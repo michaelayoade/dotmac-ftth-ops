@@ -17,6 +17,9 @@ from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 from dotmac.platform.voltha.client import VOLTHAClient
 from dotmac.platform.voltha.schemas import (
     Adapter,
+    AlarmAcknowledgeRequest,
+    AlarmClearRequest,
+    AlarmOperationResponse,
     DeviceDetailResponse,
     DeviceDisableRequest,
     DeviceEnableRequest,
@@ -264,8 +267,7 @@ async def get_adapters(
     _: UserInfo = Depends(require_permission("isp.network.pon.read")),
 ) -> list[Adapter]:
     """List adapters"""
-    result = await service.get_adapters()
-    return cast(list[Adapter], result)
+    return await service.get_adapters()
 
 
 @router.get(
@@ -279,8 +281,7 @@ async def get_device_types(
     _: UserInfo = Depends(require_permission("isp.network.pon.read")),
 ) -> list[DeviceType]:
     """List device types"""
-    result = await service.get_device_types()
-    return cast(list[DeviceType], result)
+    return await service.get_device_types()
 
 
 # =============================================================================
@@ -438,3 +439,77 @@ async def get_events(
     - Timestamp
     """
     return await service.get_events(device_id, event_type, limit)
+
+
+@router.post(
+    "/alarms/{alarm_id}/acknowledge",
+    response_model=AlarmOperationResponse,
+    summary="Acknowledge VOLTHA Alarm",
+    description="Acknowledge a specific alarm in VOLTHA",
+)
+async def acknowledge_alarm(
+    alarm_id: str,
+    request: AlarmAcknowledgeRequest,
+    service: VOLTHAService = Depends(get_voltha_service),
+    _: UserInfo = Depends(require_permission("isp.network.pon.write")),
+) -> AlarmOperationResponse:
+    """
+    Acknowledge a VOLTHA alarm.
+
+    This operation marks the alarm as acknowledged in VOLTHA and tracks
+    who acknowledged it and when. Useful for alarm workflow management.
+
+    Path Parameters:
+    - alarm_id: The unique identifier of the alarm to acknowledge
+
+    Request Body:
+    - acknowledged_by: Username of the person acknowledging the alarm
+    - note: Optional note about the acknowledgement
+
+    Returns:
+    - success: Boolean indicating if operation succeeded
+    - message: Human-readable message about the operation
+    - alarm_id: The alarm ID that was acknowledged
+    - operation: Always "acknowledge"
+    - timestamp: ISO timestamp of when the operation occurred
+
+    Required Permission: isp.network.pon.write
+    """
+    return await service.acknowledge_alarm(alarm_id, request)
+
+
+@router.post(
+    "/alarms/{alarm_id}/clear",
+    response_model=AlarmOperationResponse,
+    summary="Clear VOLTHA Alarm",
+    description="Clear a specific alarm in VOLTHA",
+)
+async def clear_alarm(
+    alarm_id: str,
+    request: AlarmClearRequest,
+    service: VOLTHAService = Depends(get_voltha_service),
+    _: UserInfo = Depends(require_permission("isp.network.pon.write")),
+) -> AlarmOperationResponse:
+    """
+    Clear a VOLTHA alarm.
+
+    This operation marks the alarm as cleared in VOLTHA and tracks
+    who cleared it and when. Useful for alarm resolution workflows.
+
+    Path Parameters:
+    - alarm_id: The unique identifier of the alarm to clear
+
+    Request Body:
+    - cleared_by: Username of the person clearing the alarm
+    - note: Optional note about the clearing
+
+    Returns:
+    - success: Boolean indicating if operation succeeded
+    - message: Human-readable message about the operation
+    - alarm_id: The alarm ID that was cleared
+    - operation: Always "clear"
+    - timestamp: ISO timestamp of when the operation occurred
+
+    Required Permission: isp.network.pon.write
+    """
+    return await service.clear_alarm(alarm_id, request)

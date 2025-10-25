@@ -142,6 +142,7 @@ class TestUserService:
             "email": "new@example.com",
             "password": "secure_password123",
             "full_name": "New User",
+            "tenant_id": "tenant-123",
         }
 
         with patch.object(user_service, "_hash_password", return_value="hashed_password"):
@@ -163,7 +164,10 @@ class TestUserService:
 
         with pytest.raises(ValueError, match="Username testuser already exists"):
             await user_service.create_user(
-                username="testuser", email="new@example.com", password="password"
+                username="testuser",
+                email="new@example.com",
+                password="password",
+                tenant_id="tenant-123",
             )
 
     @pytest.mark.asyncio

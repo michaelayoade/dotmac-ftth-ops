@@ -260,10 +260,10 @@ class TestInvoicePaymentStatus:
         assert result.paid_at is not None
 
     @pytest.mark.asyncio
-    async def test_update_payment_status_to_partially_refunded(
+    async def test_update_payment_status_to_pending_partial(
         self, invoice_service, async_db_session
     ):
-        """Test PARTIALLY_REFUNDED payment status updates."""
+        """Test pending payment status updates for partial payments."""
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
@@ -282,10 +282,10 @@ class TestInvoicePaymentStatus:
             discount_amount=0,
             total_amount=110,
             total_credits_applied=0,
-            remaining_balance=110,  # Required NOT NULL field
+            remaining_balance=60,
             credit_applications=[],
-            status=InvoiceStatus.PAID,
-            payment_status=PaymentStatus.SUCCEEDED,
+            status=InvoiceStatus.PARTIALLY_PAID,
+            payment_status=PaymentStatus.PENDING,
         )
         async_db_session.add(invoice)
         await async_db_session.commit()
@@ -293,11 +293,11 @@ class TestInvoicePaymentStatus:
         result = await invoice_service.update_invoice_payment_status(
             tenant_id=tenant_id,
             invoice_id=invoice.invoice_id,
-            payment_status=PaymentStatus.PARTIALLY_REFUNDED,
+            payment_status=PaymentStatus.PENDING,
         )
 
         assert result.status == InvoiceStatus.PARTIALLY_PAID
-        assert result.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert result.payment_status == PaymentStatus.PENDING
 
 
 class TestCreditApplication:
@@ -363,10 +363,10 @@ class TestCreditApplication:
         assert "credit-123" in result.credit_applications
 
     @pytest.mark.asyncio
-    async def test_apply_partial_credit_marks_partially_refunded(
+    async def test_apply_partial_credit_marks_partially_paid(
         self, invoice_service, async_db_session
     ):
-        """Test that partial credit marks invoice as partially refunded."""
+        """Test that partial credit marks invoice as partially paid."""
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
@@ -403,7 +403,8 @@ class TestCreditApplication:
 
         assert result.remaining_balance == 60
         assert result.total_credits_applied == 50
-        assert result.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert result.payment_status == PaymentStatus.PENDING
+        assert result.status == InvoiceStatus.PARTIALLY_PAID
         assert "credit-123" in result.credit_applications
 
     @pytest.mark.asyncio

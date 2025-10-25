@@ -10,6 +10,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dotmac.platform.graphql.schema import schema
+from dotmac.platform.version import get_version
 
 
 @pytest.fixture
@@ -68,7 +69,7 @@ class TestAnalyticsQueries:
         result = await graphql_client.execute(query)
 
         assert result.errors is None
-        assert result.data["version"] == "1.0.0"
+        assert result.data["version"] == get_version()
 
     @pytest.mark.asyncio
     async def test_billing_metrics_query_requires_auth(self, graphql_client):

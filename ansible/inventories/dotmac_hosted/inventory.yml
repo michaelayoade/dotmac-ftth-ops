@@ -1,0 +1,15 @@
+---
+all:
+  children:
+    dotmac_datacenters:
+      hosts:
+        dc1-control-01:
+          ansible_host: 10.0.10.5
+          ansible_user: deploy
+          ansible_port: 22
+          datacenter: dc1
+        dc1-control-02:
+          ansible_host: 10.0.10.6
+          ansible_user: deploy
+          ansible_port: 22
+          datacenter: dc1

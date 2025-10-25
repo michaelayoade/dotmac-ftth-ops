@@ -28,6 +28,7 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
+from dotmac.platform.genieacs.service import GenieACSService
 from dotmac.platform.genieacs.schemas import FirmwareUpgradeResult as FirmwareUpgradeResultSchema
 from dotmac.platform.genieacs.schemas import (
     FirmwareUpgradeSchedule as FirmwareUpgradeScheduleSchema,
@@ -46,7 +47,7 @@ from dotmac.platform.genieacs.schemas import MassConfigResult as MassConfigResul
 logger = structlog.get_logger(__name__)
 
 
-class GenieACSServiceDB:
+class GenieACSServiceDB(GenieACSService):
     """Production-ready GenieACS service with database persistence."""
 
     def __init__(
@@ -63,9 +64,9 @@ class GenieACSServiceDB:
             client: GenieACS client instance
             tenant_id: Tenant ID for multi-tenancy
         """
+        super().__init__(client=client, tenant_id=tenant_id)
+
         self.session = session
-        self.client = client or GenieACSClient(tenant_id=tenant_id)
-        self.tenant_id = tenant_id
 
     # =========================================================================
     # Scheduled Firmware Upgrades

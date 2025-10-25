@@ -142,7 +142,7 @@ def test_app(async_db_engine):
     try:
         from dotmac.platform.tenant.router import router as tenant_router
 
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["Tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["Tenants"])
     except ImportError:
         pass
 

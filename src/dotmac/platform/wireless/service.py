@@ -6,7 +6,7 @@ Business logic for wireless network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
@@ -363,7 +363,7 @@ class WirelessService:
 
         measurement_data = data.model_dump()
         if not measurement_data.get("measured_at"):
-            measurement_data["measured_at"] = datetime.utcnow()
+            measurement_data["measured_at"] = datetime.now(UTC)
 
         measurement = SignalMeasurement(
             tenant_id=self.tenant_id,
@@ -467,7 +467,7 @@ class WirelessService:
             WirelessClient.connected,
         ).scalar() or 0
 
-        since_24h = datetime.utcnow() - timedelta(hours=24)
+        since_24h = datetime.now(UTC) - timedelta(hours=24)
         total_clients_seen_24h = self.db.query(func.count(WirelessClient.id)).filter(
             WirelessClient.tenant_id == self.tenant_id,
             WirelessClient.last_seen >= since_24h,
@@ -505,7 +505,7 @@ class WirelessService:
         by_site = {site: count for site, count in by_site_results if site}
 
         # Average signal strength from recent measurements
-        since_1h = datetime.utcnow() - timedelta(hours=1)
+        since_1h = datetime.now(UTC) - timedelta(hours=1)
         avg_signal = self.db.query(func.avg(SignalMeasurement.rssi_dbm)).filter(
             SignalMeasurement.tenant_id == self.tenant_id,
             SignalMeasurement.measured_at >= since_1h,
@@ -582,7 +582,7 @@ class WirelessService:
         avg_utilization = float(radio_metrics[0]) if radio_metrics and radio_metrics[0] else None
 
         # Recent signal measurements
-        since_1h = datetime.utcnow() - timedelta(hours=1)
+        since_1h = datetime.now(UTC) - timedelta(hours=1)
         signal_metrics = self.db.query(
             func.avg(SignalMeasurement.rssi_dbm),
             func.avg(SignalMeasurement.snr_db),

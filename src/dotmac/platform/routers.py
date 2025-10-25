@@ -64,7 +64,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.rbac_read_router",
         router_name="router",
-        prefix="/api/v1",  # Module has /auth/rbac prefix
+        prefix="/api/v1/auth/rbac",
         tags=["RBAC"],
         requires_auth=True,
         description="RBAC read-only endpoints for frontend",
@@ -72,7 +72,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.rbac_router",
         router_name="router",
-        prefix="/api/v1",  # Module has /auth/rbac/admin prefix
+        prefix="/api/v1/auth/rbac/admin",
         tags=["RBAC - Admin"],
         requires_auth=True,
         description="RBAC admin endpoints (create/update/delete roles and permissions)",
@@ -80,10 +80,17 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.platform_admin_router",
         router_name="router",
-        prefix="/api/v1",  # Module has /admin/platform prefix
+        prefix="/api/v1/platform-admin",
         tags=["Platform Administration"],
         requires_auth=True,  # Uses require_platform_admin internally
         description="Cross-tenant platform administration (super admin only)",
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.access.router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Access Network"],
+        description="OLT management via pluggable SNMP/CLI/TR-069 drivers",
     ),
     RouterConfig(
         module_path="dotmac.platform.secrets.api",
@@ -208,7 +215,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.customer_management.router",
         router_name="router",
-        prefix="/api/v1",
+        prefix="/api/v1/customers",
         tags=["Customer Management"],
         description="Customer relationship management",
     ),

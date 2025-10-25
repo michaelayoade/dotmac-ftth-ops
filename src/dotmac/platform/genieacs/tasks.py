@@ -25,6 +25,7 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
+from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
@@ -147,8 +148,21 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
         channel = f"firmware_upgrade:{schedule_id}"
 
         try:
-            # Get GenieACS client
-            client = GenieACSClient(tenant_id=schedule.tenant_id)
+            # Get GenieACS client with tenant-specific configuration
+            config = await get_service_config(
+                session,
+                schedule.tenant_id,
+                OSSService.GENIEACS,
+            )
+            client = GenieACSClient(
+                base_url=config.url,
+                username=config.username,
+                password=config.password,
+                tenant_id=schedule.tenant_id,
+                verify_ssl=config.verify_ssl,
+                timeout_seconds=config.timeout_seconds,
+                max_retries=config.max_retries,
+            )
 
             # Query devices
             devices = await client.get_devices(query=schedule.device_filter)
@@ -377,8 +391,21 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
         channel = f"mass_config:{job_id}"
 
         try:
-            # Get GenieACS client
-            client = GenieACSClient(tenant_id=job.tenant_id)
+            # Get GenieACS client with tenant-specific configuration
+            config = await get_service_config(
+                session,
+                job.tenant_id,
+                OSSService.GENIEACS,
+            )
+            client = GenieACSClient(
+                base_url=config.url,
+                username=config.username,
+                password=config.password,
+                tenant_id=job.tenant_id,
+                verify_ssl=config.verify_ssl,
+                timeout_seconds=config.timeout_seconds,
+                max_retries=config.max_retries,
+            )
 
             # Query devices
             devices = await client.get_devices(query=job.device_filter)

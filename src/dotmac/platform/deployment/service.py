@@ -6,6 +6,7 @@ Coordinates adapters, registry, and business logic.
 """
 
 import logging
+from copy import deepcopy
 from datetime import datetime
 from typing import Any
 
@@ -64,6 +65,11 @@ class DeploymentService:
         if not template:
             raise ValueError(f"Template {instance.template_id} not found")
 
+        config = deepcopy(instance.config) if instance.config is not None else {}
+        config_updates: dict[str, Any] | None = kwargs.get("config_updates")
+        if config_updates:
+            config.update(config_updates)
+
         return ExecutionContext(
             tenant_id=instance.tenant_id,
             instance_id=instance.id,
@@ -71,11 +77,11 @@ class DeploymentService:
             operation=operation,
             template_name=template.name,
             template_version=instance.version,
-            config=instance.config,
+            config=config,
             secrets=kwargs.get("secrets", {}),
-            cpu_cores=instance.allocated_cpu,
-            memory_gb=instance.allocated_memory_gb,
-            storage_gb=instance.allocated_storage_gb,
+            cpu_cores=kwargs.get("cpu_cores", instance.allocated_cpu),
+            memory_gb=kwargs.get("memory_gb", instance.allocated_memory_gb),
+            storage_gb=kwargs.get("storage_gb", instance.allocated_storage_gb),
             environment=instance.environment,
             region=instance.region,
             availability_zone=instance.availability_zone,
@@ -271,19 +277,18 @@ class DeploymentService:
             # Get adapter
             adapter = self._get_adapter(template.backend)
 
+            original_config = deepcopy(instance.config) if instance.config is not None else None
+
             # Create context
             context = self._create_execution_context(
                 instance,
                 "upgrade",
                 execution_id=execution.id,
                 to_version=request.to_version,
+                config_updates=request.config_updates or {},
                 secrets=secrets or {},
                 triggered_by=triggered_by,
             )
-
-            # Update config if provided
-            if request.config_updates:
-                context.config.update(request.config_updates)
 
             # Execute upgrade
             result = await adapter.upgrade(context)
@@ -302,8 +307,18 @@ class DeploymentService:
 
             # Update instance
             if result.is_success():
+                updates: dict[str, Any] = {
+                    "state": DeploymentState.ACTIVE,
+                    "version": request.to_version,
+                }
+                if request.config_updates:
+                    base_config = original_config or {}
+                    updated_config = deepcopy(base_config)
+                    updated_config.update(request.config_updates)
+                    updates["config"] = updated_config
                 self.registry.update_instance(
-                    instance.id, state=DeploymentState.ACTIVE, version=request.to_version
+                    instance.id,
+                    **updates,
                 )
                 logger.info(f"Successfully upgraded deployment {instance.id} to {request.to_version}")
             else:
@@ -371,16 +386,24 @@ class DeploymentService:
             # Get adapter
             adapter = self._get_adapter(template.backend)
 
-            # Update instance resources
-            if request.cpu_cores:
-                instance.allocated_cpu = request.cpu_cores
-            if request.memory_gb:
-                instance.allocated_memory_gb = request.memory_gb
-            if request.storage_gb:
-                instance.allocated_storage_gb = request.storage_gb
+            target_cpu = request.cpu_cores if request.cpu_cores is not None else instance.allocated_cpu
+            target_memory = (
+                request.memory_gb if request.memory_gb is not None else instance.allocated_memory_gb
+            )
+            target_storage = (
+                request.storage_gb if request.storage_gb is not None else instance.allocated_storage_gb
+            )
 
             # Create context
-            context = self._create_execution_context(instance, "scale", execution_id=execution.id, triggered_by=triggered_by)
+            context = self._create_execution_context(
+                instance,
+                "scale",
+                execution_id=execution.id,
+                triggered_by=triggered_by,
+                cpu_cores=target_cpu,
+                memory_gb=target_memory,
+                storage_gb=target_storage,
+            )
 
             # Execute scale
             result = await adapter.scale(context)
@@ -398,9 +421,9 @@ class DeploymentService:
             if result.is_success():
                 self.registry.update_instance(
                     instance.id,
-                    allocated_cpu=instance.allocated_cpu,
-                    allocated_memory_gb=instance.allocated_memory_gb,
-                    allocated_storage_gb=instance.allocated_storage_gb,
+                    allocated_cpu=target_cpu,
+                    allocated_memory_gb=target_memory,
+                    allocated_storage_gb=target_storage,
                 )
 
             return execution

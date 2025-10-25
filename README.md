@@ -416,6 +416,37 @@ See [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITEC
 - ⏳ End-to-end workflow integration tests
 - ⏳ Performance testing and optimization
 
+## 🧪 Running Customer Management Tests with PostgreSQL
+
+The customer-management integration tests rely on database constraints that are only available when a real PostgreSQL instance is present. A helper compose file and script are provided:
+
+```bash
+# start a throwaway Postgres, run migrations, execute tests, and clean up
+chmod +x scripts/run_customer_tests.sh
+./scripts/run_customer_tests.sh
+
+# pass additional pytest flags (examples)
+./scripts/run_customer_tests.sh -k lifecycle -vv
+```
+
+If you already have a PostgreSQL instance running with the required schema, skip the Compose orchestration and migration steps:
+
+```bash
+export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+SKIP_COMPOSE=1 SKIP_MIGRATIONS=1 ./scripts/run_customer_tests.sh
+```
+
+The script exports `DOTMAC_DATABASE_URL` / `DOTMAC_DATABASE_URL_ASYNC`, applies the latest Alembic migration, and runs `poetry run pytest tests/customer_management`. To keep the database service running between test runs, you can start it manually:
+
+```bash
+docker compose -f docker-compose.test-db.yml up -d db-test
+export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+poetry run alembic upgrade head
+poetry run pytest tests/customer_management
+```
+
 ## 🤝 Contributing
 
 We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.

@@ -253,8 +253,8 @@ class TestInvoiceQueryHandler:
         assert result.outstanding_amount == 400000
         assert result.paid_amount == 600000  # total - outstanding
         assert result.average_invoice_amount == 10000
-        assert result.formatted_total == "$10000.00"
-        assert result.formatted_outstanding == "$4000.00"
+        assert result.formatted_total == "$10,000.00"
+        assert result.formatted_outstanding == "$4,000.00"
 
     @pytest.mark.asyncio
     async def test_handle_get_invoice_statistics_empty(self, query_handler, mock_db_session):

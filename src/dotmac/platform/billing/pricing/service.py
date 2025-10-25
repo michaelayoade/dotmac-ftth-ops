@@ -76,10 +76,12 @@ class PricingEngine:
             )
 
         # Validate discount value based on type
-        if rule_data.discount_type == DiscountType.PERCENTAGE and rule_data.discount_value > 100:
+        if rule_data.discount_type == DiscountType.PERCENTAGE:
             max_discount = settings.billing.max_discount_percentage
             if rule_data.discount_value > max_discount:
-                raise InvalidPricingRuleError(f"Percentage discount cannot exceed {max_discount}%")
+                raise InvalidPricingRuleError(
+                    f"Percentage discount cannot exceed {max_discount}%"
+                )
 
         # Create database record
         db_rule = BillingPricingRuleTable(
@@ -385,7 +387,7 @@ class PricingEngine:
         plan = await subscription_service.get_plan(plan_id, tenant_id)
 
         # Use custom price if set, otherwise plan price
-        effective_price = custom_price or plan.price
+        effective_price = plan.price if custom_price is None else custom_price
         plan_currency = getattr(plan, "currency", settings.billing.default_currency).upper()
 
         # Build simple context for subscription

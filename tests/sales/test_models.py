@@ -5,6 +5,7 @@ Unit tests for Sales order models
 import pytest
 from datetime import datetime
 from decimal import Decimal
+from uuid import uuid4
 
 from sqlalchemy.orm import Session
 
@@ -190,9 +191,10 @@ class TestServiceActivationModel:
 
     def test_create_service_activation(self, db: Session, sample_order):
         """Test creating a service activation"""
+        tenant_id = str(uuid4())
         activation = ServiceActivation(
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             service_code="test-service",
             service_name="Test Service",
             activation_status=ActivationStatus.PENDING,
@@ -205,7 +207,7 @@ class TestServiceActivationModel:
 
         assert activation.id is not None
         assert activation.order_id == sample_order.id
-        assert activation.tenant_id == 1
+        assert activation.tenant_id == tenant_id
         assert activation.service_code == "test-service"
         assert activation.activation_status == ActivationStatus.PENDING
         assert activation.success is False
@@ -213,10 +215,11 @@ class TestServiceActivationModel:
 
     def test_service_activation_lifecycle(self, db: Session, sample_order):
         """Test service activation status lifecycle"""
+        tenant_id = str(uuid4())
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             activation_status=ActivationStatus.PENDING,
         )
 
@@ -240,10 +243,11 @@ class TestServiceActivationModel:
 
     def test_service_activation_failure(self, db: Session, sample_order):
         """Test service activation failure tracking"""
+        tenant_id = str(uuid4())
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             activation_status=ActivationStatus.IN_PROGRESS,
             started_at=datetime.utcnow(),
         )

@@ -5,6 +5,7 @@ Coordinates complex multi-system workflows for subscriber lifecycle management.
 Handles end-to-end provisioning across CRM, BSS, OSS, and network systems.
 """
 
+from collections.abc import Callable
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -23,6 +24,7 @@ from dotmac.platform.netbox.service import NetBoxService
 from dotmac.platform.notifications.models import NotificationPriority, NotificationType
 from dotmac.platform.notifications.service import NotificationService
 from dotmac.platform.radius.models import RadCheck
+from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.voltha.service import VOLTHAService
@@ -49,7 +51,9 @@ class OrchestrationService:
         customer_service: CustomerService | None = None,
         lead_service: LeadService | None = None,
         quote_service: QuoteService | None = None,
-        radius_service: RADIUSService | None = None,
+        radius_service: RADIUSService
+        | Callable[[AsyncSession, str], RADIUSService]
+        | None = None,
         netbox_service: NetBoxService | None = None,
         voltha_service: VOLTHAService | None = None,
         genieacs_service: GenieACSService | None = None,
@@ -59,11 +63,20 @@ class OrchestrationService:
         self.customer_service = customer_service or CustomerService(db)
         self.lead_service = lead_service or LeadService(db)
         self.quote_service = quote_service or QuoteService(db)
-        self.radius_service = radius_service or RADIUSService(db)
+        if callable(radius_service):
+            self._radius_service_factory: Callable[[AsyncSession, str], RADIUSService] = radius_service
+        elif radius_service is not None:
+            self._radius_service_factory = lambda _db, _tenant_id: radius_service
+        else:
+            self._radius_service_factory = lambda session, tenant: RADIUSService(session, tenant)
         self.netbox_service = netbox_service or NetBoxService()
         self.voltha_service = voltha_service or VOLTHAService()
         self.genieacs_service = genieacs_service or GenieACSService()
         self.notification_service = notification_service or NotificationService(db)
+
+    def _get_radius_service(self, tenant_id: str) -> RADIUSService:
+        """Return a tenant-scoped RADIUS service instance."""
+        return self._radius_service_factory(self.db, tenant_id)
 
     async def convert_lead_to_customer(
         self,
@@ -238,6 +251,8 @@ class OrchestrationService:
         if existing_subscriber:
             raise ValidationError(f"Subscriber with username {username} already exists")
 
+        radius_service = self._get_radius_service(tenant_id)
+
         # 3. Allocate IP address from NetBox
         ip_allocation = None
         try:
@@ -278,15 +293,13 @@ class OrchestrationService:
 
         # 5. Create RADIUS authentication entries
         try:
-            await self.radius_service.create_subscriber_auth(
-                tenant_id=tenant_id,
+            radius_payload = RADIUSSubscriberCreate(
                 subscriber_id=subscriber_id,
                 username=username,
                 password=password,
-                download_speed_kbps=download_speed_kbps,
-                upload_speed_kbps=upload_speed_kbps,
-                static_ip=ip_allocation.get("address") if ip_allocation else None,
+                framed_ipv4_address=ip_allocation.get("address") if ip_allocation else None,
             )
+            await radius_service.create_subscriber(radius_payload)
             logger.info("RADIUS authentication created", username=username)
         except Exception as e:
             logger.error("RADIUS creation failed", error=str(e))
@@ -416,12 +429,12 @@ class OrchestrationService:
         if not subscriber:
             raise NotFoundError(f"Subscriber {subscriber_id} not found")
 
+        radius_service = self._get_radius_service(tenant_id)
+
         # 2. Terminate active RADIUS sessions
         session_termination = None
         try:
-            session_termination = await self.radius_service.disconnect_session(
-                username=subscriber.username
-            )
+            session_termination = await radius_service.disconnect_session(username=subscriber.username)
             logger.info("RADIUS session terminated", username=subscriber.username)
         except Exception as e:
             logger.warning("RADIUS session termination failed", error=str(e))
@@ -458,9 +471,7 @@ class OrchestrationService:
         # 6. Remove RADIUS authentication
         radius_deletion = None
         try:
-            await self.radius_service.delete_subscriber_auth(
-                tenant_id=tenant_id, subscriber_id=subscriber_id
-            )
+            radius_deletion = await radius_service.delete_subscriber(subscriber.username)
             logger.info("RADIUS authentication removed", subscriber_id=subscriber_id)
         except Exception as e:
             logger.warning("RADIUS deletion failed", error=str(e))
@@ -530,7 +541,8 @@ class OrchestrationService:
             raise NotFoundError(f"Subscriber {subscriber_id} not found")
 
         # Disconnect active sessions
-        await self.radius_service.disconnect_session(username=subscriber.username)
+        radius_service = self._get_radius_service(tenant_id)
+        await radius_service.disconnect_session(username=subscriber.username)
 
         # Update RADIUS to deny authentication
         stmt = select(RadCheck).where(

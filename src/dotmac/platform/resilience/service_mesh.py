@@ -294,6 +294,8 @@ class LoadBalancer:
             return self._select_least_connections(healthy_endpoints)
         elif policy == TrafficPolicy.CONSISTENT_HASH:
             return self._select_consistent_hash(healthy_endpoints, source_context or {})
+        elif policy == TrafficPolicy.STICKY_SESSION:
+            return self._select_sticky_session(healthy_endpoints, source_context or {})
         else:
             return healthy_endpoints[0]  # Default to first
 
@@ -353,6 +355,33 @@ class LoadBalancer:
         hash_value = int(hashlib.sha256(hash_input.encode()).hexdigest()[:16], 16)
         index = hash_value % len(endpoints)
         return endpoints[index]
+
+    def _select_sticky_session(
+        self, endpoints: list[ServiceEndpoint], source_context: dict[str, Any]
+    ) -> ServiceEndpoint:
+        """Select endpoint using sticky sessions with well-known context keys."""
+        candidate_value: str | None = None
+
+        if isinstance(source_context, dict):
+            for key in (
+                "session_id",
+                "session",
+                "user_id",
+                "customer_id",
+                "client_ip",
+                "trace_id",
+            ):
+                value = source_context.get(key)
+                if value:
+                    candidate_value = str(value)
+                    break
+
+        if candidate_value:
+            hash_value = int(hashlib.sha256(candidate_value.encode()).hexdigest()[:16], 16)
+            return endpoints[hash_value % len(endpoints)]
+
+        # Fallback to consistent hash using full context (or first endpoint if empty)
+        return self._select_consistent_hash(endpoints, source_context)
 
     async def _is_healthy(self, endpoint: ServiceEndpoint) -> bool:
         """Check if endpoint is healthy."""
@@ -528,10 +557,7 @@ class ServiceMesh:
         )
 
         if not endpoint:
-            raise EntityNotFoundError(
-                entity_type="ServiceEndpoint",
-                entity_id=destination_service,
-            )
+            raise EntityNotFoundError("ServiceEndpoint", destination_service)
 
         # Create service call record
         service_call = ServiceCall(
@@ -547,54 +573,62 @@ class ServiceMesh:
             span_id=span_id,
         )
 
-        try:
-            # Update connection count
+        attempts = 1
+        if traffic_rule.retry_policy != RetryPolicy.NONE:
+            attempts += max(0, traffic_rule.max_retries)
+
+        for attempt in range(1, attempts + 1):
             endpoint_key = f"{endpoint.host}:{endpoint.port}"
             self.registry.connection_counts[endpoint_key] = (
                 self.registry.connection_counts.get(endpoint_key, 0) + 1
             )
+            self.call_metrics["active_connections"] += 1
 
-            # Make the actual HTTP call
-            response = await self._make_http_call(
-                endpoint,
-                method,
-                path,
-                headers,
-                body,
-                timeout or traffic_rule.timeout_seconds,
-            )
+            try:
+                response = await self._make_http_call(
+                    endpoint,
+                    method,
+                    path,
+                    headers,
+                    body,
+                    timeout or traffic_rule.timeout_seconds,
+                )
 
-            # Record success
-            circuit_breaker.record_success()
-            self._record_call_success(service_call, time.time() - start_time)
+                circuit_breaker.record_success()
+                self._record_call_success(service_call, time.time() - start_time)
 
-            return {
-                "status_code": response["status_code"],
-                "headers": response["headers"],
-                "body": response["body"],
-                "call_id": call_id,
-                "trace_id": trace_id,
-                "span_id": span_id,
-            }
+                return {
+                    "status_code": response["status_code"],
+                    "headers": response["headers"],
+                    "body": response["body"],
+                    "call_id": call_id,
+                    "trace_id": trace_id,
+                    "span_id": span_id,
+                }
 
-        except Exception as e:
-            # Record failure
-            circuit_breaker.record_failure()
-            self._record_call_failure(service_call, time.time() - start_time, str(e))
+            except Exception as e:
+                circuit_breaker.record_failure()
 
-            # Retry logic could be implemented here
-            if traffic_rule.retry_policy != RetryPolicy.NONE and traffic_rule.max_retries > 0:
-                # For now, just re-raise
-                pass
+                if attempt >= attempts or traffic_rule.retry_policy == RetryPolicy.NONE:
+                    self._record_call_failure(service_call, time.time() - start_time, str(e))
+                    raise HTTPException(
+                        status_code=500, detail=f"Service call failed: {e}"
+                    ) from e
 
-            raise HTTPException(status_code=500, detail=f"Service call failed: {e}") from e
+                wait_time = self._get_retry_delay(traffic_rule.retry_policy, attempt, circuit_breaker)
+                if wait_time > 0:
+                    await asyncio.sleep(wait_time)
 
-        finally:
-            # Update connection count
-            if endpoint:
-                endpoint_key = f"{endpoint.host}:{endpoint.port}"
+            finally:
                 current_count = self.registry.connection_counts.get(endpoint_key, 1)
                 self.registry.connection_counts[endpoint_key] = max(0, current_count - 1)
+                self.call_metrics["active_connections"] = max(
+                    0, self.call_metrics["active_connections"] - 1
+                )
+
+        raise HTTPException(
+            status_code=500, detail="Service call failed after retries were exhausted"
+        )
 
     async def _make_http_call(
         self,
@@ -642,6 +676,24 @@ class ServiceMesh:
                 "headers": dict(response.headers),
                 "body": response_body,
             }
+
+    def _get_retry_delay(
+        self,
+        policy: RetryPolicy,
+        attempt_number: int,
+        circuit_breaker: CircuitBreakerState,
+    ) -> float:
+        """Calculate the delay before the next retry attempt."""
+        if policy == RetryPolicy.EXPONENTIAL_BACKOFF:
+            delay = 0.5 * (2 ** max(0, attempt_number - 1))
+            return min(delay, 10.0)
+        if policy == RetryPolicy.FIXED_INTERVAL:
+            return 1.0
+        if policy == RetryPolicy.CIRCUIT_BREAKER:
+            return max(
+                0.0, circuit_breaker.timeout_seconds / max(1, circuit_breaker.failure_threshold)
+            )
+        return 0.0
 
     def _record_call_success(self, call: ServiceCall, duration: float) -> None:
         """Record a successful service call."""

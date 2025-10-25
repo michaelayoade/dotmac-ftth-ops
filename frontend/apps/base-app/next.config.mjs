@@ -13,14 +13,17 @@ const nextConfig = {
   transpilePackages: ['react-window'],
   // Server Actions are enabled by default in Next.js 14+
   experimental: {
-    instrumentationHook: true,
+    // Disabled instrumentation hook due to gRPC bundling issues
+    // Re-enable after configuring webpack externals for @grpc/grpc-js
+    instrumentationHook: false,
   },
-  // Skip TypeScript and ESLint checks during build (can be run separately)
+  // Enable TypeScript and ESLint checks during build
+  // These checks are now enforced in CI and should fail the build if errors are found
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
   images: {
     domains: ['images.unsplash.com'],

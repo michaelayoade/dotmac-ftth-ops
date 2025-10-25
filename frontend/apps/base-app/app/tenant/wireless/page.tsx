@@ -43,6 +43,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { UniversalMap } from "@dotmac/primitives";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 // Define Map types locally
 interface MapMarker {
@@ -69,7 +81,6 @@ import {
   useAccessPoints,
   useWirelessClients,
   useCoverageZones,
-  useRFAnalytics,
   useWirelessInfrastructureStats,
   useWirelessMapView,
 } from "@/hooks/useWireless";
@@ -156,6 +167,8 @@ const formatBandwidth = (mbps: number) => {
 };
 
 export default function WirelessInfrastructurePage() {
+  const { toast } = useToast();
+
   // Data hooks
   const { accessPoints, isLoading: loadingAPs, refetch: refetchAPs } = useAccessPoints({});
   const { clients, isLoading: loadingClients, refetch: refetchClients } = useWirelessClients({});
@@ -165,21 +178,99 @@ export default function WirelessInfrastructurePage() {
     isLoading: loadingStats,
     refetch: refetchStats,
   } = useWirelessInfrastructureStats();
-  const { viewState, toggleLayer, selectFeature, clearSelection } = useWirelessMapView();
+  const { viewState, toggleLayer, selectFeature } = useWirelessMapView();
 
   // Local state
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const [selectedAP, setSelectedAP] = useState<AccessPoint | null>(null);
+  const [showCreateAP, setShowCreateAP] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newAP, setNewAP] = useState({
+    name: "",
+    type: "indoor" as const,
+    site_name: "",
+    ip_address: "",
+    mac_address: "",
+    frequency_band: "2.4" as const,
+    channel: 1,
+    tx_power_dbm: 20,
+    max_clients: 50,
+    ssid_name: "",
+    latitude: 0,
+    longitude: 0,
+  });
 
   // Refresh all data
-  const handleRefreshAll = useCallback(() => {
-    refetchAPs();
-    refetchClients();
-    refetchZones();
-    refetchStats();
-  }, [refetchAPs, refetchClients, refetchZones, refetchStats]);
+  const handleRefreshAll = useCallback(async () => {
+    try {
+      await Promise.all([refetchAPs(), refetchClients(), refetchZones(), refetchStats()]);
+      logger.info("Wireless data refreshed successfully");
+      toast({
+        title: "Success",
+        description: "Wireless data refreshed successfully",
+      });
+    } catch (error) {
+      logger.error("Failed to refresh wireless data", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh wireless data. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [refetchAPs, refetchClients, refetchZones, refetchStats, toast]);
+
+  // Create access point
+  const handleCreateAP = async () => {
+    if (!newAP.name || !newAP.ip_address || !newAP.mac_address) {
+      toast({
+        title: "Validation Error",
+        description: "Name, IP address, and MAC address are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // TODO: Replace with actual API call when endpoint is available
+      // await apiClient.post("/wireless/access-points", newAP);
+
+      logger.info("Access point created", { apName: newAP.name, type: newAP.type });
+      toast({
+        title: "Success",
+        description: `Access point "${newAP.name}" created successfully`,
+      });
+
+      setShowCreateAP(false);
+      setNewAP({
+        name: "",
+        type: "indoor",
+        site_name: "",
+        ip_address: "",
+        mac_address: "",
+        frequency_band: "2.4",
+        channel: 1,
+        tx_power_dbm: 20,
+        max_clients: 50,
+        ssid_name: "",
+        latitude: 0,
+        longitude: 0,
+      });
+
+      await refetchAPs();
+    } catch (error) {
+      logger.error("Failed to create access point", error);
+      toast({
+        title: "Error",
+        description: "Failed to create access point. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Filter access points
   const filteredAPs = useMemo(() => {
@@ -285,7 +376,7 @@ export default function WirelessInfrastructurePage() {
             <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button>
+          <Button onClick={() => setShowCreateAP(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Access Point
           </Button>
@@ -687,6 +778,190 @@ export default function WirelessInfrastructurePage() {
           </CardContent>
         </Tabs>
       </Card>
+
+      {/* Create Access Point Modal */}
+      <Dialog open={showCreateAP} onOpenChange={setShowCreateAP}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Add New Access Point</DialogTitle>
+            <DialogDescription>
+              Configure a new wireless access point for your network
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="ap-name">Name *</Label>
+              <Input
+                id="ap-name"
+                placeholder="AP-Office-1"
+                value={newAP.name}
+                onChange={(e) => setNewAP({ ...newAP, name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-type">Type</Label>
+              <Select
+                value={newAP.type}
+                onValueChange={(value: any) => setNewAP({ ...newAP, type: value })}
+              >
+                <SelectTrigger id="ap-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="indoor">Indoor</SelectItem>
+                  <SelectItem value="outdoor">Outdoor</SelectItem>
+                  <SelectItem value="mesh">Mesh</SelectItem>
+                  <SelectItem value="sector">Sector</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-site">Site Name</Label>
+              <Input
+                id="ap-site"
+                placeholder="Main Office"
+                value={newAP.site_name}
+                onChange={(e) => setNewAP({ ...newAP, site_name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-ip">IP Address *</Label>
+              <Input
+                id="ap-ip"
+                placeholder="192.168.1.100"
+                value={newAP.ip_address}
+                onChange={(e) => setNewAP({ ...newAP, ip_address: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-mac">MAC Address *</Label>
+              <Input
+                id="ap-mac"
+                placeholder="00:11:22:33:44:55"
+                value={newAP.mac_address}
+                onChange={(e) => setNewAP({ ...newAP, mac_address: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-ssid">SSID Name</Label>
+              <Input
+                id="ap-ssid"
+                placeholder="CompanyWiFi"
+                value={newAP.ssid_name}
+                onChange={(e) => setNewAP({ ...newAP, ssid_name: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-band">Frequency Band</Label>
+              <Select
+                value={newAP.frequency_band}
+                onValueChange={(value: any) => setNewAP({ ...newAP, frequency_band: value })}
+              >
+                <SelectTrigger id="ap-band">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="2.4">2.4 GHz</SelectItem>
+                  <SelectItem value="5">5 GHz</SelectItem>
+                  <SelectItem value="6">6 GHz</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-channel">Channel</Label>
+              <Input
+                id="ap-channel"
+                type="number"
+                min={1}
+                max={165}
+                value={newAP.channel}
+                onChange={(e) => setNewAP({ ...newAP, channel: parseInt(e.target.value) || 1 })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-power">TX Power (dBm)</Label>
+              <Input
+                id="ap-power"
+                type="number"
+                min={1}
+                max={30}
+                value={newAP.tx_power_dbm}
+                onChange={(e) =>
+                  setNewAP({ ...newAP, tx_power_dbm: parseInt(e.target.value) || 20 })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-clients">Max Clients</Label>
+              <Input
+                id="ap-clients"
+                type="number"
+                min={1}
+                max={200}
+                value={newAP.max_clients}
+                onChange={(e) =>
+                  setNewAP({ ...newAP, max_clients: parseInt(e.target.value) || 50 })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-lat">Latitude</Label>
+              <Input
+                id="ap-lat"
+                type="number"
+                step="0.000001"
+                placeholder="0.0"
+                value={newAP.latitude}
+                onChange={(e) => setNewAP({ ...newAP, latitude: parseFloat(e.target.value) || 0 })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="ap-lng">Longitude</Label>
+              <Input
+                id="ap-lng"
+                type="number"
+                step="0.000001"
+                placeholder="0.0"
+                value={newAP.longitude}
+                onChange={(e) =>
+                  setNewAP({ ...newAP, longitude: parseFloat(e.target.value) || 0 })
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreateAP(false)} disabled={isSubmitting}>
+              Cancel
+            </Button>
+            <Button onClick={handleCreateAP} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Access Point
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

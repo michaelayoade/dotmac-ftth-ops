@@ -338,6 +338,13 @@ class CustomerSearchParams(BaseModel):  # BaseModel resolves to Any in isolation
     service_state_province: str | None = None
     service_country: str | None = Field(None, pattern="^[A-Z]{2}$")
 
+    # Network parameter filters
+    static_ip_assigned: str | None = Field(None, description="Search by static IPv4 address")
+    ipv6_prefix: str | None = Field(None, description="Search by IPv6 prefix")
+    current_bandwidth_profile: str | None = Field(None, description="Search by bandwidth/QoS profile")
+    last_mile_technology: str | None = Field(None, description="Search by technology (gpon, xgs-pon, etc)")
+    device_serial: str | None = Field(None, description="Search by device serial number (ONU, CPE, router)")
+
     # Pagination
     page: int = Field(default=1, ge=1)
     page_size: int = Field(default=20, ge=1, le=100)

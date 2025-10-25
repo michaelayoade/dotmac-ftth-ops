@@ -1,0 +1,16 @@
+---
+- name: "Upgrade DotMac tenant deployment"
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: false
+  tasks:
+    - name: "Pull latest tenant container images"
+      community.docker.docker_image:
+        name: "{{ item }}"
+        source: pull
+      loop: "{{ tenant_container_images | default([]) }}"
+
+    - name: "Recreate tenant compose stack"
+      community.docker.docker_compose_v2:
+        project_src: "{{ tenant_workspace_root }}/{{ tenant_id }}/compose"
+        pull: true
+        state: present

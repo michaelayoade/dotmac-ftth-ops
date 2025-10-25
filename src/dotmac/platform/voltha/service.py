@@ -4,13 +4,17 @@ VOLTHA Service Layer
 Business logic for PON network management via VOLTHA.
 """
 
-from datetime import UTC
+from datetime import UTC, datetime
 
 import structlog
+from fastapi import HTTPException
 
 from dotmac.platform.voltha.client import VOLTHAClient
 from dotmac.platform.voltha.schemas import (
     Adapter,
+    AlarmAcknowledgeRequest,
+    AlarmClearRequest,
+    AlarmOperationResponse,
     Device,
     DeviceDetailResponse,
     DeviceListResponse,
@@ -260,6 +264,15 @@ class VOLTHAService:
         from datetime import datetime
 
         discovered_onus: list[DiscoveredONU] = []
+        devices = await self.client.get_devices()
+        devices_by_parent: dict[str, list[dict[str, object]]] = {}
+
+        for device in devices:
+            parent_id = device.get("parent_id")
+            if parent_id is None:
+                continue
+            parent_key = str(parent_id)
+            devices_by_parent.setdefault(parent_key, []).append(device)
 
         # Get all logical devices (OLTs) or specific OLT
         if olt_device_id:
@@ -273,19 +286,21 @@ class VOLTHAService:
             if not olt_id:
                 continue
 
+            root_device_id = olt.get("root_device_id")
+            if root_device_id is None:
+                continue
+
             # Get ports for this OLT
             ports = await self.client.get_logical_device_ports(olt_id)
+            olt_devices = devices_by_parent.get(str(root_device_id), [])
 
             for port in ports:
                 port_no = port.get("device_port_no")
                 if port_no is None:
                     continue
 
-                # Get devices on this OLT
-                devices = await self.client.get_devices()
-
                 # Find ONUs connected to this port that are discovered but not provisioned
-                for device in devices:
+                for device in olt_devices:
                     # Check if device is child of this OLT and on this port
                     parent_id = device.get("parent_id")
                     parent_port = device.get("parent_port_no")
@@ -768,13 +783,21 @@ class VOLTHAService:
         """
         try:
             # VOLTHA API call to get alarms
-            # Note: This is a placeholder - actual implementation depends on VOLTHA API
-            alarms_raw = await self.client._request(
-                "GET", "/api/v1/alarms", params={"device_id": device_id}
+            alarms_raw = await self.client.get_alarms(
+                device_id=device_id,
+                severity=severity,
+                state=state,
             )
 
+            if isinstance(alarms_raw, dict):
+                alarm_items = alarms_raw.get("items", [])
+            elif isinstance(alarms_raw, list):
+                alarm_items = alarms_raw
+            else:
+                alarm_items = []
+
             alarms = []
-            for alarm_data in alarms_raw.get("items", []):
+            for alarm_data in alarm_items:
                 # Apply filters
                 if severity and alarm_data.get("severity") != severity:
                     continue
@@ -816,15 +839,21 @@ class VOLTHAService:
         """
         try:
             # VOLTHA API call to get events
-            # Note: This is a placeholder - actual implementation depends on VOLTHA API
-            events_raw = await self.client._request(
-                "GET",
-                "/api/v1/events",
-                params={"device_id": device_id, "limit": limit},
+            events_raw = await self.client.get_events(
+                device_id=device_id,
+                event_type=event_type,
+                limit=limit,
             )
 
+            if isinstance(events_raw, dict):
+                event_items = events_raw.get("items", [])
+            elif isinstance(events_raw, list):
+                event_items = events_raw
+            else:
+                event_items = []
+
             events = []
-            for event_data in events_raw.get("items", []):
+            for event_data in event_items:
                 # Apply filters
                 if event_type and event_data.get("event_type") != event_type:
                     continue
@@ -836,3 +865,116 @@ class VOLTHAService:
         except Exception as e:
             logger.error("voltha.get_events.error", error=str(e))
             return VOLTHAEventStreamResponse(events=[], total=0)
+
+    async def get_alarm(self, alarm_id: str) -> VOLTHAAlarm:
+        """
+        Get a specific alarm by ID.
+
+        Args:
+            alarm_id: The alarm ID to retrieve
+
+        Returns:
+            VOLTHAAlarm instance
+
+        Raises:
+            HTTPException: If alarm not found or VOLTHA error
+        """
+        try:
+            alarm_data = await self.client.get_alarm(alarm_id)
+            return VOLTHAAlarm(**alarm_data)
+
+        except Exception as e:
+            logger.error("voltha.get_alarm.error", alarm_id=alarm_id, error=str(e))
+            raise HTTPException(status_code=404, detail=f"Alarm {alarm_id} not found") from e
+
+    async def acknowledge_alarm(
+        self,
+        alarm_id: str,
+        request: AlarmAcknowledgeRequest,
+    ) -> AlarmOperationResponse:
+        """
+        Acknowledge an alarm.
+
+        Args:
+            alarm_id: The alarm ID to acknowledge
+            request: Acknowledgement request with user and optional note
+
+        Returns:
+            AlarmOperationResponse with operation status
+
+        Raises:
+            HTTPException: If VOLTHA API error occurs
+        """
+        logger.info(
+            "voltha.acknowledge_alarm.attempt",
+            alarm_id=alarm_id,
+            acknowledged_by=request.acknowledged_by,
+        )
+
+        try:
+            result = await self.client.acknowledge_alarm(
+                alarm_id=alarm_id,
+                acknowledged_by=request.acknowledged_by,
+                note=request.note,
+            )
+
+            return AlarmOperationResponse(
+                success=True,
+                message=f"Alarm {alarm_id} acknowledged by {request.acknowledged_by}",
+                alarm_id=alarm_id,
+                operation="acknowledge",
+                timestamp=datetime.now(UTC).isoformat(),
+            )
+
+        except Exception as e:
+            logger.error("voltha.acknowledge_alarm.error", alarm_id=alarm_id, error=str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to acknowledge alarm: {str(e)}"
+            ) from e
+
+    async def clear_alarm(
+        self,
+        alarm_id: str,
+        request: AlarmClearRequest,
+    ) -> AlarmOperationResponse:
+        """
+        Clear an alarm.
+
+        Args:
+            alarm_id: The alarm ID to clear
+            request: Clear request with user and optional note
+
+        Returns:
+            AlarmOperationResponse with operation status
+
+        Raises:
+            HTTPException: If VOLTHA API error occurs
+        """
+        logger.info(
+            "voltha.clear_alarm.attempt",
+            alarm_id=alarm_id,
+            cleared_by=request.cleared_by,
+        )
+
+        try:
+            result = await self.client.clear_alarm(
+                alarm_id=alarm_id,
+                cleared_by=request.cleared_by,
+                note=request.note,
+            )
+
+            return AlarmOperationResponse(
+                success=True,
+                message=f"Alarm {alarm_id} cleared by {request.cleared_by}",
+                alarm_id=alarm_id,
+                operation="clear",
+                timestamp=datetime.now(UTC).isoformat(),
+            )
+
+        except Exception as e:
+            logger.error("voltha.clear_alarm.error", alarm_id=alarm_id, error=str(e))
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to clear alarm: {str(e)}"
+            ) from e

@@ -121,17 +121,17 @@ class RequestTransformMiddleware(BaseHTTPMiddleware):
             "timestamp": time.time(),
         }
 
-        # Add correlation ID if not present
-        if "X-Correlation-ID" not in request.headers:
-            correlation_id = f"corr-{int(time.time() * 1000)}"
-            # Note: Can't modify headers directly, store in state
-            request.state.correlation_id = correlation_id
+        # Ensure correlation ID is available on state for downstream use
+        header_correlation_id = request.headers.get("X-Correlation-ID")
+        if header_correlation_id:
+            request.state.correlation_id = header_correlation_id
+        else:
+            request.state.correlation_id = f"corr-{int(time.time() * 1000)}"
 
         response = await call_next(request)
 
-        # Add correlation ID to response
-        if hasattr(request.state, "correlation_id"):
-            response.headers["X-Correlation-ID"] = request.state.correlation_id
+        # Add correlation ID to response (always reflect request value)
+        response.headers["X-Correlation-ID"] = request.state.correlation_id
 
         return response
 

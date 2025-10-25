@@ -204,8 +204,11 @@ def create_search_backend_from_env(default_backend: str | None = None) -> Search
 
     backend_type = os.getenv("SEARCH_BACKEND", default_backend).lower()
 
-    # Validate that requested backend is enabled
     if not settings.features.search_enabled:
-        raise ValueError("Search functionality is disabled. Set FEATURES__SEARCH_ENABLED=true")
+        if backend_type != "memory":
+            raise ValueError(
+                "Search functionality is disabled. Enable FEATURES__SEARCH_ENABLED or use memory backend"
+            )
+        backend_type = "memory"
 
     return SearchBackendFactory.create_backend(backend_type)

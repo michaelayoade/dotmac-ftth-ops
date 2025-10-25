@@ -245,28 +245,37 @@ class MoneyInvoice(BaseModel):
             return
 
         # Sum up line items
-        subtotals = [item.total_price.to_money() for item in self.line_items]
+        line_totals = [item.total_price.to_money() for item in self.line_items]
         taxes = [item.tax_amount.to_money() for item in self.line_items]
         discounts = [item.discount_amount.to_money() for item in self.line_items]
 
-        subtotal_money = add_money(*subtotals)
+        total_money = add_money(*line_totals)
         tax_money = add_money(*taxes)
         discount_money = add_money(*discounts)
 
-        # Calculate final total (subtotal already includes tax and discount per item)
-        total_money = subtotal_money
+        # Calculate subtotal before tax (line totals already include discounts)
+        subtotal_money = Money(
+            amount=total_money.amount - tax_money.amount,
+            currency=total_money.currency,
+        )
+        subtotal_money = money_handler.round_money(subtotal_money)
 
         # Update fields
-        self.subtotal = MoneyField.from_money(
-            Money(
-                subtotal_money.amount - tax_money.amount + discount_money.amount,
-                subtotal_money.currency,
-            )
-        )
+        self.subtotal = MoneyField.from_money(subtotal_money)
         self.tax_amount = MoneyField.from_money(tax_money)
         self.discount_amount = MoneyField.from_money(discount_money)
         self.total_amount = MoneyField.from_money(total_money)
-        self.remaining_balance = MoneyField.from_money(total_money)
+        credits_money = (
+            self.total_credits_applied.to_money()
+            if self.total_credits_applied
+            else create_money(0, self.currency)
+        )
+        remaining_money = Money(
+            amount=max(Decimal("0"), total_money.amount - credits_money.amount),
+            currency=total_money.currency,
+        )
+        remaining_money = money_handler.round_money(remaining_money)
+        self.remaining_balance = MoneyField.from_money(remaining_money)
 
     def format_total(self, locale: str = "en_US") -> str:
         """Format total amount with locale."""

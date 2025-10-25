@@ -65,6 +65,8 @@ def mock_storage_service():
     service.get_file_metadata = AsyncMock(
         return_value={"file_name": "test.txt", "tenant_id": "tenant-123"}
     )
+    service.move_file = AsyncMock(return_value=True)
+    service.copy_file = AsyncMock(return_value="file-456")
     return service
 
 
@@ -628,6 +630,7 @@ class TestBatchOperationEndpoint:
 
             assert result["operation"] == "copy"
             assert result["results"][0]["status"] == "copied"
+            assert result["results"][0]["new_file_id"] == "file-456"
 
     @pytest.mark.asyncio
     async def test_batch_unsupported_operation(self, mock_request, mock_user, mock_storage_service):

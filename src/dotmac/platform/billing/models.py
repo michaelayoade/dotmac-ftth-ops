@@ -6,6 +6,7 @@ Provides foundation for all billing system components.
 
 from datetime import UTC, datetime
 from typing import Any
+from uuid import uuid4
 
 from pydantic import Field
 from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Numeric, String, Text, UniqueConstraint
@@ -388,6 +389,27 @@ class BillingTenantAddonTable(BillingSQLModel):
     )
 
 
+class BillingSettingsTable(BillingSQLModel):
+    """SQLAlchemy table for tenant billing settings."""
+
+    __tablename__ = "billing_settings"
+
+    settings_id = Column(String(50), primary_key=True, default=lambda: str(uuid4()))
+    company_info = Column(JSON, nullable=False, default=dict)
+    tax_settings = Column(JSON, nullable=False, default=dict)
+    payment_settings = Column(JSON, nullable=False, default=dict)
+    invoice_settings = Column(JSON, nullable=False, default=dict)
+    notification_settings = Column(JSON, nullable=False, default=dict)
+    features_enabled = Column(JSON, nullable=False, default=dict)
+    custom_settings = Column(JSON, nullable=False, default=dict)
+    api_settings = Column(JSON, nullable=False, default=dict)
+
+    __table_args__ = (
+        UniqueConstraint("tenant_id", name="uq_billing_settings_tenant"),
+        {"extend_existing": True},
+    )
+
+
 __all__ = [
     "BillingBaseModel",
     "BillingSQLModel",
@@ -400,6 +422,7 @@ __all__ = [
     "BillingRuleUsageTable",
     "BillingAddonTable",
     "BillingTenantAddonTable",
+    "BillingSettingsTable",
     # Core models
     "Invoice",
     "InvoiceLineItem",

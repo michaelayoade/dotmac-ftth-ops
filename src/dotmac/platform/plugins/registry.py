@@ -144,8 +144,10 @@ class PluginRegistry:
         """Load a plugin from a Python module."""
         # Add plugin directory to Python path if needed
         plugin_dir = module_path.parent
+        inserted_path = False
         if str(plugin_dir) not in sys.path:
             sys.path.insert(0, str(plugin_dir))
+            inserted_path = True
 
         try:
             # Import the module
@@ -172,8 +174,8 @@ class PluginRegistry:
         except Exception as e:
             raise PluginLoadError(f"Failed to load plugin module {module_path}: {e}")
         finally:
-            # Clean up Python path
-            if str(plugin_dir) in sys.path:
+            # Clean up Python path only if we inserted it
+            if inserted_path and str(plugin_dir) in sys.path:
                 sys.path.remove(str(plugin_dir))
 
     async def _register_plugin_provider(self, provider: PluginProvider, module_name: str) -> None:

@@ -29,6 +29,18 @@ logger = structlog.get_logger(__name__)
 feature_flags_router = APIRouter(prefix="/feature-flags", tags=["Feature Flags"])
 
 
+def _build_flag_response(flag_name: str, flag_data: dict[str, Any]) -> "FeatureFlagResponse":
+    metadata = dict(flag_data.get("metadata") or {})
+    return FeatureFlagResponse(
+        name=flag_name,
+        enabled=flag_data.get("enabled", False),
+        context=dict(flag_data.get("context") or {}),
+        description=metadata.get("description"),
+        updated_at=flag_data.get("updated_at", 0),
+        created_at=metadata.get("created_at"),
+    )
+
+
 def _require_authenticated_user(current_user: UserInfo | None) -> UserInfo:
     if current_user is None:
         raise HTTPException(
@@ -172,6 +184,7 @@ async def bulk_update_flags(
 
         success_count = 0
         failed_flags = []
+        existing_flags = await list_flags()
 
         for flag_name, flag_request in request.flags.items():
             try:
@@ -180,15 +193,32 @@ async def bulk_update_flags(
                     failed_flags.append({"flag": flag_name, "error": "Invalid flag name"})
                     continue
 
-                # Create enhanced context
-                enhanced_context = flag_request.context or {}
-                if flag_request.description:
-                    enhanced_context["_description"] = flag_request.description
+                context = dict(flag_request.context or {})
+                existing_flag = existing_flags.get(flag_name)
+                existing_metadata: dict[str, Any] = {}
+                if existing_flag:
+                    raw_metadata = existing_flag.get("metadata")
+                    if isinstance(raw_metadata, dict):
+                        existing_metadata = raw_metadata
+                metadata = dict(existing_metadata)
+                now = int(datetime.now(UTC).timestamp())
 
-                enhanced_context["_created_by"] = user.user_id
-                enhanced_context["_bulk_updated_at"] = int(datetime.now(UTC).timestamp())
+                metadata.setdefault("created_at", now)
+                metadata.setdefault("created_by", user.user_id)
+                metadata["updated_at"] = now
+                metadata["updated_by"] = user.user_id
+                metadata["bulk_updated_at"] = now
 
-                await set_flag(flag_name, flag_request.enabled, enhanced_context)
+                if flag_request.description is not None:
+                    metadata["description"] = flag_request.description
+
+                await set_flag(flag_name, flag_request.enabled, context, metadata)
+                existing_flags[flag_name] = {
+                    "enabled": flag_request.enabled,
+                    "context": context,
+                    "metadata": metadata,
+                    "updated_at": now,
+                }
                 success_count += 1
 
             except Exception as e:
@@ -242,15 +272,35 @@ async def create_or_update_flag(
                 detail="Flag name must contain only alphanumeric characters, hyphens, and underscores",
             )
 
-        # Create enhanced context with metadata
-        enhanced_context = request.context or {}
-        if request.description:
-            enhanced_context["_description"] = request.description
+        existing_flag = (await list_flags()).get(flag_name)
+        existing_metadata: dict[str, Any] = {}
+        if existing_flag:
+            raw_metadata = existing_flag.get("metadata")
+            if isinstance(raw_metadata, dict):
+                existing_metadata = raw_metadata
+        metadata = dict(existing_metadata)
+        context = dict(request.context or {})
+        now = int(datetime.now(UTC).timestamp())
 
-        enhanced_context["_created_by"] = user.user_id
-        enhanced_context["_created_at"] = int(datetime.now(UTC).timestamp())
+        if request.description is not None:
+            metadata["description"] = request.description
 
-        await set_flag(flag_name, request.enabled, enhanced_context)
+        metadata.setdefault("created_at", now)
+        metadata.setdefault("created_by", user.user_id)
+        metadata["updated_at"] = now
+        metadata["updated_by"] = user.user_id
+
+        await set_flag(flag_name, request.enabled, context, metadata)
+
+        updated_flag = (await list_flags()).get(
+            flag_name,
+            {
+                "enabled": request.enabled,
+                "context": context,
+                "metadata": metadata,
+                "updated_at": now,
+            },
+        )
 
         logger.info(
             "Feature flag created/updated",
@@ -259,14 +309,7 @@ async def create_or_update_flag(
             user=user.user_id,
         )
 
-        return FeatureFlagResponse(
-            name=flag_name,
-            enabled=request.enabled,
-            context=enhanced_context,
-            description=request.description,
-            updated_at=enhanced_context["_created_at"],
-            created_at=enhanced_context.get("_created_at"),
-        )
+        return _build_flag_response(flag_name, updated_flag)
 
     except HTTPException:
         raise
@@ -297,14 +340,7 @@ async def get_flag(
 
         flag_data = flags[flag_name]
 
-        return FeatureFlagResponse(
-            name=flag_name,
-            enabled=flag_data.get("enabled", False),
-            context=flag_data.get("context", {}),
-            description=flag_data.get("context", {}).get("_description"),
-            updated_at=flag_data.get("updated_at", 0),
-            created_at=flag_data.get("context", {}).get("_created_at"),
-        )
+        return _build_flag_response(flag_name, flag_data)
 
     except HTTPException:
         raise
@@ -333,16 +369,7 @@ async def list_all_flags(
             if enabled_only and not flag_enabled:
                 continue
 
-            result.append(
-                FeatureFlagResponse(
-                    name=flag_name,
-                    enabled=flag_enabled,
-                    context=flag_data.get("context", {}),
-                    description=flag_data.get("context", {}).get("_description"),
-                    updated_at=flag_data.get("updated_at", 0),
-                    created_at=flag_data.get("context", {}).get("_created_at"),
-                )
-            )
+            result.append(_build_flag_response(flag_name, flag_data))
 
         logger.info("Listed feature flags", count=len(result), user=user.user_id)
         return result

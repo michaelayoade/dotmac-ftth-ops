@@ -7,12 +7,14 @@ provisioning, activation, suspension, resumption, and termination workflows.
 
 from datetime import UTC, datetime, timedelta
 from typing import Any
+from types import SimpleNamespace
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 
+from dotmac.platform.core.exceptions import BusinessRuleError, ValidationError
 from dotmac.platform.services.lifecycle.models import (
     LifecycleEvent,
     LifecycleEventType,
@@ -59,6 +61,7 @@ class LifecycleOrchestrationService:
         tenant_id: str,
         data: ServiceProvisionRequest,
         created_by_user_id: UUID | None = None,
+        auto_activate: bool = True,
     ) -> ServiceProvisioningResponse:
         """
         Initiate service provisioning workflow.
@@ -77,6 +80,9 @@ class LifecycleOrchestrationService:
         Raises:
             ValueError: If validation fails
         """
+        if not data.service_name or len(data.service_name.strip()) < 3:
+            raise ValidationError("Service name must be at least 3 characters")
+
         # Generate unique service identifier
         service_identifier = await self._generate_service_identifier(tenant_id, data.service_type)
 
@@ -99,9 +105,9 @@ class LifecycleOrchestrationService:
             vlan_id=data.vlan_id,
             external_service_id=data.external_service_id,
             network_element_id=data.network_element_id,
-            metadata=data.metadata,
+            service_metadata=data.metadata,
             notes=data.notes,
-            created_by_user_id=created_by_user_id,
+            created_by=str(created_by_user_id) if created_by_user_id else None,
         )
 
         self.session.add(service_instance)
@@ -148,12 +154,20 @@ class LifecycleOrchestrationService:
         if data.installation_scheduled_date:
             estimated_completion = data.installation_scheduled_date + timedelta(hours=4)
 
+        if auto_activate:
+            await self._auto_progress_provisioning(
+                tenant_id=tenant_id,
+                service_instance=service_instance,
+                workflow=workflow,
+                triggered_by_user_id=created_by_user_id,
+            )
+
         return ServiceProvisioningResponse(
             service_instance_id=service_instance.id,
             service_identifier=service_identifier,
             workflow_id=workflow_id,
-            status=ServiceStatus.PENDING,
-            provisioning_status=ProvisioningStatus.PENDING,
+            status=service_instance.status,
+            provisioning_status=service_instance.provisioning_status or ProvisioningStatus.PENDING,
             message="Service provisioning workflow initiated successfully",
             estimated_completion=estimated_completion,
         )
@@ -214,6 +228,80 @@ class LifecycleOrchestrationService:
         await self.session.commit()
         return True
 
+    async def _auto_progress_provisioning(
+        self,
+        tenant_id: str,
+        service_instance: ServiceInstance,
+        workflow: ProvisioningWorkflow,
+        triggered_by_user_id: UUID | None,
+    ) -> None:
+        """Automatically mark provisioning workflow as completed and activate service."""
+        now = datetime.now(UTC)
+
+        # Move to provisioning state and record start event
+        service_instance.workflow_id = workflow.workflow_id
+        service_instance.provisioning_started_at = now
+        service_instance.status = ServiceStatus.PROVISIONING
+        service_instance.provisioning_status = ProvisioningStatus.ACTIVATING_SERVICE
+
+        workflow.status = ProvisioningStatus.ACTIVATING_SERVICE
+        workflow.started_at = workflow.started_at or now
+        workflow.current_step = max(workflow.current_step, 1)
+
+        await self._create_lifecycle_event(
+            tenant_id=tenant_id,
+            service_instance_id=service_instance.id,
+            event_type=LifecycleEventType.PROVISION_STARTED,
+            previous_status=ServiceStatus.PENDING,
+            new_status=ServiceStatus.PROVISIONING,
+            description="Provisioning workflow started",
+            triggered_by_user_id=triggered_by_user_id,
+            workflow_id=workflow.workflow_id,
+        )
+
+        await self.session.commit()
+
+        # Activate service using existing activation flow
+        activation_result = await self.activate_service(
+            tenant_id=tenant_id,
+            data=ServiceActivationRequest(service_instance_id=service_instance.id),
+            activated_by_user_id=triggered_by_user_id,
+        )
+
+        if not activation_result.success:
+            raise ValidationError(activation_result.message)
+
+        await self.session.refresh(service_instance)
+
+        completion_time = datetime.now(UTC)
+        service_instance.provisioning_status = ProvisioningStatus.COMPLETED
+        service_instance.provisioned_at = completion_time
+        service_instance.notification_sent = True
+
+        workflow.status = ProvisioningStatus.COMPLETED
+        workflow.completed_at = completion_time
+        workflow.current_step = workflow.total_steps
+        workflow.failed_steps = []
+        if "auto_activation" not in workflow.completed_steps:
+            workflow.completed_steps.append("auto_activation")
+        workflow.last_error = None
+        workflow.retry_count = 0
+
+        await self._create_lifecycle_event(
+            tenant_id=tenant_id,
+            service_instance_id=service_instance.id,
+            event_type=LifecycleEventType.PROVISION_COMPLETED,
+            previous_status=ServiceStatus.PROVISIONING,
+            new_status=service_instance.status,
+            description="Provisioning workflow completed",
+            triggered_by_user_id=triggered_by_user_id,
+            workflow_id=workflow.workflow_id,
+        )
+
+        await self.session.commit()
+        await self.session.refresh(service_instance)
+        await self.session.refresh(workflow)
+
     # ==========================================
     # Service Activation
     # ==========================================
@@ -221,9 +309,14 @@ class LifecycleOrchestrationService:
     async def activate_service(
         self,
         tenant_id: str,
-        data: ServiceActivationRequest,
+        data: ServiceActivationRequest | None = None,
         activated_by_user_id: UUID | None = None,
-    ) -> ServiceOperationResult:
+        *,
+        service_id: UUID | None = None,
+        activation_note: str | None = None,
+        send_notification: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ServiceOperationResult | ServiceInstance:
         """
         Activate a provisioned service.
 
@@ -237,6 +330,17 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with activation details
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None:
+                raise ValueError("service_id is required when data is not provided")
+            data = ServiceActivationRequest.model_construct(
+                service_instance_id=service_id,
+                activation_note=activation_note,
+                send_notification=send_notification if send_notification is not None else True,
+                metadata=metadata or {},
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
@@ -248,15 +352,24 @@ class LifecycleOrchestrationService:
                 error="NOT_FOUND",
             )
 
+        # Allow activation from pending by transitioning to provisioning
+        if service.status == ServiceStatus.PENDING:
+            service.provisioning_started_at = service.provisioning_started_at or datetime.now(UTC)
+            service.status = ServiceStatus.PROVISIONING
+            service.provisioning_status = ProvisioningStatus.ACTIVATING_SERVICE
+
         # Validate status
         if service.status not in [ServiceStatus.PROVISIONING, ServiceStatus.SUSPENDED]:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="activate",
                 message=f"Cannot activate service in {service.status.value} status",
                 error="INVALID_STATUS",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Update service status
         previous_status = service.status
@@ -280,13 +393,17 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="activate",
             message="Service activated successfully",
             event_id=event.id,
         )
+        if legacy_mode:
+            await self.session.refresh(service)
+            return service
+        return result
 
     # ==========================================
     # Service Suspension
@@ -295,9 +412,17 @@ class LifecycleOrchestrationService:
     async def suspend_service(
         self,
         tenant_id: str,
-        data: ServiceSuspensionRequest,
+        data: ServiceSuspensionRequest | None = None,
         suspended_by_user_id: UUID | None = None,
-    ) -> ServiceOperationResult:
+        *,
+        service_id: UUID | None = None,
+        reason: str | None = None,
+        suspension_type: str | None = None,
+        auto_resume_at: datetime | None = None,
+        send_notification: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+        fraud_suspension: bool | None = None,
+    ) -> ServiceOperationResult | ServiceInstance:
         """
         Suspend an active service.
 
@@ -311,6 +436,22 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with suspension details
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None or reason is None:
+                raise ValueError("service_id and reason are required when data is not provided")
+            effective_type = suspension_type
+            if fraud_suspension:
+                effective_type = "fraud"
+            data = ServiceSuspensionRequest.model_construct(
+                service_instance_id=service_id,
+                suspension_reason=reason,
+                suspension_type=effective_type,
+                auto_resume_at=auto_resume_at,
+                send_notification=send_notification if send_notification is not None else True,
+                metadata=metadata or {},
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
@@ -324,13 +465,16 @@ class LifecycleOrchestrationService:
 
         # Validate status
         if service.status != ServiceStatus.ACTIVE:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="suspend",
                 message=f"Cannot suspend service in {service.status.value} status",
                 error="INVALID_STATUS",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Update service status
         previous_status = service.status
@@ -367,13 +511,17 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="suspend",
             message="Service suspended successfully",
             event_id=event.id,
         )
+        if legacy_mode:
+            await self.session.refresh(service)
+            return service
+        return result
 
     # ==========================================
     # Service Resumption
@@ -382,9 +530,14 @@ class LifecycleOrchestrationService:
     async def resume_service(
         self,
         tenant_id: str,
-        data: ServiceResumptionRequest,
+        data: ServiceResumptionRequest | None = None,
         resumed_by_user_id: UUID | None = None,
-    ) -> ServiceOperationResult:
+        *,
+        service_id: UUID | None = None,
+        resumption_note: str | None = None,
+        send_notification: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ServiceOperationResult | ServiceInstance:
         """
         Resume a suspended service.
 
@@ -398,6 +551,17 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with resumption details
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None:
+                raise ValueError("service_id is required when data is not provided")
+            data = ServiceResumptionRequest.model_construct(
+                service_instance_id=service_id,
+                resumption_note=resumption_note,
+                send_notification=send_notification if send_notification is not None else True,
+                metadata=metadata or {},
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
@@ -414,13 +578,16 @@ class LifecycleOrchestrationService:
             ServiceStatus.SUSPENDED,
             ServiceStatus.SUSPENDED_FRAUD,
         ]:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="resume",
                 message=f"Cannot resume service in {service.status.value} status",
                 error="INVALID_STATUS",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Update service status
         previous_status = service.status
@@ -446,13 +613,17 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="resume",
             message="Service resumed successfully",
             event_id=event.id,
         )
+        if legacy_mode:
+            await self.session.refresh(service)
+            return service
+        return result
 
     # ==========================================
     # Service Termination
@@ -461,9 +632,18 @@ class LifecycleOrchestrationService:
     async def terminate_service(
         self,
         tenant_id: str,
-        data: ServiceTerminationRequest,
+        data: ServiceTerminationRequest | None = None,
         terminated_by_user_id: UUID | None = None,
-    ) -> ServiceOperationResult:
+        *,
+        service_id: UUID | None = None,
+        termination_reason: str | None = None,
+        reason: str | None = None,
+        termination_type: str | None = None,
+        termination_date: datetime | None = None,
+        send_notification: bool | None = None,
+        return_equipment: bool | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> ServiceOperationResult | ServiceInstance:
         """
         Terminate a service.
 
@@ -477,6 +657,21 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with termination details
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None:
+                raise ValueError("service_id is required when data is not provided")
+            termination_reason = termination_reason or reason
+            data = ServiceTerminationRequest.model_construct(
+                service_instance_id=service_id,
+                termination_reason=termination_reason or "Customer request",
+                termination_type=termination_type,
+                termination_date=termination_date,
+                send_notification=send_notification if send_notification is not None else True,
+                return_equipment=return_equipment if return_equipment is not None else False,
+                metadata=metadata or {},
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
@@ -490,13 +685,16 @@ class LifecycleOrchestrationService:
 
         # Validate status
         if service.status == ServiceStatus.TERMINATED:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="terminate",
                 message="Service is already terminated",
                 error="ALREADY_TERMINATED",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Update service status
         previous_status = service.status
@@ -549,13 +747,17 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="terminate",
             message=message,
             event_id=event.id,
         )
+        if legacy_mode:
+            await self.session.refresh(service)
+            return service
+        return result
 
     # ==========================================
     # Service Modification
@@ -564,9 +766,12 @@ class LifecycleOrchestrationService:
     async def modify_service(
         self,
         tenant_id: str,
-        data: ServiceModificationRequest,
+        data: ServiceModificationRequest | None = None,
         modified_by_user_id: UUID | None = None,
-    ) -> ServiceOperationResult:
+        *,
+        service_id: UUID | None = None,
+        changes: dict[str, Any] | None = None,
+    ) -> ServiceOperationResult | ServiceInstance:
         """
         Modify an existing service.
 
@@ -580,16 +785,37 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with modification details
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None:
+                raise ValueError("service_id is required when data is not provided")
+            payload = changes or {}
+            data = ServiceModificationRequest.model_construct(
+                service_instance_id=service_id,
+                service_config=payload.get("service_config"),
+                service_name=payload.get("service_name"),
+                installation_address=payload.get("installation_address"),
+                equipment_assigned=payload.get("equipment_assigned"),
+                vlan_id=payload.get("vlan_id"),
+                metadata=payload.get("metadata"),
+                notes=payload.get("notes"),
+                modification_reason=payload.get("modification_reason", "Manual update"),
+                send_notification=payload.get("send_notification", True),
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="modify",
                 message="Service instance not found",
                 error="NOT_FOUND",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Track changes
         changes = {}
@@ -603,8 +829,11 @@ class LifecycleOrchestrationService:
             service.service_name = data.service_name
 
         if data.service_config is not None:
-            changes["service_config"] = {"updated": True}
-            service.service_config.update(data.service_config)
+            for key, new_value in data.service_config.items():
+                old_value = service.service_config.get(key)
+                if old_value != new_value:
+                    changes[key] = {"old": old_value, "new": new_value}
+                service.service_config[key] = new_value
 
         if data.installation_address is not None:
             changes["installation_address"] = {
@@ -648,21 +877,30 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="modify",
             message="Service modified successfully",
             event_id=event.id,
         )
+        if legacy_mode:
+            await self.session.refresh(service)
+            return service
+        return result
 
     # ==========================================
     # Health Checks
     # ==========================================
 
     async def perform_health_check(
-        self, tenant_id: str, data: ServiceHealthCheckRequest
-    ) -> ServiceOperationResult:
+        self,
+        tenant_id: str,
+        data: ServiceHealthCheckRequest | None = None,
+        *,
+        service_id: UUID | None = None,
+        check_type: str | None = None,
+    ) -> ServiceOperationResult | Any:
         """
         Perform health check on a service.
 
@@ -675,16 +913,28 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with health check results
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_id is None:
+                raise ValueError("service_id is required when data is not provided")
+            data = ServiceHealthCheckRequest.model_construct(
+                service_instance_id=service_id,
+                check_type=check_type,
+            )
+
         # Get service instance
         service = await self.get_service_instance(data.service_instance_id, tenant_id)
         if not service:
-            return ServiceOperationResult(
+            result = ServiceOperationResult(
                 success=False,
                 service_instance_id=data.service_instance_id,
                 operation="health_check",
                 message="Service instance not found",
                 error="NOT_FOUND",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
+            return result
 
         # Perform health check (this would integrate with monitoring systems)
         health_status = "healthy"  # Default for now
@@ -709,13 +959,20 @@ class LifecycleOrchestrationService:
 
         await self.session.commit()
 
-        return ServiceOperationResult(
+        result = ServiceOperationResult(
             success=True,
             service_instance_id=service.id,
             operation="health_check",
             message=f"Health check completed: {health_status}",
             event_id=event.id,
         )
+        if legacy_mode:
+            return SimpleNamespace(
+                is_healthy=True,
+                checks_performed=1,
+                event_id=event.id,
+            )
+        return result
 
     # ==========================================
     # Bulk Operations
@@ -724,9 +981,14 @@ class LifecycleOrchestrationService:
     async def bulk_service_operation(
         self,
         tenant_id: str,
-        data: BulkServiceOperationRequest,
+        data: BulkServiceOperationRequest | None = None,
         user_id: UUID | None = None,
-    ) -> BulkServiceOperationResult:
+        *,
+        service_ids: list[UUID] | None = None,
+        operation: str | None = None,
+        operation_params: dict[str, Any] | None = None,
+        **legacy_kwargs: Any,
+    ) -> BulkServiceOperationResult | list[ServiceInstance]:
         """
         Perform bulk operations on multiple services.
 
@@ -738,6 +1000,24 @@ class LifecycleOrchestrationService:
         Returns:
             BulkServiceOperationResult with individual results
         """
+        legacy_mode = data is None
+        if data is None:
+            if service_ids is None or operation is None:
+                raise ValueError("service_ids and operation are required when data is not provided")
+            params = dict(operation_params or {})
+            params.update(legacy_kwargs)
+            if operation == "suspend" and "reason" in params:
+                params.setdefault("suspension_reason", params.pop("reason"))
+            if operation == "terminate" and "reason" in params:
+                params.setdefault("termination_reason", params.pop("reason"))
+            data = BulkServiceOperationRequest.model_construct(
+                service_instance_ids=service_ids,
+                operation=operation,
+                operation_params=params,
+            )
+        elif legacy_kwargs:
+            raise ValueError("Unexpected keyword arguments for bulk operation")
+
         start_time = datetime.now(UTC)
         results: list[ServiceOperationResult] = []
 
@@ -790,13 +1070,25 @@ class LifecycleOrchestrationService:
         successful = sum(1 for r in results if r.success)
         failed = len(results) - successful
 
-        return BulkServiceOperationResult(
+        bulk_result = BulkServiceOperationResult(
             total_requested=len(data.service_instance_ids),
             total_successful=successful,
             total_failed=failed,
             results=results,
             execution_time_seconds=execution_time,
         )
+        if legacy_mode:
+            if failed:
+                failed_message = next((r.message for r in results if not r.success), "Bulk operation failed")
+                raise BusinessRuleError(failed_message)
+            services: list[ServiceInstance] = []
+            for result in results:
+                service = await self.get_service_instance(result.service_instance_id, tenant_id)
+                if service:
+                    await self.session.refresh(service)
+                    services.append(service)
+            return services
+        return bulk_result
 
     # ==========================================
     # Query Methods
@@ -849,12 +1141,18 @@ class LifecycleOrchestrationService:
 
     async def get_lifecycle_events(
         self,
-        service_instance_id: UUID,
         tenant_id: str,
+        service_instance_id: UUID | None = None,
         event_type: LifecycleEventType | None = None,
         limit: int = 50,
+        *,
+        service_id: UUID | None = None,
     ) -> list[LifecycleEvent]:
         """Get lifecycle events for a service instance."""
+        if service_instance_id is None:
+            if service_id is None:
+                raise ValueError("service_instance_id is required")
+            service_instance_id = service_id
         query = select(LifecycleEvent).where(
             and_(
                 LifecycleEvent.tenant_id == tenant_id,

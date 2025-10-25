@@ -189,15 +189,59 @@ class SchedulerService:
             "parameters",
         }
 
-        for field, value in updates.items():
-            if field in allowed_fields and value is not None:
-                setattr(scheduled_job, field, value)
+        schedule_fields = {"cron_expression", "interval_seconds"}
+        cron_specified = "cron_expression" in updates
+        interval_specified = "interval_seconds" in updates
 
-        # Recalculate next run if schedule changed
-        if "cron_expression" in updates or "interval_seconds" in updates:
-            scheduled_job.next_run_at = self._calculate_next_run(
-                scheduled_job.cron_expression, scheduled_job.interval_seconds
-            )
+        new_cron = scheduled_job.cron_expression
+        new_interval = scheduled_job.interval_seconds
+
+        if cron_specified:
+            new_cron = updates["cron_expression"]
+        if interval_specified:
+            new_interval = updates["interval_seconds"]
+
+        # When setting one schedule type, clear the other to avoid conflicts
+        if cron_specified and updates.get("cron_expression") is not None:
+            if interval_specified and updates.get("interval_seconds"):
+                raise ValueError("Cannot set both cron_expression and interval_seconds")
+            new_interval = None
+
+        if interval_specified:
+            interval_value = updates["interval_seconds"]
+            if interval_value is not None and interval_value <= 0:
+                raise ValueError("interval_seconds must be a positive integer")
+            if interval_value is not None and cron_specified and updates.get("cron_expression"):
+                raise ValueError("Cannot set both cron_expression and interval_seconds")
+            if interval_value is not None:
+                new_cron = None
+
+        if new_cron is None and new_interval is None:
+            raise ValueError("Scheduled job must define either cron_expression or interval_seconds")
+        if new_cron is not None and new_interval is not None:
+            raise ValueError("Scheduled job cannot have both cron_expression and interval_seconds")
+
+        # Apply non-schedule fields
+        other_fields = allowed_fields - schedule_fields
+        for field in other_fields:
+            if field in updates:
+                value = updates[field]
+                if field == "priority" and value is not None:
+                    priority_value = value.value if isinstance(value, JobPriority) else value
+                    setattr(scheduled_job, field, priority_value)
+                else:
+                    setattr(scheduled_job, field, value)
+
+        # Recalculate next run if schedule changed (validate before mutating)
+        if cron_specified or interval_specified:
+            next_run = self._calculate_next_run(new_cron, new_interval)
+        else:
+            next_run = scheduled_job.next_run_at
+
+        # Apply schedule fields after validation
+        scheduled_job.cron_expression = new_cron
+        scheduled_job.interval_seconds = new_interval
+        scheduled_job.next_run_at = next_run
 
         scheduled_job.updated_at = datetime.now(UTC)
 

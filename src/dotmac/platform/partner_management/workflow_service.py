@@ -69,39 +69,37 @@ class PartnerService:
             ValueError: If partner not found or invalid parameters
             RuntimeError: If quota check fails
         """
+        if tenant_id is None:
+            raise ValueError("tenant_id is required for quota checks")
+
         logger.info(
-            f"Checking license quota for partner {partner_id}, "
-            f"requested {requested_licenses} licenses"
+            "Checking license quota",
+            partner_id=partner_id,
+            tenant_id=tenant_id,
+            requested=requested_licenses,
         )
 
-        # Validate inputs
         if requested_licenses < 0:
             raise ValueError(f"Invalid requested_licenses: {requested_licenses} (must be >= 0)")
 
-        # Convert partner_id to UUID
         try:
-            if isinstance(partner_id, str):
-                partner_uuid = UUID(partner_id) if "-" in partner_id else None
-            else:
-                partner_uuid = UUID(str(partner_id))
+            partner_uuid = UUID(str(partner_id))
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid partner_id: {partner_id}") from e
-
-        if not partner_uuid:
-            raise ValueError(f"Invalid partner_id format: {partner_id}")
 
         try:
             # Fetch partner
             result = await self.db.execute(
                 select(Partner).where(
                     Partner.id == partner_uuid,
+                    Partner.tenant_id == tenant_id,
                     Partner.deleted_at.is_(None),
                 )
             )
             partner = result.scalar_one_or_none()
 
             if not partner:
-                raise ValueError(f"Partner not found: {partner_id}")
+                raise ValueError(f"Partner not found for tenant {tenant_id}: {partner_id}")
 
             # Check partner status
             if partner.status not in [PartnerStatus.ACTIVE]:
@@ -126,6 +124,7 @@ class PartnerService:
             usage_result = await self.db.execute(
                 select(func.count(PartnerAccount.id)).where(
                     PartnerAccount.partner_id == partner_uuid,
+                    PartnerAccount.tenant_id == tenant_id,
                     PartnerAccount.is_active == True,  # noqa: E712
                 )
             )
@@ -230,9 +229,17 @@ class PartnerService:
         if amount_decimal < 0:
             raise ValueError(f"Invalid commission amount: {amount_decimal} (must be >= 0)")
 
+        if tenant_id is None:
+            raise ValueError("tenant_id is required for commission recording")
+
         logger.info(
-            f"Recording commission for partner {partner_id}, "
-            f"customer {customer_id}, type {commission_type}, amount {amount_decimal} {currency}"
+            "Recording commission",
+            partner_id=partner_id,
+            customer_id=customer_id,
+            tenant_id=tenant_id,
+            commission_type=commission_type,
+            amount=str(amount_decimal),
+            currency=currency,
         )
 
         # Convert IDs to UUIDs
@@ -248,13 +255,16 @@ class PartnerService:
             partner_result = await self.db.execute(
                 select(Partner).where(
                     Partner.id == partner_uuid,
+                    Partner.tenant_id == tenant_id,
                     Partner.deleted_at.is_(None),
                 )
             )
             partner = partner_result.scalar_one_or_none()
 
             if not partner:
-                raise ValueError(f"Partner not found: {partner_id}")
+                raise ValueError(
+                    f"Partner not found for tenant {tenant_id}: {partner_id}"
+                )
 
             if partner.status != PartnerStatus.ACTIVE:
                 logger.warning(

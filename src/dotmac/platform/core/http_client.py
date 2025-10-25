@@ -335,7 +335,10 @@ class RobustHTTPClient:
                     )
                     if attempt < self.max_retries:
                         await asyncio.sleep(min(2**attempt * 0.5, 5.0))
-                        raise httpx.NetworkError(f"Server error: {response.status_code}")
+                        raise httpx.NetworkError(
+                            f"Server error: {response.status_code}",
+                            request=response.request,
+                        )
 
                 # Retry on 429 (rate limit)
                 if response.status_code == 429:
@@ -349,7 +352,10 @@ class RobustHTTPClient:
                     )
                     if attempt < self.max_retries:
                         await asyncio.sleep(wait_time)
-                        raise httpx.NetworkError("Rate limited")
+                        raise httpx.NetworkError(
+                            f"Rate limited (Retry-After: {wait_time}s)",
+                            request=response.request,
+                        )
 
                 response.raise_for_status()
 

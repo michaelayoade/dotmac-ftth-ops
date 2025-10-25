@@ -263,6 +263,7 @@ async def load_secrets_from_vault(
         return
 
     # Create Vault client if not provided
+    created_client = False
     if vault_client is None:
         if HAS_VAULT_CONFIG:
             # Use configured client from vault_config
@@ -276,6 +277,7 @@ async def load_secrets_from_vault(
                 mount_path=settings_obj.vault.mount_path,
                 kv_version=settings_obj.vault.kv_version,
             )
+        created_client = True
 
     try:
         # Check Vault health
@@ -304,8 +306,9 @@ async def load_secrets_from_vault(
         if settings_obj.environment == "production":
             raise
     finally:
-        # Clean up client if we created it
-        await _cleanup_vault_client_async(vault_client)
+        # Always attempt to clean up the client when provided
+        if vault_client is not None:
+            await _cleanup_vault_client_async(vault_client)
 
 
 def load_secrets_from_vault_sync(

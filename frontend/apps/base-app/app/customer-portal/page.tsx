@@ -11,10 +11,8 @@ import Link from "next/link";
 import {
   Wifi,
   CreditCard,
-  Calendar,
   Download,
   Upload,
-  AlertCircle,
   CheckCircle,
   Clock,
   DollarSign,

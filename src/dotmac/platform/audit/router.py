@@ -53,10 +53,35 @@ async def ensure_audit_access(
     return await require_security_audit_read(current_user=current_user, db=db)
 
 
-router = APIRouter(prefix="/audit", tags=["Audit"])
+router = APIRouter(tags=["Audit"])
 
 
-@router.get("/activities", response_model=AuditActivityList)
+def _register_dual_route(
+    path: str,
+    *,
+    methods: list[str],
+    **kwargs: Any,
+):
+    """
+    Register the same endpoint under both `/audit/...` and `/...`.
+
+    This keeps backwards compatibility for apps that include the router either at
+    `/api/v1` (expecting `/api/v1/audit/...`) or `/api/v1/audit`.
+    """
+
+    def decorator(func: Any) -> Any:
+        router.add_api_route(f"/audit{path}", func, methods=methods, **kwargs)
+        router.add_api_route(path, func, methods=methods, **kwargs)
+        return func
+
+    return decorator
+
+
+@_register_dual_route(
+    "/activities",
+    methods=["GET"],
+    response_model=AuditActivityList,
+)
 async def list_activities(
     request: Request,
     user_id: str | None = Query(None, description="Filter by user ID"),
@@ -131,7 +156,11 @@ async def list_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve audit activities")
 
 
-@router.get("/activities/recent", response_model=list[AuditActivityResponse])
+@_register_dual_route(
+    "/activities/recent",
+    methods=["GET"],
+    response_model=list[AuditActivityResponse],
+)
 async def get_recent_activities(
     request: Request,
     limit: int = Query(20, ge=1, le=100, description="Maximum number of activities to return"),
@@ -189,7 +218,11 @@ async def get_recent_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve recent activities")
 
 
-@router.get("/activities/user/{user_id}", response_model=list[AuditActivityResponse])
+@_register_dual_route(
+    "/activities/user/{user_id}",
+    methods=["GET"],
+    response_model=list[AuditActivityResponse],
+)
 async def get_user_activities(
     user_id: str,
     request: Request,
@@ -249,7 +282,7 @@ async def get_user_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve user activities")
 
 
-@router.get("/activities/summary")
+@_register_dual_route("/activities/summary", methods=["GET"])
 async def get_activity_summary(
     request: Request,
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
@@ -289,7 +322,11 @@ async def get_activity_summary(
         raise HTTPException(status_code=500, detail="Failed to retrieve activity summary")
 
 
-@router.get("/activities/{activity_id}", response_model=AuditActivityResponse)
+@_register_dual_route(
+    "/activities/{activity_id}",
+    methods=["GET"],
+    response_model=AuditActivityResponse,
+)
 async def get_activity_details(
     activity_id: UUID,
     request: Request,
@@ -351,7 +388,11 @@ async def get_activity_details(
         raise HTTPException(status_code=500, detail="Failed to retrieve activity details")
 
 
-@router.post("/frontend-logs", response_model=FrontendLogsResponse)
+@_register_dual_route(
+    "/frontend-logs",
+    methods=["POST"],
+    response_model=FrontendLogsResponse,
+)
 async def create_frontend_logs(
     request: Request,
     logs_request: FrontendLogsRequest,

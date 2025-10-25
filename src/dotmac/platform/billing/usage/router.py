@@ -7,7 +7,7 @@ pay-as-you-go charges.
 """
 
 from datetime import datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.database import get_async_session
+from dotmac.platform.billing.settings.service import BillingSettingsService
 
 from .models import BilledStatus, UsageAggregate, UsageRecord, UsageType
 from .schemas import (
@@ -34,6 +35,11 @@ from .schemas import (
 # ============================================================================
 
 router = APIRouter(prefix="/usage", tags=["Billing - Usage"])
+
+
+OVERRIDE_CURRENCY_HEADERS = ("X-Currency", "X-Currency-Code")
+OVERRIDE_CURRENCY_QUERY_PARAM = "currency"
+OVERRIDE_CURRENCY_STATE_ATTRS = ("currency", "currency_code")
 
 
 def get_tenant_id_from_request(request: Request) -> str:
@@ -54,6 +60,65 @@ def get_tenant_id_from_request(request: Request) -> str:
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Tenant ID is required. Provide via X-Tenant-ID header or tenant_id query param.",
     )
+
+
+def _get_currency_override(request: Request) -> str | None:
+    """Return currency override from request state, headers, or query parameters."""
+    for attr in OVERRIDE_CURRENCY_STATE_ATTRS:
+        override = getattr(request.state, attr, None)
+        if isinstance(override, str) and override.strip():
+            candidate = override.strip().upper()
+            if len(candidate) == 3:
+                return candidate
+
+    for header_name in OVERRIDE_CURRENCY_HEADERS:
+        header_value = request.headers.get(header_name)
+        if header_value:
+            candidate = header_value.strip().upper()
+            if len(candidate) == 3:
+                return candidate
+
+    query_override = request.query_params.get(OVERRIDE_CURRENCY_QUERY_PARAM)
+    if query_override:
+        candidate = query_override.strip().upper()
+        if len(candidate) == 3:
+            return candidate
+
+    return None
+
+
+async def resolve_usage_currency(request: Request, db: AsyncSession, tenant_id: str) -> str:
+    """
+    Determine currency for usage records.
+
+    Priority order:
+    1. Request override (state/header/query)
+    2. Tenant billing settings default currency
+    3. Fallback to USD
+    """
+    override = _get_currency_override(request)
+    if override:
+        return override
+
+    try:
+        settings_service = BillingSettingsService(db)
+        settings = await settings_service.get_settings(tenant_id)
+        default_currency = settings.payment_settings.default_currency
+        if default_currency:
+            return default_currency.upper()
+    except Exception:
+        # Fallback to USD when settings retrieval fails
+        pass
+
+    return "USD"
+
+
+def calculate_total_amount(quantity: Decimal, unit_price: Decimal) -> int:
+    """Convert quantity * unit_price to cents using round half up."""
+    total = (Decimal(quantity) * Decimal(unit_price) * Decimal("100")).quantize(
+        Decimal("1"), rounding=ROUND_HALF_UP
+    )
+    return int(total)
 
 
 # ============================================================================
@@ -118,8 +183,8 @@ async def create_usage_record(
     tenant_id = get_tenant_id_from_request(request)
 
     try:
-        # Calculate total amount
-        total_amount = int(float(record_data.quantity) * float(record_data.unit_price))
+        currency = await resolve_usage_currency(request, db, tenant_id)
+        total_amount = calculate_total_amount(record_data.quantity, record_data.unit_price)
 
         # Create usage record
         usage_record = UsageRecord(
@@ -131,7 +196,7 @@ async def create_usage_record(
             unit=record_data.unit,
             unit_price=record_data.unit_price,
             total_amount=total_amount,
-            currency="USD",
+            currency=currency,
             period_start=record_data.period_start,
             period_end=record_data.period_end,
             billed_status=BilledStatus.PENDING,
@@ -175,10 +240,10 @@ async def bulk_create_usage_records(
 
     try:
         usage_records = []
+        currency = await resolve_usage_currency(request, db, tenant_id)
 
         for record_data in bulk_data.records:
-            # Calculate total amount
-            total_amount = int(float(record_data.quantity) * float(record_data.unit_price))
+            total_amount = calculate_total_amount(record_data.quantity, record_data.unit_price)
 
             usage_record = UsageRecord(
                 tenant_id=tenant_id,
@@ -189,7 +254,7 @@ async def bulk_create_usage_records(
                 unit=record_data.unit,
                 unit_price=record_data.unit_price,
                 total_amount=total_amount,
-                currency="USD",
+                currency=currency,
                 period_start=record_data.period_start,
                 period_end=record_data.period_end,
                 billed_status=BilledStatus.PENDING,
@@ -354,7 +419,9 @@ async def update_usage_record(
 
         # Recalculate total amount if quantity or unit_price changed
         if update_data.quantity is not None or update_data.unit_price is not None:
-            record.total_amount = int(float(record.quantity) * float(record.unit_price))
+            record.total_amount = calculate_total_amount(
+                Decimal(record.quantity), Decimal(record.unit_price)
+            )
 
         record.updated_by = current_user.user_id
 
@@ -471,13 +538,14 @@ async def get_usage_statistics(
         by_type: dict[str, UsageSummary] = {}
         for record in records:
             usage_type_str = record.usage_type.value
+            record_currency = (record.currency or "USD").upper()
 
             if usage_type_str not in by_type:
                 by_type[usage_type_str] = UsageSummary(
                     usage_type=record.usage_type,
                     total_quantity=Decimal("0"),
                     total_amount=0,
-                    currency="USD",
+                    currency=record_currency,
                     record_count=0,
                     period_start=(
                         period_start or records[0].period_start if records else datetime.utcnow()
@@ -487,9 +555,10 @@ async def get_usage_statistics(
                     ),
                 )
 
-            by_type[usage_type_str].total_quantity += Decimal(record.quantity)
-            by_type[usage_type_str].total_amount += int(record.total_amount)
-            by_type[usage_type_str].record_count += 1
+            summary = by_type[usage_type_str]
+            summary.total_quantity += Decimal(record.quantity)
+            summary.total_amount += int(record.total_amount)
+            summary.record_count += 1
 
         return UsageStats(
             total_records=total_records,

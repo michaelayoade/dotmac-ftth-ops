@@ -3,6 +3,7 @@ Fixtures for payment service and router tests.
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -129,6 +130,7 @@ def sample_payment_entity():
     payment.status = PaymentStatus.SUCCEEDED
     payment.provider = "stripe"
     payment.provider_payment_id = "provider_payment_123"
+    payment.provider_payment_data = {}
     payment.payment_method_type = PaymentMethodType.CARD
     payment.payment_method_details = {
         "payment_method_id": "pm_789",
@@ -137,6 +139,8 @@ def sample_payment_entity():
     }
     payment.retry_count = 0
     payment.extra_data = {}
+    payment.refund_amount = Decimal("0")
+    payment.refunded_at = None
     payment.created_at = now
     payment.updated_at = now
     payment.processed_at = now

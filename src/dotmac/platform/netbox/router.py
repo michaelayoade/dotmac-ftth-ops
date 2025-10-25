@@ -74,6 +74,7 @@ async def get_netbox_service(
     client = NetBoxClient(
         base_url=config.url,
         api_token=config.api_token,
+        tenant_id=tenant.id,
         verify_ssl=config.verify_ssl,
         timeout_seconds=config.timeout_seconds,
         max_retries=config.max_retries,

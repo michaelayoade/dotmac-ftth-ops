@@ -38,7 +38,7 @@ from .service import DeploymentService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/deployments", )
+router = APIRouter()
 
 
 def get_deployment_service(db: Session = Depends(get_db)) -> DeploymentService:

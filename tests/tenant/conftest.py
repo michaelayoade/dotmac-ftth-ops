@@ -12,6 +12,7 @@ from httpx import AsyncClient
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.tenant.models import TenantInvitationStatus, TenantPlanType, TenantStatus
 from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
+from dotmac.platform.tenant.provisioning_service import TenantProvisioningService
 from dotmac.platform.tenant.usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
@@ -680,6 +681,14 @@ def tenant_service(mock_tenant_service: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture
+def mock_provisioning_service() -> AsyncMock:
+    """Mock tenant provisioning service for router tests."""
+    service = AsyncMock(spec=TenantProvisioningService)
+    service.list_jobs.return_value = ([], 0)
+    return service
+
+
+@pytest.fixture
 async def client(
     mock_tenant_service: AsyncMock,
     mock_subscription_service: AsyncMock,
@@ -726,6 +735,7 @@ async def authenticated_client(
     mock_subscription_service: AsyncMock,
     usage_billing_integration: TenantUsageBillingIntegration,
     mock_user_service: AsyncMock,
+    mock_provisioning_service: AsyncMock,
 ):
     """Create authenticated async HTTP client with dependency overrides."""
     from fastapi import FastAPI
@@ -745,7 +755,10 @@ async def authenticated_client(
         get_user_service_dependency,
     )
     from dotmac.platform.tenant.onboarding_router import router as onboarding_router
-    from dotmac.platform.tenant.router import get_tenant_service as get_tenant_service_main
+    from dotmac.platform.tenant.router import (
+        get_tenant_service as get_tenant_service_main,
+        get_tenant_provisioning_service,
+    )
     from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
         get_usage_billing_integration,
@@ -789,12 +802,13 @@ async def authenticated_client(
     app.dependency_overrides[get_tenant_service_main] = lambda: mock_tenant_service
     app.dependency_overrides[get_tenant_service_dependency] = lambda: mock_tenant_service
     app.dependency_overrides[get_tenant_service_usage] = lambda: mock_tenant_service
+    app.dependency_overrides[get_tenant_provisioning_service] = lambda: mock_provisioning_service
     app.dependency_overrides[get_subscription_service] = lambda: mock_subscription_service
     app.dependency_overrides[get_usage_billing_integration] = lambda: usage_billing_integration
     app.dependency_overrides[get_user_service_dependency] = lambda: mock_user_service
 
     # Include the routers
-    app.include_router(tenant_router.router, prefix="/api/v1/tenants")
+    app.include_router(tenant_router.router, prefix="/api/v1")
     app.include_router(onboarding_router, prefix="/api/v1")
     app.include_router(
         usage_billing_router, prefix="/api/v1/tenants", tags=["Tenant Usage Billing"]

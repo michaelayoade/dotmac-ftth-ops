@@ -4,6 +4,7 @@ WebSocket Authentication and Authorization.
 Provides secure authentication for WebSocket connections with tenant isolation.
 """
 
+import inspect
 from typing import Any
 from urllib.parse import parse_qs
 
@@ -16,9 +17,11 @@ logger = structlog.get_logger(__name__)
 
 
 class WebSocketAuthError(Exception):
-    """WebSocket authentication error."""
+    """WebSocket authentication/authorization error."""
 
-    pass
+    def __init__(self, message: str, *, already_closed: bool = False) -> None:
+        super().__init__(message)
+        self.already_closed = already_closed
 
 
 async def extract_token_from_websocket(websocket: WebSocket) -> str | None:
@@ -191,22 +194,23 @@ async def accept_websocket_with_auth(
                     code=status.WS_1008_POLICY_VIOLATION,
                     reason="Insufficient permissions",
                 )
-                raise WebSocketAuthError("Insufficient permissions")
+                raise WebSocketAuthError("Insufficient permissions", already_closed=True)
 
         # Accept connection
         await websocket.accept()
 
         return user_info
 
-    except WebSocketAuthError:
+    except WebSocketAuthError as exc:
         # Close connection with appropriate status code
-        try:
-            await websocket.close(
-                code=status.WS_1008_POLICY_VIOLATION,
-                reason="Authentication failed",
-            )
-        except Exception:
-            pass  # Connection might already be closed
+        if not getattr(exc, "already_closed", False):
+            try:
+                await websocket.close(
+                    code=status.WS_1008_POLICY_VIOLATION,
+                    reason="Authentication failed",
+                )
+            except Exception:
+                pass  # Connection might already be closed
         raise
 
 
@@ -313,7 +317,10 @@ class AuthenticatedWebSocketConnection:
         if not channel.startswith(f"{self.tenant_id}:") and ":" not in channel:
             channel = f"{self.tenant_id}:{channel}"
 
-        self.pubsub = self.redis.pubsub()
+        pubsub = self.redis.pubsub()
+        if inspect.isawaitable(pubsub):
+            pubsub = await pubsub
+        self.pubsub = pubsub
         await self.pubsub.subscribe(channel)
 
         logger.info(

@@ -15,12 +15,14 @@ Design Principles:
 """
 
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Optional
 
 if TYPE_CHECKING:  # pragma: no cover - typings only
     from .observability import ObservabilityManager as _ObservabilityManager
 
-__version__ = "1.0.0"
+from .version import get_version as _load_version
+
+__version__ = _load_version()
 __author__ = "DotMac Team"
 __email__ = "dev@dotmac.com"
 
@@ -39,7 +41,7 @@ def register_service(name: str, service: Any) -> None:
     _services_registry[name] = service
 
 
-def get_service(name: str) -> Any | None:
+def get_service(name: str) -> Optional[Any]:
     """Get a registered platform service."""
     return _services_registry.get(name)
 
@@ -110,7 +112,7 @@ class PlatformConfig:
             }
         )
 
-    def get(self, key: str, default: Any | None = None) -> Any:
+    def get(self, key: str, default: Optional[Any] = None) -> Any:
         """Get configuration value by key path (e.g., 'auth.jwt_secret_key')."""
         keys = key.split(".")
         value = self._config
@@ -141,9 +143,9 @@ config = PlatformConfig()
 
 
 def initialize_platform_services(
-    auth_config: dict[str, Any] | None = None,
-    secrets_config: dict[str, Any] | None = None,
-    observability_config: dict[str, Any] | None = None,
+    auth_config: Optional[dict[str, Any]] = None,
+    secrets_config: Optional[dict[str, Any]] = None,
+    observability_config: Optional[dict[str, Any]] = None,
     auto_discover: bool = True,
 ) -> None:
     """
@@ -222,7 +224,7 @@ def create_jwt_service(**kwargs: Any) -> Any:
         )
 
 
-def create_secrets_manager(backend: str | None = None, **kwargs: Any) -> Any:
+def create_secrets_manager(backend: Optional[str] = None, **kwargs: Any) -> Any:
     """
     Create a secrets manager with clean factory pattern.
 
@@ -262,7 +264,7 @@ def create_secrets_manager(backend: str | None = None, **kwargs: Any) -> Any:
 
 
 def create_observability_manager(
-    app: Any | None = None,
+    app: Optional[Any] = None,
     *,
     auto_initialize: bool = False,
     **kwargs: Any,

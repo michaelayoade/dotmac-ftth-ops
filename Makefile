@@ -1,332 +1,254 @@
-# DotMac Platform Services - Makefile
+# DotMac Platform Services - Simplified Makefile
 
-.PHONY: help install test test-fast test-unit test-integration test-cov test-mutation test-slow test-comprehensive lint format clean doctor doctor-imports verify docker-up docker-down docker-test openapi-client infra-up infra-down infra-status run run-dev seed-db dev dev-backend dev-frontend dev-all
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint
+
+# Colors
+CYAN := \033[0;36m
+GREEN := \033[0;32m
+YELLOW := \033[1;33m
+NC := \033[0m
 
 # Default target
+.DEFAULT_GOAL := help
+
 help:
-	@echo "DotMac Platform Services - Development Commands"
+	@echo "$(CYAN)╔══════════════════════════════════════════════════════════╗$(NC)"
+	@echo "$(CYAN)║  DotMac Platform - Development Commands                 ║$(NC)"
+	@echo "$(CYAN)╚══════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
-	@echo "Setup:"
-	@echo "  make install          Install all dependencies"
-	@echo "  make doctor          Verify Python version and key dependencies"
-	@echo "  make seed-db         Seed database with test data"
+	@echo "$(GREEN)Infrastructure - Platform (Core):$(NC)"
+	@echo "  make start-platform         Start platform infrastructure (postgres, redis, vault, minio)"
+	@echo "  make start-platform-obs     Start platform + observability (jaeger, prometheus, grafana)"
+	@echo "  make stop-platform          Stop platform infrastructure"
+	@echo "  make status-platform        Check platform service status"
+	@echo "  make logs-platform          View platform logs"
 	@echo ""
-	@echo "Testing:"
-	@echo "  make test-fast       🚀 Fast tests, no coverage (<1 min) - RECOMMENDED"
-	@echo "  make test-module-cov MODULE=auth  📊 Single module coverage (fast!)"
-	@echo "  make test-critical   Test critical modules (auth, secrets, tenant, webhooks - 90%)"
-	@echo "  make test            Run all tests with coverage (SLOW locally, 15+ min)"
-	@echo "  make test-unit       Run unit tests with coverage (SLOW, 10-20 min)"
-	@echo "  make test-diff       Check diff coverage for PRs (use in CI)"
-	@echo "  make test-slow       Run only slow/comprehensive tests"
-	@echo "  make test-integration Run integration tests with Docker"
-	@echo "  make test-cov        Generate HTML coverage report"
+	@echo "$(GREEN)Infrastructure - ISP Services:$(NC)"
+	@echo "  make start-isp              Start ISP services (FreeRADIUS, NetBox, GenieACS, AWX, etc.)"
+	@echo "  make stop-isp               Stop ISP services"
+	@echo "  make status-isp             Check ISP service status"
+	@echo "  make logs-isp               View ISP logs"
 	@echo ""
-	@echo "  💡 TIP: Use 'test-module-cov' to check single module coverage quickly!"
+	@echo "$(GREEN)Infrastructure - Complete Stack:$(NC)"
+	@echo "  make start-all              Start all services (with observability)"
+	@echo "  make start-all-no-obs       Start all services (without observability)"
+	@echo "  make stop-all               Stop all services"
+	@echo "  make status-all             Check all service status"
+	@echo "  make restart-all            Restart all services"
 	@echo ""
-	@echo "Infrastructure:"
-	@echo "  make infra-up        Start all infrastructure services"
-	@echo "  make infra-down      Stop all infrastructure services"
-	@echo "  make infra-status    Check infrastructure health"
+	@echo "$(GREEN)Development:$(NC)"
+	@echo "  make dev                    Start backend server (localhost:8000)"
+	@echo "  make dev-backend            Start backend with auto-reload"
+	@echo "  make dev-frontend           Start frontend (localhost:3000)"
+	@echo "  make install                Install dependencies"
 	@echo ""
-	@echo "Docker:"
-	@echo "  make docker-up       Start Docker services"
-	@echo "  make docker-down     Stop Docker services"
-	@echo "  make docker-test     Run integration tests with Docker"
+	@echo "$(GREEN)Testing:$(NC)"
+	@echo "  make test                   Run all tests"
+	@echo "  make test-fast              Run fast tests (no coverage)"
+	@echo "  make lint                   Run linting"
 	@echo ""
-	@echo "Running:"
-	@echo "  make run             Start the application"
-	@echo "  make run-dev         Start in development mode with hot reload"
-	@echo "  make dev-all         Start backend + frontend (requires infra running)"
-	@echo "  make dev-backend     Start backend only (port 8000)"
-	@echo "  make dev-frontend    Start frontend only (port 3000)"
-	@echo "  make dev             Start infra + backend + frontend (full stack)"
+	@echo "$(GREEN)Database:$(NC)"
+	@echo "  make db-migrate             Run database migrations"
+	@echo "  make db-seed                Seed database with test data"
 	@echo ""
-	@echo "Code Quality:"
-	@echo "  make lint            Run all linters"
-	@echo "  make format          Auto-format code"
-	@echo "  make clean           Remove build artifacts"
-	@echo "  make openapi-client  Export OpenAPI spec and regenerate TypeScript client"
+	@echo "$(GREEN)Cleanup:$(NC)"
+	@echo "  make clean-platform         Remove platform containers/volumes (DESTRUCTIVE!)"
+	@echo "  make clean-isp              Remove ISP containers/volumes (DESTRUCTIVE!)"
+	@echo "  make clean-all              Remove ALL containers/volumes (DESTRUCTIVE!)"
+	@echo ""
+	@echo "$(YELLOW)Quick Start:$(NC)"
+	@echo "  1. make start-all           # Start all infrastructure (includes observability)"
+	@echo "  2. make db-migrate          # Run migrations"
+	@echo "  3. make dev                 # Start backend API"
+	@echo ""
+	@echo "$(YELLOW)Observability:$(NC)"
+	@echo "  Jaeger (Tracing):     http://localhost:16686"
+	@echo "  Prometheus (Metrics): http://localhost:9090"
+	@echo "  Grafana (Dashboards): http://localhost:3400 (admin/admin)"
+	@echo ""
 
-# Installation
+# ===================================================================
+# Infrastructure - Platform
+# ===================================================================
+
+start-platform:
+	@./scripts/infra.sh platform start
+
+start-platform-obs:
+	@./scripts/infra.sh platform start --with-obs
+
+stop-platform:
+	@./scripts/infra.sh platform stop
+
+restart-platform:
+	@./scripts/infra.sh platform restart
+
+status-platform:
+	@./scripts/infra.sh platform status
+
+logs-platform:
+	@./scripts/infra.sh platform logs
+
+# ===================================================================
+# Infrastructure - ISP Services
+# ===================================================================
+
+start-isp:
+	@./scripts/infra.sh isp start
+
+stop-isp:
+	@./scripts/infra.sh isp stop
+
+restart-isp:
+	@./scripts/infra.sh isp restart
+
+status-isp:
+	@./scripts/infra.sh isp status
+
+logs-isp:
+	@./scripts/infra.sh isp logs
+
+# ===================================================================
+# Infrastructure - All Services
+# ===================================================================
+
+start-all:
+	@./scripts/infra.sh all start --with-obs
+
+start-all-no-obs:
+	@./scripts/infra.sh all start
+
+stop-all:
+	@./scripts/infra.sh all stop
+
+restart-all:
+	@./scripts/infra.sh all restart
+
+status-all:
+	@./scripts/infra.sh all status
+
+logs-all:
+	@./scripts/infra.sh all logs
+
+# ===================================================================
+# Cleanup (DESTRUCTIVE!)
+# ===================================================================
+
+clean-platform:
+	@./scripts/infra.sh platform clean
+
+clean-isp:
+	@./scripts/infra.sh isp clean
+
+clean-all:
+	@./scripts/infra.sh all clean
+
+# ===================================================================
+# Development
+# ===================================================================
+
 install:
-	poetry install --with dev
+	@echo "$(CYAN)Installing dependencies...$(NC)"
+	@poetry install
 
-# Fast unit tests without coverage (for development)
-test-fast:
-	poetry run pytest tests/ -m "not integration and not slow" -x --tb=short -q
+dev: dev-backend
 
-# Fast tests with parallel execution (recommended for development)
-test-fast-parallel:
-	@echo "🚀 Running fast tests in parallel..."
-	poetry run pytest tests/ -m "not integration and not slow" -n auto -x --tb=short -q
+dev-backend:
+	@echo "$(CYAN)Starting backend on http://localhost:8000$(NC)"
+	@echo "$(CYAN)API docs: http://localhost:8000/docs$(NC)"
+	@ENVIRONMENT=development poetry run uvicorn src.dotmac.platform.main:app --reload --host 0.0.0.0 --port 8000
 
-# Parallel test execution using all CPU cores
-test-parallel:
-	@echo "🚀 Running tests in parallel with auto CPU detection..."
-	poetry run pytest tests/ -n auto -x --tb=short -v
+dev-frontend:
+	@echo "$(CYAN)Starting frontend on http://localhost:3000$(NC)"
+	@cd frontend/apps/base-app && pnpm dev
 
-# Unit tests with coverage (aligned with CI - base threshold)
-# Note: Full coverage is VERY slow locally due to large codebase (33k+ LOC)
-# Use test-module-cov for specific modules instead
-test-unit:
-	@echo "⚠️  WARNING: Full coverage takes 10-20+ minutes locally"
-	@echo "💡 Better options:"
-	@echo "   - make test-fast              (no coverage, <1 min)"
-	@echo "   - make test-module-cov MODULE=auth   (single module)"
-	@echo "   - Let CI measure coverage     (optimized, ~15 min)"
-	@echo ""
-	@read -p "Continue anyway? [y/N]: " confirm && [ "$$confirm" = "y" ] || exit 1
-	@echo ""
-	@echo "Running full coverage (this will take a while)..."
-	poetry run pytest tests/ -m "not integration" \
-		--cov=src/dotmac \
-		--cov-branch \
-		--cov-report=term-missing \
-		--cov-report=xml \
-		--cov-fail-under=75
+# ===================================================================
+# Database
+# ===================================================================
 
-# Test single module with coverage (fast!)
-# Usage: make test-module-cov MODULE=auth
-test-module-cov:
-	@if [ -z "$(MODULE)" ]; then \
-		echo "❌ Error: MODULE not specified"; \
-		echo "Usage: make test-module-cov MODULE=auth"; \
-		echo ""; \
-		echo "Available modules:"; \
-		echo "  auth, billing, customer_management, partner_management,"; \
-		echo "  user_management, tenant, webhooks, secrets, audit, core"; \
-		exit 1; \
+db-migrate:
+	@echo "$(CYAN)Running database migrations...$(NC)"
+	@poetry run alembic upgrade head
+
+db-migrate-create:
+	@echo "$(CYAN)Creating new migration...$(NC)"
+	@read -p "Enter migration message: " msg; \
+	poetry run alembic revision --autogenerate -m "$$msg"
+
+db-seed:
+	@echo "$(CYAN)Seeding database with test data...$(NC)"
+	@poetry run python scripts/seed_data.py --env=development
+
+db-reset:
+	@echo "$(YELLOW)⚠ WARNING: This will reset the database!$(NC)"
+	@read -p "Continue? (yes/no): " confirm; \
+	if [ "$$confirm" = "yes" ]; then \
+		poetry run alembic downgrade base && \
+		poetry run alembic upgrade head && \
+		make db-seed; \
 	fi
-	@echo "🔍 Testing $(MODULE) module with coverage..."
-	poetry run pytest tests/$(MODULE)/ \
-		--cov=src/dotmac/platform/$(MODULE) \
-		--cov-branch \
-		--cov-report=term-missing \
-		--cov-report=xml \
-		-v
 
-# Full test suite with coverage + module checks (aligned with CI)
+# ===================================================================
+# Testing
+# ===================================================================
+
 test:
-	poetry run pytest \
-		--cov=src/dotmac \
-		--cov-branch \
-		--cov-report=term-missing \
-		--cov-report=xml \
-		--cov-report=html \
-		--cov-fail-under=75 \
-		-v
-	@echo ""
-	@echo "Checking module-specific thresholds..."
-	poetry run python scripts/check_coverage.py coverage.xml
+	@poetry run pytest --cov=src/dotmac --cov-report=term-missing --cov-report=xml
 
-# Run tests with coverage in parallel (faster than 'make test')
-test-cov-parallel:
-	@echo "🚀 Running tests with coverage in parallel..."
-	poetry run pytest \
-		-n auto \
-		--cov=src/dotmac \
-		--cov-branch \
-		--cov-report=term-missing \
-		--cov-report=xml \
-		--cov-report=html \
-		--cov-fail-under=75 \
-		-v
-	@echo ""
-	@echo "Checking module-specific thresholds..."
-	poetry run python scripts/check_coverage.py coverage.xml
+test-fast:
+	@poetry run pytest -v --tb=short
 
-# Check coverage for critical modules only (auth, secrets, tenant, webhooks)
-test-critical:
-	poetry run pytest tests/auth tests/secrets tests/tenant tests/webhooks \
-		--cov=src/dotmac/platform/auth \
-		--cov-append --cov=src/dotmac/platform/secrets \
-		--cov-append --cov=src/dotmac/platform/tenant \
-		--cov-append --cov=src/dotmac/platform/webhooks \
-		--cov-branch \
-		--cov-report=term-missing \
-		--cov-report=xml \
-		--cov-fail-under=90 \
-		-v
-
-# Check diff coverage (for PR validation)
-# Note: This is primarily for CI. Locally, just ensure your changes have tests.
-test-diff:
-	@echo "📊 Checking diff coverage (may be slow locally)..."
-	@echo "💡 Tip: Run 'make test-fast' first to ensure tests pass quickly."
-	@echo "🚀 CI will run this automatically on PRs."
-	@echo ""
-	COVERAGE_CORE=sysmon poetry run pytest \
-		--cov=src/dotmac \
-		--cov-branch \
-		--cov-report=xml \
-		--cov-fail-under=75 \
-		-q
-	@echo ""
-	poetry run diff-cover coverage.xml \
-		--compare-branch=origin/main \
-		--fail-under=80 \
-		--html-report=diff-cover.html
-	@echo "✅ Diff coverage report: diff-cover.html"
-
-# Generate and open coverage report with module checks
-test-cov:
-	poetry run pytest \
-		--cov=src/dotmac \
-		--cov-branch \
-		--cov-report=html \
-		--cov-report=xml \
-		--cov-fail-under=75
-	@echo ""
-	@echo "Checking module-specific thresholds..."
-	poetry run python scripts/check_coverage.py coverage.xml
-	@echo ""
-	@echo "Opening coverage report..."
-	@python -m webbrowser htmlcov/index.html || open htmlcov/index.html
-
-# Run only slow and comprehensive tests
-test-slow:
-	poetry run pytest tests/ -m "slow or comprehensive" -v --tb=short
-
-# Run comprehensive tests specifically
-test-comprehensive:
-	poetry run pytest tests/ -m "comprehensive" -v --tb=short
-
-# Environment diagnostics
-doctor:
-	@echo "Checking Python version (>= 3.12 required)..."
-	@poetry run python -c "import sys; m,n=sys.version_info[:2]; print(f'Python {m}.{n}'); assert (m,n)>=(3,12), 'Python 3.12+ required for modern typing and Pydantic v2'; print('\u2713 Python version OK')"
-	@echo "Checking core runtime dependencies..."
-	@poetry run python scripts/check_deps.py runtime
-	@echo "Checking test/dev dependencies..."
-	@poetry run python scripts/check_deps.py dev || true
-	@echo "✓ Environment looks good!"
-
-doctor-imports:
-	@echo "Verifying high-level module imports..."
-	@PYTHONPATH=src poetry run python scripts/verify_imports.py || true
-
-verify: doctor doctor-imports
-
-# Generate OpenAPI specification and TypeScript client types
-openapi-client:
-	poetry run python scripts/export_openapi.py --mode=$(MODE)
-	cd frontend && pnpm generate:api-client
-
-# Linting
-lint:
-	poetry run black --check .
-	poetry run isort --check-only .
-	poetry run ruff check .
-	poetry run bandit -r src/ -ll
-
-# Auto-format code
-format:
-	poetry run black .
-	poetry run isort .
-	poetry run ruff check --fix .
-
-# Clean build artifacts
-clean:
-	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage coverage.xml
-	rm -rf .pytest_cache/ .ruff_cache/ .mypy_cache/
-	find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
-	find . -type f -name "*.pyc" -delete
-
-# Docker commands
-docker-up:
-	docker compose up -d
-	@echo "Waiting for services to be ready..."
-	@sleep 10
-	@echo "Docker services are running"
-
-docker-down:
-	docker compose down -v
-
-docker-test: docker-up
-	@echo "Running integration tests..."
-	poetry run pytest tests/integration/test_docker_services.py -v --tb=short || true
-	@echo ""
-	@read -p "Stop Docker services? (y/N): " stop; \
-	if [ "$$stop" = "y" ] || [ "$$stop" = "Y" ]; then \
-		make docker-down; \
-	fi
-
-# Integration tests
 test-integration:
 	@./scripts/run_integration_tests.sh
 
-# Infrastructure Management
-infra-up:
-	@./scripts/check_infra.sh up
+# ===================================================================
+# Linting & Formatting
+# ===================================================================
 
-infra-down:
-	@./scripts/check_infra.sh down
+lint:
+	@poetry run ruff check src/ tests/
+	@poetry run mypy src/
 
-infra-status:
-	@./scripts/check_infra.sh status
+format:
+	@poetry run ruff check --fix src/ tests/
+	@poetry run ruff format src/ tests/
 
-# Run application
-run:
-	@poetry run python -m src.dotmac.platform.main
+# ===================================================================
+# Utilities
+# ===================================================================
 
-run-dev:
-	@ENVIRONMENT=development poetry run python -m src.dotmac.platform.main
+shell:
+	@poetry shell
 
-# Database seeding
-seed-db:
-	@echo "🌱 Seeding database with test data..."
-	@poetry run python scripts/seed_data.py --env=development
-	@echo "✅ Database seeded successfully!"
+clean-py:
+	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type d -name "*.egg-info" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} + 2>/dev/null || true
+	@find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 
-seed-db-clean:
-	@echo "🧹 Clearing and re-seeding database..."
-	@poetry run python scripts/seed_data.py --env=development --clear
-	@echo "✅ Database re-seeded successfully!"
+# ===================================================================
+# Build
+# ===================================================================
 
-# Development mode - Backend only
-dev-backend:
-	@echo "🚀 Starting backend on http://localhost:8000"
-	@echo "   API docs: http://localhost:8000/docs"
-	@ENVIRONMENT=development poetry run uvicorn src.dotmac.platform.main:app --reload --host 0.0.0.0 --port 8000
+build-freeradius:
+	@echo "$(CYAN)Building FreeRADIUS image for Apple Silicon...$(NC)"
+	@docker build --platform linux/amd64 -f Dockerfile.freeradius -t freeradius-postgresql:latest .
 
-# Development mode - Frontend only
-dev-frontend:
-	@echo "🚀 Starting frontend on http://localhost:3000"
-	@cd frontend/apps/base-app && PORT=3000 pnpm dev
+# ===================================================================
+# Docker Direct Access (Advanced)
+# ===================================================================
 
-# Development mode - Backend + Frontend (requires infra)
-dev-all:
-	@echo "🚀 Starting backend + frontend..."
-	@echo ""
-	@echo "  Backend:  http://localhost:8000"
-	@echo "  Frontend: http://localhost:3000"
-	@echo "  API Docs: http://localhost:8000/docs"
-	@echo ""
-	@$(MAKE) -j2 dev-backend dev-frontend
+docker-platform-up:
+	@docker compose -f docker-compose.base.yml up -d postgres redis vault minio
 
-# Full development stack (infra + backend + frontend)
-dev:
-	@echo "🚀 Starting full development stack..."
-	@echo ""
-	@./scripts/check_infra.sh dev
-	@echo ""
-	@echo "✨ Full stack ready!"
-	@echo ""
-	@echo "  📦 Infrastructure:"
-	@echo "    PostgreSQL:  localhost:5432"
-	@echo "    Redis:       localhost:6379"
-	@echo "    Vault:       localhost:8200"
-	@echo "    MinIO API:   localhost:9000"
-	@echo "    MinIO UI:    localhost:9001"
-	@echo "    Jaeger UI:   http://localhost:16686"
-	@echo "    Flower UI:   http://localhost:5555"
-	@echo ""
-	@echo "  🚀 Application:"
-	@echo "    Backend:     http://localhost:8000"
-	@echo "    Frontend:    http://localhost:3000"
-	@echo "    API Docs:    http://localhost:8000/docs"
-	@echo ""
-	@echo "Press Ctrl+C to stop all services"
-	@echo ""
-	@$(MAKE) dev-all
+docker-platform-obs-up:
+	@docker compose -f docker-compose.base.yml --profile observability up -d
+
+docker-isp-up:
+	@docker compose -f docker-compose.isp.yml up -d
+
+docker-ps:
+	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

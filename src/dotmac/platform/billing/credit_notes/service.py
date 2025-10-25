@@ -23,6 +23,7 @@ from dotmac.platform.billing.core.enums import (
     CreditNoteStatus,
     CreditReason,
     CreditType,
+    InvoiceStatus,
     PaymentStatus,
     TransactionType,
 )
@@ -117,19 +118,10 @@ class CreditNoteService:
         # Save to database
         self.db.add(credit_note_entity)
         await self.db.commit()
-        await self.db.refresh(credit_note_entity)
+        await self.db.refresh(credit_note_entity, attribute_names=["line_items"])
 
         # Create transaction record
         await self._create_credit_note_transaction(credit_note_entity)
-
-        # Auto-apply to invoice if requested
-        if auto_apply and credit_note_entity.status == CreditNoteStatus.ISSUED:
-            await self.apply_credit_to_invoice(
-                tenant_id,
-                credit_note_entity.credit_note_id,
-                invoice_id,
-                total_amount,
-            )
 
         # Record metrics
         self.metrics.record_credit_note_created(
@@ -139,7 +131,20 @@ class CreditNoteService:
             reason=reason.value,
         )
 
-        return CreditNote.model_validate(credit_note_entity)
+        credit_note_model = CreditNote.model_validate(credit_note_entity)
+
+        if auto_apply:
+            # Issue the credit note before applying it
+            issued_note = await self.issue_credit_note(tenant_id, credit_note_entity.credit_note_id)
+
+            credit_note_model = await self.apply_credit_to_invoice(
+                tenant_id,
+                issued_note.credit_note_id,
+                invoice_id,
+                issued_note.remaining_credit_amount or issued_note.total_amount,
+            )
+
+        return credit_note_model
 
     async def get_credit_note(self, tenant_id: str, credit_note_id: str) -> CreditNote | None:
         """Get credit note by ID with tenant isolation"""
@@ -211,7 +216,7 @@ class CreditNoteService:
         credit_note.updated_at = datetime.now(UTC)
 
         await self.db.commit()
-        await self.db.refresh(credit_note)
+        await self.db.refresh(credit_note, attribute_names=["line_items"])
 
         # Record metrics
         self.metrics.record_credit_note_issued(
@@ -257,7 +262,7 @@ class CreditNoteService:
             credit_note.internal_notes = f"Voided: {reason}"
 
         await self.db.commit()
-        await self.db.refresh(credit_note)
+        await self.db.refresh(credit_note, attribute_names=["line_items"])
 
         # Create void transaction
         await self._create_void_transaction(credit_note)
@@ -315,11 +320,9 @@ class CreditNoteService:
         )
 
         self.db.add(application)
-        if hasattr(credit_note, "applications"):
-            credit_note.applications.append(application)
 
         await self.db.commit()
-        await self.db.refresh(credit_note)
+        await self.db.refresh(credit_note, attribute_names=["line_items"])
 
         # Create application transaction
         await self._create_application_transaction(credit_note, invoice_id, amount)
@@ -476,8 +479,10 @@ class CreditNoteService:
             # Update payment status if fully paid via credits
             if invoice.remaining_balance == 0:
                 invoice.payment_status = PaymentStatus.SUCCEEDED
+                invoice.status = InvoiceStatus.PAID
             elif invoice.total_credits_applied > 0:
-                invoice.payment_status = PaymentStatus.PARTIALLY_REFUNDED
+                invoice.payment_status = PaymentStatus.PENDING
+                invoice.status = InvoiceStatus.PARTIALLY_PAID
 
             invoice.updated_at = datetime.now(UTC)
             await self.db.commit()

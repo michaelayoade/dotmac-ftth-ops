@@ -21,6 +21,7 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
@@ -33,6 +34,12 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+
+# Ensure dependent tables (users) are registered when metadata is generated during tests
+try:  # pragma: no cover - import side-effect
+    from dotmac.platform.user_management.models import User  # noqa: F401
+except Exception:  # pragma: no cover - optional dependency
+    User = None  # type: ignore
 
 
 class CustomerStatus(str, Enum):
@@ -214,6 +221,24 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
         Numeric(15, 2), default=Decimal("0.00"), nullable=False
     )
 
+    # Compatibility helpers -------------------------------------------------
+
+    @property
+    def name(self) -> str:
+        """Backwards-compatible display name accessor."""
+        if self.display_name:
+            return self.display_name
+        return " ".join(filter(None, [self.first_name, self.last_name])).strip()
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """Allow legacy code to set name directly."""
+        if value:
+            self.display_name = value
+            parts = value.strip().split(" ", 1)
+            self.first_name = parts[0]
+            self.last_name = parts[1] if len(parts) > 1 else parts[0]
+
     # Scoring and Risk
     credit_score: Mapped[int | None] = mapped_column(nullable=True)
     risk_score: Mapped[int] = mapped_column(default=0, nullable=False)
@@ -339,7 +364,16 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
     # Indexes and constraints
     __table_args__ = (
         UniqueConstraint("tenant_id", "customer_number", name="uq_tenant_customer_number"),
-        UniqueConstraint("tenant_id", "email", name="uq_tenant_email"),
+        # Partial unique index for email - only applies to non-deleted rows
+        # This allows re-creating customers with same email after soft delete
+        Index(
+            "uq_tenant_email_active",
+            "tenant_id",
+            "email",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+            sqlite_where=text("deleted_at IS NULL"),
+        ),
         Index("ix_customer_status_tier", "status", "tier"),
         Index("ix_customer_search", "first_name", "last_name", "company_name"),
         Index("ix_customer_location", "country", "state_province", "city"),

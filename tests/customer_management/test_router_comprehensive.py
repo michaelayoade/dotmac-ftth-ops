@@ -7,6 +7,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
+from unittest.mock import AsyncMock
 
 from dotmac.platform.customer_management.models import (
     ActivityType,
@@ -18,6 +19,7 @@ from dotmac.platform.customer_management.models import (
 from dotmac.platform.customer_management.router import (
     add_customer_activity,
     add_customer_note,
+    _handle_status_lifecycle_events,
     create_customer,
     create_segment,
     delete_customer,
@@ -232,7 +234,7 @@ class TestCustomerList:
         result = await search_customers(
             params=search_params,
             service=mock_service,
-            current_user=mock_user,
+            _current_user=mock_user,
         )
 
         assert result.total == 2
@@ -539,3 +541,48 @@ class TestCustomerSegments:
             "member_count": 10,
         }
         mock_service.recalculate_segment.assert_called_once_with(segment_id)
+
+
+class TestStatusLifecycleEvents:
+    """Tests for customer status lifecycle helper."""
+
+    @pytest.mark.asyncio
+    async def test_status_lifecycle_events_publish_payload(self, monkeypatch):
+        """Verify lifecycle events emit payload instead of data."""
+
+        class EmptyResult:
+            """Stub scalar result returning no rows."""
+
+            def scalars(self):
+                return self
+
+            def all(self):
+                return []
+
+        fake_session = AsyncMock()
+        fake_session.execute.return_value = EmptyResult()
+        fake_session.commit = AsyncMock()
+
+        event_bus = AsyncMock()
+        monkeypatch.setattr(
+            "dotmac.platform.events.bus.get_event_bus",
+            lambda *_, **__: event_bus,
+        )
+        from dotmac.platform.events.bus import reset_event_bus
+
+        reset_event_bus()
+
+        customer_id = uuid4()
+
+        await _handle_status_lifecycle_events(
+            customer_id=customer_id,
+            old_status=CustomerStatus.ACTIVE.value,
+            new_status=CustomerStatus.SUSPENDED.value,
+            customer_email="payload-test@example.com",
+            session=fake_session,
+        )
+
+        event_bus.publish.assert_awaited()
+        publish_kwargs = event_bus.publish.await_args.kwargs
+        assert "payload" in publish_kwargs
+        assert publish_kwargs["payload"]["customer_id"] == str(customer_id)

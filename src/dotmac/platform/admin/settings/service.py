@@ -2,6 +2,7 @@
 Settings management service for admin operations.
 """
 
+import asyncio
 import json
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
@@ -11,12 +12,15 @@ from uuid import UUID, uuid4
 
 import structlog
 from pydantic import BaseModel, ValidationError
-from sqlalchemy import select
+from sqlalchemy import func, select
+from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform import settings as platform_settings
 from dotmac.platform.admin.settings.models import (
     AdminSettingsAuditEntry,
+    AdminSettingsBackupEntry,
+    AdminSettingsStore,
     AuditLog,
     SettingField,
     SettingsBackup,
@@ -90,6 +94,75 @@ class SettingsManagementService:
         async with self._session_factory() as new_session:
             yield new_session
 
+    async def _load_category_from_store(
+        self,
+        category: SettingsCategory,
+        session: AsyncSession | None = None,
+    ) -> None:
+        """Ensure the in-memory settings reflect persisted values for a category."""
+        attr_name = self.CATEGORY_MAPPING.get(category)
+        if not attr_name or not hasattr(self.settings, attr_name):
+            return
+
+        try:
+            async with self._get_session(session) as db_session:
+                result = await db_session.execute(
+                    select(AdminSettingsStore).where(AdminSettingsStore.category == category.value)
+                )
+                entry = result.scalar_one_or_none()
+        except OperationalError:
+            logger.debug(
+                "settings.store.unavailable",
+                category=category.value,
+                message="Settings store table not available; skipping load",
+            )
+            return
+
+        if not entry:
+            return
+
+        settings_obj = getattr(self.settings, attr_name)
+        for field_name, value in entry.settings_data.items():
+            if hasattr(settings_obj, field_name):
+                setattr(settings_obj, field_name, value)
+
+    async def _persist_category_settings(
+        self,
+        category: SettingsCategory,
+        user_email: str | None,
+        session: AsyncSession | None = None,
+        commit: bool = True,
+    ) -> None:
+        """Persist the current in-memory settings for a category to the database."""
+        attr_name = self.CATEGORY_MAPPING.get(category)
+        if not attr_name or not hasattr(self.settings, attr_name):
+            return
+
+        settings_obj = getattr(self.settings, attr_name)
+        data = settings_obj.model_dump()
+
+        async with self._get_session(session) as db_session:
+            result = await db_session.execute(
+                select(AdminSettingsStore).where(AdminSettingsStore.category == category.value)
+            )
+            entry = result.scalar_one_or_none()
+
+            if entry:
+                entry.settings_data = data
+                entry.updated_by = user_email
+            else:
+                entry = AdminSettingsStore(
+                    category=category.value,
+                    settings_data=data,
+                    updated_by=user_email,
+                )
+                db_session.add(entry)
+
+            if commit:
+                await db_session.commit()
+            else:
+                await db_session.flush()
+
     async def get_category_settings(
         self,
         category: SettingsCategory,
@@ -108,6 +181,8 @@ class SettingsManagementService:
         Returns:
             SettingsResponse with category settings
         """
+        await self._load_category_from_store(category, session=session)
+
         attr_name = self.CATEGORY_MAPPING.get(category)
         if not attr_name or not hasattr(self.settings, attr_name):
             raise ValueError(f"Invalid settings category: {category}")
@@ -151,10 +226,22 @@ class SettingsManagementService:
         Returns:
             Updated settings response
         """
+        await self._load_category_from_store(category, session=session)
+
         # Validate category
         attr_name = self.CATEGORY_MAPPING.get(category)
         if not attr_name or not hasattr(self.settings, attr_name):
             raise ValueError(f"Invalid settings category: {category}")
+
+        validation_result = await self.validate_settings_async(
+            category=category,
+            updates=update_request.updates,
+            session=session,
+        )
+        if not validation_result.valid:
+            raise ValueError(
+                f"Validation failed for {category.value}: {validation_result.errors}"
+            )
 
         # Get current settings
         settings_obj = getattr(self.settings, attr_name)
@@ -202,6 +289,23 @@ class SettingsManagementService:
             else:
                 last_update_info = await self._get_last_update_info(db_session, category)
 
+            if not update_request.validate_only:
+                await self._persist_category_settings(
+                    category=category,
+                    user_email=user_email,
+                    session=db_session,
+                    commit=False,
+                )
+                await db_session.commit()
+
+        if update_request.validate_only:
+            return await self.get_category_settings(
+                category=category,
+                include_sensitive=False,
+                user_id=user_id,
+                session=session,
+            )
+
         fields = self._extract_fields(settings_obj, include_sensitive=False)
 
         return SettingsResponse(
@@ -212,21 +316,13 @@ class SettingsManagementService:
             updated_by=last_update_info.get("user_email"),
         )
 
-    def validate_settings(
+    def _run_validation_checks(
         self,
         category: SettingsCategory,
+        settings_obj: BaseModel,
         updates: dict[str, Any],
     ) -> SettingsValidationResult:
-        """
-        Validate settings updates without applying them.
-
-        Args:
-            category: Settings category
-            updates: Proposed updates
-
-        Returns:
-            Validation result with any errors or warnings
-        """
+        """Internal validation helper shared by sync/async pathways."""
         result = SettingsValidationResult(
             valid=True,
             errors={},
@@ -234,29 +330,26 @@ class SettingsManagementService:
             restart_required=False,
         )
 
-        attr_name = self.CATEGORY_MAPPING.get(category)
-        if not attr_name or not hasattr(self.settings, attr_name):
-            result.valid = False
-            result.errors["category"] = f"Invalid category: {category}"
-            return result
+        model_class = type(settings_obj)
 
-        settings_class = type(getattr(self.settings, attr_name))
-
-        # Check if any fields require restart
+        # Check restart requirements and unknown fields
         restart_fields = self.RESTART_REQUIRED_SETTINGS.get(category, [])
         for field_name in updates.keys():
             if field_name in restart_fields:
                 result.restart_required = True
                 result.warnings[field_name] = "This change requires service restart"
 
-        # Validate using Pydantic model
+            if field_name not in model_class.model_fields:
+                result.valid = False
+                result.errors[field_name] = f"Invalid field '{field_name}' for category {category.value}"
+
+        if not result.valid and result.errors:
+            return result
+
         try:
-            # Get current values
-            current_data = getattr(self.settings, attr_name).model_dump()
-            # Apply updates
+            current_data = settings_obj.model_dump()
             current_data.update(updates)
-            # Validate complete model
-            settings_class(**current_data)
+            model_class(**current_data)
         except ValidationError as e:
             result.valid = False
             for error in e.errors():
@@ -267,6 +360,45 @@ class SettingsManagementService:
             result.errors["validation"] = str(e)
 
         return result
+
+    async def validate_settings_async(
+        self,
+        category: SettingsCategory,
+        updates: dict[str, Any],
+        session: AsyncSession | None = None,
+    ) -> SettingsValidationResult:
+        """Async-friendly settings validation exposed for router usage."""
+        attr_name = self.CATEGORY_MAPPING.get(category)
+        if not attr_name or not hasattr(self.settings, attr_name):
+            return SettingsValidationResult(
+                valid=False,
+                errors={"category": f"Invalid category: {category}"},
+                warnings={},
+                restart_required=False,
+            )
+
+        await self._load_category_from_store(category, session=session)
+        settings_obj = getattr(self.settings, attr_name)
+        return self._run_validation_checks(category, settings_obj, updates)
+
+    def validate_settings(
+        self,
+        category: SettingsCategory,
+        updates: dict[str, Any],
+        session: AsyncSession | None = None,
+    ) -> SettingsValidationResult:
+        """Synchronous validation helper retained for backwards compatibility."""
+        attr_name = self.CATEGORY_MAPPING.get(category)
+        if not attr_name or not hasattr(self.settings, attr_name):
+            return SettingsValidationResult(
+                valid=False,
+                errors={"category": f"Invalid category: {category}"},
+                warnings={},
+                restart_required=False,
+            )
+
+        settings_obj = getattr(self.settings, attr_name)
+        return self._run_validation_checks(category, settings_obj, updates)
 
     async def get_all_categories(
         self, session: AsyncSession | None = None
@@ -284,6 +416,8 @@ class SettingsManagementService:
                 attr_name = self.CATEGORY_MAPPING.get(category)
                 if not attr_name or not hasattr(self.settings, attr_name):
                     continue
+
+                await self._load_category_from_store(category, session=db_session)
 
                 settings_obj = getattr(self.settings, attr_name)
                 fields = self._extract_fields(settings_obj)
@@ -306,12 +440,13 @@ class SettingsManagementService:
 
         return categories
 
-    def create_backup(
+    async def create_backup_async(
         self,
         name: str,
         description: str | None,
         categories: list[SettingsCategory] | None,
         user_id: str,
+        session: AsyncSession | None = None,
     ) -> SettingsBackup:
         """
         Create a backup of current settings.
@@ -328,7 +463,51 @@ class SettingsManagementService:
         if categories is None:
             categories = list(SettingsCategory)
 
-        backup_data = {}
+        async with self._get_session(session) as db_session:
+            backup_data: dict[str, Any] = {}
+            for category in categories:
+                await self._load_category_from_store(category, session=db_session)
+                attr_name = self.CATEGORY_MAPPING.get(category)
+                if attr_name and hasattr(self.settings, attr_name):
+                    settings_obj = getattr(self.settings, attr_name)
+                    backup_data[category.value] = settings_obj.model_dump()
+
+            backup_entry = AdminSettingsBackupEntry(
+                name=name,
+                description=description,
+                created_by=user_id,
+                categories=[category.value for category in categories],
+                settings_data=backup_data,
+            )
+            db_session.add(backup_entry)
+            await db_session.commit()
+
+        logger.info(
+            "Settings backup created",
+            backup_id=str(backup_entry.id),
+            name=name,
+            categories=[c.value for c in categories],
+        )
+
+        snapshot = self._build_backup_snapshot(
+            name=name,
+            description=description,
+            categories=categories,
+            user_id=user_id,
+        )
+
+        self._backups[backup_entry.id] = snapshot
+
+        return snapshot
+
+    def _build_backup_snapshot(
+        self,
+        name: str,
+        description: str | None,
+        categories: list[SettingsCategory],
+        user_id: str,
+    ) -> SettingsBackup:
+        backup_data: dict[str, Any] = {}
         for category in categories:
             attr_name = self.CATEGORY_MAPPING.get(category)
             if attr_name and hasattr(self.settings, attr_name):
@@ -344,17 +523,38 @@ class SettingsManagementService:
             categories=categories,
             settings_data=backup_data,
         )
-
         self._backups[backup.id] = backup
-
-        logger.info(
-            "Settings backup created",
-            backup_id=str(backup.id),
-            name=name,
-            categories=[c.value for c in categories],
-        )
-
         return backup
+
+    def create_backup(
+        self,
+        name: str,
+        description: str | None,
+        categories: list[SettingsCategory] | None,
+        user_id: str,
+        session: AsyncSession | None = None,
+    ) -> SettingsBackup:
+        """Synchronous wrapper for creating backups (legacy compatibility)."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(
+                self.create_backup_async(
+                    name=name,
+                    description=description,
+                    categories=categories,
+                    user_id=user_id,
+                    session=session,
+                )
+            )
+
+        categories = categories or list(SettingsCategory)
+        return self._build_backup_snapshot(
+            name=name,
+            description=description,
+            categories=categories,
+            user_id=user_id,
+        )
 
     async def restore_backup(
         self,
@@ -375,58 +575,86 @@ class SettingsManagementService:
         Returns:
             Restored settings by category
         """
-        backup = self._backups.get(backup_id)
-        if not backup:
-            raise ValueError(f"Backup not found: {backup_id}")
-
-        restored: dict[SettingsCategory, SettingsResponse] = {}
-        audit_entries: list[AdminSettingsAuditEntry] = []
-        restored_categories: list[SettingsCategory] = []
-
-        for category_str, data in backup.settings_data.items():
-            category = SettingsCategory(category_str)
-            attr_name = self.CATEGORY_MAPPING.get(category)
-
-            if attr_name and hasattr(self.settings, attr_name):
-                settings_obj = getattr(self.settings, attr_name)
-
-                # Track changes for audit
-                changes = {}
-                for field_name, new_value in data.items():
-                    if hasattr(settings_obj, field_name):
-                        old_value = getattr(settings_obj, field_name)
-                        setattr(settings_obj, field_name, new_value)
-                        changes[field_name] = {"old": old_value, "new": new_value}
-
-                if changes:
-                    audit_entries.append(
-                        AdminSettingsAuditEntry(
-                            tenant_id=tenant_id,
-                            category=category.value,
-                            action="restore",
-                            user_id=user_id,
-                            user_email=user_email,
-                            reason=f"Restored from backup: {backup.name}",
-                            ip_address=None,
-                            user_agent=None,
-                            changes=changes,
-                        )
-                    )
-                restored_categories.append(category)
+        legacy_backup = self._backups.get(backup_id)
 
         async with self._get_session(session) as db_session:
+            backup_entry = await db_session.get(AdminSettingsBackupEntry, backup_id)
+            if not backup_entry and not legacy_backup:
+                raise ValueError(f"Backup not found: {backup_id}")
+
+            if backup_entry and backup_entry.id not in self._backups:
+                self._backups[backup_entry.id] = SettingsBackup(
+                    id=backup_entry.id,
+                    created_at=backup_entry.created_at,
+                    created_by=backup_entry.created_by,
+                    name=backup_entry.name,
+                    description=backup_entry.description,
+                    categories=[SettingsCategory(cat) for cat in backup_entry.categories],
+                    settings_data=backup_entry.settings_data,
+                )
+
+            active_backup = legacy_backup or self._backups.get(backup_id)
+            backup_name = active_backup.name if active_backup else backup_entry.name
+            backup_data = active_backup.settings_data if active_backup else backup_entry.settings_data
+
+            restored: dict[SettingsCategory, SettingsResponse] = {}
+            audit_entries: list[AdminSettingsAuditEntry] = []
+            restored_categories: list[SettingsCategory] = []
+
+            for category_str, data in backup_data.items():
+                category = SettingsCategory(category_str)
+                attr_name = self.CATEGORY_MAPPING.get(category)
+
+                if attr_name and hasattr(self.settings, attr_name):
+                    await self._load_category_from_store(category, session=db_session)
+                    settings_obj = getattr(self.settings, attr_name)
+
+                    changes = {}
+                    for field_name, new_value in data.items():
+                        if hasattr(settings_obj, field_name):
+                            old_value = getattr(settings_obj, field_name)
+                            setattr(settings_obj, field_name, new_value)
+                            changes[field_name] = {"old": old_value, "new": new_value}
+
+                    if changes:
+                        audit_entries.append(
+                            AdminSettingsAuditEntry(
+                                tenant_id=tenant_id,
+                                category=category.value,
+                                action="restore",
+                                user_id=user_id,
+                                user_email=user_email,
+                                reason=f"Restored from backup: {backup_name}",
+                                ip_address=None,
+                                user_agent=None,
+                                changes=changes,
+                            )
+                        )
+
+                    await self._persist_category_settings(
+                        category=category,
+                        user_email=user_email,
+                        session=db_session,
+                        commit=False,
+                    )
+                    restored_categories.append(category)
+
             if audit_entries:
                 for entry in audit_entries:
                     db_session.add(entry)
-                await db_session.commit()
+
+            await db_session.commit()
 
             for category in restored_categories:
-                restored[category] = await self.get_category_settings(category, session=db_session)
+                restored[category] = await self.get_category_settings(
+                    category,
+                    session=db_session,
+                )
 
         logger.info(
             "Settings restored from backup",
             backup_id=str(backup_id),
-            categories=list(restored.keys()),
+            categories=[cat.value for cat in restored.keys()],
             user=user_email,
         )
 
@@ -483,11 +711,49 @@ class SettingsManagementService:
 
         return [self._to_audit_log_model(entry) for entry in entries]
 
-    def export_settings(
+    async def get_backups_count(self, session: AsyncSession | None = None) -> int:
+        """Return the number of stored backups."""
+        async with self._get_session(session) as db_session:
+            result = await db_session.execute(
+                select(func.count()).select_from(AdminSettingsBackupEntry)
+            )
+            db_count = int(result.scalar_one())
+        return max(db_count, len(self._backups))
+
+    def _format_export_data(self, export_data: dict[str, Any], format: str) -> str:
+        """Format export data into the desired output format."""
+        if format == "json":
+            return json.dumps(export_data, indent=2, default=str)
+        if format == "env":
+            return self._to_env_format(export_data)
+        if format == "yaml":
+            # YAML support can be added via dependency; fallback to JSON formatting for now
+            return json.dumps(export_data, indent=2, default=str)
+        raise ValueError(f"Unsupported export format: {format}")
+
+    def _collect_export_data_in_memory(
+        self,
+        categories: list[SettingsCategory],
+        include_sensitive: bool,
+    ) -> dict[str, Any]:
+        """Collect export data using in-memory settings only (no DB access)."""
+        export_data: dict[str, Any] = {}
+        for category in categories:
+            attr_name = self.CATEGORY_MAPPING.get(category)
+            if attr_name and hasattr(self.settings, attr_name):
+                settings_obj = getattr(self.settings, attr_name)
+                data = settings_obj.model_dump()
+                if not include_sensitive:
+                    data = self._mask_sensitive_data(data)
+                export_data[category.value] = data
+        return export_data
+
+    async def _export_settings_async(
         self,
         categories: list[SettingsCategory] | None = None,
         include_sensitive: bool = False,
         format: str = "json",
+        session: AsyncSession | None = None,
     ) -> str:
         """
         Export settings to string format.
@@ -504,27 +770,60 @@ class SettingsManagementService:
             categories = list(SettingsCategory)
 
         export_data = {}
-        for category in categories:
-            attr_name = self.CATEGORY_MAPPING.get(category)
-            if attr_name and hasattr(self.settings, attr_name):
-                settings_obj = getattr(self.settings, attr_name)
-                data = settings_obj.model_dump()
+        async with self._get_session(session) as db_session:
+            for category in categories:
+                attr_name = self.CATEGORY_MAPPING.get(category)
+                if attr_name and hasattr(self.settings, attr_name):
+                    await self._load_category_from_store(category, session=db_session)
+                    settings_obj = getattr(self.settings, attr_name)
+                    data = settings_obj.model_dump()
 
-                # Mask sensitive fields if needed
-                if not include_sensitive:
-                    data = self._mask_sensitive_data(data)
+                    if not include_sensitive:
+                        data = self._mask_sensitive_data(data)
 
-                export_data[category.value] = data
+                    export_data[category.value] = data
 
-        if format == "json":
-            return json.dumps(export_data, indent=2, default=str)
-        elif format == "env":
-            return self._to_env_format(export_data)
-        elif format == "yaml":
-            # Would need to import yaml library
-            return json.dumps(export_data, indent=2, default=str)
-        else:
-            raise ValueError(f"Unsupported export format: {format}")
+        return self._format_export_data(export_data, format)
+
+    async def export_settings_async(
+        self,
+        categories: list[SettingsCategory] | None = None,
+        include_sensitive: bool = False,
+        format: str = "json",
+        session: AsyncSession | None = None,
+    ) -> str:
+        """Async-friendly export method for router usage."""
+        return await self._export_settings_async(
+            categories=categories,
+            include_sensitive=include_sensitive,
+            format=format,
+            session=session,
+        )
+
+    def export_settings(
+        self,
+        categories: list[SettingsCategory] | None = None,
+        include_sensitive: bool = False,
+        format: str = "json",
+        session: AsyncSession | None = None,
+    ) -> str:
+        """Synchronous export retained for backwards compatibility."""
+        categories = categories or list(SettingsCategory)
+
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            return asyncio.run(
+                self._export_settings_async(
+                    categories=categories,
+                    include_sensitive=include_sensitive,
+                    format=format,
+                    session=session,
+                )
+            )
+
+        export_data = self._collect_export_data_in_memory(categories, include_sensitive)
+        return self._format_export_data(export_data, format)
 
     # Helper methods
 

@@ -229,8 +229,8 @@ class TestConvenienceFunctions:
         """Test creating backend when search disabled."""
         mock_settings.features.search_enabled = False
 
-        with pytest.raises(ValueError, match="Search functionality is disabled"):
-            create_search_backend_from_env()
+        backend = create_search_backend_from_env()
+        assert isinstance(backend, InMemorySearchBackend)
 
 
 class TestInMemorySearchBackend:

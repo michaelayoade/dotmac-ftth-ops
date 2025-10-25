@@ -51,6 +51,11 @@ class RouterManagementService:
         Returns:
             dict with job execution results
         """
+        required_wan_fields = {"ip", "gateway"}
+        missing = [field for field in required_wan_fields if field not in wan_config]
+        if missing:
+            raise ValueError(f"WAN configuration missing required fields: {', '.join(missing)}")
+
         # Build default LAN config if not provided
         if not lan_config:
             lan_config = {

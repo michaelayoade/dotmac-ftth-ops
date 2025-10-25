@@ -8,20 +8,126 @@ Tests all customer management router endpoints following the Two-Tier Testing St
 Coverage Target: 85%+ for router endpoints
 """
 
-from unittest.mock import patch
+from datetime import UTC, datetime
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+from fastapi import FastAPI, HTTPException, status
 from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.main import app
+from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import (
+    require_customer_impersonate,
+    require_customer_manage_status,
+    require_customer_reset_password,
+)
+from tests.customer_management.conftest import MockObject
 
 
 @pytest.fixture
-def test_client():
-    """Create a test client for the FastAPI app."""
-    return TestClient(app)
+def test_client(
+    mock_auth_dependency: UserInfo,
+    mock_tenant_dependency: str,
+    monkeypatch,
+):
+    """Create a test client for the FastAPI app with customer deps overridden."""
+    from dotmac.platform.customer_management.router import (
+        get_customer_service,
+        router as customer_router,
+    )
+
+    mock_service = MagicMock()
+    mock_service.create_customer = AsyncMock()
+    mock_service.get_customer = AsyncMock(return_value=None)
+    mock_service.get_customer_by_email = AsyncMock(return_value=None)
+    mock_service.get_customer_by_number = AsyncMock(return_value=None)
+    mock_service.update_customer = AsyncMock(return_value=None)
+    mock_service.delete_customer = AsyncMock(return_value=True)
+    mock_service.search_customers = AsyncMock(return_value=([], 0))
+    mock_service.add_activity = AsyncMock()
+    mock_service.get_customer_activities = AsyncMock(return_value=[])
+    mock_service.add_note = AsyncMock()
+    mock_service.get_customer_notes = AsyncMock(return_value=[])
+    mock_service.update_metrics = AsyncMock()
+    mock_service.get_customer_metrics = AsyncMock(
+        return_value={
+            "total_customers": 100,
+            "active_customers": 80,
+            "new_customers_this_month": 5,
+            "churn_rate": 0.05,
+            "average_lifetime_value": 1200.0,
+            "total_revenue": 50000.0,
+            "customers_by_status": {"active": 80, "prospect": 15, "churned": 5},
+            "customers_by_tier": {"standard": 60, "premium": 25, "enterprise": 15},
+            "customers_by_type": {"individual": 70, "business": 30},
+            "top_segments": [
+                {"name": "VIP", "member_count": 10},
+                {"name": "Trial", "member_count": 5},
+            ],
+        }
+    )
+    mock_service.record_purchase = AsyncMock()
+    mock_service.create_segment = AsyncMock()
+    mock_service.recalculate_segment = AsyncMock(return_value=0)
+    mock_service.session = MagicMock()
+
+    mock_event_bus = AsyncMock()
+    monkeypatch.setattr(
+        "dotmac.platform.events.bus.get_event_bus",
+        lambda *_, **__: mock_event_bus,
+    )
+    from dotmac.platform.events.bus import reset_event_bus
+
+    reset_event_bus()
+
+    import dotmac.platform.auth.core as auth_core
+
+    mock_jwt = MagicMock()
+    mock_jwt.create_access_token = MagicMock(return_value="mock-token")
+    monkeypatch.setattr(auth_core, "jwt_service", mock_jwt)
+
+    async def noop_log(*args, **kwargs):  # pragma: no cover - simple async stub
+        return None
+
+    import dotmac.platform.audit as audit_module
+
+    monkeypatch.setattr(audit_module, "log_user_activity", noop_log)
+
+    mock_email_service = MagicMock()
+    mock_email_service.send_password_reset_email = AsyncMock(return_value=("sent", "token"))
+    import dotmac.platform.auth.email_service as email_service_module
+
+    monkeypatch.setattr(
+        email_service_module,
+        "get_auth_email_service",
+        lambda: mock_email_service,
+    )
+
+    tenant_id = mock_tenant_dependency
+    monkeypatch.setattr("dotmac.platform.tenant.get_current_tenant_id", lambda: tenant_id)
+
+    app = FastAPI()
+    app.include_router(customer_router, prefix="/api/v1/customers")
+
+    app.dependency_overrides[get_customer_service] = lambda: mock_service
+    user = mock_auth_dependency
+    app.dependency_overrides[get_current_user] = lambda user=user: user
+    app.dependency_overrides[require_customer_impersonate] = (
+        lambda user=user: user
+    )
+    app.dependency_overrides[require_customer_manage_status] = (
+        lambda user=user: user
+    )
+    app.dependency_overrides[require_customer_reset_password] = (
+        lambda user=user: user
+    )
+
+    with TestClient(app) as client:
+        client.mock_customer_service = mock_service  # type: ignore[attr-defined]
+        client.mock_event_bus = mock_event_bus  # type: ignore[attr-defined]
+        yield client
 
 
 @pytest.fixture
@@ -36,15 +142,13 @@ def mock_auth_dependency():
         tenant_id="test-tenant-123",
     )
 
-    with patch("dotmac.platform.auth.dependencies.get_current_user", return_value=mock_user):
-        yield mock_user
+    return mock_user
 
 
 @pytest.fixture
 def mock_tenant_dependency():
     """Mock tenant context dependency."""
-    with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant-123"):
-        yield "test-tenant-123"
+    return "test-tenant-123"
 
 
 class TestCustomerCRUDEndpoints:
@@ -52,138 +156,186 @@ class TestCustomerCRUDEndpoints:
 
     @pytest.mark.asyncio
     async def test_create_customer_success(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test successful customer creation."""
-        customer_data = {
-            "email": f"test{uuid4().hex[:8]}@example.com",
-            "first_name": "John",
-            "last_name": "Doe",
-            "phone": "+1234567890",
-            "company": "Acme Corp",
-            "status": "ACTIVE",
-            "tier": "PREMIUM",
-            "type": "BUSINESS",
+        request_payload = {
+            "email": sample_customer_dict["email"],
+            "first_name": sample_customer_dict["first_name"],
+            "last_name": sample_customer_dict["last_name"],
+            "phone": sample_customer_dict["phone"],
+            "customer_type": sample_customer_dict["customer_type"],
+            "tier": sample_customer_dict["tier"],
+            "company_name": "Acme Corp",
         }
+
+        customer_obj = MockObject(**sample_customer_dict)
+        test_client.mock_customer_service.get_customer_by_email.return_value = None  # type: ignore[attr-defined]
+        test_client.mock_customer_service.create_customer.return_value = customer_obj  # type: ignore[attr-defined]
 
         response = test_client.post(
             "/api/v1/customers",
-            json=customer_data,
+            json=request_payload,
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Flexible status code check (handles different states)
-        assert response.status_code in [201, 400, 401, 500]
-
-        if response.status_code == 201:
-            data = response.json()
-            assert data["email"] == customer_data["email"]
-            assert data["first_name"] == customer_data["first_name"]
-            assert "id" in data
+        assert response.status_code == 201
+        data = response.json()
+        assert data["email"] == sample_customer_dict["email"]
+        assert data["first_name"] == sample_customer_dict["first_name"]
+        assert data["customer_number"] == sample_customer_dict["customer_number"]
 
     @pytest.mark.asyncio
     async def test_create_customer_duplicate_email(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test creating customer with duplicate email."""
-        customer_data = {
-            "email": "duplicate@example.com",
-            "first_name": "John",
-            "last_name": "Doe",
-        }
+        duplicate_customer = MockObject(**sample_customer_dict)
+        test_client.mock_customer_service.get_customer_by_email.return_value = duplicate_customer  # type: ignore[attr-defined]
 
-        # First creation
-        test_client.post(
-            "/api/v1/customers",
-            json=customer_data,
-            headers={"Authorization": "Bearer fake-token"},
-        )
-
-        # Second creation with same email
         response = test_client.post(
             "/api/v1/customers",
-            json=customer_data,
+            json={
+                "email": sample_customer_dict["email"],
+                "first_name": sample_customer_dict["first_name"],
+                "last_name": sample_customer_dict["last_name"],
+            },
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Should fail with 400 (duplicate) or handle gracefully
-        assert response.status_code in [400, 401, 500]
+        assert response.status_code == 400
 
     @pytest.mark.asyncio
     async def test_get_customer_success(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test successful customer retrieval."""
         customer_id = str(uuid4())
+
+        test_client.mock_customer_service.get_customer.return_value = MockObject(  # type: ignore[attr-defined]
+            **{**sample_customer_dict, "id": customer_id}
+        )
 
         response = test_client.get(
             f"/api/v1/customers/{customer_id}",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Should return 404 (not found) or 401 (auth issue)
-        assert response.status_code in [200, 404, 401]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_get_customer_with_activities(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test getting customer with activities included."""
         customer_id = str(uuid4())
+
+        test_client.mock_customer_service.get_customer.return_value = MockObject(  # type: ignore[attr-defined]
+            **{**sample_customer_dict, "id": customer_id}
+        )
 
         response = test_client.get(
             f"/api/v1/customers/{customer_id}?include_activities=true",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 404, 401]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_get_customer_with_notes(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test getting customer with notes included."""
         customer_id = str(uuid4())
+
+        test_client.mock_customer_service.get_customer.return_value = MockObject(  # type: ignore[attr-defined]
+            **{**sample_customer_dict, "id": customer_id}
+        )
 
         response = test_client.get(
             f"/api/v1/customers/{customer_id}?include_notes=true",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 404, 401]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_get_customer_by_number(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test getting customer by customer number."""
         customer_number = "CUST-001"
+
+        test_client.mock_customer_service.get_customer_by_number.return_value = MockObject(  # type: ignore[attr-defined]
+            **{**sample_customer_dict, "customer_number": customer_number}
+        )
 
         response = test_client.get(
             f"/api/v1/customers/by-number/{customer_number}",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 404, 401]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_update_customer_success(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test successful customer update."""
         customer_id = str(uuid4())
-        update_data = {
+        update_payload = {
             "first_name": "Jane",
-            "company": "New Corp",
+            "company_name": "New Corp",
+            "tier": "premium",
         }
+
+        updated_customer = MockObject(  # type: ignore[attr-defined]
+            **{
+                **sample_customer_dict,
+                "id": customer_id,
+                "first_name": "Jane",
+                "company_name": "New Corp",
+                "tier": "premium",
+            }
+        )
+
+        test_client.mock_customer_service.update_customer.return_value = updated_customer  # type: ignore[attr-defined]
 
         response = test_client.patch(
             f"/api/v1/customers/{customer_id}",
-            json=update_data,
+            json=update_payload,
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 404, 400, 401, 500]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_delete_customer_soft(
@@ -219,7 +371,11 @@ class TestCustomerSearchEndpoint:
 
     @pytest.mark.asyncio
     async def test_search_customers_no_filters(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test searching customers with no filters."""
         search_params = {
@@ -227,31 +383,41 @@ class TestCustomerSearchEndpoint:
             "page_size": 10,
         }
 
+        test_client.mock_customer_service.search_customers.return_value = (  # type: ignore[attr-defined]
+            [MockObject(**sample_customer_dict)],
+            1,
+        )
+
         response = test_client.post(
             "/api/v1/customers/search",
             json=search_params,
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
-
-        if response.status_code == 200:
-            data = response.json()
-            assert "customers" in data
-            assert "total" in data
-            assert "page" in data
-            assert "page_size" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total"] == 1
+        assert len(data["customers"]) == 1
 
     @pytest.mark.asyncio
     async def test_search_customers_with_status_filter(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test searching customers by status."""
         search_params = {
-            "status": "ACTIVE",
+            "status": "active",
             "page": 1,
             "page_size": 10,
         }
+
+        test_client.mock_customer_service.search_customers.return_value = (  # type: ignore[attr-defined]
+            [MockObject(**sample_customer_dict)],
+            1,
+        )
 
         response = test_client.post(
             "/api/v1/customers/search",
@@ -259,18 +425,27 @@ class TestCustomerSearchEndpoint:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_search_customers_with_tier_filter(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test searching customers by tier."""
         search_params = {
-            "tier": "PREMIUM",
+            "tier": "premium",
             "page": 1,
             "page_size": 10,
         }
+
+        test_client.mock_customer_service.search_customers.return_value = (  # type: ignore[attr-defined]
+            [MockObject(**sample_customer_dict)],
+            1,
+        )
 
         response = test_client.post(
             "/api/v1/customers/search",
@@ -278,11 +453,15 @@ class TestCustomerSearchEndpoint:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
+        assert response.status_code == 200
 
     @pytest.mark.asyncio
     async def test_search_customers_pagination(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test customer search pagination."""
         search_params = {
@@ -290,18 +469,21 @@ class TestCustomerSearchEndpoint:
             "page_size": 5,
         }
 
+        test_client.mock_customer_service.search_customers.return_value = (  # type: ignore[attr-defined]
+            [MockObject(**sample_customer_dict)],
+            10,
+        )
+
         response = test_client.post(
             "/api/v1/customers/search",
             json=search_params,
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
-
-        if response.status_code == 200:
-            data = response.json()
-            assert data["page"] == 2
-            assert data["page_size"] == 5
+        assert response.status_code == 200
+        data = response.json()
+        assert data["page"] == 2
+        assert data["page_size"] == 5
 
 
 class TestCustomerActivitiesEndpoints:
@@ -309,15 +491,37 @@ class TestCustomerActivitiesEndpoints:
 
     @pytest.mark.asyncio
     async def test_add_customer_activity(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test adding customer activity."""
         customer_id = str(uuid4())
         activity_data = {
-            "activity_type": "CALL",
-            "description": "Follow-up call with customer",
+            "activity_type": "contact_made",
+            "title": "Follow-up Call",
+            "description": "Spoke with customer about upgrade options",
             "metadata": {"duration_minutes": 15},
+            "ip_address": "192.0.2.10",
+            "user_agent": "pytest-client",
         }
+
+        activity_response = MockObject(
+            id=str(uuid4()),
+            customer_id=customer_id,
+            activity_type="contact_made",
+            title="Follow-up Call",
+            description="Spoke with customer about upgrade options",
+            metadata_={"duration_minutes": 15},
+            performed_by=str(uuid4()),
+            ip_address="192.0.2.10",
+            user_agent="pytest-client",
+            created_at=datetime.now(UTC),
+        )
+
+        test_client.mock_customer_service.add_activity.return_value = activity_response  # type: ignore[attr-defined]
 
         response = test_client.post(
             f"/api/v1/customers/{customer_id}/activities",
@@ -325,7 +529,7 @@ class TestCustomerActivitiesEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [201, 404, 400, 401, 500]
+        assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_get_customer_activities(
@@ -334,16 +538,15 @@ class TestCustomerActivitiesEndpoints:
         """Test getting customer activities."""
         customer_id = str(uuid4())
 
+        test_client.mock_customer_service.get_customer_activities.return_value = []  # type: ignore[attr-defined]
+
         response = test_client.get(
             f"/api/v1/customers/{customer_id}/activities",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
-
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list)
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
 
     @pytest.mark.asyncio
     async def test_get_customer_activities_with_pagination(
@@ -352,12 +555,14 @@ class TestCustomerActivitiesEndpoints:
         """Test getting customer activities with pagination."""
         customer_id = str(uuid4())
 
+        test_client.mock_customer_service.get_customer_activities.return_value = []  # type: ignore[attr-defined]
+
         response = test_client.get(
             f"/api/v1/customers/{customer_id}/activities?limit=10&offset=0",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
+        assert response.status_code == 200
 
 
 class TestCustomerNotesEndpoints:
@@ -365,15 +570,32 @@ class TestCustomerNotesEndpoints:
 
     @pytest.mark.asyncio
     async def test_add_customer_note(
-        self, test_client, mock_auth_dependency, mock_tenant_dependency
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+        sample_customer_dict,
     ):
         """Test adding customer note."""
         customer_id = str(uuid4())
         note_data = {
+            "subject": "Customer Preferences",
             "content": "Customer prefers email communication",
             "is_internal": True,
-            "category": "PREFERENCE",
         }
+
+        note_response = MockObject(
+            id=str(uuid4()),
+            customer_id=customer_id,
+            subject=note_data["subject"],
+            content=note_data["content"],
+            is_internal=True,
+            created_by_id=str(uuid4()),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+
+        test_client.mock_customer_service.add_note.return_value = note_response  # type: ignore[attr-defined]
 
         response = test_client.post(
             f"/api/v1/customers/{customer_id}/notes",
@@ -381,7 +603,7 @@ class TestCustomerNotesEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [201, 404, 400, 401, 500]
+        assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_get_customer_notes(
@@ -390,16 +612,15 @@ class TestCustomerNotesEndpoints:
         """Test getting customer notes."""
         customer_id = str(uuid4())
 
+        test_client.mock_customer_service.get_customer_notes.return_value = []  # type: ignore[attr-defined]
+
         response = test_client.get(
             f"/api/v1/customers/{customer_id}/notes",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
-
-        if response.status_code == 200:
-            data = response.json()
-            assert isinstance(data, list)
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)
 
     @pytest.mark.asyncio
     async def test_get_customer_notes_exclude_internal(
@@ -424,12 +645,14 @@ class TestCustomerMetricsEndpoints:
         """Test recording customer purchase."""
         customer_id = str(uuid4())
 
+        test_client.mock_customer_service.record_purchase.return_value = None  # type: ignore[attr-defined]
+
         response = test_client.post(
             f"/api/v1/customers/{customer_id}/metrics/purchase?amount=99.99",
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [204, 404, 401, 500]
+        assert response.status_code == 204
 
     @pytest.mark.asyncio
     async def test_get_customer_metrics_overview(
@@ -441,21 +664,22 @@ class TestCustomerMetricsEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
-
-        if response.status_code == 200:
-            data = response.json()
-            # Validate metrics structure
-            assert "total_customers" in data
-            assert "active_customers" in data
-            assert "churn_rate" in data
+        assert response.status_code == 200
+        data = response.json()
+        assert data["total_customers"] == 100
+        assert data["active_customers"] == 80
 
 
 class TestCustomerSegmentsEndpoints:
     """Test customer segments endpoints."""
 
     @pytest.mark.asyncio
-    async def test_create_segment(self, test_client, mock_auth_dependency, mock_tenant_dependency):
+    async def test_create_segment(
+        self,
+        test_client,
+        mock_auth_dependency,
+        mock_tenant_dependency,
+    ):
         """Test creating customer segment."""
         segment_data = {
             "name": "High Value Customers",
@@ -464,13 +688,28 @@ class TestCustomerSegmentsEndpoints:
             "is_dynamic": True,
         }
 
+        segment_response = MockObject(
+            id=str(uuid4()),
+            name=segment_data["name"],
+            description=segment_data["description"],
+            criteria=segment_data["criteria"],
+            is_dynamic=True,
+            priority=10,
+            member_count=25,
+            last_calculated=datetime.now(UTC),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+
+        test_client.mock_customer_service.create_segment.return_value = segment_response  # type: ignore[attr-defined]
+
         response = test_client.post(
             "/api/v1/customers/segments",
             json=segment_data,
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [201, 400, 401, 500]
+        assert response.status_code == 201
 
     @pytest.mark.asyncio
     async def test_recalculate_segment(
@@ -484,7 +723,8 @@ class TestCustomerSegmentsEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 404, 401, 500]
+        assert response.status_code == 200
+        assert response.json()["segment_id"] == segment_id
 
 
 class TestCustomerRouterAuthorization:
@@ -499,23 +739,45 @@ class TestCustomerRouterAuthorization:
             "last_name": "Doe",
         }
 
+        original_dependency = test_client.app.dependency_overrides.get(get_current_user)
+
+        def raise_unauthorized() -> None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+        test_client.app.dependency_overrides[get_current_user] = raise_unauthorized
+
         response = test_client.post(
             "/api/v1/customers",
             json=customer_data,
         )
 
-        # Should fail without authentication
-        assert response.status_code in [401, 403, 422]
+        if original_dependency is not None:
+            test_client.app.dependency_overrides[get_current_user] = original_dependency
+        else:
+            test_client.app.dependency_overrides.pop(get_current_user, None)
+
+        assert response.status_code == 401
 
     @pytest.mark.asyncio
     async def test_get_customer_requires_auth(self, test_client):
         """Test that getting customer requires authentication."""
         customer_id = str(uuid4())
 
+        original_dependency = test_client.app.dependency_overrides.get(get_current_user)
+
+        def raise_unauthorized() -> None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+        test_client.app.dependency_overrides[get_current_user] = raise_unauthorized
+
         response = test_client.get(f"/api/v1/customers/{customer_id}")
 
-        # Should fail without authentication
-        assert response.status_code in [401, 403, 422]
+        if original_dependency is not None:
+            test_client.app.dependency_overrides[get_current_user] = original_dependency
+        else:
+            test_client.app.dependency_overrides.pop(get_current_user, None)
+
+        assert response.status_code == 401
 
 
 class TestCustomerRouterErrorHandling:

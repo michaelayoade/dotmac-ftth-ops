@@ -4,6 +4,7 @@ GenieACS NBI (Northbound Interface) Client
 Provides interface to GenieACS REST API for TR-069/CWMP device management.
 """
 
+import asyncio
 import os
 from typing import Any, cast
 from urllib.parse import quote
@@ -14,6 +15,14 @@ import structlog
 from dotmac.platform.core.http_client import RobustHTTPClient
 
 logger = structlog.get_logger(__name__)
+
+
+def _snake_to_camel(name: str) -> str:
+    """Convert snake_case to camelCase to match GenieACS field names."""
+    if "_" not in name:
+        return name
+    parts = name.split("_")
+    return parts[0] + "".join(part.capitalize() for part in parts[1:])
 
 
 class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
@@ -35,6 +44,9 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         "provision": 60.0,
     }
 
+    PREFETCH_THRESHOLD = 50  # Concurrent requests before triggering cache prefetch
+    PREFETCH_LIMIT = 1000
+
     def __init__(
         self,
         base_url: str | None = None,
@@ -44,6 +56,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         verify_ssl: bool = True,
         timeout_seconds: float = 30.0,
         max_retries: int = 3,
+        max_connections: int | None = None,
+        max_keepalive_connections: int | None = None,
     ):
         """
         Initialize GenieACS client with robust HTTP capabilities.
@@ -56,6 +70,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
             verify_ssl: Verify SSL certificates (default True)
             timeout_seconds: Default timeout in seconds
             max_retries: Maximum retry attempts
+            max_connections: Maximum concurrent connections in pool (None for unlimited)
+            max_keepalive_connections: Maximum keep-alive connections to retain (None for unlimited)
         """
         # Load from centralized settings (Phase 2 implementation)
         if base_url is None:
@@ -80,7 +96,15 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
             verify_ssl=verify_ssl,
             default_timeout=timeout_seconds,
             max_retries=max_retries,
+            max_connections=max_connections,
+            max_keepalive_connections=max_keepalive_connections,
         )
+
+        # Prefetch/cache state (lazily initialised inside async context)
+        self._prefetch_lock: asyncio.Lock | None = None
+        self._prefetch_task: asyncio.Task[None] | None = None
+        self._device_cache: dict[str, dict[str, Any]] | None = None
+        self._active_requests = 0
 
     async def _genieacs_request(
         self,
@@ -147,6 +171,75 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         response = await self._genieacs_request("GET", "devices", params=params)
         return response if isinstance(response, list) else []
 
+    async def _ensure_prefetch_lock(self) -> None:
+        if self._prefetch_lock is None:
+            self._prefetch_lock = asyncio.Lock()
+
+    async def _invalidate_device_cache(self) -> None:
+        await self._ensure_prefetch_lock()
+        async with self._prefetch_lock:  # type: ignore[arg-type]
+            self._device_cache = None
+            self._prefetch_task = None
+
+    async def _cache_devices(self, devices: list[dict[str, Any]]) -> None:
+        cache: dict[str, dict[str, Any]] = {}
+        for device in devices:
+            if isinstance(device, dict) and "_id" in device:
+                cache[str(device["_id"])] = device
+
+        await self._ensure_prefetch_lock()
+        async with self._prefetch_lock:  # type: ignore[arg-type]
+            self._device_cache = cache
+            self._prefetch_task = None
+
+    async def _cache_device_object(self, device: dict[str, Any]) -> None:
+        device_id = device.get("_id")
+        if device_id is None:
+            return
+        await self._ensure_prefetch_lock()
+        async with self._prefetch_lock:  # type: ignore[arg-type]
+            if self._device_cache is not None:
+                self._device_cache[str(device_id)] = device
+
+    async def _prefetch_all_devices(self) -> None:
+        try:
+            response = await self._genieacs_request(
+                "GET",
+                "devices",
+                params={"limit": self.PREFETCH_LIMIT},
+            )
+            devices = response if isinstance(response, list) else []
+            await self._cache_devices(devices)
+        except Exception as exc:  # pragma: no cover - diagnostic aide
+            logger.warning("genieacs.prefetch.failed", error=str(exc))
+            await self._invalidate_device_cache()
+
+    async def _maybe_prefetch_devices(self) -> None:
+        if self._device_cache is not None:
+            return
+
+        if self._active_requests < self.PREFETCH_THRESHOLD:
+            return
+
+        await self._ensure_prefetch_lock()
+        async with self._prefetch_lock:  # type: ignore[arg-type]
+            if self._device_cache is not None:
+                return
+
+            if self._prefetch_task is None:
+                self._prefetch_task = asyncio.create_task(self._prefetch_all_devices())
+
+            task = self._prefetch_task
+
+        if task is not None:
+            await task
+
+    async def _get_cached_device(self, device_id: str) -> dict[str, Any] | None:
+        await self._maybe_prefetch_devices()
+        if self._device_cache is not None:
+            return cast(dict[str, Any] | None, self._device_cache.get(device_id))
+        return None
+
     async def get_device(self, device_id: str) -> dict[str, Any] | None:
         """
         Get single device by ID
@@ -157,15 +250,24 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         Returns:
             Device object or None
         """
+        self._active_requests += 1
         try:
+            cached = await self._get_cached_device(device_id)
+            if cached is not None:
+                return cached
+
             # URL encode device ID
             encoded_id = quote(device_id, safe="")
             response = await self._genieacs_request("GET", f"devices/{encoded_id}")
-            return cast(dict[str, Any], response)
+            device = cast(dict[str, Any], response)
+            await self._cache_device_object(device)
+            return device
         except httpx.HTTPStatusError as e:
             if e.response.status_code == 404:
                 return None
             raise
+        finally:
+            self._active_requests = max(0, self._active_requests - 1)
 
     async def delete_device(self, device_id: str) -> bool:
         """
@@ -180,10 +282,27 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         try:
             encoded_id = quote(device_id, safe="")
             await self._genieacs_request("DELETE", f"devices/{encoded_id}")
+            await self._invalidate_device_cache()
             return True
         except Exception as e:
             logger.error("genieacs.delete_device.failed", device_id=device_id, error=str(e))
             return False
+
+    async def update_device(self, device_id: str, data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Update device metadata (e.g., tags) in GenieACS.
+
+        Args:
+            device_id: Device identifier
+            data: Partial device payload (e.g., {"_tags": [...]})
+
+        Returns:
+            Updated device document
+        """
+        encoded_id = quote(device_id, safe="")
+        response = await self._genieacs_request("PATCH", f"devices/{encoded_id}", json=data)
+        await self._invalidate_device_cache()
+        return cast(dict[str, Any], response)
 
     async def get_device_count(self, query: dict[str, Any] | None = None) -> int:
         """
@@ -237,6 +356,25 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
 
         response = await self._genieacs_request("POST", endpoint, json=payload)
         return cast(dict[str, Any], response)
+
+    async def add_task(self, device_id: str, task_name: str, **task_kwargs: Any) -> dict[str, Any]:
+        """
+        Convenience wrapper mirroring GenieACS API naming for task creation.
+
+        Args:
+            device_id: Device identifier
+            task_name: Task name (download, refreshObject, etc.)
+            task_kwargs: Additional task-specific parameters
+
+        Returns:
+            Task creation response
+        """
+        task_data = None
+        if task_kwargs:
+            task_data = {
+                _snake_to_camel(key): value for key, value in task_kwargs.items() if value is not None
+            }
+        return await self.create_task(device_id=device_id, task_name=task_name, task_data=task_data)
 
     async def refresh_device(
         self,

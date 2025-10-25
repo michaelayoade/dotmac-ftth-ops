@@ -145,11 +145,15 @@ class RADIUSService:
 
         # Apply bandwidth profile if specified
         if data.bandwidth_profile_id:
-            await self.apply_bandwidth_profile(
+            profile_response = await self.apply_bandwidth_profile(
                 username=data.username,
                 subscriber_id=data.subscriber_id,
                 profile_id=data.bandwidth_profile_id,
             )
+            if profile_response is None:
+                raise ValueError(
+                    f"Bandwidth profile '{data.bandwidth_profile_id}' not found"
+                )
 
         await self.session.commit()
 
@@ -376,12 +380,34 @@ class RADIUSService:
     # =========================================================================
 
     async def apply_bandwidth_profile(
-        self, username: str, subscriber_id: str, profile_id: str
-    ) -> None:
+        self,
+        username: str,
+        profile_id: str,
+        subscriber_id: str | None = None,
+    ) -> RADIUSSubscriberResponse | None:
         """Apply bandwidth profile to subscriber"""
         profile = await self.repository.get_bandwidth_profile(self.tenant_id, profile_id)
         if not profile:
-            raise ValueError(f"Bandwidth profile {profile_id} not found")
+            logger.warning(
+                "radius_bandwidth_profile_not_found",
+                tenant_id=self.tenant_id,
+                username=username,
+                profile_id=profile_id,
+            )
+            return None
+
+        # Ensure subscriber exists and obtain subscriber_id when not provided
+        radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
+        if not radcheck:
+            logger.warning(
+                "radius_subscriber_not_found_for_bandwidth",
+                tenant_id=self.tenant_id,
+                username=username,
+                profile_id=profile_id,
+            )
+            return None
+
+        subscriber_id = subscriber_id or radcheck.subscriber_id
 
         # Remove existing rate limit and profile ID attributes
         await self.repository.delete_radreply(self.tenant_id, username, "Mikrotik-Rate-Limit")
@@ -412,6 +438,10 @@ class RADIUSService:
             value=rate_limit_value,
         )
 
+        await self.session.flush()
+
+        return await self.get_subscriber(username)
+
     # =========================================================================
     # Session Management
     # =========================================================================
@@ -441,14 +471,31 @@ class RADIUSService:
 
     async def get_subscriber_sessions(
         self,
-        subscriber_id: str,
+        subscriber_id: str | None = None,
+        username: str | None = None,
         active_only: bool = False,
         skip: int = 0,
         limit: int = 100,
     ) -> list[RADIUSSessionResponse]:
         """Get sessions for a subscriber"""
+        effective_subscriber_id = subscriber_id
+
+        if not effective_subscriber_id and username:
+            radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
+            if radcheck:
+                effective_subscriber_id = radcheck.subscriber_id
+
+        if not effective_subscriber_id:
+            logger.warning(
+                "radius_session_lookup_missing_subscriber",
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+            )
+            return []
+
         sessions = await self.repository.get_sessions_by_subscriber(
-            self.tenant_id, subscriber_id, active_only, skip, limit
+            self.tenant_id, effective_subscriber_id, active_only, skip, limit
         )
 
         return [
@@ -488,7 +535,12 @@ class RADIUSService:
             nas_ip: NAS IP address for routing
 
         Returns:
-            Dictionary with disconnect result
+            Dictionary with disconnect result containing:
+            - success: bool - Whether the disconnect was successful
+            - message: str - Human-readable result message
+            - username: str - Username that was disconnected
+            - details: dict - Full server response details
+            - error: str - Error message if applicable
 
         Raises:
             ValueError: If neither username nor session_id is provided
@@ -512,14 +564,13 @@ class RADIUSService:
                     session_id=session_id,
                     tenant_id=self.tenant_id,
                 )
-                return {
-                    "success": False,
-                    "message": f"Session {session_id} not found",
-                }
+                # Continue with provided session ID even if not found locally
 
         # Send CoA/DM disconnect request
         try:
-            result: dict[str, Any] = await self.coa_client.disconnect_session(
+            response: dict[str, Any]
+            # Always use disconnect_session for full response details
+            response = await self.coa_client.disconnect_session(
                 username=username or "",
                 nas_ip=nas_ip,
                 session_id=session_id,
@@ -530,11 +581,11 @@ class RADIUSService:
                 username=username,
                 session_id=session_id,
                 nas_ip=nas_ip,
-                result=result,
+                result=response,
                 tenant_id=self.tenant_id,
             )
 
-            return dict(result)
+            return response
 
         except Exception as e:
             logger.error(
@@ -545,10 +596,10 @@ class RADIUSService:
                 tenant_id=self.tenant_id,
                 exc_info=True,
             )
-
             return {
                 "success": False,
                 "message": f"Failed to disconnect session: {str(e)}",
+                "username": username or "",
                 "error": str(e),
             }
 
@@ -578,12 +629,12 @@ class RADIUSService:
         return RADIUSUsageResponse(
             subscriber_id=query.subscriber_id or "",
             username=query.username or "",
-            total_sessions=stats["total_sessions"],
-            total_session_time=stats["total_session_time"],
-            total_input_octets=stats["total_input_octets"],
-            total_output_octets=stats["total_output_octets"],
-            total_bytes=stats["total_bytes"],
-            active_sessions=stats["active_sessions"],
+            total_sessions=stats.get("total_sessions") or 0,
+            total_session_time=stats.get("total_session_time") or 0,
+            total_download_bytes=stats.get("total_input_octets") or 0,
+            total_upload_bytes=stats.get("total_output_octets") or 0,
+            total_bytes=stats.get("total_bytes") or 0,
+            active_sessions=stats.get("active_sessions") or 0,
             last_session_start=last_session.acctstarttime if last_session else None,
             last_session_stop=last_session.acctstoptime if last_session else None,
         )
@@ -612,6 +663,7 @@ class RADIUSService:
             nasname=nas.nasname,
             shortname=nas.shortname,
             type=nas.type,
+            secret=nas.secret,
             ports=nas.ports,
             community=nas.community,
             description=nas.description,
@@ -631,6 +683,7 @@ class RADIUSService:
             nasname=nas.nasname,
             shortname=nas.shortname,
             type=nas.type,
+            secret=nas.secret,
             ports=nas.ports,
             community=nas.community,
             description=nas.description,
@@ -667,6 +720,7 @@ class RADIUSService:
                 nasname=nas.nasname,
                 shortname=nas.shortname,
                 type=nas.type,
+                secret=nas.secret,
                 ports=nas.ports,
                 community=nas.community,
                 description=nas.description,
@@ -770,5 +824,17 @@ class RADIUSService:
     @staticmethod
     def generate_random_password(length: int = 12) -> str:
         """Generate a random password"""
+        if length < 4:
+            raise ValueError("Password length must be at least 4 characters")
+
+        lowercase = secrets.choice(string.ascii_lowercase)
+        uppercase = secrets.choice(string.ascii_uppercase)
+        digit = secrets.choice(string.digits)
+        special = secrets.choice("!@#$%^&*")
+
         alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
-        return "".join(secrets.choice(alphabet) for _ in range(length))
+        remaining = [secrets.choice(alphabet) for _ in range(length - 4)]
+
+        password_chars = [lowercase, uppercase, digit, special, *remaining]
+        secrets.SystemRandom().shuffle(password_chars)
+        return "".join(password_chars)

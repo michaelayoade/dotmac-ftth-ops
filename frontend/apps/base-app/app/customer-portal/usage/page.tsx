@@ -36,7 +36,7 @@ import {
   Wifi,
   Loader2,
 } from "lucide-react";
-import { format, subDays, eachDayOfInterval } from "date-fns";
+import { format } from "date-fns";
 import { useCustomerUsage } from "@/hooks/useCustomerPortal";
 
 export default function CustomerUsagePage() {

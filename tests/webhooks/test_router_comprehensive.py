@@ -11,16 +11,22 @@ import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.webhooks.router import router
 
 pytestmark = pytest.mark.asyncio
+
+
+def _override_webhook_permissions(app: FastAPI, mock_user):
+    permission_dependency = require_permission("webhooks:manage")
+    app.dependency_overrides[permission_dependency] = lambda: mock_user
 
 
 @pytest.fixture
 def app():
     """Create test FastAPI app."""
     test_app = FastAPI()
-    test_app.include_router(router, prefix="/api/v1/webhooks")
+    test_app.include_router(router, prefix="/api/v1")
     return test_app
 
 
@@ -158,6 +164,7 @@ def setup_dependencies(app, mock_user, mock_sub_service_cls, mock_del_service_cl
     from dotmac.platform.auth.dependencies import get_current_user
 
     app.dependency_overrides[get_current_user] = lambda: mock_user
+    _override_webhook_permissions(app, mock_user)
 
     yield app
 
@@ -187,9 +194,10 @@ class TestCreateSubscription:
 
             assert response.status_code == 201
             data = response.json()
-            assert data["id"] == "sub-123"
-            assert data["url"] == "https://example.com/webhook"
-            # Note: secret is not exposed in response for security
+            assert data["secret"] == "whsec_test123"
+            subscription = data["subscription"]
+            assert subscription["id"] == "sub-123"
+            assert subscription["url"] == "https://example.com/webhook"
 
     async def test_create_subscription_with_description(self, setup_dependencies):
         """Test creating subscription with description."""
@@ -206,6 +214,8 @@ class TestCreateSubscription:
             )
 
             assert response.status_code == 201
+            body = response.json()
+            assert body["secret"] == "whsec_test123"
 
     async def test_create_subscription_service_error(self, app, mock_user):
         """Test create subscription when service fails."""
@@ -215,6 +225,7 @@ class TestCreateSubscription:
         failing_service.create_subscription = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -269,6 +280,7 @@ class TestListSubscriptions:
         failing_service.list_subscriptions = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -307,6 +319,7 @@ class TestGetSubscription:
         not_found_service.get_subscription = AsyncMock(return_value=None)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -330,6 +343,7 @@ class TestGetSubscription:
         failing_service.get_subscription = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -383,6 +397,7 @@ class TestUpdateSubscription:
         not_found_service.update_subscription = AsyncMock(return_value=None)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -407,6 +422,7 @@ class TestUpdateSubscription:
         failing_service.update_subscription = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -444,6 +460,7 @@ class TestDeleteSubscription:
         not_found_service.delete_subscription = AsyncMock(return_value=False)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -466,6 +483,7 @@ class TestDeleteSubscription:
         failing_service.delete_subscription = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -504,6 +522,7 @@ class TestRotateSecret:
         not_found_service.rotate_secret = AsyncMock(return_value=None)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -528,6 +547,7 @@ class TestRotateSecret:
         failing_service.rotate_secret = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -564,6 +584,7 @@ class TestGetSubscriptionDeliveries:
         failing_service.get_deliveries = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -614,6 +635,7 @@ class TestListDeliveries:
         failing_service.get_recent_deliveries = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -651,6 +673,7 @@ class TestGetDelivery:
         not_found_service.get_delivery = AsyncMock(return_value=None)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -673,6 +696,7 @@ class TestGetDelivery:
         failing_service.get_delivery = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookSubscriptionService",
@@ -711,6 +735,7 @@ class TestRetryDelivery:
         failed_service.retry_delivery = AsyncMock(return_value=False)
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookDeliveryService", return_value=failed_service
@@ -733,6 +758,7 @@ class TestRetryDelivery:
         failing_service.retry_delivery = AsyncMock(side_effect=Exception("Database error"))
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch(
             "dotmac.platform.webhooks.router.WebhookDeliveryService", return_value=failing_service
@@ -787,6 +813,7 @@ class TestListEvents:
         from dotmac.platform.auth.dependencies import get_current_user
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch("dotmac.platform.webhooks.router.get_event_bus") as mock_bus:
             mock_bus.return_value.get_registered_events.side_effect = Exception("Event bus error")
@@ -854,6 +881,7 @@ class TestGetEventSchema:
         from dotmac.platform.auth.dependencies import get_current_user
 
         app.dependency_overrides[get_current_user] = lambda: mock_user
+        _override_webhook_permissions(app, mock_user)
 
         with patch("dotmac.platform.webhooks.router.get_event_bus") as mock_bus:
             mock_bus.return_value.get_registered_events.side_effect = Exception("Event bus error")

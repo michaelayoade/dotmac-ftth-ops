@@ -20,6 +20,8 @@ from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 
+_default_cache_service: "CacheService | None" = None
+
 
 class CacheService:
     """Service for caching with Redis backend."""
@@ -45,7 +47,7 @@ class CacheService:
             redis_url = settings.redis.redis_url
             self.redis = cast(
                 RedisClientType,
-                await aioredis.from_url(
+                aioredis.from_url(
                     redis_url,
                     encoding="utf-8",
                     decode_responses=False,  # We'll handle encoding
@@ -517,7 +519,6 @@ class CacheService:
             )
 
         self._local_stats[ns]["sets"] += count
-
     def _record_delete(self, namespace: CacheNamespace | str, count: int = 1) -> None:
         """Record cache delete operation."""
         ns = namespace.value if isinstance(namespace, CacheNamespace) else namespace
@@ -563,3 +564,20 @@ class CacheService:
     def reset_stats(self) -> None:
         """Reset accumulated statistics."""
         self._local_stats = {}
+
+
+def get_cache_service(redis: RedisClientType | None = None) -> CacheService:
+    """
+    Return a shared CacheService instance.
+
+    Allows dependency overrides in tests by passing a custom Redis client.
+    """
+    global _default_cache_service
+
+    if redis is not None:
+        return CacheService(redis=redis)
+
+    if _default_cache_service is None:
+        _default_cache_service = CacheService()
+
+    return _default_cache_service

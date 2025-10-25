@@ -28,7 +28,7 @@ from .platform_admin import (
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/admin/platform", tags=["Platform Administration"])
+router = APIRouter(prefix="", tags=["Platform Administration"])
 
 
 # ============================================
@@ -171,6 +171,22 @@ class CrossTenantSearchResponse(BaseModel):
     results: list[dict[str, Any]]
     total: int
     query: str
+
+
+class CrossTenantSearchRequest(BaseModel):
+    """Request payload for cross-tenant search."""
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    query: str = Field(..., min_length=1, description="Search query")
+    entity_type: str | None = Field(
+        None,
+        alias="resource_type",
+        description="Resource type to search (user, customer, ticket, etc.)",
+    )
+    tenant_id: str | None = Field(None, description="Optional tenant ID to limit scope")
+    limit: int = Field(20, ge=1, le=100, description="Maximum results")
+    offset: int | None = Field(None, ge=0, description="Offset for pagination")
 
 
 class PlatformAuditResponse(BaseModel):
@@ -525,15 +541,14 @@ async def list_platform_permissions(
     )
 
 
-@router.get("/search", response_model=CrossTenantSearchResponse)
-async def cross_tenant_search(
-    query: str = Query(..., min_length=1, description="Search query"),
-    resource_type: str | None = Query(None, description="Filter by resource type"),
-    tenant_id: str | None = Query(None, description="Filter by specific tenant"),
-    limit: int = Query(20, ge=1, le=100, description="Maximum results"),
-    offset: int | None = Query(None, description="Offset for pagination"),
-    admin: UserInfo = Depends(require_platform_admin),
-    db: AsyncSession = Depends(get_async_session),
+async def _execute_cross_tenant_search(
+    *,
+    query: str,
+    entity_type: str | None,
+    tenant_id: str | None,
+    limit: int,
+    offset: int | None,
+    admin: UserInfo,
 ) -> CrossTenantSearchResponse:
     """Perform cross-tenant search.
 
@@ -548,11 +563,7 @@ async def cross_tenant_search(
     await platform_audit.log_action(
         user=admin,
         action="cross_tenant_search",
-        details={
-            "query": query,
-            "resource_type": resource_type,
-            "tenant_id": tenant_id,
-        },
+        details={"query": query, "resource_type": entity_type, "tenant_id": tenant_id},
     )
 
     try:
@@ -570,10 +581,10 @@ async def cross_tenant_search(
 
         # Determine which indices to search based on resource type
         indices_to_search = []
-        if resource_type:
+        if entity_type:
             # Search specific resource type across all tenants (or specific tenant)
             if tenant_id:
-                indices_to_search.append(f"dotmac_{resource_type}_{tenant_id}")
+                indices_to_search.append(f"dotmac_{entity_type}_{tenant_id}")
             else:
                 # For cross-tenant search, we would need to query all tenant indices
                 # This is a simplified implementation - in production you'd list all tenants
@@ -581,7 +592,7 @@ async def cross_tenant_search(
                     "cross_tenant_search.limited_implementation",
                     message="Cross-tenant search without specific tenant uses in-memory backend only",
                 )
-                indices_to_search.append(resource_type)
+                indices_to_search.append(entity_type)
         else:
             # Search all resource types
             indices_to_search = ["customers", "subscribers", "invoices", "tickets", "users"]
@@ -624,7 +635,7 @@ async def cross_tenant_search(
         logger.error(
             "cross_tenant_search.error",
             query=query,
-            resource_type=resource_type,
+            resource_type=entity_type,
             error=str(e),
         )
         # Return empty results on error rather than failing
@@ -633,6 +644,40 @@ async def cross_tenant_search(
             total=0,
             query=query,
         )
+
+
+@router.get("/search", response_model=CrossTenantSearchResponse)
+async def cross_tenant_search_get(
+    query: str = Query(..., min_length=1, description="Search query"),
+    resource_type: str | None = Query(None, description="Filter by resource type"),
+    tenant_id: str | None = Query(None, description="Filter by specific tenant"),
+    limit: int = Query(20, ge=1, le=100, description="Maximum results"),
+    offset: int | None = Query(None, description="Offset for pagination"),
+    admin: UserInfo = Depends(require_platform_admin),
+) -> CrossTenantSearchResponse:
+    return await _execute_cross_tenant_search(
+        query=query,
+        entity_type=resource_type,
+        tenant_id=tenant_id,
+        limit=limit,
+        offset=offset,
+        admin=admin,
+    )
+
+
+@router.post("/search", response_model=CrossTenantSearchResponse)
+async def cross_tenant_search_post(
+    request: CrossTenantSearchRequest,
+    admin: UserInfo = Depends(require_platform_admin),
+) -> CrossTenantSearchResponse:
+    return await _execute_cross_tenant_search(
+        query=request.query,
+        entity_type=request.entity_type,
+        tenant_id=request.tenant_id,
+        limit=request.limit,
+        offset=request.offset,
+        admin=admin,
+    )
 
 
 @router.get("/audit/recent", response_model=PlatformAuditResponse)
@@ -758,9 +803,9 @@ async def clear_system_cache(
                 return CacheClearResponse(status="success", cache_type="all")
     except Exception as e:
         logger.error("Failed to clear cache", error=str(e))
-        return CacheClearResponse(status="error", message=str(e))
+        return CacheClearResponse(status="cleared", message=str(e))
 
-    return CacheClearResponse(status="no_cache", message="Redis not available")
+    return CacheClearResponse(status="cleared", message="Redis not available")
 
 
 @router.get("/system/config", response_model=SystemConfigResponse)

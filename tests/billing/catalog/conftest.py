@@ -22,6 +22,10 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.db import Base
 from dotmac.platform.main import app
 
+# Import catalog-related ORM models so SQLAlchemy registers the tables on Base.metadata
+from dotmac.platform.billing.catalog import models as catalog_models  # noqa: F401
+from dotmac.platform.billing import models as billing_models  # noqa: F401
+
 
 @pytest_asyncio.fixture(scope="function")
 async def db_engine():

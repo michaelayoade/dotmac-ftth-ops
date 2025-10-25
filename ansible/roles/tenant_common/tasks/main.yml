@@ -1,0 +1,24 @@
+---
+# Common provisioning tasks shared by all tenant deployments.
+
+- name: "Ensure base packages are present"
+  ansible.builtin.package:
+    name: "{{ tenant_common_packages | default(['curl', 'git']) }}"
+    state: present
+
+- name: "Create tenant working directory"
+  ansible.builtin.file:
+    path: "{{ tenant_workspace_root }}/{{ tenant_id }}"
+    state: directory
+    mode: "0750"
+
+- name: "Write provisioning metadata"
+  ansible.builtin.copy:
+    dest: "{{ tenant_workspace_root }}/{{ tenant_id }}/provisioning.json"
+    content: |
+      {
+        "tenant_id": "{{ tenant_id }}",
+        "deployment_mode": "{{ deployment_mode }}",
+        "requested_at": "{{ provisioning_requested_at }}"
+      }
+    mode: "0640"

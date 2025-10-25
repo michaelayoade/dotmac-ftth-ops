@@ -2,6 +2,7 @@
 Billing reports service - Main orchestrator for all billing reports
 """
 
+import asyncio
 import logging
 from datetime import UTC, datetime, timedelta
 from enum import Enum
@@ -15,7 +16,7 @@ from dotmac.platform.billing.reports.generators import (
     RevenueReportGenerator,
 )
 from dotmac.platform.billing.tax.reports import TaxReportGenerator
-from dotmac.platform.billing.utils import format_money
+from dotmac.platform.billing.utils.currency import format_money
 
 logger = logging.getLogger(__name__)
 
@@ -74,25 +75,19 @@ class BillingReportService:
         # Get previous period for comparison
         prev_start, prev_end = self._calculate_previous_period(start_date, end_date)
 
-        # Gather all metrics
-        current_revenue = await self.revenue_generator.get_revenue_summary(
-            tenant_id, start_date, end_date
-        )
-        previous_revenue = await self.revenue_generator.get_revenue_summary(
-            tenant_id, prev_start, prev_end
-        )
-
-        # Customer metrics
-        customer_metrics = await self.customer_generator.get_customer_metrics(
-            tenant_id, start_date, end_date
-        )
-
-        # Outstanding amounts
-        aging_summary = await self.aging_generator.get_aging_summary(tenant_id)
-
-        # Tax liability
-        tax_liability = await self.tax_generator.tax_service.get_tax_liability_report(
-            tenant_id, start_date, end_date
+        # Gather all metrics concurrently
+        (
+            current_revenue,
+            previous_revenue,
+            customer_metrics,
+            aging_summary,
+            tax_liability,
+        ) = await asyncio.gather(
+            self.revenue_generator.get_revenue_summary(tenant_id, start_date, end_date),
+            self.revenue_generator.get_revenue_summary(tenant_id, prev_start, prev_end),
+            self.customer_generator.get_customer_metrics(tenant_id, start_date, end_date),
+            self.aging_generator.get_aging_summary(tenant_id),
+            self.tax_generator.tax_service.get_tax_liability_report(tenant_id, start_date, end_date),
         )
 
         # Calculate growth rates
@@ -105,7 +100,16 @@ class BillingReportService:
             customer_metrics.get("previous_period_new_customers", 0),
         )
 
-        return {
+        currency_code = (current_revenue.get("currency") or "USD").upper()
+
+        def format_amount(amount: int | None) -> str:
+            minor_amount = int(amount or 0)
+            numeric = format_money(minor_amount, include_symbol=False)
+            if currency_code == "USD":
+                return f"${numeric}"
+            return f"{currency_code} {numeric}"
+
+        summary = {
             "report_type": "executive_summary",
             "tenant_id": tenant_id,
             "period": {
@@ -118,7 +122,7 @@ class BillingReportService:
                     "current_period": current_revenue.get("total_revenue", 0),
                     "previous_period": previous_revenue.get("total_revenue", 0),
                     "growth_rate": revenue_growth,
-                    "formatted": format_money(current_revenue.get("total_revenue", 0)),
+                    "formatted": format_amount(current_revenue.get("total_revenue", 0)),
                 },
                 "invoices": {
                     "total_issued": current_revenue.get("invoice_count", 0),
@@ -136,12 +140,12 @@ class BillingReportService:
                 "outstanding": {
                     "total_outstanding": aging_summary.get("total_outstanding", 0),
                     "overdue_amount": aging_summary.get("overdue_amount", 0),
-                    "formatted": format_money(aging_summary.get("total_outstanding", 0)),
+                    "formatted": format_amount(aging_summary.get("total_outstanding", 0)),
                 },
                 "tax_liability": {
                     "total_collected": tax_liability.get("tax_collected", 0),
                     "net_liability": tax_liability.get("net_tax_liability", 0),
-                    "formatted": format_money(tax_liability.get("net_tax_liability", 0)),
+                    "formatted": format_amount(tax_liability.get("net_tax_liability", 0)),
                 },
             },
             "trends": {
@@ -154,6 +158,10 @@ class BillingReportService:
             },
             "generated_at": datetime.now(UTC).isoformat(),
         }
+        summary["key_metrics"]["revenue"]["currency"] = currency_code
+        summary["key_metrics"]["outstanding"]["currency"] = currency_code
+        summary["key_metrics"]["tax_liability"]["currency"] = currency_code
+        return summary
 
     async def generate_revenue_report(
         self,

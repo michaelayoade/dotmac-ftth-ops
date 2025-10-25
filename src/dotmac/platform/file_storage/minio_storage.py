@@ -9,6 +9,7 @@ from typing import BinaryIO
 
 import structlog
 from minio import Minio
+from minio.commonconfig import CopySource
 from minio.error import S3Error
 
 from ..settings import settings
@@ -151,6 +152,39 @@ class MinIOStorage:
             if "NoSuchKey" in str(e):
                 return False
             logger.error(f"Failed to delete file {object_name}: {e}")
+            raise
+
+    def copy_file(
+        self,
+        source_path: str,
+        destination_path: str,
+        source_tenant_id: str,
+        destination_tenant_id: str | None = None,
+    ) -> None:
+        """Copy a file within MinIO."""
+        dest_tenant = destination_tenant_id or source_tenant_id
+
+        destination_object = self._get_object_name(destination_path, dest_tenant)
+        source_object = self._get_object_name(source_path, source_tenant_id)
+
+        try:
+            self.client.copy_object(
+                bucket_name=self.bucket,
+                object_name=destination_object,
+                source=CopySource(self.bucket, source_object),
+            )
+            logger.info(
+                "Copied file",
+                source=source_object,
+                destination=destination_object,
+            )
+        except S3Error as e:
+            logger.error(
+                "Failed to copy file in MinIO",
+                source=source_object,
+                destination=destination_object,
+                error=str(e),
+            )
             raise
 
     def file_exists(self, file_path: str, tenant_id: str) -> bool:

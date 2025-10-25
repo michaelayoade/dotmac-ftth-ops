@@ -58,10 +58,8 @@ class NetworkQueries:
         # Get monitoring service
         # Note: In production, service would be injected via dependency injection
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Fetch overview from service
@@ -110,10 +108,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum if provided
@@ -196,10 +192,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -241,10 +235,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -289,10 +281,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -344,10 +334,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enums to Pydantic enums if provided
@@ -413,10 +401,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Fetch all alerts and find the specific one

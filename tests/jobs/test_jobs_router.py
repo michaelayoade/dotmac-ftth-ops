@@ -7,6 +7,7 @@ Tests for BSS Phase 1 async job tracking endpoints.
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
 
 from dotmac.platform.jobs.models import Job, JobStatus
 from dotmac.platform.tenant.models import Tenant
@@ -77,7 +78,7 @@ class TestJobEndpoints:
         """Test listing all jobs."""
         # Create test jobs
         job1 = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_import",
             title="Import Job 1",
@@ -86,7 +87,7 @@ class TestJobEndpoints:
             created_by="test_user",
         )
         job2 = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_export",
             title="Export Job 2",
@@ -118,7 +119,7 @@ class TestJobEndpoints:
     ):
         """Test getting a specific job by ID."""
         job = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_import",
             title="Test Job",
@@ -152,7 +153,7 @@ class TestJobEndpoints:
     ):
         """Test updating job progress."""
         job = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_import",
             title="Progress Test Job",
@@ -193,7 +194,7 @@ class TestJobEndpoints:
     ):
         """Test cancelling a running job."""
         job = Job(
-            id=str(pytest.uuid4()),
+                    id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_import",
             title="Cancel Test Job",
@@ -225,7 +226,7 @@ class TestJobEndpoints:
         # Create jobs with different statuses
         for i, status in enumerate([JobStatus.PENDING, JobStatus.RUNNING, JobStatus.COMPLETED]):
             job = Job(
-                id=str(pytest.uuid4()),
+                    id=str(uuid4()),
                 tenant_id=str(test_tenant.id),
                 job_type="data_import",
                 title=f"Job {i}",
@@ -257,7 +258,7 @@ class TestJobEndpoints:
         # Create jobs with different types
         for i, job_type in enumerate(["data_import", "data_export", "bulk_update"]):
             job = Job(
-                id=str(pytest.uuid4()),
+                id=str(uuid4()),
                 tenant_id=str(test_tenant.id),
                 job_type=job_type,
                 title=f"Job {i}",
@@ -295,7 +296,7 @@ class TestJobEndpoints:
         ]
         for status in statuses:
             job = Job(
-                id=str(pytest.uuid4()),
+                id=str(uuid4()),
                 tenant_id=str(test_tenant.id),
                 job_type="data_import",
                 title=f"Job {status.value}",
@@ -337,9 +338,9 @@ class TestJobTenantIsolation:
     ):
         """Test that jobs are isolated by tenant."""
         # Create job for a different tenant
-        other_tenant_id = str(pytest.uuid4())
+        other_tenant_id = str(uuid4())
         other_job = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=other_tenant_id,
             job_type="data_import",
             title="Other Tenant Job",
@@ -370,9 +371,9 @@ class TestJobTenantIsolation:
     ):
         """Test that users cannot access jobs from other tenants."""
         # Create job for a different tenant
-        other_tenant_id = str(pytest.uuid4())
+        other_tenant_id = str(uuid4())
         other_job = Job(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=other_tenant_id,
             job_type="data_import",
             title="Other Tenant Job",

@@ -157,7 +157,8 @@ def create_quick_order(
         ],
     }
 
-    services = package_services.get(request.package_code, package_services["starter"])
+    base_services = package_services.get(request.package_code, package_services["starter"])
+    services = list(base_services)
 
     # Add any additional services
     if request.additional_services:
@@ -270,12 +271,21 @@ def list_orders(
 
     Query and filter orders. Requires `order.read` permission.
     """
-    orders = service.list_orders(
-        status=status,
-        customer_email=customer_email,
-        skip=skip,
-        limit=limit
-    )
+    try:
+        orders = service.list_orders(
+            status=status,
+            customer_email=customer_email,
+            skip=skip,
+            limit=limit,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     return [OrderResponse.model_validate(o) for o in orders]
 
 
@@ -286,7 +296,18 @@ def get_order(
     service: OrderProcessingService = Depends(get_order_service),
 ) -> OrderResponse:
     """Get order by ID (Internal API)"""
-    order = service.get_order(order_id)
+    try:
+        order = service.get_order(
+            order_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -311,11 +332,20 @@ async def submit_order(
 
     Requires `order.submit` permission.
     """
-    order = await service.submit_order(
-        order_id=order_id,
-        submit_request=submit_request,
-        user_id=current_user.user_id,
-    )
+    try:
+        order = await service.submit_order(
+            order_id=order_id,
+            submit_request=submit_request,
+            user_id=current_user.user_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     return OrderResponse.model_validate(order)
 
 
@@ -337,7 +367,19 @@ async def process_order(
 
     Requires `order.process` permission.
     """
-    order = await service.process_order(order_id=order_id, user_id=current_user.user_id)
+    try:
+        order = await service.process_order(
+            order_id=order_id,
+            user_id=current_user.user_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     return OrderResponse.model_validate(order)
 
 
@@ -359,9 +401,17 @@ def update_order_status(
         order = service.update_order_status(
             order_id=order_id,
             status=status_update.status,
-            status_message=status_update.status_message
+            status_message=status_update.status_message,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
         )
         return OrderResponse.model_validate(order)
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -383,8 +433,18 @@ def cancel_order(
     Requires `order.delete` permission.
     """
     try:
-        order = service.cancel_order(order_id)
+        order = service.cancel_order(
+            order_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
         return {"success": True, "message": f"Order {order.order_number} cancelled"}
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     except ValueError as e:
         error_msg = str(e)
         if "not found" in error_msg:
@@ -418,7 +478,18 @@ def list_order_activations(
     status of each service activation.
     """
     # Verify order exists
-    order = order_service.get_order(order_id)
+    try:
+        order = order_service.get_order(
+            order_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -443,7 +514,18 @@ def get_activation_progress(
     have been activated, are in progress, or failed.
     """
     # Verify order exists
-    order = order_service.get_order(order_id)
+    try:
+        order = order_service.get_order(
+            order_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -484,7 +566,18 @@ def retry_failed_activations(
     Requires `order.process` permission.
     """
     # Verify order exists
-    order = order_service.get_order(order_id)
+    try:
+        order = order_service.get_order(
+            order_id,
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc
     if not order:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -513,4 +606,14 @@ def get_order_statistics(
     - Average processing time
     - Success rate
     """
-    return service.get_order_statistics()
+    try:
+        return service.get_order_statistics(
+            tenant_id=current_user.tenant_id,
+            is_platform_admin=current_user.is_platform_admin,
+            enforce_scope=True,
+        )
+    except PermissionError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=str(exc),
+        ) from exc

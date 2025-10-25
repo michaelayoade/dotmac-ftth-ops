@@ -73,6 +73,12 @@ def mock_radius_service():
 def mock_netbox_service():
     """Create mock NetBox service."""
     service = AsyncMock()
+    # Configure get_ip_address to return a dict, not an AsyncMock
+    service.get_ip_address.return_value = {
+        "address": "10.0.0.100",
+        "status": "active",
+        "vrf": None,
+    }
     return service
 
 
@@ -80,6 +86,14 @@ def mock_netbox_service():
 def mock_voltha_service():
     """Create mock VOLTHA service."""
     service = AsyncMock()
+    # Configure get_onu_status to return a dict, not an AsyncMock
+    service.get_onu_status.return_value = {
+        "status": "online",
+        "optical_signal_level": -20.5,
+        "firmware_version": "1.0.0",
+        "registration_id": "REG123",
+        "operational_state": "active",
+    }
     return service
 
 
@@ -87,6 +101,22 @@ def mock_voltha_service():
 def mock_genieacs_service():
     """Create mock GenieACS service."""
     service = AsyncMock()
+    # Configure get_device_status to return a dict, not an AsyncMock
+    service.get_device_status.return_value = {
+        "status": "online",
+        "last_inform": "2024-01-01T12:00:00",
+        "firmware_version": "1.0.0",
+        "model": "Router Model X",
+        "uptime": 3600,
+        "wan_ip": "192.168.1.1",
+        "wifi_enabled": True,
+        "firmware_outdated": False,
+    }
+    # Configure reboot_device to return a dict, not an AsyncMock
+    service.reboot_device.return_value = {
+        "success": True,
+        "task_id": "task-123",
+    }
     return service
 
 
@@ -538,6 +568,31 @@ class TestDiagnosticsServiceHealthCheck:
 
             # Should complete despite failures (health check creates multiple diagnostics)
             assert mock_db_session.add.call_count >= 1
+
+    @pytest.mark.asyncio
+    async def test_run_health_check_does_not_use_asyncio_gather(
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_radius_service,
+        mock_voltha_service,
+        mock_genieacs_service,
+    ):
+        """Ensure health check no longer relies on asyncio.gather (prevents session reuse)."""
+        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+            mock_get_sub.return_value = mock_subscriber
+            mock_radius_service.get_active_sessions.return_value = []
+            mock_voltha_service.get_onu_status.return_value = {"operational_state": "active"}
+            mock_genieacs_service.get_device_status.return_value = {"status": "online"}
+
+            with patch("asyncio.gather", side_effect=AssertionError("asyncio.gather should not be called")):
+                await diagnostics_service.run_health_check(
+                    tenant_id=tenant_id,
+                    subscriber_id=subscriber_id,
+                )
 
 
 class TestDiagnosticsServiceDiagnosticRuns:

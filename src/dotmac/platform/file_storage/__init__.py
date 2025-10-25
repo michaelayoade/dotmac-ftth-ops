@@ -13,6 +13,10 @@ from .service import (
     StorageBackend,
     get_storage_service,
 )
+from .plugins import (
+    register_plugin as register_storage_plugin,
+    list_plugins as list_storage_plugins,
+)
 
 __all__ = [
     # MinIO specific
@@ -28,6 +32,8 @@ __all__ = [
     "MemoryFileStorage",
     "MinIOFileStorage",
     "get_storage_service",
+    "register_storage_plugin",
+    "list_storage_plugins",
     # Router
     "file_storage_router",
     "storage_router",

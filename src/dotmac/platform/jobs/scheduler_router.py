@@ -270,9 +270,12 @@ async def update_scheduled_job(
     """
     update_dict = updates.model_dump(exclude_unset=True)
 
-    scheduled_job = await service.update_scheduled_job(
-        scheduled_job_id, current_user.tenant_id, **update_dict
-    )
+    try:
+        scheduled_job = await service.update_scheduled_job(
+            scheduled_job_id, current_user.tenant_id, **update_dict
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     if not scheduled_job:
         raise HTTPException(

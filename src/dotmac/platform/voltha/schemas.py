@@ -57,6 +57,7 @@ class Device(BaseModel):  # BaseModel resolves to Any in isolation
     oper_status: str | None = None
     connect_status: str | None = None
     reason: str | None = None
+    metadata: dict[str, Any] | None = Field(default=None)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -103,6 +104,8 @@ class LogicalDevice(BaseModel):  # BaseModel resolves to Any in isolation
     desc: dict[str, Any] | None = None
     switch_features: dict[str, Any] | None = None
     root_device_id: str | None = None
+    ports: list[dict[str, Any]] = Field(default_factory=list)
+    flows: list[dict[str, Any]] = Field(default_factory=list)
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -210,10 +213,14 @@ class PONStatistics(BaseModel):  # BaseModel resolves to Any in isolation
     model_config = ConfigDict()
 
     total_olts: int = 0
+    active_olts: int = 0
     total_onus: int = 0
+    active_onus: int = 0
     online_onus: int = 0
     offline_onus: int = 0
     total_flows: int = 0
+    total_ports: int = 0
+    active_ports: int = 0
     adapters: list[str] = Field(default_factory=lambda: [])
 
 
@@ -386,6 +393,41 @@ class VOLTHAEventStreamResponse(BaseModel):  # BaseModel resolves to Any in isol
 
     events: list[VOLTHAEvent]
     total: int
+
+
+# ============================================================================
+# Alarm Operations Schemas
+# ============================================================================
+
+
+class AlarmAcknowledgeRequest(BaseModel):
+    """Request to acknowledge an alarm"""
+
+    model_config = ConfigDict()
+
+    acknowledged_by: str = Field(..., description="User who acknowledged the alarm")
+    note: str | None = Field(None, description="Optional note about acknowledgement")
+
+
+class AlarmClearRequest(BaseModel):
+    """Request to clear an alarm"""
+
+    model_config = ConfigDict()
+
+    cleared_by: str = Field(..., description="User who cleared the alarm")
+    note: str | None = Field(None, description="Optional note about clearing")
+
+
+class AlarmOperationResponse(BaseModel):
+    """Response from alarm acknowledge/clear operation"""
+
+    model_config = ConfigDict()
+
+    success: bool
+    message: str
+    alarm_id: str
+    operation: str  # "acknowledge" or "clear"
+    timestamp: str  # ISO timestamp
 
 
 # ============================================================================

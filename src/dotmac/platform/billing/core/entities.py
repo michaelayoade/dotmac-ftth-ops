@@ -3,6 +3,7 @@ Billing module SQLAlchemy entities with tenant support
 """
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -15,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -195,6 +197,7 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     provider_payment_id: Mapped[str | None] = mapped_column(String(255), index=True)
     provider_fee: Mapped[int | None] = mapped_column(Integer)
+    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     # Failure handling
     failure_reason: Mapped[str | None] = mapped_column(String(500))
@@ -203,9 +206,11 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
 
     # Additional timestamp
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Metadata
     extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    refund_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
 
     # Relationships
     invoices: Mapped[list["PaymentInvoiceEntity"]] = relationship(back_populates="payment")

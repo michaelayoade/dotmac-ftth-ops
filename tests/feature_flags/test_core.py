@@ -203,10 +203,12 @@ class TestSetFlag:
             flag_data = json.loads(call_args[0][2])
             assert flag_data["enabled"] is True
             assert flag_data["context"] == {"env": "test"}
+            assert flag_data["metadata"] == {}
             assert "updated_at" in flag_data
 
             # Check cache was updated
             assert "test_flag" in _flag_cache
+            assert _flag_cache["test_flag"]["metadata"] == {}
 
     @pytest.mark.asyncio
     async def test_set_flag_without_redis(self):
@@ -219,6 +221,7 @@ class TestSetFlag:
             flag_data = _flag_cache["cache_only_flag"]
             assert flag_data["enabled"] is True
             assert flag_data["context"] == {"env": "test"}
+            assert flag_data["metadata"] == {}
 
     @pytest.mark.asyncio
     async def test_set_flag_redis_error(self, mock_redis_client):
@@ -242,6 +245,29 @@ class TestSetFlag:
             flag_data = _flag_cache["simple_flag"]
             assert flag_data["enabled"] is False
             assert flag_data["context"] == {}
+            assert flag_data["metadata"] == {}
+
+    @pytest.mark.asyncio
+    async def test_set_flag_with_metadata(self, mock_redis_client):
+        """Test setting flag with metadata persists metadata separately."""
+        metadata = {"description": "Test flag", "created_by": "user123"}
+
+        with patch(
+            "dotmac.platform.feature_flags.core.get_redis_client", return_value=mock_redis_client
+        ):
+            await set_flag("meta_flag", True, {"env": "stage"}, metadata)
+
+            # Redis payload should include metadata
+            call_args = mock_redis_client.hset.call_args
+            payload = json.loads(call_args[0][2])
+            assert payload["metadata"] == metadata
+            assert payload["context"] == {"env": "stage"}
+
+            # Cache should have isolated metadata copy
+            cached_flag = _flag_cache["meta_flag"]
+            assert cached_flag["metadata"] == metadata
+            metadata["description"] = "Updated"
+            assert cached_flag["metadata"]["description"] == "Test flag"
 
 
 class TestIsEnabled:
@@ -282,7 +308,7 @@ class TestIsEnabled:
         ):
             result = await is_enabled("nonexistent_flag")
 
-            assert result is False
+        assert result is False
 
     @pytest.mark.asyncio
     async def test_is_enabled_with_context_matching(self):
@@ -305,6 +331,18 @@ class TestIsEnabled:
         # Partial context (missing required key)
         result = await is_enabled("context_flag", {"env": "prod"})
         assert result is False
+
+    @pytest.mark.asyncio
+    async def test_is_enabled_ignores_metadata_keys(self):
+        """Ensure metadata-style keys do not impact evaluation."""
+        _flag_cache["meta_flag"] = {
+            "enabled": True,
+            "context": {"env": "prod", "_created_by": "user123"},
+        }
+
+        result = await is_enabled("meta_flag", {"env": "prod"})
+
+        assert result is True
 
     @pytest.mark.asyncio
     async def test_is_enabled_redis_error(self, mock_redis_client):
@@ -419,6 +457,23 @@ class TestListFlags:
             # Should only have valid flag
             assert "valid_flag" in flags
             assert "invalid_flag" not in flags
+
+    @pytest.mark.asyncio
+    async def test_list_flags_migrates_legacy_metadata(self):
+        """Legacy context keys should move to metadata automatically."""
+        _flag_cache["legacy_flag"] = {
+            "enabled": True,
+            "context": {"env": "prod", "_description": "Legacy flag"},
+            "updated_at": 111,
+        }
+
+        with patch("dotmac.platform.feature_flags.core.get_redis_client", return_value=None):
+            flags = await list_flags()
+
+        flag = flags["legacy_flag"]
+        assert flag["context"] == {"env": "prod"}
+        assert flag["metadata"]["description"] == "Legacy flag"
+        assert flag["updated_at"] == 111
 
 
 class TestDeleteFlag:
@@ -603,3 +658,40 @@ class TestDecorator:
             result = await decorated_function()
 
             assert result is None
+
+    def test_decorator_sync_function_enabled(self):
+        """Sync decorated functions should evaluate flag without runtime errors."""
+        from dotmac.platform.feature_flags.core import feature_flag
+
+        @feature_flag("test_sync_decorator", default=False)
+        def decorated_function():
+            return "success"
+
+        async_enabled = AsyncMock(return_value=True)
+        with patch("dotmac.platform.feature_flags.core.is_enabled", async_enabled):
+            result = decorated_function()
+
+        assert result == "success"
+        async_enabled.assert_awaited()
+
+    def test_decorator_sync_function_with_running_loop(self):
+        """Sync decorator must still work when a loop is already running."""
+        from dotmac.platform.feature_flags.core import feature_flag
+
+        @feature_flag("test_sync_with_loop", default=False)
+        def decorated_function():
+            return "success"
+
+        async_enabled = AsyncMock(return_value=True)
+
+        class DummyLoop:
+            def is_running(self) -> bool:
+                return True
+
+        with patch("dotmac.platform.feature_flags.core.is_enabled", async_enabled), patch(
+            "asyncio.get_running_loop", return_value=DummyLoop()
+        ):
+            result = decorated_function()
+
+        assert result == "success"
+        async_enabled.assert_awaited()

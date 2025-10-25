@@ -38,13 +38,24 @@ async def get_failed_payments(
     """
     Get summary of failed payments for monitoring.
 
-    Returns count and total amount of payments that have failed.
+    Returns count and total amount of payments that have failed for the current tenant.
     """
     try:
-        # Query failed payments from last 30 days
+        # Guard against missing tenant_id (should not happen with proper auth)
+        if not current_user.tenant_id:
+            logger.error(
+                "Failed payments query attempted without tenant_id",
+                user_id=current_user.user_id,
+            )
+            return FailedPaymentsSummary(
+                count=0,
+                total_amount=0.0,
+            )
+
+        # Query failed payments from last 30 days for current tenant only
         thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
 
-        # Count and sum failed payments
+        # Count and sum failed payments scoped by tenant_id
         query = select(
             func.count(PaymentEntity.payment_id).label("count"),
             func.sum(PaymentEntity.amount).label("total_amount"),
@@ -53,6 +64,7 @@ async def get_failed_payments(
         ).where(
             PaymentEntity.status == PaymentStatus.FAILED,
             PaymentEntity.created_at >= thirty_days_ago,
+            PaymentEntity.tenant_id == current_user.tenant_id,  # CRITICAL: Scope by tenant
         )
 
         result = await session.execute(query)

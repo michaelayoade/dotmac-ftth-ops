@@ -269,6 +269,13 @@ class WebhookSubscriptionResponse(BaseModel):  # BaseModel resolves to Any in is
         return str(v) if v else None
 
 
+class WebhookSubscriptionCreateResponse(BaseModel):
+    """Response returned when creating a webhook subscription."""
+
+    subscription: WebhookSubscriptionResponse
+    secret: str
+
+
 class WebhookDeliveryResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """Webhook delivery response."""
 

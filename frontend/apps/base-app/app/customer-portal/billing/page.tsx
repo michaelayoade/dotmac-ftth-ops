@@ -29,13 +29,12 @@ import {
   Loader2,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { formatDistanceToNow } from "date-fns";
 import { useCustomerInvoices, useCustomerPayments } from "@/hooks/useCustomerPortal";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function CustomerBillingPage() {
   const { toast } = useToast();
-  const [selectedInvoice, setSelectedInvoice] = useState<string | null>(null);
+  const [, setSelectedInvoice] = useState<string | null>(null);
   const { invoices, loading: invoicesLoading, refetch: refetchInvoices } = useCustomerInvoices();
   const { payments, loading: paymentsLoading, makePayment } = useCustomerPayments();
 

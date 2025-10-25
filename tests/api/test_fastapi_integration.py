@@ -10,6 +10,8 @@ from unittest.mock import Mock
 
 import pytest
 
+from dotmac.platform.version import get_version
+
 pytestmark = pytest.mark.asyncio
 
 
@@ -54,6 +56,7 @@ class APIEndpointHandler:
         self.api_key_service = Mock()
         self.rate_limiter = Mock()
         self.validator = Mock()
+        self._version = get_version()
 
     async def health_check(self) -> dict[str, Any]:
         """Health check endpoint"""
@@ -66,7 +69,7 @@ class APIEndpointHandler:
         return {
             "status": "healthy",
             "timestamp": datetime.now(UTC).isoformat(),
-            "version": "1.0.0",
+            "version": self._version,
             "checks": checks,
         }
 

@@ -14,6 +14,11 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
+from dotmac.platform.version import get_version
+
+
+CURRENT_VERSION = get_version()
+
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
@@ -32,7 +37,7 @@ def sample_license_dict() -> dict[str, Any]:
         "customer_id": str(uuid4()),
         "product_id": str(uuid4()),
         "product_name": "Test Product",
-        "product_version": "1.0.0",
+        "product_version": CURRENT_VERSION,
         "license_type": "PERPETUAL",
         "license_model": "PER_SEAT",
         "issued_to": "Test Customer",
@@ -67,7 +72,7 @@ def sample_activation_dict() -> dict[str, Any]:
         "ip_address": "192.168.1.100",
         "operating_system": "Linux",
         "user_agent": "TestAgent/1.0",
-        "application_version": "1.0.0",
+        "application_version": CURRENT_VERSION,
         "activation_type": "ONLINE",
         "location": None,
         "status": "ACTIVE",
@@ -194,10 +199,13 @@ async def async_client(monkeypatch):
     mock_session.execute = AsyncMock(return_value=mock_result)
 
     # Mock LicensingService
-    mock_licensing_service = AsyncMock()
-    mock_licensing_service.tenant_id = "test-tenant"
-    mock_licensing_service.user_id = str(uuid4())
-    mock_licensing_service.session = mock_session
+    from dotmac.platform.licensing.service import LicensingService
+
+    mock_licensing_service = LicensingService(
+        session=mock_session,
+        tenant_id="test-tenant",
+        user_id=str(uuid4()),
+    )
 
     # Mock all service methods
     mock_licensing_service.get_license = AsyncMock(return_value=None)
@@ -218,14 +226,7 @@ async def async_client(monkeypatch):
     mock_licensing_service.process_offline_activation = AsyncMock()
 
     mock_licensing_service.get_template = AsyncMock(return_value=None)
-    mock_licensing_service.create_template = AsyncMock()
-    mock_licensing_service.update_template = AsyncMock()
-
     mock_licensing_service.get_order = AsyncMock(return_value=None)
-    mock_licensing_service.create_order = AsyncMock()
-    mock_licensing_service.approve_order = AsyncMock()
-    mock_licensing_service.fulfill_order = AsyncMock()
-    mock_licensing_service.cancel_order = AsyncMock()
 
     mock_licensing_service.validate_license_key = AsyncMock()
     mock_licensing_service.integrity_check = AsyncMock()
@@ -360,7 +361,7 @@ class TestLicenseManagement:
                 "customer_id": sample_license_dict["customer_id"],
                 "product_id": sample_license_dict["product_id"],
                 "product_name": "Test Product",
-                "product_version": "1.0.0",
+                "product_version": CURRENT_VERSION,
                 "license_type": "PERPETUAL",
                 "license_model": "PER_SEAT",
                 "issued_to": "Test Customer",
@@ -490,7 +491,7 @@ class TestActivationManagement:
             json={
                 "license_key": "LIC-2025-001-ABCD",
                 "device_fingerprint": "fp-abc123",
-                "application_version": "1.0.0",
+                "application_version": CURRENT_VERSION,
                 "activation_type": "ONLINE"
             }
         )
@@ -742,7 +743,6 @@ class TestTemplateManagement:
         """Test creating new template."""
         # Arrange
         template_obj = MockObject(**sample_template_dict)
-        async_client.mock_licensing_service.create_template.return_value = template_obj  # type: ignore
 
         # Act
         response = await async_client.post(
@@ -780,7 +780,9 @@ class TestTemplateManagement:
         # Arrange
         updated_dict = {**sample_template_dict, "default_seats": 10}
         template_obj = MockObject(**updated_dict)
-        async_client.mock_licensing_service.update_template.return_value = template_obj  # type: ignore
+        mock_result = MagicMock()
+        mock_result.scalar_one_or_none = MagicMock(return_value=template_obj)
+        async_client.mock_licensing_service.session.execute = AsyncMock(return_value=mock_result)  # type: ignore
 
         # Act
         response = await async_client.put(
@@ -862,6 +864,7 @@ class TestOrderManagement:
         mock_result = MagicMock()
         mock_result.scalar_one_or_none = MagicMock(return_value=template_obj)
         async_client.mock_licensing_service.session.execute = AsyncMock(return_value=mock_result)  # type: ignore
+        async_client.mock_licensing_service.get_template.return_value = template_obj  # type: ignore
 
         # Act
         response = await async_client.post(
@@ -887,7 +890,7 @@ class TestOrderManagement:
         # Arrange
         approved_dict = {**sample_order_dict, "status": "approved"}
         order_obj = MockObject(**approved_dict)
-        async_client.mock_licensing_service.approve_order.return_value = order_obj  # type: ignore
+        async_client.mock_licensing_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
         response = await async_client.post(
@@ -910,7 +913,7 @@ class TestOrderManagement:
         # Arrange
         fulfilled_dict = {**sample_order_dict, "status": "fulfilled"}
         order_obj = MockObject(**fulfilled_dict)
-        async_client.mock_licensing_service.fulfill_order.return_value = order_obj  # type: ignore
+        async_client.mock_licensing_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
         response = await async_client.post(f"/api/licensing/orders/{sample_order_dict['id']}/fulfill")
@@ -930,7 +933,7 @@ class TestOrderManagement:
         # Arrange
         cancelled_dict = {**sample_order_dict, "status": "cancelled"}
         order_obj = MockObject(**cancelled_dict)
-        async_client.mock_licensing_service.cancel_order.return_value = order_obj  # type: ignore
+        async_client.mock_licensing_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
         response = await async_client.post(

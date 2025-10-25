@@ -188,7 +188,7 @@ class RadAcct(Base):  # type: ignore[misc]
             "idx_radacct_active_session",
             "tenant_id",
             "username",
-            postgresql_where=(acctstoptime is None),
+            postgresql_where=acctstoptime.is_(None),
         ),
     )
 

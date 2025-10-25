@@ -54,6 +54,9 @@ class TenantStatus(str, PyEnum):
     INACTIVE = "inactive"
     PENDING = "pending"
     CANCELLED = "cancelled"
+    PROVISIONING = "provisioning"
+    PROVISIONED = "provisioned"
+    FAILED_PROVISIONING = "failed_provisioning"
 
 
 class TenantPlanType(str, PyEnum):
@@ -64,6 +67,24 @@ class TenantPlanType(str, PyEnum):
     PROFESSIONAL = "professional"
     ENTERPRISE = "enterprise"
     CUSTOM = "custom"
+
+
+class TenantDeploymentMode(str, PyEnum):
+    """Deployment target for a tenant environment."""
+
+    DOTMAC_HOSTED = "dotmac_hosted"
+    CUSTOMER_HOSTED = "customer_hosted"
+
+
+class TenantProvisioningStatus(str, PyEnum):
+    """Lifecycle for tenant provisioning jobs."""
+
+    QUEUED = "queued"
+    IN_PROGRESS = "in_progress"
+    SUCCEEDED = "succeeded"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+    TIMED_OUT = "timed_out"
 
 
 class BillingCycle(str, PyEnum):
@@ -154,6 +175,9 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     invitations: Mapped[list["TenantInvitation"]] = relationship(
         "TenantInvitation", back_populates="tenant", cascade="all, delete-orphan"
     )
+    provisioning_jobs: Mapped[list["TenantProvisioningJob"]] = relationship(
+        "TenantProvisioningJob", back_populates="tenant", cascade="all, delete-orphan"
+    )
     # RADIUS relationships (configured lazily to avoid optional import cycles)
     @declared_attr.directive
     def radius_checks(cls) -> Any:  # pragma: no cover - optional radius integration
@@ -174,7 +198,7 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     @property
     def status_is_active(self) -> bool:
         """Check if tenant's status is ACTIVE without overriding the is_active column."""
-        return self.status == TenantStatus.ACTIVE
+        return self.status in {TenantStatus.ACTIVE, TenantStatus.PROVISIONED}
 
     @property
     def trial_expired(self) -> bool:
@@ -325,6 +349,58 @@ class TenantInvitation(Base, TimestampMixin):
     def is_pending(self) -> bool:
         """Check if invitation is pending."""
         return self.status == TenantInvitationStatus.PENDING and not self.is_expired
+
+
+class TenantProvisioningJob(Base, TimestampMixin, AuditMixin):
+    """Track dedicated infrastructure provisioning for a tenant."""
+
+    __tablename__ = "tenant_provisioning_jobs"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True, default=lambda: str(uuid4()))
+    tenant_id: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    status: Mapped[TenantProvisioningStatus] = mapped_column(
+        Enum(TenantProvisioningStatus),
+        default=TenantProvisioningStatus.QUEUED,
+        nullable=False,
+        index=True,
+    )
+    deployment_mode: Mapped[TenantDeploymentMode] = mapped_column(
+        Enum(TenantDeploymentMode), nullable=False
+    )
+    awx_template_id: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    awx_job_id: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
+    requested_by: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    extra_vars: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    connection_profile: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
+    last_acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="provisioning_jobs")
+
+    def mark_started(self) -> None:
+        """Set start timestamp when provisioning begins."""
+        self.status = TenantProvisioningStatus.IN_PROGRESS
+        self.started_at = datetime.now(UTC)
+
+    def mark_succeeded(self) -> None:
+        """Mark job as succeeded."""
+        self.status = TenantProvisioningStatus.SUCCEEDED
+        self.finished_at = datetime.now(UTC)
+
+    def mark_failed(self, message: str | None = None) -> None:
+        """Mark job as failed and capture reason."""
+        self.status = TenantProvisioningStatus.FAILED
+        self.finished_at = datetime.now(UTC)
+        if message:
+            self.error_message = message
 
 
 class VerificationMethod(str, PyEnum):

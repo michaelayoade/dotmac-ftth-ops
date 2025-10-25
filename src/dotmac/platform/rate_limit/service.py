@@ -128,7 +128,9 @@ class RateLimitService:
                 continue
 
             # Check rate limit for this rule
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue
@@ -184,7 +186,9 @@ class RateLimitService:
             if await self._is_exempt(rule, user_id, ip_address, api_key_id):
                 continue
 
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue
@@ -235,6 +239,7 @@ class RateLimitService:
     def _get_identifier(
         self,
         scope: RateLimitScope,
+        tenant_id: str,
         user_id: UUID | None,
         ip_address: str | None,
         api_key_id: str | None,
@@ -243,6 +248,8 @@ class RateLimitService:
         """Get identifier based on scope."""
         if scope == RateLimitScope.GLOBAL:
             return "global"
+        elif scope == RateLimitScope.PER_TENANT:
+            return tenant_id
         elif scope == RateLimitScope.PER_USER:
             return str(user_id) if user_id else None
         elif scope == RateLimitScope.PER_IP:
@@ -359,7 +366,9 @@ class RateLimitService:
             if await self._is_exempt(rule, user_id, ip_address, api_key_id):
                 continue
 
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue

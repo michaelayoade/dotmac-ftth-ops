@@ -6,7 +6,9 @@ ARG POETRY_VERSION=1.8.3
 ARG APP_VERSION=latest
 
 # Stage 1: Dependencies Builder
-FROM python:${PYTHON_VERSION}-slim as dependencies
+FROM python:${PYTHON_VERSION}-slim AS dependencies
+
+ARG POETRY_VERSION
 
 WORKDIR /build
 
@@ -32,7 +34,7 @@ RUN pip install --no-cache-dir poetry==${POETRY_VERSION} && \
     pip install --no-cache-dir --target=/install -r requirements.txt
 
 # Stage 2: Application Builder
-FROM python:${PYTHON_VERSION}-slim as app-builder
+FROM python:${PYTHON_VERSION}-slim AS app-builder
 
 WORKDIR /build
 
@@ -47,7 +49,7 @@ RUN python -m compileall -b src && \
     find src -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 
 # Stage 3: Runtime Base
-FROM python:${PYTHON_VERSION}-slim as runtime-base
+FROM python:${PYTHON_VERSION}-slim AS runtime-base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -69,7 +71,9 @@ RUN groupadd -r -g 1001 dotmac && \
     chown -R dotmac:dotmac /app
 
 # Stage 4: API Runtime
-FROM runtime-base as api
+FROM runtime-base AS api
+
+ARG APP_VERSION
 
 WORKDIR /app
 
@@ -81,9 +85,7 @@ COPY --from=app-builder --chown=dotmac:dotmac /build/src ./src
 COPY --from=app-builder --chown=dotmac:dotmac /build/alembic.ini ./
 COPY --from=app-builder --chown=dotmac:dotmac /build/alembic ./alembic
 
-# Create CLI symlink for easy access
-RUN ln -s /app/src/dotmac/platform/cli.py /usr/local/bin/dotmac-cli && \
-    chmod +x /app/src/dotmac/platform/cli.py
+# (Optional) CLI entry point removed in production image to reduce footprint
 
 # Add startup script for migrations and health checks
 COPY --chown=dotmac:dotmac scripts/docker-entrypoint.sh /docker-entrypoint.sh
@@ -124,7 +126,7 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["api"]
 
 # Stage 5: Celery Worker Runtime
-FROM runtime-base as celery
+FROM runtime-base AS celery
 
 WORKDIR /app
 
@@ -134,9 +136,7 @@ COPY --from=dependencies --chown=dotmac:dotmac /install /usr/local/lib/python3.1
 # Copy compiled application
 COPY --from=app-builder --chown=dotmac:dotmac /build/src ./src
 
-# Create CLI symlink for easy access
-RUN ln -s /app/src/dotmac/platform/cli.py /usr/local/bin/dotmac-cli && \
-    chmod +x /app/src/dotmac/platform/cli.py
+# (Optional) CLI entry point removed in production image to reduce footprint
 
 # Add celery startup script
 COPY --chown=dotmac:dotmac scripts/celery-entrypoint.sh /celery-entrypoint.sh

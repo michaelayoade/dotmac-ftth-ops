@@ -13,6 +13,11 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
+def _is_async_session_like(value: Any) -> bool:
+    """Check if object behaves like AsyncSession (allows AsyncMock in tests)."""
+    return isinstance(value, AsyncSession) or hasattr(value, "execute")
+
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.rbac_service import RBACService
@@ -328,7 +333,7 @@ def check_permission(
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
+            if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)
@@ -355,7 +360,7 @@ def check_any_permission(
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
+            if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)

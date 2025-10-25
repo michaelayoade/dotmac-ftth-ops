@@ -33,7 +33,7 @@ from dotmac.platform.radius.schemas import (
 from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
-router = APIRouter(prefix="/radius", tags=["RADIUS"])
+router = APIRouter(prefix="/api/v1/radius", tags=["RADIUS"])
 
 
 # =============================================================================

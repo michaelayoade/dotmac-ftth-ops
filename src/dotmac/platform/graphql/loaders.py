@@ -21,12 +21,13 @@ class SessionLoader:
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        self._cache: dict[str, list[Any]] = {}
+        self._cache: dict[tuple[str | None, str], list[Any]] = {}
 
-    async def load(self, username: str) -> list[Any]:
+    async def load(self, username: str, *, tenant_id: str | None = None) -> list[Any]:
         """Load sessions for a single username (with cache)."""
-        if username in self._cache:
-            return self._cache[username]
+        cache_key = (tenant_id, username)
+        if cache_key in self._cache:
+            return list(self._cache[cache_key])
 
         # Import here to avoid circular imports
         from dotmac.platform.radius.models import RadAcct
@@ -39,47 +40,59 @@ class SessionLoader:
             .order_by(RadAcct.acctstarttime.desc())
             .limit(20)
         )
+        if tenant_id is not None:
+            stmt = stmt.where(RadAcct.tenant_id == tenant_id)
 
         result = await self.db.execute(stmt)
         sessions = result.scalars().all()
 
         # Cache result
-        self._cache[username] = list(sessions)
+        self._cache[cache_key] = list(sessions)
         return list(sessions)
 
-    async def load_many(self, usernames: list[str]) -> list[list[Any]]:
+    async def load_many(
+        self,
+        usernames: list[str],
+        *,
+        tenant_id: str | None = None,
+    ) -> list[list[Any]]:
         """Batch load sessions for multiple usernames."""
         if not usernames:
             return []
 
-        # Import here to avoid circular imports
-        from dotmac.platform.radius.models import RadAcct
+        cache_key = lambda name: (tenant_id, name)
+        uncached_usernames = [username for username in usernames if cache_key(username) not in self._cache]
 
-        # Query all sessions at once
-        stmt = (
-            select(RadAcct)
-            .where(RadAcct.username.in_(usernames))
-            .where(RadAcct.acctstoptime.is_(None))  # Only active sessions
-            .order_by(RadAcct.username, RadAcct.acctstarttime.desc())
-        )
+        if uncached_usernames:
+            # Import here to avoid circular imports
+            from dotmac.platform.radius.models import RadAcct
 
-        result = await self.db.execute(stmt)
-        all_sessions = result.scalars().all()
+            # Query all uncached sessions at once
+            stmt = (
+                select(RadAcct)
+                .where(RadAcct.username.in_(uncached_usernames))
+                .where(RadAcct.acctstoptime.is_(None))  # Only active sessions
+                .order_by(RadAcct.username, RadAcct.acctstarttime.desc())
+            )
+            if tenant_id is not None:
+                stmt = stmt.where(RadAcct.tenant_id == tenant_id)
 
-        # Group sessions by username
-        grouped: dict[str, list[Any]] = defaultdict(list)
-        for session in all_sessions:
-            grouped[session.username].append(session)
+            result = await self.db.execute(stmt)
+            all_sessions = result.scalars().all()
 
-        # Limit each user to 20 sessions
-        for username in grouped:
-            grouped[username] = grouped[username][:20]
+            # Group sessions by username
+            grouped: dict[str, list[Any]] = defaultdict(list)
+            for session in all_sessions:
+                grouped[session.username].append(session)
 
-        # Cache all results
-        self._cache.update(grouped)
+            # Limit each user to 20 sessions and cache
+            for username in uncached_usernames:
+                sessions = grouped.get(username, [])
+                limited_sessions = sessions[:20]
+                self._cache[cache_key(username)] = list(limited_sessions)
 
         # Return in same order as input usernames
-        return [grouped.get(username, []) for username in usernames]
+        return [list(self._cache.get(cache_key(username), [])) for username in usernames]
 
 
 class CustomerActivityLoader:

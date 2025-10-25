@@ -5,13 +5,19 @@ Provides workflow-compatible methods for customer management operations.
 """
 
 import logging
+from contextlib import contextmanager
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .service import CustomerManagementService
+from dotmac.platform.customer_management.models import CustomerStatus
+from dotmac.platform.customer_management.schemas import CustomerCreate, CustomerUpdate
+from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
+
+from .service import CustomerService as CoreCustomerService
 
 logger = logging.getLogger(__name__)
 
@@ -20,12 +26,41 @@ class CustomerService:
     """
     Customer management service for workflow integration.
 
-    Wraps CustomerManagementService with workflow-compatible methods.
+    Wraps the core CustomerService with workflow-compatible methods.
     """
 
     def __init__(self, db: AsyncSession):
         self.db = db
-        self.customer_service = CustomerManagementService(db)
+        self.customer_service = CoreCustomerService(db)
+
+    @contextmanager
+    def _tenant_context(self, tenant_id: str | None):
+        """Temporarily override the tenant context for service operations."""
+        previous_tenant = get_current_tenant_id()
+        if tenant_id is not None:
+            set_current_tenant_id(tenant_id)
+        try:
+            yield
+        finally:
+            set_current_tenant_id(previous_tenant)
+
+    async def _create_customer_in_tenant(
+        self,
+        tenant_id: str,
+        customer_data: CustomerCreate,
+        status: CustomerStatus | None = None,
+    ):
+        """Create a customer while ensuring the correct tenant context."""
+        with self._tenant_context(tenant_id):
+            customer = await self.customer_service.create_customer(data=customer_data)
+            if status is not None:
+                updated = await self.customer_service.update_customer(
+                    customer_id=customer.id,
+                    data=CustomerUpdate(status=status),
+                )
+                if updated:
+                    customer = updated
+        return customer
 
     async def create_from_lead(
         self,
@@ -73,32 +108,47 @@ class CustomerService:
             logger.info(f"Customer already exists for lead {lead_id}: {existing_customer.id}")
             return {
                 "customer_id": existing_customer.id,
-                "name": existing_customer.name,
+                "name": existing_customer.full_name,
                 "email": existing_customer.email,
             }
 
         # Create new customer from lead data
-        from .schemas import CustomerCreate
-
         customer_data = CustomerCreate(
-            name=f"{lead.first_name} {lead.last_name}".strip(),
+            first_name=lead.first_name,
+            last_name=lead.last_name,
             email=lead.email,
             phone=lead.phone,
-            company=lead.company,
-            status="active",
-            # Map lead address to customer address if available
-            billing_address=lead.address,
+            company_name=lead.company_name,
+            metadata={
+                "converted_from_lead_id": str(lead.id),
+                "source": lead.source.value,
+            },
+            address_line1=lead.service_address_line1,
+            address_line2=lead.service_address_line2,
+            city=lead.service_city,
+            state_province=lead.service_state_province,
+            postal_code=lead.service_postal_code,
+            country=lead.service_country,
+            service_address_line1=lead.service_address_line1,
+            service_address_line2=lead.service_address_line2,
+            service_city=lead.service_city,
+            service_state_province=lead.service_state_province,
+            service_postal_code=lead.service_postal_code,
+            service_country=lead.service_country,
+            service_coordinates=lead.service_coordinates or {},
         )
 
-        customer = await self.customer_service.create_customer(
-            tenant_id=tenant_id, customer_data=customer_data
+        customer = await self._create_customer_in_tenant(
+            tenant_id=tenant_id,
+            customer_data=customer_data,
+            status=CustomerStatus.ACTIVE,
         )
 
         logger.info(f"Created customer {customer.id} from lead {lead_id}")
 
         return {
             "customer_id": customer.id,
-            "name": customer.name,
+            "name": customer.full_name,
             "email": customer.email,
         }
 
@@ -210,8 +260,12 @@ class CustomerService:
             # Use tenant_id from partner if not provided
             tenant_id = tenant_id or partner.tenant_id
 
-            # Create customer using customer service
-            from .schemas import CustomerCreate
+            # Prepare customer creation payload
+            billing_address_raw = customer_data.get("billing_address")
+            service_address_raw = customer_data.get("service_address")
+
+            billing_address = billing_address_raw if isinstance(billing_address_raw, dict) else {}
+            service_address = service_address_raw if isinstance(service_address_raw, dict) else {}
 
             customer_create = CustomerCreate(
                 first_name=customer_data["first_name"],
@@ -220,22 +274,48 @@ class CustomerService:
                 phone=customer_data.get("phone"),
                 company_name=customer_data.get("company_name"),
                 tier=customer_data.get("tier", "standard"),
-                # ISP-specific fields
-                service_address_line1=customer_data.get("service_address"),
-                billing_address_line1=customer_data.get("billing_address"),
+                address_line1=(
+                    billing_address_raw
+                    if isinstance(billing_address_raw, str)
+                    else billing_address.get("line1")
+                    or billing_address.get("address_line1")
+                    or billing_address.get("street")
+                ),
+                address_line2=billing_address.get("line2") or billing_address.get("address_line2"),
+                city=billing_address.get("city"),
+                state_province=billing_address.get("state") or billing_address.get("state_province"),
+                postal_code=billing_address.get("postal_code") or billing_address.get("zip"),
+                country=billing_address.get("country"),
+                service_address_line1=(
+                    service_address_raw
+                    if isinstance(service_address_raw, str)
+                    else service_address.get("line1")
+                    or service_address.get("address_line1")
+                    or service_address.get("street")
+                ),
+                service_address_line2=service_address.get("line2") if isinstance(service_address, dict) else None,
+                service_city=service_address.get("city") if isinstance(service_address, dict) else None,
+                service_state_province=service_address.get("state") if isinstance(service_address, dict) else None,
+                service_postal_code=service_address.get("postal_code") if isinstance(service_address, dict) else None,
+                service_country=service_address.get("country") if isinstance(service_address, dict) else None,
             )
 
-            customer = await self.customer_service.create_customer(
+            desired_status = customer_data.get("status", CustomerStatus.ACTIVE.value)
+            try:
+                status_enum = CustomerStatus(desired_status)
+            except ValueError:
+                status_enum = CustomerStatus.ACTIVE
+
+            customer = await self._create_customer_in_tenant(
                 tenant_id=tenant_id,
                 customer_data=customer_create,
+                status=status_enum,
             )
 
             # Create partner account linkage
-            from datetime import UTC, datetime
-
             partner_account = PartnerAccount(
                 partner_id=partner_uuid,
-                customer_id=UUID(customer.id),
+                customer_id=customer.id,
                 engagement_type=engagement_type,
                 start_date=datetime.now(UTC),
                 is_active=True,
@@ -265,7 +345,7 @@ class CustomerService:
             return {
                 "customer_id": customer.id,
                 "customer_number": customer.customer_number,
-                "name": f"{customer.first_name} {customer.last_name}",
+                "name": customer.full_name,
                 "email": customer.email,
                 "phone": customer.phone,
                 "company_name": customer.company_name,

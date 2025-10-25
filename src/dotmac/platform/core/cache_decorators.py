@@ -5,6 +5,7 @@ Provides reusable caching decorators that can be used across all modules.
 """
 
 import hashlib
+import inspect
 import json
 from collections.abc import Awaitable, Callable
 from enum import Enum
@@ -53,30 +54,43 @@ def cached_result(
     """
 
     def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
+        signature = inspect.signature(func)
+
+        def _default_cache_key(*args: P.args, **kwargs: P.kwargs) -> str:
+            func_name = f"{func.__module__}.{func.__name__}"
+            args_str = json.dumps(
+                {
+                    "args": [str(a) for a in args],
+                    "kwargs": {k: str(v) for k, v in kwargs.items()},
+                },
+                sort_keys=True,
+            )
+            args_hash = hashlib.md5(
+                args_str.encode(), usedforsecurity=False
+            ).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
+            return f"{key_prefix}:{func_name}:{args_hash}"
+
         @wraps(func)
         async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Generate cache key
             if key_params:
-                key_parts = [key_prefix]
-                # Extract specified parameters from kwargs
+                bound = signature.bind_partial(*args, **kwargs)
+                bound.apply_defaults()
+
+                key_parts: list[str] = []
+                if key_prefix:
+                    key_parts.append(key_prefix)
+
                 for param in key_params:
-                    if param in kwargs:
-                        key_parts.append(str(kwargs[param]))
-                cache_key = ":".join(key_parts)
+                    if param in bound.arguments:
+                        key_parts.append(str(bound.arguments[param]))
+
+                if key_parts and len(key_parts) > (1 if key_prefix else 0):
+                    cache_key = ":".join(key_parts)
+                else:
+                    cache_key = _default_cache_key(*args, **kwargs)
             else:
-                # Generate key from function name and all args/kwargs
-                func_name = f"{func.__module__}.{func.__name__}"
-                args_str = json.dumps(
-                    {
-                        "args": [str(a) for a in args],
-                        "kwargs": {k: str(v) for k, v in kwargs.items()},
-                    },
-                    sort_keys=True,
-                )
-                args_hash = hashlib.md5(
-                    args_str.encode(), usedforsecurity=False
-                ).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
-                cache_key = f"{key_prefix}:{func_name}:{args_hash}"
+                cache_key = _default_cache_key(*args, **kwargs)
 
             # Only L2_REDIS is supported for now (L1 would need instance-specific cache)
             if tier == CacheTier.L2_REDIS:

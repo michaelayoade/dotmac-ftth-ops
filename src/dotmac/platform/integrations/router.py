@@ -19,6 +19,13 @@ logger = structlog.get_logger(__name__)
 integrations_router = APIRouter(prefix="/integrations", )
 
 
+def _health_check_failure_message(exc: Exception | None = None) -> str:
+    """Return a sanitized health-check failure message."""
+    if exc:
+        return f"Health check failed ({exc.__class__.__name__}). See server logs for details."
+    return "Health check failed. See server logs for details."
+
+
 @integrations_router.get("", response_model=IntegrationListResponse)
 async def list_integrations(
     current_user: Annotated[UserInfo, Depends(get_current_user)],
@@ -34,18 +41,30 @@ async def list_integrations(
         integrations = []
         for name, config in registry._configs.items():
             integration_obj = registry.get_integration(name)
-            if not integration_obj:
-                continue
-
-            # Get health status
-            try:
-                health = await integration_obj.health_check()
-            except Exception as e:
-                logger.warning(f"Health check failed for {name}: {e}")
+            if integration_obj:
+                # Get health status
+                try:
+                    health = await integration_obj.health_check()
+                except Exception as exc:
+                    logger.warning(
+                        "Health check failed for integration",
+                        integration=name,
+                        error=str(exc),
+                        exc_info=True,
+                    )
+                    health = IntegrationHealth(
+                        name=name,
+                        status=IntegrationStatus.ERROR,
+                        message=_health_check_failure_message(exc),
+                    )
+            else:
+                error_message = registry.get_integration_error(name) or (
+                    "Integration not initialized. See server logs for details."
+                )
                 health = IntegrationHealth(
                     name=name,
                     status=IntegrationStatus.ERROR,
-                    message=f"Health check failed: {str(e)}",
+                    message=error_message,
                 )
 
             integrations.append(
@@ -106,21 +125,28 @@ async def get_integration_details(
             )
 
         integration_obj = registry.get_integration(integration_name)
-        if not integration_obj:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Integration '{integration_name}' not initialized",
-            )
-
-        # Get health status
-        try:
-            health = await integration_obj.health_check()
-        except Exception as e:
-            logger.warning(f"Health check failed for {integration_name}: {e}")
+        if integration_obj:
+            # Get health status
+            try:
+                health = await integration_obj.health_check()
+            except Exception as exc:
+                logger.warning(
+                    "Health check failed for integration",
+                    integration=integration_name,
+                    error=str(exc),
+                    exc_info=True,
+                )
+                health = IntegrationHealth(
+                    name=integration_name,
+                    status=IntegrationStatus.ERROR,
+                    message=_health_check_failure_message(exc),
+                )
+        else:
             health = IntegrationHealth(
                 name=integration_name,
                 status=IntegrationStatus.ERROR,
-                message=f"Health check failed: {str(e)}",
+                message=registry.get_integration_error(integration_name)
+                or "Integration not initialized. See server logs for details.",
             )
 
         return IntegrationResponse(

@@ -74,6 +74,11 @@ class TestIntegrationRegistry:
         await registry.register_integration(config)
 
         assert "test" not in registry._integrations
+        assert "test" in registry._configs
+        assert (
+            registry.get_integration_error("test")
+            == "Provider 'unknown' not registered. See server logs for details."
+        )
 
     @pytest.mark.asyncio
     async def test_register_integration_success(self):
@@ -125,6 +130,9 @@ class TestIntegrationRegistry:
 
         # Integration should not be registered
         assert "failing-integration" not in registry._integrations
+        assert "failing-integration" in registry._configs
+        error_message = registry.get_integration_error("failing-integration")
+        assert error_message == "Exception during initialization. See server logs for details."
 
     def test_get_integration(self):
         """Test getting integration by name."""

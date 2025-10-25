@@ -33,12 +33,14 @@ from dotmac.platform.billing.bank_accounts.service import (
     BankAccountService,
     ManualPaymentService,
 )
-from dotmac.platform.db import get_db
+from dotmac.platform.db import get_session_dependency
 from dotmac.platform.file_storage.service import FileStorageService
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/billing/bank-accounts", tags=["Billing - Bank Accounts"])
+# Note: This router is included by the parent billing router which already has /billing prefix
+# So we only need /bank-accounts here to avoid /billing/billing/bank-accounts
+router = APIRouter(prefix="/bank-accounts", tags=["Billing - Bank Accounts"])
 
 # ============================================================================
 # Company Bank Account Endpoints
@@ -49,7 +51,7 @@ router = APIRouter(prefix="/billing/bank-accounts", tags=["Billing - Bank Accoun
 async def create_bank_account(
     account_data: CompanyBankAccountCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CompanyBankAccountResponse:
     """Create a new company bank account"""
     service = BankAccountService(db)
@@ -73,7 +75,7 @@ async def create_bank_account(
 async def list_bank_accounts(
     include_inactive: bool = Query(False, description="Include inactive accounts"),
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> list[CompanyBankAccountResponse]:
     """List all company bank accounts"""
     service = BankAccountService(db)
@@ -95,7 +97,7 @@ async def list_bank_accounts(
 async def get_bank_account(
     account_id: int,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CompanyBankAccountResponse:
     """Get a specific bank account"""
     service = BankAccountService(db)
@@ -114,7 +116,7 @@ async def get_bank_account(
 async def get_bank_account_summary(
     account_id: int,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> BankAccountSummary:
     """Get bank account with summary statistics"""
     service = BankAccountService(db)
@@ -136,7 +138,7 @@ async def update_bank_account(
     account_id: int,
     update_data: CompanyBankAccountUpdate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CompanyBankAccountResponse:
     """Update a bank account"""
     service = BankAccountService(db)
@@ -161,7 +163,7 @@ async def verify_bank_account(
     account_id: int,
     notes: str | None = None,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CompanyBankAccountResponse:
     """Verify a bank account"""
     service = BankAccountService(db)
@@ -185,7 +187,7 @@ async def verify_bank_account(
 async def deactivate_bank_account(
     account_id: int,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CompanyBankAccountResponse:
     """Deactivate a bank account"""
     service = BankAccountService(db)
@@ -214,7 +216,7 @@ async def deactivate_bank_account(
 async def record_cash_payment(
     payment_data: CashPaymentCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> ManualPaymentResponse:
     """Record a cash payment"""
     service = ManualPaymentService(db)
@@ -238,7 +240,7 @@ async def record_cash_payment(
 async def record_check_payment(
     payment_data: CheckPaymentCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> ManualPaymentResponse:
     """Record a check payment"""
     service = ManualPaymentService(db)
@@ -262,7 +264,7 @@ async def record_check_payment(
 async def record_bank_transfer(
     payment_data: BankTransferCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> ManualPaymentResponse:
     """Record a bank transfer"""
     service = ManualPaymentService(db)
@@ -286,7 +288,7 @@ async def record_bank_transfer(
 async def record_mobile_money(
     payment_data: MobileMoneyCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> ManualPaymentResponse:
     """Record a mobile money payment"""
     service = ManualPaymentService(db)
@@ -312,7 +314,7 @@ async def search_manual_payments(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> list[ManualPaymentResponse]:
     """Search manual payments with filters"""
     service = ManualPaymentService(db)
@@ -335,7 +337,7 @@ async def verify_payment(
     payment_id: int,
     notes: str | None = None,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> ManualPaymentResponse:
     """Verify a manual payment"""
     service = ManualPaymentService(db)
@@ -358,7 +360,7 @@ async def verify_payment(
 async def reconcile_payments(
     request: ReconcilePaymentRequest,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> list[ManualPaymentResponse]:
     """Reconcile multiple payments"""
     service = ManualPaymentService(db)
@@ -385,7 +387,7 @@ async def upload_payment_attachment(
     payment_id: int,
     file: UploadFile = File(...),
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> dict[str, Any]:
     """Upload an attachment for a payment (receipt, check image, etc.)"""
     tenant_id = current_user.tenant_id or "default"
@@ -474,7 +476,7 @@ async def upload_payment_attachment(
 async def create_cash_register(
     register_data: CashRegisterCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CashRegisterResponse:
     """Create a new cash register/point"""
     service = CashRegisterService(db)
@@ -498,7 +500,7 @@ async def create_cash_register(
 async def list_cash_registers(
     include_inactive: bool = Query(False, description="Include inactive registers"),
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> list[CashRegisterResponse]:
     """List all cash registers"""
     service = CashRegisterService(db)
@@ -521,7 +523,7 @@ async def list_cash_registers(
 async def get_cash_register(
     register_id: str,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CashRegisterResponse:
     """Get a specific cash register"""
     service = CashRegisterService(db)
@@ -541,7 +543,7 @@ async def reconcile_cash_register(
     register_id: str,
     data: CashRegisterReconciliationCreate,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CashRegisterReconciliationResponse:
     """Reconcile a cash register"""
     service = CashRegisterService(db)
@@ -567,7 +569,7 @@ async def update_cash_float(
     new_float: float = Query(..., description="New float amount"),
     reason: str = Query(..., description="Reason for float change"),
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CashRegisterResponse:
     """Update cash register float"""
     service = CashRegisterService(db)
@@ -594,7 +596,7 @@ async def update_cash_float(
 async def deactivate_cash_register(
     register_id: str,
     current_user: UserInfo = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
+    db: AsyncSession = Depends(get_session_dependency),
 ) -> CashRegisterResponse:
     """Deactivate a cash register"""
     service = CashRegisterService(db)

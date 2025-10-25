@@ -10,18 +10,20 @@ Provides a unified interface for file storage operations with support for:
 import hashlib
 import json
 import re
+import shutil
 import tempfile
 import uuid
 from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Protocol
+from typing import Any, Protocol, TYPE_CHECKING
 
 import structlog
+from minio.error import S3Error
 from pydantic import BaseModel, ConfigDict, Field
 
 from ..settings import settings
-from .minio_storage import MinIOStorage, get_storage
+from .factory import get_storage_backend
 
 logger = structlog.get_logger(__name__)
 
@@ -134,6 +136,15 @@ class LocalFileStorage:
         with open(metadata_file, "w") as f:
             json.dump(metadata.to_dict(), f, default=str)
 
+    @staticmethod
+    def _coerce_datetime(value: datetime | str | None) -> datetime | None:
+        """Convert datetime strings to datetime objects."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        return datetime.fromisoformat(value)
+
     def _load_metadata(self, file_id: str) -> FileMetadata | None:
         """Load file metadata."""
         metadata_file = self._get_metadata_path(file_id)
@@ -162,6 +173,32 @@ class LocalFileStorage:
         except Exception as e:
             logger.error(f"Failed to load metadata for {file_id}: {e}")
             return None
+
+    def _metadata_from_dict(self, data: dict[str, Any]) -> FileMetadata:
+        """Construct FileMetadata from a dictionary."""
+        return FileMetadata(
+            file_id=data["file_id"],
+            file_name=data["file_name"],
+            file_size=data["file_size"],
+            content_type=data["content_type"],
+            created_at=self._coerce_datetime(data["created_at"]),
+            updated_at=self._coerce_datetime(data.get("updated_at")),
+            path=data.get("path"),
+            metadata=data.get("metadata", {}) or {},
+            checksum=data.get("checksum"),
+            tenant_id=data.get("tenant_id"),
+        )
+
+    def apply_metadata_update(self, file_id: str, metadata: dict[str, Any]) -> bool:
+        """Persist metadata updates to disk."""
+        try:
+            file_metadata = self._metadata_from_dict(metadata)
+        except KeyError as exc:
+            logger.warning("Incomplete metadata payload for metadata update", file_id=file_id, missing=str(exc))
+            return False
+
+        self._save_metadata(file_id, file_metadata)
+        return True
 
     async def store(
         self,
@@ -252,6 +289,64 @@ class LocalFileStorage:
 
         return deleted
 
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool:
+        """Move a file to a new logical path."""
+        metadata = self._load_metadata(file_id)
+        if not metadata:
+            return False
+
+        if tenant_id and metadata.tenant_id != tenant_id:
+            return False
+
+        metadata.path = destination
+        metadata.updated_at = datetime.now(UTC)
+        self._save_metadata(file_id, metadata)
+        return True
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None:
+        """Copy a file to a new logical path."""
+        metadata = self._load_metadata(file_id)
+        if not metadata:
+            return None
+
+        if tenant_id and metadata.tenant_id != tenant_id:
+            return None
+
+        source_tenant = metadata.tenant_id
+        file_path = self._get_file_path(file_id, source_tenant)
+        if not file_path.exists():
+            return None
+
+        new_file_id = str(uuid.uuid4())
+        new_file_path = self._get_file_path(new_file_id, source_tenant)
+        new_file_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(file_path, new_file_path)
+
+        new_metadata = FileMetadata(
+            file_id=new_file_id,
+            file_name=metadata.file_name,
+            file_size=metadata.file_size,
+            content_type=metadata.content_type,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+            path=destination,
+            metadata=dict(metadata.metadata or {}),
+            checksum=metadata.checksum,
+            tenant_id=source_tenant,
+        )
+        self._save_metadata(new_file_id, new_metadata)
+        return new_file_id
+
     async def list_files(
         self,
         path: str | None = None,
@@ -269,11 +364,8 @@ class LocalFileStorage:
         # Sort by modification time (newest first)
         metadata_files.sort(key=lambda p: p.stat().st_mtime, reverse=True)
 
-        # Apply pagination
-        start = offset
-        end = offset + limit
-
-        for metadata_file in metadata_files[start:end]:
+        matched = 0
+        for metadata_file in metadata_files:
             file_id = metadata_file.stem
             try:
                 metadata = self._load_metadata(file_id)
@@ -290,7 +382,15 @@ class LocalFileStorage:
             if path and metadata.path and not metadata.path.startswith(path):
                 continue
 
+            if matched < offset:
+                matched += 1
+                continue
+
             files.append(metadata)
+            matched += 1
+
+            if len(files) >= limit:
+                break
 
         return files
 
@@ -376,6 +476,58 @@ class MemoryFileStorage:
 
         return deleted
 
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool:
+        """Move a file to a new logical path."""
+        metadata = self.metadata.get(file_id)
+        if not metadata:
+            return False
+
+        if tenant_id and metadata.tenant_id != tenant_id:
+            return False
+
+        metadata.path = destination
+        metadata.updated_at = datetime.now(UTC)
+        return True
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None:
+        """Copy a file to a new logical path."""
+        metadata = self.metadata.get(file_id)
+        file_data = self.files.get(file_id)
+
+        if not metadata or file_data is None:
+            return None
+
+        if tenant_id and metadata.tenant_id != tenant_id:
+            return None
+
+        new_file_id = str(uuid.uuid4())
+        self.files[new_file_id] = file_data
+
+        new_metadata = FileMetadata(
+            file_id=new_file_id,
+            file_name=metadata.file_name,
+            file_size=metadata.file_size,
+            content_type=metadata.content_type,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+            path=destination,
+            metadata=dict(metadata.metadata or {}),
+            checksum=metadata.checksum,
+            tenant_id=metadata.tenant_id,
+        )
+        self.metadata[new_file_id] = new_metadata
+        return new_file_id
+
     async def list_files(
         self,
         path: str | None = None,
@@ -409,11 +561,178 @@ class MemoryFileStorage:
 class MinIOFileStorage:
     """MinIO/S3 storage backend wrapper."""
 
-    def __init__(self, minio_client: MinIOStorage | None = None) -> None:
+    _METADATA_TENANT = "__metadata__"
+    _METADATA_PREFIX = ".metadata"
+
+    if TYPE_CHECKING:  # pragma: no cover - imported only for typing
+        from .minio_storage import MinIOStorage as _MinIOStorage
+    else:  # pragma: no cover - runtime alias
+        _MinIOStorage = object  # type: ignore
+
+    def __init__(self, minio_client: '_MinIOStorage | None' = None) -> None:
         """Initialize MinIO storage."""
-        self.client = minio_client or get_storage()
+        if minio_client is None:
+            from .minio_storage import MinIOStorage
+
+            minio_client = MinIOStorage()
+
+        self.client = minio_client
         self.metadata_store: dict[str, FileMetadata] = {}
+        self._metadata_cache_populated = False
         logger.info("MinIO storage initialized")
+
+    @staticmethod
+    def _coerce_datetime(value: datetime | str | None) -> datetime | None:
+        """Convert datetime strings to datetime objects."""
+        if value is None:
+            return None
+        if isinstance(value, datetime):
+            return value
+        return datetime.fromisoformat(value)
+
+    def _metadata_object_name(self, file_id: str) -> str:
+        """Return metadata object path."""
+        return f"{self._METADATA_PREFIX}/{file_id}.json"
+
+    def _metadata_from_dict(self, data: dict[str, Any]) -> FileMetadata | None:
+        """Construct FileMetadata from stored dictionary."""
+        required_fields = {"file_id", "file_name", "file_size", "content_type", "created_at"}
+        missing = required_fields - data.keys()
+        if missing:
+            logger.warning("Skipping metadata record with missing fields", missing=sorted(missing))
+            return None
+
+        return FileMetadata(
+            file_id=data["file_id"],
+            file_name=data["file_name"],
+            file_size=data["file_size"],
+            content_type=data["content_type"],
+            created_at=self._coerce_datetime(data["created_at"]),
+            updated_at=self._coerce_datetime(data.get("updated_at")),
+            path=data.get("path"),
+            metadata=data.get("metadata", {}) or {},
+            checksum=data.get("checksum"),
+            tenant_id=data.get("tenant_id"),
+        )
+
+    def _persist_metadata_record(self, metadata: FileMetadata) -> None:
+        """Persist metadata to MinIO metadata namespace."""
+        payload = json.dumps(metadata.to_dict(), default=str).encode("utf-8")
+        buffer = BytesIO(payload)
+        try:
+            self.client.save_file(
+                file_path=self._metadata_object_name(metadata.file_id),
+                content=buffer,
+                tenant_id=self._METADATA_TENANT,
+                content_type="application/json",
+            )
+        except S3Error as exc:
+            logger.error(
+                "Failed to persist metadata record to MinIO",
+                file_id=metadata.file_id,
+                error=str(exc),
+            )
+            raise
+
+    def _delete_metadata_record(self, file_id: str) -> None:
+        """Delete persisted metadata record."""
+        try:
+            self.client.delete_file(
+                file_path=self._metadata_object_name(file_id),
+                tenant_id=self._METADATA_TENANT,
+            )
+        except S3Error as exc:
+            logger.error("Failed to delete metadata record from MinIO", file_id=file_id, error=str(exc))
+            raise
+
+    def _load_metadata_from_storage(self, file_id: str) -> FileMetadata | None:
+        """Load metadata from MinIO when not cached."""
+        try:
+            raw = self.client.get_file(
+                file_path=self._metadata_object_name(file_id),
+                tenant_id=self._METADATA_TENANT,
+            )
+        except FileNotFoundError:
+            return None
+        except S3Error as exc:
+            logger.error("Failed to load metadata record from MinIO", file_id=file_id, error=str(exc))
+            return None
+
+        try:
+            data = json.loads(raw.decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+            logger.error("Invalid metadata payload encountered", file_id=file_id, error=str(exc))
+            return None
+
+        metadata = self._metadata_from_dict(data)
+        if metadata:
+            self.metadata_store[file_id] = metadata
+        return metadata
+
+    def _ensure_metadata_cache(self) -> None:
+        """Populate metadata cache from MinIO once per process."""
+        if self._metadata_cache_populated:
+            return
+
+        if not hasattr(self.client, "client"):
+            logger.warning("MinIO client missing raw client attribute; skipping metadata prefetch")
+            self._metadata_cache_populated = True
+            return
+
+        prefix = f"{self._METADATA_TENANT}/{self._METADATA_PREFIX}/"
+        try:
+            objects = self.client.client.list_objects(  # type: ignore[attr-defined]
+                self.client.bucket,
+                prefix=prefix,
+                recursive=True,
+            )
+        except (AttributeError, TypeError) as exc:
+            logger.warning(
+                "Metadata prefetch skipped; client list_objects unavailable",
+                error=str(exc),
+            )
+            self._metadata_cache_populated = True
+            return
+
+        try:
+            for obj in objects:
+                try:
+                    response = self.client.client.get_object(self.client.bucket, obj.object_name)  # type: ignore[attr-defined]
+                    try:
+                        payload = response.read()
+                    finally:
+                        response.close()
+                        response.release_conn()
+                except S3Error as exc:
+                    logger.warning(
+                        "Failed to read metadata object during cache warmup",
+                        object_name=obj.object_name,
+                        error=str(exc),
+                    )
+                    continue
+
+                try:
+                    data = json.loads(payload.decode("utf-8"))
+                except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                    logger.warning(
+                        "Skipping malformed metadata object during cache warmup",
+                        object_name=obj.object_name,
+                        error=str(exc),
+                    )
+                    continue
+
+                metadata = self._metadata_from_dict(data)
+                if metadata:
+                    self.metadata_store[metadata.file_id] = metadata
+        except S3Error as exc:
+            logger.error("Failed to list metadata records from MinIO", error=str(exc))
+        except TypeError as exc:
+            logger.warning(
+                "Metadata prefetch aborted; list_objects response not iterable",
+                error=str(exc),
+            )
+        finally:
+            self._metadata_cache_populated = True
 
     async def store(
         self,
@@ -458,6 +777,7 @@ class MinIOFileStorage:
             tenant_id=tenant_id,
         )
         self.metadata_store[file_id] = file_metadata
+        self._persist_metadata_record(file_metadata)
 
         logger.info(f"Stored file {file_id} ({file_name}) in MinIO - {len(file_data)} bytes")
         return file_id
@@ -466,12 +786,18 @@ class MinIOFileStorage:
         self, file_id: str, tenant_id: str | None = None
     ) -> tuple[bytes | None, dict[str, Any] | None]:
         """Retrieve a file from MinIO."""
-        tenant_id = tenant_id or "default"
+        requested_tenant = tenant_id
 
-        # Get metadata
         metadata = self.metadata_store.get(file_id)
-        if not metadata or (tenant_id and metadata.tenant_id != tenant_id):
+        if not metadata:
+            metadata = self._load_metadata_from_storage(file_id)
+            if not metadata:
+                return None, None
+
+        if requested_tenant and metadata.tenant_id != requested_tenant:
             return None, None
+
+        tenant_id = metadata.tenant_id or "default"
 
         # Construct path
         if metadata.path:
@@ -489,12 +815,18 @@ class MinIOFileStorage:
 
     async def delete(self, file_id: str, tenant_id: str | None = None) -> bool:
         """Delete a file from MinIO."""
-        tenant_id = tenant_id or "default"
+        requested_tenant = tenant_id
 
-        # Get metadata
         metadata = self.metadata_store.get(file_id)
-        if not metadata or (tenant_id and metadata.tenant_id != tenant_id):
+        if not metadata:
+            metadata = self._load_metadata_from_storage(file_id)
+            if not metadata:
+                return False
+
+        if requested_tenant and metadata.tenant_id != requested_tenant:
             return False
+
+        tenant_id = metadata.tenant_id or "default"
 
         # Construct path
         if metadata.path:
@@ -507,9 +839,133 @@ class MinIOFileStorage:
 
         if success:
             del self.metadata_store[file_id]
+            try:
+                self._delete_metadata_record(file_id)
+            except S3Error:
+                # Already logged inside helper; continue despite failure
+                pass
             logger.info(f"Deleted file {file_id} from MinIO")
 
         return success
+
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool:
+        """Move a file to a new logical path within MinIO."""
+        requested_tenant = tenant_id
+
+        metadata = self.metadata_store.get(file_id)
+        if not metadata:
+            metadata = self._load_metadata_from_storage(file_id)
+            if not metadata:
+                return False
+
+        if requested_tenant and metadata.tenant_id != requested_tenant:
+            return False
+
+        tenant_id = metadata.tenant_id or "default"
+
+        if metadata.path:
+            source_path = f"{metadata.path}/{file_id}/{metadata.file_name}"
+        else:
+            source_path = f"{file_id}/{metadata.file_name}"
+
+        if destination:
+            destination_path = f"{destination}/{file_id}/{metadata.file_name}"
+        else:
+            destination_path = source_path
+
+        if source_path != destination_path:
+            try:
+                self.client.copy_file(
+                    source_path=source_path,
+                    destination_path=destination_path,
+                    source_tenant_id=tenant_id,
+                )
+                self.client.delete_file(source_path, tenant_id)
+            except S3Error as exc:
+                logger.error("Failed to move file in MinIO", file_id=file_id, error=str(exc))
+                return False
+
+        metadata.path = destination
+        metadata.updated_at = datetime.now(UTC)
+        self.metadata_store[file_id] = metadata
+        try:
+            self._persist_metadata_record(metadata)
+        except S3Error:
+            return False
+
+        return True
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None:
+        """Copy a file to a new logical path within MinIO."""
+        requested_tenant = tenant_id
+
+        metadata = self.metadata_store.get(file_id)
+        if not metadata:
+            metadata = self._load_metadata_from_storage(file_id)
+            if not metadata:
+                return None
+
+        if requested_tenant and metadata.tenant_id != requested_tenant:
+            return None
+
+        tenant_id = metadata.tenant_id or "default"
+
+        if metadata.path:
+            source_path = f"{metadata.path}/{file_id}/{metadata.file_name}"
+        else:
+            source_path = f"{file_id}/{metadata.file_name}"
+
+        new_file_id = str(uuid.uuid4())
+        if destination:
+            destination_path = f"{destination}/{new_file_id}/{metadata.file_name}"
+        else:
+            destination_path = f"{new_file_id}/{metadata.file_name}"
+
+        try:
+            self.client.copy_file(
+                source_path=source_path,
+                destination_path=destination_path,
+                source_tenant_id=tenant_id,
+            )
+        except S3Error as exc:
+            logger.error("Failed to copy file in MinIO", file_id=file_id, error=str(exc))
+            return None
+
+        new_metadata = FileMetadata(
+            file_id=new_file_id,
+            file_name=metadata.file_name,
+            file_size=metadata.file_size,
+            content_type=metadata.content_type,
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+            path=destination,
+            metadata=dict(metadata.metadata or {}),
+            checksum=metadata.checksum,
+            tenant_id=metadata.tenant_id,
+        )
+        self.metadata_store[new_file_id] = new_metadata
+        try:
+            self._persist_metadata_record(new_metadata)
+        except S3Error:
+            # Attempt to clean up copied object if metadata persistence fails
+            self.metadata_store.pop(new_file_id, None)
+            try:
+                self.client.delete_file(destination_path, tenant_id)
+            except Exception:
+                pass
+            return None
+
+        return new_file_id
 
     async def list_files(
         self,
@@ -519,16 +975,17 @@ class MinIOFileStorage:
         tenant_id: str | None = None,
     ) -> list[FileMetadata]:
         """List files in MinIO."""
-        tenant_id = tenant_id or "default"
+        self._ensure_metadata_cache()
 
-        # In production, query from database
-        files = list(self.metadata_store.values())
-
-        # Filter by tenant
         if tenant_id:
-            files = [f for f in files if f.tenant_id == tenant_id]
+            files = [
+                metadata
+                for metadata in self.metadata_store.values()
+                if metadata.tenant_id == tenant_id
+            ]
+        else:
+            files = list(self.metadata_store.values())
 
-        # Filter by path
         if path:
             files = [f for f in files if f.path and f.path.startswith(path)]
 
@@ -541,45 +998,41 @@ class MinIOFileStorage:
     async def get_metadata(self, file_id: str) -> dict[str, Any] | None:
         """Get file metadata."""
         metadata = self.metadata_store.get(file_id)
+        if not metadata:
+            metadata = self._load_metadata_from_storage(file_id)
         return metadata.to_dict() if metadata else None
+
+    def apply_metadata_update(self, file_id: str, metadata: dict[str, Any]) -> bool:
+        """Persist metadata updates to MinIO."""
+        updated = self._metadata_from_dict(metadata)
+        if not updated:
+            return False
+
+        self.metadata_store[file_id] = updated
+        try:
+            self._persist_metadata_record(updated)
+        except S3Error:
+            return False
+
+        return True
 
 
 class FileStorageService:
     """Unified file storage service with backend selection."""
 
-    def __init__(self, backend: str = StorageBackend.LOCAL) -> None:
+    def __init__(self, backend: str | None = None) -> None:
         """Initialize storage service with specified backend."""
-        self.backend_type = backend
-        backend_instance: StorageBackendProtocol
-
-        # Initialize appropriate backend
-        if backend == StorageBackend.LOCAL:
-            backend_instance = LocalFileStorage()
-        elif backend == StorageBackend.MEMORY:
-            backend_instance = MemoryFileStorage()
-        elif backend == StorageBackend.MINIO or backend == StorageBackend.S3:
-            # Try to use MinIO backend
-            try:
-                # Check if MinIO/S3 dependencies are available
-                backend_instance = MinIOFileStorage()
-                logger.info("Successfully initialized MinIO/S3 backend")
-            except Exception as e:
-                logger.error(
-                    f"Failed to initialize MinIO backend: {e}",
-                    exc_info=True,
-                    backend=backend,
-                    endpoint=settings.storage.endpoint,
-                    bucket=settings.storage.bucket,
-                )
-                logger.warning("Falling back to local storage due to MinIO initialization failure")
-                backend_instance = LocalFileStorage()
-                self.backend_type = StorageBackend.LOCAL
-        else:
-            # Default to local storage
-            logger.warning(f"Unknown backend {backend}, using local storage")
-            backend_instance = LocalFileStorage()
+        try:
+            backend_instance, provider = get_storage_backend(backend)
+        except Exception as exc:  # pragma: no cover - safety fallback
+            logger.error(
+                "Failed to initialize storage backend, falling back to local",
+                error=str(exc),
+            )
+            backend_instance, provider = get_storage_backend("local")
 
         self.backend = backend_instance
+        self.backend_type = provider
 
         logger.info(f"FileStorageService initialized with {self.backend_type} backend")
 
@@ -623,6 +1076,26 @@ class FileStorageService:
         safe_file_id = self._ensure_valid_file_id(file_id)
         return await self.backend.delete(safe_file_id, tenant_id)
 
+    async def move_file(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool:
+        """Move a file to a new logical path."""
+        safe_file_id = self._ensure_valid_file_id(file_id)
+        return await self.backend.move(safe_file_id, destination, tenant_id)
+
+    async def copy_file(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None:
+        """Copy a file to a new logical path."""
+        safe_file_id = self._ensure_valid_file_id(file_id)
+        return await self.backend.copy(safe_file_id, destination, tenant_id)
+
     async def list_files(
         self,
         path: str | None = None,
@@ -664,6 +1137,19 @@ class FileStorageService:
 
         current_metadata["updated_at"] = datetime.now(UTC).isoformat()
 
+        updated = False
+
+        if hasattr(self.backend, "apply_metadata_update"):
+            try:
+                result = self.backend.apply_metadata_update(safe_file_id, current_metadata)
+                updated = bool(result) or updated
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning(
+                    "Backend apply_metadata_update failed",
+                    file_id=safe_file_id,
+                    error=str(exc),
+                )
+
         # In production, save to database
         # For now, update in-memory if applicable
         if hasattr(self.backend, "metadata_store"):
@@ -671,13 +1157,15 @@ class FileStorageService:
             if file_meta:
                 file_meta.metadata.update(metadata_updates)
                 file_meta.updated_at = datetime.now(UTC)
+                updated = True
         elif hasattr(self.backend, "metadata"):
             file_meta = self.backend.metadata.get(safe_file_id)
             if file_meta:
                 file_meta.metadata.update(metadata_updates)
                 file_meta.updated_at = datetime.now(UTC)
+                updated = True
 
-        return True
+        return updated
 
 
 # Global service instance
@@ -688,22 +1176,7 @@ def get_storage_service() -> FileStorageService:
     """Get the global storage service instance."""
     global _storage_service
     if _storage_service is None:
-        # Determine backend from "minio"
-        provider = "minio".lower()
-
-        # Map provider to backend
-        if provider == "minio":
-            backend = StorageBackend.MINIO
-        elif provider == "s3":
-            backend = StorageBackend.S3
-        elif provider == "local":
-            backend = StorageBackend.LOCAL
-        else:
-            # Default to local if unknown provider
-            backend = StorageBackend.LOCAL
-
-        logger.info(f"Initializing storage service with {backend} backend (provider: {provider})")
-        _storage_service = FileStorageService(backend=backend)
+        _storage_service = FileStorageService()
     return _storage_service
 
 
@@ -735,3 +1208,31 @@ class StorageBackendProtocol(Protocol):
     ) -> list[FileMetadata]: ...
 
     async def get_metadata(self, file_id: str) -> dict[str, Any] | None: ...
+
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool: ...
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None: ...
+
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool: ...
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None: ...

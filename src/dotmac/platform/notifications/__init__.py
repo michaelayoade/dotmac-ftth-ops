@@ -14,6 +14,10 @@ from dotmac.platform.notifications.models import (
     NotificationTemplate,
     NotificationType,
 )
+from dotmac.platform.notifications.plugins import (
+    register_plugin as register_notification_plugin,
+    list_plugins as list_notification_plugins,
+)
 from dotmac.platform.notifications.service import NotificationService
 
 __all__ = [
@@ -26,4 +30,7 @@ __all__ = [
     "NotificationChannel",
     # Services
     "NotificationService",
+    # Plugin helpers
+    "register_notification_plugin",
+    "list_notification_plugins",
 ]

@@ -235,7 +235,9 @@ class TestInternalOrderAPI:
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "submitted"
-        assert data["payment_reference"] == submit_data["payment_reference"]
+        db.refresh(sample_order)
+        assert sample_order.payment_reference == submit_data["payment_reference"]
+        assert sample_order.status == OrderStatus.SUBMITTED
 
     def test_process_order(
         self,
@@ -254,8 +256,9 @@ class TestInternalOrderAPI:
 
         response = auth_client.post(f"/api/v1/orders/{order.id}/process")
 
-        # May succeed or fail depending on mocks, but should return 200
-        assert response.status_code in [200, 500]
+        assert response.status_code == 200
+        db.refresh(order)
+        assert order.status == OrderStatus.ACTIVE
 
     def test_update_order_status(
         self,

@@ -529,6 +529,8 @@ class PaymentMethodService:
         details = pm.details or {}
 
         # Build response
+        card_brand = self._parse_card_brand(details.get("brand"))
+
         return PaymentMethodResponse(
             payment_method_id=str(pm.id),
             tenant_id=pm.tenant_id,
@@ -536,7 +538,7 @@ class PaymentMethodService:
             status=status,
             is_default=pm.is_default,
             # Card details
-            card_brand=CardBrand(details.get("brand", "unknown")) if details.get("brand") else None,
+            card_brand=card_brand,
             card_last4=details.get("last4"),
             card_exp_month=details.get("exp_month"),
             card_exp_year=details.get("exp_year"),
@@ -570,6 +572,40 @@ class PaymentMethodService:
 
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
+
+    def _parse_card_brand(self, brand: Any) -> CardBrand | None:
+        """Normalize brand strings from providers into CardBrand enum values."""
+        if not brand:
+            return None
+
+        raw = str(brand).strip()
+        if not raw:
+            return None
+
+        candidate = raw.lower()
+        if candidate in CardBrand._value2member_map_:
+            return CardBrand(candidate)
+
+        compact = candidate.replace(" ", "").replace("-", "")
+        if compact in CardBrand._value2member_map_:
+            return CardBrand(compact)
+
+        alias_map = {
+            "americanexpress": CardBrand.AMEX,
+            "american express": CardBrand.AMEX,
+            "dinersclub": CardBrand.DINERS,
+            "diners club": CardBrand.DINERS,
+            "mastercard": CardBrand.MASTERCARD,
+            "master card": CardBrand.MASTERCARD,
+        }
+
+        if candidate in alias_map:
+            return alias_map[candidate]
+        if compact in alias_map:
+            return alias_map[compact]
+
+        # Unknown brand - map explicitly rather than raising.
+        return CardBrand.UNKNOWN
 
     def _get_paystack_plugin(self) -> Any:
         """

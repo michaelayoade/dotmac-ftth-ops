@@ -491,6 +491,94 @@ class TestVOLTHAMeterOperations:
             assert result is True
 
 
+class TestVOLTHAAlarmEventOperations:
+    """Test alarm and event helper methods"""
+
+    @pytest.mark.asyncio
+    async def test_get_alarms_with_filters(self):
+        """Ensure alarm helper forwards parameters"""
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"items": []}
+
+            await client.get_alarms(
+                device_id="device-1",
+                severity="CRITICAL",
+                state="RAISED",
+            )
+
+            mock_req.assert_awaited_once_with(
+                "GET",
+                "alarms",
+                params={
+                    "device_id": "device-1",
+                    "severity": "CRITICAL",
+                    "state": "RAISED",
+                },
+                timeout=client.TIMEOUTS["alarms"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_alarms_without_filters(self):
+        """Ensure alarm helper omits params when not provided"""
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"items": []}
+
+            await client.get_alarms()
+
+            mock_req.assert_awaited_once_with(
+                "GET",
+                "alarms",
+                params=None,
+                timeout=client.TIMEOUTS["alarms"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_events_with_filters(self):
+        """Ensure event helper forwards parameters"""
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"items": []}
+
+            await client.get_events(
+                device_id="olt-1",
+                event_type="onu_discovered",
+                limit=25,
+            )
+
+            mock_req.assert_awaited_once_with(
+                "GET",
+                "events",
+                params={
+                    "limit": 25,
+                    "device_id": "olt-1",
+                    "event_type": "onu_discovered",
+                },
+                timeout=client.TIMEOUTS["events"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_get_events_with_defaults(self):
+        """Ensure event helper applies default limit"""
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"items": []}
+
+            await client.get_events()
+
+            mock_req.assert_awaited_once_with(
+                "GET",
+                "events",
+                params={"limit": 100},
+                timeout=client.TIMEOUTS["events"],
+            )
+
+
 class TestVOLTHAErrorHandling:
     """Test error handling"""
 

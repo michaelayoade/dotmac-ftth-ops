@@ -474,7 +474,10 @@ class SessionManager:
 
         if self._redis is None and redis_async is not None:
             try:
-                self._redis = redis_async.from_url(self.redis_url, decode_responses=True)
+                client = redis_async.from_url(self.redis_url, decode_responses=True)
+                if inspect.isawaitable(client):
+                    client = await client
+                self._redis = client
                 # Verify connection
                 await self._redis.ping()
                 self._redis_healthy = True
@@ -485,10 +488,7 @@ class SessionManager:
                 self._redis = None
 
                 if not self._fallback_enabled:
-                    raise HTTPException(
-                        status_code=503,
-                        detail="Session service unavailable (Redis connection failed)",
-                    )
+                    raise RuntimeError("Session service unavailable (Redis connection failed)")
         return self._redis
 
     async def create_session(self, user_id: str, data: dict[str, Any], ttl: int = 3600) -> str:
@@ -1039,12 +1039,14 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(user_id: str, **kwargs: Any) -> str:
     """Create access token."""
-    return jwt_service.create_access_token(user_id, kwargs)
+    user_uuid = ensure_uuid(user_id)
+    return jwt_service.create_access_token(str(user_uuid), kwargs)
 
 
 def create_refresh_token(user_id: str, **kwargs: Any) -> str:
     """Create refresh token."""
-    return jwt_service.create_refresh_token(user_id, kwargs)
+    user_uuid = ensure_uuid(user_id)
+    return jwt_service.create_refresh_token(str(user_uuid), kwargs)
 
 
 # ============================================

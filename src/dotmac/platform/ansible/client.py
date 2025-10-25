@@ -6,6 +6,7 @@ Uses RobustHTTPClient for consistent architecture with other external service cl
 """
 
 import os
+import re
 from typing import Any, cast
 from urllib.parse import urljoin
 
@@ -67,6 +68,14 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
             except (ImportError, AttributeError):
                 # Fallback to environment variable if settings not available
                 base_url = os.getenv("AWX_URL", "http://localhost:80")
+
+        if base_url is None:
+            raise ValueError("AWX base URL is required")
+
+        # Normalise base URL to avoid duplicated /api/v2 segments
+        base_url = re.sub(r"/api(?:/v2)?/?$", "/", base_url.rstrip("/"))
+        if not base_url.endswith("/"):
+            base_url += "/"
 
         username = username or os.getenv("AWX_USERNAME", "admin")
         password = password or os.getenv("AWX_PASSWORD", "password")

@@ -5,6 +5,7 @@ import json
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
+from fnmatch import fnmatch
 from typing import Any, Protocol
 
 import structlog
@@ -69,6 +70,7 @@ class EventBus:
         """
         # In-memory handlers registry
         self._handlers: dict[str, list[EventHandler]] = defaultdict(list)
+        self._pattern_handlers: dict[str, list[EventHandler]] = defaultdict(list)
 
         # Injected dependencies
         self._storage = storage or EventStorage(use_redis=redis_client is not None)
@@ -160,7 +162,12 @@ class EventBus:
 
     async def _publish_local(self, event: Event) -> None:
         """Publish event to local in-memory handlers."""
-        handlers = self._handlers.get(event.event_type, [])
+        handlers: list[EventHandler] = list(self._handlers.get(event.event_type, []))
+
+        if self._pattern_handlers:
+            for pattern, pattern_handlers in self._pattern_handlers.items():
+                if fnmatch(event.event_type, pattern):
+                    handlers.extend(pattern_handlers)
 
         if not handlers:
             logger.debug("No local handlers for event", event_type=event.event_type)
@@ -249,12 +256,19 @@ class EventBus:
             event_type: Event type to subscribe to
             handler: Async handler function
         """
-        self._handlers[event_type].append(handler)
+        registry: dict[str, list[EventHandler]]
+
+        if any(char in event_type for char in ("*", "?")):
+            registry = self._pattern_handlers
+        else:
+            registry = self._handlers
+
+        registry[event_type].append(handler)
         logger.info(
             "Handler subscribed",
             event_type=event_type,
             handler=handler.__name__,
-            total_handlers=len(self._handlers[event_type]),
+            total_handlers=len(registry[event_type]),
         )
 
     def unsubscribe(self, event_type: str, handler: EventHandler) -> None:
@@ -265,9 +279,21 @@ class EventBus:
             event_type: Event type to unsubscribe from
             handler: Handler function to remove
         """
-        if event_type in self._handlers:
-            self._handlers[event_type].remove(handler)
-            logger.info("Handler unsubscribed", event_type=event_type, handler=handler.__name__)
+        registry = (
+            self._pattern_handlers
+            if event_type in self._pattern_handlers
+            else self._handlers
+        )
+
+        if event_type in registry:
+            handlers = registry[event_type]
+            if handler in handlers:
+                handlers.remove(handler)
+                logger.info(
+                    "Handler unsubscribed",
+                    event_type=event_type,
+                    handler=handler.__name__,
+                )
 
     async def get_event(self, event_id: str) -> Event | None:
         """Get event by ID from storage."""

@@ -11,7 +11,18 @@ from .otel_collector import create_otel_collector
 
 logger = structlog.get_logger(__name__)
 
-_analytics_instances: dict[str, BaseAnalyticsCollector] = {}
+_collector_cache: dict[str, BaseAnalyticsCollector] = {}
+
+
+class _AnalyticsServiceCache(dict[str, "AnalyticsService"]):
+    def clear(self) -> None:  # noqa: D401 - standard dict clear semantics
+        super().clear()
+        _collector_cache.clear()
+
+
+_service_cache: _AnalyticsServiceCache = _AnalyticsServiceCache()
+# Backwards compatibility alias for tests and legacy code
+_analytics_instances = _service_cache
 
 
 class AnalyticsService:
@@ -127,7 +138,10 @@ def get_analytics_service(
     """
     cache_key = f"{tenant_id}:{service_name}"
 
-    if cache_key not in _analytics_instances:
+    if cache_key in _service_cache:
+        return _service_cache[cache_key]
+
+    if cache_key not in _collector_cache:
         endpoint = signoz_endpoint or kwargs.get("otlp_endpoint")
         environment = kwargs.get("environment", "development")
 
@@ -137,7 +151,9 @@ def get_analytics_service(
             endpoint=endpoint,
             environment=environment,
         )
-        _analytics_instances[cache_key] = collector
+        _collector_cache[cache_key] = collector
         logger.info(f"Created analytics service for {cache_key}")
 
-    return AnalyticsService(_analytics_instances[cache_key])
+    service = AnalyticsService(_collector_cache[cache_key])
+    _service_cache[cache_key] = service
+    return service

@@ -5,6 +5,7 @@ Handles complete subscription lifecycle with simple, clear operations.
 """
 
 from datetime import UTC, datetime, timedelta
+from calendar import monthrange
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -370,8 +371,26 @@ class SubscriptionService:
         if db_subscription is None:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
-        # Use setattr to avoid mypy Column assignment errors
-        db_subscription.plan_id = change_request.new_plan_id
+        # Check if this is a future-dated plan change
+        now = datetime.now(UTC)
+        if effective_date > now:
+            # Store the pending plan change for future processing
+            # The renewal job should check scheduled_plan_id and apply it at effective_date
+            if hasattr(db_subscription, "scheduled_plan_id"):
+                db_subscription.scheduled_plan_id = change_request.new_plan_id
+                db_subscription.scheduled_plan_change_date = effective_date
+            else:
+                # If schema doesn't support scheduled changes, log warning and apply immediately
+                # This is a known limitation - scheduled plan changes require schema update
+                logger.warning(
+                    f"Schema doesn't support scheduled plan changes. "
+                    f"Applying plan change immediately instead of at {effective_date}",
+                    subscription_id=subscription_id,
+                )
+                db_subscription.plan_id = change_request.new_plan_id
+        else:
+            # Apply plan change immediately
+            db_subscription.plan_id = change_request.new_plan_id
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -442,9 +461,11 @@ class SubscriptionService:
             db_subscription.canceled_at = now
         else:
             # Cancel at period end (default behavior) - use setattr to avoid mypy Column assignment errors
+            # IMPORTANT: Keep status as ACTIVE so subscription remains usable until period ends
+            # The renewal job will check cancel_at_period_end and transition to ENDED at current_period_end
             db_subscription.cancel_at_period_end = True
             db_subscription.canceled_at = now
-            db_subscription.status = SubscriptionStatus.CANCELED.value
+            # Do NOT change status to CANCELED - keep it ACTIVE until period actually ends
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -851,27 +872,19 @@ class SubscriptionService:
         """Calculate period end date based on billing cycle."""
 
         if billing_cycle == BillingCycle.MONTHLY:
-            # Add one month
-            if start_date.month == 12:
-                return start_date.replace(year=start_date.year + 1, month=1)
-            else:
-                return start_date.replace(month=start_date.month + 1)
-
+            months_to_add = 1
         elif billing_cycle == BillingCycle.QUARTERLY:
-            # Add 3 months
-            new_month = start_date.month + 3
-            new_year = start_date.year
-            while new_month > 12:
-                new_month -= 12
-                new_year += 1
-            return start_date.replace(year=new_year, month=new_month)
-
+            months_to_add = 3
         elif billing_cycle == BillingCycle.ANNUAL:
-            # Add one year
-            return start_date.replace(year=start_date.year + 1)
-
+            months_to_add = 12
         else:
             raise SubscriptionError(f"Unsupported billing cycle: {billing_cycle}")
+
+        total_months = start_date.month - 1 + months_to_add
+        year = start_date.year + total_months // 12
+        month = total_months % 12 + 1
+        day = min(start_date.day, monthrange(year, month)[1])
+        return start_date.replace(year=year, month=month, day=day)
 
     def _calculate_proration(
         self, subscription: Subscription, old_plan: SubscriptionPlan, new_plan: SubscriptionPlan
@@ -1237,12 +1250,16 @@ class SubscriptionService:
         # Validate new plan exists
         await self.get_plan(new_plan_id, tenant_id)
 
-        # Use existing change_plan method
-        await self.change_subscription_plan(
-            subscription_id=subscription.subscription_id,
+        # Use existing change_plan method (not change_subscription_plan which doesn't exist)
+        change_request = SubscriptionPlanChangeRequest(
             new_plan_id=new_plan_id,
-            tenant_id=tenant_id,
             proration_behavior=proration_behavior,
+            effective_date=None,  # Apply immediately
+        )
+        await self.change_plan(
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+            change_request=change_request,
         )
 
         # Record event

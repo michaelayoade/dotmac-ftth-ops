@@ -161,6 +161,31 @@ class TestEventBus:
         assert all(e.event_type == "type1.event" for e in events)
 
     @pytest.mark.asyncio
+    async def test_wildcard_subscription(self, event_bus):
+        """Wildcard handlers should receive matching events."""
+        wildcard_calls: list[str] = []
+        catch_all_calls: list[str] = []
+
+        async def wildcard_handler(event: Event):
+            wildcard_calls.append(event.event_type)
+
+        async def catch_all_handler(event: Event):
+            catch_all_calls.append(event.event_type)
+
+        event_bus.subscribe("billing.*", wildcard_handler)
+        event_bus.subscribe("*", catch_all_handler)
+
+        await event_bus.publish(event_type="billing.invoice.created", payload={})
+        await event_bus.publish(event_type="customer.created", payload={})
+
+        import asyncio
+
+        await asyncio.sleep(0.1)
+
+        assert wildcard_calls == ["billing.invoice.created"]
+        assert catch_all_calls == ["billing.invoice.created", "customer.created"]
+
+    @pytest.mark.asyncio
     async def test_query_events_by_status(self, event_bus):
         """Test querying events by status."""
 

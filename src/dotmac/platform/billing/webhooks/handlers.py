@@ -286,8 +286,8 @@ class StripeWebhookHandler(WebhookHandler):
 
         # Process refund notification
         if payment_id and tenant_id and amount_refunded:
-            # Convert cents to dollars
-            refund_amount = Decimal(str(amount_refunded)) / Decimal("100")
+            # Keep amount in minor units (cents) to match payment.amount storage
+            refund_amount = Decimal(str(amount_refunded))
 
             # Get the most recent refund for details
             refund_reason = None

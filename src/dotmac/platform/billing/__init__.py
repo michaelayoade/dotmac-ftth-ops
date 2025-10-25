@@ -53,6 +53,7 @@ from dotmac.platform.billing.exceptions import (
 )
 from dotmac.platform.billing.models import (
     BillingBaseModel,
+    BillingSettingsTable,
     BillingPricingRuleTable,
     BillingProductCategoryTable,
     BillingProductTable,
@@ -107,6 +108,7 @@ __all__ = [
     "BillingSubscriptionEventTable",
     "BillingPricingRuleTable",
     "BillingRuleUsageTable",
+    "BillingSettingsTable",
     # Money-aware models and utilities
     "MoneyInvoice",
     "MoneyInvoiceLineItem",

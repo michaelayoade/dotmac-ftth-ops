@@ -12,6 +12,11 @@ os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
 from dotmac.platform.db import Base
+from dotmac.platform.auth.models import user_roles  # noqa: F401
+from dotmac.platform.user_management.models import User  # noqa: F401
+from dotmac.platform.billing.core.entities import InvoiceEntity  # noqa: F401
+from dotmac.platform.tenant import set_current_tenant_id
+from tests.test_utils import TenantContext
 
 # Import partner management models to ensure they're registered
 
@@ -62,3 +67,15 @@ async def db_session(db_engine):
 def test_tenant_id():
     """Generate a test tenant ID."""
     return "test-tenant-123"
+
+
+@pytest.fixture
+def tenant_context(test_tenant_id):
+    """Provide tenant context fixture expected by partner tests."""
+    previous = TenantContext().current
+    set_current_tenant_id(test_tenant_id)
+    context = TenantContext(test_tenant_id)
+    try:
+        yield context
+    finally:
+        set_current_tenant_id(previous)

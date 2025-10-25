@@ -19,7 +19,7 @@ from dotmac.platform.cache.models import (
     CacheStatistics,
     CacheStrategy,
 )
-from dotmac.platform.cache.service import CacheService
+from dotmac.platform.cache.service import CacheService, get_cache_service
 
 __all__ = [
     # Models
@@ -30,6 +30,7 @@ __all__ = [
     "CacheStrategy",
     # Service
     "CacheService",
+    "get_cache_service",
     # Decorators
     "cached",
     "cache_aside",

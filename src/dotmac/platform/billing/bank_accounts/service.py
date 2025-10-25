@@ -229,7 +229,7 @@ class BankAccountService:
 
         # Calculate MTD deposits
         today = datetime.now(UTC)
-        month_start = datetime(today.year, today.month, 1)
+        month_start = today.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         mtd_result = await self.db.execute(
             select(func.sum(ManualPayment.amount)).where(
@@ -244,7 +244,7 @@ class BankAccountService:
         total_deposits_mtd = mtd_result.scalar() or 0.00
 
         # Calculate YTD deposits
-        year_start = datetime(today.year, 1, 1)
+        year_start = today.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
 
         ytd_result = await self.db.execute(
             select(func.sum(ManualPayment.amount)).where(

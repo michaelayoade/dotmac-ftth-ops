@@ -5,17 +5,17 @@ Provides REST API for uploading files and managing import jobs.
 """
 
 import io
+import logging
 import json
 from typing import Any
 from uuid import UUID
 
-import structlog
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.rbac_dependencies import require_admin
+from dotmac.platform.auth.dependencies import require_admin
 from dotmac.platform.billing.dependencies import get_tenant_id
 from dotmac.platform.data_import import (
     DataImportService,
@@ -30,7 +30,7 @@ from dotmac.platform.data_import.schemas import (
 )
 from dotmac.platform.database import get_async_session as get_db
 
-logger = structlog.get_logger(__name__)
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/data-import", tags=["Data Import"])
 
@@ -146,9 +146,9 @@ async def upload_import_file(
 
     except Exception as exc:
         logger.exception(
-            "data_import.upload_failed",
-            entity_type=entity_type,
-            tenant_id=tenant_id,
+            "data_import.upload_failed entity_type=%s tenant_id=%s",
+            entity_type,
+            tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

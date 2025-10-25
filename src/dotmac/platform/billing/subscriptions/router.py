@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
@@ -31,7 +32,9 @@ from .models import (
 )
 from .service import SubscriptionService
 
-router = APIRouter(prefix="/billing/subscriptions", tags=["Billing - Subscriptions"])
+# Note: This router is included by the parent billing router which already has /billing prefix
+# So we only need /subscriptions here to avoid /billing/billing/subscriptions
+router = APIRouter(prefix="/subscriptions", tags=["Billing - Subscriptions"])
 
 
 # Subscription Plans Management
@@ -41,6 +44,7 @@ router = APIRouter(prefix="/billing/subscriptions", tags=["Billing - Subscriptio
     "/plans",
     response_model=SubscriptionPlanResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
 )
 @rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def create_subscription_plan(
@@ -50,7 +54,7 @@ async def create_subscription_plan(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict[str, Any]:
-    """Create a new subscription plan."""
+    """Create a new subscription plan. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         plan = await service.create_plan(plan_data, tenant_id)
@@ -102,7 +106,11 @@ async def get_subscription_plan(
         )
 
 
-@router.patch("/plans/{plan_id}", response_model=SubscriptionPlanResponse)
+@router.patch(
+    "/plans/{plan_id}",
+    response_model=SubscriptionPlanResponse,
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def update_subscription_plan(
     plan_id: str,
     plan_data: dict[str, str],  # Using dict for flexible updates
@@ -110,7 +118,7 @@ async def update_subscription_plan(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> SubscriptionPlanResponse:
-    """Update a subscription plan."""
+    """Update a subscription plan. Requires billing:subscriptions:write permission."""
     # Note: This endpoint is a placeholder - update_plan method doesn't exist in service
     # Would need to implement plan update logic in service layer
     raise HTTPException(
@@ -119,14 +127,17 @@ async def update_subscription_plan(
     )
 
 
-@router.delete("/plans/{plan_id}")
+@router.delete(
+    "/plans/{plan_id}",
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def deactivate_subscription_plan(
     plan_id: str,
     db_session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> JSONResponse:
-    """Deactivate a subscription plan (soft delete)."""
+    """Deactivate a subscription plan (soft delete). Requires billing:subscriptions:write permission."""
     # Note: This endpoint is a placeholder - deactivate_plan method doesn't exist in service
     # Would need to implement plan deactivation logic in service layer
     raise HTTPException(
@@ -142,6 +153,7 @@ async def deactivate_subscription_plan(
     "/",
     response_model=SubscriptionResponse,
     status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
 )
 async def create_subscription(
     subscription_data: SubscriptionCreateRequest,
@@ -149,7 +161,7 @@ async def create_subscription(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict[str, Any]:
-    """Create a new customer subscription."""
+    """Create a new customer subscription. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         subscription = await service.create_subscription(subscription_data, tenant_id)
@@ -297,7 +309,11 @@ async def get_subscription(
     return subscription_response
 
 
-@router.patch("/{subscription_id}", response_model=SubscriptionResponse)
+@router.patch(
+    "/{subscription_id}",
+    response_model=SubscriptionResponse,
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def update_subscription(
     subscription_id: str,
     update_data: SubscriptionUpdateRequest,
@@ -305,7 +321,7 @@ async def update_subscription(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> SubscriptionResponse:
-    """Update a subscription."""
+    """Update a subscription. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         subscription = await service.update_subscription(subscription_id, update_data, tenant_id)
@@ -328,7 +344,10 @@ async def update_subscription(
 # Subscription Lifecycle Operations
 
 
-@router.post("/{subscription_id}/cancel")
+@router.post(
+    "/{subscription_id}/cancel",
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def cancel_subscription(
     subscription_id: str,
     at_period_end: bool = Query(True, description="Cancel at current period end"),
@@ -336,7 +355,7 @@ async def cancel_subscription(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> JSONResponse:
-    """Cancel a subscription."""
+    """Cancel a subscription. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         # cancel_subscription returns Subscription, not bool
@@ -358,14 +377,17 @@ async def cancel_subscription(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/{subscription_id}/reactivate")
+@router.post(
+    "/{subscription_id}/reactivate",
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def reactivate_subscription(
     subscription_id: str,
     db_session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> JSONResponse:
-    """Reactivate a canceled subscription."""
+    """Reactivate a canceled subscription. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         # reactivate_subscription returns Subscription, not bool
@@ -384,7 +406,11 @@ async def reactivate_subscription(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/{subscription_id}/change-plan", response_model=dict)
+@router.post(
+    "/{subscription_id}/change-plan",
+    response_model=dict,
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def change_subscription_plan(
     subscription_id: str,
     change_data: SubscriptionPlanChangeRequest,
@@ -392,7 +418,7 @@ async def change_subscription_plan(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> dict[str, str | dict[str, str]]:
-    """Change subscription plan with proration calculation."""
+    """Change subscription plan with proration calculation. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         # change_plan returns tuple[Subscription, ProrationResult | None]
@@ -419,7 +445,10 @@ async def change_subscription_plan(
 # Usage Tracking for Hybrid Plans
 
 
-@router.post("/{subscription_id}/usage")
+@router.post(
+    "/{subscription_id}/usage",
+    dependencies=[Depends(require_permission("billing:subscriptions:write"))],
+)
 async def record_usage(
     subscription_id: str,
     usage_data: UsageRecordRequest,
@@ -427,7 +456,7 @@ async def record_usage(
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
 ) -> JSONResponse:
-    """Record usage for usage-based or hybrid subscriptions."""
+    """Record usage for usage-based or hybrid subscriptions. Requires billing:subscriptions:write permission."""
     service = SubscriptionService(db_session)
     try:
         # record_usage returns dict[str, int] (updated usage records)

@@ -2,6 +2,7 @@
 Unit tests for Order Processing Service
 """
 
+import asyncio
 import pytest
 from decimal import Decimal
 from unittest.mock import Mock, patch, call
@@ -14,6 +15,7 @@ from dotmac.platform.sales.service import (
     OrderProcessingService,
     TemplateMapper,
 )
+from dotmac.platform.deployment.models import DeploymentType
 from .conftest import create_order
 
 
@@ -39,11 +41,16 @@ class TestTemplateMapper:
         # Create professional template
         template = DeploymentTemplate(
             name="enhanced-cloud",
+            display_name="Enhanced deployment",
             description="Enhanced deployment",
             backend=DeploymentBackend.KUBERNETES,
-            helm_chart="dotmac/platform",
-            chart_version="1.0.0",
-            default_region="us-east-1",
+            deployment_type=DeploymentType.CLOUD_DEDICATED,
+            version="1.0.0",
+            helm_chart_url="dotmac/platform",
+            helm_chart_version="1.0.0",
+            cpu_cores=4,
+            memory_gb=16,
+            storage_gb=100,
             is_active=True,
         )
         db.add(template)
@@ -57,26 +64,18 @@ class TestTemplateMapper:
 
     def test_map_by_region_default(self, db: Session, sample_deployment_template):
         """Test mapping by region with default template"""
-        sample_deployment_template.default_region = "us-east-1"
-        sample_deployment_template.is_default = True
-        db.commit()
-
         mapper = TemplateMapper(db)
         template = mapper.map_to_template(region="us-east-1")
 
         assert template is not None
-        assert template.default_region == "us-east-1"
+        assert template.id == sample_deployment_template.id
 
     def test_map_fallback_to_any_default(self, db: Session, sample_deployment_template):
         """Test fallback to any default template"""
-        sample_deployment_template.is_default = True
-        db.commit()
-
         mapper = TemplateMapper(db)
         template = mapper.map_to_template(region="nonexistent-region")
 
         assert template is not None
-        assert template.is_default is True
 
     def test_map_no_template_found(self, db: Session):
         """Test when no template is found"""
@@ -209,9 +208,9 @@ class TestOrderProcessingService:
         sample_order_submit: OrderSubmit,
     ):
         """Test successful order submission"""
-        result = order_service.submit_order(
+        result = asyncio.run(order_service.submit_order(
             sample_order.id, sample_order_submit
-        )
+        ))
 
         assert result.status == OrderStatus.SUBMITTED
         assert result.payment_reference == sample_order_submit.payment_reference
@@ -224,7 +223,7 @@ class TestOrderProcessingService:
     ):
         """Test submitting non-existent order"""
         with pytest.raises(ValueError, match="not found"):
-            order_service.submit_order(99999, sample_order_submit)
+            asyncio.run(order_service.submit_order(99999, sample_order_submit))
 
     def test_submit_order_wrong_status(
         self,
@@ -237,7 +236,7 @@ class TestOrderProcessingService:
         order = create_order(db, status=OrderStatus.ACTIVE)
 
         with pytest.raises(ValueError, match="not in draft state"):
-            order_service.submit_order(order.id, sample_order_submit)
+            asyncio.run(order_service.submit_order(order.id, sample_order_submit))
 
     def test_submit_order_sends_confirmation_email(
         self,
@@ -248,7 +247,7 @@ class TestOrderProcessingService:
         mock_email_service,
     ):
         """Test that confirmation email is sent"""
-        order_service.submit_order(sample_order.id, sample_order_submit)
+        asyncio.run(order_service.submit_order(sample_order.id, sample_order_submit))
 
         mock_email_service.send_email.assert_called_once()
         call_args = mock_email_service.send_email.call_args
@@ -331,7 +330,7 @@ class TestOrderProcessingService:
         )
 
         # Process order
-        result = order_service.process_order(order.id)
+        result = asyncio.run(order_service.process_order(order.id))
 
         # Verify workflow executed
         assert result.status == OrderStatus.ACTIVE
@@ -364,7 +363,7 @@ class TestOrderProcessingService:
 
         # Process should handle exception
         with pytest.raises(Exception):
-            order_service.process_order(order.id)
+            asyncio.run(order_service.process_order(order.id))
 
         # Verify order marked as failed
         db.refresh(order)
@@ -379,7 +378,7 @@ class TestOrderProcessingService:
         mock_tenant_service,
     ):
         """Test tenant creation from order"""
-        tenant = order_service._create_tenant_for_order(sample_order, user_id=1)
+        tenant = asyncio.run(order_service._create_tenant_for_order(sample_order, user_id=1))
 
         assert tenant is not None
         assert tenant.id is not None
@@ -398,9 +397,9 @@ class TestOrderProcessingService:
         mock_deployment_service,
     ):
         """Test deployment provisioning from order"""
-        instance = order_service._provision_deployment_for_order(
+        instance = asyncio.run(order_service._provision_deployment_for_order(
             sample_order, tenant_id=1, user_id=1
-        )
+        ))
 
         assert instance is not None
         assert instance.id is not None
@@ -496,11 +495,11 @@ class TestOrderProcessingIntegration:
 
         # Step 2: Submit order
         submit = OrderSubmit(auto_activate=False)
-        order = order_service.submit_order(order.id, submit)
+        order = asyncio.run(order_service.submit_order(order.id, submit))
         assert order.status == OrderStatus.SUBMITTED
 
         # Step 3: Process order
-        order = order_service.process_order(order.id)
+        order = asyncio.run(order_service.process_order(order.id))
         assert order.status == OrderStatus.ACTIVE
         assert order.tenant_id is not None
         assert order.deployment_instance_id is not None
@@ -524,7 +523,7 @@ class TestOrderProcessingIntegration:
 
         # Submit with auto_activate
         submit = OrderSubmit(auto_activate=True)
-        order = order_service.submit_order(order.id, submit)
+        order = asyncio.run(order_service.submit_order(order.id, submit))
 
         # Should be processed automatically
         # (In this test it might fail due to mocks, but status should change)

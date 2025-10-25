@@ -5,7 +5,7 @@ Tests the REST API endpoints for managing feature flags including
 authentication, validation, and comprehensive management operations.
 """
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import status
@@ -41,7 +41,7 @@ def client():
         )
 
     app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
-    app.include_router(feature_flags_router, prefix="/feature-flags")
+    app.include_router(feature_flags_router)
     return TestClient(app)
 
 
@@ -65,7 +65,7 @@ def regular_user_client():
         )
 
     app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
-    app.include_router(feature_flags_router, prefix="/feature-flags")
+    app.include_router(feature_flags_router)
     return TestClient(app)
 
 
@@ -89,7 +89,7 @@ def feature_flag_admin_client():
         )
 
     app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
-    app.include_router(feature_flags_router, prefix="/feature-flags")
+    app.include_router(feature_flags_router)
     return TestClient(app)
 
 
@@ -104,7 +104,20 @@ class TestCreateOrUpdateFlag:
             "description": "Enable new feature in production",
         }
 
-        with patch("dotmac.platform.feature_flags.router.set_flag") as mock_set_flag:
+        fake_flags = {
+            "new_feature": {
+                "enabled": True,
+                "context": {"env": "production"},
+                "metadata": {"description": request_data["description"], "created_at": 1700000000},
+                "updated_at": 1700000100,
+            }
+        }
+
+        mock_list_flags = AsyncMock(side_effect=[{}, fake_flags])
+
+        with patch("dotmac.platform.feature_flags.router.set_flag") as mock_set_flag, patch(
+            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        ):
             response = client.post("/feature-flags/flags/new_feature", json=request_data)
 
             assert response.status_code == status.HTTP_200_OK
@@ -112,16 +125,27 @@ class TestCreateOrUpdateFlag:
             assert data["name"] == "new_feature"
             assert data["enabled"] is True
             assert data["description"] == "Enable new feature in production"
-            assert "_created_by" in data["context"]
-            assert "_created_at" in data["context"]
+            assert data["context"] == {"env": "production"}
+            assert data["created_at"] == 1700000000
+            assert data["updated_at"] == 1700000100
 
             mock_set_flag.assert_called_once()
+            _, _, context_arg, metadata_arg = mock_set_flag.call_args[0]
+            assert context_arg == {"env": "production"}
+            assert metadata_arg["description"] == "Enable new feature in production"
+            assert metadata_arg["created_by"] == "test-user-123"
+            assert metadata_arg["updated_by"] == "test-user-123"
+            assert isinstance(metadata_arg["created_at"], int)
 
     def test_create_flag_feature_admin_permission(self, feature_flag_admin_client):
         """Test creating flag with feature_flag_admin role."""
         request_data = {"enabled": True, "description": "Admin flag"}
 
-        with patch("dotmac.platform.feature_flags.router.set_flag"):
+        mock_list_flags = AsyncMock(side_effect=[{}, {"admin_flag": {"enabled": True, "context": {}, "metadata": {}, "updated_at": 170}}])
+
+        with patch("dotmac.platform.feature_flags.router.set_flag"), patch(
+            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        ):
             response = feature_flag_admin_client.post(
                 "/feature-flags/flags/admin_flag", json=request_data
             )
@@ -161,6 +185,8 @@ class TestCreateOrUpdateFlag:
 
         with patch(
             "dotmac.platform.feature_flags.router.set_flag", side_effect=Exception("Redis error")
+        ), patch(
+            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
         ):
             response = client.post("/feature-flags/flags/error_flag", json=request_data)
 
@@ -176,12 +202,16 @@ class TestGetFlag:
         mock_flags = {
             "existing_flag": {
                 "enabled": True,
-                "context": {"_description": "Test flag", "_created_at": 1640995200, "env": "test"},
-                "updated_at": 1640995200,
+                "context": {"env": "test"},
+                "metadata": {"description": "Test flag", "created_at": 1640995200},
+                "updated_at": 1640995300,
             }
         }
 
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value=mock_flags):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags",
+            AsyncMock(return_value=mock_flags),
+        ):
             response = client.get("/feature-flags/flags/existing_flag")
 
             assert response.status_code == status.HTTP_200_OK
@@ -190,10 +220,13 @@ class TestGetFlag:
             assert data["enabled"] is True
             assert data["description"] == "Test flag"
             assert data["created_at"] == 1640995200
+            assert data["updated_at"] == 1640995300
 
     def test_get_flag_not_found(self, client):
         """Test getting non-existent flag."""
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value={}):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
+        ):
             response = client.get("/feature-flags/flags/nonexistent")
 
             assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -203,7 +236,7 @@ class TestGetFlag:
         """Test getting flag when service throws error."""
         with patch(
             "dotmac.platform.feature_flags.router.list_flags",
-            side_effect=Exception("Service error"),
+            AsyncMock(side_effect=Exception("Service error")),
         ):
             response = client.get("/feature-flags/flags/error_flag")
 
@@ -216,11 +249,24 @@ class TestListAllFlags:
     def test_list_all_flags(self, client):
         """Test listing all flags."""
         mock_flags = {
-            "flag1": {"enabled": True, "context": {}, "updated_at": 1640995200},
-            "flag2": {"enabled": False, "context": {"env": "test"}, "updated_at": 1640995300},
+            "flag1": {
+                "enabled": True,
+                "context": {},
+                "metadata": {"description": "First flag"},
+                "updated_at": 1640995200,
+            },
+            "flag2": {
+                "enabled": False,
+                "context": {"env": "test"},
+                "metadata": {},
+                "updated_at": 1640995300,
+            },
         }
 
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value=mock_flags):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags",
+            AsyncMock(return_value=mock_flags),
+        ):
             response = client.get("/feature-flags/flags")
 
             assert response.status_code == status.HTTP_200_OK
@@ -234,11 +280,24 @@ class TestListAllFlags:
     def test_list_enabled_flags_only(self, client):
         """Test listing only enabled flags."""
         mock_flags = {
-            "enabled_flag": {"enabled": True, "context": {}, "updated_at": 1640995200},
-            "disabled_flag": {"enabled": False, "context": {}, "updated_at": 1640995300},
+            "enabled_flag": {
+                "enabled": True,
+                "context": {},
+                "metadata": {},
+                "updated_at": 1640995200,
+            },
+            "disabled_flag": {
+                "enabled": False,
+                "context": {},
+                "metadata": {},
+                "updated_at": 1640995300,
+            },
         }
 
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value=mock_flags):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags",
+            AsyncMock(return_value=mock_flags),
+        ):
             response = client.get("/feature-flags/flags?enabled_only=true")
 
             assert response.status_code == status.HTTP_200_OK
@@ -248,7 +307,9 @@ class TestListAllFlags:
 
     def test_list_flags_empty(self, client):
         """Test listing flags when none exist."""
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value={}):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
+        ):
             response = client.get("/feature-flags/flags")
 
             assert response.status_code == status.HTTP_200_OK
@@ -467,7 +528,12 @@ class TestBulkOperations:
             }
         }
 
-        with patch("dotmac.platform.feature_flags.router.set_flag"):
+        mock_set_flag = AsyncMock()
+        mock_list_flags = AsyncMock(return_value={})
+
+        with patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag), patch(
+            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        ):
             response = client.post("/feature-flags/flags/bulk", json=request_data)
 
             assert response.status_code == status.HTTP_200_OK
@@ -475,6 +541,7 @@ class TestBulkOperations:
             assert data["success_count"] == 3
             assert data["failed_count"] == 0
             assert len(data["failed_flags"]) == 0
+            assert mock_set_flag.await_count == 3
 
     def test_bulk_update_partial_failure(self, client):
         """Test bulk update with some failures."""
@@ -485,7 +552,12 @@ class TestBulkOperations:
             }
         }
 
-        with patch("dotmac.platform.feature_flags.router.set_flag"):
+        mock_set_flag = AsyncMock()
+        mock_list_flags = AsyncMock(return_value={})
+
+        with patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag), patch(
+            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        ):
             response = client.post("/feature-flags/flags/bulk", json=request_data)
 
             assert response.status_code == status.HTTP_200_OK
@@ -558,16 +630,16 @@ class TestResponseModels:
         mock_flags = {
             "test_flag": {
                 "enabled": True,
-                "context": {
-                    "_description": "Test description",
-                    "_created_at": 1640995200,
-                    "env": "test",
-                },
+                "context": {"env": "test"},
+                "metadata": {"description": "Test description", "created_at": 1640995200},
                 "updated_at": 1640995300,
             }
         }
 
-        with patch("dotmac.platform.feature_flags.router.list_flags", return_value=mock_flags):
+        with patch(
+            "dotmac.platform.feature_flags.router.list_flags",
+            AsyncMock(return_value=mock_flags),
+        ):
             response = client.get("/feature-flags/flags/test_flag")
 
             assert response.status_code == status.HTTP_200_OK

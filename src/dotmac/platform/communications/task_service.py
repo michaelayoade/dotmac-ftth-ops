@@ -343,7 +343,28 @@ def queue_email(
     subject: str,
     text_body: str | None = None,
     html_body: str | None = None,
+    from_email: str | None = None,
+    from_name: str | None = None,
+    reply_to: str | None = None,
+    cc: list[str] | None = None,
+    bcc: list[str] | None = None,
 ) -> str:
+    """Queue an email for background sending with full email options support.
+
+    Args:
+        to: Recipient email addresses
+        subject: Email subject
+        text_body: Plain text body (optional)
+        html_body: HTML body (optional)
+        from_email: Sender email address (optional, falls back to service default)
+        from_name: Sender display name (optional)
+        reply_to: Reply-to email address (optional)
+        cc: CC recipients (optional)
+        bcc: BCC recipients (optional)
+
+    Returns:
+        Task ID for tracking the queued email
+    """
     service = get_task_service()
     # EmailStr is a type annotation, not a constructor - just pass strings
     message = EmailMessage(
@@ -351,6 +372,11 @@ def queue_email(
         subject=subject,
         text_body=text_body,
         html_body=html_body,
+        from_email=from_email,
+        from_name=from_name,
+        reply_to=reply_to,
+        cc=cc or [],
+        bcc=bcc or [],
     )
     return service.send_email_async(message)
 

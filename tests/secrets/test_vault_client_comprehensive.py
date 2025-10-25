@@ -371,7 +371,7 @@ class TestVaultClientDeleteSecret:
 
         client.delete_secret("app/old-config")
 
-        mock_http_client.delete.assert_called_once_with("/v1/secret/metadata/app/old-config")
+        mock_http_client.delete.assert_called_once_with("/v1/secret/data/app/old-config")
 
     @patch("httpx.Client")
     def test_delete_secret_permission_denied(self, mock_client_class):

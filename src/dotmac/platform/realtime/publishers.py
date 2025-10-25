@@ -69,8 +69,10 @@ class EventPublisher:
         # Publish to both tenant-wide and job-specific channels
         tenant_channel = f"jobs:{event.tenant_id}"
         job_channel = f"job:{event.job_id}"
+        tenant_scoped_job_channel = f"{event.tenant_id}:job:{event.job_id}"
         await self.publish_event(tenant_channel, event)
         await self.publish_event(job_channel, event)
+        await self.publish_event(tenant_scoped_job_channel, event)
 
     async def publish_ticket(self, event: TicketEvent) -> None:
         """Publish ticket event."""

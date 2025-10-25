@@ -6,7 +6,8 @@ import pytest
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Generator
-from unittest.mock import Mock
+from unittest.mock import Mock, AsyncMock
+from uuid import uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
@@ -27,6 +28,8 @@ from dotmac.platform.sales.schemas import (
     QuickOrderRequest,
     ServiceSelection,
 )
+from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
+from dotmac.platform.dependencies import get_deployment_service
 from dotmac.platform.deployment.models import DeploymentTemplate, DeploymentBackend
 
 
@@ -40,7 +43,7 @@ def mock_db_session():
 def mock_tenant_service():
     """Mock tenant service"""
     service = Mock()
-    service.create_tenant.return_value = Mock(id=1, slug="test-tenant")
+    service.create_tenant = AsyncMock(return_value=Mock(id=str(uuid4()), slug="test-tenant"))
     return service
 
 
@@ -50,7 +53,7 @@ def mock_deployment_service():
     service = Mock()
     instance = Mock(id=1, state="active")
     execution = Mock(id=1, status="succeeded")
-    service.provision_deployment.return_value = (instance, execution)
+    service.provision_deployment = AsyncMock(return_value=(instance, execution))
     return service
 
 
@@ -58,7 +61,7 @@ def mock_deployment_service():
 def mock_notification_service():
     """Mock notification service"""
     service = Mock()
-    service.send_notification.return_value = None
+    service.send_notification = AsyncMock(return_value=None)
     return service
 
 
@@ -74,7 +77,7 @@ def mock_email_service():
 def mock_event_bus():
     """Mock event bus"""
     bus = Mock()
-    bus.publish.return_value = None
+    bus.publish = AsyncMock(return_value=None)
     return bus
 
 
@@ -116,65 +119,65 @@ def db(db_session):
         db_session.rollback()
 
 
-@pytest.fixture(scope="session")
-def sample_tenant(db_engine):
-    """Create a sample tenant for testing (session-scoped)"""
+@pytest.fixture
+def sample_tenant(db: Session):
+    """Create a sample tenant for testing."""
     from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
-    from sqlalchemy.orm import sessionmaker
+
     from dotmac.platform.db import Base
 
-    # Ensure all tables are created before attempting to insert data
-    Base.metadata.create_all(db_engine, checkfirst=True)
+    Base.metadata.create_all(db.get_bind(), checkfirst=True)
 
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
+    tenant = Tenant(
+        id=f"tenant-{uuid4().hex}",
+        name="Test ISP Company",
+        slug=f"tenant-{uuid4().hex[:8]}",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.ENTERPRISE,
+        billing_cycle=BillingCycle.MONTHLY,
+        email="admin@test-isp.com",
+    )
+    db.add(tenant)
+    db.commit()
+    db.refresh(tenant)
     try:
-        tenant = Tenant(
-            id="test-tenant-123",
-            name="Test ISP Company",
-            slug="test-isp",
-            status=TenantStatus.ACTIVE,
-            plan_type=TenantPlanType.ENTERPRISE,
-            billing_cycle=BillingCycle.MONTHLY,
-            email="admin@test-isp.com",
-        )
-        session.add(tenant)
-        session.commit()
-        session.refresh(tenant)
-        return tenant
+        yield tenant
     finally:
-        session.close()
+        db.delete(tenant)
+        db.commit()
 
 
-@pytest.fixture(scope="session")
-def sample_deployment_template(db_engine) -> DeploymentTemplate:
-    """Create a sample deployment template (session-scoped)"""
+@pytest.fixture
+def sample_deployment_template(db: Session) -> DeploymentTemplate:
+    """Create a sample deployment template."""
     from dotmac.platform.deployment.models import DeploymentType
-    from sqlalchemy.orm import sessionmaker
 
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
+    from dotmac.platform.db import Base
+
+    Base.metadata.create_all(db.get_bind(), checkfirst=True)
+
+    template = DeploymentTemplate(
+        name=f"standard-cloud-{uuid4().hex[:6]}",
+        display_name="Standard Cloud Deployment",
+        description="Standard cloud deployment",
+        backend=DeploymentBackend.KUBERNETES,
+        deployment_type=DeploymentType.CLOUD_DEDICATED,
+        version="1.0.0",
+        helm_chart_url="https://charts.dotmac.io/platform",
+        helm_chart_version="1.0.0",
+        cpu_cores=4,
+        memory_gb=16,
+        storage_gb=100,
+        is_active=True,
+    )
+    db.add(template)
+    db.commit()
+    db.refresh(template)
     try:
-        template = DeploymentTemplate(
-            name="standard-cloud",
-            display_name="Standard Cloud Deployment",
-            description="Standard cloud deployment",
-            backend=DeploymentBackend.KUBERNETES,
-            deployment_type=DeploymentType.CLOUD_DEDICATED,
-            version="1.0.0",
-            helm_chart_url="https://charts.dotmac.io/platform",
-            helm_chart_version="1.0.0",
-            cpu_cores=4,
-            memory_gb=16,
-            storage_gb=100,
-            is_active=True,
-        )
-        session.add(template)
-        session.commit()
-        session.refresh(template)
-        return template
+        yield template
     finally:
-        session.close()
+        db.delete(template)
+        db.commit()
 
 
 @pytest.fixture
@@ -220,52 +223,51 @@ def sample_quick_order() -> QuickOrderRequest:
     )
 
 
-@pytest.fixture(scope="session")
-def sample_order(db_engine, sample_deployment_template: DeploymentTemplate, sample_tenant) -> Order:
-    """Create a sample order (session-scoped to avoid duplicate key errors)"""
-    from sqlalchemy.orm import sessionmaker
-    # Ensure sample_tenant is created first (triggers db setup)
-    _ = sample_tenant
+@pytest.fixture
+def sample_order(db: Session, sample_deployment_template: DeploymentTemplate, sample_tenant) -> Order:
+    """Create a sample order for testing."""
+    from dotmac.platform.db import Base
 
-    SessionLocal = sessionmaker(bind=db_engine)
-    session = SessionLocal()
+    Base.metadata.create_all(db.get_bind(), checkfirst=True)
+
+    order = Order(
+        order_number=f"ORD-{uuid4().hex[:12].upper()}",
+        order_type=OrderType.NEW_TENANT,
+        status=OrderStatus.DRAFT,
+        customer_email="admin@example.com",
+        customer_name="John Smith",
+        customer_phone="+1-555-0100",
+        company_name="Example ISP Inc.",
+        organization_slug=f"example-{uuid4().hex[:8]}",
+        deployment_template_id=sample_deployment_template.id,
+        deployment_region="us-east-1",
+        selected_services=[
+            {
+                "service_code": "subscriber-provisioning",
+                "name": "Subscriber Management",
+                "quantity": 1,
+            },
+            {
+                "service_code": "billing-invoicing",
+                "name": "Billing & Invoicing",
+                "quantity": 1,
+            },
+        ],
+        currency="USD",
+        subtotal=Decimal("248.00"),
+        tax_amount=Decimal("0.00"),
+        total_amount=Decimal("248.00"),
+        billing_cycle="monthly",
+        source="public_api",
+    )
+    db.add(order)
+    db.commit()
+    db.refresh(order)
     try:
-        order = Order(
-            order_number="ORD-20251016-1001",
-            order_type=OrderType.NEW_TENANT,
-            status=OrderStatus.DRAFT,
-            customer_email="admin@example.com",
-            customer_name="John Smith",
-            customer_phone="+1-555-0100",
-            company_name="Example ISP Inc.",
-            organization_slug="example-isp",
-            deployment_template_id=sample_deployment_template.id,
-            deployment_region="us-east-1",
-            selected_services=[
-                {
-                    "service_code": "subscriber-provisioning",
-                    "name": "Subscriber Management",
-                    "quantity": 1,
-                },
-                {
-                    "service_code": "billing-invoicing",
-                    "name": "Billing & Invoicing",
-                    "quantity": 1,
-                },
-            ],
-            currency="USD",
-            subtotal=Decimal("248.00"),
-            tax_amount=Decimal("0.00"),
-            total_amount=Decimal("248.00"),
-            billing_cycle="monthly",
-            source="public_api",
-        )
-        session.add(order)
-        session.commit()
-        session.refresh(order)
-        return order
+        yield order
     finally:
-        session.close()
+        db.delete(order)
+        db.commit()
 
 
 @pytest.fixture
@@ -373,8 +375,69 @@ def sample_order_submit() -> OrderSubmit:
     return OrderSubmit(
         payment_reference="PAY-123456",
         contract_reference="CONTRACT-789",
-        auto_activate=True,
+        auto_activate=False,
     )
+
+
+@pytest.fixture
+def client(test_client):
+    """Synchronous TestClient for sales API tests."""
+    return test_client
+
+
+@pytest.fixture
+def auth_client(client, auth_headers):
+    """Authenticated TestClient with default headers for internal API tests."""
+    original_all_permissions = RBACService.user_has_all_permissions
+    original_any_permission = RBACService.user_has_any_permission if hasattr(RBACService, "user_has_any_permission") else None
+    original_get_permissions = RBACService.get_user_permissions
+
+    async def _allow_all_permissions(self, user_id, permissions):  # noqa: D401
+        return True
+
+    async def _allow_any_permission(self, user_id, permissions):  # noqa: D401
+        return True
+
+    async def _return_permissions(self, user_id):  # noqa: D401
+        return set(["order.read", "order.submit", "order.process", "order.update", "order.delete"])
+
+    RBACService.user_has_all_permissions = _allow_all_permissions  # type: ignore[assignment]
+    if original_any_permission is not None:
+        RBACService.user_has_any_permission = _allow_any_permission  # type: ignore[assignment]
+    RBACService.get_user_permissions = _return_permissions  # type: ignore[assignment]
+
+    class _AllowAllRBACService:
+        async def user_has_all_permissions(self, *args, **kwargs):
+            return True
+
+        async def user_has_permission(self, *args, **kwargs):
+            return True
+
+        async def get_user_permissions(self, *args, **kwargs):
+            return {"order.read", "order.submit", "order.process", "order.update", "order.delete"}
+
+        async def get_user_roles(self, *args, **kwargs):
+            return {"admin"}
+
+    class _MockDeploymentService:
+        async def provision_deployment(self, *args, **kwargs):  # noqa: D401
+            return Mock(id=1, state="active"), Mock(id=1, status="succeeded")
+
+    client.app.dependency_overrides[get_rbac_service] = lambda: _AllowAllRBACService()
+    client.app.dependency_overrides[get_deployment_service] = lambda: _MockDeploymentService()
+    original_headers = dict(client.headers)
+    client.headers.update(auth_headers)
+    try:
+        yield client
+    finally:
+        client.headers.clear()
+        client.headers.update(original_headers)
+        client.app.dependency_overrides.pop(get_rbac_service, None)
+        client.app.dependency_overrides.pop(get_deployment_service, None)
+        RBACService.user_has_all_permissions = original_all_permissions  # type: ignore[assignment]
+        if original_any_permission is not None:
+            RBACService.user_has_any_permission = original_any_permission  # type: ignore[assignment]
+        RBACService.get_user_permissions = original_get_permissions  # type: ignore[assignment]
 
 
 # Factory functions for creating test data
@@ -382,13 +445,15 @@ def sample_order_submit() -> OrderSubmit:
 
 def create_order(
     db: Session,
-    order_number: str = "ORD-TEST-0001",
+    order_number: str | None = None,
     status: OrderStatus = OrderStatus.DRAFT,
     **kwargs: Any,
 ) -> Order:
     """Factory function to create an order"""
+    order_number_value = order_number or f"ORD-{uuid4().hex[:8].upper()}"
+
     defaults = {
-        "order_number": order_number,
+        "order_number": order_number_value,
         "order_type": OrderType.NEW_TENANT,
         "status": status,
         "customer_email": "test@example.com",
@@ -437,14 +502,18 @@ def create_order_item(
 def create_service_activation(
     db: Session,
     order_id: int,
-    tenant_id: int,
+    tenant_id: str | None = None,
     service_code: str = "test-service",
     **kwargs: Any,
 ) -> ServiceActivation:
     """Factory function to create a service activation"""
+    tenant_value = tenant_id or str(uuid4())
+    if isinstance(tenant_value, int):
+        tenant_value = str(tenant_value)
+
     defaults = {
         "order_id": order_id,
-        "tenant_id": tenant_id,
+        "tenant_id": tenant_value,
         "service_code": service_code,
         "service_name": f"{service_code.replace('-', ' ').title()}",
         "activation_status": ActivationStatus.PENDING,

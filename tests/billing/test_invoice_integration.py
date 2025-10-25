@@ -498,7 +498,8 @@ class TestInvoicePaymentApplication:
 
         assert updated_invoice.total_credits_applied == 5000
         assert updated_invoice.remaining_balance == 5000
-        assert updated_invoice.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert updated_invoice.payment_status == PaymentStatus.PENDING
+        assert updated_invoice.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_overpayment_handling(self, async_session: AsyncSession) -> None:
         """Test that overpayment brings balance to zero (not negative)."""

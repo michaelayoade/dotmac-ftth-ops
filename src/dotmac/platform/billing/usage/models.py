@@ -101,7 +101,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
     unit_price: Mapped[Decimal] = mapped_column(
         Numeric(12, 6),
         nullable=False,
-        comment="Price per unit in cents (e.g., 10 cents/GB)",
+        comment="Price per unit in major currency units (e.g., 0.10 USD/GB), not cents",
     )
     total_amount: Mapped[int] = mapped_column(
         Integer,

@@ -5,6 +5,7 @@ Business logic for NetBox IPAM and DCIM operations.
 """
 
 import re
+from uuid import uuid4
 from typing import Any
 
 import structlog
@@ -115,13 +116,24 @@ class NetBoxService:
             return int(existing_id) if existing_id is not None else 0
 
         # Create new tenant
-        slug = self._generate_slug(tenant_name)
+        base_slug = self._generate_slug(tenant_name)
+        slug = await self._generate_unique_slug(base_slug)
         data = TenantCreate(
             name=tenant_name,
             slug=slug,
             description=f"Tenant {tenant_id}",
         )
-        tenant = await self.client.create_tenant(data.model_dump(exclude_none=True))
+        try:
+            tenant = await self.client.create_tenant(data.model_dump(exclude_none=True))
+        except Exception as e:
+            logger.error(
+                "netbox.create_tenant.failed",
+                tenant_id=tenant_id,
+                tenant_name=tenant_name,
+                slug=slug,
+                error=str(e),
+            )
+            raise
         tenant_id_value = tenant.get("id")
         return int(tenant_id_value) if tenant_id_value is not None else 0
 
@@ -715,6 +727,22 @@ class NetBoxService:
         # Remove leading/trailing hyphens
         slug = slug.strip("-")
         return slug
+
+    async def _generate_unique_slug(self, base_slug: str) -> str:
+        """
+        Ensure slug is unique by querying NetBox and appending suffix when necessary.
+        """
+        slug_candidate = base_slug or "tenant"
+        attempt = 1
+
+        while await self.client.get_tenant_by_slug(slug_candidate):
+            attempt += 1
+            if attempt > 10:
+                slug_candidate = f"{base_slug}-{uuid4().hex[:6]}"
+            else:
+                slug_candidate = f"{base_slug}-{attempt}"
+
+        return slug_candidate
 
     async def sync_subscriber_to_netbox(
         self,

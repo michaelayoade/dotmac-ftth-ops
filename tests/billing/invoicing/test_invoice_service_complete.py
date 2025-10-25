@@ -137,20 +137,22 @@ class TestPaymentStatusUpdate:
             assert sample_invoice_entity.paid_at is not None
             assert sample_invoice_entity.remaining_balance == 0
 
-    async def test_update_payment_status_to_partially_refunded(
+    async def test_update_payment_status_to_pending_partial(
         self, invoice_service, sample_invoice_entity
     ):
-        """Test updating payment status to partially refunded."""
+        """Test updating payment status to pending for partial payments."""
         with patch.object(
             invoice_service, "_get_invoice_entity", return_value=sample_invoice_entity
         ):
+            sample_invoice_entity.status = InvoiceStatus.OPEN
+            sample_invoice_entity.remaining_balance = sample_invoice_entity.total_amount - 10
             await invoice_service.update_invoice_payment_status(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
-                payment_status=PaymentStatus.PARTIALLY_REFUNDED,
+                payment_status=PaymentStatus.PENDING,
             )
 
-            assert sample_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+            assert sample_invoice_entity.payment_status == PaymentStatus.PENDING
             assert sample_invoice_entity.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_update_payment_status_not_found(self, invoice_service):

@@ -19,6 +19,8 @@ from unittest.mock import Mock, patch
 
 from fastapi import FastAPI
 
+from dotmac.platform.version import get_version
+
 from dotmac.platform.telemetry import (
     configure_structlog,
     create_resource,
@@ -33,6 +35,9 @@ from dotmac.platform.telemetry import (
 )
 
 
+CURRENT_VERSION = get_version()
+
+
 class TestCreateResource:
     """Test OpenTelemetry resource creation."""
 
@@ -40,7 +45,7 @@ class TestCreateResource:
     def test_create_resource_basic(self, mock_settings):
         """Test creating resource with basic attributes."""
         mock_settings.observability.otel_service_name = "test-service"
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = CURRENT_VERSION
         mock_settings.environment.value = "development"
         mock_settings.observability.otel_resource_attributes = None
 
@@ -49,7 +54,7 @@ class TestCreateResource:
         assert resource is not None
         attrs = resource.attributes
         assert attrs["service.name"] == "test-service"
-        assert attrs["service.version"] == "1.0.0"
+        assert attrs["service.version"] == CURRENT_VERSION
         assert attrs["deployment.environment"] == "development"
 
     @patch("dotmac.platform.telemetry.settings")
@@ -382,9 +387,9 @@ class TestGetTracerAndMeter:
         mock_tracer = Mock()
         mock_get_tracer.return_value = mock_tracer
 
-        tracer = get_tracer("test-component", "1.0.0")
+        tracer = get_tracer("test-component", CURRENT_VERSION)
 
-        mock_get_tracer.assert_called_once_with("test-component", "1.0.0")
+        mock_get_tracer.assert_called_once_with("test-component", CURRENT_VERSION)
         assert tracer == mock_tracer
 
     @patch("dotmac.platform.telemetry.metrics.get_meter")

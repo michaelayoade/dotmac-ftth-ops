@@ -147,6 +147,20 @@ class TestGenieACSDeviceOperations:
                 "devices/nonexistent"
             )
 
+    @pytest.mark.asyncio
+    async def test_update_device(self):
+        """Test updating device metadata"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"_id": "device1", "_tags": ["example"]}
+
+            payload = {"_tags": ["example"]}
+            result = await client.update_device("device1", payload)
+
+            assert result["_id"] == "device1"
+            mock_req.assert_called_once_with("PATCH", "devices/device1", json=payload)
+
 
 class TestGenieACSTaskOperations:
     """Test task-related operations"""
@@ -239,6 +253,47 @@ class TestGenieACSTaskOperations:
 
             assert result["name"] == "reboot"
             mock_req.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_task_delegates_to_create(self):
+        """Test add_task convenience wrapper"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, 'create_task', new_callable=AsyncMock) as mock_create:
+            mock_create.return_value = {"_id": "task123", "name": "download"}
+
+            result = await client.add_task(
+                device_id="device1",
+                task_name="download",
+                file_name="fw.bin",
+            )
+
+            assert result["_id"] == "task123"
+            mock_create.assert_called_once_with(
+                device_id="device1",
+                task_name="download",
+                task_data={"fileName": "fw.bin"},
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_task_converts_object_name(self):
+        """Ensure add_task converts snake_case keys"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, 'create_task', new_callable=AsyncMock) as mock_create:
+            mock_create.return_value = {"_id": "task456", "name": "refreshObject"}
+
+            await client.add_task(
+                device_id="device1",
+                task_name="refreshObject",
+                object_name="InternetGatewayDevice",
+            )
+
+            mock_create.assert_called_once_with(
+                device_id="device1",
+                task_name="refreshObject",
+                task_data={"objectName": "InternetGatewayDevice"},
+            )
 
 
 class TestGenieACSHealthChecks:

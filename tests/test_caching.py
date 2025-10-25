@@ -173,20 +173,24 @@ class TestCaching:
     @patch("dotmac.platform.core.caching.redis_client")
     def test_cache_clear_with_redis(self, mock_redis):
         """Test cache_clear with Redis."""
+        mock_redis.delete = Mock()
         mock_redis.flushdb = Mock()
+
+        cache_set("tracked:key1", "redis_value")
         memory_cache["key1"] = "value1"
         lru_cache["key2"] = "value2"
 
         cache_clear()
 
-        mock_redis.flushdb.assert_called_once()
+        mock_redis.delete.assert_called_once_with("tracked:key1")
         assert len(memory_cache) == 0
         assert len(lru_cache) == 0
 
     @patch("dotmac.platform.core.caching.redis_client")
     def test_cache_clear_with_redis_exception(self, mock_redis):
         """Test cache_clear with Redis exception."""
-        mock_redis.flushdb.side_effect = Exception("Redis error")
+        mock_redis.delete.side_effect = Exception("Redis error")
+        cache_set("tracked:key1", "redis_value")
         memory_cache["key1"] = "value1"
         lru_cache["key2"] = "value2"
 
@@ -206,6 +210,13 @@ class TestCaching:
 
         assert len(memory_cache) == 0
         assert len(lru_cache) == 0
+
+    @patch("dotmac.platform.core.caching.redis_client")
+    def test_cache_clear_flush_all(self, mock_redis):
+        """Test cache_clear flush all resets Redis DB."""
+        mock_redis.flushdb = Mock()
+        cache_clear(flush_all=True)
+        mock_redis.flushdb.assert_called_once()
 
     @patch("dotmac.platform.core.caching.cache_get")
     @patch("dotmac.platform.core.caching.cache_set")

@@ -3,9 +3,11 @@
 import uuid
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
+from urllib.parse import urlencode
 
 import pytest
 from fastapi import HTTPException, status
+from starlette.requests import Request
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.user_management.models import User
@@ -67,6 +69,35 @@ def admin_user(sample_user):
     )
 
 
+@pytest.fixture
+def request_factory():
+    """Factory to build ASGI Request objects for router tests."""
+    def _build_request(
+        headers: dict[str, str] | None = None, query_params: dict[str, str] | None = None
+    ) -> Request:
+        asgi_headers = []
+        if headers:
+            asgi_headers = [
+                (key.lower().encode("latin-1"), value.encode("latin-1"))
+                for key, value in headers.items()
+            ]
+        query_string = b""
+        if query_params:
+            query_string = urlencode(query_params).encode("latin-1")
+
+        scope = {
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "raw_path": b"/",
+            "headers": asgi_headers,
+            "query_string": query_string,
+        }
+        return Request(scope)
+
+    return _build_request
+
+
 class TestUserRouter:
     """Test User Management API Router."""
 
@@ -91,7 +122,9 @@ class TestUserProfileEndpoints:
         assert response.user_id == str(sample_user.id)
         assert response.username == sample_user.username
         assert response.email == sample_user.email
-        mock_user_service.get_user_by_id.assert_called_once_with(current_user.user_id)
+        mock_user_service.get_user_by_id.assert_called_once_with(
+            current_user.user_id, tenant_id=current_user.tenant_id
+        )
 
     @pytest.mark.asyncio
     async def test_get_current_user_profile_not_found(self, current_user, mock_user_service):
@@ -133,9 +166,9 @@ class TestUserProfileEndpoints:
         assert response.full_name == "Updated Name"
         assert response.email == "updated@example.com"
         mock_user_service.update_user.assert_called_once()
-
-        # Check that roles are excluded from update
         call_args = mock_user_service.update_user.call_args
+        assert call_args[1]["tenant_id"] == current_user.tenant_id
+        # Check that roles are excluded from update
         assert "roles" not in call_args[1]
 
     @pytest.mark.asyncio
@@ -177,6 +210,7 @@ class TestUserProfileEndpoints:
             user_id=current_user.user_id,
             current_password="oldpassword",
             new_password="newpassword123",
+            tenant_id=current_user.tenant_id,
         )
 
     @pytest.mark.asyncio
@@ -224,7 +258,9 @@ class TestUserManagementEndpoints:
     """Test admin user management endpoints."""
 
     @pytest.mark.asyncio
-    async def test_list_users_success(self, admin_user, mock_user_service, sample_user):
+    async def test_list_users_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test listing users successfully."""
         # Arrange
         from dotmac.platform.user_management.router import list_users
@@ -240,6 +276,7 @@ class TestUserManagementEndpoints:
             is_active=None,
             role=None,
             search=None,
+            request=request_factory(),
             admin_user=admin_user,
             user_service=mock_user_service,
         )
@@ -256,10 +293,13 @@ class TestUserManagementEndpoints:
             role=None,
             search=None,
             tenant_id=admin_user.tenant_id,
+            require_tenant=True,
         )
 
     @pytest.mark.asyncio
-    async def test_list_users_with_filters(self, admin_user, mock_user_service, sample_user):
+    async def test_list_users_with_filters(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test listing users with filters."""
         # Arrange
         from dotmac.platform.user_management.router import list_users
@@ -275,6 +315,7 @@ class TestUserManagementEndpoints:
             is_active=True,
             role="admin",
             search="test",
+            request=request_factory(),
             admin_user=admin_user,
             user_service=mock_user_service,
         )
@@ -289,10 +330,13 @@ class TestUserManagementEndpoints:
             role="admin",
             search="test",
             tenant_id=admin_user.tenant_id,
+            require_tenant=True,
         )
 
     @pytest.mark.asyncio
-    async def test_create_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_create_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test creating user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import create_user
@@ -309,7 +353,7 @@ class TestUserManagementEndpoints:
         mock_user_service.create_user.return_value = sample_user
 
         # Act
-        response = await create_user(user_data, admin_user, mock_user_service)
+        response = await create_user(user_data, request_factory(), admin_user, mock_user_service)
 
         # Assert
         assert response.user_id == str(sample_user.id)
@@ -324,7 +368,9 @@ class TestUserManagementEndpoints:
         )
 
     @pytest.mark.asyncio
-    async def test_create_user_validation_error(self, admin_user, mock_user_service):
+    async def test_create_user_validation_error(
+        self, admin_user, mock_user_service, request_factory
+    ):
         """Test creating user with validation error."""
         # Arrange
         from dotmac.platform.user_management.router import create_user
@@ -339,13 +385,15 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await create_user(user_data, admin_user, mock_user_service)
+            await create_user(user_data, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
         assert "Username already exists" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_get_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_get_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test getting specific user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import get_user
@@ -353,14 +401,18 @@ class TestUserManagementEndpoints:
         mock_user_service.get_user_by_id.return_value = sample_user
 
         # Act
-        response = await get_user(str(sample_user.id), admin_user, mock_user_service)
+        response = await get_user(
+            str(sample_user.id), request_factory(), admin_user, mock_user_service
+        )
 
         # Assert
         assert response.user_id == str(sample_user.id)
-        mock_user_service.get_user_by_id.assert_called_once_with(str(sample_user.id))
+        mock_user_service.get_user_by_id.assert_called_once_with(
+            str(sample_user.id), tenant_id=admin_user.tenant_id
+        )
 
     @pytest.mark.asyncio
-    async def test_get_user_not_found(self, admin_user, mock_user_service):
+    async def test_get_user_not_found(self, admin_user, mock_user_service, request_factory):
         """Test getting user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import get_user
@@ -370,13 +422,15 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await get_user(user_id, admin_user, mock_user_service)
+            await get_user(user_id, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert f"User {user_id} not found" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_update_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_update_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test updating user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import update_user
@@ -391,7 +445,9 @@ class TestUserManagementEndpoints:
         mock_user_service.update_user.return_value = sample_user
 
         # Act
-        response = await update_user(str(sample_user.id), updates, admin_user, mock_user_service)
+        response = await update_user(
+            str(sample_user.id), updates, request_factory(), admin_user, mock_user_service
+        )
 
         # Assert
         assert response.full_name == "Updated Name"
@@ -399,7 +455,9 @@ class TestUserManagementEndpoints:
         mock_user_service.update_user.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_user_not_found(self, admin_user, mock_user_service):
+    async def test_update_user_not_found(
+        self, admin_user, mock_user_service, request_factory
+    ):
         """Test updating user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import update_user
@@ -410,13 +468,15 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await update_user(user_id, updates, admin_user, mock_user_service)
+            await update_user(user_id, updates, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert f"User {user_id} not found" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_update_user_validation_error(self, admin_user, mock_user_service, sample_user):
+    async def test_update_user_validation_error(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test updating user with validation error."""
         # Arrange
         from dotmac.platform.user_management.router import update_user
@@ -426,13 +486,17 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await update_user(str(sample_user.id), updates, admin_user, mock_user_service)
+            await update_user(
+                str(sample_user.id), updates, request_factory(), admin_user, mock_user_service
+            )
 
         assert exc_info.value.status_code == status.HTTP_400_BAD_REQUEST
         assert "Email is already in use" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_delete_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_delete_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test deleting user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import delete_user
@@ -440,14 +504,20 @@ class TestUserManagementEndpoints:
         mock_user_service.delete_user.return_value = True
 
         # Act
-        response = await delete_user(str(sample_user.id), admin_user, mock_user_service)
+        response = await delete_user(
+            str(sample_user.id), request_factory(), admin_user, mock_user_service
+        )
 
         # Assert
         assert response is None  # 204 No Content
-        mock_user_service.delete_user.assert_called_once_with(str(sample_user.id))
+        mock_user_service.delete_user.assert_called_once_with(
+            str(sample_user.id), tenant_id=admin_user.tenant_id
+        )
 
     @pytest.mark.asyncio
-    async def test_delete_user_not_found(self, admin_user, mock_user_service):
+    async def test_delete_user_not_found(
+        self, admin_user, mock_user_service, request_factory
+    ):
         """Test deleting user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import delete_user
@@ -457,13 +527,15 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await delete_user(user_id, admin_user, mock_user_service)
+            await delete_user(user_id, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert f"User {user_id} not found" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_disable_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_disable_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test disabling user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import disable_user
@@ -472,16 +544,20 @@ class TestUserManagementEndpoints:
         mock_user_service.update_user.return_value = sample_user
 
         # Act
-        response = await disable_user(str(sample_user.id), admin_user, mock_user_service)
+        response = await disable_user(
+            str(sample_user.id), request_factory(), admin_user, mock_user_service
+        )
 
         # Assert
         assert "disabled successfully" in response["message"]
         mock_user_service.update_user.assert_called_once_with(
-            user_id=str(sample_user.id), is_active=False
+            user_id=str(sample_user.id), tenant_id=admin_user.tenant_id, is_active=False
         )
 
     @pytest.mark.asyncio
-    async def test_disable_user_not_found(self, admin_user, mock_user_service):
+    async def test_disable_user_not_found(
+        self, admin_user, mock_user_service, request_factory
+    ):
         """Test disabling user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import disable_user
@@ -491,13 +567,15 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await disable_user(user_id, admin_user, mock_user_service)
+            await disable_user(user_id, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert f"User {user_id} not found" in str(exc_info.value.detail)
 
     @pytest.mark.asyncio
-    async def test_enable_user_success(self, admin_user, mock_user_service, sample_user):
+    async def test_enable_user_success(
+        self, admin_user, mock_user_service, sample_user, request_factory
+    ):
         """Test enabling user successfully."""
         # Arrange
         from dotmac.platform.user_management.router import enable_user
@@ -506,16 +584,20 @@ class TestUserManagementEndpoints:
         mock_user_service.update_user.return_value = sample_user
 
         # Act
-        response = await enable_user(str(sample_user.id), admin_user, mock_user_service)
+        response = await enable_user(
+            str(sample_user.id), request_factory(), admin_user, mock_user_service
+        )
 
         # Assert
         assert "enabled successfully" in response["message"]
         mock_user_service.update_user.assert_called_once_with(
-            user_id=str(sample_user.id), is_active=True
+            user_id=str(sample_user.id), tenant_id=admin_user.tenant_id, is_active=True
         )
 
     @pytest.mark.asyncio
-    async def test_enable_user_not_found(self, admin_user, mock_user_service):
+    async def test_enable_user_not_found(
+        self, admin_user, mock_user_service, request_factory
+    ):
         """Test enabling user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import enable_user
@@ -525,7 +607,7 @@ class TestUserManagementEndpoints:
 
         # Act & Assert
         with pytest.raises(HTTPException) as exc_info:
-            await enable_user(user_id, admin_user, mock_user_service)
+            await enable_user(user_id, request_factory(), admin_user, mock_user_service)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert f"User {user_id} not found" in str(exc_info.value.detail)

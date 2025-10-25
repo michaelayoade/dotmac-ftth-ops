@@ -2,6 +2,7 @@
 Billing settings data models
 """
 
+from datetime import datetime
 from typing import Any
 from uuid import uuid4
 
@@ -268,6 +269,10 @@ class BillingSettings(BillingBaseModel):  # type: ignore[misc]  # BillingBaseMod
             "api_version": "v1",
         }
     )
+
+    # Metadata
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
 
     @field_validator("company_info", mode="before")
     @classmethod

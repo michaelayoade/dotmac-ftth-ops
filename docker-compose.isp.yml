@@ -6,6 +6,7 @@ services:
   freeradius:
     image: freeradius-postgresql:latest
     container_name: isp-freeradius
+    platform: linux/amd64
     environment:
       - RADIUS_DB_TYPE=postgresql
       - RADIUS_DB_HOST=postgres
@@ -19,13 +20,11 @@ services:
       - "3799:3799/udp"   # CoA/DM (Change of Authorization / Disconnect Messages)
       - "18120:18120"     # Status server
     volumes:
-      - ./config/radius/clients.conf:/etc/raddb/clients.conf:ro
-      - ./config/radius/sql.conf:/etc/raddb/mods-available/sql:ro
-      - ./config/radius/sql.conf:/etc/raddb/mods-enabled/sql:ro
-      - ./config/radius/radiusd.conf:/etc/raddb/radiusd.conf:ro
-      - ./config/radius/default:/etc/raddb/sites-available/default:ro
-      - ./config/freeradius/coa-config.conf:/etc/raddb/sites-available/coa:ro
-      - radius_logs:/var/log/radius
+      # Mount only custom clients file for now - defaults for everything else
+      - ./config/radius/clients.conf:/etc/freeradius/clients.conf:ro
+      - ./config/radius/dictionary:/etc/freeradius/dictionary.local:ro
+      - radius_logs:/var/log/freeradius
+      - radius_config:/etc/freeradius
     networks:
       - dotmac-network
     restart: unless-stopped
@@ -156,7 +155,7 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7557/devices"]
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:7557/devices')\""]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -238,10 +237,11 @@ services:
 
   # Ansible AWX Web (using AWX-EE image)
   awx-web:
-    image: quay.io/ansible/awx-ee:latest
+    image: quay.io/ansible/awx:24.5.0
     container_name: isp-awx-web
     hostname: awxweb
     user: root
+    command: /usr/bin/launch_awx_web.sh
     environment:
       - DATABASE_HOST=postgres
       - DATABASE_NAME=awx
@@ -258,6 +258,7 @@ services:
     volumes:
       - awx_projects:/var/lib/awx/projects
       - awx_rsyslog:/var/lib/awx/rsyslog
+      - ./config/awx/settings.py:/etc/tower/settings.py:ro
     networks:
       - dotmac-network
     restart: unless-stopped
@@ -269,7 +270,7 @@ services:
 
   # AWX Task Manager
   awx-task:
-    image: quay.io/ansible/awx-ee:latest
+    image: quay.io/ansible/awx:24.5.0
     container_name: isp-awx-task
     hostname: awx
     user: root
@@ -287,6 +288,7 @@ services:
     volumes:
       - awx_projects:/var/lib/awx/projects
       - awx_rsyslog:/var/lib/awx/rsyslog
+      - ./config/awx/settings.py:/etc/tower/settings.py:ro
     networks:
       - dotmac-network
     restart: unless-stopped
@@ -325,6 +327,8 @@ services:
 volumes:
   radius_logs:
     driver: local
+  radius_config:
+    driver: local
   netbox_media:
     driver: local
   netbox_reports:
@@ -353,3 +357,4 @@ volumes:
 networks:
   dotmac-network:
     external: true
+    name: dotmac-ftth-ops-network

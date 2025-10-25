@@ -2,6 +2,7 @@
 Main FastAPI application entry point for DotMac Platform Services.
 """
 
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
@@ -226,7 +227,13 @@ def create_application() -> FastAPI:
     )
 
     # Configure telemetry early so middleware instrumentation happens before startup events.
-    setup_telemetry(app)
+    disable_telemetry = os.getenv("PYTEST_DOTMAC_PLATFORM") == "1"
+    if (
+        not disable_telemetry
+        and settings.observability.enable_tracing
+        and settings.observability.otel_enabled
+    ):
+        setup_telemetry(app)
 
     # Get logger after telemetry is configured
     logger = structlog.get_logger(__name__)

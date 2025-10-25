@@ -4,6 +4,7 @@ Licensing & Entitlement Models.
 SQLAlchemy models for software licensing, activation, compliance, and auditing.
 """
 
+import os
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any, cast
@@ -22,12 +23,21 @@ from sqlalchemy import (
     Text,
     UUID as SQLUUID,
 )
-from sqlalchemy import (
-    Enum as SQLEnum,
-)
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from ..db import BaseModel
+
+
+def _licensing_indexes_enabled() -> bool:
+    """Determine if licensing indexes should be created for current environment."""
+    db_url = os.getenv("DATABASE_URL", "")
+    if os.getenv("TESTING") == "1" and db_url.startswith("sqlite"):
+        return False
+    return True
+
+
+_CREATE_LICENSING_INDEXES = _licensing_indexes_enabled()
 
 
 class LicenseType(str, Enum):
@@ -228,13 +238,16 @@ class License(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_licenses_tenant_customer", "tenant_id", "customer_id"),
-        Index("ix_licenses_tenant_status", "tenant_id", "status"),
-        Index("ix_licenses_tenant_expiry", "tenant_id", "expiry_date"),
-        Index("ix_licenses_product_status", "product_id", "status"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_licenses_tenant_customer", "tenant_id", "customer_id"),
+            Index("ix_licenses_tenant_status", "tenant_id", "status"),
+            Index("ix_licenses_tenant_expiry", "tenant_id", "expiry_date"),
+            Index("ix_licenses_product_status", "product_id", "status"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class LicenseTemplate(BaseModel):
@@ -289,11 +302,14 @@ class LicenseTemplate(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_license_templates_tenant_product", "tenant_id", "product_id"),
-        Index("ix_license_templates_tenant_active", "tenant_id", "active"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_license_templates_tenant_product", "tenant_id", "product_id"),
+            Index("ix_license_templates_tenant_active", "tenant_id", "active"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class Activation(BaseModel):
@@ -372,13 +388,16 @@ class Activation(BaseModel):
     license: Mapped["License"] = relationship("License", back_populates="activations")
 
     # Indexes
-    __table_args__ = (
-        Index("ix_activations_license_status", "license_id", "status"),
-        Index("ix_activations_tenant_status", "tenant_id", "status"),
-        Index("ix_activations_device", "device_fingerprint"),
-        Index("ix_activations_heartbeat", "last_heartbeat"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_activations_license_status", "license_id", "status"),
+            Index("ix_activations_tenant_status", "tenant_id", "status"),
+            Index("ix_activations_device", "device_fingerprint"),
+            Index("ix_activations_heartbeat", "last_heartbeat"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class LicenseOrder(BaseModel):
@@ -451,12 +470,15 @@ class LicenseOrder(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_license_orders_tenant_customer", "tenant_id", "customer_id"),
-        Index("ix_license_orders_tenant_status", "tenant_id", "status"),
-        Index("ix_license_orders_payment_status", "payment_status"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_license_orders_tenant_customer", "tenant_id", "customer_id"),
+            Index("ix_license_orders_tenant_status", "tenant_id", "status"),
+            Index("ix_license_orders_payment_status", "payment_status"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class ComplianceAudit(BaseModel):
@@ -517,12 +539,15 @@ class ComplianceAudit(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_compliance_audits_tenant_customer", "tenant_id", "customer_id"),
-        Index("ix_compliance_audits_tenant_status", "tenant_id", "status"),
-        Index("ix_compliance_audits_audit_date", "audit_date"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_compliance_audits_tenant_customer", "tenant_id", "customer_id"),
+            Index("ix_compliance_audits_tenant_status", "tenant_id", "status"),
+            Index("ix_compliance_audits_audit_date", "audit_date"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class ComplianceViolation(BaseModel):
@@ -576,12 +601,15 @@ class ComplianceViolation(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_violations_tenant_license", "tenant_id", "license_id"),
-        Index("ix_violations_tenant_status", "tenant_id", "status"),
-        Index("ix_violations_severity", "severity"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_violations_tenant_license", "tenant_id", "license_id"),
+            Index("ix_violations_tenant_status", "tenant_id", "status"),
+            Index("ix_violations_severity", "severity"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)
 
 
 class LicenseEventLog(BaseModel):
@@ -616,9 +644,12 @@ class LicenseEventLog(BaseModel):
     )
 
     # Indexes
-    __table_args__ = (
-        Index("ix_license_events_tenant_type", "tenant_id", "event_type"),
-        Index("ix_license_events_license", "license_id"),
-        Index("ix_license_events_created_at", "created_at"),
-        {"extend_existing": True},
-    )
+    if _CREATE_LICENSING_INDEXES:
+        __table_args__ = (
+            Index("ix_license_events_tenant_type", "tenant_id", "event_type"),
+            Index("ix_license_events_license", "license_id"),
+            Index("ix_license_events_created_at", "created_at"),
+            {"extend_existing": True},
+        )
+    else:
+        __table_args__ = ({"extend_existing": True},)

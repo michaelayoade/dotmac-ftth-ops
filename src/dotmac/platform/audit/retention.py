@@ -261,9 +261,11 @@ class AuditRetentionService:
         try:
             # Process in batches
             offset = 0
+            ordered_query = query.order_by(AuditActivity.timestamp.asc(), AuditActivity.id.asc())
+
             with gzip.open(archive_file, "wt", encoding="utf-8") as f:
                 while True:
-                    batch_query = query.offset(offset).limit(self.policy.batch_size)
+                    batch_query = ordered_query.offset(offset).limit(self.policy.batch_size)
                     result = await session.execute(batch_query)
                     records = result.scalars().all()
 

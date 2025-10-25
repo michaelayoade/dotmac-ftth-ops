@@ -101,7 +101,7 @@ class TestTenantRouterPropertyAssignments:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -163,7 +163,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -215,7 +215,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -259,7 +259,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -305,7 +305,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)

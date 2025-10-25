@@ -16,9 +16,22 @@ from dotmac.platform.main import app
 
 
 @pytest.fixture
-def test_client():
-    """Create a test client for the FastAPI app."""
-    return TestClient(app)
+def test_client(db_session, mock_tenant_dependency):
+    """Create a test client for the FastAPI app with DB overrides."""
+
+    from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.db import get_async_session
+    from dotmac.platform.tenant import get_current_tenant_id
+
+    app.dependency_overrides[get_async_session] = lambda: db_session
+    app.dependency_overrides[get_current_tenant_id] = lambda: mock_tenant_dependency
+
+    client = TestClient(app)
+
+    yield client
+
+    app.dependency_overrides.pop(get_async_session, None)
+    app.dependency_overrides.pop(get_current_tenant_id, None)
 
 
 @pytest.fixture
@@ -33,8 +46,14 @@ def mock_auth_dependency():
         tenant_id="test-tenant-123",
     )
 
+    from dotmac.platform.auth.dependencies import get_current_user
+
     with patch("dotmac.platform.auth.dependencies.get_current_user", return_value=mock_user):
-        yield mock_user
+        app.dependency_overrides[get_current_user] = lambda: mock_user
+        try:
+            yield mock_user
+        finally:
+            app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest.fixture
@@ -55,14 +74,14 @@ class TestProductCategoryEndpoints:
         category_data = {
             "name": "Software",
             "description": "Software products and licenses",
-            "default_tax_class": "DIGITAL_GOODS",
+            "default_tax_class": "digital_services",
             "sort_order": 1,
         }
 
         response = test_client.post(
             "/api/v1/billing/catalog/categories",
             json=category_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [201, 400, 401, 500]
@@ -72,7 +91,7 @@ class TestProductCategoryEndpoints:
         """Test listing categories."""
         response = test_client.get(
             "/api/v1/billing/catalog/categories",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 401]
@@ -90,7 +109,7 @@ class TestProductCategoryEndpoints:
 
         response = test_client.get(
             f"/api/v1/billing/catalog/categories/{category_id}",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 404, 401]
@@ -105,20 +124,22 @@ class TestProductEndpoints:
     ):
         """Test successful product creation."""
         product_data = {
+            "sku": f"SKU-{uuid4().hex[:8]}",
             "name": "Enterprise License",
             "description": "Annual enterprise software license",
-            "sku": f"SKU-{uuid4().hex[:8]}",
-            "product_type": "SUBSCRIPTION",
-            "category_id": str(uuid4()),
+            "category": "Software",
+            "product_type": "subscription",
             "base_price": 999.99,
             "currency": "USD",
+            "tax_class": "standard",
             "is_active": True,
+            "metadata": {"tier": "enterprise"},
         }
 
         response = test_client.post(
             "/api/v1/billing/catalog/products",
             json=product_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [201, 400, 404, 401, 500]
@@ -128,7 +149,7 @@ class TestProductEndpoints:
         """Test listing products."""
         response = test_client.get(
             "/api/v1/billing/catalog/products",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 401]
@@ -143,8 +164,8 @@ class TestProductEndpoints:
     ):
         """Test listing products with filters."""
         response = test_client.get(
-            "/api/v1/billing/catalog/products?is_active=true&product_type=SUBSCRIPTION",
-            headers={"Authorization": "Bearer fake-token"},
+            "/api/v1/billing/catalog/products?is_active=true&product_type=subscription",
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 401]
@@ -158,7 +179,7 @@ class TestProductEndpoints:
 
         response = test_client.get(
             f"/api/v1/billing/catalog/products/{product_id}",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 404, 401]
@@ -175,7 +196,7 @@ class TestProductEndpoints:
         response = test_client.put(
             f"/api/v1/billing/catalog/products/{product_id}",
             json=update_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 404, 400, 401, 500]
@@ -193,7 +214,7 @@ class TestProductEndpoints:
         response = test_client.patch(
             f"/api/v1/billing/catalog/products/{product_id}/price",
             json=price_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 404, 400, 401, 500]
@@ -205,7 +226,7 @@ class TestProductEndpoints:
 
         response = test_client.delete(
             f"/api/v1/billing/catalog/products/{product_id}",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [204, 404, 401]
@@ -217,7 +238,7 @@ class TestProductEndpoints:
         """Test listing usage-based products."""
         response = test_client.get(
             "/api/v1/billing/catalog/products/usage-based",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 401]
@@ -235,7 +256,7 @@ class TestProductEndpoints:
 
         response = test_client.get(
             f"/api/v1/billing/catalog/categories/{category_id}/products",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         assert response.status_code in [200, 404, 401]
@@ -284,7 +305,7 @@ class TestCatalogRouterErrorHandling:
         response = test_client.post(
             "/api/v1/billing/catalog/products",
             json=product_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         # Should fail validation
@@ -297,7 +318,7 @@ class TestCatalogRouterErrorHandling:
         """Test getting product with invalid UUID."""
         response = test_client.get(
             "/api/v1/billing/catalog/products/not-a-uuid",
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         # Should fail validation
@@ -314,7 +335,7 @@ class TestCatalogRouterErrorHandling:
         response = test_client.put(
             f"/api/v1/billing/catalog/products/{product_id}",
             json=update_data,
-            headers={"Authorization": "Bearer fake-token"},
+            headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
         )
 
         # Should return 404
@@ -331,14 +352,14 @@ class TestCatalogRouterTenantIsolation:
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-a"):
             response_a = test_client.get(
                 "/api/v1/billing/catalog/products",
-                headers={"Authorization": "Bearer fake-token"},
+                headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
             )
 
         # Test with tenant B
         with patch("dotmac.platform.tenant.get_current_tenant_id", return_value="tenant-b"):
             response_b = test_client.get(
                 "/api/v1/billing/catalog/products",
-                headers={"Authorization": "Bearer fake-token"},
+                headers={"Authorization": "Bearer fake-token", "X-Tenant-ID": "test-tenant-123"},
             )
 
         # Both should succeed

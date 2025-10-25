@@ -23,27 +23,12 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
-from sqlalchemy.types import TypeDecorator
 
 from dotmac.platform.db import Base
-
-
-# Type that uses JSONB on PostgreSQL and JSON on SQLite
-class JSONBType(TypeDecorator[Any]):
-    """Custom type that uses JSONB on PostgreSQL and JSON on other databases."""
-
-    impl = JSON
-    cache_ok = True
-
-    def load_dialect_impl(self, dialect: Any) -> Any:
-        if dialect.name == "postgresql":
-            return dialect.type_descriptor(JSONB())
-        else:
-            return dialect.type_descriptor(JSON())
+from dotmac.platform.db.types import JSONBCompat
 
 
 # Association table for many-to-many contact labels
@@ -181,12 +166,12 @@ class Contact(Base):  # type: ignore[misc]
 
     # Custom fields (JSONB for flexible schema)
     custom_fields: Mapped[dict[str, Any] | None] = mapped_column(
-        JSONBType, nullable=True, default=dict
+        JSONBCompat, nullable=True, default=dict
     )
 
     # Additional metadata
     metadata_: Mapped[dict[str, Any] | None] = mapped_column(
-        "metadata", JSONBType, nullable=True, default=dict
+        "metadata", JSONBCompat, nullable=True, default=dict
     )
 
     # Important dates

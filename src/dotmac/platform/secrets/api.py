@@ -219,21 +219,33 @@ async def create_or_update_secret(
     """
     try:
         async with vault:
+            existing_secret = await vault.get_secret(path)
             await vault.set_secret(path, secret_data.data)
+
+        is_update = bool(existing_secret)
+        activity_type = ActivityType.SECRET_UPDATED if is_update else ActivityType.SECRET_CREATED
+        action = "secret_create_or_update"
+        description = (
+            f"Successfully updated secret at path: {path}"
+            if is_update
+            else f"Successfully created secret at path: {path}"
+        )
+        severity = ActivitySeverity.LOW if is_update else ActivitySeverity.MEDIUM
 
         # Log successful secret creation/update
         await log_api_activity(
             request=request,
-            activity_type=ActivityType.SECRET_CREATED,
-            action="secret_create_or_update",
-            description=f"Successfully created/updated secret at path: {path}",
-            severity=ActivitySeverity.MEDIUM,
+            activity_type=activity_type,
+            action=action,
+            description=description,
+            severity=severity,
             resource_type="secret",
             resource_id=path,
             details={
                 "path": path,
                 "keys": list(secret_data.data.keys()),
                 "metadata": secret_data.metadata,
+                "operation": "update" if is_update else "create",
             },
         )
 

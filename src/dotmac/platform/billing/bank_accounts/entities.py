@@ -142,7 +142,7 @@ class ManualPayment(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ign
     payment_method: Mapped[PaymentMethodType] = mapped_column(
         SQLEnum(PaymentMethodType), nullable=False
     )
-    amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=False)
+    amount: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
 
     # Dates

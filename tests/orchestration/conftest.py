@@ -44,10 +44,20 @@ def mock_orchestration_service():
 def mock_current_user():
     """Mock current user for authentication."""
     user = MagicMock()
-    user.id = 1
+    user.id = "550e8400-e29b-41d4-a716-446655440000"
+    user.user_id = "550e8400-e29b-41d4-a716-446655440000"
     user.email = "test@example.com"
     user.tenant_id = "test_tenant"
     user.is_superuser = False
+    user.roles = ["admin"]
+    user.permissions = [
+        "customers.create",
+        "subscribers.create",
+        "subscribers.update",
+        "subscribers.delete",
+        "orchestration.read",
+        "orchestration.update",
+    ]
     return user
 
 
@@ -337,7 +347,7 @@ async def authenticated_client(mock_current_user, mock_orchestration_service):
     app.dependency_overrides[get_db] = override_get_db
     app.dependency_overrides[get_orchestration_service] = override_get_orchestration_service
 
-    app.include_router(orchestration_router)
+    app.include_router(orchestration_router, prefix="/api/v1")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:

@@ -638,7 +638,7 @@ class TestInvoiceCredits:
         )
 
         assert credited.remaining_balance == 150000  # $1,500 remaining
-        assert credited.status == InvoiceStatus.OPEN
+        assert credited.status == InvoiceStatus.PARTIALLY_PAID
 
 
 class TestOverdueInvoices:

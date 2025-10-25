@@ -128,16 +128,27 @@ async def add_payment_method(
 
         # Billing details
         billing_details = {
-            "name": request.billing_name,
-            "email": request.billing_email,
-            "phone": request.billing_phone,
-            "address_line1": request.billing_address_line1,
-            "address_line2": request.billing_address_line2,
-            "city": request.billing_city,
-            "state": request.billing_state,
-            "postal_code": request.billing_postal_code,
-            "country": request.billing_country,
+            "billing_name": request.billing_name,
+            "billing_email": request.billing_email,
+            "billing_phone": request.billing_phone,
+            "billing_address_line1": request.billing_address_line1,
+            "billing_address_line2": request.billing_address_line2,
+            "billing_city": request.billing_city,
+            "billing_state": request.billing_state,
+            "billing_postal_code": request.billing_postal_code,
+            "billing_country": request.billing_country,
         }
+
+        # Backward-compatible keys for legacy consumers inside the service layer.
+        billing_details["name"] = request.billing_name
+        billing_details["email"] = request.billing_email
+        billing_details["phone"] = request.billing_phone
+        billing_details["address_line1"] = request.billing_address_line1
+        billing_details["address_line2"] = request.billing_address_line2
+        billing_details["city"] = request.billing_city
+        billing_details["state"] = request.billing_state
+        billing_details["postal_code"] = request.billing_postal_code
+        billing_details["country"] = request.billing_country
 
         payment_method = await service.add_payment_method(
             tenant_id=tenant_id,

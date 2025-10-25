@@ -4,6 +4,7 @@ Tests for file storage service.
 
 import hashlib
 import json
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -284,6 +285,121 @@ class TestLocalFileStorage:
         path_files = await storage.list_files(path="path/0")
         assert len(path_files) == 1
 
+    @pytest.mark.asyncio
+    async def test_list_files_paginates_after_filters(self, storage):
+        """Pagination should respect filtering rules for tenant/path."""
+        await storage.store(b"A1", "a1.txt", "text/plain", tenant_id="tenant-a")
+        await storage.store(b"A2", "a2.txt", "text/plain", tenant_id="tenant-a")
+        await storage.store(b"B1", "b1.txt", "text/plain", tenant_id="tenant-b")
+        await storage.store(b"B2", "b2.txt", "text/plain", tenant_id="tenant-b")
+
+        files = await storage.list_files(tenant_id="tenant-b", limit=1, offset=1)
+
+        assert len(files) == 1
+        assert files[0].tenant_id == "tenant-b"
+
+    @pytest.mark.asyncio
+    async def test_apply_metadata_update_persists_locally(self, storage):
+        """Metadata updates should be flushed to the metadata file."""
+        file_id = await storage.store(b"Meta", "meta.txt", "text/plain")
+
+        metadata = await storage.get_metadata(file_id)
+        assert metadata is not None
+
+        metadata.setdefault("metadata", {})
+        metadata["metadata"]["description"] = "updated"
+        metadata["updated_at"] = datetime.now(UTC).isoformat()
+
+        assert storage.apply_metadata_update(file_id, metadata) is True
+
+        metadata_path = storage._get_metadata_path(file_id)
+        with open(metadata_path) as handler:
+            persisted = json.load(handler)
+
+        assert persisted["metadata"]["description"] == "updated"
+
+
+class InMemoryMinioClient:
+    """Simple in-memory MinIO client stub for testing persistence."""
+
+    class _ObjectResponse:
+        """Represents a stored object stream."""
+
+        def __init__(self, data: bytes):
+            self._data = data
+
+        def read(self) -> bytes:
+            return self._data
+
+        def close(self) -> None:  # pragma: no cover - nothing to do
+            return None
+
+        def release_conn(self) -> None:  # pragma: no cover - nothing to do
+            return None
+
+    class _ObjectRecord:
+        """Lightweight record returned from list_objects."""
+
+        def __init__(self, object_name: str):
+            self.object_name = object_name
+
+    class _ObjectAPI:
+        """Expose list/get operations similar to MinIO client."""
+
+        def __init__(self, parent: "InMemoryMinioClient"):
+            self._parent = parent
+
+        def list_objects(self, bucket: str, prefix: str | None = None, recursive: bool = True):  # noqa: ARG002
+            for (tenant, path), _ in self._parent._store.items():
+                object_name = f"{tenant}/{path}"
+                if prefix is None or object_name.startswith(prefix):
+                    yield InMemoryMinioClient._ObjectRecord(object_name)
+
+        def get_object(self, bucket: str, object_name: str):  # noqa: ARG002
+            tenant, path = object_name.split("/", 1)
+            data = self._parent._store.get((tenant, path))
+            if data is None:
+                raise FileNotFoundError(object_name)
+            return InMemoryMinioClient._ObjectResponse(data)
+
+    def __init__(self) -> None:
+        self.bucket = "test-bucket"
+        self._store: dict[tuple[str, str], bytes] = {}
+        self.client = InMemoryMinioClient._ObjectAPI(self)
+
+    def save_file(
+        self,
+        file_path: str,
+        content,
+        tenant_id: str,
+        content_type: str = "application/octet-stream",  # noqa: ARG002
+    ) -> str:
+        data = content.read()
+        self._store[(tenant_id, file_path)] = data
+        return f"{tenant_id}/{file_path}"
+
+    def get_file(self, file_path: str, tenant_id: str) -> bytes:
+        try:
+            return self._store[(tenant_id, file_path)]
+        except KeyError as exc:
+            raise FileNotFoundError(file_path) from exc
+
+    def delete_file(self, file_path: str, tenant_id: str) -> bool:
+        return self._store.pop((tenant_id, file_path), None) is not None
+
+    def copy_file(
+        self,
+        source_path: str,
+        destination_path: str,
+        source_tenant_id: str,
+        destination_tenant_id: str | None = None,
+    ) -> None:
+        tenant = destination_tenant_id or source_tenant_id
+        data = self._store.get((source_tenant_id, source_path))
+        if data is None:
+            raise FileNotFoundError(source_path)
+        self._store[(tenant, destination_path)] = data
+
 
 class TestMinIOFileStorage:
     """Test MinIO storage backend."""
@@ -296,6 +412,11 @@ class TestMinIOFileStorage:
         client.get_file = Mock(return_value=b"MinIO test content")
         client.delete_file = Mock(return_value=True)
         return client
+
+    @pytest.fixture
+    def in_memory_minio_client(self):
+        """Provide in-memory MinIO implementation for persistence checks."""
+        return InMemoryMinioClient()
 
     @pytest.fixture
     def storage(self, mock_minio_client):
@@ -361,6 +482,37 @@ class TestMinIOFileStorage:
         assert success is True
         assert mock_minio_client.delete_file.called
         assert file_id not in storage.metadata_store
+
+    @pytest.mark.asyncio
+    async def test_metadata_survives_backend_reinstantiation(self, in_memory_minio_client):
+        """Metadata should be reloaded from MinIO when cache is empty."""
+        storage = MinIOFileStorage(minio_client=in_memory_minio_client)
+
+        file_id = await storage.store(
+            file_data=b"Persistent content",
+            file_name="persist.txt",
+            content_type="text/plain",
+            tenant_id="tenant1",
+        )
+
+        # Simulate service restart by re-instantiating storage with same client
+        storage = MinIOFileStorage(minio_client=in_memory_minio_client)
+
+        data, metadata = await storage.retrieve(file_id, "tenant1")
+
+        assert data == b"Persistent content"
+        assert metadata is not None
+        assert metadata["file_id"] == file_id
+
+        files = await storage.list_files(tenant_id="tenant1")
+        assert len(files) == 1
+        assert files[0].file_id == file_id
+
+        # Ensure deletion removes both object and metadata entry
+        assert await storage.delete(file_id, "tenant1") is True
+        assert await storage.retrieve(file_id, "tenant1") == (None, None)
+        metadata_key = (MinIOFileStorage._METADATA_TENANT, f"{MinIOFileStorage._METADATA_PREFIX}/{file_id}.json")
+        assert metadata_key not in in_memory_minio_client._store
 
 
 class TestFileStorageService:

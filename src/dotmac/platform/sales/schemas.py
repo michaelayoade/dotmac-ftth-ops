@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, field_validator, constr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, constr
 
 from .models import ActivationStatus, OrderStatus, OrderType
 
@@ -127,7 +127,7 @@ class OrderResponse(BaseModel):
     total_amount: Decimal
     billing_cycle: str | None = None
 
-    tenant_id: int | None = None
+    tenant_id: str | None = None
     deployment_instance_id: int | None = None
 
     processing_started_at: datetime | None = None
@@ -136,8 +136,7 @@ class OrderResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, json_encoders={Decimal: float})
 
 
 class OrderStatusUpdate(BaseModel):
@@ -165,7 +164,7 @@ class ServiceActivationResponse(BaseModel):
 
     id: int
     order_id: int
-    tenant_id: int
+    tenant_id: str
     service_code: str
     service_name: str
     activation_status: ActivationStatus
@@ -179,8 +178,7 @@ class ServiceActivationResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True, json_encoders={Decimal: float})
 
 
 class ActivationProgress(BaseModel):

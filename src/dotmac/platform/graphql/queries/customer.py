@@ -106,16 +106,23 @@ class CustomerQueries:
         Returns:
             Customer with batched activities and notes, or None if not found
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
-        try:
-            customer_id = UUID(id)
-        except ValueError:
-            logger.warning(f"Invalid customer ID format: {id}")
+        customer_uuid = await self._get_customer_uuid_for_tenant(db, tenant_id, id)
+        if customer_uuid is None:
             return None
 
-        # Fetch customer
-        stmt = select(CustomerModel).where(CustomerModel.id == customer_id)
+        # Fetch customer within tenant scope
+        stmt = (
+            select(CustomerModel)
+            .where(
+                CustomerModel.id == customer_uuid,
+                CustomerModel.tenant_id == tenant_id,
+            )
+        )
         result = await db.execute(stmt)
         customer_model = result.scalar_one_or_none()
 
@@ -168,10 +175,19 @@ class CustomerQueries:
         Returns:
             CustomerConnection with customers and pagination info
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Build base query
-        stmt = select(CustomerModel).where(CustomerModel.deleted_at.is_(None))
+        stmt = (
+            select(CustomerModel)
+            .where(
+                CustomerModel.deleted_at.is_(None),
+                CustomerModel.tenant_id == tenant_id,
+            )
+        )
 
         # Apply filters
         if status:
@@ -237,7 +253,10 @@ class CustomerQueries:
         Returns:
             CustomerOverviewMetrics with counts and lifetime value totals
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Get counts by status
         count_stmt = (
@@ -255,7 +274,10 @@ class CustomerQueries:
                 func.sum(CustomerModel.lifetime_value).label("total_ltv"),
             )
             .select_from(CustomerModel)
-            .where(CustomerModel.deleted_at.is_(None))
+            .where(
+                CustomerModel.deleted_at.is_(None),
+                CustomerModel.tenant_id == tenant_id,
+            )
         )
 
         result = await db.execute(count_stmt)

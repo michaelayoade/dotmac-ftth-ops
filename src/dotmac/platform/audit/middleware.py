@@ -11,6 +11,9 @@ import structlog
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
+from ..tenant import get_tenant_context
+from .. import tenant as tenant_module
+
 logger = structlog.get_logger(__name__)
 
 
@@ -25,10 +28,11 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Any) -> Any:
         """Process request and set audit context."""
 
-        # Try to extract user information from the request
-        # This needs to be done carefully to avoid circular dependencies
+        original_tenant = get_tenant_context()
+        tenant_overridden = False
+
         try:
-            # Check if there's an Authorization header or cookie
+            # Try to extract user information from the request
             auth_header = request.headers.get("Authorization")
             api_key = request.headers.get("X-API-Key")
 
@@ -62,11 +66,13 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                         request.state.tenant_id = claims.get("tenant_id")
                         request.state.roles = claims.get("roles", [])
 
-                        # Also set tenant in context var for database operations
-                        if claims.get("tenant_id"):
-                            from ..tenant import set_current_tenant_id
+                        tenant_claim = claims.get("tenant_id")
+                        if tenant_claim and tenant_claim != get_tenant_context():
+                            from ..tenant import set_current_tenant_id as set_tenant_id
 
-                            set_current_tenant_id(claims.get("tenant_id"))
+                            set_tenant_id(tenant_claim)
+                            tenant_module._tenant_context.set(tenant_claim)
+                            tenant_overridden = True
                     except Exception as e:
                         logger.debug("Failed to extract user from JWT", error=str(e))
 
@@ -80,11 +86,13 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                             request.state.tenant_id = key_data.get("tenant_id")
                             request.state.roles = ["api_user"]
 
-                            # Also set tenant in context var for database operations
-                            if key_data.get("tenant_id"):
-                                from ..tenant import set_current_tenant_id
+                            tenant_claim = key_data.get("tenant_id")
+                            if tenant_claim and tenant_claim != get_tenant_context():
+                                from ..tenant import set_current_tenant_id as set_tenant_id
 
-                                set_current_tenant_id(key_data.get("tenant_id"))
+                                set_tenant_id(tenant_claim)
+                                tenant_module._tenant_context.set(tenant_claim)
+                                tenant_overridden = True
                     except Exception as e:
                         logger.debug("Failed to extract user from API key", error=str(e))
 
@@ -92,8 +100,12 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
             # Don't fail the request if we can't extract user context
             logger.debug("Failed to extract audit context", error=str(e))
 
-        # Continue processing the request
-        response = await call_next(request)
+        try:
+            response = await call_next(request)
+        finally:
+            if tenant_overridden:
+                tenant_module._tenant_context.set(original_tenant)
+
         return response
 
 

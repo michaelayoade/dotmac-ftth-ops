@@ -20,6 +20,8 @@ class SubscriberMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     suspended: int = Field(..., description="Suspended subscribers")
     pending: int = Field(..., description="Pending activation")
     disconnected: int = Field(..., description="Disconnected subscribers")
+    terminated: int = Field(..., description="Terminated subscribers")
+    quarantined: int = Field(..., description="Quarantined subscribers")
     growth_this_month: int = Field(..., description="Net new subscribers this month")
     churn_rate: float = Field(..., description="Churn rate percentage")
     arpu: float = Field(..., description="Average revenue per user")
@@ -38,7 +40,9 @@ class NetworkMetrics(BaseModel):  # BaseModel resolves to Any in isolation
     onu_count: int = Field(..., description="Total ONU count")
     onus_online: int = Field(..., description="ONUs currently online")
     onus_offline: int = Field(..., description="ONUs offline")
-    avg_signal_strength_dbm: float = Field(..., description="Average ONU signal strength")
+    avg_signal_strength_dbm: float | None = Field(
+        default=None, description="Average ONU signal strength"
+    )
     degraded_onus: int = Field(..., description="ONUs with degraded signal")
 
 

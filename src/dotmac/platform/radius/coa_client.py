@@ -305,12 +305,24 @@ class CoAClient:
             "details": response.to_dict(),
         }
 
+    async def send_disconnect(
+        self,
+        username: str,
+        nas_ip: str | None = None,
+        session_id: str | None = None,
+    ) -> bool:
+        """Compatibility wrapper returning boolean success value."""
+        result = await self.disconnect_session(username, nas_ip=nas_ip, session_id=session_id)
+        return bool(result.get("success"))
+
     async def change_bandwidth(
         self,
         username: str,
         download_kbps: int,
         upload_kbps: int,
         nas_ip: str | None = None,
+        download_burst_kbps: int | None = None,
+        upload_burst_kbps: int | None = None,
     ) -> dict[str, Any]:
         """
         Send CoA request to change bandwidth limits.
@@ -320,6 +332,8 @@ class CoAClient:
             download_kbps: Download speed in Kbps
             upload_kbps: Upload speed in Kbps
             nas_ip: NAS IP address
+            download_burst_kbps: Optional download burst speed in Kbps
+            upload_burst_kbps: Optional upload burst speed in Kbps
 
         Returns:
             Dictionary with result status and structured response details.
@@ -330,10 +344,17 @@ class CoAClient:
             if download_kbps <= 0 or upload_kbps <= 0:
                 raise ValueError("Bandwidth values must be greater than zero")
 
-            rate_limit = f"{download_kbps}/{upload_kbps}"
+            # Format for Mikrotik: "rx-rate[/tx-rate] [rx-burst-rate[/tx-burst-rate]]"
+            # Mikrotik requires the "k" suffix to specify Kbps
+            rate_limit = f"{download_kbps}k/{upload_kbps}k"
+
+            if download_burst_kbps and upload_burst_kbps:
+                rate_limit += f" {download_burst_kbps}k/{upload_burst_kbps}k"
+
             packet = client.CreateCoAPacket(code=self._coa_request_code)
             packet["User-Name"] = username
-            packet["Filter-Id"] = rate_limit
+            # Use Mikrotik-Rate-Limit instead of Filter-Id for Mikrotik devices
+            packet["Mikrotik-Rate-Limit"] = rate_limit
 
             if nas_ip:
                 packet["NAS-IP-Address"] = self._validate_nas_ip(nas_ip)
@@ -519,6 +540,15 @@ class CoAClientHTTP:
                 "username": username,
                 "error": str(e),
             }
+
+    async def send_disconnect(
+        self,
+        username: str,
+        nas_ip: str | None = None,
+        session_id: str | None = None,
+    ) -> bool:
+        result = await self.disconnect_session(username, nas_ip=nas_ip, session_id=session_id)
+        return bool(result.get("success"))
 
 
 async def disconnect_session_helper(

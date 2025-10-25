@@ -32,7 +32,7 @@ class InternetPlanService:
 
     def __init__(self, session: AsyncSession, tenant_id: UUID):
         self.session = session
-        self.tenant_id = tenant_id
+        self.tenant_id = str(tenant_id)
 
     async def create_plan(self, data: InternetServicePlanCreate) -> InternetServicePlanResponse:
         """Create a new internet service plan."""
@@ -283,6 +283,9 @@ class InternetPlanService:
         result = await self.session.execute(stmt)
         plans = result.scalars().all()
 
+        if not plans:
+            return PlanComparison(plans=[], comparison_matrix={}, recommendations=[])
+
         plan_responses = [InternetServicePlanResponse.model_validate(p) for p in plans]
 
         # Build comparison matrix
@@ -306,11 +309,11 @@ class InternetPlanService:
         recommendations = []
 
         # Highest speed
-        max_speed_plan = max(plan_responses, key=lambda p: p.download_speed)
+        max_speed_plan = max(plans, key=lambda p: p.download_speed)
         recommendations.append(f"Highest speed: {max_speed_plan.name} ({max_speed_plan.download_speed} {max_speed_plan.speed_unit})")
 
         # Best value
-        plans_with_prices = [p for p in plan_responses if p.monthly_price > 0]
+        plans_with_prices = [p for p in plans if p.monthly_price > 0]
         if plans_with_prices:
             best_value_plan = max(
                 plans_with_prices,

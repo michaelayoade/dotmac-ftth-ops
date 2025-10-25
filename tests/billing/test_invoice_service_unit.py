@@ -435,7 +435,8 @@ class TestCreditApplication:
             # Balance should be reduced
             assert open_invoice.total_credits_applied == 30
             assert open_invoice.remaining_balance == 70  # 100 - 30
-            assert open_invoice.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+            assert open_invoice.payment_status == PaymentStatus.PENDING
+            assert open_invoice.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_apply_full_credit(self, invoice_service, open_invoice, mock_db_session):
         """Test applying full credit marks invoice as paid."""

@@ -299,9 +299,10 @@ async def _execute_action(
                 action_type=action_type,
                 action_config=action_config,
                 step_number=step_number,
-                executed_at=executed_at,
-                status=result["status"],
-                result=result.get("details", {}),
+                attempted_at=executed_at,
+                completed_at=datetime.now(UTC),
+                success=result.get("status") == "success",
+                response_data=result.get("details", {}),
                 error_message=result.get("error"),
                 external_id=result.get("external_id"),
             )

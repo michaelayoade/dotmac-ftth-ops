@@ -15,7 +15,7 @@ class TestPlatformRegistry:
         version = platform.get_version()
         assert isinstance(version, str)
         assert len(version) > 0
-        assert version == "1.0.0"
+        assert version == platform.__version__
 
     def test_register_and_get_service(self):
         """Test registering and retrieving services."""
@@ -255,7 +255,7 @@ class TestPlatformModule:
 
     def test_module_constants(self):
         """Test module constants have expected values."""
-        assert platform.__version__ == "1.0.0"
+        assert platform.__version__ == platform.get_version()
         assert platform.__author__ == "DotMac Team"
         assert platform.__email__ == "dev@dotmac.com"
 

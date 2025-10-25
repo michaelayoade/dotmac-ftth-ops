@@ -7,9 +7,79 @@ import asyncio
 import os
 import sys
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
+# ---------------------------------------------------------------------------
+# MinIO stub (provides minimal interface for tests without real dependency)
+# ---------------------------------------------------------------------------
+import types
+
+os.environ.setdefault("TENANT_MODE", "single")
+
+if "minio" not in sys.modules:
+    minio_module = types.ModuleType("minio")
+
+    class _DummyMinioClient:
+        def __init__(self, *args, **kwargs):  # noqa: D401, ANN001
+            pass
+
+        def bucket_exists(self, bucket):  # noqa: D401, ANN001
+            return True
+
+        def make_bucket(self, bucket):  # noqa: D401, ANN001
+            return None
+
+        def put_object(self, *args, **kwargs):  # noqa: D401, ANN001
+            return None
+
+        def get_object(self, *args, **kwargs):  # noqa: D401, ANN001
+            class _DummyResponse:
+                def read(self):
+                    return b""
+
+                def close(self):
+                    return None
+
+                def release_conn(self):
+                    return None
+
+            return _DummyResponse()
+
+        def remove_object(self, *args, **kwargs):  # noqa: D401, ANN001
+            return None
+
+        def copy_object(self, *args, **kwargs):  # noqa: D401, ANN001
+            return None
+
+    minio_module.Minio = _DummyMinioClient
+
+    error_module = types.ModuleType("minio.error")
+
+    class S3Error(Exception):
+        """Minimal S3Error stub used in unit tests."""
+
+    error_module.S3Error = S3Error
+
+    commonconfig_module = types.ModuleType("minio.commonconfig")
+
+    class CopySource:
+        """Lightweight stand-in for MinIO CopySource."""
+
+        def __init__(self, bucket: str, object_name: str):
+            self.bucket = bucket
+            self.object_name = object_name
+
+    commonconfig_module.CopySource = CopySource
+
+    sys.modules["minio"] = minio_module
+    sys.modules["minio.error"] = error_module
+    sys.modules["minio.commonconfig"] = commonconfig_module
+
+    minio_module.error = error_module
+    minio_module.commonconfig = commonconfig_module
 
 # Configure SQLite for all tests by default (unless explicitly overridden)
 # This prevents database authentication errors when PostgreSQL is not running
@@ -459,10 +529,18 @@ if HAS_SQLALCHEMY:
                     # For SQLite with StaticPool, indexes may persist across tests
                     # Use checkfirst for tables, wrap in try/except for index conflicts
                     try:
-                        await conn.run_sync(Base.metadata.drop_all)
+                        try:
+                            await conn.run_sync(Base.metadata.drop_all)
+                        except OperationalError as exc:
+                            if "does not exist" not in str(exc).lower():
+                                raise
                     except OperationalError:
                         pass
-                    await conn.run_sync(Base.metadata.create_all)
+                    try:
+                        await conn.run_sync(Base.metadata.create_all)
+                    except OperationalError as exc:
+                        if "already exists" not in str(exc).lower():
+                            raise
 
             # Ensure application code uses the test engine/session maker
             try:
@@ -487,7 +565,11 @@ if HAS_SQLALCHEMY:
                     from dotmac.platform.db import Base
 
                     async with engine.begin() as conn:
-                        await conn.run_sync(Base.metadata.drop_all)
+                        try:
+                            await conn.run_sync(Base.metadata.drop_all)
+                        except OperationalError as exc:
+                            if "does not exist" not in str(exc).lower():
+                                raise
                 # Force close all connections to prevent event loop issues across tests
                 await engine.dispose(close=True)
                 # Give asyncio a chance to clean up pending tasks
@@ -552,7 +634,11 @@ if HAS_SQLALCHEMY:
                         await conn.run_sync(Base.metadata.drop_all)
                     except OperationalError:
                         pass
-                    await conn.run_sync(Base.metadata.create_all)
+                    try:
+                        await conn.run_sync(Base.metadata.create_all)
+                    except OperationalError as exc:
+                        if "already exists" not in str(exc).lower():
+                            raise
 
             try:
                 yield engine
@@ -655,14 +741,37 @@ if HAS_FASTAPI:
         # Setup auth override for testing
         # Override get_current_user to return test user
         try:
-            from dotmac.platform.auth.core import UserInfo
+            from dotmac.platform.auth.core import TokenType, UserInfo, jwt_service
             from dotmac.platform.auth.dependencies import (
                 get_current_user,
                 get_current_user_optional,
             )
+            from fastapi import Request
 
-            async def override_get_current_user():
-                """Test user with admin permissions."""
+            async def _resolve_user_from_request(request: Request) -> UserInfo | None:
+                token = None
+                auth_header = request.headers.get("Authorization")
+                if auth_header and auth_header.lower().startswith("bearer "):
+                    token = auth_header.split(" ", 1)[1].strip()
+                if not token:
+                    token = request.cookies.get("access_token")
+                if not token:
+                    return None
+                try:
+                    claims = jwt_service.verify_token(token, expected_type=TokenType.ACCESS)
+                    return UserInfo(
+                        user_id=claims.get("sub", ""),
+                        email=claims.get("email"),
+                        username=claims.get("username"),
+                        roles=claims.get("roles", []),
+                        permissions=claims.get("permissions", []),
+                        tenant_id=claims.get("tenant_id"),
+                        is_platform_admin=claims.get("is_platform_admin", False),
+                    )
+                except Exception:
+                    return None
+
+            def _default_user() -> UserInfo:
                 return UserInfo(
                     user_id="test-user-123",
                     email="test@example.com",
@@ -670,11 +779,19 @@ if HAS_FASTAPI:
                     roles=["admin"],
                     permissions=["read", "write", "admin"],
                     tenant_id="test-tenant",
+                    is_platform_admin=True,
                 )
 
+            async def override_get_current_user(request: Request) -> UserInfo:
+                user = await _resolve_user_from_request(request)
+                return user or _default_user()
+
+            async def override_get_current_user_optional(request: Request) -> UserInfo | None:
+                user = await _resolve_user_from_request(request)
+                return user
+
             app.dependency_overrides[get_current_user] = override_get_current_user
-            # Also override optional version for endpoints that accept unauthenticated requests
-            app.dependency_overrides[get_current_user_optional] = override_get_current_user
+            app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
         except ImportError:
             pass
 
@@ -695,7 +812,7 @@ if HAS_FASTAPI:
         try:
             from sqlalchemy.ext.asyncio import async_sessionmaker
 
-            from dotmac.platform.db import get_async_session
+            from dotmac.platform.db import get_async_session, get_session_dependency
 
             test_session_maker = async_sessionmaker(async_db_engine, expire_on_commit=False)
 
@@ -711,6 +828,7 @@ if HAS_FASTAPI:
                         await session.close()
 
             app.dependency_overrides[get_async_session] = override_get_async_session
+            app.dependency_overrides[get_session_dependency] = override_get_async_session
         except ImportError:
             pass
 
@@ -733,7 +851,7 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.auth.router import router as auth_router
 
-            app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+            app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
         except ImportError:
             pass
 
@@ -764,7 +882,7 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.tenant.router import router as tenant_router
 
-            app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["Tenant Management"])
+            app.include_router(tenant_router, prefix="/api/v1", tags=["Tenant Management"])
         except ImportError:
             pass
 
@@ -879,7 +997,7 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.audit.router import router as audit_router
 
-            app.include_router(audit_router, prefix="/api/v1", tags=["Audit"])
+            app.include_router(audit_router, prefix="/api/v1/audit", tags=["Audit"])
         except ImportError:
             pass
 
@@ -944,6 +1062,15 @@ if HAS_FASTAPI:
             from dotmac.platform.file_storage.router import router as file_storage_router
 
             app.include_router(file_storage_router, prefix="/api/v1/files", tags=["File Storage"])
+        except ImportError:
+            pass
+
+        # Fiber Infrastructure
+        try:
+            from dotmac.platform.fiber.router import router as fiber_router
+
+            app.include_router(fiber_router, prefix="/api/v1", tags=["Fiber Infrastructure"])
+            app.state.include_fiber = True  # marker for coverage stats dependency
         except ImportError:
             pass
 
@@ -1117,10 +1244,82 @@ if HAS_FASTAPI:
 
         return app
 
+    class _HybridResponse:
+        """Wrapper that supports both sync and async access to HTTP responses."""
+
+        def __init__(self, sync_client: TestClient, app: Any, method: str, args: tuple[Any, ...], kwargs: dict[str, Any]):
+            self._sync_client = sync_client
+            self._app = app
+            self._method = method
+            self._args = args
+            self._kwargs = kwargs
+            self._sync_response: Any | None = None
+
+        def _ensure_sync(self) -> Any:
+            if self._sync_response is None:
+                handler = getattr(self._sync_client, self._method)
+                self._sync_response = handler(*self._args, **self._kwargs)
+            return self._sync_response
+
+        def __getattr__(self, name: str):  # pragma: no cover - thin wrapper
+            return getattr(self._ensure_sync(), name)
+
+        def __await__(self):
+            async def _run() -> Any:
+                from httpx import ASGITransport, AsyncClient  # Local import to avoid global dependency
+
+                transport = ASGITransport(app=self._app)
+                async with AsyncClient(
+                    transport=transport,
+                    base_url="http://testserver",
+                    cookies=self._sync_client.cookies,
+                ) as client:
+                    handler = getattr(client, self._method)
+                    response = await handler(*self._args, **self._kwargs)
+                    # Persist cookies across async requests
+                    self._sync_client.cookies.update(response.cookies)
+                    return response
+
+            return _run().__await__()
+
+    class HybridTestClient:
+        """Client that works for both sync and async HTTP calls in tests."""
+
+        def __init__(self, app: Any) -> None:
+            self._app = app
+            self._sync_client = TestClient(app)
+
+        def _make_request(self, method: str, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return _HybridResponse(self._sync_client, self._app, method, args, kwargs)
+
+        def get(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("get", *args, **kwargs)
+
+        def post(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("post", *args, **kwargs)
+
+        def put(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("put", *args, **kwargs)
+
+        def patch(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("patch", *args, **kwargs)
+
+        def delete(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("delete", *args, **kwargs)
+
+        def options(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("options", *args, **kwargs)
+
+        def head(self, *args: Any, **kwargs: Any) -> _HybridResponse:
+            return self._make_request("head", *args, **kwargs)
+
+        def __getattr__(self, name: str):  # pragma: no cover - simple delegation
+            return getattr(self._sync_client, name)
+
     @pytest.fixture
     def test_client(test_app):
-        """Test client for FastAPI app."""
-        return TestClient(test_app)
+        """Test client for FastAPI app supporting sync & async usage."""
+        return HybridTestClient(test_app)
 
     try:
         import pytest_asyncio
@@ -1145,15 +1344,12 @@ if HAS_FASTAPI:
                 },
             )
 
-            # Create async client with auth headers
+            # Create async client without default auth headers so tests can control Authorization
             transport = ASGITransport(app=test_app)
             async with AsyncClient(
                 transport=transport,
                 base_url="http://testserver",
-                headers={
-                    "Authorization": f"Bearer {test_token}",
-                    "X-Tenant-ID": "test-tenant",  # Required by tenant middleware
-                },
+                headers={"X-Tenant-ID": "test-tenant"},
             ) as client:
                 yield client
 

@@ -4,9 +4,8 @@ Diagnostics Service.
 Network troubleshooting and diagnostic operations for ISP services.
 """
 
-import asyncio
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Awaitable
 from uuid import UUID
 
 import structlog
@@ -722,23 +721,26 @@ class DiagnosticsService:
         try:
             await self._update_diagnostic_run(diagnostic, DiagnosticStatus.RUNNING)
 
-            # Run all checks in parallel
-            checks_results = await asyncio.gather(
-                self.check_subscriber_connectivity(tenant_id, subscriber_id),
-                self.get_radius_sessions(tenant_id, subscriber_id),
-                (
-                    self.check_onu_status(tenant_id, subscriber_id)
-                    if subscriber.onu_serial
-                    else self._create_skipped_check("ONU check skipped (no ONU configured)")
-                ),
-                (
-                    self.check_cpe_status(tenant_id, subscriber_id)
-                    if subscriber.cpe_mac_address
-                    else self._create_skipped_check("CPE check skipped (no CPE configured)")
-                ),
-                self.verify_ip_allocation(tenant_id, subscriber_id),
-                return_exceptions=True,
-            )
+            checks_to_run: list[tuple[str, Awaitable[DiagnosticRun | dict[str, Any]]]] = [
+                ("connectivity", self.check_subscriber_connectivity(tenant_id, subscriber_id)),
+                ("radius", self.get_radius_sessions(tenant_id, subscriber_id)),
+            ]
+
+            if subscriber.onu_serial:
+                checks_to_run.append(("onu", self.check_onu_status(tenant_id, subscriber_id)))
+            else:
+                checks_to_run.append(
+                    ("onu", self._create_skipped_check("ONU check skipped (no ONU configured)"))
+                )
+
+            if subscriber.cpe_mac_address:
+                checks_to_run.append(("cpe", self.check_cpe_status(tenant_id, subscriber_id)))
+            else:
+                checks_to_run.append(
+                    ("cpe", self._create_skipped_check("CPE check skipped (no CPE configured)"))
+                )
+
+            checks_to_run.append(("ip", self.verify_ip_allocation(tenant_id, subscriber_id)))
 
             # Aggregate results
             results: dict[str, Any] = {
@@ -751,45 +753,46 @@ class DiagnosticsService:
             recommendations: list[dict[str, Any]] = []
             highest_severity = DiagnosticSeverity.INFO
 
-            for idx, check_result in enumerate(checks_results):
-                check_name = ["connectivity", "radius", "onu", "cpe", "ip"][idx]
-
-                if isinstance(check_result, Exception):
-                    results["checks"][check_name] = {"status": "error", "error": str(check_result)}
+            for check_name, check_coro in checks_to_run:
+                try:
+                    check_result = await check_coro
+                except Exception as check_error:
+                    results["checks"][check_name] = {"status": "error", "error": str(check_error)}
                     results["checks_failed"] += 1
                     highest_severity = DiagnosticSeverity.CRITICAL
-                elif isinstance(check_result, dict) and check_result.get("skipped"):
-                    results["checks"][check_name] = {"status": "skipped"}
-                    results["checks_skipped"] += 1
-                elif isinstance(check_result, DiagnosticRun):
-                    results["checks"][check_name] = {
-                        "status": "passed" if check_result.success else "failed",
-                        "summary": check_result.summary,
-                        "severity": (
-                            check_result.severity.value if check_result.severity else "info"
-                        ),
-                    }
-                    if check_result.success:
-                        results["checks_passed"] += 1
-                    else:
-                        results["checks_failed"] += 1
-
-                    # Collect recommendations
-                    if check_result.recommendations:
-                        recommendations.extend(check_result.recommendations)
-
-                    # Track highest severity
-                    if check_result.severity:
-                        severity_order = {
-                            DiagnosticSeverity.INFO: 0,
-                            DiagnosticSeverity.WARNING: 1,
-                            DiagnosticSeverity.ERROR: 2,
-                            DiagnosticSeverity.CRITICAL: 3,
+                else:
+                    if isinstance(check_result, dict) and check_result.get("skipped"):
+                        results["checks"][check_name] = {"status": "skipped"}
+                        results["checks_skipped"] += 1
+                    elif isinstance(check_result, DiagnosticRun):
+                        results["checks"][check_name] = {
+                            "status": "passed" if check_result.success else "failed",
+                            "summary": check_result.summary,
+                            "severity": (
+                                check_result.severity.value if check_result.severity else "info"
+                            ),
                         }
-                        if severity_order.get(check_result.severity, 0) > severity_order.get(
-                            highest_severity, 0
-                        ):
-                            highest_severity = check_result.severity
+                        if check_result.success:
+                            results["checks_passed"] += 1
+                        else:
+                            results["checks_failed"] += 1
+
+                        if check_result.recommendations:
+                            recommendations.extend(check_result.recommendations)
+
+                        if check_result.severity:
+                            severity_order = {
+                                DiagnosticSeverity.INFO: 0,
+                                DiagnosticSeverity.WARNING: 1,
+                                DiagnosticSeverity.ERROR: 2,
+                                DiagnosticSeverity.CRITICAL: 3,
+                            }
+                            if severity_order.get(check_result.severity, 0) > severity_order.get(
+                                highest_severity, 0
+                            ):
+                                highest_severity = check_result.severity
+                    else:
+                        results["checks"][check_name] = {"status": "unknown"}
 
                 results["total_checks"] += 1
 

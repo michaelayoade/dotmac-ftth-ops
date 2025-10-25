@@ -42,6 +42,15 @@ import {
   Cable,
   Bell,
   Calendar,
+  Router as RouterIcon,
+  Plus,
+  Zap,
+  FileCode,
+  ArrowLeftRight,
+  ShoppingCart,
+  Ticket,
+  GitBranch,
+  Puzzle,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { apiClient } from "@/lib/api/client";
@@ -53,6 +62,7 @@ import { NotificationCenter } from "@/components/notifications/NotificationCente
 import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatusIndicator";
 import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
+import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
 
 interface NavItem {
   name: string;
@@ -60,6 +70,7 @@ interface NavItem {
   icon: React.ElementType;
   badge?: string;
   permission?: string;
+  portals?: PortalType[];
 }
 
 interface NavSection {
@@ -69,6 +80,7 @@ interface NavSection {
   href: string;
   items?: NavItem[];
   permission?: string | string[];
+  portals?: PortalType[];
 }
 
 const sections: NavSection[] = [
@@ -91,6 +103,73 @@ const sections: NavSection[] = [
         icon: LayoutDashboard,
         permission: "isp.radius.read",
       },
+    ],
+  },
+  {
+    id: "radius",
+    label: "RADIUS",
+    icon: Shield,
+    href: "/dashboard/radius",
+    permission: "isp.radius.read",
+    items: [
+      {
+        name: "Overview",
+        href: "/dashboard/radius",
+        icon: LayoutDashboard,
+        permission: "isp.radius.read",
+      },
+      {
+        name: "Subscribers",
+        href: "/dashboard/radius/subscribers",
+        icon: Users,
+        permission: "isp.radius.read",
+      },
+      {
+        name: "Active Sessions",
+        href: "/dashboard/radius/sessions",
+        icon: Activity,
+        permission: "isp.radius.read",
+      },
+      {
+        name: "NAS Devices",
+        href: "/dashboard/radius/nas",
+        icon: Server,
+        permission: "isp.radius.read",
+      },
+    ],
+  },
+  {
+    id: "devices",
+    label: "Devices",
+    icon: RouterIcon,
+    href: "/dashboard/devices",
+    permission: "devices.read",
+    items: [
+      { name: "All Devices", href: "/dashboard/devices", icon: RouterIcon },
+      { name: "Provision", href: "/dashboard/devices/provision", icon: Plus },
+      { name: "Presets", href: "/dashboard/devices/presets", icon: Settings },
+    ],
+  },
+  {
+    id: "diagnostics",
+    label: "Diagnostics",
+    icon: Activity,
+    href: "/dashboard/diagnostics",
+    permission: "diagnostics.read",
+    items: [
+      { name: "History", href: "/dashboard/diagnostics", icon: Activity },
+    ],
+  },
+  {
+    id: "pon",
+    label: "PON Network",
+    icon: Zap,
+    href: "/dashboard/pon/olts",
+    permission: "isp.network.pon.read",
+    items: [
+      { name: "OLTs", href: "/dashboard/pon/olts", icon: Server },
+      { name: "ONUs", href: "/dashboard/pon/onus", icon: Wifi },
+      { name: "Discover ONUs", href: "/dashboard/pon/onus/discover", icon: Search },
     ],
   },
   {
@@ -149,11 +228,116 @@ const sections: NavSection[] = [
     label: "Automation",
     icon: Repeat,
     href: "/dashboard/automation",
+    permission: "deployment.template.read",
     items: [
       {
         name: "Overview",
         href: "/dashboard/automation",
         icon: LayoutDashboard,
+      },
+      {
+        name: "Templates",
+        href: "/dashboard/automation/templates",
+        icon: FileCode,
+        permission: "deployment.template.read",
+      },
+      {
+        name: "Instances",
+        href: "/dashboard/automation/instances",
+        icon: Server,
+        permission: "deployment.instance.read",
+      },
+    ],
+  },
+  {
+    id: "workflows",
+    label: "Workflows",
+    icon: GitBranch,
+    href: "/dashboard/workflows",
+    permission: "workflows:read",
+    items: [
+      {
+        name: "All Workflows",
+        href: "/dashboard/workflows",
+        icon: LayoutDashboard,
+        permission: "workflows:read",
+      },
+    ],
+  },
+  {
+    id: "data-transfer",
+    label: "Data Transfer",
+    icon: ArrowLeftRight,
+    href: "/dashboard/data-transfer",
+    permission: "admin",
+    portals: ["admin"],
+    items: [
+      {
+        name: "Import/Export",
+        href: "/dashboard/data-transfer",
+        icon: Database,
+        permission: "admin",
+      },
+    ],
+  },
+  {
+    id: "jobs",
+    label: "Background Jobs",
+    icon: Briefcase,
+    href: "/dashboard/jobs",
+    permission: "jobs:read",
+    portals: ["admin"],
+    items: [
+      {
+        name: "All Jobs",
+        href: "/dashboard/jobs",
+        icon: LayoutDashboard,
+        permission: "jobs:read",
+      },
+    ],
+  },
+  {
+    id: "services",
+    label: "Services",
+    icon: Package,
+    href: "/dashboard/services/internet-plans",
+    permission: "isp.plans.read",
+    items: [
+      {
+        name: "Internet Plans",
+        href: "/dashboard/services/internet-plans",
+        icon: Wifi,
+        permission: "isp.plans.read",
+      },
+    ],
+  },
+  {
+    id: "sales",
+    label: "Sales Orders",
+    icon: ShoppingCart,
+    href: "/dashboard/sales",
+    permission: "order.read",
+    items: [
+      {
+        name: "All Orders",
+        href: "/dashboard/sales",
+        icon: LayoutDashboard,
+        permission: "order.read",
+      },
+    ],
+  },
+  {
+    id: "ticketing",
+    label: "Support Tickets",
+    icon: Ticket,
+    href: "/dashboard/ticketing",
+    permission: "tickets:read",
+    items: [
+      {
+        name: "All Tickets",
+        href: "/dashboard/ticketing",
+        icon: LayoutDashboard,
+        permission: "tickets:read",
       },
     ],
   },
@@ -208,6 +392,12 @@ const sections: NavSection[] = [
         href: "/dashboard/crm",
         icon: LayoutDashboard,
         permission: "customers.read",
+      },
+      {
+        name: "Contacts",
+        href: "/dashboard/crm/contacts",
+        icon: Users,
+        permission: "contacts.read",
       },
       {
         name: "Leads",
@@ -269,10 +459,89 @@ const sections: NavSection[] = [
     ],
   },
   {
+    id: "licensing",
+    label: "Licensing",
+    icon: Key,
+    href: "/dashboard/licensing",
+    permission: "admin",
+    items: [
+      {
+        name: "All Licenses",
+        href: "/dashboard/licensing",
+        icon: LayoutDashboard,
+        permission: "admin",
+      },
+    ],
+  },
+  {
+    id: "integrations",
+    label: "Integrations",
+    icon: Plug,
+    href: "/dashboard/integrations",
+    permission: "admin",
+    portals: ["admin"],
+    items: [
+      {
+        name: "All Integrations",
+        href: "/dashboard/integrations",
+        icon: LayoutDashboard,
+        permission: "admin",
+      },
+    ],
+  },
+  {
+    id: "plugins",
+    label: "Plugins",
+    icon: Puzzle,
+    href: "/dashboard/plugins",
+    permission: "admin",
+    portals: ["admin"],
+    items: [
+      {
+        name: "All Plugins",
+        href: "/dashboard/plugins",
+        icon: LayoutDashboard,
+        permission: "admin",
+      },
+    ],
+  },
+  {
+    id: "feature-flags",
+    label: "Feature Flags",
+    icon: ToggleLeft,
+    href: "/dashboard/feature-flags",
+    permission: "admin",
+    portals: ["admin"],
+    items: [
+      {
+        name: "All Flags",
+        href: "/dashboard/feature-flags",
+        icon: LayoutDashboard,
+        permission: "admin",
+      },
+    ],
+  },
+  {
+    id: "audit",
+    label: "Audit Logs",
+    icon: FileText,
+    href: "/dashboard/audit",
+    permission: "security.audit.read",
+    items: [
+      {
+        name: "Activity Logs",
+        href: "/dashboard/audit",
+        icon: LayoutDashboard,
+        permission: "security.audit.read",
+      },
+    ],
+  },
+  {
     id: "security-access",
     label: "Security & Access",
     icon: Shield,
     href: "/dashboard/security-access",
+    portals: ["admin"],
     items: [
       { name: "Overview", href: "/dashboard/security-access", icon: BarChart3 },
       {
@@ -307,6 +576,7 @@ const sections: NavSection[] = [
     icon: Activity,
     href: "/dashboard/infrastructure",
     permission: "infrastructure.read",
+    portals: ["admin"],
     items: [
       {
         name: "Overview",
@@ -346,6 +616,7 @@ const sections: NavSection[] = [
     icon: Shield,
     href: "/dashboard/platform-admin",
     permission: "platform:admin",
+    portals: ["admin"],
     items: [
       {
         name: "Overview",
@@ -449,6 +720,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname();
   const { hasPermission, hasAnyPermission } = useRBAC();
   const { branding } = useBranding();
+  const portalType = getPortalType();
 
   // Type helper for user data
   const userData = user as {
@@ -459,13 +731,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     roles?: string[];
   } | null;
 
+  const portalScopedSections = useMemo(
+    () =>
+      sections
+        .filter((section) => portalAllows(section.portals, portalType))
+        .map((section) => ({
+          ...section,
+          items: section.items?.filter((item) => portalAllows(item.portals, portalType)),
+        })),
+    [portalType],
+  );
+
   // Filter sections based on permissions
   const visibleSections = useMemo(
     () =>
-      sections.filter((section) =>
+      portalScopedSections.filter((section) =>
         checkSectionVisibility(section, hasPermission, hasAnyPermission),
       ),
-    [hasPermission, hasAnyPermission],
+    [hasAnyPermission, hasPermission, portalScopedSections],
   );
 
   // Toggle section expansion

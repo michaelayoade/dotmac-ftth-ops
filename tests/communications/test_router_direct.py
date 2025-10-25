@@ -46,7 +46,7 @@ class TestEmailEndpointsDirect:
         )
 
         with patch("dotmac.platform.communications.router.get_email_service") as mock_get_service:
-            with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+            with patch("dotmac.platform.communications.router.get_async_session_context") as mock_get_db:
                 # Mock email service
                 mock_service = AsyncMock()
                 mock_service.send_email.return_value = EmailResponse(
@@ -395,7 +395,7 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_communication_stats_from_db(self):
         """Test getting stats from database."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch("dotmac.platform.communications.router.get_async_session_context") as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -424,7 +424,7 @@ class TestStatsActivityEndpointsDirect:
         mock_user = Mock()
         mock_user.tenant_id = "tenant_123"
 
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch("dotmac.platform.communications.router.get_async_session_context") as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -449,7 +449,7 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_recent_activity_from_db(self):
         """Test getting activity from database."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch("dotmac.platform.communications.router.get_async_session_context") as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -481,7 +481,7 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_recent_activity_with_filters(self):
         """Test getting activity with filters."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch("dotmac.platform.communications.router.get_async_session_context") as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:

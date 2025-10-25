@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
+from fastapi import HTTPException
 from jwt.exceptions import InvalidTokenError as JWTError
 from sqlalchemy.orm import Session
 
@@ -115,6 +116,13 @@ class RBACTokenService:
         # Verify the token signature and expiration
         try:
             payload: dict[str, Any] = self.jwt_service.verify_token(token)
+        except HTTPException as exc:
+            logger.error(
+                "Token verification failed (status %s): %s",
+                exc.status_code,
+                exc.detail,
+            )
+            raise InvalidToken("Invalid or expired token", reason=str(exc.detail))
         except JWTError as e:
             logger.error(f"Token verification failed: {e}")
             raise InvalidToken("Invalid or expired token")
@@ -158,6 +166,13 @@ class RBACTokenService:
         # Verify refresh token
         try:
             payload = self.jwt_service.verify_token(refresh_token)
+        except HTTPException as exc:
+            logger.error(
+                "Refresh token verification failed (status %s): %s",
+                exc.status_code,
+                exc.detail,
+            )
+            raise InvalidToken("Invalid refresh token", reason=str(exc.detail))
         except JWTError:
             raise InvalidToken("Invalid refresh token")
 
@@ -195,6 +210,12 @@ class RBACTokenService:
                     # Add to blacklist
                     cache_set(f"blacklist:{token[:50]}", True, ttl=int(ttl))  # Use first 50 chars
                     logger.info(f"Token revoked for user {payload.get('sub')}")
+        except HTTPException as exc:
+            logger.info(
+                "Token already invalid during revocation (status %s): %s",
+                exc.status_code,
+                exc.detail,
+            )
         except JWTError:
             pass  # Token is already invalid
 

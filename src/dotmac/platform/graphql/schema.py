@@ -6,6 +6,8 @@ Combines all GraphQL queries and mutations into a single schema.
 
 import strawberry
 
+from dotmac.platform.version import get_version
+
 from dotmac.platform.graphql.mutations.orchestration import OrchestrationMutations
 from dotmac.platform.graphql.queries.analytics import AnalyticsQueries
 from dotmac.platform.graphql.queries.customer import CustomerQueries
@@ -58,7 +60,7 @@ class Query(
     @strawberry.field(description="API version and info")  # type: ignore[misc]
     def version(self) -> str:
         """Get GraphQL API version."""
-        return "1.0.0"
+        return get_version()
 
 
 @strawberry.type

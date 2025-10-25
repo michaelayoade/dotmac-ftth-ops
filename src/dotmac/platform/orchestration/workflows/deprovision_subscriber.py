@@ -344,21 +344,45 @@ async def delete_radius_account_handler(
     db: Session,
 ) -> dict[str, Any]:
     """Delete RADIUS authentication account."""
+    from dotmac.platform.settings import settings
+
+    # Check if RADIUS is enabled
+    if not settings.features.radius_enabled:
+        logger.info("RADIUS is disabled, skipping RADIUS account deletion")
+        return {
+            "output_data": {"skipped": True, "reason": "RADIUS not enabled"},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
+    # Get tenant_id from context or input_data
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        # Try to get tenant_id from subscriber
+        from ...subscribers.models import Subscriber
+        subscriber = db.query(Subscriber).filter(
+            Subscriber.id == context["subscriber_id"]
+        ).first()
+        if subscriber:
+            tenant_id = subscriber.tenant_id
+        else:
+            logger.error(f"Cannot determine tenant_id for subscriber: {context['subscriber_id']}")
+            raise ValueError("tenant_id is required for RADIUS operations")
+
     subscriber_id = context["subscriber_id"]
-    
     logger.info(f"Deleting RADIUS account for subscriber: {subscriber_id}")
-    
-    radius_service = RADIUSService(db)
-    
+
+    radius_service = RADIUSService(db, tenant_id)
+
     try:
         deleted = await radius_service.delete_subscriber_by_id(subscriber_id)
         logger.info(f"RADIUS account deleted: {deleted}")
     except Exception as e:
         logger.warning(f"Failed to delete RADIUS account (continuing anyway): {e}")
-    
+
     return {
         "output_data": {"radius_deleted": True},
-        "compensation_data": {"subscriber_id": subscriber_id},
+        "compensation_data": {"subscriber_id": subscriber_id, "tenant_id": tenant_id},
         "context_updates": {},
     }
 

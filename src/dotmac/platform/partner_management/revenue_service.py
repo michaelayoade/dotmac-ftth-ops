@@ -303,7 +303,8 @@ class PartnerRevenueService:
         Returns:
             Calculated commission amount
         """
-        # Get partner
+        self._resolve_tenant_id()  # Ensure context evaluated (no-op for now)
+
         partner_result = await self.session.execute(select(Partner).where(Partner.id == partner_id))
         partner = partner_result.scalar_one_or_none()
         if not partner:

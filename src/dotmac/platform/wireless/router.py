@@ -6,13 +6,15 @@ REST API endpoints for wireless network infrastructure management.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from ..auth.core import get_current_user
+from ..auth.core import UserInfo, get_current_user
+from ..auth.rbac_dependencies import require_permission
 from ..db import get_db
 from ..user_management.models import User
 from .models import CoverageType, DeviceStatus, DeviceType
@@ -63,6 +65,7 @@ async def create_device(
     data: WirelessDeviceCreate,
     service: WirelessService = Depends(get_wireless_service),
     current_user: User = Depends(get_current_user),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> WirelessDeviceResponse:
     """Create a new wireless device"""
     try:
@@ -91,6 +94,7 @@ async def list_devices(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> list[WirelessDeviceResponse]:
     """List wireless devices"""
     try:
@@ -119,6 +123,7 @@ async def list_devices(
 async def get_device(
     device_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> WirelessDeviceResponse:
     """Get wireless device by ID"""
     device = service.get_device(device_id)
@@ -140,6 +145,7 @@ async def update_device(
     device_id: UUID,
     data: WirelessDeviceUpdate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> WirelessDeviceResponse:
     """Update wireless device"""
     try:
@@ -169,6 +175,7 @@ async def update_device(
 async def delete_device(
     device_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ):
     """Delete wireless device"""
     success = service.delete_device(device_id)
@@ -188,6 +195,7 @@ async def delete_device(
 async def get_device_health(
     device_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> DeviceHealthSummary:
     """Get device health summary"""
     health = service.get_device_health(device_id)
@@ -214,6 +222,7 @@ async def get_device_health(
 async def create_radio(
     data: WirelessRadioCreate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> WirelessRadioResponse:
     """Create a new wireless radio"""
     try:
@@ -241,6 +250,7 @@ async def list_radios(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> list[WirelessRadioResponse]:
     """List wireless radios"""
     try:
@@ -268,6 +278,7 @@ async def list_radios(
 async def get_radio(
     radio_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> WirelessRadioResponse:
     """Get wireless radio by ID"""
     radio = service.get_radio(radio_id)
@@ -289,6 +300,7 @@ async def update_radio(
     radio_id: UUID,
     data: WirelessRadioUpdate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> WirelessRadioResponse:
     """Update wireless radio"""
     try:
@@ -318,6 +330,7 @@ async def update_radio(
 async def delete_radio(
     radio_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ):
     """Delete wireless radio"""
     success = service.delete_radio(radio_id)
@@ -343,6 +356,7 @@ async def delete_radio(
 async def create_coverage_zone(
     data: CoverageZoneCreate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> CoverageZoneResponse:
     """Create a new coverage zone"""
     try:
@@ -370,6 +384,7 @@ async def list_coverage_zones(
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> list[CoverageZoneResponse]:
     """List coverage zones"""
     try:
@@ -397,6 +412,7 @@ async def list_coverage_zones(
 async def get_coverage_zone(
     zone_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> CoverageZoneResponse:
     """Get coverage zone by ID"""
     zone = service.get_coverage_zone(zone_id)
@@ -418,6 +434,7 @@ async def update_coverage_zone(
     zone_id: UUID,
     data: CoverageZoneUpdate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> CoverageZoneResponse:
     """Update coverage zone"""
     try:
@@ -447,6 +464,7 @@ async def update_coverage_zone(
 async def delete_coverage_zone(
     zone_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ):
     """Delete coverage zone"""
     success = service.delete_coverage_zone(zone_id)
@@ -472,6 +490,7 @@ async def delete_coverage_zone(
 async def create_signal_measurement(
     data: SignalMeasurementCreate,
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
 ) -> SignalMeasurementResponse:
     """Create a new signal measurement"""
     try:
@@ -499,11 +518,11 @@ async def list_signal_measurements(
     limit: int = Query(1000, ge=1, le=5000),
     offset: int = Query(0, ge=0),
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> list[SignalMeasurementResponse]:
     """List signal measurements"""
     try:
-        from datetime import datetime, timedelta
-        since = datetime.utcnow() - timedelta(hours=hours)
+        since = datetime.now(UTC) - timedelta(hours=hours)
 
         measurements = service.list_signal_measurements(
             device_id=device_id,
@@ -537,6 +556,7 @@ async def list_wireless_clients(
     limit: int = Query(500, ge=1, le=1000),
     offset: int = Query(0, ge=0),
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> list[WirelessClientResponse]:
     """List wireless clients"""
     try:
@@ -568,6 +588,7 @@ async def list_wireless_clients(
 )
 async def get_statistics(
     service: WirelessService = Depends(get_wireless_service),
+    _: UserInfo = Depends(require_permission("isp.network.wireless.read")),
 ) -> WirelessStatistics:
     """Get wireless statistics"""
     try:

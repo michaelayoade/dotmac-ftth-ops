@@ -96,11 +96,19 @@ class UserService:
         # Check if user exists
         existing = await self.get_user_by_username(username, tenant_id=tenant_id)
         if existing:
-            raise ValueError(f"Username {username} already exists")
+            raise IntegrityError(  # type: ignore[arg-type]
+                statement="user.username",
+                params={"username": username, "tenant_id": tenant_id},
+                orig=ValueError(f"Username {username} already exists"),
+            )
 
         existing = await self.get_user_by_email(email, tenant_id=tenant_id)
         if existing:
-            raise ValueError(f"Email {email} already exists")
+            raise IntegrityError(  # type: ignore[arg-type]
+                statement="user.email",
+                params={"email": email, "tenant_id": tenant_id},
+                orig=ValueError(f"Email {email} already exists"),
+            )
 
         # Hash password
         password_hash = self._hash_password(password)
@@ -186,9 +194,10 @@ class UserService:
         is_verified: bool | None = None,
         phone_number: str | None = None,
         metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
     ) -> User | None:
         """Update user information."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return None
 
@@ -215,9 +224,11 @@ class UserService:
             logger.error(f"Failed to update user {user_id}: {e}")
             raise
 
-    async def delete_user(self, user_id: str | UUID) -> bool:
+    async def delete_user(
+        self, user_id: str | UUID, tenant_id: str | None = None
+    ) -> bool:
         """Delete a user."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return False
 
@@ -293,9 +304,10 @@ class UserService:
         user_id: str | UUID,
         current_password: str,
         new_password: str,
+        tenant_id: str | None = None,
     ) -> bool:
         """Change user password."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return False
 
@@ -326,10 +338,12 @@ class UserService:
             tenant_id: Optional tenant ID for multi-tenant isolation.
                       If provided, only users in this tenant can authenticate.
         """
-        # Try to find user by username or email
-        user = await self.get_user_by_username(username_or_email)
+        # Try to find user by username or email within tenant scope
+        user = await self.get_user_by_username(
+            username_or_email, tenant_id=tenant_id
+        )
         if not user:
-            user = await self.get_user_by_email(username_or_email)
+            user = await self.get_user_by_email(username_or_email, tenant_id=tenant_id)
 
         if not user:
             logger.debug(f"User not found: {username_or_email}")
@@ -380,9 +394,11 @@ class UserService:
         logger.info(f"User authenticated: {user.username}")
         return user
 
-    async def enable_mfa(self, user_id: str | UUID) -> str:
+    async def enable_mfa(
+        self, user_id: str | UUID, tenant_id: str | None = None
+    ) -> str:
         """Enable MFA for user and return secret."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             raise ValueError("User not found")
 
@@ -395,9 +411,11 @@ class UserService:
         logger.info(f"MFA enabled for user: {user.username}")
         return secret
 
-    async def disable_mfa(self, user_id: str | UUID) -> bool:
+    async def disable_mfa(
+        self, user_id: str | UUID, tenant_id: str | None = None
+    ) -> bool:
         """Disable MFA for user."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return False
 
@@ -408,9 +426,11 @@ class UserService:
         logger.info(f"MFA disabled for user: {user.username}")
         return True
 
-    async def add_role(self, user_id: str | UUID, role: str) -> User | None:
+    async def add_role(
+        self, user_id: str | UUID, role: str, tenant_id: str | None = None
+    ) -> User | None:
         """Add role to user."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return None
 
@@ -421,9 +441,11 @@ class UserService:
 
         return user
 
-    async def remove_role(self, user_id: str | UUID, role: str) -> User | None:
+    async def remove_role(
+        self, user_id: str | UUID, role: str, tenant_id: str | None = None
+    ) -> User | None:
         """Remove role from user."""
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return None
 
@@ -435,7 +457,10 @@ class UserService:
         return user
 
     async def update_last_login(
-        self, user_id: str | UUID, ip_address: str | None = None
+        self,
+        user_id: str | UUID,
+        ip_address: str | None = None,
+        tenant_id: str | None = None,
     ) -> User | None:
         """Update user's last login timestamp and IP address.
 
@@ -448,7 +473,7 @@ class UserService:
         """
         from datetime import datetime
 
-        user = await self.get_user_by_id(user_id)
+        user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
             return None
 

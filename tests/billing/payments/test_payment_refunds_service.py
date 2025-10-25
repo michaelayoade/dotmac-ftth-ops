@@ -3,6 +3,7 @@ Tests for payment refund functionality.
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -150,6 +151,9 @@ class TestPaymentRefunds:
         existing_refund.failure_reason = None
         existing_refund.next_retry_at = None
         existing_refund.extra_data = {}
+        existing_refund.provider_payment_data = {}
+        existing_refund.refund_amount = Decimal("0")
+        existing_refund.refunded_at = now
 
         # Need to return results in order: payment entity first, then idempotency check
         mock_result_payment = create_mock_async_result([sample_payment_entity])

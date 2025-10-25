@@ -263,6 +263,78 @@ def test_health_check_not_found(
     assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
+@pytest.mark.asyncio
+async def test_get_integration_not_initialized_returns_error(monkeypatch):
+    """Test that uninitialized integrations return error status instead of 404."""
+    from dotmac.platform.integrations.router import get_integration_details
+
+    registry = IntegrationRegistry()
+
+    config = IntegrationConfig(
+        name="email",
+        type=IntegrationType.EMAIL,
+        provider="sendgrid",
+        enabled=True,
+        settings={"from_email": "ops@example.com"},
+        secrets_path="email/sendgrid",
+    )
+
+    registry._configs["email"] = config
+    registry._integration_errors["email"] = (
+        "Exception during initialization. See server logs for details."
+    )
+
+    async def mock_get_registry():
+        return registry
+
+    monkeypatch.setattr(
+        "dotmac.platform.integrations.router.get_integration_registry",
+        mock_get_registry,
+    )
+
+    result = await get_integration_details("email", current_user=object())
+
+    assert result.status == "error"
+    assert result.message == registry._integration_errors["email"]
+
+
+@pytest.mark.asyncio
+async def test_list_integrations_includes_failed_entries(monkeypatch):
+    """Test that failed integrations still appear in listing."""
+    from dotmac.platform.integrations.router import list_integrations
+
+    registry = IntegrationRegistry()
+
+    config = IntegrationConfig(
+        name="currency",
+        type=IntegrationType.CURRENCY,
+        provider="openexchangerates",
+        enabled=True,
+        settings={"base_currency": "USD"},
+        secrets_path="currency/openexchangerates",
+    )
+
+    registry._configs["currency"] = config
+    registry._integration_errors["currency"] = (
+        "RuntimeError during initialization. See server logs for details."
+    )
+
+    async def mock_get_registry():
+        return registry
+
+    monkeypatch.setattr(
+        "dotmac.platform.integrations.router.get_integration_registry",
+        mock_get_registry,
+    )
+
+    result = await list_integrations(current_user=object())
+
+    assert result.total == 1
+    assert result.integrations[0].name == "currency"
+    assert result.integrations[0].status == "error"
+    assert result.integrations[0].message == registry._integration_errors["currency"]
+
+
 def test_integration_response_schema(
     test_client: TestClient,
     auth_headers: dict[str, str],

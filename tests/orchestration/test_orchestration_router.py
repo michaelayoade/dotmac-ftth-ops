@@ -7,13 +7,21 @@ workflow management, statistics, and export functionality.
 Note: Uses authenticated_client fixture from tests/conftest.py
 """
 
-import pytest
-from fastapi import status
-from unittest.mock import patch, AsyncMock
 from datetime import datetime
 from io import BytesIO
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from fastapi import HTTPException, status
+from starlette.requests import Request
 
 from dotmac.platform.orchestration.models import WorkflowStatus, WorkflowType
+from starlette.requests import Request
+
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.orchestration import router as orchestration_router
+from dotmac.platform.tenant import set_current_tenant_id
 
 
 class TestSubscriberProvisioning:
@@ -140,6 +148,25 @@ class TestSubscriberProvisioning:
 
         # Assert
         assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
+
+    async def test_provision_subscriber_requires_permission(
+        self,
+        authenticated_client,
+        mock_orchestration_service,
+        mock_current_user,
+        sample_provision_request,
+    ):
+        """Provisioning should return 403 when user lacks permissions."""
+
+        mock_current_user.permissions = []
+
+        response = await authenticated_client.post(
+            "/api/v1/orchestration/provision-subscriber",
+            json=sample_provision_request,
+        )
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        mock_orchestration_service.provision_subscriber.assert_not_called()
 
 
 class TestSubscriberDeprovisioning:
@@ -679,3 +706,116 @@ class TestWorkflowExport:
         assert response.headers["content-type"] == "application/json"
         assert "attachment" in response.headers["content-disposition"]
         assert ".json" in response.headers["content-disposition"]
+
+
+class TestOrchestrationServiceDependency:
+    """Unit tests for orchestration dependency resolution."""
+
+    @staticmethod
+    def _make_request():
+        scope = {
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "headers": [],
+        }
+
+        async def _receive():
+            return {"type": "http.request"}
+
+        return Request(scope, _receive)
+
+    def teardown_method(self):
+        set_current_tenant_id(None)
+
+    def test_platform_admin_uses_request_state(self, monkeypatch):
+        request = self._make_request()
+        request.state.tenant_id = "tenant-from-header"
+
+        db = MagicMock()
+        user = UserInfo(
+            user_id="admin-user",
+            tenant_id=None,
+            roles=[],
+            permissions=["*"],
+            is_platform_admin=True,
+        )
+
+        captured: dict[str, dict[str, Any]] = {}
+
+        def _fake_service(*, db: Any, tenant_id: str):
+            captured["kwargs"] = {"db": db, "tenant_id": tenant_id}
+            return "service-instance"
+
+        monkeypatch.setattr(orchestration_router, "OrchestrationService", _fake_service)
+
+        result = orchestration_router.get_orchestration_service(
+            request=request,
+            db=db,
+            current_user=user,
+        )
+
+        assert result == "service-instance"
+        assert captured["kwargs"]["db"] is db
+        assert captured["kwargs"]["tenant_id"] == "tenant-from-header"
+
+    def test_platform_admin_requires_target_tenant(self, monkeypatch):
+        request = self._make_request()
+        set_current_tenant_id(None)
+
+        db = MagicMock()
+        user = UserInfo(
+            user_id="admin-user",
+            tenant_id=None,
+            roles=[],
+            permissions=["*"],
+            is_platform_admin=True,
+        )
+
+        monkeypatch.setattr(orchestration_router, "get_current_tenant_id", lambda: None)
+        monkeypatch.setattr(
+            orchestration_router,
+            "OrchestrationService",
+            lambda *_args, **_kwargs: "service-instance",
+        )
+
+        with pytest.raises(HTTPException) as exc:
+            orchestration_router.get_orchestration_service(
+                request=request,
+                db=db,
+                current_user=user,
+            )
+
+        assert exc.value.status_code == status.HTTP_400_BAD_REQUEST
+        assert "X-Target-Tenant-ID" in exc.value.detail
+
+    def test_falls_back_to_context_for_tenant_user(self, monkeypatch):
+        request = self._make_request()
+        set_current_tenant_id("context-tenant")
+
+        db = MagicMock()
+        user = UserInfo(
+            user_id="tenant-user",
+            tenant_id=None,
+            roles=["tenant-admin"],
+            permissions=["subscribers.read"],
+            is_platform_admin=False,
+        )
+
+        captured: dict[str, dict[str, Any]] = {}
+
+        def _fake_service(*, db: Any, tenant_id: str):
+            captured["kwargs"] = {"db": db, "tenant_id": tenant_id}
+            return "service-instance"
+
+        monkeypatch.setattr(orchestration_router, "OrchestrationService", _fake_service)
+
+        result = orchestration_router.get_orchestration_service(
+            request=request,
+            db=db,
+            current_user=user,
+        )
+
+        assert result == "service-instance"
+        assert captured["kwargs"]["db"] is db
+        assert captured["kwargs"]["tenant_id"] == "context-tenant"

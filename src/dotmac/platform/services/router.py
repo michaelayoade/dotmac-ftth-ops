@@ -11,7 +11,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import get_current_user
+from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
 from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.services.orchestration import OrchestrationService
@@ -20,7 +20,6 @@ from dotmac.platform.services.tasks import (
     deprovision_subscriber_async,
     provision_subscriber_async,
 )
-from dotmac.platform.user_management.models import User
 
 router = APIRouter(prefix="/orchestration", tags=["Orchestration"])
 
@@ -116,7 +115,7 @@ class SuspendSubscriberResponse(BaseModel):  # BaseModel resolves to Any in isol
 async def convert_lead_to_customer(
     request: ConvertLeadRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Convert an accepted lead to a customer.
@@ -134,7 +133,7 @@ async def convert_lead_to_customer(
             tenant_id=current_user.tenant_id,
             lead_id=request.lead_id,
             accepted_quote_id=request.accepted_quote_id,
-            user_id=current_user.id,
+            user_id=UUID(current_user.user_id),
         )
         await db.commit()
 
@@ -163,7 +162,7 @@ async def convert_lead_to_customer(
 async def convert_lead_to_customer_background(
     request: ConvertLeadRequest,
     background_tasks: BackgroundTasks,
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, str]:
     """
     Convert lead to customer asynchronously (background task).
@@ -174,7 +173,7 @@ async def convert_lead_to_customer_background(
         tenant_id=current_user.tenant_id,
         lead_id=str(request.lead_id),
         accepted_quote_id=str(request.accepted_quote_id),
-        user_id=str(current_user.id),
+        user_id=current_user.user_id,
     )
 
     return {"task_id": task.id, "status": "processing", "message": "Lead conversion started"}
@@ -188,7 +187,7 @@ async def convert_lead_to_customer_background(
 async def provision_subscriber(
     request: ProvisionSubscriberRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Provision a new subscriber across all systems.
@@ -218,7 +217,7 @@ async def provision_subscriber(
             onu_serial=request.onu_serial,
             cpe_mac_address=request.cpe_mac_address,
             site_id=request.site_id,
-            user_id=current_user.id,
+            user_id=UUID(current_user.user_id),
         )
         await db.commit()
 
@@ -250,7 +249,7 @@ async def provision_subscriber(
 @router.post("/subscribers/provision/async", status_code=status.HTTP_202_ACCEPTED)
 async def provision_subscriber_background(
     request: ProvisionSubscriberRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, str]:
     """
     Provision subscriber asynchronously (background task).
@@ -269,7 +268,7 @@ async def provision_subscriber_background(
         onu_serial=request.onu_serial,
         cpe_mac_address=request.cpe_mac_address,
         site_id=request.site_id,
-        user_id=str(current_user.id),
+        user_id=current_user.user_id,
     )
 
     return {
@@ -286,7 +285,7 @@ async def deprovision_subscriber(
     subscriber_id: str,
     request: DeprovisionSubscriberRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Deprovision a subscriber across all systems.
@@ -308,7 +307,7 @@ async def deprovision_subscriber(
             tenant_id=current_user.tenant_id,
             subscriber_id=subscriber_id,
             reason=request.reason,
-            user_id=current_user.id,
+            user_id=UUID(current_user.user_id),
         )
         await db.commit()
 
@@ -329,7 +328,7 @@ async def deprovision_subscriber(
 async def deprovision_subscriber_background(
     subscriber_id: str,
     request: DeprovisionSubscriberRequest,
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, str]:
     """
     Deprovision subscriber asynchronously (background task).
@@ -340,7 +339,7 @@ async def deprovision_subscriber_background(
         tenant_id=current_user.tenant_id,
         subscriber_id=subscriber_id,
         reason=request.reason,
-        user_id=str(current_user.id),
+        user_id=current_user.user_id,
     )
 
     return {
@@ -355,7 +354,7 @@ async def suspend_subscriber(
     subscriber_id: str,
     request: SuspendSubscriberRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Suspend a subscriber temporarily.
@@ -372,7 +371,7 @@ async def suspend_subscriber(
             tenant_id=current_user.tenant_id,
             subscriber_id=subscriber_id,
             reason=request.reason,
-            user_id=current_user.id,
+            user_id=UUID(current_user.user_id),
         )
         await db.commit()
 
@@ -393,7 +392,7 @@ async def suspend_subscriber(
 async def reactivate_subscriber(
     subscriber_id: str,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Reactivate a suspended subscriber.
@@ -409,7 +408,7 @@ async def reactivate_subscriber(
         result = await service.reactivate_subscriber(
             tenant_id=current_user.tenant_id,
             subscriber_id=subscriber_id,
-            user_id=current_user.id,
+            user_id=UUID(current_user.user_id),
         )
         await db.commit()
 

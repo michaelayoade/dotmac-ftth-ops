@@ -11,6 +11,7 @@ import structlog
 # Optional OpenTelemetry imports
 from ..dependencies import safe_import
 from ..settings import settings
+from ..version import get_version
 from .base import (
     BaseAnalyticsCollector,
     CounterMetric,
@@ -175,6 +176,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         self.config = config
         self.meter: Any | None = None
         self._tracer: Any = None  # Will be set during initialization
+        self._version = get_version()
 
         # Initialize resource attributes
         if Resource:
@@ -182,7 +184,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
                 {
                     "service.name": service_name,
                     "service.namespace": "dotmac",
-                    "service.version": "1.0.0",
+                    "service.version": self._version,
                     "deployment.environment": config.environment,
                     "tenant.id": tenant_id,
                 }
@@ -272,7 +274,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         # Get meter for this service
         self.meter = metrics.get_meter(
             name=self.service_name,
-            version="1.0.0",
+            version=self._version,
         )
 
     def _init_tracing(self, resource: Any) -> None:
@@ -328,7 +330,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         # Get tracer for this service
         self._tracer = trace.get_tracer(
             instrumenting_module_name=self.service_name,
-            instrumenting_library_version="1.0.0",
+            instrumenting_library_version=self._version,
         )
 
     def _get_or_create_counter(self, metric: CounterMetric) -> Any:

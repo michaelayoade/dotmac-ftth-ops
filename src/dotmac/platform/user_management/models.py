@@ -15,6 +15,23 @@ from sqlalchemy.orm import Mapped, mapped_column
 from dotmac.platform.db import Base, TenantMixin, TimestampMixin
 
 
+
+try:  # Ensure dependent tables are registered for metadata creation in tests
+    from dotmac.platform.contacts.models import Contact  # noqa: F401
+except Exception:  # pragma: no cover - optional dependency
+    Contact = None  # type: ignore
+    from sqlalchemy import Column, Table
+
+    if "contacts" not in Base.metadata.tables:
+        Table(
+            "contacts",
+            Base.metadata,
+            Column("id", String(36), primary_key=True),
+            Column("created_at", String(32), nullable=True),
+            Column("updated_at", String(32), nullable=True),
+            extend_existing=True,
+        )
+
 class User(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """User model for authentication and authorization."""
 

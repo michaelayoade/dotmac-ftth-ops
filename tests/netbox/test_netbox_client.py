@@ -16,6 +16,16 @@ from dotmac.platform.netbox.client import NetBoxClient
 class TestNetBoxClient:
     """Test NetBox client operations"""
 
+    @pytest.fixture(autouse=True)
+    def reset_http_client_pool(self):
+        from dotmac.platform.core.http_client import RobustHTTPClient
+
+        RobustHTTPClient._client_pool.clear()
+        RobustHTTPClient._circuit_breakers.clear()
+        yield
+        RobustHTTPClient._client_pool.clear()
+        RobustHTTPClient._circuit_breakers.clear()
+
     def test_client_initialization(self):
         """Test client initialization"""
         client = NetBoxClient(
@@ -26,6 +36,7 @@ class TestNetBoxClient:
         assert client.base_url == "http://netbox.local:8080/"
         # api_token is not stored as attribute, only used for Authorization header
         assert client.headers["Authorization"] == "Token test-token-123"
+        assert client.client.headers["Authorization"] == "Token test-token-123"
 
     def test_client_initialization_with_env(self):
         """Test client initialization from environment variables"""
@@ -36,17 +47,31 @@ class TestNetBoxClient:
             assert client.base_url == "http://netbox:8080/"
             # api_token is not stored as attribute, only used for Authorization header
             assert client.headers["Authorization"] == "Token env-token"
+            assert client.client.headers["Authorization"] == "Token env-token"
+
+    def test_client_normalizes_api_suffix(self):
+        """NetBox client should avoid duplicating /api in base URL"""
+        client = NetBoxClient(
+            base_url="https://netbox.local/api/",
+            api_token="token-xyz",
+        )
+
+        assert client.base_url == "https://netbox.local/"
+        assert client.api_base == "https://netbox.local/api/"
+        assert client.headers["Authorization"] == "Token token-xyz"
+        assert client.client.headers["Authorization"] == "Token token-xyz"
 
     @patch("httpx.AsyncClient")
     async def test_request_get(self, mock_client_class):
         """Test GET request"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {"results": []}
         mock_response.raise_for_status = MagicMock()
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         # Note: Client doesn't have _request method directly, tests HTTP through service layer
@@ -60,6 +85,7 @@ class TestNetBoxClient:
     async def test_get_ip_addresses(self, mock_client_class):
         """Test getting IP addresses"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "results": [
                 {"id": 1, "address": "10.0.0.1/24"},
@@ -70,7 +96,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_ip_addresses(tenant="tenant1", limit=10)
@@ -82,6 +108,7 @@ class TestNetBoxClient:
     async def test_create_ip_address(self, mock_client_class):
         """Test creating IP address"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "id": 1,
             "address": "10.0.0.1/24",
@@ -91,7 +118,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         data = {"address": "10.0.0.1/24", "status": "active"}
@@ -104,12 +131,13 @@ class TestNetBoxClient:
     async def test_health_check_success(self, mock_client_class):
         """Test successful health check"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {"status": "ok"}
         mock_response.raise_for_status = MagicMock()
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.health_check()
@@ -121,7 +149,7 @@ class TestNetBoxClient:
         """Test failed health check"""
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(side_effect=httpx.HTTPError("Connection failed"))
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.health_check()
@@ -132,6 +160,7 @@ class TestNetBoxClient:
     async def test_get_prefixes(self, mock_client_class):
         """Test getting IP prefixes"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "results": [
                 {"id": 1, "prefix": "10.0.0.0/24"},
@@ -142,7 +171,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_prefixes()
@@ -153,6 +182,7 @@ class TestNetBoxClient:
     async def test_get_available_ips(self, mock_client_class):
         """Test getting available IPs in prefix"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = [
             {"address": "10.0.0.1/24"},
             {"address": "10.0.0.2/24"},
@@ -161,7 +191,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_available_ips(prefix_id=1, limit=10)
@@ -172,6 +202,7 @@ class TestNetBoxClient:
     async def test_get_devices(self, mock_client_class):
         """Test getting devices"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "results": [
                 {"id": 1, "name": "router01"},
@@ -182,7 +213,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_devices(site="site1")
@@ -193,6 +224,7 @@ class TestNetBoxClient:
     async def test_get_tenant_by_name(self, mock_client_class):
         """Test getting tenant by name"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {
             "results": [
                 {"id": 1, "name": "TestTenant", "slug": "test-tenant"},
@@ -202,7 +234,7 @@ class TestNetBoxClient:
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_tenant_by_name("TestTenant")
@@ -214,12 +246,13 @@ class TestNetBoxClient:
     async def test_get_tenant_by_name_not_found(self, mock_client_class):
         """Test getting tenant by name when not found"""
         mock_response = MagicMock()
+        mock_response.status_code = 200
         mock_response.json.return_value = {"results": []}
         mock_response.raise_for_status = MagicMock()
 
         mock_client = AsyncMock()
         mock_client.request = AsyncMock(return_value=mock_response)
-        mock_client_class.return_value.__aenter__.return_value = mock_client
+        mock_client_class.return_value = mock_client
 
         client = NetBoxClient(base_url="http://netbox:8080", api_token="test-token")
         result = await client.get_tenant_by_name("NonExistent")

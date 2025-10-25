@@ -14,12 +14,15 @@ Target: Increase payment service coverage from 10.64% to 70%+
 """
 
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
     PaymentEntity,
+    PaymentInvoiceEntity,
     PaymentMethodEntity,
 )
 from dotmac.platform.billing.core.enums import (
@@ -979,3 +982,45 @@ class TestTenantIsolation:
                 tenant_id=tenant2_id,
                 payment_id=payment1.payment_id,
             )
+
+
+class TestInvoiceLinking:
+    """Tests for payment-to-invoice allocation."""
+
+    async def test_link_payment_to_invoices_distributes_remainder(
+        self,
+        payment_service: PaymentService,
+        async_session: AsyncSession,
+        tenant_id: str,
+        customer_id: str,
+    ):
+        """Ensure invoice linking allocates any leftover minor units."""
+        payment = PaymentEntity(
+            tenant_id=tenant_id,
+            amount=100,  # Not divisible by 3
+            currency="USD",
+            customer_id=customer_id,
+            status=PaymentStatus.SUCCEEDED,
+            provider="stripe",
+            payment_method_type=PaymentMethodType.CARD,
+            payment_method_details={"payment_method_id": "pm_test"},
+            provider_payment_data={},
+        )
+        async_session.add(payment)
+        await async_session.commit()
+        await async_session.refresh(payment)
+
+        invoice_ids = [str(uuid4()), str(uuid4()), str(uuid4())]
+        await payment_service._link_payment_to_invoices(payment, invoice_ids)
+
+        result = await async_session.execute(
+            select(PaymentInvoiceEntity).where(
+                PaymentInvoiceEntity.payment_id == payment.payment_id
+            )
+        )
+        links = result.scalars().all()
+        applied_amounts = [link.amount_applied for link in links]
+
+        assert len(applied_amounts) == len(invoice_ids)
+        assert sum(applied_amounts) == payment.amount
+        assert sorted(applied_amounts) == [33, 33, 34]

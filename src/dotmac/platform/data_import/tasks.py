@@ -588,8 +588,8 @@ async def _process_subscription_import(
         987fcdeb-51a2-43d1-b234-567890abcdef,plan_pro_yearly,trialing,yearly,1,2025-01-15
     """
     raise NotImplementedError(
-        "Subscription import feature not yet implemented. "
-        "Follow the implementation pattern in _process_customer_import() and customer_management/mappers.py"
+        "Subscription import requires implementing _process_subscription_import(). "
+        "Follow the customer import pattern in customer_management/mappers.py"
     )
 
 
@@ -645,8 +645,8 @@ async def _process_payment_import(
         987fcdeb-51a2-43d1-b234-567890abcdef,249.00,USD,bank_transfer,completed,2025-01-16,txn_xyz789
     """
     raise NotImplementedError(
-        "Payment import feature not yet implemented. "
-        "Follow the implementation pattern in _process_customer_import() and customer_management/mappers.py"
+        "Payment import requires implementing _process_payment_import(). "
+        "Follow the customer import pattern in customer_management/mappers.py"
     )
 
 

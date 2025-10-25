@@ -100,15 +100,16 @@ async def track_event(
 
         # Track event
         service = get_analytics_service()
+        event_timestamp = _ensure_utc(request.timestamp)
+
         event_id = await service.track_event(
             event_name=request.event_name,
             event_type=request.event_type.value,
             properties=request.properties,
             user_id=request.user_id,
             session_id=request.session_id,
+            timestamp=event_timestamp,
         )
-
-        event_timestamp = _ensure_utc(request.timestamp)
 
         return EventTrackResponse(
             event_id=event_id,

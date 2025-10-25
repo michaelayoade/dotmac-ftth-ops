@@ -83,7 +83,9 @@ from .utils import (
 )
 
 # Version info
-__version__ = "2.0.0"
+from ..version import get_version
+
+__version__ = get_version()
 __author__ = "DotMac Team"
 
 __all__ = [

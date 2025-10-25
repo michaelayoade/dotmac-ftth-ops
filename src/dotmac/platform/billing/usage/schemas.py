@@ -12,7 +12,7 @@ from .models import BilledStatus, UsageType
 
 
 class UsageRecordCreate(BaseModel):
-    """Schema for creating a usage record."""
+    """Schema for creating a usage record with unit prices expressed in major currency units."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -21,7 +21,11 @@ class UsageRecordCreate(BaseModel):
     usage_type: UsageType
     quantity: Decimal = Field(gt=0, decimal_places=6)
     unit: str = Field(min_length=1, max_length=20)
-    unit_price: Decimal = Field(ge=0, decimal_places=6, description="Price per unit in cents")
+    unit_price: Decimal = Field(
+        ge=0,
+        decimal_places=6,
+        description="Price per unit in major currency units (e.g., dollars); not cents.",
+    )
     period_start: datetime
     period_end: datetime
     source_system: str = Field(min_length=1, max_length=50)
@@ -108,7 +112,7 @@ class UsageSummary(BaseModel):
     usage_type: UsageType
     total_quantity: Decimal
     total_amount: int  # in cents
-    currency: str = "USD"
+    currency: str = Field(..., min_length=3, max_length=3, description="Currency code (ISO 4217)")
     record_count: int
     period_start: datetime
     period_end: datetime

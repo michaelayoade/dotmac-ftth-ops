@@ -8,6 +8,7 @@ This maintains clean separation between domain and infrastructure layers.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID, uuid4
 
 from dotmac.platform.billing.core.entities import (
     InvoiceEntity,
@@ -17,7 +18,13 @@ from dotmac.platform.billing.core.models import Invoice as InvoiceModel
 from dotmac.platform.billing.core.models import Payment as PaymentModel
 from dotmac.platform.billing.subscriptions.models import Subscription as SubscriptionModel
 from dotmac.platform.core import Money
-from dotmac.platform.customer_management.models import Customer as CustomerEntity
+from dotmac.platform.customer_management.models import (
+    CommunicationChannel,
+    Customer as CustomerEntity,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 
 from .aggregates import Customer, Invoice, InvoiceLineItem, Payment, Subscription
 
@@ -44,6 +51,19 @@ class InvoiceMapper:
         Returns:
             InvoiceEntity for database persistence
         """
+        from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
+
+        status_value = (
+            InvoiceStatus(invoice.status)
+            if isinstance(invoice.status, str)
+            else invoice.status
+        )
+        payment_status_value = (
+            PaymentStatus(invoice.payment_status)
+            if isinstance(invoice.payment_status, str)
+            else invoice.payment_status
+        )
+
         return InvoiceEntity(
             invoice_id=invoice.id,
             tenant_id=invoice.tenant_id,
@@ -59,9 +79,9 @@ class InvoiceMapper:
             tax_amount=int(invoice.tax_amount.amount * 100),
             discount_amount=int(invoice.discount_amount.amount * 100),
             total_amount=int(invoice.total_amount.amount * 100),
-            remaining_balance=int(invoice.total_amount.amount * 100),
-            status=invoice.status,
-            payment_status=invoice.payment_status,
+            remaining_balance=int(invoice.remaining_balance.amount * 100),
+            status=status_value,
+            payment_status=payment_status_value,
             subscription_id=invoice.subscription_id,
             notes=invoice.notes,
             paid_at=invoice.paid_at,
@@ -200,6 +220,14 @@ class PaymentMapper:
         }
         payment_method_type = payment_method_map.get(payment.payment_method, PaymentMethodType.CARD)
 
+        from dotmac.platform.billing.core.enums import PaymentStatus
+
+        status_value = (
+            PaymentStatus(payment.status)
+            if isinstance(payment.status, str)
+            else payment.status
+        )
+
         return PaymentEntity(
             payment_id=payment.id,
             tenant_id=payment.tenant_id,
@@ -208,9 +236,11 @@ class PaymentMapper:
             currency=payment.amount.currency,
             payment_method_type=payment_method_type,
             provider=payment.payment_method,  # Use as provider for now
-            status=payment.status,
+            status=status_value,
             processed_at=payment.processed_at,
             failure_reason=payment.error_message,
+            provider_payment_id=payment.transaction_id,
+            provider_fee=None,
         )
 
     @staticmethod
@@ -343,17 +373,49 @@ class CustomerMapper:
     @staticmethod
     def to_entity(customer: Customer) -> CustomerEntity:
         """Convert Customer aggregate to CustomerEntity."""
+        # Split name into first/last for required fields
+        display_name = customer.name or (customer.email.split("@", 1)[0] if customer.email else "Customer")
+        name_parts = display_name.strip().split()
+        first_name = name_parts[0] if name_parts else "Customer"
+        last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else first_name
+
+        status = (
+            CustomerStatus(customer.status)
+            if isinstance(customer.status, str)
+            else customer.status
+            if customer.status
+            else CustomerStatus.ACTIVE
+        )
+
+        # Ensure we have UUID for primary key
+        try:
+            entity_id = UUID(customer.id)
+        except (TypeError, ValueError):
+            entity_id = uuid4()
+
         return CustomerEntity(
-            customer_id=customer.id,
+            id=entity_id,
             tenant_id=customer.tenant_id,
+            customer_number=customer.customer_id,
+            first_name=first_name,
+            last_name=last_name or first_name,
+            display_name=display_name,
+            company_name=customer.company,
+            status=status,
+            customer_type=CustomerType.INDIVIDUAL,
+            tier=CustomerTier.FREE,
             email=customer.email,
-            name=customer.name,
-            company=customer.company,
+            email_verified=False,
             phone=customer.phone,
-            status=customer.status,
-            is_deleted=customer.is_deleted,
-            metadata_=customer.metadata,  # Note: CustomerEntity uses metadata_
+            phone_verified=False,
+            preferred_channel=CommunicationChannel.EMAIL,
+            preferred_language="en",
+            timezone="UTC",
+            opt_in_marketing=False,
+            opt_in_updates=True,
+            metadata_=customer.metadata or {},
             deleted_at=customer.deleted_at,
+            is_deleted=customer.is_deleted,
         )
 
     @staticmethod
@@ -366,15 +428,17 @@ class CustomerMapper:
             last_name = getattr(entity, "last_name", "")
             name = f"{first_name} {last_name}".strip()
 
+        status_value = entity.status.value if hasattr(entity.status, "value") else entity.status
+
         return Customer(
             id=str(entity.id),
             tenant_id=entity.tenant_id or "",
-            customer_id=str(entity.id),
+            customer_id=entity.customer_number,
             email=getattr(entity, "email", ""),
             name=name,
             company=getattr(entity, "company_name", None),
             phone=getattr(entity, "phone", None),
-            status=getattr(entity, "status", "active"),
+            status=status_value or "active",
             is_deleted=getattr(entity, "is_deleted", False),
             metadata=getattr(entity, "metadata_", {}) or {},
             deleted_at=getattr(entity, "deleted_at", None),

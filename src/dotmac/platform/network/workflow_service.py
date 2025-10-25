@@ -85,31 +85,35 @@ class NetworkService:
 
         customer_id_str = str(customer_id)
 
-        # Get tenant_id if not provided
-        if not tenant_id:
+        customer: Customer | None = None
+
+        # Determine tenant context and validate customer ownership
+        if tenant_id:
+            stmt = select(Customer).where(
+                Customer.id == customer_id_str,
+                Customer.tenant_id == tenant_id,
+            )
+            result = await self.db.execute(stmt)
+            customer = result.scalar_one_or_none()
+            if not customer:
+                raise ValueError(
+                    f"Customer {customer_id_str} not found for tenant {tenant_id}"
+                )
+        else:
             stmt = select(Customer).where(Customer.id == customer_id_str)
             result = await self.db.execute(stmt)
             customer = result.scalar_one_or_none()
-            if customer:
-                tenant_id = customer.tenant_id
+            if not customer:
+                raise ValueError(f"Customer {customer_id_str} not found")
+            tenant_id = customer.tenant_id
 
         # Generate username for RADIUS (unique identifier)
         # Use format: customer email prefix or customer_<id>
         username = None
-        if not tenant_id:
-            username = f"customer_{customer_id_str}"
+        if customer and customer.email:
+            username = customer.email.split("@")[0]
         else:
-            stmt = select(Customer).where(
-                Customer.id == customer_id_str,
-                Customer.tenant_id == tenant_id
-            )
-            result = await self.db.execute(stmt)
-            customer = result.scalar_one_or_none()
-            if customer and customer.email:
-                # Use email prefix as username (before @)
-                username = customer.email.split("@")[0]
-            else:
-                username = f"customer_{customer_id_str}"
+            username = f"customer_{customer_id_str}"
 
         # Generate service ID
         service_id = f"svc-{secrets.token_hex(8)}"

@@ -5,7 +5,8 @@ Handles add-on purchases, cancellations, and quantity management for tenants.
 """
 
 from datetime import UTC, datetime
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
+from inspect import isawaitable
 from uuid import uuid4
 
 import structlog
@@ -35,6 +36,59 @@ class AddonService:
         """Initialize service with database session."""
         self.db = db_session
 
+    @staticmethod
+    async def _resolve(value):
+        """Await value if needed."""
+        if isawaitable(value):
+            return await value
+        return value
+
+    # --------------------------------------------------------------------- #
+    # Internal helpers
+    # --------------------------------------------------------------------- #
+
+    @staticmethod
+    def _to_minor_units(amount: Decimal) -> int:
+        """Convert a Decimal amount to minor currency units (e.g., cents)."""
+        quantized = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+        return int(quantized * Decimal("100"))
+
+    async def _get_subscription(
+        self, tenant_id: str, subscription_id: str
+    ):
+        """Fetch a subscription and validate tenant ownership."""
+        from dotmac.platform.billing.models import BillingSubscriptionTable
+
+        stmt = (
+            select(BillingSubscriptionTable)
+            .where(BillingSubscriptionTable.subscription_id == subscription_id)
+            .where(BillingSubscriptionTable.tenant_id == tenant_id)
+        )
+        result = await self.db.execute(stmt)
+        return await self._resolve(result.scalar_one_or_none())
+
+    async def _get_latest_active_subscription(self, tenant_id: str):
+        """Return the most recent active/trialing subscription for the tenant."""
+        from dotmac.platform.billing.models import BillingSubscriptionTable
+        from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+
+        stmt = (
+            select(BillingSubscriptionTable)
+            .where(BillingSubscriptionTable.tenant_id == tenant_id)
+            .where(
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE.value,
+                        SubscriptionStatus.TRIALING.value,
+                    ]
+                )
+            )
+            .order_by(BillingSubscriptionTable.created_at.desc())
+            .limit(1)
+        )
+        result = await self.db.execute(stmt)
+        return await self._resolve(result.scalar_one_or_none())
+
     # ============================================================================
     # Add-on Catalog Operations
     # ============================================================================
@@ -57,25 +111,17 @@ class AddonService:
             BillingAddonTable.is_active == True  # noqa: E712
         )
 
-        # Filter by plan compatibility if plan_id provided
-        if plan_id:
-            from sqlalchemy import or_, func
-            stmt = stmt.where(
-                or_(
-                    BillingAddonTable.compatible_with_all_plans == True,  # noqa: E712
-                    func.json_contains(
-                        BillingAddonTable.compatible_plan_ids,
-                        func.cast(plan_id, type_=type(BillingAddonTable.compatible_plan_ids))
-                    )
-                )
-            )
-
         result = await self.db.execute(stmt)
-        addon_rows = result.scalars().all()
+        scalars_result = await self._resolve(result.scalars())
+        addon_rows = await self._resolve(scalars_result.all())
 
         # Convert to response models
         addons = []
         for row in addon_rows:
+            if plan_id and not row.compatible_with_all_plans:
+                compatible_ids = row.compatible_plan_ids or []
+                if plan_id not in compatible_ids:
+                    continue
             addons.append(AddonResponse(
                 addon_id=row.addon_id,
                 name=row.name,
@@ -84,12 +130,12 @@ class AddonService:
                 billing_type=AddonBillingType(row.billing_type),
                 price=Decimal(str(row.price)),
                 currency=row.currency,
-                setup_fee=Decimal(str(row.setup_fee)) if row.setup_fee else None,
+                setup_fee=Decimal(str(row.setup_fee)) if row.setup_fee is not None else None,
                 is_quantity_based=row.is_quantity_based,
                 min_quantity=int(row.min_quantity),
-                max_quantity=int(row.max_quantity) if row.max_quantity else None,
+                max_quantity=int(row.max_quantity) if row.max_quantity is not None else None,
                 metered_unit=row.metered_unit,
-                included_quantity=int(row.included_quantity) if row.included_quantity else None,
+                included_quantity=int(row.included_quantity) if row.included_quantity is not None else None,
                 is_active=row.is_active,
                 is_featured=row.is_featured,
                 compatible_with_all_plans=row.compatible_with_all_plans,
@@ -107,7 +153,7 @@ class AddonService:
             BillingAddonTable.addon_id == addon_id
         )
         result = await self.db.execute(stmt)
-        row = result.scalar_one_or_none()
+        row = await self._resolve(result.scalar_one_or_none())
 
         if not row:
             return None
@@ -121,12 +167,12 @@ class AddonService:
             billing_type=AddonBillingType(row.billing_type),
             price=Decimal(str(row.price)),
             currency=row.currency,
-            setup_fee=Decimal(str(row.setup_fee)) if row.setup_fee else None,
+            setup_fee=Decimal(str(row.setup_fee)) if row.setup_fee is not None else None,
             is_quantity_based=row.is_quantity_based,
             min_quantity=int(row.min_quantity),
-            max_quantity=int(row.max_quantity) if row.max_quantity else None,
+            max_quantity=int(row.max_quantity) if row.max_quantity is not None else None,
             metered_unit=row.metered_unit,
-            included_quantity=int(row.included_quantity) if row.included_quantity else None,
+            included_quantity=int(row.included_quantity) if row.included_quantity is not None else None,
             is_active=row.is_active,
             is_featured=row.is_featured,
             compatible_with_all_plans=row.compatible_with_all_plans,
@@ -165,7 +211,7 @@ class AddonService:
         )
 
         result = await self.db.execute(stmt)
-        rows = result.all()
+        rows = await self._resolve(result.all())
 
         # Convert to response models
         tenant_addons = []
@@ -178,12 +224,12 @@ class AddonService:
                 billing_type=AddonBillingType(addon_row.billing_type),
                 price=Decimal(str(addon_row.price)),
                 currency=addon_row.currency,
-                setup_fee=Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee else None,
+                setup_fee=Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee is not None else None,
                 is_quantity_based=addon_row.is_quantity_based,
                 min_quantity=int(addon_row.min_quantity),
-                max_quantity=int(addon_row.max_quantity) if addon_row.max_quantity else None,
+                max_quantity=int(addon_row.max_quantity) if addon_row.max_quantity is not None else None,
                 metered_unit=addon_row.metered_unit,
-                included_quantity=int(addon_row.included_quantity) if addon_row.included_quantity else None,
+                included_quantity=int(addon_row.included_quantity) if addon_row.included_quantity is not None else None,
                 is_active=addon_row.is_active,
                 is_featured=addon_row.is_featured,
                 compatible_with_all_plans=addon_row.compatible_with_all_plans,
@@ -247,12 +293,12 @@ class AddonService:
             billing_type=AddonBillingType(addon_row.billing_type),
             price=Decimal(str(addon_row.price)),
             currency=addon_row.currency,
-            setup_fee=Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee else None,
+            setup_fee=Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee is not None else None,
             is_quantity_based=addon_row.is_quantity_based,
             min_quantity=int(addon_row.min_quantity),
-            max_quantity=int(addon_row.max_quantity) if addon_row.max_quantity else None,
+            max_quantity=int(addon_row.max_quantity) if addon_row.max_quantity is not None else None,
             metered_unit=addon_row.metered_unit,
-            included_quantity=int(addon_row.included_quantity) if addon_row.included_quantity else None,
+            included_quantity=int(addon_row.included_quantity) if addon_row.included_quantity is not None else None,
             is_active=addon_row.is_active,
             is_featured=addon_row.is_featured,
             compatible_with_all_plans=addon_row.compatible_with_all_plans,
@@ -315,10 +361,28 @@ class AddonService:
         if addon.is_quantity_based:
             if quantity < addon.min_quantity:
                 raise ValueError(f"Quantity must be at least {addon.min_quantity}")
-            if addon.max_quantity and quantity > addon.max_quantity:
+            if addon.max_quantity is not None and quantity > addon.max_quantity:
                 raise ValueError(f"Quantity cannot exceed {addon.max_quantity}")
         elif quantity != 1:
             raise ValueError("This add-on does not support quantity adjustments")
+
+        subscription = None
+        plan_id = None
+
+        if subscription_id:
+            subscription = await self._get_subscription(tenant_id, subscription_id)
+            if not subscription:
+                raise ValueError(f"Subscription {subscription_id} not found for tenant {tenant_id}")
+            plan_id = subscription.plan_id
+        else:
+            subscription = await self._get_latest_active_subscription(tenant_id)
+            if subscription:
+                plan_id = subscription.plan_id
+
+        if not addon.compatible_with_all_plans:
+            allowed_plan_ids = set(addon.compatible_plan_ids or [])
+            if plan_id is None or plan_id not in allowed_plan_ids:
+                raise ValueError("Add-on is not compatible with the tenant's current subscription plan")
 
         # Implement actual purchase logic
         now = datetime.now(UTC)
@@ -328,17 +392,10 @@ class AddonService:
         current_period_start = now
         current_period_end = None
 
-        if subscription_id:
-            # Align with subscription billing period
-            from dotmac.platform.billing.models import BillingSubscriptionTable
-            stmt = select(BillingSubscriptionTable).where(
-                BillingSubscriptionTable.subscription_id == subscription_id,
-                BillingSubscriptionTable.tenant_id == tenant_id,
-            )
-            result = await self.db.execute(stmt)
-            subscription = result.scalar_one_or_none()
-            if subscription:
+        if subscription:
+            if subscription.current_period_start:
                 current_period_start = subscription.current_period_start
+            if subscription.current_period_end:
                 current_period_end = subscription.current_period_end
 
         # Create TenantAddon record
@@ -379,17 +436,8 @@ class AddonService:
 
         # Get customer information from subscription or use tenant as customer
         customer_id = tenant_id
-
-        if subscription_id:
-            from dotmac.platform.billing.models import BillingSubscriptionTable
-            sub_stmt = select(BillingSubscriptionTable).where(
-                BillingSubscriptionTable.subscription_id == subscription_id,
-                BillingSubscriptionTable.tenant_id == tenant_id,
-            )
-            sub_result = await self.db.execute(sub_stmt)
-            subscription = sub_result.scalar_one_or_none()
-            if subscription:
-                customer_id = subscription.customer_id
+        if subscription and subscription.customer_id:
+            customer_id = subscription.customer_id
 
         # Resolve real billing contact data (email + address)
         from dotmac.platform.billing.integration import BillingIntegrationService
@@ -406,8 +454,8 @@ class AddonService:
         line_items.append({
             "description": f"{addon.name} (x{quantity})",
             "quantity": quantity,
-            "unit_price": int(addon.price * 100),  # Convert to minor units (cents)
-            "total_price": int(addon.price * quantity * 100),
+            "unit_price": self._to_minor_units(addon.price),
+            "total_price": self._to_minor_units(addon.price * quantity),
             "product_id": addon_id,
             "subscription_id": subscription_id,
             "tax_rate": 0.0,
@@ -425,8 +473,8 @@ class AddonService:
             line_items.append({
                 "description": f"{addon.name} - Setup Fee",
                 "quantity": 1,
-                "unit_price": int(addon.setup_fee * 100),
-                "total_price": int(addon.setup_fee * 100),
+                "unit_price": self._to_minor_units(addon.setup_fee),
+                "total_price": self._to_minor_units(addon.setup_fee),
                 "product_id": f"{addon_id}_setup",
                 "subscription_id": subscription_id,
                 "tax_rate": 0.0,
@@ -502,7 +550,7 @@ class AddonService:
         addon_row = await self.db.execute(
             select(BillingAddonTable).where(BillingAddonTable.addon_id == addon_id)
         )
-        addon_details = addon_row.scalar_one()
+        addon_details = await self._resolve(addon_row.scalar_one())
 
         addon_response = AddonResponse(
             addon_id=addon_details.addon_id,
@@ -512,12 +560,12 @@ class AddonService:
             billing_type=AddonBillingType(addon_details.billing_type),
             price=Decimal(str(addon_details.price)),
             currency=addon_details.currency,
-            setup_fee=Decimal(str(addon_details.setup_fee)) if addon_details.setup_fee else None,
+            setup_fee=Decimal(str(addon_details.setup_fee)) if addon_details.setup_fee is not None else None,
             is_quantity_based=addon_details.is_quantity_based,
             min_quantity=int(addon_details.min_quantity),
-            max_quantity=int(addon_details.max_quantity) if addon_details.max_quantity else None,
+            max_quantity=int(addon_details.max_quantity) if addon_details.max_quantity is not None else None,
             metered_unit=addon_details.metered_unit,
-            included_quantity=int(addon_details.included_quantity) if addon_details.included_quantity else None,
+            included_quantity=int(addon_details.included_quantity) if addon_details.included_quantity is not None else None,
             is_active=addon_details.is_active,
             is_featured=addon_details.is_featured,
             compatible_with_all_plans=addon_details.compatible_with_all_plans,
@@ -581,7 +629,7 @@ class AddonService:
         # Validate new quantity
         if new_quantity < addon.min_quantity:
             raise ValueError(f"Quantity must be at least {addon.min_quantity}")
-        if addon.max_quantity and new_quantity > addon.max_quantity:
+        if addon.max_quantity is not None and new_quantity > addon.max_quantity:
             raise ValueError(f"Quantity cannot exceed {addon.max_quantity}")
 
         # Implement quantity update logic
@@ -592,6 +640,17 @@ class AddonService:
             # No change, return current state
             return tenant_addon
 
+        tenant_addon_row_stmt = (
+            select(BillingTenantAddonTable)
+            .where(BillingTenantAddonTable.tenant_addon_id == tenant_addon_id)
+            .where(BillingTenantAddonTable.tenant_id == tenant_id)
+        )
+        tenant_addon_row_result = await self.db.execute(tenant_addon_row_stmt)
+        tenant_addon_row = await self._resolve(tenant_addon_row_result.scalar_one_or_none())
+        if not tenant_addon_row:
+            raise AddonNotFoundError(f"Add-on {tenant_addon_id} not found for tenant")
+        existing_metadata = dict(tenant_addon_row.metadata_json or {})
+
         # Calculate proration for mid-cycle change
         now = datetime.now(UTC)
 
@@ -601,7 +660,10 @@ class AddonService:
                 tenant_addon.current_period_end - tenant_addon.current_period_start
             ).total_seconds()
             remaining_seconds = (tenant_addon.current_period_end - now).total_seconds()
-            proration_factor = remaining_seconds / total_period_seconds if total_period_seconds > 0 else 0
+            raw_proration_factor = (
+                remaining_seconds / total_period_seconds if total_period_seconds > 0 else 0.0
+            )
+            proration_factor = max(0.0, min(1.0, raw_proration_factor))
 
             # Calculate prorated amount
             price_diff = addon.price * quantity_diff
@@ -635,7 +697,7 @@ class AddonService:
                         BillingSubscriptionTable.tenant_id == tenant_id,
                     )
                     sub_result = await self.db.execute(sub_stmt)
-                    subscription = sub_result.scalar_one_or_none()
+                    subscription = await self._resolve(sub_result.scalar_one_or_none())
                     if subscription:
                         customer_id = subscription.customer_id
 
@@ -650,8 +712,8 @@ class AddonService:
                 line_items = [{
                     "description": f"{addon.name} - Quantity Increase ({old_quantity} → {new_quantity})",
                     "quantity": quantity_diff,
-                    "unit_price": int(addon.price * 100),
-                    "total_price": int(prorated_amount * 100),
+                    "unit_price": self._to_minor_units(addon.price),
+                    "total_price": self._to_minor_units(prorated_amount),
                     "product_id": addon.addon_id,
                     "subscription_id": tenant_addon.subscription_id,
                     "tax_rate": 0.0,
@@ -699,7 +761,7 @@ class AddonService:
                         tenant_id=tenant_id,
                         invoice_id=invoice.invoice_id,
                         invoice_number=invoice.invoice_number,
-                        prorated_amount=int(prorated_amount * 100),
+                        prorated_amount=self._to_minor_units(prorated_amount),
                     )
 
                 except Exception as e:
@@ -719,8 +781,8 @@ class AddonService:
 
                 # Get the most recent invoice for this addon if available
                 invoice_id = None
-                if tenant_addon.metadata_json and "invoice_id" in tenant_addon.metadata_json:
-                    invoice_id = tenant_addon.metadata_json["invoice_id"]
+                if "invoice_id" in existing_metadata:
+                    invoice_id = existing_metadata["invoice_id"]
 
                 # If no invoice found, we'll create a standalone credit note
                 if not invoice_id:
@@ -734,7 +796,7 @@ class AddonService:
                         .limit(1)
                     )
                     invoice_result = await self.db.execute(invoice_stmt)
-                    invoice_id = invoice_result.scalar_one_or_none()
+                    invoice_id = await self._resolve(invoice_result.scalar_one_or_none())
 
                 # Create credit note for quantity decrease
                 from dotmac.platform.billing.credit_notes.service import CreditNoteService
@@ -752,8 +814,8 @@ class AddonService:
                             line_items=[{
                                 "description": f"{addon.name} - Quantity Decrease ({old_quantity} → {new_quantity})",
                                 "quantity": abs(quantity_diff),
-                                "unit_price": int(addon.price * 100),
-                                "amount": int(credit_amount * 100),
+                                "unit_price": self._to_minor_units(addon.price),
+                                "amount": self._to_minor_units(credit_amount),
                                 "extra_data": {
                                     "addon_type": addon.addon_type.value,
                                     "tenant_addon_id": tenant_addon_id,
@@ -773,7 +835,7 @@ class AddonService:
                             tenant_id=tenant_id,
                             credit_note_id=credit_note.credit_note_id,
                             credit_note_number=credit_note.credit_note_number,
-                            credit_amount=int(credit_amount * 100),
+                            credit_amount=self._to_minor_units(credit_amount),
                         )
 
                     except Exception as e:
@@ -794,18 +856,7 @@ class AddonService:
         from sqlalchemy import update
 
         # Prepare metadata with quantity changes history
-        existing_metadata = {}
-        # We need to fetch the actual row to get metadata_json
-        fetch_stmt = select(BillingTenantAddonTable).where(
-            BillingTenantAddonTable.tenant_addon_id == tenant_addon_id,
-            BillingTenantAddonTable.tenant_id == tenant_id,
-        )
-        fetch_result = await self.db.execute(fetch_stmt)
-        tenant_addon_row = fetch_result.scalar_one_or_none()
-        if tenant_addon_row:
-            existing_metadata = tenant_addon_row.metadata_json or {}
-
-        quantity_changes = existing_metadata.get("quantity_changes", [])
+        quantity_changes = list(existing_metadata.get("quantity_changes", []))
         quantity_changes.append({
             "from": old_quantity,
             "to": new_quantity,
@@ -874,6 +925,15 @@ class AddonService:
         now = datetime.now(UTC)
         ended_at = None
 
+        tenant_addon_row_stmt = (
+            select(BillingTenantAddonTable)
+            .where(BillingTenantAddonTable.tenant_addon_id == tenant_addon_id)
+            .where(BillingTenantAddonTable.tenant_id == tenant_id)
+        )
+        tenant_addon_row_result = await self.db.execute(tenant_addon_row_stmt)
+        tenant_addon_row = await self._resolve(tenant_addon_row_result.scalar_one_or_none())
+        existing_metadata = dict((tenant_addon_row.metadata_json or {}) if tenant_addon_row else {})
+
         if cancel_immediately:
             # Immediate cancellation - end the add-on now
             ended_at = now
@@ -886,7 +946,10 @@ class AddonService:
                         tenant_addon.current_period_end - tenant_addon.current_period_start
                     ).total_seconds()
                     remaining_seconds = (tenant_addon.current_period_end - now).total_seconds()
-                    proration_factor = remaining_seconds / total_period_seconds if total_period_seconds > 0 else 0
+                    raw_proration_factor = (
+                        remaining_seconds / total_period_seconds if total_period_seconds > 0 else 0.0
+                    )
+                    proration_factor = max(0.0, min(1.0, raw_proration_factor))
 
                     # Calculate refund amount
                     period_amount = addon.price * tenant_addon.quantity
@@ -901,12 +964,8 @@ class AddonService:
 
                     # Issue credit/refund through billing service
                     if refund_amount > 0:
-                        # Get the most recent invoice for this addon
-                        invoice_id = None
-                        if tenant_addon.metadata_json and "invoice_id" in tenant_addon.metadata_json:
-                            invoice_id = tenant_addon.metadata_json["invoice_id"]
+                        invoice_id = existing_metadata.get("invoice_id")
 
-                        # If no invoice found, try to find the most recent invoice for this customer
                         if not invoice_id:
                             from dotmac.platform.billing.core.entities import InvoiceEntity
                             invoice_stmt = (
@@ -917,9 +976,8 @@ class AddonService:
                                 .limit(1)
                             )
                             invoice_result = await self.db.execute(invoice_stmt)
-                            invoice_id = invoice_result.scalar_one_or_none()
+                            invoice_id = await self._resolve(invoice_result.scalar_one_or_none())
 
-                        # Create credit note for cancellation refund
                         from dotmac.platform.billing.credit_notes.service import CreditNoteService
                         from dotmac.platform.billing.core.enums import CreditReason
 
@@ -934,15 +992,15 @@ class AddonService:
                                     line_items=[{
                                         "description": f"{addon.name} - Cancellation Refund (Remaining Period)",
                                         "quantity": tenant_addon.quantity,
-                                        "unit_price": int(addon.price * 100),
-                                        "amount": int(refund_amount * 100),
+                                        "unit_price": self._to_minor_units(addon.price),
+                                        "amount": self._to_minor_units(refund_amount),
                                         "extra_data": {
                                             "addon_type": addon.addon_type.value,
                                             "tenant_addon_id": tenant_addon_id,
                                             "cancellation_type": "immediate",
                                             "prorated": True,
                                             "proration_factor": proration_factor,
-                                            "period_amount": int(period_amount * 100),
+                                            "period_amount": self._to_minor_units(period_amount),
                                         },
                                     }],
                                     notes=f"Credit for immediate cancellation of {addon.name}",
@@ -957,7 +1015,7 @@ class AddonService:
                                     tenant_addon_id=tenant_addon_id,
                                     credit_note_id=credit_note.credit_note_id,
                                     credit_note_number=credit_note.credit_note_number,
-                                    refund_amount=int(refund_amount * 100),
+                                    refund_amount=self._to_minor_units(refund_amount),
                                 )
 
                             except Exception as e:
@@ -986,17 +1044,8 @@ class AddonService:
         # Update tenant add-on status
         from sqlalchemy import update
 
-        # Fetch current metadata
-        fetch_stmt = select(BillingTenantAddonTable).where(
-            BillingTenantAddonTable.tenant_addon_id == tenant_addon_id,
-            BillingTenantAddonTable.tenant_id == tenant_id,
-        )
-        fetch_result = await self.db.execute(fetch_stmt)
-        tenant_addon_row = fetch_result.scalar_one_or_none()
-        existing_metadata = tenant_addon_row.metadata_json if tenant_addon_row else {}
-
         cancellation_metadata = {
-            **(existing_metadata or {}),
+            **existing_metadata,
             "cancellation": {
                 "canceled_by": canceled_by_user_id,
                 "canceled_at": now.isoformat(),
@@ -1074,8 +1123,8 @@ class AddonService:
             BillingTenantAddonTable.tenant_id == tenant_id,
         )
         fetch_result = await self.db.execute(fetch_stmt)
-        tenant_addon_row = fetch_result.scalar_one_or_none()
-        existing_metadata = tenant_addon_row.metadata_json if tenant_addon_row else {}
+        tenant_addon_row = await self._resolve(fetch_result.scalar_one_or_none())
+        existing_metadata = dict((tenant_addon_row.metadata_json or {}) if tenant_addon_row else {})
 
         reactivation_metadata = {
             **(existing_metadata or {}),

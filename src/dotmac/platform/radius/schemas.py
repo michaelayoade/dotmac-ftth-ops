@@ -251,12 +251,28 @@ class RADIUSUsageResponse(BaseModel):
     username: str
     total_sessions: int
     total_session_time: int  # Total seconds
-    total_input_octets: int  # Total bytes downloaded
-    total_output_octets: int  # Total bytes uploaded
+    total_download_bytes: int  # Total bytes downloaded
+    total_upload_bytes: int  # Total bytes uploaded
     total_bytes: int  # Total bytes transferred
     active_sessions: int
     last_session_start: datetime | None = None
     last_session_stop: datetime | None = None
+
+    @property
+    def total_input_octets(self) -> int:
+        """Backward compatibility alias for download bytes.
+
+        RADIUS traditionally uses 'input' from the NAS perspective (data sent TO user).
+        """
+        return self.total_download_bytes
+
+    @property
+    def total_output_octets(self) -> int:
+        """Backward compatibility alias for upload bytes.
+
+        RADIUS traditionally uses 'output' from the NAS perspective (data sent FROM user).
+        """
+        return self.total_upload_bytes
 
 
 class RADIUSUsageQuery(BaseModel):
@@ -320,6 +336,7 @@ class NASResponse(BaseModel):
     nasname: str
     shortname: str
     type: str
+    secret: str
     ports: int | None = None
     community: str | None = None
     description: str | None = None

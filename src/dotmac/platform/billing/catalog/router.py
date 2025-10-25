@@ -4,18 +4,33 @@ Product catalog API router.
 Provides REST endpoints for managing products and categories.
 """
 
+import inspect
+import string
+from uuid import UUID
+
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth import dependencies as auth_dependencies
+from dotmac.platform.auth.core import (
+    HTTPAuthorizationCredentials,
+    UserInfo,
+    api_key_header,
+    bearer_scheme,
+    oauth2_scheme,
+)
+from dotmac.platform.auth.rbac_dependencies import (
+    require_permission,
+    require_permissions,
+)
 from dotmac.platform.billing.catalog.models import (
     ProductCategoryCreateRequest,
     ProductCategoryResponse,
     ProductCreateRequest,
     ProductFilters,
+    ProductPriceUpdateRequest,
     ProductResponse,
     ProductType,
     ProductUpdateRequest,
@@ -28,29 +43,102 @@ from dotmac.platform.billing.exceptions import (
     ProductNotFoundError,
 )
 from dotmac.platform.db import get_async_session
-from dotmac.platform.tenant import get_current_tenant_id
+from dotmac.platform import tenant as tenant_ctx
 
 logger = structlog.get_logger(__name__)
 
+
+async def _get_current_user_dependency(
+    request: Request,
+    token: str | None = Depends(oauth2_scheme),
+    api_key: str | None = Depends(api_key_header),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+) -> UserInfo:
+    """Resolve current user while respecting runtime overrides and patches."""
+
+    # FastAPI supports overriding dependencies via app.dependency_overrides.
+    # Honor those overrides first to keep tests simple.
+    override = request.app.dependency_overrides.get(auth_dependencies.get_current_user)
+    if override is not None:
+        value = override()
+        if inspect.isawaitable(value):
+            value = await value
+        return value
+
+    dependency = getattr(auth_dependencies, "get_current_user")
+    return await dependency(
+        request=request,
+        token=token,
+        api_key=api_key,
+        credentials=credentials,
+    )
+
+
+async def _get_current_tenant_dependency(request: Request) -> str:
+    """Resolve tenant from context while allowing runtime overrides."""
+
+    override = request.app.dependency_overrides.get(tenant_ctx.get_current_tenant_id)
+    if override is not None:
+        tenant_id = override()
+        if inspect.isawaitable(tenant_id):
+            tenant_id = await tenant_id
+    else:
+        # Access attribute dynamically so that monkeypatching works.
+        tenant_id = tenant_ctx.get_current_tenant_id()
+
+    if tenant_id:
+        return tenant_id
+
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Tenant context missing",
+    )
+
+
+def _validate_product_identifier(product_id: str) -> None:
+    """Validate product identifier format (generated prod_ IDs or UUID strings)."""
+
+    if product_id.startswith("prod_"):
+        suffix = product_id[5:]
+        if len(suffix) == 12 and all(ch in string.hexdigits for ch in suffix):
+            return
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid product_id format",
+        )
+
+    try:
+        UUID(product_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Invalid product_id format",
+        ) from exc
+
+
 router = APIRouter(
     tags=["Billing - Catalog"],
-    dependencies=[Depends(get_current_user)],  # All endpoints require authentication
+    dependencies=[Depends(_get_current_user_dependency)],  # All endpoints require authentication
 )
 
 
 @router.post(
-    "/categories", response_model=ProductCategoryResponse, status_code=status.HTTP_201_CREATED
+    "/categories",
+    response_model=ProductCategoryResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("billing:catalog:write"))],
 )
 async def create_product_category(
     category_data: ProductCategoryCreateRequest,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(_get_current_user_dependency),
 ) -> ProductCategoryResponse:
     """
     Create a new product category.
 
-    Requires authentication. Categories are tenant-isolated.
+    Requires authentication and billing:catalog:write permission.
+    Categories are tenant-isolated.
     """
 
     service = ProductService(db_session)
@@ -83,7 +171,7 @@ async def create_product_category(
 
 @router.get("/categories", response_model=list[ProductCategoryResponse])
 async def list_product_categories(
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> list[ProductCategoryResponse]:
     """
@@ -113,7 +201,7 @@ async def list_product_categories(
 @router.get("/categories/{category_id}", response_model=ProductCategoryResponse)
 async def get_product_category(
     category_id: str,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> ProductCategoryResponse:
     """Get a specific product category by ID."""
@@ -138,16 +226,22 @@ async def get_product_category(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.post("/products", response_model=ProductResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/products",
+    response_model=ProductResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("billing:catalog:write"))],
+)
 async def create_product(
     product_data: ProductCreateRequest,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(_get_current_user_dependency),
 ) -> ProductResponse:
     """
     Create a new product.
 
+    Requires authentication and billing:catalog:write permission.
     SKUs must be unique within the tenant. Usage-based products require usage_type.
     """
 
@@ -198,7 +292,7 @@ async def list_products(
     search: str | None = Query(None, description="Search in name, description, or SKU"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(50, ge=1, le=100, description="Items per page"),
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> list[ProductResponse]:
     """
@@ -245,7 +339,7 @@ async def list_products(
 
 @router.get("/products/usage-based", response_model=list[ProductResponse])
 async def list_usage_products(
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> list[ProductResponse]:
     """
@@ -284,10 +378,12 @@ async def list_usage_products(
 @router.get("/products/{product_id}", response_model=ProductResponse)
 async def get_product(
     product_id: str,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> ProductResponse:
     """Get a specific product by ID."""
+
+    _validate_product_identifier(product_id)
 
     service = ProductService(db_session)
 
@@ -317,19 +413,26 @@ async def get_product(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
-@router.put("/products/{product_id}", response_model=ProductResponse)
+@router.put(
+    "/products/{product_id}",
+    response_model=ProductResponse,
+    dependencies=[Depends(require_permission("billing:catalog:write"))],
+)
 async def update_product(
     product_id: str,
     updates: ProductUpdateRequest,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(_get_current_user_dependency),
 ) -> ProductResponse:
     """
     Update a product.
 
+    Requires authentication and billing:catalog:write permission.
     Only provided fields will be updated. Product type and usage type cannot be changed.
     """
+
+    _validate_product_identifier(product_id)
 
     service = ProductService(db_session)
 
@@ -369,36 +472,37 @@ async def update_product(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.patch("/products/{product_id}/price")
+@router.patch(
+    "/products/{product_id}/price",
+    dependencies=[Depends(require_permission("billing:catalog:write"))],
+)
 async def update_product_price(
     product_id: str,
-    new_price: float = Query(..., ge=0, description="New price in major units (e.g., dollars)"),
-    tenant_id: str = Depends(get_current_tenant_id),
+    payload: ProductPriceUpdateRequest,
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(_get_current_user_dependency),
 ) -> JSONResponse:
     """
     Update product price.
 
+    Requires authentication and billing:catalog:write permission.
     Simple price update endpoint for quick price changes.
     Price should be provided in major currency units (e.g., dollars, not cents).
     """
 
+    _validate_product_identifier(product_id)
+
     service = ProductService(db_session)
 
     try:
-        from decimal import Decimal
-
-        # Convert to minor units (cents) for storage
-        price_minor_units = Decimal(str(new_price)) * 100
-
-        product = await service.update_price(product_id, price_minor_units, tenant_id)
+        product = await service.update_price(product_id, payload.new_price, tenant_id)
 
         logger.info(
             "Product price updated",
             product_id=product.product_id,
             sku=product.sku,
-            new_price=str(new_price),
+            new_price=str(payload.new_price),
             user_id=current_user.user_id,
             tenant_id=tenant_id,
         )
@@ -409,7 +513,7 @@ async def update_product_price(
                 "message": "Price updated successfully",
                 "product_id": product.product_id,
                 "sku": product.sku,
-                "new_price": float(new_price),
+                "new_price": float(payload.new_price),
                 "currency": product.currency,
             },
         )
@@ -422,19 +526,25 @@ async def update_product_price(
         )
 
 
-@router.delete("/products/{product_id}")
+@router.delete(
+    "/products/{product_id}",
+    dependencies=[Depends(require_permission("billing:catalog:write"))],
+)
 async def deactivate_product(
     product_id: str,
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
-    current_user: UserInfo = Depends(get_current_user),
-) -> JSONResponse:
+    current_user: UserInfo = Depends(_get_current_user_dependency),
+) -> Response:
     """
     Deactivate a product (soft delete).
 
+    Requires authentication and billing:catalog:write permission.
     Products are not physically deleted but marked as inactive.
     This preserves data integrity for existing invoices and subscriptions.
     """
+
+    _validate_product_identifier(product_id)
 
     service = ProductService(db_session)
 
@@ -449,14 +559,7 @@ async def deactivate_product(
             tenant_id=tenant_id,
         )
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "message": "Product deactivated successfully",
-                "product_id": product.product_id,
-                "sku": product.sku,
-            },
-        )
+        return Response(status_code=status.HTTP_204_NO_CONTENT)
 
     except ProductNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -466,7 +569,7 @@ async def deactivate_product(
 async def list_products_by_category(
     category: str,
     active_only: bool = Query(True, description="Only return active products"),
-    tenant_id: str = Depends(get_current_tenant_id),
+    tenant_id: str = Depends(_get_current_tenant_dependency),
     db_session: AsyncSession = Depends(get_async_session),
 ) -> list[ProductResponse]:
     """Get all products in a specific category."""

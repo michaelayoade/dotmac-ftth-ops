@@ -172,7 +172,7 @@ async def handle_job_ws_authenticated(
         async with async_session_maker() as db:
             query = select(Job).where(
                 and_(
-                    Job.job_id == job_id,
+                    Job.id == job_id,
                     Job.tenant_id == user_info.tenant_id,
                 )
             )
@@ -380,7 +380,7 @@ async def handle_campaign_ws_authenticated(
             user_info,
             resource_type="campaign",
             resource_id=campaign_id,
-            required_permissions=["campaigns.read"],
+            required_permissions=["campaigns.read", "firmware.campaigns.read"],
         )
 
         # Create authenticated connection

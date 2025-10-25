@@ -1,24 +1,19 @@
 """
-Integration tests for customer service lifecycle endpoints.
+Integration tests for customer service lifecycle event helpers.
 
-Tests full request/response cycle for lifecycle event handlers in the router.
+These tests exercise the lifecycle handler logic in isolation with patched
+dependencies to avoid touching real infrastructure components.
 """
 
 import pytest
 from datetime import UTC, datetime
-from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from uuid import UUID, uuid4
 
-from dotmac.platform.main import app
 from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 from dotmac.platform.billing.models import BillingSubscriptionTable
-
-
-@pytest.fixture
-def client():
-    """Create test client."""
-    return TestClient(app)
+from dotmac.platform.customer_management.models import CustomerStatus
+from dotmac.platform.customer_management.router import _handle_status_lifecycle_events
 
 
 @pytest.fixture
@@ -43,7 +38,7 @@ def mock_event_bus():
 def sample_customer_data():
     """Sample customer data."""
     return {
-        "customer_id": "cust_123",
+        "customer_id": str(uuid4()),
         "tenant_id": "test_tenant",
         "email": "customer@example.com",
         "name": "Test Customer",
@@ -51,13 +46,23 @@ def sample_customer_data():
     }
 
 
+@pytest.fixture(autouse=True)
+def reset_event_bus_state():
+    """Ensure the global event bus cache does not leak between tests."""
+    from dotmac.platform.events.bus import reset_event_bus
+
+    reset_event_bus()
+    yield
+    reset_event_bus()
+
+
 class TestServiceSuspensionEndpoint:
     """Test service suspension via customer status change webhook."""
 
     @pytest.mark.asyncio
     async def test_suspend_customer_via_status_change(
-        self, client, mock_db_session, mock_event_bus, sample_customer_data
-    ):
+        self, mock_db_session, mock_event_bus, sample_customer_data
+    ) -> None:
         """Test suspending customer via status change webhook."""
         # This would be triggered by a status change webhook
         # In the actual router, this happens in the status change handler
@@ -86,12 +91,17 @@ class TestServiceSuspensionEndpoint:
         mock_result.scalars.return_value.all.return_value = [active_subscription]
         mock_db_session.execute.return_value = mock_result
 
-        with patch("dotmac.platform.customer_management.router.get_async_db") as mock_get_db:
-            mock_get_db.return_value.__aenter__.return_value = mock_db_session
-            with patch("dotmac.platform.customer_management.router.get_event_bus", return_value=mock_event_bus):
-                # In actual implementation, this would be part of the router's
-                # handle_customer_status_change function
-                pass
+        with patch(
+            "dotmac.platform.events.bus.get_event_bus",
+            return_value=mock_event_bus,
+        ):
+            await _handle_status_lifecycle_events(
+                customer_id=UUID(status_change_payload["customer_id"]),
+                old_status=status_change_payload["old_status"],
+                new_status=status_change_payload["new_status"],
+                customer_email="customer@example.com",
+                session=mock_db_session,
+            )
 
         # Assertions would verify:
         # 1. Subscription status updated to PAUSED
@@ -103,7 +113,7 @@ class TestServiceSuspensionEndpoint:
         self, mock_db_session, mock_event_bus
     ):
         """Test suspending customer with multiple active subscriptions."""
-        customer_id = "cust_multi"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Mock multiple subscriptions
@@ -146,7 +156,7 @@ class TestServiceReactivationEndpoint:
         self, mock_db_session, mock_event_bus
     ):
         """Test reactivating suspended customer via status change webhook."""
-        customer_id = "cust_suspended"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         status_change_payload = {
@@ -179,15 +189,24 @@ class TestServiceReactivationEndpoint:
         mock_result.scalars.return_value.all.return_value = [suspended_subscription]
         mock_db_session.execute.return_value = mock_result
 
-        # Subscription should be restored to ACTIVE status
-        # Suspension metadata should be removed
+        with patch(
+            "dotmac.platform.events.bus.get_event_bus",
+            return_value=mock_event_bus,
+        ):
+            await _handle_status_lifecycle_events(
+                customer_id=UUID(status_change_payload["customer_id"]),
+                old_status=status_change_payload["old_status"],
+                new_status=status_change_payload["new_status"],
+                customer_email="customer@example.com",
+                session=mock_db_session,
+            )
 
     @pytest.mark.asyncio
     async def test_reactivate_restores_original_status(
         self, mock_db_session, mock_event_bus
     ):
         """Test that reactivation restores the original subscription status."""
-        customer_id = "cust_trial"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Subscription was TRIALING before suspension
@@ -223,7 +242,7 @@ class TestChurnHandlingEndpoint:
         self, mock_db_session, mock_event_bus
     ):
         """Test churning customer via status change webhook."""
-        customer_id = "cust_churn"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         status_change_payload = {
@@ -263,7 +282,7 @@ class TestChurnHandlingEndpoint:
         mock_subscription_service = AsyncMock(spec=SubscriptionService)
         mock_subscription_service.cancel_subscription = AsyncMock()
 
-        customer_id = "cust_churn"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         active_subscription = BillingSubscriptionTable(
@@ -277,18 +296,25 @@ class TestChurnHandlingEndpoint:
             metadata_json={},
         )
 
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = [active_subscription]
+        mock_db_session.execute.return_value = mock_result
+
         with patch(
-            "dotmac.platform.customer_management.router.SubscriptionService",
+            "dotmac.platform.billing.subscriptions.service.SubscriptionService",
             return_value=mock_subscription_service,
+        ), patch(
+            "dotmac.platform.events.bus.get_event_bus",
+            return_value=mock_event_bus,
         ):
-            await mock_subscription_service.cancel_subscription(
-                subscription_id=active_subscription.subscription_id,
-                tenant_id=tenant_id,
-                cancel_immediately=False,
-                reason="Customer churned - status changed to CHURNED",
+            await _handle_status_lifecycle_events(
+                customer_id=UUID(customer_id),
+                old_status=CustomerStatus.ACTIVE.value,
+                new_status=CustomerStatus.CHURNED.value,
+                customer_email="customer@example.com",
+                session=mock_db_session,
             )
 
-        # Verify cancel_immediately=False
         call_kwargs = mock_subscription_service.cancel_subscription.call_args.kwargs
         assert call_kwargs["cancel_immediately"] is False
 
@@ -297,7 +323,7 @@ class TestChurnHandlingEndpoint:
         self, mock_db_session, mock_event_bus
     ):
         """Test that churn handling continues even if one subscription fails."""
-        customer_id = "cust_error"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Mock multiple subscriptions, one will fail
@@ -340,7 +366,7 @@ class TestEndToEndLifecycleWorkflow:
         self, mock_db_session, mock_event_bus
     ):
         """Test complete workflow: active -> suspend -> reactivate."""
-        customer_id = "cust_lifecycle"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Step 1: Customer is ACTIVE with subscription
@@ -368,7 +394,7 @@ class TestEndToEndLifecycleWorkflow:
         self, mock_db_session, mock_event_bus
     ):
         """Test complete workflow: active -> churned."""
-        customer_id = "cust_churn_lifecycle"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Step 1: Customer is ACTIVE with subscription
@@ -388,7 +414,7 @@ class TestEventDrivenWorkflow:
         self, mock_event_bus
     ):
         """Test that suspension triggers expected downstream events."""
-        customer_id = "cust_event"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Suspension should trigger:
@@ -413,7 +439,7 @@ class TestEventDrivenWorkflow:
         self, mock_event_bus
     ):
         """Test that churn publishes analytics data."""
-        customer_id = "cust_analytics"
+        customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         churn_event_data = {

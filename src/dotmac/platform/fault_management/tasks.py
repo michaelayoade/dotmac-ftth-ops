@@ -10,7 +10,7 @@ from uuid import UUID
 
 import structlog
 from celery import shared_task
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -23,6 +23,7 @@ from dotmac.platform.fault_management.models import (
     AlarmStatus,
     MaintenanceWindow,
     SLAInstance,
+    SLAStatus,
 )
 from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
@@ -379,7 +380,9 @@ def check_sla_compliance() -> dict[str, Any]:
                 # Check for breaches
                 await service._check_availability_breach(instance)
 
-                if instance.status != "compliant":
+                status = instance.status
+                status_value = status.value if isinstance(status, SLAStatus) else str(status)
+                if status_value != SLAStatus.COMPLIANT.value:
                     breaches_detected += 1
 
             await session.commit()

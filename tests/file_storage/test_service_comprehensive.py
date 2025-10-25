@@ -648,10 +648,22 @@ class TestLocalFileStorageEdgeCases:
 class TestMinIOFileStorageEdgeCases:
     """Test edge cases in MinIOFileStorage."""
 
+    @staticmethod
+    def _create_minio_mock() -> Mock:
+        """Create a MinIO client mock with metadata helpers."""
+        client = Mock()
+        client.client = Mock()
+        client.client.list_objects.return_value = []
+        client.copy_file = Mock()
+        client.delete_file = Mock(return_value=True)
+        client.get_file = Mock()
+        client.save_file = Mock(return_value="object")
+        return client
+
     @pytest.mark.asyncio
     async def test_retrieve_file_not_found_in_minio(self):
         """Test retrieving file that doesn't exist in MinIO."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.get_file.side_effect = FileNotFoundError("File not found")
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -675,7 +687,12 @@ class TestMinIOFileStorageEdgeCases:
     @pytest.mark.asyncio
     async def test_retrieve_file_no_metadata(self):
         """Test retrieving file when metadata doesn't exist."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
+
+        def _get_file(*_, **__):  # noqa: D401
+            raise FileNotFoundError("File not found")
+
+        mock_client.get_file.side_effect = _get_file
         storage = MinIOFileStorage(minio_client=mock_client)
 
         data, metadata = await storage.retrieve("nonexistent-id")
@@ -686,7 +703,14 @@ class TestMinIOFileStorageEdgeCases:
     @pytest.mark.asyncio
     async def test_delete_file_no_metadata(self):
         """Test deleting file when metadata doesn't exist."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
+
+        def _get_file(*_, **__):  # noqa: D401
+            raise FileNotFoundError("File not found")
+
+        mock_client.get_file.side_effect = _get_file
+        mock_client.delete_file.return_value = True
+
         storage = MinIOFileStorage(minio_client=mock_client)
 
         result = await storage.delete("nonexistent-id")
@@ -698,7 +722,7 @@ class TestMinIOFileStorageEdgeCases:
         """Test deleting file with custom path."""
         import uuid
 
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.delete_file.return_value = True
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -722,12 +746,12 @@ class TestMinIOFileStorageEdgeCases:
 
         assert result is True
         assert file_id not in storage.metadata_store
-        mock_client.delete_file.assert_called_once()
+        assert mock_client.delete_file.call_count == 2
 
     @pytest.mark.asyncio
     async def test_list_files_with_filters(self):
         """Test listing files with tenant and path filters."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         storage = MinIOFileStorage(minio_client=mock_client)
 
         # Add multiple files with default tenant
@@ -759,7 +783,13 @@ class TestMinIOFileStorageEdgeCases:
     @pytest.mark.asyncio
     async def test_get_metadata_not_found(self):
         """Test getting metadata for nonexistent file."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
+
+        def _get_file(*_, **__):  # noqa: D401
+            raise FileNotFoundError("File not found")
+
+        mock_client.get_file.side_effect = _get_file
+
         storage = MinIOFileStorage(minio_client=mock_client)
 
         metadata = await storage.get_metadata("nonexistent")
@@ -768,7 +798,7 @@ class TestMinIOFileStorageEdgeCases:
     @pytest.mark.asyncio
     async def test_store_file_with_path(self):
         """Test storing file with custom path."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.save_file.return_value = "stored-object-name"
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -796,7 +826,7 @@ class TestMinIOFileStorageEdgeCases:
     @pytest.mark.asyncio
     async def test_store_file_without_path(self):
         """Test storing file without custom path."""
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.save_file.return_value = "stored-object-name"
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -818,7 +848,7 @@ class TestMinIOFileStorageEdgeCases:
         """Test retrieving file with custom path."""
         import uuid
 
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.get_file.return_value = b"Retrieved data"
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -849,7 +879,7 @@ class TestMinIOFileStorageEdgeCases:
         """Test retrieving file without custom path."""
         import uuid
 
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.get_file.return_value = b"Retrieved data"
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -878,7 +908,7 @@ class TestMinIOFileStorageEdgeCases:
         """Test deleting file without custom path."""
         import uuid
 
-        mock_client = Mock()
+        mock_client = self._create_minio_mock()
         mock_client.delete_file.return_value = True
 
         storage = MinIOFileStorage(minio_client=mock_client)
@@ -901,7 +931,7 @@ class TestMinIOFileStorageEdgeCases:
 
         assert result is True
         assert file_id not in storage.metadata_store
-        mock_client.delete_file.assert_called_once()
+        assert mock_client.delete_file.call_count == 2
 
 
 class TestFileStorageServiceMinio:
@@ -925,8 +955,8 @@ class TestFileStorageServiceMinio:
 
             service = FileStorageService(backend=StorageBackend.S3)
 
-            # Should use MinIOFileStorage for S3
-            assert service.backend_type == StorageBackend.S3
+            # Should use MinIOFileStorage for S3 (alias)
+            assert service.backend_type == StorageBackend.MINIO
 
 
 class TestFileStorageServiceMetadataUpdate:
@@ -1004,8 +1034,8 @@ class TestGetStorageService:
 
             get_storage_service()
 
-            # Should initialize with MINIO backend
-            mock_service.assert_called_once_with(backend=StorageBackend.MINIO)
+            # Should initialize with default backend (resolved via factory)
+            mock_service.assert_called_once_with()
 
     def test_get_storage_service_cached(self):
         """Test storage service is cached."""

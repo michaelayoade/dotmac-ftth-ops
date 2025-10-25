@@ -10,6 +10,7 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PaymentMethodError
 from dotmac.platform.billing.payment_methods.models import (
+    CardBrand,
     PaymentMethodResponse,
     PaymentMethodStatus,
     PaymentMethodType,
@@ -392,3 +393,47 @@ class TestRemovePaymentMethod:
                     tenant_id="tenant-123",
                     removed_by_user_id="user-123",
                 )
+
+
+class TestPaymentMethodBrandParsing:
+    """Ensure card brand parsing is resilient."""
+
+    def test_card_brand_normalization(self, mock_db_session):
+        """Uppercase provider responses should map to enum values."""
+        from tests.billing.payment_methods.conftest import create_payment_method_orm
+
+        service = PaymentMethodService(mock_db_session)
+        pm = create_payment_method_orm(
+            details={
+                "last4": "1111",
+                "brand": "VISA",
+                "exp_month": 5,
+                "exp_year": 2030,
+                "billing_name": "Case Normalize",
+                "billing_email": "case@example.com",
+                "billing_country": "US",
+            }
+        )
+
+        response = service._orm_to_response(pm)
+        assert response.card_brand == CardBrand.VISA
+
+    def test_unknown_card_brand_maps_to_unknown(self, mock_db_session):
+        """Unexpected brands should not crash and return UNKNOWN."""
+        from tests.billing.payment_methods.conftest import create_payment_method_orm
+
+        service = PaymentMethodService(mock_db_session)
+        pm = create_payment_method_orm(
+            details={
+                "last4": "2222",
+                "brand": "Verve",
+                "exp_month": 6,
+                "exp_year": 2031,
+                "billing_name": "Unknown Brand",
+                "billing_email": "unknown@example.com",
+                "billing_country": "NG",
+            }
+        )
+
+        response = service._orm_to_response(pm)
+        assert response.card_brand == CardBrand.UNKNOWN

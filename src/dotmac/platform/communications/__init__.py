@@ -12,6 +12,10 @@ from .email_service import (
     get_email_service,
     send_email,
 )
+from .plugins import (
+    register_plugin as register_email_plugin,
+    list_plugins as list_email_plugins,
+)
 from .router import router
 from .task_service import (
     BulkEmailJob,
@@ -32,7 +36,9 @@ from .template_service import (
 )
 
 # Version info
-__version__ = "2.0.0-simplified"
+from ..version import get_version
+
+__version__ = get_version()
 
 # Public API
 __all__ = [
@@ -42,6 +48,9 @@ __all__ = [
     "EmailService",
     "get_email_service",
     "send_email",
+    # Plugin helpers
+    "register_email_plugin",
+    "list_email_plugins",
     # Templates
     "TemplateData",
     "RenderedTemplate",

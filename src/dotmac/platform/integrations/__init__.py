@@ -543,6 +543,7 @@ class IntegrationRegistry:
         self._integrations: dict[str, BaseIntegration] = {}
         self._configs: dict[str, IntegrationConfig] = {}
         self._providers: dict[str, type[BaseIntegration]] = {}
+        self._integration_errors: dict[str, str] = {}
         self._register_default_providers()
 
     def _register_default_providers(self) -> None:
@@ -631,6 +632,9 @@ class IntegrationRegistry:
             logger.info("Skipping disabled integration", integration=config.name)
             return
 
+        self._configs[config.name] = config
+        self._integration_errors.pop(config.name, None)
+
         provider_key = f"{config.type.value if isinstance(config.type, Enum) else config.type}:{config.provider}"
         provider_class = self._providers.get(provider_key)
 
@@ -640,6 +644,9 @@ class IntegrationRegistry:
                 type=config.type,
                 provider=config.provider,
                 available_providers=list(self._providers.keys()),
+            )
+            self._integration_errors[config.name] = (
+                f"Provider '{config.provider}' not registered. See server logs for details."
             )
             return
 
@@ -658,10 +665,17 @@ class IntegrationRegistry:
 
         except Exception as e:
             logger.error("Failed to register integration", integration=config.name, error=str(e))
+            self._integration_errors[config.name] = (
+                f"{e.__class__.__name__} during initialization. See server logs for details."
+            )
 
     def get_integration(self, name: str) -> BaseIntegration | None:
         """Get an integration by name."""
         return self._integrations.get(name)
+
+    def get_integration_error(self, name: str) -> str | None:
+        """Get the last initialization error for an integration."""
+        return self._integration_errors.get(name)
 
     async def health_check_all(self) -> dict[str, IntegrationHealth]:
         """Check health of all integrations."""
@@ -675,7 +689,9 @@ class IntegrationRegistry:
                 results[name] = IntegrationHealth(
                     name=name,
                     status=IntegrationStatus.ERROR,
-                    message=f"Health check failed: {str(e)}",
+                    message=(
+                        f"Health check failed ({e.__class__.__name__}). See server logs for details."
+                    ),
                 )
 
         return results

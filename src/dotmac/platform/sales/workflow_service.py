@@ -83,6 +83,9 @@ class SalesService:
         existing_order = existing_result.scalar_one_or_none()
 
         if existing_order:
+            if tenant_id and not existing_order.tenant_id:
+                existing_order.tenant_id = tenant_id
+                await self.db.flush()
             logger.info(f"Order already exists for quote {quote_id}: {existing_order.order_number}")
             return {
                 "order_id": existing_order.id,
@@ -114,6 +117,7 @@ class SalesService:
             external_order_id=str(quote.id),
             source="quote",
             notes=f"Order created from quote {quote.quote_number}",
+            tenant_id=tenant_id,
         )
 
         self.db.add(order)

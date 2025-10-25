@@ -6,6 +6,7 @@ import json
 from abc import ABC, abstractmethod
 from typing import Any, cast
 
+import anyio
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -138,13 +139,15 @@ class StripePaymentProvider(PaymentProvider):
         """Charge a payment method using Stripe"""
 
         try:
-            # Create payment intent and confirm
-            intent = self.stripe.PaymentIntent.create(
-                amount=amount,
-                currency=currency.lower(),
-                payment_method=payment_method_id,
-                confirm=True,
-                metadata=metadata or {},
+            # Create payment intent and confirm (run in thread to avoid blocking event loop)
+            intent = await anyio.to_thread.run_sync(
+                lambda: self.stripe.PaymentIntent.create(
+                    amount=amount,
+                    currency=currency.lower(),
+                    payment_method=payment_method_id,
+                    confirm=True,
+                    metadata=metadata or {},
+                )
             )
 
             if intent.status == "succeeded":
@@ -191,10 +194,13 @@ class StripePaymentProvider(PaymentProvider):
         """Refund a Stripe payment"""
 
         try:
-            refund = self.stripe.Refund.create(
-                payment_intent=provider_payment_id,
-                amount=amount,
-                reason=reason or "requested_by_customer",
+            # Run blocking Stripe call in thread
+            refund = await anyio.to_thread.run_sync(
+                lambda: self.stripe.Refund.create(
+                    payment_intent=provider_payment_id,
+                    amount=amount,
+                    reason=reason or "requested_by_customer",
+                )
             )
 
             return RefundResult(
@@ -221,9 +227,12 @@ class StripePaymentProvider(PaymentProvider):
     ) -> SetupIntent:
         """Create Stripe setup intent"""
 
-        intent = self.stripe.SetupIntent.create(
-            customer=customer_id,
-            payment_method_types=payment_method_types or ["card"],
+        # Run blocking Stripe call in thread
+        intent = await anyio.to_thread.run_sync(
+            lambda: self.stripe.SetupIntent.create(
+                customer=customer_id,
+                payment_method_types=payment_method_types or ["card"],
+            )
         )
 
         return SetupIntent(
@@ -241,15 +250,21 @@ class StripePaymentProvider(PaymentProvider):
     ) -> dict[str, Any]:
         """Create a Stripe payment method"""
 
-        payment_method = self.stripe.PaymentMethod.create(
-            type=type,
-            **details,
+        # Run blocking Stripe call in thread
+        payment_method = await anyio.to_thread.run_sync(
+            lambda: self.stripe.PaymentMethod.create(
+                type=type,
+                **details,
+            )
         )
 
         if customer_id:
-            payment_method = self.stripe.PaymentMethod.attach(
-                payment_method.id,
-                customer=customer_id,
+            # Run blocking Stripe call in thread
+            payment_method = await anyio.to_thread.run_sync(
+                lambda: self.stripe.PaymentMethod.attach(
+                    payment_method.id,
+                    customer=customer_id,
+                )
             )
 
         return {
@@ -270,9 +285,12 @@ class StripePaymentProvider(PaymentProvider):
     ) -> dict[str, Any]:
         """Attach Stripe payment method to customer"""
 
-        payment_method = self.stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=customer_id,
+        # Run blocking Stripe call in thread
+        payment_method = await anyio.to_thread.run_sync(
+            lambda: self.stripe.PaymentMethod.attach(
+                payment_method_id,
+                customer=customer_id,
+            )
         )
 
         return {
@@ -287,7 +305,10 @@ class StripePaymentProvider(PaymentProvider):
         """Detach Stripe payment method"""
 
         try:
-            self.stripe.PaymentMethod.detach(payment_method_id)
+            # Run blocking Stripe call in thread
+            await anyio.to_thread.run_sync(
+                lambda: self.stripe.PaymentMethod.detach(payment_method_id)
+            )
             return True
         except Exception:
             return False
@@ -305,10 +326,13 @@ class StripePaymentProvider(PaymentProvider):
         try:
             payload = json.dumps(webhook_data)
             signature_header = signature or ""
-            event = self.stripe.Webhook.construct_event(
-                payload,
-                signature_header,
-                self.webhook_secret,
+            # Run blocking Stripe call in thread
+            event = await anyio.to_thread.run_sync(
+                lambda: self.stripe.Webhook.construct_event(
+                    payload,
+                    signature_header,
+                    self.webhook_secret,
+                )
             )
 
             # Handle different event types

@@ -424,6 +424,19 @@ class DeviceTypeSummary:
 
 
 @strawberry.type
+class DataSourceStatus:
+    """Status of upstream monitoring data sources."""
+
+    name: str
+    status: str
+
+    @classmethod
+    def from_dict(cls, entry: tuple[str, str]) -> "DataSourceStatus":
+        name, status = entry
+        return cls(name=name, status=status)
+
+
+@strawberry.type
 class NetworkOverview:
     """Network monitoring overview/dashboard."""
 
@@ -453,6 +466,7 @@ class NetworkOverview:
     # Recent events
     recent_offline_devices: list[str]
     recent_alerts: list[NetworkAlert] = strawberry.field(default_factory=list)
+    data_source_status: list[DataSourceStatus] = strawberry.field(default_factory=list)
 
     # Computed properties
     uptime_percentage: float
@@ -474,6 +488,19 @@ class NetworkOverview:
         if hasattr(overview, 'recent_alerts') and overview.recent_alerts:
             recent_alerts = [NetworkAlert.from_model(a) for a in overview.recent_alerts]
 
+        data_source_status = []
+        if hasattr(overview, 'data_source_status') and overview.data_source_status:
+            raw_status = overview.data_source_status
+            if isinstance(raw_status, dict):
+                iterator = raw_status.items()
+            else:
+                iterator = list(raw_status)
+            data_source_status = [
+                DataSourceStatus.from_dict(item)
+                for item in iterator
+                if isinstance(item, (tuple, list)) and len(item) == 2
+            ]
+
         return cls(
             tenant_id=overview.tenant_id,
             timestamp=overview.timestamp,
@@ -491,6 +518,7 @@ class NetworkOverview:
             device_type_summary=device_type_summary,
             recent_offline_devices=overview.recent_offline_devices or [],
             recent_alerts=recent_alerts,
+            data_source_status=data_source_status,
             uptime_percentage=round(uptime_percentage, 2),
             total_bandwidth_gbps=round(total_bandwidth_gbps, 4),
         )

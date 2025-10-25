@@ -6,6 +6,7 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from dotmac.platform.version import get_version
 from dotmac.platform.main import (
     app,
     create_application,
@@ -22,7 +23,7 @@ class TestCreateApplication:
 
         assert isinstance(test_app, FastAPI)
         assert test_app.title == "DotMac Platform Services"
-        assert test_app.version == "1.0.0"
+        assert test_app.version == get_version()
         assert test_app.docs_url == "/docs"
         assert test_app.redoc_url == "/redoc"
 
@@ -397,7 +398,7 @@ class TestMissingCoverage:
     ):
         """Test application creation with CORS enabled (line 141->152)."""
         # Enable CORS in settings
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = get_version()
         mock_settings.environment = "development"
         mock_settings.cors.enabled = True
         mock_settings.cors.origins = ["*"]
@@ -422,7 +423,7 @@ class TestMissingCoverage:
     @patch("dotmac.platform.main.settings")
     def test_create_application_metrics_enabled(self, mock_settings):
         """Test application creation with metrics enabled (lines 210->216)."""
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = get_version()
         mock_settings.environment = "development"
         mock_settings.cors.enabled = False
         mock_settings.observability.enable_metrics = True

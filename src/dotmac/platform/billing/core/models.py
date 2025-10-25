@@ -3,6 +3,7 @@ Billing module Pydantic models with tenant support
 """
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -184,6 +185,7 @@ class Payment(BillingBaseModel):
     provider: str = Field(..., description="Payment provider (stripe, paypal, etc.)")
     provider_payment_id: str | None = None
     provider_fee: int | None = Field(None, ge=0)
+    provider_payment_data: dict[str, Any] = Field(default_factory=lambda: {})
 
     # Related entities
     invoice_ids: list[str] = Field(default_factory=lambda: [])
@@ -196,8 +198,10 @@ class Payment(BillingBaseModel):
     # Timestamps
     created_at: datetime = Field(default_factory=datetime.utcnow)
     processed_at: datetime | None = None
+    refunded_at: datetime | None = None
 
     extra_data: dict[str, Any] = Field(default_factory=lambda: {})
+    refund_amount: Decimal | None = Field(None)
 
 
 class PaymentMethod(BillingBaseModel):

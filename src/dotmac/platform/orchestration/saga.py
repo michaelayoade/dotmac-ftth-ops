@@ -65,6 +65,15 @@ class SagaOrchestrator:
         self.compensation_handlers[name] = handler
         logger.info(f"Registered compensation handler: {name}")
 
+    @property
+    def handlers(self) -> dict[str, Callable]:
+        """
+        Backwards compatible accessor for registered step handlers.
+
+        Some tests reference saga.handlers to ensure registration occurred.
+        """
+        return self.step_handlers
+
     async def execute_workflow(
         self,
         workflow: OrchestrationWorkflow,
@@ -381,6 +390,7 @@ class SagaOrchestrator:
             input_data=workflow.input_data,
             max_retries=step_def.max_retries,
             compensation_handler=step_def.compensation_handler,
+            tenant_id=workflow.tenant_id,
         )
 
         self.db.add(step)
@@ -424,4 +434,34 @@ class SagaOrchestrator:
 
         # Note: The actual retry would be triggered by the service layer
         # This just prepares the workflow for retry
+        return workflow
+
+    async def retry_workflow(self, workflow: OrchestrationWorkflow) -> OrchestrationWorkflow:
+        """
+        Backwards compatible alias for retry_failed_workflow.
+        """
+        return await self.retry_failed_workflow(workflow)
+
+    async def cancel_workflow(self, workflow: OrchestrationWorkflow) -> OrchestrationWorkflow:
+        """
+        Cancel a running workflow and trigger compensation.
+
+        Args:
+            workflow: Workflow to cancel
+
+        Returns:
+            Updated workflow model
+        """
+        if workflow.status not in [WorkflowStatus.PENDING, WorkflowStatus.RUNNING]:
+            raise ValueError(f"Cannot cancel workflow in status: {workflow.status}")
+
+        workflow.status = WorkflowStatus.ROLLING_BACK
+        self.db.commit()
+
+        await self._compensate_workflow(workflow)
+
+        workflow.status = WorkflowStatus.ROLLED_BACK
+        workflow.failed_at = datetime.utcnow()
+        self.db.commit()
+
         return workflow

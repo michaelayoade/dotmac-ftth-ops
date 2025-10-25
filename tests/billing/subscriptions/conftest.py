@@ -11,9 +11,11 @@ from fastapi import FastAPI
 
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
+    SubscriptionPlanCreateRequest,
     SubscriptionStatus,
     ProrationBehavior,
 )
+from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
 class MockObject:
@@ -203,8 +205,9 @@ async def async_client(
 ):
     """Async HTTP client with billing subscriptions router registered and dependencies mocked."""
     from dotmac.platform.billing.subscriptions.router import router as subscriptions_router
-    from dotmac.platform.auth.core import get_current_user
-    from dotmac.platform.dependencies import get_db
+    from dotmac.platform.auth.core import get_current_user as core_get_current_user
+    from dotmac.platform.auth.dependencies import get_current_user as dep_get_current_user
+    from dotmac.platform.db import get_async_session
     from dotmac.platform.tenant import get_current_tenant_id
     import dotmac.platform.auth.rbac_dependencies
 
@@ -224,8 +227,17 @@ async def async_client(
     def override_get_current_user():
         return mock_current_user
 
-    def override_get_db():
-        return MagicMock()
+    async def override_get_async_session():
+        from unittest.mock import AsyncMock
+        from sqlalchemy.ext.asyncio import AsyncSession
+
+        session = AsyncMock(spec=AsyncSession)
+        session.commit = AsyncMock()
+        session.rollback = AsyncMock()
+        session.refresh = AsyncMock()
+        session.execute = AsyncMock()
+        session.add = AsyncMock()
+        return session
 
     def override_get_tenant_id():
         return "1"
@@ -235,12 +247,48 @@ async def async_client(
     from dotmac.platform.billing.subscriptions import router as router_module
     monkeypatch.setattr(router_module, 'SubscriptionService', lambda db: mock_subscription_service)
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[core_get_current_user] = override_get_current_user
+    app.dependency_overrides[dep_get_current_user] = override_get_current_user
+    app.dependency_overrides[get_async_session] = override_get_async_session
     app.dependency_overrides[get_current_tenant_id] = override_get_tenant_id
 
-    app.include_router(subscriptions_router, prefix="/api/v1/billing/subscriptions")
+    app.include_router(subscriptions_router, prefix="/api/v1")
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         yield client
+
+
+# ---------------------------------------------------------------------------
+# Shared fixtures for service-level tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def tenant_id(test_tenant_id):
+    """Alias to reuse the tenant fixture name expected by service tests."""
+    return test_tenant_id
+
+
+@pytest.fixture
+async def subscription_service(async_session):
+    """Create a real SubscriptionService backed by the async session fixture."""
+    return SubscriptionService(async_session)
+
+
+@pytest.fixture
+def sample_plan_data() -> SubscriptionPlanCreateRequest:
+    """Sample plan payload used across plan CRUD tests."""
+    return SubscriptionPlanCreateRequest(
+        product_id="product-456",
+        name="Basic Plan",
+        description="Basic subscription plan",
+        billing_cycle=BillingCycle.MONTHLY,
+        price=Decimal("29.99"),
+        currency="USD",
+        setup_fee=Decimal("10.00"),
+        trial_days=14,
+        included_usage={"api_calls": 1000},
+        overage_rates={"api_calls": Decimal("0.01")},
+        metadata={},
+    )

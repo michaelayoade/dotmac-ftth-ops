@@ -58,6 +58,8 @@ class TestNetBoxService:
         """Test ensuring tenant when it doesn't exist"""
         mock_client = AsyncMock()
         mock_client.get_tenant_by_name = AsyncMock(return_value=None)
+        mock_client.get_tenant_by_slug = AsyncMock(return_value=None)
+        mock_client.get_tenant_by_slug = AsyncMock(return_value=None)
         mock_client.create_tenant = AsyncMock(
             return_value={"id": 1, "name": "TestTenant", "slug": "testtenant"}
         )

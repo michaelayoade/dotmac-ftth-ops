@@ -171,8 +171,8 @@ def test_client(monkeypatch):
     app.dependency_overrides[get_event_bus] = lambda: MagicMock()
 
     # Include both public and authenticated routers
-    app.include_router(public_router, prefix="/api/v1/sales/public", tags=["Sales Public"])
-    app.include_router(sales_router, prefix="/api/v1/sales", tags=["Sales"])
+    app.include_router(public_router, tags=["Sales Public"])
+    app.include_router(sales_router, prefix="/api/v1", tags=["Sales"])
 
     with TestClient(app) as client:
         # Store mocks on client for tests to access
@@ -196,7 +196,7 @@ class TestPublicAPI:
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/public",
+            "/api/public/orders",
             json={
                 "customer_email": "customer@example.com",
                 "customer_name": "John Doe",
@@ -230,7 +230,7 @@ class TestPublicAPI:
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/public/quick",
+            "/api/public/orders/quick",
             json={
                 "email": "customer@example.com",
                 "name": "John Doe",
@@ -265,7 +265,7 @@ class TestPublicAPI:
         test_client.mock_order_service.get_order_by_number.return_value = order_status  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/public/ORD-2025-001/status")
+        response = test_client.get("/api/public/orders/ORD-2025-001/status")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -282,7 +282,7 @@ class TestPublicAPI:
         test_client.mock_order_service.get_order_by_number.return_value = None  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/public/ORD-NOTFOUND/status")
+        response = test_client.get("/api/public/orders/ORD-NOTFOUND/status")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -304,7 +304,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.list_orders.return_value = [order1, order2]  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales")
+        response = test_client.get("/api/v1/orders")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -323,7 +323,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/1")
+        response = test_client.get("/api/v1/orders/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -340,7 +340,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.get_order.return_value = None  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/999")
+        response = test_client.get("/api/v1/orders/999")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -356,7 +356,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.cancel_order.return_value = cancelled_order  # type: ignore
 
         # Act
-        response = test_client.delete("/api/v1/sales/1")
+        response = test_client.delete("/api/v1/orders/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -381,7 +381,7 @@ class TestOrderWorkflow:
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/1/submit",
+            "/api/v1/orders/1/submit",
             json={"payment_method": "credit_card"}
         )
 
@@ -402,7 +402,7 @@ class TestOrderWorkflow:
         test_client.mock_order_service.process_order.return_value = order_obj  # type: ignore
 
         # Act
-        response = test_client.post("/api/v1/sales/1/process")
+        response = test_client.post("/api/v1/orders/1/process")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -422,7 +422,7 @@ class TestOrderWorkflow:
 
         # Act
         response = test_client.patch(
-            "/api/v1/sales/1/status",
+            "/api/v1/orders/1/status",
             json={"status": "active", "status_message": "All services activated"}
         )
 
@@ -465,7 +465,7 @@ class TestServiceActivations:
         test_client.mock_activation_orchestrator.get_service_activations.return_value = [activation]  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/1/activations")
+        response = test_client.get("/api/v1/orders/1/activations")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -499,7 +499,7 @@ class TestServiceActivations:
         test_client.mock_activation_orchestrator.get_activation_progress.return_value = progress_data  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/1/activations/progress")
+        response = test_client.get("/api/v1/orders/1/activations/progress")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -523,7 +523,7 @@ class TestServiceActivations:
         test_client.mock_activation_orchestrator.retry_failed_activations.return_value = result  # type: ignore
 
         # Act
-        response = test_client.post("/api/v1/sales/1/activations/retry")
+        response = test_client.post("/api/v1/orders/1/activations/retry")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -559,7 +559,7 @@ class TestOrderStatistics:
         test_client.mock_order_service.get_order_statistics.return_value = stats  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/stats/summary")
+        response = test_client.get("/api/v1/orders/stats/summary")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK

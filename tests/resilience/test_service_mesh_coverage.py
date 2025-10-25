@@ -160,19 +160,29 @@ class TestLoadBalancerPolicies:
             assert result in [endpoint1, endpoint2]
 
     @pytest.mark.asyncio
-    async def test_select_endpoint_default_policy(self):
-        """Test selection with unknown/default policy."""
+    async def test_select_endpoint_sticky_session(self):
+        """Test sticky session selection stays consistent for same context."""
         registry = ServiceRegistry()
         lb = LoadBalancer(registry)
 
-        endpoint = ServiceEndpoint(service_name="test", host="host1", port=8080)
+        endpoint1 = ServiceEndpoint(service_name="test", host="host1", port=8080)
+        endpoint2 = ServiceEndpoint(service_name="test", host="host2", port=8080)
 
-        registry.register_endpoint(endpoint)
+        registry.register_endpoint(endpoint1)
+        registry.register_endpoint(endpoint2)
 
         with patch.object(lb, "_is_healthy", return_value=True):
-            # Use STICKY_SESSION which falls to default case
-            result = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION)
-            assert result == endpoint
+            context = {"session_id": "session-123"}
+            result1 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, context)
+            result2 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, context)
+
+            assert result1 == result2
+            assert result1 in (endpoint1, endpoint2)
+
+            # Different sessions may be routed elsewhere
+            other_context = {"session_id": "session-456"}
+            result3 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, other_context)
+            assert result3 in (endpoint1, endpoint2)
 
     @pytest.mark.asyncio
     async def test_select_endpoint_all_unhealthy_fallback(self):
@@ -511,7 +521,7 @@ class TestServiceMeshCallService:
                 path="/test",
             )
 
-        assert "No endpoints available" in str(exc_info.value)
+        assert "ServiceEndpoint not found" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_call_service_success(self):
@@ -902,17 +912,25 @@ class TestServiceMeshRetryLogic:
 
         # Mock endpoint selection and failed HTTP call
         with patch.object(mesh.load_balancer, "select_endpoint", return_value=endpoint):
-            with patch.object(mesh, "_make_http_call", side_effect=Exception("Network error")):
-                with pytest.raises(HTTPException) as exc_info:
-                    await mesh.call_service(
-                        source_service="source",
-                        destination_service="test-service",
-                        method="GET",
-                        path="/test",
-                    )
+            with patch.object(
+                mesh, "_make_http_call", side_effect=Exception("Network error")
+            ) as mock_call:
+                with patch(
+                    "dotmac.platform.resilience.service_mesh.asyncio.sleep",
+                    new_callable=AsyncMock,
+                ) as mock_sleep:
+                    with pytest.raises(HTTPException) as exc_info:
+                        await mesh.call_service(
+                            source_service="source",
+                            destination_service="test-service",
+                            method="GET",
+                            path="/test",
+                        )
 
         assert exc_info.value.status_code == 500
         assert "Service call failed" in exc_info.value.detail
+        assert mock_call.await_count == 1
+        mock_sleep.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_call_service_with_retry_policy_enabled_still_raises(self):
@@ -937,17 +955,26 @@ class TestServiceMeshRetryLogic:
 
         # Mock endpoint selection and failed HTTP call
         with patch.object(mesh.load_balancer, "select_endpoint", return_value=endpoint):
-            with patch.object(mesh, "_make_http_call", side_effect=Exception("Network error")):
-                with pytest.raises(HTTPException) as exc_info:
-                    await mesh.call_service(
-                        source_service="source",
-                        destination_service="test-service",
-                        method="GET",
-                        path="/test",
-                    )
+            with patch.object(
+                mesh, "_make_http_call", side_effect=Exception("Network error")
+            ) as mock_call:
+                with patch(
+                    "dotmac.platform.resilience.service_mesh.asyncio.sleep",
+                    new_callable=AsyncMock,
+                ) as mock_sleep:
+                    with pytest.raises(HTTPException) as exc_info:
+                        await mesh.call_service(
+                            source_service="source",
+                            destination_service="test-service",
+                            method="GET",
+                            path="/test",
+                        )
 
-        # Should still fail since retry is not implemented
+        # Should still fail after exhausting retries
         assert exc_info.value.status_code == 500
+        assert mock_call.await_count == rule.max_retries + 1
+        assert mock_sleep.await_count == rule.max_retries
+        assert mesh.call_metrics["active_connections"] == 0
 
 
 class TestServiceMeshHealthMonitoring:
