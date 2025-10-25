@@ -146,12 +146,15 @@ async def create_server(
             name=request.name,
             public_endpoint=request.public_endpoint,
             server_ipv4=request.server_ipv4,
+            server_ipv6=request.server_ipv6,
             listen_port=request.listen_port,
             description=request.description,
             location=request.location,
             max_peers=request.max_peers,
             dns_servers=request.dns_servers,
             allowed_ips=request.allowed_ips,
+            persistent_keepalive=request.persistent_keepalive,
+            metadata=request.metadata,
         )
         return server
     except Exception as e:
@@ -383,7 +386,11 @@ async def create_peer(
             generate_keys=request.generate_keys,
             public_key=request.public_key,
             peer_ipv4=request.peer_ipv4,
+            peer_ipv6=request.peer_ipv6,
             allowed_ips=request.allowed_ips,
+            expires_at=request.expires_at,
+            metadata=request.metadata,
+            notes=request.notes,
         )
         return peer
     except Exception as e:

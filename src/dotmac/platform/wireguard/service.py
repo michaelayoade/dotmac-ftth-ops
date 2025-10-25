@@ -86,6 +86,8 @@ class WireGuardService:
         max_peers: int = 1000,
         dns_servers: list[str] | None = None,
         allowed_ips: list[str] | None = None,
+        persistent_keepalive: int | None = 25,
+        metadata: dict[str, Any] | None = None,
     ) -> WireGuardServer:
         """
         Create a new WireGuard server with dual-stack support.
@@ -178,6 +180,8 @@ class WireGuardService:
                 max_peers=max_peers,
                 dns_servers=dns_servers or ["1.1.1.1", "1.0.0.1"],
                 allowed_ips=allowed_ips or ["0.0.0.0/0", "::/0"],
+                persistent_keepalive=persistent_keepalive,
+                metadata_=metadata or {},
             )
 
             self.session.add(server)
@@ -343,6 +347,9 @@ class WireGuardService:
         peer_ipv4: str | None = None,
         peer_ipv6: str | None = None,
         allowed_ips: list[str] | None = None,
+        expires_at: datetime | None = None,
+        metadata: dict[str, Any] | None = None,
+        notes: str | None = None,
     ) -> WireGuardPeer:
         """
         Create a new WireGuard peer with dual-stack support.
@@ -433,6 +440,9 @@ class WireGuardService:
                 peer_ipv6=peer_ipv6,
                 allowed_ips=allowed_ips or server.allowed_ips,
                 status=WireGuardPeerStatus.ACTIVE,
+                expires_at=expires_at,
+                metadata_=metadata or {},
+                notes=notes,
             )
 
             # Generate config file
@@ -527,6 +537,7 @@ class WireGuardService:
             "status",
             "enabled",
             "allowed_ips",
+            "expires_at",
             "metadata_",
             "notes",
         }
