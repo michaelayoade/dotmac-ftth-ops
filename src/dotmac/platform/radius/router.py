@@ -845,3 +845,28 @@ async def list_reply_attributes(
         "attributes": registry.list_reply_items(),
         "total": len([a for a in registry.standard_attrs.values() if a.reply_item]),
     }
+
+
+# =============================================================================
+# Password Security Monitoring
+# =============================================================================
+
+
+@router.get(
+    "/security/password-stats",
+    summary="Password Hashing Statistics",
+    description="Get statistics on password hashing methods used across RADIUS subscribers",
+)
+async def get_password_hashing_stats(
+    service: RADIUSService = Depends(get_radius_service),
+    _: UserInfo = Depends(require_permission("isp.radius.admin")),
+) -> dict[str, Any]:
+    """
+    Get password hashing statistics.
+
+    Returns counts and percentages of subscribers using different
+    password hashing methods (cleartext, MD5, SHA256, bcrypt).
+
+    Useful for tracking security posture and migration progress.
+    """
+    return await service.get_password_hashing_stats()

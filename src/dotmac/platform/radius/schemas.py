@@ -7,7 +7,7 @@ Request and response schemas for RADIUS API endpoints.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from dotmac.platform.core.ip_validation import (
     IPv4AddressValidator,
@@ -329,14 +329,17 @@ class NASUpdate(BaseModel):
 
 
 class NASResponse(BaseModel):
-    """NAS device response"""
+    """NAS device response without exposing shared secrets"""
 
     id: int
     tenant_id: str
     nasname: str
     shortname: str
     type: str
-    secret: str
+    secret_configured: bool = Field(
+        ...,
+        description="Indicates whether a shared secret has been configured. The secret value is never returned.",
+    )
     ports: int | None = None
     community: str | None = None
     description: str | None = None

@@ -18,6 +18,10 @@ from dotmac.platform.radius.models import (
     RadiusBandwidthProfile,
     RadReply,
 )
+from dotmac.platform.subscribers.models import (
+    PasswordHashingMethod,
+    hash_radius_password,
+)
 
 
 class RADIUSRepository:
@@ -36,15 +40,31 @@ class RADIUSRepository:
         subscriber_id: str,
         username: str,
         password: str,
+        hashing_method: PasswordHashingMethod = PasswordHashingMethod.BCRYPT,
     ) -> RadCheck:
-        """Create RADIUS check entry (authentication)"""
+        """
+        Create RADIUS check entry (authentication).
+
+        Args:
+            tenant_id: Tenant identifier
+            subscriber_id: Subscriber identifier
+            username: RADIUS username
+            password: Plain text password (will be hashed)
+            hashing_method: Password hashing method (default: BCRYPT)
+
+        Returns:
+            Created RadCheck entry
+        """
+        # Hash the password with specified method
+        hashed_password = hash_radius_password(password, hashing_method)
+
         radcheck = RadCheck(
             tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             username=username,
-            attribute="Cleartext-Password",
+            attribute="Cleartext-Password",  # FreeRADIUS attribute for password
             op=":=",
-            value=password,
+            value=hashed_password,  # Store hashed password with prefix
         )
         self.session.add(radcheck)
         await self.session.flush()
@@ -74,12 +94,29 @@ class RADIUSRepository:
         return result.scalar_one_or_none()
 
     async def update_radcheck_password(
-        self, tenant_id: str, username: str, new_password: str
+        self,
+        tenant_id: str,
+        username: str,
+        new_password: str,
+        hashing_method: PasswordHashingMethod = PasswordHashingMethod.BCRYPT,
     ) -> RadCheck | None:
-        """Update RADIUS password"""
+        """
+        Update RADIUS password.
+
+        Args:
+            tenant_id: Tenant identifier
+            username: RADIUS username
+            new_password: New plain text password (will be hashed)
+            hashing_method: Password hashing method (default: BCRYPT)
+
+        Returns:
+            Updated RadCheck entry or None if not found
+        """
         radcheck = await self.get_radcheck_by_username(tenant_id, username)
         if radcheck:
-            radcheck.value = new_password
+            # Hash the new password
+            hashed_password = hash_radius_password(new_password, hashing_method)
+            radcheck.value = hashed_password
             radcheck.updated_at = datetime.utcnow()
             await self.session.flush()
         return radcheck
@@ -101,6 +138,40 @@ class RADIUSRepository:
             select(RadCheck).where(RadCheck.tenant_id == tenant_id).offset(skip).limit(limit)
         )
         return list(result.scalars().all())
+
+    async def get_password_hashing_stats(self, tenant_id: str) -> dict[str, int]:
+        """
+        Get statistics on password hashing methods used.
+
+        Returns:
+            Dictionary mapping hashing method to count of subscribers using it
+        """
+        result = await self.session.execute(
+            select(RadCheck).where(RadCheck.tenant_id == tenant_id)
+        )
+        radchecks = result.scalars().all()
+
+        stats: dict[str, int] = {
+            "cleartext": 0,
+            "md5": 0,
+            "sha256": 0,
+            "bcrypt": 0,
+            "unknown": 0,
+        }
+
+        for radcheck in radchecks:
+            password_value = radcheck.value or ""
+            if ":" in password_value:
+                method = password_value.split(":", 1)[0]
+                if method in stats:
+                    stats[method] += 1
+                else:
+                    stats["unknown"] += 1
+            else:
+                # No prefix = legacy cleartext
+                stats["cleartext"] += 1
+
+        return stats
 
     # =========================================================================
     # RadReply Operations (Authorization)
@@ -137,8 +208,12 @@ class RADIUSRepository:
         )
         return list(result.scalars().all())
 
-    async def delete_radreply(self, tenant_id: str, username: str, attribute: str) -> bool:
-        """Delete specific RADIUS reply attribute"""
+    async def delete_radreply(self, tenant_id: str, username: str, attribute: str) -> int:
+        """Delete ALL RADIUS reply attributes matching the criteria.
+
+        Returns:
+            Number of rows deleted
+        """
         result = await self.session.execute(
             select(RadReply).where(
                 and_(
@@ -148,12 +223,45 @@ class RADIUSRepository:
                 )
             )
         )
-        radreply = result.scalar_one_or_none()
-        if radreply:
+        radreplies = result.scalars().all()
+        count = len(radreplies)
+        for radreply in radreplies:
             await self.session.delete(radreply)
+        if count > 0:
             await self.session.flush()
-            return True
-        return False
+        return count
+
+    async def delete_radreply_by_value_pattern(
+        self, tenant_id: str, username: str, attribute: str, value_pattern: str
+    ) -> int:
+        """Delete RADIUS reply attributes matching attribute and value pattern.
+
+        Args:
+            tenant_id: Tenant ID
+            username: RADIUS username
+            attribute: Attribute name
+            value_pattern: SQL LIKE pattern for value matching
+
+        Returns:
+            Number of rows deleted
+        """
+        result = await self.session.execute(
+            select(RadReply).where(
+                and_(
+                    RadReply.tenant_id == tenant_id,
+                    RadReply.username == username,
+                    RadReply.attribute == attribute,
+                    RadReply.value.like(value_pattern),
+                )
+            )
+        )
+        radreplies = result.scalars().all()
+        count = len(radreplies)
+        for radreply in radreplies:
+            await self.session.delete(radreply)
+        if count > 0:
+            await self.session.flush()
+        return count
 
     async def delete_all_radreplies(self, tenant_id: str, username: str) -> int:
         """Delete all RADIUS reply entries for username"""

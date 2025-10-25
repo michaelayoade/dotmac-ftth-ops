@@ -323,9 +323,10 @@ class CoAClient:
         nas_ip: str | None = None,
         download_burst_kbps: int | None = None,
         upload_burst_kbps: int | None = None,
+        nas_vendor: str | None = None,
     ) -> dict[str, Any]:
         """
-        Send CoA request to change bandwidth limits.
+        Send CoA request to change bandwidth limits with vendor-aware packet construction.
 
         Args:
             username: RADIUS username
@@ -334,30 +335,55 @@ class CoAClient:
             nas_ip: NAS IP address
             download_burst_kbps: Optional download burst speed in Kbps
             upload_burst_kbps: Optional upload burst speed in Kbps
+            nas_vendor: Optional NAS vendor override (mikrotik, cisco, huawei, juniper)
 
         Returns:
             Dictionary with result status and structured response details.
         """
+        from dotmac.platform.radius.vendors import get_coa_strategy
+        from dotmac.platform.settings import settings
+
         client = self._create_client()
 
         try:
             if download_kbps <= 0 or upload_kbps <= 0:
                 raise ValueError("Bandwidth values must be greater than zero")
 
-            # Format for Mikrotik: "rx-rate[/tx-rate] [rx-burst-rate[/tx-burst-rate]]"
-            # Mikrotik requires the "k" suffix to specify Kbps
-            rate_limit = f"{download_kbps}k/{upload_kbps}k"
+            # Get vendor-specific CoA strategy
+            if settings.radius.vendor_aware and nas_vendor:
+                strategy = get_coa_strategy(vendor=nas_vendor, tenant_id=self.tenant_id)
+                logger.info(
+                    "Using vendor-specific CoA strategy",
+                    vendor=nas_vendor,
+                    username=username,
+                )
+            else:
+                # Fallback to Mikrotik if vendor-aware disabled or vendor not specified
+                from dotmac.platform.radius.vendors import MikrotikCoAStrategy
+                strategy = MikrotikCoAStrategy()
+                logger.debug(
+                    "Using Mikrotik CoA strategy (default)",
+                    username=username,
+                )
 
-            if download_burst_kbps and upload_burst_kbps:
-                rate_limit += f" {download_burst_kbps}k/{upload_burst_kbps}k"
+            # Build vendor-specific CoA packet
+            packet_attrs = strategy.build_bandwidth_change_packet(
+                username=username,
+                download_kbps=download_kbps,
+                upload_kbps=upload_kbps,
+                download_burst_kbps=download_burst_kbps,
+                upload_burst_kbps=upload_burst_kbps,
+                nas_ip=nas_ip,
+            )
 
+            # Create CoA packet and populate with vendor-specific attributes
             packet = client.CreateCoAPacket(code=self._coa_request_code)
-            packet["User-Name"] = username
-            # Use Mikrotik-Rate-Limit instead of Filter-Id for Mikrotik devices
-            packet["Mikrotik-Rate-Limit"] = rate_limit
-
-            if nas_ip:
-                packet["NAS-IP-Address"] = self._validate_nas_ip(nas_ip)
+            for attr_name, attr_value in packet_attrs.items():
+                if attr_name == "NAS-IP-Address":
+                    # Validate IP addresses
+                    packet[attr_name] = self._validate_nas_ip(attr_value)
+                else:
+                    packet[attr_name] = attr_value
 
             response = await self._send_packet(client, packet)
         except (ValueError, RADIUSCoAError) as exc:
@@ -379,7 +405,8 @@ class CoAClient:
                 "error": str(exc),
             }
 
-        success = response.code == self._coa_ack_code
+        # Validate response using vendor-specific strategy
+        success = strategy.validate_response(response.to_dict())
         message = (
             "Bandwidth change acknowledged by RADIUS server"
             if success
@@ -392,6 +419,7 @@ class CoAClient:
                 username=username,
                 download_kbps=download_kbps,
                 upload_kbps=upload_kbps,
+                vendor=nas_vendor or "mikrotik",
                 details=response.to_dict(),
             )
         else:
@@ -400,6 +428,7 @@ class CoAClient:
                 username=username,
                 download_kbps=download_kbps,
                 upload_kbps=upload_kbps,
+                vendor=nas_vendor or "mikrotik",
                 details=response.to_dict(),
             )
 

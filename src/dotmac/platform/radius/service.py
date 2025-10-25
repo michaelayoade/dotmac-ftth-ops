@@ -29,6 +29,7 @@ from dotmac.platform.radius.schemas import (
     RADIUSUsageQuery,
     RADIUSUsageResponse,
 )
+from dotmac.platform.subscribers.models import PasswordHashingMethod
 
 logger = structlog.get_logger(__name__)
 
@@ -379,13 +380,67 @@ class RADIUSService:
     # Bandwidth Profile Management
     # =========================================================================
 
+    async def _get_subscriber_nas_vendor(self, username: str) -> str:
+        """
+        Get NAS vendor for a subscriber.
+
+        Looks up the subscriber's primary NAS device and returns its vendor type.
+        Falls back to default vendor from settings if not found.
+
+        Args:
+            username: RADIUS username
+
+        Returns:
+            NAS vendor string (mikrotik, cisco, huawei, juniper, generic)
+        """
+        from dotmac.platform.settings import settings
+
+        # Try to get vendor from subscriber's active session
+        sessions = await self.repository.get_active_sessions(self.tenant_id, username)
+        if sessions:
+            # Get NAS from first active session
+            nas_ip = str(sessions[0].nasipaddress)
+            nas = await self.repository.get_nas_by_name(self.tenant_id, nas_ip)
+            if nas and hasattr(nas, 'vendor'):
+                logger.debug(
+                    "Resolved NAS vendor from active session",
+                    username=username,
+                    vendor=nas.vendor,
+                    nas_ip=nas_ip,
+                )
+                return nas.vendor
+
+        # Fallback to default vendor from settings
+        default_vendor = settings.radius.default_vendor
+        logger.debug(
+            "Using default NAS vendor",
+            username=username,
+            vendor=default_vendor,
+        )
+        return default_vendor
+
     async def apply_bandwidth_profile(
         self,
         username: str,
         profile_id: str,
         subscriber_id: str | None = None,
+        nas_vendor: str | None = None,
     ) -> RADIUSSubscriberResponse | None:
-        """Apply bandwidth profile to subscriber"""
+        """
+        Apply bandwidth profile to subscriber with vendor-aware attribute generation.
+
+        Args:
+            username: RADIUS username
+            profile_id: Bandwidth profile ID
+            subscriber_id: Optional subscriber ID
+            nas_vendor: Optional NAS vendor override (mikrotik, cisco, huawei, juniper)
+
+        Returns:
+            Updated subscriber response or None if not found
+        """
+        from dotmac.platform.radius.vendors import get_bandwidth_builder
+        from dotmac.platform.settings import settings
+
         profile = await self.repository.get_bandwidth_profile(self.tenant_id, profile_id)
         if not profile:
             logger.warning(
@@ -409,36 +464,119 @@ class RADIUSService:
 
         subscriber_id = subscriber_id or radcheck.subscriber_id
 
-        # Remove existing rate limit and profile ID attributes
-        await self.repository.delete_radreply(self.tenant_id, username, "Mikrotik-Rate-Limit")
-        await self.repository.delete_radreply(self.tenant_id, username, "X-Bandwidth-Profile-ID")
+        # Determine NAS vendor (auto-detect if not provided)
+        if not nas_vendor:
+            nas_vendor = await self._get_subscriber_nas_vendor(username)
 
-        # Store bandwidth profile ID as a custom attribute for later retrieval
+        # Get vendor-specific bandwidth builder
+        if settings.radius.vendor_aware:
+            builder = get_bandwidth_builder(vendor=nas_vendor, tenant_id=self.tenant_id)
+            logger.info(
+                "Using vendor-specific bandwidth builder",
+                username=username,
+                vendor=nas_vendor,
+                profile_id=profile_id,
+            )
+        else:
+            # Fallback to Mikrotik if vendor-aware mode disabled
+            from dotmac.platform.radius.vendors import MikrotikBandwidthBuilder
+            builder = MikrotikBandwidthBuilder()
+            logger.info(
+                "Using Mikrotik bandwidth builder (vendor-aware disabled)",
+                username=username,
+                profile_id=profile_id,
+            )
+
+        # Build vendor-specific attributes using profile NAME (not UUID)
+        # Policy-based vendors (Cisco/Juniper) need human-readable policy names
+        attributes = builder.build_radreply(
+            download_rate_kbps=profile.download_rate_kbps,
+            upload_rate_kbps=profile.upload_rate_kbps,
+            download_burst_kbps=profile.download_burst_kbps,
+            upload_burst_kbps=profile.upload_burst_kbps,
+            profile_name=profile.name,  # Use profile name, NOT UUID
+        )
+
+        # SCOPED cleanup: Remove only bandwidth-related attributes we created
+        # DO NOT blanket-delete Cisco-AVPair, Huawei-*, Juniper-* as they may
+        # contain VRF, DNS, ACL, and other policy entries from other features
+
+        # 1. Remove tracking attribute (marks all our bandwidth entries)
+        await self.repository.delete_radreply(
+            self.tenant_id, username, "X-Bandwidth-Profile-ID"
+        )
+
+        # 2. Remove vendor-specific bandwidth attributes
+        # Mikrotik: Safe to remove all (bandwidth-only attribute)
+        await self.repository.delete_radreply(self.tenant_id, username, "Mikrotik-Rate-Limit")
+
+        # Huawei: Safe to remove rate-limit attributes (bandwidth-only)
+        for attr in [
+            "Huawei-Input-Rate-Limit",
+            "Huawei-Output-Rate-Limit",
+            "Huawei-Input-Peak-Rate",
+            "Huawei-Output-Peak-Rate",
+            "Huawei-Qos-Profile-Name",
+        ]:
+            await self.repository.delete_radreply(self.tenant_id, username, attr)
+
+        # Juniper: Safe to remove rate-limit attributes (bandwidth-only)
+        for attr in ["Juniper-Rate-Limit-In", "Juniper-Rate-Limit-Out"]:
+            await self.repository.delete_radreply(self.tenant_id, username, attr)
+
+        # Cisco-AVPair: CAREFUL - only remove bandwidth/QoS entries
+        # Match patterns like "subscriber:sub-qos-policy-in=*" or "ip:rate-limit=*"
+        for pattern in [
+            "subscriber:sub-qos-policy-in=%",
+            "subscriber:sub-qos-policy-out=%",
+            "ip:rate-limit=%",
+        ]:
+            await self.repository.delete_radreply_by_value_pattern(
+                self.tenant_id, username, "Cisco-AVPair", pattern
+            )
+
+        # Juniper ERX policies: CAREFUL - only remove QoS-related entries
+        # ERX-Qos-Profile-Name is bandwidth-specific, safe to remove
+        # ERX-Ingress/Egress-Policy-Name may be used for ACLs, only remove if QoS-related
+        await self.repository.delete_radreply(
+            self.tenant_id, username, "ERX-Qos-Profile-Name"
+        )
+        # Only remove ERX policies if they match QoS naming patterns (e.g., contain "-qos-")
+        for attr in ["ERX-Ingress-Policy-Name", "ERX-Egress-Policy-Name"]:
+            await self.repository.delete_radreply_by_value_pattern(
+                self.tenant_id, username, attr, "%-qos-%"
+            )
+
+        # Create vendor-specific attributes
+        for attr_spec in attributes:
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute=attr_spec.attribute,
+                value=attr_spec.value,
+                op=attr_spec.op,
+            )
+
+        # Add tracking attribute to mark these as bandwidth-profile-managed
         await self.repository.create_radreply(
             tenant_id=self.tenant_id,
             subscriber_id=subscriber_id,
             username=username,
             attribute="X-Bandwidth-Profile-ID",
-            value=profile_id,
-            op="=",
-        )
-
-        # Create Mikrotik rate limit attribute
-        # Format: "rx-rate[/tx-rate] [rx-burst-rate[/tx-burst-rate]]"
-        rate_limit_value = f"{profile.download_rate_kbps}k/{profile.upload_rate_kbps}k"
-
-        if profile.download_burst_kbps and profile.upload_burst_kbps:
-            rate_limit_value += f" {profile.download_burst_kbps}k/{profile.upload_burst_kbps}k"
-
-        await self.repository.create_radreply(
-            tenant_id=self.tenant_id,
-            subscriber_id=subscriber_id,
-            username=username,
-            attribute="Mikrotik-Rate-Limit",
-            value=rate_limit_value,
+            value=profile_id,  # Store UUID for tracking/debugging
+            op=":=",
         )
 
         await self.session.flush()
+
+        logger.info(
+            "Applied bandwidth profile",
+            username=username,
+            profile_id=profile_id,
+            vendor=nas_vendor,
+            attributes=[attr.attribute for attr in attributes],
+        )
 
         return await self.get_subscriber(username)
 
@@ -657,19 +795,7 @@ class RADIUSService:
         )
         await self.session.commit()
 
-        return NASResponse(
-            id=nas.id,
-            tenant_id=nas.tenant_id,
-            nasname=nas.nasname,
-            shortname=nas.shortname,
-            type=nas.type,
-            secret=nas.secret,
-            ports=nas.ports,
-            community=nas.community,
-            description=nas.description,
-            created_at=nas.created_at,
-            updated_at=nas.updated_at,
-        )
+        return self._nas_to_response(nas)
 
     async def get_nas(self, nas_id: int) -> NASResponse | None:
         """Get NAS device by ID"""
@@ -677,19 +803,7 @@ class RADIUSService:
         if not nas:
             return None
 
-        return NASResponse(
-            id=nas.id,
-            tenant_id=nas.tenant_id,
-            nasname=nas.nasname,
-            shortname=nas.shortname,
-            type=nas.type,
-            secret=nas.secret,
-            ports=nas.ports,
-            community=nas.community,
-            description=nas.description,
-            created_at=nas.created_at,
-            updated_at=nas.updated_at,
-        )
+        return self._nas_to_response(nas)
 
     async def update_nas(self, nas_id: int, data: NASUpdate) -> NASResponse | None:
         """Update NAS device"""
@@ -713,22 +827,23 @@ class RADIUSService:
         """List NAS devices"""
         nas_devices = await self.repository.list_nas_devices(self.tenant_id, skip, limit)
 
-        return [
-            NASResponse(
-                id=nas.id,
-                tenant_id=nas.tenant_id,
-                nasname=nas.nasname,
-                shortname=nas.shortname,
-                type=nas.type,
-                secret=nas.secret,
-                ports=nas.ports,
-                community=nas.community,
-                description=nas.description,
-                created_at=nas.created_at,
-                updated_at=nas.updated_at,
-            )
-            for nas in nas_devices
-        ]
+        return [self._nas_to_response(nas) for nas in nas_devices]
+
+    def _nas_to_response(self, nas: Any) -> NASResponse:
+        """Convert NAS ORM object to response without leaking secrets."""
+        return NASResponse(
+            id=nas.id,
+            tenant_id=nas.tenant_id,
+            nasname=nas.nasname,
+            shortname=nas.shortname,
+            type=nas.type,
+            secret_configured=bool(getattr(nas, "secret", None)),
+            ports=nas.ports,
+            community=nas.community,
+            description=nas.description,
+            created_at=nas.created_at,
+            updated_at=nas.updated_at,
+        )
 
     # =========================================================================
     # Bandwidth Profile Management
@@ -838,3 +953,68 @@ class RADIUSService:
         password_chars = [lowercase, uppercase, digit, special, *remaining]
         secrets.SystemRandom().shuffle(password_chars)
         return "".join(password_chars)
+
+    # =========================================================================
+    # Password Security Management
+    # =========================================================================
+
+    async def get_password_hashing_stats(self) -> dict[str, Any]:
+        """
+        Get statistics on password hashing methods used across subscribers.
+
+        Returns:
+            Dictionary with counts of each hashing method and percentage breakdown
+        """
+        stats = await self.repository.get_password_hashing_stats(self.tenant_id)
+
+        total = sum(stats.values())
+        percentages = {
+            method: round((count / total * 100), 2) if total > 0 else 0
+            for method, count in stats.items()
+        }
+
+        return {
+            "total_subscribers": total,
+            "counts": stats,
+            "percentages": percentages,
+            "weak_password_count": stats.get("cleartext", 0) + stats.get("md5", 0),
+            "strong_password_count": stats.get("bcrypt", 0) + stats.get("sha256", 0),
+        }
+
+    async def upgrade_subscriber_password_hash(
+        self,
+        username: str,
+        plain_password: str,
+        target_method: PasswordHashingMethod = PasswordHashingMethod.BCRYPT,
+    ) -> bool:
+        """
+        Upgrade a subscriber's password hash to a stronger method.
+
+        Note: This requires the plain text password, so it should only be used:
+        - During password reset flows
+        - When user provides password (e.g., profile update)
+        - In migration scripts where passwords are available
+
+        Args:
+            username: RADIUS username
+            plain_password: Plain text password
+            target_method: Target hashing method (default: BCRYPT)
+
+        Returns:
+            True if upgraded successfully, False if subscriber not found
+        """
+        radcheck = await self.repository.update_radcheck_password(
+            self.tenant_id, username, plain_password, target_method
+        )
+
+        if radcheck:
+            await self.session.commit()
+            logger.info(
+                "password_hash_upgraded",
+                username=username,
+                target_method=target_method.value,
+                tenant_id=self.tenant_id,
+            )
+            return True
+
+        return False
