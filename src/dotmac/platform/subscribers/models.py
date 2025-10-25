@@ -6,6 +6,9 @@ A Subscriber is the network-level representation of a service connection,
 which may be linked to a Customer (billing entity) but tracks different concerns.
 """
 
+import bcrypt
+import hashlib
+import secrets
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -18,7 +21,8 @@ from sqlalchemy import (
     Index,
     String,
     Text,
-    UniqueConstraint,
+    event,
+    text,
 )
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
@@ -36,6 +40,108 @@ from dotmac.platform.services.lifecycle.models import ServiceType
 
 if TYPE_CHECKING:
     pass
+
+
+class PasswordHashingMethod(str, Enum):
+    """RADIUS password hashing methods."""
+
+    CLEARTEXT = "cleartext"  # Plain text (not recommended)
+    MD5 = "md5"  # MD5 hash
+    SHA256 = "sha256"  # SHA-256 hash (recommended)
+    BCRYPT = "bcrypt"  # Bcrypt (strongest, but may not be supported by all NAS)
+
+
+def hash_radius_password(password: str, method: PasswordHashingMethod = PasswordHashingMethod.SHA256) -> str:
+    """
+    Hash a RADIUS password using the specified method.
+
+    Args:
+        password: Plain text password
+        method: Hashing method to use
+
+    Returns:
+        Hashed password string, prefixed with method identifier
+
+    Note:
+        - CLEARTEXT: Returns plain password (insecure, only for testing)
+        - MD5: Legacy hash, not recommended but widely supported
+        - SHA256: Recommended default, good security and compatibility
+        - BCRYPT: Strongest security, but NAS support varies
+
+    Example:
+        >>> hash_radius_password("secret123", PasswordHashingMethod.SHA256)
+        'sha256:5e88489...'
+    """
+    if method == PasswordHashingMethod.CLEARTEXT:
+        return f"cleartext:{password}"
+    elif method == PasswordHashingMethod.MD5:
+        # MD5 is legacy only, not for security - nosec B324
+        hashed = hashlib.md5(password.encode(), usedforsecurity=False).hexdigest()
+        return f"md5:{hashed}"
+    elif method == PasswordHashingMethod.SHA256:
+        hashed = hashlib.sha256(password.encode()).hexdigest()
+        return f"sha256:{hashed}"
+    elif method == PasswordHashingMethod.BCRYPT:
+        # Bcrypt with salt (recommended for strongest security)
+        salt = bcrypt.gensalt(rounds=12)
+        hashed = bcrypt.hashpw(password.encode(), salt)
+        return f"bcrypt:{hashed.decode('utf-8')}"
+    else:
+        # Default to SHA256
+        hashed = hashlib.sha256(password.encode()).hexdigest()
+        return f"sha256:{hashed}"
+
+
+def verify_radius_password(password: str, hashed_password: str) -> bool:
+    """
+    Verify a plain text password against a hashed password.
+
+    Args:
+        password: Plain text password to verify
+        hashed_password: Stored hashed password with method prefix
+
+    Returns:
+        True if password matches, False otherwise
+    """
+    if ":" not in hashed_password:
+        # Legacy password without method prefix, assume cleartext
+        return password == hashed_password
+
+    method_str, stored_hash = hashed_password.split(":", 1)
+
+    if method_str == "cleartext":
+        return password == stored_hash
+    elif method_str == "md5":
+        # MD5 is legacy only, not for security - nosec B324
+        computed_hash = hashlib.md5(password.encode(), usedforsecurity=False).hexdigest()
+        return computed_hash == stored_hash
+    elif method_str == "sha256":
+        computed_hash = hashlib.sha256(password.encode()).hexdigest()
+        return computed_hash == stored_hash
+    elif method_str == "bcrypt":
+        # Bcrypt verification
+        try:
+            return bcrypt.checkpw(password.encode(), stored_hash.encode('utf-8'))
+        except (ValueError, TypeError):
+            return False
+    else:
+        # Unknown method
+        return False
+
+
+def generate_random_password(length: int = 16) -> str:
+    """
+    Generate a secure random password for RADIUS accounts.
+
+    Args:
+        length: Password length (default 16)
+
+    Returns:
+        Random alphanumeric password
+    """
+    import string
+    alphabet = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(alphabet) for _ in range(length))
 
 
 class SubscriberStatus(str, Enum):
@@ -98,18 +204,27 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         String(64),
         nullable=False,
         index=True,
-        comment="RADIUS username (unique per tenant)",
+        comment="RADIUS username (unique per tenant when not soft-deleted)",
     )
     password: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
-        comment="RADIUS password (hashed or cleartext depending on NAS)",
+        comment="RADIUS password - stored with hash method prefix (e.g., 'sha256:abc123...'). "
+                "Use set_password() method to hash automatically. "
+                "Supports: cleartext (insecure), md5 (legacy), sha256 (recommended), bcrypt (future).",
     )
-    subscriber_number: Mapped[str | None] = mapped_column(
+    password_hash_method: Mapped[str] = mapped_column(
+        String(20),
+        default="sha256",
+        nullable=False,
+        comment="Hashing method used for password (cleartext, md5, sha256, bcrypt)",
+    )
+    subscriber_number: Mapped[str] = mapped_column(
         String(50),
-        nullable=True,
+        nullable=False,
+        default="",
         index=True,
-        comment="Human-readable subscriber ID",
+        comment="Human-readable subscriber ID (empty string if not assigned, unique per tenant when not soft-deleted)",
     )
 
     # Service Status
@@ -300,9 +415,28 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     radius_sessions = relationship("RadAcct", back_populates="subscriber", lazy="dynamic")
 
     # Indexes and constraints
+    # Note: Partial unique indexes exclude soft-deleted rows to allow re-use
+    # of username/subscriber_number after soft-delete
     __table_args__ = (
-        UniqueConstraint("tenant_id", "username", name="uq_subscriber_tenant_username"),
-        UniqueConstraint("tenant_id", "subscriber_number", name="uq_subscriber_tenant_number"),
+        # Partial unique index for username (excludes soft-deleted)
+        Index(
+            "uq_subscriber_tenant_username_active",
+            "tenant_id",
+            "username",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+            sqlite_where=text("deleted_at IS NULL"),
+        ),
+        # Partial unique index for subscriber_number (excludes soft-deleted and empty)
+        Index(
+            "uq_subscriber_tenant_number_active",
+            "tenant_id",
+            "subscriber_number",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL AND subscriber_number != ''"),
+            sqlite_where=text("deleted_at IS NULL AND subscriber_number != ''"),
+        ),
+        # Regular indexes for query performance
         Index("ix_subscriber_status", "tenant_id", "status"),
         Index("ix_subscriber_service_type", "tenant_id", "service_type"),
         Index("ix_subscriber_customer", "customer_id"),
@@ -310,6 +444,8 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         Index("ix_subscriber_onu", "onu_serial"),
         Index("ix_subscriber_cpe", "cpe_mac_address"),
         Index("ix_subscriber_site", "site_id"),
+        # Index for soft-deleted subscribers to enable efficient queries
+        Index("ix_subscriber_deleted_at", "deleted_at"),
     )
 
     def __repr__(self) -> str:
@@ -328,6 +464,99 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     @property
     def display_name(self) -> str:
         """Get display name for subscriber."""
-        if self.subscriber_number:
+        if self.subscriber_number and self.subscriber_number != "":
             return f"{self.username} ({self.subscriber_number})"
         return self.username
+
+    @property
+    def is_password_secure(self) -> bool:
+        """
+        Check if password is stored securely (not cleartext).
+
+        Returns:
+            True if password uses hashing, False if cleartext
+        """
+        return not self.password.startswith("cleartext:")
+
+    def set_password(
+        self,
+        password: str,
+        method: PasswordHashingMethod = PasswordHashingMethod.SHA256,
+        auto_hash: bool = True,
+    ) -> None:
+        """
+        Set subscriber password with automatic hashing.
+
+        Args:
+            password: Plain text password (or pre-hashed with method prefix)
+            method: Hashing method to use if auto_hash is True
+            auto_hash: If True, automatically hash the password. If False, store as-is.
+
+        Examples:
+            # Recommended: Auto-hash with SHA256 (default)
+            subscriber.set_password("mysecret")
+
+            # Legacy: Store cleartext (not recommended)
+            subscriber.set_password("mysecret", method=PasswordHashingMethod.CLEARTEXT)
+
+            # Advanced: Store pre-hashed password
+            subscriber.set_password("sha256:abc123...", auto_hash=False)
+
+        Warning:
+            Using CLEARTEXT or auto_hash=False is insecure and only recommended for
+            testing or when required by legacy NAS equipment.
+        """
+        if auto_hash:
+            self.password = hash_radius_password(password, method)
+            self.password_hash_method = method.value
+        else:
+            # Store as-is (for pre-hashed passwords)
+            self.password = password
+            # Try to detect method from prefix
+            if ":" in password:
+                method_str = password.split(":", 1)[0]
+                if method_str in [m.value for m in PasswordHashingMethod]:
+                    self.password_hash_method = method_str
+            else:
+                # No prefix, assume cleartext
+                self.password_hash_method = "cleartext"
+
+    def check_password(self, password: str) -> bool:
+        """
+        Verify a plain text password against the stored password.
+
+        Args:
+            password: Plain text password to verify
+
+        Returns:
+            True if password matches, False otherwise
+
+        Example:
+            >>> subscriber = Subscriber(username="user123")
+            >>> subscriber.set_password("secret")
+            >>> subscriber.check_password("secret")
+            True
+            >>> subscriber.check_password("wrong")
+            False
+        """
+        return verify_radius_password(password, self.password)
+
+    def rotate_password(self, length: int = 16) -> str:
+        """
+        Generate and set a new random password.
+
+        Args:
+            length: Password length (default 16)
+
+        Returns:
+            The new plain text password (store securely!)
+
+        Example:
+            >>> subscriber = Subscriber(username="user123")
+            >>> new_password = subscriber.rotate_password()
+            >>> # Send new_password to subscriber via secure channel
+            >>> # Password is automatically hashed in the database
+        """
+        new_password = generate_random_password(length)
+        self.set_password(new_password, method=PasswordHashingMethod.SHA256)
+        return new_password
