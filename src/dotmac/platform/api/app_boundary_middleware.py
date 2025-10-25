@@ -42,7 +42,9 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     TENANT_PREFIXES = ("/api/tenant/",)
     SHARED_PREFIXES = ("/api/v1/",)
     PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
-    HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api")
+    # Fixed: Removed overly broad "/api" prefix that was bypassing ALL API route enforcement
+    # Only include actual health endpoints: /health, /ready, /metrics, /api/health
+    HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
 
     async def dispatch(
         self,

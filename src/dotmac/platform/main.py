@@ -173,10 +173,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.info("redis.init.success", emoji="✅")
     except Exception as e:
         logger.error("redis.init.failed", error=str(e), emoji="❌")
-        # Continue in development, fail in production if Redis is critical
-        # Allow graceful degradation for features that can work without Redis
-        if settings.is_production:
-            logger.warning("redis.production.unavailable", emoji="⚠️")
+        raise
 
     # Seed RBAC permissions/roles after database init
     try:

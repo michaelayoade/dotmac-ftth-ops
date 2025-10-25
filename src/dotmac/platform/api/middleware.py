@@ -154,6 +154,37 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.gateway = gateway
 
+    def _extract_service_name(self, path: str) -> str:
+        """
+        Extract service name from path for circuit breaker scoping.
+
+        Path patterns:
+        - /api/platform/v1/{service}/... → extract 'service' (index 4)
+        - /api/tenant/v1/{service}/... → extract 'service' (index 4)
+        - /api/v1/{service}/... → extract 'service' (index 3)
+        - Other paths → return 'unknown'
+
+        Args:
+            path: Request path
+
+        Returns:
+            Service name for circuit breaker scoping
+        """
+        path_parts = path.split("/")
+
+        # /api/platform/v1/{service}/... or /api/tenant/v1/{service}/...
+        if len(path_parts) > 4 and path_parts[1] == "api" and path_parts[2] in ("platform", "tenant"):
+            service = path_parts[4]  # service name after /api/{boundary}/v1/
+            return service or "unknown"
+
+        # /api/v1/{service}/...
+        if len(path_parts) > 3 and path_parts[1] == "api" and path_parts[2] == "v1":
+            service = path_parts[3]  # service name after /api/v1/
+            return service or "unknown"
+
+        # Fallback for non-API paths or unknown patterns
+        return "unknown"
+
     async def dispatch(self, request: Request, call_next: CallNext) -> Response:
         """
         Check circuit breaker before processing.
@@ -165,9 +196,10 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
         Returns:
             Response
         """
-        # Extract service from path (e.g., /api/v1/billing/...)
-        path_parts = request.url.path.split("/")
-        service = path_parts[3] if len(path_parts) > 3 else "unknown"
+        # Extract service from path using proper parsing
+        # Fixed: Now correctly extracts service name from different path structures
+        # instead of always using index 3 which gave "v1" for platform/tenant routes
+        service = self._extract_service_name(request.url.path)
 
         # Check circuit breaker
         circuit = self.gateway.get_circuit_breaker(service)

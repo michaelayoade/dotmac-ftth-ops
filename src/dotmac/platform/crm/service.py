@@ -89,7 +89,7 @@ class LeadService:
             desired_installation_date=desired_installation_date,
             assigned_to_id=assigned_to_id,
             partner_id=partner_id,
-            metadata=metadata or {},
+            metadata_=metadata or {},
             notes=notes,
             created_by=str(created_by_id) if created_by_id else None,
         )
@@ -127,7 +127,8 @@ class LeadService:
             if hasattr(lead, field):
                 setattr(lead, field, value)
 
-        lead.updated_by_id = updated_by_id
+        if updated_by_id:
+            lead.updated_by = str(updated_by_id)
         await self.db.flush()
         await self.db.refresh(lead)
 
@@ -154,7 +155,8 @@ class LeadService:
             lead.converted_at = datetime.utcnow()
 
         lead.status = new_status
-        lead.updated_by_id = updated_by_id
+        if updated_by_id:
+            lead.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(lead)
@@ -182,7 +184,8 @@ class LeadService:
         lead.status = LeadStatus.DISQUALIFIED
         lead.disqualification_reason = reason
         lead.disqualified_at = datetime.utcnow()
-        lead.updated_by_id = updated_by_id
+        if updated_by_id:
+            lead.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(lead)
@@ -203,7 +206,8 @@ class LeadService:
         lead.serviceability_checked_at = datetime.utcnow()
         if notes:
             lead.serviceability_notes = notes
-        lead.updated_by_id = updated_by_id
+        if updated_by_id:
+            lead.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(lead)
@@ -226,7 +230,8 @@ class LeadService:
         lead.converted_to_customer_id = customer.id
         lead.converted_at = datetime.utcnow()
         lead.status = LeadStatus.WON
-        lead.updated_by_id = updated_by_id
+        if updated_by_id:
+            lead.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(lead)
@@ -266,14 +271,9 @@ class LeadService:
 
     async def _generate_lead_number(self, tenant_id: str) -> str:
         """Generate unique lead number for tenant."""
-        # Get count of leads for this tenant
-        stmt = select(func.count(Lead.id)).where(Lead.tenant_id == tenant_id)
-        result = await self.db.execute(stmt)
-        count = result.scalar_one()
-
-        # Format: LEAD-YYYY-NNNNNN
         year = datetime.utcnow().year
-        return f"LEAD-{year}-{count + 1:06d}"
+        suffix = uuid4().hex[:6].upper()
+        return f"LEAD-{year}-{suffix}"
 
 
 class QuoteService:
@@ -341,7 +341,7 @@ class QuoteService:
             promo_monthly_discount=promo_monthly_discount,
             valid_until=valid_until,
             line_items=line_items or [],
-            metadata=metadata or {},
+            metadata_=metadata or {},
             notes=notes,
             created_by=str(created_by_id) if created_by_id else None,
         )
@@ -387,7 +387,8 @@ class QuoteService:
 
         quote.status = QuoteStatus.SENT
         quote.sent_at = datetime.utcnow()
-        quote.updated_by_id = updated_by_id
+        if updated_by_id:
+            quote.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(quote)
@@ -433,7 +434,8 @@ class QuoteService:
         quote.status = QuoteStatus.ACCEPTED
         quote.accepted_at = datetime.utcnow()
         quote.signature_data = signature_data
-        quote.updated_by_id = updated_by_id
+        if updated_by_id:
+            quote.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(quote)
@@ -457,7 +459,8 @@ class QuoteService:
         quote.status = QuoteStatus.REJECTED
         quote.rejected_at = datetime.utcnow()
         quote.rejection_reason = rejection_reason
-        quote.updated_by_id = updated_by_id
+        if updated_by_id:
+            quote.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(quote)
@@ -600,7 +603,7 @@ class QuoteService:
             priority=2,  # Medium priority for renewals
             metadata={"renewal": True, "customer_id": str(customer_id)},
             notes=f"Auto-generated renewal lead for customer {customer_id}",
-            created_by=str(created_by_id) if created_by_id else None,
+            created_by_id=created_by_id,
         )
 
         quote = Quote(
@@ -622,7 +625,7 @@ class QuoteService:
             promo_monthly_discount=None,
             valid_until=valid_until,
             line_items=line_items,
-            metadata=metadata,
+            metadata_=metadata,
             notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount" if discount_percentage else "Renewal quote for existing customer",
             created_by=str(created_by_id) if created_by_id else None,
         )
@@ -635,12 +638,9 @@ class QuoteService:
 
     async def _generate_quote_number(self, tenant_id: str) -> str:
         """Generate unique quote number for tenant."""
-        stmt = select(func.count(Quote.id)).where(Quote.tenant_id == tenant_id)
-        result = await self.db.execute(stmt)
-        count = result.scalar_one()
-
         year = datetime.utcnow().year
-        return f"QUOT-{year}-{count + 1:06d}"
+        suffix = uuid4().hex[:6].upper()
+        return f"QUOT-{year}-{suffix}"
 
 
 class SiteSurveyService:
@@ -681,7 +681,7 @@ class SiteSurveyService:
             lead_id=lead_id,
             scheduled_date=scheduled_date,
             technician_id=technician_id,
-            metadata=metadata or {},
+            metadata_=metadata or {},
             notes=notes,
             created_by=str(created_by_id) if created_by_id else None,
         )
@@ -730,7 +730,8 @@ class SiteSurveyService:
             raise ValidationError(f"Survey {survey_id} cannot be started in {survey.status} status")
 
         survey.status = SiteSurveyStatus.IN_PROGRESS
-        survey.updated_by_id = updated_by_id
+        if updated_by_id:
+            survey.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(survey)
@@ -777,7 +778,8 @@ class SiteSurveyService:
         survey.photos = photos or []
         survey.recommendations = recommendations
         survey.obstacles = obstacles
-        survey.updated_by_id = updated_by_id
+        if updated_by_id:
+            survey.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(survey)
@@ -808,7 +810,8 @@ class SiteSurveyService:
             )
 
         survey.status = SiteSurveyStatus.CANCELED
-        survey.updated_by_id = updated_by_id
+        if updated_by_id:
+            survey.updated_by = str(updated_by_id)
 
         await self.db.flush()
         await self.db.refresh(survey)
@@ -844,9 +847,6 @@ class SiteSurveyService:
 
     async def _generate_survey_number(self, tenant_id: str) -> str:
         """Generate unique survey number for tenant."""
-        stmt = select(func.count(SiteSurvey.id)).where(SiteSurvey.tenant_id == tenant_id)
-        result = await self.db.execute(stmt)
-        count = result.scalar_one()
-
         year = datetime.utcnow().year
-        return f"SURV-{year}-{count + 1:06d}"
+        suffix = uuid4().hex[:6].upper()
+        return f"SURV-{year}-{suffix}"

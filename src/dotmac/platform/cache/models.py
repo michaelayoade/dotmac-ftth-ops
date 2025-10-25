@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, ForeignKey, Integer, String, Text
+from sqlalchemy import Boolean, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import ENUM as SQLEnum
 from sqlalchemy.dialects.postgresql import JSON, TIMESTAMP
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
@@ -159,11 +159,11 @@ class CacheStatistics(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     total_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cache_hits: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cache_misses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    hit_rate: Mapped[float] = mapped_column(Integer, nullable=False, default=0)  # Percentage
+    hit_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)  # Percentage (0.0-100.0)
 
     # Performance metrics
-    avg_hit_latency_ms: Mapped[float] = mapped_column(Integer, nullable=False, default=0)
-    avg_miss_latency_ms: Mapped[float] = mapped_column(Integer, nullable=False, default=0)
+    avg_hit_latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    avg_miss_latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
 
     # Storage metrics
     keys_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)

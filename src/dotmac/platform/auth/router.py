@@ -415,6 +415,8 @@ async def _authenticate_and_issue_tokens(
             "roles": user.roles or [],
             "access_token": access_token,
         },
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )
 
     # Log successful login
@@ -478,6 +480,8 @@ async def _complete_cookie_login(
             "roles": user.roles or [],
             "access_token": access_token,
         },
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )
 
     set_auth_cookies(response, access_token, refresh_token)
@@ -664,6 +668,8 @@ async def _complete_2fa_login(
             "roles": user.roles or [],
             "access_token": access_token,
         },
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )
 
     # Log successful login
@@ -1031,6 +1037,8 @@ async def register(
             "roles": role_names,  # RBAC roles
             "access_token": access_token,
         },
+        ip_address=request.client.host if request.client else None,
+        user_agent=request.headers.get("user-agent"),
     )
 
     # Log successful registration

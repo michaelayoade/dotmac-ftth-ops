@@ -152,14 +152,19 @@ class TicketingService:
             ticket_service = TicketService(self.db)
 
             # Build ticket creation request
+            # Workflow-generated tickets are created by tenant context and target platform support
+            # This follows the ALLOWED_TARGETS matrix: TENANT -> {PARTNER, PLATFORM}
             ticket_data = TicketCreate(
                 subject=title,
                 message=description,
-                target_type=TicketActorType.TENANT,  # Customer tickets target tenant
+                target_type=TicketActorType.PLATFORM,  # Tenant tickets target platform support
                 priority=priority_enum,
                 tenant_id=tenant_id,
                 metadata=metadata,
                 attachments=[],
+                # ISP-specific fields
+                ticket_type=ticket_type_enum,
+                service_address=service_address,
             )
 
             # Create the ticket
@@ -167,12 +172,19 @@ class TicketingService:
                 data=ticket_data, current_user=system_user, tenant_id=tenant_id
             )
 
-            # Update ISP-specific fields if provided
-            if ticket_type_enum or service_address:
+            # CRITICAL: Propagate customer_id so customers can see their tickets
+            # Workflow-driven tickets use tenant/system actor, so create_ticket sets customer_id=None
+            # We must explicitly patch it here with the resolved customer_uuid
+            ticket.customer_id = customer_uuid
+
+            # Update ISP-specific fields if already provided via schema (belt-and-suspenders)
+            if ticket_type_enum and not ticket.ticket_type:
                 ticket.ticket_type = ticket_type_enum
+            if service_address and not ticket.service_address:
                 ticket.service_address = service_address
-                await self.db.flush()
-                await self.db.commit()
+
+            await self.db.flush()
+            await self.db.commit()
 
             logger.info(
                 f"Ticket created successfully: {ticket.ticket_number} "

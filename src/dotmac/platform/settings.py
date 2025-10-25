@@ -186,6 +186,16 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
         "", description="HTTP API authentication key (load from Vault in production)"
     )
 
+    # Multi-vendor support
+    default_vendor: str = Field(
+        "mikrotik",
+        description="Default NAS vendor for new deployments (mikrotik, cisco, huawei, juniper, generic)"
+    )
+    vendor_aware: bool = Field(
+        True,
+        description="Enable vendor-specific attribute generation and CoA handling"
+    )
+
     def __init__(self, **data: Any):
         """Initialize with environment variable overrides."""
         # Load from environment if not explicitly provided
@@ -208,6 +218,13 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
             data["http_api_url"] = os.getenv("RADIUS_HTTP_API_URL")
         if "http_api_key" not in data:
             data["http_api_key"] = os.getenv("RADIUS_HTTP_API_KEY", "")
+        if "default_vendor" not in data:
+            data["default_vendor"] = os.getenv("RADIUS_DEFAULT_VENDOR", "mikrotik")
+        if "vendor_aware" not in data:
+            data["vendor_aware"] = os.getenv("RADIUS_VENDOR_AWARE", "true").lower() in {
+                "true",
+                "1",
+            }
 
         # Dictionary paths - try bundled first, then environment, then system
         if "dictionary_path" not in data:

@@ -902,6 +902,47 @@ class WirelessQueries:
         site_meta = metadata_value.get("site") if isinstance(metadata_value, dict) else {}
         site_display_name = site_meta.get("name", site_display_name)
 
+        # Calculate 6 GHz clients
+        clients_6_query = select(func.count()).select_from(WirelessClient).where(
+            and_(
+                WirelessClient.tenant_id == tenant_id,
+                WirelessClient.device_id.in_(select(WirelessDevice.id).where(
+                    and_(
+                        WirelessDevice.tenant_id == tenant_id,
+                        WirelessDevice.site_id == site_id,
+                        WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    )
+                )),
+                WirelessClient.frequency == Frequency.FREQ_6_GHZ,
+                WirelessClient.connected == True,  # noqa: E712
+            )
+        )
+        clients_6_row = await db.execute(clients_6_query)
+        clients_6 = clients_6_row.scalar() or 0
+
+        # Calculate average signal strength and SNR from connected clients
+        signal_query = select(
+            func.avg(WirelessClient.rssi_dbm),
+            func.avg(WirelessClient.snr_db),
+        ).where(
+            and_(
+                WirelessClient.tenant_id == tenant_id,
+                WirelessClient.device_id.in_(select(WirelessDevice.id).where(
+                    and_(
+                        WirelessDevice.tenant_id == tenant_id,
+                        WirelessDevice.site_id == site_id,
+                        WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    )
+                )),
+                WirelessClient.connected == True,  # noqa: E712
+                WirelessClient.rssi_dbm.isnot(None),
+            )
+        )
+        signal_row = await db.execute(signal_query)
+        signal_data = signal_row.one()
+        avg_rssi = float(signal_data[0]) if signal_data[0] is not None else 0.0
+        avg_snr = float(signal_data[1]) if signal_data[1] is not None else 0.0
+
         return WirelessSiteMetrics(
             site_id=site_id,
             site_name=site_display_name,
@@ -912,9 +953,9 @@ class WirelessQueries:
             total_clients=total_clients,
             clients_2_4ghz=clients_2_4,
             clients_5ghz=clients_5,
-            clients_6ghz=0,  # TODO: derive 6 GHz metrics when available
-            average_signal_strength_dbm=0.0,  # TODO: derive from signal measurements
-            average_snr=0.0,
+            clients_6ghz=clients_6,
+            average_signal_strength_dbm=avg_rssi,
+            average_snr=avg_snr,
             total_throughput_mbps=0.0,
             total_capacity=capacity,
             capacity_utilization_percent=utilization,

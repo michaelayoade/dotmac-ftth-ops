@@ -491,14 +491,26 @@ class SessionManager:
                     raise RuntimeError("Session service unavailable (Redis connection failed)")
         return self._redis
 
-    async def create_session(self, user_id: str, data: dict[str, Any], ttl: int = 3600) -> str:
+    async def create_session(
+        self,
+        user_id: str,
+        data: dict[str, Any],
+        ttl: int = 3600,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
+    ) -> str:
         """Create new session with Redis or fallback."""
         session_id = secrets.token_urlsafe(32)
         session_key = f"session:{session_id}"
 
+        now = datetime.now(UTC).isoformat()
         session_data = {
+            "session_id": session_id,
             "user_id": user_id,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": now,
+            "last_accessed": now,
+            "ip_address": ip_address,
+            "user_agent": user_agent,
             "data": data,
         }
 
@@ -1079,6 +1091,9 @@ def configure_auth(
 
     # Recreate services with new config
     jwt_service = JWTService(JWT_SECRET, JWT_ALGORITHM)
-    session_manager = SessionManager(REDIS_URL)
+    session_manager = SessionManager(
+        redis_url=REDIS_URL,
+        fallback_enabled=not _require_redis_for_sessions
+    )
     oauth_service = OAuthService()
     api_key_service = APIKeyService(REDIS_URL)

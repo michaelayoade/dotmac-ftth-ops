@@ -194,9 +194,17 @@ class ContactService:
 
         # Update fields if provided
         update_fields = contact_data.model_dump(exclude_unset=True)
+
+        # Map schema field names to ORM column names
+        field_mapping = {
+            "metadata": "metadata_",  # Schema uses 'metadata', ORM uses 'metadata_'
+        }
+
         for field, value in update_fields.items():
-            if hasattr(contact, field):
-                setattr(contact, field, value)
+            # Use mapped field name if it exists, otherwise use original
+            orm_field = field_mapping.get(field, field)
+            if hasattr(contact, orm_field):
+                setattr(contact, orm_field, value)
 
         contact.updated_at = datetime.now(UTC)
         await self.db.commit()
@@ -322,14 +330,34 @@ class ContactService:
         # Add label filtering if specified
         if label_ids:
             stmt = stmt.join(Contact.labels).where(ContactLabelDefinition.id.in_(label_ids))
+            # Use distinct to avoid duplicates when contacts have multiple matching labels
+            stmt = stmt.distinct(Contact.id)
 
-        # Get total count
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        # Get total count (use distinct subquery if labels were filtered)
+        if label_ids:
+            # Count distinct contacts from the filtered query
+            # Build subquery that selects only distinct contact IDs
+            subq = (
+                select(Contact.id)
+                .where(and_(*conditions))
+                .join(Contact.labels)
+                .where(ContactLabelDefinition.id.in_(label_ids))
+                .distinct()
+                .subquery()
+            )
+            # Count rows in the subquery (each row is a unique contact)
+            count_stmt = select(func.count()).select_from(subq)
+        else:
+            count_stmt = select(func.count()).select_from(stmt.subquery())
         raw_total = await self.db.scalar(count_stmt)
         total = int(raw_total or 0)
 
         # Add ordering and pagination
-        stmt = stmt.order_by(Contact.display_name).limit(limit).offset(offset)
+        if label_ids:
+            stmt = stmt.order_by(Contact.id, Contact.display_name)
+        else:
+            stmt = stmt.order_by(Contact.display_name)
+        stmt = stmt.limit(limit).offset(offset)
 
         # Execute query
         result = await self.db.execute(stmt)
@@ -402,9 +430,17 @@ class ContactService:
 
         # Update fields
         update_fields = method_data.model_dump(exclude_unset=True)
+
+        # Map schema field names to ORM column names
+        field_mapping = {
+            "metadata": "metadata_",  # Schema uses 'metadata', ORM uses 'metadata_'
+        }
+
         for field, value in update_fields.items():
-            if hasattr(method, field):
-                setattr(method, field, value)
+            # Use mapped field name if it exists, otherwise use original
+            orm_field = field_mapping.get(field, field)
+            if hasattr(method, orm_field):
+                setattr(method, orm_field, value)
 
         method.updated_at = datetime.now(UTC)
         await self.db.commit()

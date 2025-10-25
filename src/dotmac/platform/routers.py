@@ -14,12 +14,15 @@ import structlog
 from fastapi import Depends, FastAPI
 from fastapi.security import HTTPBearer
 
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 
-# Security scheme for Swagger UI
+# Security scheme for Swagger UI (documentation only - NOT for actual auth)
+# IMPORTANT: This only validates Bearer token format, not JWT validity
+# Real authentication uses get_current_user which validates the JWT
 security = HTTPBearer(auto_error=True)
 
 
@@ -90,6 +93,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",
         tags=["Access Network"],
+        requires_auth=True,  # CRITICAL: Access network requires authentication
         description="OLT management via pluggable SNMP/CLI/TR-069 drivers",
     ),
     RouterConfig(
@@ -97,6 +101,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1/secrets",
         tags=["Secrets Management"],
+        requires_auth=True,  # CRITICAL: Secrets require authentication
         description="Vault/OpenBao secrets management",
     ),
     RouterConfig(
@@ -104,6 +109,7 @@ ROUTER_CONFIGS = [
         router_name="analytics_router",
         prefix="/api/v1",  # Module has /analytics prefix
         tags=["Analytics"],
+        requires_auth=True,  # Analytics requires authentication
         description="Analytics and metrics endpoints",
     ),
     RouterConfig(
@@ -111,6 +117,7 @@ ROUTER_CONFIGS = [
         router_name="file_storage_router",
         prefix="/api/v1",  # Module has /files/storage prefix
         tags=["File Storage"],
+        requires_auth=True,  # CRITICAL: File storage requires authentication
         description="File storage management",
     ),
     RouterConfig(
@@ -118,6 +125,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",  # Module has /communications prefix
         tags=["Communications"],
+        requires_auth=True,  # Communications requires authentication
         description="Communications API with email, templates, and background tasks",
     ),
     RouterConfig(
@@ -125,6 +133,7 @@ ROUTER_CONFIGS = [
         router_name="search_router",
         prefix="/api/v1/search",
         tags=["Search"],
+        requires_auth=True,  # Search requires authentication
         description="Search functionality",
     ),
     RouterConfig(
@@ -132,6 +141,7 @@ ROUTER_CONFIGS = [
         router_name="data_transfer_router",
         prefix="/api/v1",  # Module has /data-transfer prefix
         tags=["Data Transfer"],
+        requires_auth=True,  # CRITICAL: Data transfer requires authentication
         description="Data import/export operations",
     ),
     RouterConfig(
@@ -139,6 +149,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",  # Module has /data-import prefix
         tags=["Data Import"],
+        requires_auth=True,  # CRITICAL: Data import requires authentication
         description="File-based data import operations (CSV, JSON)",
     ),
     RouterConfig(
@@ -146,6 +157,7 @@ ROUTER_CONFIGS = [
         router_name="user_router",
         prefix="/api/v1",  # Module has /users prefix
         tags=["User Management"],
+        requires_auth=True,  # CRITICAL: User management requires authentication
         description="User management endpoints",
     ),
     RouterConfig(
@@ -210,6 +222,7 @@ ROUTER_CONFIGS = [
         router_name="feature_flags_router",
         prefix="/api/v1",  # Module has /feature-flags prefix
         tags=["Feature Flags"],
+        requires_auth=True,  # Feature flags require authentication
         description="Feature flags management",
     ),
     RouterConfig(
@@ -217,13 +230,23 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1/customers",
         tags=["Customer Management"],
+        requires_auth=True,  # CRITICAL: Customer management requires authentication
         description="Customer relationship management",
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.customer_portal.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /customer prefix
+        tags=["Customer Portal"],
+        description="Customer self-service portal (usage, billing, invoices)",
+        requires_auth=True,
     ),
     RouterConfig(
         module_path="dotmac.platform.contacts.router",
         router_name="router",
         prefix="/api/v1",  # Module has /contacts prefix
         tags=["Contacts"],
+        requires_auth=True,  # Contacts require authentication
         description="Contact management system",
     ),
     RouterConfig(
@@ -231,6 +254,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",  # Module has /auth/api-keys prefix
         tags=["API Keys"],
+        requires_auth=True,  # CRITICAL: API key management requires authentication
         description="API key management",
     ),
     RouterConfig(
@@ -246,6 +270,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",  # Module has /billing prefix
         tags=["Billing"],
+        requires_auth=True,  # CRITICAL: Billing requires authentication
         description="Billing and payment management",
     ),
     RouterConfig(
@@ -261,6 +286,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1/plugins",
         tags=["Plugin Management"],
+        requires_auth=True,  # Plugin management requires authentication
         description="Dynamic plugin system management",
     ),
     RouterConfig(
@@ -268,6 +294,7 @@ ROUTER_CONFIGS = [
         router_name="router",
         prefix="/api/v1",  # Module has /audit prefix
         tags=["Audit"],
+        requires_auth=True,  # CRITICAL: Audit logs require authentication
         description="Audit trails and activity tracking",
     ),
     RouterConfig(
@@ -711,6 +738,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.fault_management.oncall_router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /oncall prefix
+        tags=["On-Call Management"],
+        description="On-call schedule and rotation management",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.deployment.router",
         router_name="router",
         prefix="/api/v1",  # Module has /deployments prefix
@@ -761,7 +796,9 @@ def _register_router(app: FastAPI, config: RouterConfig) -> bool:
         router = getattr(module, config.router_name)
 
         # Add auth dependency if required
-        dependencies = [Depends(security)] if config.requires_auth else None
+        # CRITICAL: Use get_current_user for real JWT validation, not bare HTTPBearer
+        # HTTPBearer only checks for Authorization header presence, not JWT validity
+        dependencies = [Depends(get_current_user)] if config.requires_auth else None
 
         # Register the router with proper typing
         router_tags = list(config.tags) if config.tags is not None else None

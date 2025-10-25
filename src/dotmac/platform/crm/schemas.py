@@ -201,8 +201,8 @@ class LeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None
 
 
 # Quote Schemas
@@ -280,8 +280,8 @@ class QuoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None
 
 
 # Site Survey Schemas
@@ -346,5 +346,5 @@ class SiteSurveyResponse(BaseModel):  # BaseModel resolves to Any in isolation
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None

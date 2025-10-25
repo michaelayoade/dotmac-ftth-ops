@@ -17,6 +17,27 @@ from .. import tenant as tenant_module
 logger = structlog.get_logger(__name__)
 
 
+class SimpleUser:
+    """Simple user object for middleware context.
+
+    Provides a minimal user representation that AppBoundaryMiddleware
+    can use for authentication and authorization checks.
+    """
+
+    def __init__(self, user_id: str, username: str | None = None, email: str | None = None,
+                 tenant_id: str | None = None, roles: list[str] | None = None,
+                 scopes: list[str] | None = None):
+        self.id = user_id
+        self.user_id = user_id
+        self.username = username
+        self.email = email
+        self.tenant_id = tenant_id
+        self.roles = roles or []
+        # Map roles to scopes for boundary middleware
+        # Roles and scopes are treated as equivalent permissions
+        self.scopes = scopes or roles or []
+
+
 class AuditContextMiddleware(BaseHTTPMiddleware):
     """
     Middleware that adds audit context to requests.
