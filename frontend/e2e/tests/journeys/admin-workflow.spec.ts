@@ -1,17 +1,27 @@
 /**
  * E2E tests for admin user journeys
  * Tests complete workflows that an admin would perform
+ *
+ * Configuration via environment variables:
+ * - E2E_BASE_URL: Base URL for the app (default: http://localhost:3000)
+ * - E2E_ADMIN_USERNAME: Admin username (default: admin)
+ * - E2E_ADMIN_PASSWORD: Admin password (default: admin123)
  */
 import { test, expect } from "@playwright/test";
 
 test.describe("Admin User Journey", () => {
-  const BASE_APP_URL = "http://localhost:3000";
-  const TEST_USERNAME = "admin";
-  const TEST_PASSWORD = "admin123";
+  // Use environment variables with fallbacks
+  const BASE_APP_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
+  const TEST_USERNAME = process.env.E2E_ADMIN_USERNAME || "admin";
+  const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "admin123";
 
   /**
-   * Helper to login
-   * Uses hidden test button to bypass react-hook-form issues
+   * Helper to login using test E2E hook
+   *
+   * NOTE: This uses a custom __e2e_login function exposed by the app for testing.
+   * This bypasses react-hook-form to avoid flakiness in E2E tests.
+   *
+   * For testing the actual login form UI, see login-form.spec.ts
    */
   async function login(page: any) {
     await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load" });
@@ -65,118 +75,147 @@ test.describe("Admin User Journey", () => {
     const dashboardContent = page.locator('[data-testid="dashboard"], .dashboard, main').first();
     await expect(dashboardContent).toBeVisible();
 
-    console.log("Admin successfully accessed dashboard");
+    console.log("✅ Admin successfully accessed dashboard");
   });
 
   test("admin can access user management", async ({ page }) => {
-    // Try to navigate to user management
+    // Navigate to user management - assert the link exists
     const userManagementLink = page
       .locator('[data-testid="users-link"], a:has-text("Users"), a[href*="users"]')
       .first();
 
-    if (await userManagementLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await userManagementLink.click();
+    // FIXED: Assert the link is visible instead of silently logging
+    await expect(userManagementLink).toBeVisible({
+      timeout: 5000,
+    });
 
-      await page.waitForLoadState("networkidle");
+    await userManagementLink.click();
+    await page.waitForLoadState("networkidle");
 
-      // Check if we're on user management page
-      const isOnUsers = page.url().includes("/users");
-      console.log("User management page accessible:", isOnUsers);
+    // Assert we navigated to user management page
+    await expect(page).toHaveURL(/users/);
 
-      if (isOnUsers) {
-        // Look for user list
-        const userList = page.locator('[data-testid="user-list"], table, .user-table').first();
-        const hasUserList = await userList.isVisible({ timeout: 2000 }).catch(() => false);
-        console.log("User list displayed:", hasUserList);
-      }
-    } else {
-      console.log("User management link not found in navigation");
-    }
+    // Look for user list - assert it exists
+    const userList = page.locator('[data-testid="user-list"], table, .user-table').first();
+    await expect(userList).toBeVisible({ timeout: 5000 });
+
+    console.log("✅ User management page accessible and user list displayed");
   });
 
   test("admin can access settings", async ({ page }) => {
-    // Try to navigate to settings
+    // Navigate to settings - assert the link exists
     const settingsLink = page
       .locator('[data-testid="settings-link"], a:has-text("Settings"), a[href*="settings"]')
       .first();
 
-    if (await settingsLink.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await settingsLink.click();
+    // FIXED: Assert the link is visible instead of silently logging
+    await expect(settingsLink).toBeVisible({
+      timeout: 5000,
+    });
 
-      await page.waitForLoadState("networkidle");
+    await settingsLink.click();
+    await page.waitForLoadState("networkidle");
 
-      // Check if we're on settings page
-      const isOnSettings = page.url().includes("/settings");
-      console.log("Settings page accessible:", isOnSettings);
+    // Assert we navigated to settings page
+    await expect(page).toHaveURL(/settings/);
 
-      if (isOnSettings) {
-        // Look for settings content
-        const settingsContent = page.locator('[data-testid="settings"], .settings, form').first();
-        const hasSettings = await settingsContent.isVisible({ timeout: 2000 }).catch(() => false);
-        console.log("Settings content displayed:", hasSettings);
-      }
-    } else {
-      console.log("Settings link not found in navigation");
-    }
+    // Look for settings content - assert it exists
+    const settingsContent = page.locator('[data-testid="settings"], .settings, form').first();
+    await expect(settingsContent).toBeVisible({ timeout: 5000 });
+
+    console.log("✅ Settings page accessible and settings content displayed");
   });
 
   test("admin can logout", async ({ page }) => {
-    // Look for logout button
+    // Look for logout button - assert it exists
     const logoutButton = page
       .locator(
         '[data-testid="logout-button"], button:has-text("Logout"), button:has-text("Sign out")',
       )
       .first();
 
-    if (await logoutButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+    // FIXED: Try both direct logout button and user menu, but fail if neither found
+    const hasDirectLogout = await logoutButton.isVisible({ timeout: 2000 }).catch(() => false);
+
+    if (hasDirectLogout) {
       await logoutButton.click();
     } else {
-      // Try user menu approach
+      // Try user menu approach - assert the menu exists
       const userMenu = page
         .locator('[data-testid="user-menu"], .user-menu, [aria-label="User menu"]')
         .first();
-      if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
-        await userMenu.click();
-        await page
-          .locator('button:has-text("Logout"), button:has-text("Sign out")')
-          .first()
-          .click();
-      }
+
+      await expect(userMenu).toBeVisible({
+        timeout: 5000,
+      });
+
+      await userMenu.click();
+
+      const logoutInMenu = page
+        .locator('button:has-text("Logout"), button:has-text("Sign out")')
+        .first();
+
+      await expect(logoutInMenu).toBeVisible({ timeout: 5000 });
+      await logoutInMenu.click();
     }
 
-    // Should redirect to login
+    // Assert redirect to login page
     await page.waitForURL(/login/, { timeout: 5000 });
     await expect(page).toHaveURL(/login/);
 
-    console.log("Admin successfully logged out");
+    console.log("✅ Admin successfully logged out");
   });
 
-  test("admin workflow documentation", async ({ page }) => {
-    // This test documents what admin features are available
+  test("admin has access to core features", async ({ page }) => {
+    // FIXED: This test now validates that critical features are accessible
     await page.goto(`${BASE_APP_URL}/dashboard`);
 
-    // Check for admin-specific navigation items
-    const navigationItems = [
-      { selector: 'a:has-text("Users")', name: "User Management" },
-      { selector: 'a:has-text("Settings")', name: "Settings" },
-      { selector: 'a:has-text("Analytics")', name: "Analytics" },
-      { selector: 'a:has-text("Billing")', name: "Billing" },
-      { selector: 'a:has-text("Admin")', name: "Admin Panel" },
-      { selector: 'a:has-text("Dashboard")', name: "Dashboard" },
+    // Define critical admin features that MUST be available
+    const criticalFeatures = [
+      { selector: 'a:has-text("Dashboard"), a[href*="dashboard"]', name: "Dashboard" },
+    ];
+
+    // Define optional features to document
+    const optionalFeatures = [
+      { selector: 'a:has-text("Users"), a[href*="users"]', name: "User Management" },
+      { selector: 'a:has-text("Settings"), a[href*="settings"]', name: "Settings" },
+      { selector: 'a:has-text("Analytics"), a[href*="analytics"]', name: "Analytics" },
+      { selector: 'a:has-text("Billing"), a[href*="billing"]', name: "Billing" },
+      { selector: 'a:has-text("Admin"), a[href*="admin"]', name: "Admin Panel" },
     ];
 
     const availableFeatures: string[] = [];
+    const missingCritical: string[] = [];
 
-    for (const item of navigationItems) {
-      const element = page.locator(item.selector).first();
-      if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
-        availableFeatures.push(item.name);
+    // Validate critical features exist
+    for (const feature of criticalFeatures) {
+      const element = page.locator(feature.selector).first();
+      const isVisible = await element.isVisible({ timeout: 2000 }).catch(() => false);
+
+      if (isVisible) {
+        availableFeatures.push(feature.name);
+      } else {
+        missingCritical.push(feature.name);
       }
     }
 
-    console.log("Available admin features:", availableFeatures);
+    // Document optional features
+    for (const feature of optionalFeatures) {
+      const element = page.locator(feature.selector).first();
+      const isVisible = await element.isVisible({ timeout: 1000 }).catch(() => false);
 
-    // This test always passes - it's for documentation
-    expect(true).toBe(true);
+      if (isVisible) {
+        availableFeatures.push(feature.name);
+      }
+    }
+
+    console.log("✅ Available admin features:", availableFeatures);
+
+    // FIXED: Assert critical features are present instead of always passing
+    expect(missingCritical).toHaveLength(0);
+    expect(availableFeatures.length).toBeGreaterThan(0);
+
+    // Additional assertion: should have at least Dashboard + 1 other feature
+    expect(availableFeatures.length).toBeGreaterThanOrEqual(2);
   });
 });

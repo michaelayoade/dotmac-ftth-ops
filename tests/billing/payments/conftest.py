@@ -62,6 +62,14 @@ def setup_mock_refresh(mock_db_session):
                 entity.retry_count = 0
             if not hasattr(entity, "extra_data") or entity.extra_data is None:
                 entity.extra_data = {}
+            # CRITICAL FIX: Ensure payment_method_type and payment_method_details are preserved
+            # These fields must not be set to None during refresh
+            if not hasattr(entity, "payment_method_details") or entity.payment_method_details is None:
+                entity.payment_method_details = {}
+            # payment_method_type should be preserved if already set, but default if None
+            if not hasattr(entity, "payment_method_type") or entity.payment_method_type is None:
+                from dotmac.platform.billing.models import PaymentMethodType
+                entity.payment_method_type = PaymentMethodType.CARD
         # Set required fields for PaymentMethodEntity
         if hasattr(entity, "payment_method_id"):
             if not getattr(entity, "payment_method_id", None):

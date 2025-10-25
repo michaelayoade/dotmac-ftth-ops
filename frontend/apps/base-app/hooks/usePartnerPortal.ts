@@ -20,6 +20,8 @@ export interface PartnerDashboardStats {
   current_tier: string;
   commission_model: string;
   default_commission_rate: number;
+  referral_code?: string;
+  referral_link?: string;
 }
 
 export interface PartnerProfile {

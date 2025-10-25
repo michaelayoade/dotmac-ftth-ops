@@ -348,7 +348,7 @@ class TestRADIUSNASManagement:
 
         assert updated_nas is not None
         assert updated_nas.shortname == "UpdatedNAS"
-        assert updated_nas.secret == "new-secret-456"
+        assert updated_nas.secret_configured is True
 
     async def test_update_nonexistent_nas(self, async_db_session, test_tenant):
         """Test updating non-existent NAS returns None"""

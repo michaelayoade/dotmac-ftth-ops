@@ -230,6 +230,7 @@ async function fetchPartners(
   status?: string,
   page: number = 1,
   pageSize: number = 50,
+  onlyManagedTenants: boolean = false,
 ): Promise<PartnerListResponse> {
   const params = new URLSearchParams({
     page: page.toString(),
@@ -483,10 +484,15 @@ async function completePartnerOnboarding(
 }
 
 // Hooks
-export function usePartners(status?: string, page: number = 1, pageSize: number = 50) {
+export function usePartners(
+  status?: string,
+  page: number = 1,
+  pageSize: number = 50,
+  onlyManagedTenants: boolean = false,
+) {
   return useQuery({
-    queryKey: ["partners", status, page, pageSize],
-    queryFn: () => fetchPartners(status, page, pageSize),
+    queryKey: ["partners", status, page, pageSize, onlyManagedTenants],
+    queryFn: () => fetchPartners(status, page, pageSize, onlyManagedTenants),
   });
 }
 
@@ -641,3 +647,6 @@ export function useCompletePartnerOnboarding() {
     },
   });
 }
+  if (onlyManagedTenants) {
+    params.append("has_managed_tenants", "true");
+  }

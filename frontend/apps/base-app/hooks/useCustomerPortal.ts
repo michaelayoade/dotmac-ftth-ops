@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { platformConfig } from "@/lib/config";
+import type { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
 
 const API_BASE = platformConfig.api.baseUrl;
 
@@ -382,6 +383,208 @@ export function useCustomerPayments() {
 }
 
 // ============================================================================
+// useCustomerPaymentMethods Hook
+// ============================================================================
+
+export function useCustomerPaymentMethods() {
+  const [paymentMethods, setPaymentMethods] = useState<CustomerPaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPaymentMethods = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const token = localStorage.getItem("customer_access_token");
+      const response = await fetch(`${API_BASE}/api/v1/customer/payment-methods`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch payment methods");
+      }
+
+      const data = await response.json();
+      setPaymentMethods(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred");
+      console.error("Error fetching customer payment methods:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addPaymentMethod = useCallback(
+    async (request: AddPaymentMethodRequest) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem("customer_access_token");
+        const response = await fetch(`${API_BASE}/api/v1/customer/payment-methods`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(request),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to add payment method");
+        }
+
+        await fetchPaymentMethods();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error adding customer payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const setDefaultPaymentMethod = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem("customer_access_token");
+        const response = await fetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/default`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to set default payment method");
+        }
+
+        await fetchPaymentMethods();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error setting default payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const removePaymentMethod = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem("customer_access_token");
+        const response = await fetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}`,
+          {
+            method: "DELETE",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to remove payment method");
+        }
+
+        await fetchPaymentMethods();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error removing payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const toggleAutoPay = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const token = localStorage.getItem("customer_access_token");
+        const response = await fetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/toggle-autopay`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.detail || "Failed to toggle AutoPay");
+        }
+
+        await fetchPaymentMethods();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "An error occurred");
+        console.error("Error toggling AutoPay:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, [fetchPaymentMethods]);
+
+  const defaultPaymentMethod = useMemo(
+    () => paymentMethods.find((method) => method.is_default) || null,
+    [paymentMethods],
+  );
+
+  const autoPayPaymentMethod = useMemo(
+    () => paymentMethods.find((method) => method.auto_pay_enabled) || null,
+    [paymentMethods],
+  );
+
+  return {
+    paymentMethods,
+    defaultPaymentMethod,
+    autoPayPaymentMethod,
+    loading,
+    error,
+    refetch: fetchPaymentMethods,
+    addPaymentMethod,
+    setDefaultPaymentMethod,
+    removePaymentMethod,
+    toggleAutoPay,
+  };
+}
+
+// ============================================================================
 // useCustomerUsage Hook
 // ============================================================================
 
@@ -628,4 +831,42 @@ export function useCustomerSettings() {
     updateSettings,
     changePassword,
   };
+}
+export interface CustomerPaymentMethod {
+  payment_method_id: string;
+  tenant_id: string;
+  method_type: "card" | "bank_account" | "wallet" | "wire_transfer" | "check";
+  status: "active" | "pending_verification" | "verification_failed" | "expired" | "inactive";
+  is_default: boolean;
+  auto_pay_enabled: boolean;
+  card_brand?:
+    | "visa"
+    | "mastercard"
+    | "amex"
+    | "discover"
+    | "diners"
+    | "jcb"
+    | "unionpay"
+    | "unknown";
+  card_last4?: string;
+  card_exp_month?: number;
+  card_exp_year?: number;
+  bank_name?: string;
+  bank_account_last4?: string;
+  bank_account_type?: string;
+  wallet_type?: string;
+  billing_name?: string;
+  billing_email?: string;
+  billing_phone?: string;
+  billing_address_line1?: string;
+  billing_address_line2?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postal_code?: string;
+  billing_country?: string;
+  is_verified: boolean;
+  verified_at?: string;
+  created_at: string;
+  expires_at?: string;
+  metadata?: Record<string, any>;
 }

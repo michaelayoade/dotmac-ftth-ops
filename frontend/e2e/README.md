@@ -41,12 +41,21 @@ pnpm install:deps
 Create `.env` file in the e2e directory:
 
 ```env
+# Application URLs
 E2E_BASE_URL=http://localhost:3000
 API_BASE_URL=http://localhost:8000
+
+# Test credentials (DO NOT use production credentials!)
+E2E_ADMIN_USERNAME=admin
+E2E_ADMIN_PASSWORD=admin123
+
+# Infrastructure
 REDIS_URL=redis://localhost:6379/1
 DATABASE_URL=sqlite:///tmp/e2e_test.db
 DOTMAC_JWT_SECRET_KEY=test-secret-key-for-e2e
 ```
+
+**Important**: Never commit real credentials. Use environment-specific secrets in CI/CD.
 
 ## Running Tests
 
