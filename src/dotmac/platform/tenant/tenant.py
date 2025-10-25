@@ -79,25 +79,30 @@ class TenantMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.config = config or get_tenant_config()
         self.resolver = resolver or TenantIdentityResolver(self.config)
-        self.exempt_paths = exempt_paths or {
-            "/health",
-            "/ready",
-            "/metrics",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/api/v1/auth/login",  # Auth endpoints don't need tenant
-            "/api/v1/auth/register",
-            "/api/v1/auth/password-reset",
-            "/api/v1/auth/password-reset/confirm",
-            "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
-            "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
-            "/api/v1/secrets/health",  # Vault health check is public
-            "/api/v1/health",  # Health check endpoint (also available at /health)
-            "/api/v1/platform/config",
-            "/api/v1/platform/health",
-            "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
-        }
+        self.header_name = self.config.tenant_header_name  # Set header name for middleware
+        self.query_param = self.config.tenant_query_param  # Set query param for middleware
+        self.exempt_paths = (
+            exempt_paths
+            or {
+                "/health",
+                "/ready",
+                "/metrics",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/api/v1/auth/login",  # Auth endpoints don't need tenant
+                "/api/v1/auth/register",
+                "/api/v1/auth/password-reset",
+                "/api/v1/auth/password-reset/confirm",
+                "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
+                "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
+                "/api/v1/secrets/health",  # Vault health check is public
+                "/api/v1/health",  # Health check endpoint (also available at /health)
+                "/api/v1/platform/config",
+                "/api/v1/platform/health",
+                "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
+            }
+        )
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
         self.optional_tenant_paths = {
             "/api/v1/audit/frontend-logs",  # Frontend logs can be unauthenticated
@@ -119,11 +124,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         skip_tenant_validation = False
         if path in self.exempt_paths:
             # Registration requires explicit tenant context when header enforcement is enabled
-            if (
-                path == register_path
-                and self.require_tenant
-                and not self.config.is_single_tenant
-            ):
+            if path == register_path and self.require_tenant and not self.config.is_single_tenant:
                 skip_tenant_validation = False
             else:
                 skip_tenant_validation = True
