@@ -56,7 +56,7 @@ PLATFORM_OBSERVABILITY=(
     "otel-collector:4318:Telemetry Collector"
     "jaeger:16686:Distributed Tracing"
     "prometheus:9090:Metrics Storage"
-    "grafana:3000:Dashboards"
+    "grafana:3400:Dashboards"
 )
 
 ISP_SERVICES=(
@@ -114,7 +114,7 @@ ${CYAN}Service Ports:${NC}
     MinIO:          9000, 9001 (console)
     Jaeger UI:      16686
     Prometheus:     9090
-    Grafana:        3000
+    Grafana:        3400
 
   ${YELLOW}ISP Services:${NC}
     FreeRADIUS:     1812-1813 (UDP)
