@@ -12,6 +12,7 @@ import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -237,6 +238,33 @@ def create_application() -> FastAPI:
 
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # Add TrustedHostMiddleware for host header validation
+    # Protects against host header poisoning attacks
+    if settings.trusted_hosts and len(settings.trusted_hosts) > 0:
+        logger.info(
+            "trusted_host_middleware_enabled",
+            trusted_hosts=settings.trusted_hosts,
+            count=len(settings.trusted_hosts),
+        )
+        app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    else:
+        # In production, require trusted_hosts to be set
+        if settings.is_production:
+            logger.error(
+                "trusted_hosts_not_configured_in_production",
+                deployment_mode=settings.DEPLOYMENT_MODE,
+            )
+            raise ValueError(
+                "TRUSTED_HOSTS must be configured in production. "
+                "Set the environment variable or add to settings. "
+                "Example: TRUSTED_HOSTS=example.com,api.example.com"
+            )
+        logger.warning(
+            "trusted_host_middleware_disabled",
+            reason="No trusted_hosts configured",
+            environment=settings.DEPLOYMENT_MODE,
+        )
 
     # Add error tracking middleware (should be early in the chain)
     # Tracks HTTP errors and exceptions in Prometheus

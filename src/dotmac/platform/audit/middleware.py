@@ -81,18 +81,36 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                 if jwt_token:
                     try:
                         claims = jwt_service.verify_token(jwt_token)
-                        request.state.user_id = claims.get("sub")
-                        request.state.username = claims.get("username")
-                        request.state.email = claims.get("email")
-                        request.state.tenant_id = claims.get("tenant_id")
-                        request.state.roles = claims.get("roles", [])
+                        user_id = claims.get("sub")
+                        username = claims.get("username")
+                        email = claims.get("email")
+                        tenant_id_claim = claims.get("tenant_id")
+                        roles = claims.get("roles", [])
+                        scopes = claims.get("scopes", []) or claims.get("permissions", [])
 
-                        tenant_claim = claims.get("tenant_id")
-                        if tenant_claim and tenant_claim != get_tenant_context():
+                        # Set individual fields for backward compatibility
+                        request.state.user_id = user_id
+                        request.state.username = username
+                        request.state.email = email
+                        request.state.tenant_id = tenant_id_claim
+                        request.state.roles = roles
+
+                        # Create user object for AppBoundaryMiddleware
+                        if user_id:
+                            request.state.user = SimpleUser(
+                                user_id=user_id,
+                                username=username,
+                                email=email,
+                                tenant_id=tenant_id_claim,
+                                roles=roles,
+                                scopes=scopes
+                            )
+
+                        if tenant_id_claim and tenant_id_claim != get_tenant_context():
                             from ..tenant import set_current_tenant_id as set_tenant_id
 
-                            set_tenant_id(tenant_claim)
-                            tenant_module._tenant_context.set(tenant_claim)
+                            set_tenant_id(tenant_id_claim)
+                            tenant_module._tenant_context.set(tenant_id_claim)
                             tenant_overridden = True
                     except Exception as e:
                         logger.debug("Failed to extract user from JWT", error=str(e))
@@ -102,17 +120,34 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                     try:
                         key_data = await api_key_service.verify_api_key(api_key)
                         if key_data:
-                            request.state.user_id = key_data.get("user_id")
-                            request.state.username = key_data.get("name")
-                            request.state.tenant_id = key_data.get("tenant_id")
-                            request.state.roles = ["api_user"]
+                            user_id = key_data.get("user_id")
+                            username = key_data.get("name")
+                            tenant_id_claim = key_data.get("tenant_id")
+                            roles = ["api_user"]
+                            scopes = key_data.get("scopes", []) or key_data.get("permissions", [])
 
-                            tenant_claim = key_data.get("tenant_id")
-                            if tenant_claim and tenant_claim != get_tenant_context():
+                            # Set individual fields for backward compatibility
+                            request.state.user_id = user_id
+                            request.state.username = username
+                            request.state.tenant_id = tenant_id_claim
+                            request.state.roles = roles
+
+                            # Create user object for AppBoundaryMiddleware
+                            if user_id:
+                                request.state.user = SimpleUser(
+                                    user_id=user_id,
+                                    username=username,
+                                    email=None,
+                                    tenant_id=tenant_id_claim,
+                                    roles=roles,
+                                    scopes=scopes
+                                )
+
+                            if tenant_id_claim and tenant_id_claim != get_tenant_context():
                                 from ..tenant import set_current_tenant_id as set_tenant_id
 
-                                set_tenant_id(tenant_claim)
-                                tenant_module._tenant_context.set(tenant_claim)
+                                set_tenant_id(tenant_id_claim)
+                                tenant_module._tenant_context.set(tenant_id_claim)
                                 tenant_overridden = True
                     except Exception as e:
                         logger.debug("Failed to extract user from API key", error=str(e))

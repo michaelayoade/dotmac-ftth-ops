@@ -276,7 +276,34 @@ cd apps/platform-admin-app && pnpm build
 3. Check exact error stack trace
 4. Rebuild and redeploy frontend
 
-**Code Changes Needed**: ❌ **NONE** - All files already use safe pattern
+**Code Changes Needed**: ❌ **NONE for NAS dashboards** - All files already use safe pattern
+
+---
+
+## UPDATE: Additional Fixes Applied
+
+While verifying the NAS dashboards (which were already fixed), I discovered **16 other dashboard pages** with the same unsafe pattern that were causing production crashes.
+
+### ✅ Fixed 23 occurrences across 16 files:
+
+1. WireGuard Peers (1)
+2. WireGuard Servers (1)
+3. CRM Quotes (1)
+4. CRM Leads (1)
+5. RADIUS Sessions (1)
+6. RADIUS Subscribers (1)
+7. Support Tickets (1)
+8. Wireless APs (2)
+9. Diagnostics (2)
+10. Receipts (3)
+11. Payments (1)
+12. Product Catalog (1)
+13. Subscriptions (1)
+14. Dunning Campaigns (1)
+15. Pricing Rules (1)
+16. Playbooks (1)
+
+**See [DASHBOARD_FILTER_FIXES.md](DASHBOARD_FILTER_FIXES.md) for complete details.**
 
 ---
 
