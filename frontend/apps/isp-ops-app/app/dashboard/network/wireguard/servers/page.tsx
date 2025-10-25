@@ -79,7 +79,7 @@ export default function WireGuardServersPage() {
   const filteredServers = servers.filter((server) =>
     searchTerm
       ? server.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        server.location?.toLowerCase().includes(searchTerm.toLowerCase())
+        (server.location ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       : true,
   );
 

@@ -57,7 +57,7 @@ export default function SupportTicketsPage() {
     return (
       ticket.ticket_number.toLowerCase().includes(query) ||
       ticket.subject.toLowerCase().includes(query) ||
-      ticket.service_address?.toLowerCase().includes(query)
+      (ticket.service_address ?? "").toLowerCase().includes(query)
     );
   });
 

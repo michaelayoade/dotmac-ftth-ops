@@ -112,8 +112,8 @@ export default function WirelessDashboardPage() {
   const filteredAccessPoints = accessPoints.filter(
     (ap: any) =>
       ap.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ap.siteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ap.ipAddress?.toLowerCase().includes(searchTerm.toLowerCase()),
+      (ap.siteName ?? "").toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ap.ipAddress ?? "").toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate status colors

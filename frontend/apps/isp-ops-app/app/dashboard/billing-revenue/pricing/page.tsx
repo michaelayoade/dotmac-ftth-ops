@@ -166,7 +166,7 @@ export default function PricingPage() {
       const searchLower = searchQuery.toLowerCase();
       if (
         !rule.name.toLowerCase().includes(searchLower) &&
-        !rule.description?.toLowerCase().includes(searchLower)
+        !(rule.description ?? "").toLowerCase().includes(searchLower)
       ) {
         return false;
       }

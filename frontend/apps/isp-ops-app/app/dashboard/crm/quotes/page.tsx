@@ -134,7 +134,7 @@ export default function QuotesPage() {
       (quote) =>
         quote.quote_number.toLowerCase().includes(query) ||
         quote.service_plan_name.toLowerCase().includes(query) ||
-        quote.bandwidth?.toLowerCase().includes(query),
+        (quote.bandwidth ?? "").toLowerCase().includes(query),
     );
   }, [quotes, searchQuery]);
 

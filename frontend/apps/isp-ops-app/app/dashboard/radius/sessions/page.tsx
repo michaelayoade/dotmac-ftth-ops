@@ -96,7 +96,7 @@ export default function RADIUSSessionsPage() {
     (session) =>
       session.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       session.nasipaddress.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      session.framedipaddress?.toLowerCase().includes(searchQuery.toLowerCase())
+      (session.framedipaddress ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDisconnect = (session: RADIUSSession) => {

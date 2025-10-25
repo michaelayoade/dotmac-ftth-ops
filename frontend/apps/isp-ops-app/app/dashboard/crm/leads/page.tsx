@@ -106,7 +106,7 @@ export default function LeadsManagementPage() {
           lead.first_name.toLowerCase().includes(query) ||
           lead.last_name.toLowerCase().includes(query) ||
           lead.email.toLowerCase().includes(query) ||
-          lead.phone?.toLowerCase().includes(query) ||
+          (lead.phone ?? "").toLowerCase().includes(query) ||
           lead.lead_number.toLowerCase().includes(query),
       );
     }

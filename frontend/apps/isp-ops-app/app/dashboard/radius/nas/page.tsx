@@ -40,7 +40,7 @@ interface NASDevice {
   shortname: string;
   type: string;
   ports?: number | null;
-  secret: string;
+  secret_configured: boolean;
   server?: string | null;
   community?: string | null;
   description?: string | null;
@@ -94,7 +94,7 @@ export default function RADIUSNASPage() {
       nas.nasname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.shortname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      nas.description?.toLowerCase().includes(searchQuery.toLowerCase())
+      (nas.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDelete = (nas: NASDevice) => {
@@ -143,7 +143,7 @@ export default function RADIUSNASPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(nasDevices?.map((n) => n.type)).size ?? 0}
+              {new Set((nasDevices ?? []).map((n) => n.type)).size}
             </div>
             <p className="text-xs text-muted-foreground">Unique types</p>
           </CardContent>

@@ -149,7 +149,7 @@ export default function RADIUSSubscribersPage() {
     (sub) =>
       sub.username.toLowerCase().includes(searchQuery.toLowerCase()) ||
       sub.subscriber_id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      sub.framed_ipv4_address?.toLowerCase().includes(searchQuery.toLowerCase())
+      (sub.framed_ipv4_address ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleToggleStatus = (subscriber: RADIUSSubscriber) => {

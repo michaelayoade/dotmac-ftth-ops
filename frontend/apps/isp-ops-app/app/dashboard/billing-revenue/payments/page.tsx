@@ -148,7 +148,7 @@ export default function PaymentsPage() {
           customerName.toLowerCase().includes(searchLower) ||
           payment.customer?.email.toLowerCase().includes(searchLower) ||
           payment.id.toLowerCase().includes(searchLower) ||
-          payment.description?.toLowerCase().includes(searchLower);
+          (payment.description ?? "").toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 

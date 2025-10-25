@@ -141,7 +141,7 @@ export interface NASResponse {
   shortname: string;
   type?: string | null;
   ports?: number | null;
-  secret: string;
+  secret_configured: boolean;
   server?: string | null;
   community?: string | null;
   description?: string | null;

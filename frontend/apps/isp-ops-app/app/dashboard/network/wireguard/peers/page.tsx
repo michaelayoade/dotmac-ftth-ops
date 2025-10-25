@@ -96,7 +96,7 @@ export default function WireGuardPeersPage() {
     searchTerm
       ? peer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         peer.peer_ipv4.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        peer.customer_id?.toLowerCase().includes(searchTerm.toLowerCase())
+        (peer.customer_id ?? "").toLowerCase().includes(searchTerm.toLowerCase())
       : true,
   );
 

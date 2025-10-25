@@ -122,9 +122,9 @@ export default function ReceiptsPage() {
     return receiptsData.receipts.filter(
       (receipt) =>
         receipt.receipt_number.toLowerCase().includes(query) ||
-        receipt.customer_name?.toLowerCase().includes(query) ||
-        receipt.customer_email?.toLowerCase().includes(query) ||
-        receipt.payment_id?.toLowerCase().includes(query)
+        (receipt.customer_name ?? "").toLowerCase().includes(query) ||
+        (receipt.customer_email ?? "").toLowerCase().includes(query) ||
+        (receipt.payment_id ?? "").toLowerCase().includes(query)
     );
   }, [receiptsData, searchQuery]);
 

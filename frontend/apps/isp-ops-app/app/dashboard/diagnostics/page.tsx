@@ -111,9 +111,9 @@ function DiagnosticsHistoryPageContent() {
   const filteredRuns = runs.filter((run) => {
     const matchesSearch =
       !searchQuery ||
-      run.subscriber_id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (run.subscriber_id ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
       run.diagnostic_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      run.summary?.toLowerCase().includes(searchQuery.toLowerCase());
+      (run.summary ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesStatus = statusFilter === "all" || run.status === statusFilter;
     const matchesSeverity = severityFilter === "all" || run.severity === severityFilter;
