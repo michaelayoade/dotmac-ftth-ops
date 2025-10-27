@@ -41,8 +41,7 @@ def get_version() -> str:
                 (
                     candidate
                     for candidate in (
-                        parent / "pyproject.toml"
-                        for parent in Path(__file__).resolve().parents
+                        parent / "pyproject.toml" for parent in Path(__file__).resolve().parents
                     )
                     if candidate.is_file()
                 ),

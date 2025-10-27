@@ -9,23 +9,10 @@ from uuid import uuid4
 
 import pytest
 
-from dotmac.platform.auth.core import create_access_token
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
-
-@pytest.fixture
-def auth_headers(user_id, tenant_id):
-    """Create authentication headers with JWT token for API requests."""
-    token = create_access_token(
-        user_id=user_id,
-        username="e2e-test-user",
-        email=f"{user_id}@test.com",
-        tenant_id=tenant_id,
-        roles=["admin"],
-        permissions=["customers:read", "customers:write"],
-    )
-    return {"Authorization": f"Bearer {token}"}
+# Note: auth_headers fixture is provided by tests/e2e/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
 
 
 class TestCustomerCreationE2E:

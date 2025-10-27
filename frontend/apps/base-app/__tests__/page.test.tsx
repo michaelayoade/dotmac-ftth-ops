@@ -1,5 +1,4 @@
 import { render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import HomePage from "../app/page";
 
 // Mock fetch globally
@@ -36,9 +35,16 @@ describe("HomePage", () => {
       expect(screen.getByText("Go to Dashboard")).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("heading", { level: 1, name: /DotMac Platform/ })).toBeInTheDocument();
     expect(
-      screen.getByText("Reusable SaaS backend and APIs to launch faster."),
+      screen.getByRole("heading", {
+        level: 1,
+        name: /DotMac Platform/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Fiber-to-the-Home \(FTTH\) Operations Platform\. Manage your network infrastructure/,
+      ),
     ).toBeInTheDocument();
 
     // Check for authenticated UI - should show dashboard button
@@ -66,9 +72,16 @@ describe("HomePage", () => {
       expect(screen.getByText("Sign In")).toBeInTheDocument();
     });
 
-    expect(screen.getByRole("heading", { level: 1, name: /DotMac Platform/ })).toBeInTheDocument();
     expect(
-      screen.getByText("Reusable SaaS backend and APIs to launch faster."),
+      screen.getByRole("heading", {
+        level: 1,
+        name: /DotMac Platform/,
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Fiber-to-the-Home \(FTTH\) Operations Platform\. Manage your network infrastructure/,
+      ),
     ).toBeInTheDocument();
 
     // Check for unauthenticated UI - should show sign in and register buttons
@@ -113,12 +126,17 @@ describe("HomePage", () => {
 
     // Check main headings and content
     expect(screen.getByText("🚀 DotMac Platform")).toBeInTheDocument();
-    expect(screen.getByRole("heading", { level: 1, name: /DotMac Platform/ })).toBeInTheDocument();
     expect(
-      screen.getByText("Reusable SaaS backend and APIs to launch faster."),
+      screen.getByRole("heading", {
+        level: 1,
+        name: /DotMac Platform/,
+      }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/Complete reusable backend for authentication/)).toBeInTheDocument();
-
+    expect(
+      screen.getByText(
+        /Fiber-to-the-Home \(FTTH\) Operations Platform\. Manage your network infrastructure/,
+      ),
+    ).toBeInTheDocument();
     // Check test credentials section
     expect(screen.getByText("Quick Start - Test Credentials:")).toBeInTheDocument();
     expect(screen.getByText("newuser / Test123!@#")).toBeInTheDocument();
@@ -137,15 +155,14 @@ describe("HomePage", () => {
     });
 
     // Check feature cards
-    expect(screen.getByText("Authentication & Security")).toBeInTheDocument();
-    expect(screen.getByText("Business Operations")).toBeInTheDocument();
-    expect(screen.getByText("Developer Experience")).toBeInTheDocument();
+    expect(screen.getByText("Network Operations")).toBeInTheDocument();
+    expect(screen.getByText("Subscriber Management")).toBeInTheDocument();
+    expect(screen.getByText("Business Support Systems")).toBeInTheDocument();
 
     // Check feature details
-    expect(screen.getByText(/JWT-based authentication/)).toBeInTheDocument();
-    expect(screen.getByText(/Role-based access control/)).toBeInTheDocument();
-    expect(screen.getByText(/Customer relationship management/)).toBeInTheDocument();
-    expect(screen.getByText(/Modern React\/Next.js frontend/)).toBeInTheDocument();
+    expect(screen.getByText(/FTTH\/PON network management/)).toBeInTheDocument();
+    expect(screen.getByText(/RADIUS authentication & accounting/)).toBeInTheDocument();
+    expect(screen.getByText(/Automated billing & invoicing/)).toBeInTheDocument();
   });
 
   it("renders API status indicators", async () => {
@@ -162,7 +179,6 @@ describe("HomePage", () => {
 
     // Check status indicators
     expect(screen.getByText(/API:/)).toBeInTheDocument();
-    expect(screen.getByText("localhost:8000")).toBeInTheDocument();
     expect(screen.getByText(/Frontend:/)).toBeInTheDocument();
     expect(screen.getByText("localhost:3001")).toBeInTheDocument();
   });
@@ -177,7 +193,7 @@ describe("HomePage", () => {
 
     // Wait for auth check
     await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith("/api/v1/auth/me", {
+      expect(global.fetch).toHaveBeenCalledWith("/auth/me", {
         credentials: "include",
       });
     });

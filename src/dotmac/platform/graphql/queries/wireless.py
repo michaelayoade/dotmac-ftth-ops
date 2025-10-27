@@ -11,10 +11,10 @@ Implements GraphQL query resolvers for wireless network management:
 Created: 2025-10-16
 """
 
-from datetime import datetime
 import json
 import uuid
 from collections import defaultdict
+from datetime import datetime
 from statistics import mean
 
 import strawberry
@@ -46,11 +46,15 @@ from dotmac.platform.graphql.types.wireless import (
 )
 from dotmac.platform.wireless.models import (
     CoverageZone as CoverageZoneModel,
+)
+from dotmac.platform.wireless.models import (
     DeviceStatus,
     DeviceType,
     Frequency,
     WirelessDevice,
     WirelessRadio,
+)
+from dotmac.platform.wireless.models import (
     WirelessClient as WirelessClientModel,
 )
 
@@ -141,10 +145,15 @@ class WirelessQueries:
 
         if status:
             # Map GraphQL status to database status
-            db_status = DeviceStatus.ONLINE if status == AccessPointStatus.ONLINE else \
-                       DeviceStatus.OFFLINE if status == AccessPointStatus.OFFLINE else \
-                       DeviceStatus.DEGRADED if status == AccessPointStatus.DEGRADED else \
-                       DeviceStatus.MAINTENANCE
+            db_status = (
+                DeviceStatus.ONLINE
+                if status == AccessPointStatus.ONLINE
+                else DeviceStatus.OFFLINE
+                if status == AccessPointStatus.OFFLINE
+                else DeviceStatus.DEGRADED
+                if status == AccessPointStatus.DEGRADED
+                else DeviceStatus.MAINTENANCE
+            )
             query = query.where(WirelessDevice.status == db_status)
 
         if search:
@@ -168,9 +177,7 @@ class WirelessQueries:
         device_models = result.scalars().all()
 
         # Map to GraphQL types
-        access_points = [
-            map_device_to_access_point(device) for device in device_models
-        ]
+        access_points = [map_device_to_access_point(device) for device in device_models]
 
         return AccessPointConnection(
             access_points=access_points,
@@ -234,13 +241,17 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        query = select(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.site_name == site_id,
+        query = (
+            select(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.site_name == site_id,
+                )
             )
-        ).order_by(WirelessDevice.name)
+            .order_by(WirelessDevice.name)
+        )
 
         result = await db.execute(query)
         devices = result.scalars().all()
@@ -287,9 +298,11 @@ class WirelessQueries:
             )
 
         # Base query for wireless clients
-        query = select(WirelessClientModel).where(
-            WirelessClientModel.tenant_id == tenant_id
-        ).order_by(desc(WirelessClientModel.last_seen))
+        query = (
+            select(WirelessClientModel)
+            .where(WirelessClientModel.tenant_id == tenant_id)
+            .order_by(desc(WirelessClientModel.last_seen))
+        )
 
         if access_point_id:
             try:
@@ -418,12 +431,16 @@ class WirelessQueries:
         except ValueError:
             return []
 
-        query = select(WirelessClientModel).where(
-            and_(
-                WirelessClientModel.tenant_id == tenant_id,
-                WirelessClientModel.device_id == ap_uuid,
+        query = (
+            select(WirelessClientModel)
+            .where(
+                and_(
+                    WirelessClientModel.tenant_id == tenant_id,
+                    WirelessClientModel.device_id == ap_uuid,
+                )
             )
-        ).order_by(desc(WirelessClientModel.last_seen))
+            .order_by(desc(WirelessClientModel.last_seen))
+        )
 
         result = await db.execute(query)
         clients = result.scalars().all()
@@ -448,9 +465,11 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
-        query = select(WirelessClientModel).where(
-            WirelessClientModel.tenant_id == tenant_id
-        ).order_by(desc(WirelessClientModel.last_seen))
+        query = (
+            select(WirelessClientModel)
+            .where(WirelessClientModel.tenant_id == tenant_id)
+            .order_by(desc(WirelessClientModel.last_seen))
+        )
 
         result = await db.execute(query)
         clients = result.scalars().all()
@@ -500,16 +519,12 @@ class WirelessQueries:
         tenant_id = info.context["tenant_id"]
 
         # Build query for coverage zones
-        query = select(CoverageZoneModel).where(
-            CoverageZoneModel.tenant_id == tenant_id
-        )
+        query = select(CoverageZoneModel).where(CoverageZoneModel.tenant_id == tenant_id)
 
         # Apply filters
         if site_id:
             # Join with device to filter by site
-            query = query.join(WirelessDevice).where(
-                WirelessDevice.site_name == site_id
-            )
+            query = query.join(WirelessDevice).where(WirelessDevice.site_name == site_id)
 
         # Get total count
         total_count_query = select(func.count()).select_from(query.subquery())
@@ -523,9 +538,7 @@ class WirelessQueries:
         zone_models = result.scalars().all()
 
         # Map to GraphQL types
-        zones = [
-            map_coverage_zone_model_to_graphql(zone) for zone in zone_models
-        ]
+        zones = [map_coverage_zone_model_to_graphql(zone) for zone in zone_models]
 
         return CoverageZoneConnection(
             zones=zones,
@@ -708,8 +721,10 @@ class WirelessQueries:
         avg_interference = mean(interference_values) if interference_values else 0.0
         total_interference_score = min(100.0, avg_interference * 100.0)
 
-        utilization_values = [info.utilization_percent for infos in band_to_channels.values() for info in infos]
-        avg_utilization = mean(utilization_values) if utilization_values else 0.0
+        utilization_values = [
+            info.utilization_percent for infos in band_to_channels.values() for info in infos
+        ]
+        mean(utilization_values) if utilization_values else 0.0
         coverage_quality_score = max(
             0.0,
             min(100.0, 80.0 + (average_snr / 2.0) - (avg_interference * 20.0)),
@@ -801,11 +816,15 @@ class WirelessQueries:
         tenant_id = info.context["tenant_id"]
 
         # Count APs by status
-        total_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.site_name == site_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+        total_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.site_name == site_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                )
             )
         )
         total_aps = await db.scalar(total_aps_query) or 0
@@ -813,22 +832,30 @@ class WirelessQueries:
         if total_aps == 0:
             return None
 
-        online_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.site_name == site_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.status == DeviceStatus.ONLINE,
+        online_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.site_name == site_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.status == DeviceStatus.ONLINE,
+                )
             )
         )
         online_aps = await db.scalar(online_aps_query) or 0
 
-        offline_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.site_name == site_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.status == DeviceStatus.OFFLINE,
+        offline_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.site_name == site_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.status == DeviceStatus.OFFLINE,
+                )
             )
         )
         offline_aps = await db.scalar(offline_aps_query) or 0
@@ -903,18 +930,24 @@ class WirelessQueries:
         site_display_name = site_meta.get("name", site_display_name)
 
         # Calculate 6 GHz clients
-        clients_6_query = select(func.count()).select_from(WirelessClient).where(
-            and_(
-                WirelessClient.tenant_id == tenant_id,
-                WirelessClient.device_id.in_(select(WirelessDevice.id).where(
-                    and_(
-                        WirelessDevice.tenant_id == tenant_id,
-                        WirelessDevice.site_id == site_id,
-                        WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                    )
-                )),
-                WirelessClient.frequency == Frequency.FREQ_6_GHZ,
-                WirelessClient.connected == True,  # noqa: E712
+        clients_6_query = (
+            select(func.count())
+            .select_from(WirelessClientModel)
+            .where(
+                and_(
+                    WirelessClientModel.tenant_id == tenant_id,
+                    WirelessClientModel.device_id.in_(
+                        select(WirelessDevice.id).where(
+                            and_(
+                                WirelessDevice.tenant_id == tenant_id,
+                                WirelessDevice.site_name == site_id,
+                                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                            )
+                        )
+                    ),
+                    WirelessClientModel.frequency == Frequency.FREQ_6_GHZ,
+                    WirelessClientModel.connected == True,  # noqa: E712
+                )
             )
         )
         clients_6_row = await db.execute(clients_6_query)
@@ -922,20 +955,22 @@ class WirelessQueries:
 
         # Calculate average signal strength and SNR from connected clients
         signal_query = select(
-            func.avg(WirelessClient.rssi_dbm),
-            func.avg(WirelessClient.snr_db),
+            func.avg(WirelessClientModel.rssi_dbm),
+            func.avg(WirelessClientModel.snr_db),
         ).where(
             and_(
-                WirelessClient.tenant_id == tenant_id,
-                WirelessClient.device_id.in_(select(WirelessDevice.id).where(
-                    and_(
-                        WirelessDevice.tenant_id == tenant_id,
-                        WirelessDevice.site_id == site_id,
-                        WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                WirelessClientModel.tenant_id == tenant_id,
+                WirelessClientModel.device_id.in_(
+                    select(WirelessDevice.id).where(
+                        and_(
+                            WirelessDevice.tenant_id == tenant_id,
+                            WirelessDevice.site_name == site_id,
+                            WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                        )
                     )
-                )),
-                WirelessClient.connected == True,  # noqa: E712
-                WirelessClient.rssi_dbm.isnot(None),
+                ),
+                WirelessClientModel.connected == True,  # noqa: E712
+                WirelessClientModel.rssi_dbm.isnot(None),
             )
         )
         signal_row = await db.execute(signal_query)
@@ -982,38 +1017,54 @@ class WirelessQueries:
         tenant_id = info.context["tenant_id"]
 
         # Count total APs
-        total_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+        total_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                )
             )
         )
         total_aps = await db.scalar(total_aps_query) or 0
 
         # Count APs by status
-        online_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.status == DeviceStatus.ONLINE,
+        online_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.status == DeviceStatus.ONLINE,
+                )
             )
         )
         online_aps = await db.scalar(online_aps_query) or 0
 
-        offline_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.status == DeviceStatus.OFFLINE,
+        offline_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.status == DeviceStatus.OFFLINE,
+                )
             )
         )
         offline_aps = await db.scalar(offline_aps_query) or 0
 
-        degraded_aps_query = select(func.count()).select_from(WirelessDevice).where(
-            and_(
-                WirelessDevice.tenant_id == tenant_id,
-                WirelessDevice.device_type == DeviceType.ACCESS_POINT,
-                WirelessDevice.status == DeviceStatus.DEGRADED,
+        degraded_aps_query = (
+            select(func.count())
+            .select_from(WirelessDevice)
+            .where(
+                and_(
+                    WirelessDevice.tenant_id == tenant_id,
+                    WirelessDevice.device_type == DeviceType.ACCESS_POINT,
+                    WirelessDevice.status == DeviceStatus.DEGRADED,
+                )
             )
         )
         degraded_aps = await db.scalar(degraded_aps_query) or 0
@@ -1111,7 +1162,9 @@ def map_device_to_access_point(device: WirelessDevice) -> AccessPoint:
     transmit_power = int(metadata.get("transmit_power", 20))
     max_clients = metadata.get("max_clients")
 
-    security_type_value = str(metadata.get("security_type", WirelessSecurityType.WPA2_WPA3.value)).lower()
+    security_type_value = str(
+        metadata.get("security_type", WirelessSecurityType.WPA2_WPA3.value)
+    ).lower()
     try:
         security_type = WirelessSecurityType(security_type_value)
     except ValueError:
@@ -1200,27 +1253,21 @@ def map_device_to_access_point(device: WirelessDevice) -> AccessPoint:
         transmit_power=transmit_power,
         max_clients=max_clients,
         security_type=security_type,
-
         # Location
         location=location,
-
         # RF Metrics
         rf_metrics=rf_metrics,
-
         # Performance Metrics
         performance=performance,
-
         # Management
         controller_id=None,
         controller_name=None,
         site_id=site_id,
         site_name=site_name,
-
         # Timestamps
         created_at=device.created_at,
         updated_at=device.updated_at,
         last_reboot_at=last_reboot_at,
-
         # Configuration
         is_mesh_enabled=False,
         is_band_steering_enabled=False,
@@ -1399,8 +1446,3 @@ def map_coverage_zone_model_to_graphql(zone: CoverageZoneModel) -> CoverageZone:
         last_surveyed_at=last_surveyed_at,
     )
     # Map frequency to frequency band
-    freq_map = {
-        Frequency.FREQ_2_4_GHZ: FrequencyBand.BAND_2_4_GHZ,
-        Frequency.FREQ_5_GHZ: FrequencyBand.BAND_5_GHZ,
-        Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
-    }

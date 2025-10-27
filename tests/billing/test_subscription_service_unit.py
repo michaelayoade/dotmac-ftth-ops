@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, plan lookups, event creation)
 Focus: Test business rules, validation, lifecycle management in isolation
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -165,8 +165,8 @@ class TestSubscriptionLifecycle:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -251,7 +251,7 @@ class TestSubscriptionPlanChange:
     @pytest.fixture
     def active_subscription(self):
         """Create active subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -289,8 +289,8 @@ class TestSubscriptionPlanChange:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -311,8 +311,8 @@ class TestSubscriptionPlanChange:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     async def test_change_plan_with_proration(
@@ -413,7 +413,7 @@ class TestSubscriptionCancellation:
     @pytest.fixture
     def active_subscription(self):
         """Create active subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -513,7 +513,7 @@ class TestSubscriptionReactivation:
     @pytest.fixture
     def canceled_subscription(self):
         """Create canceled subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -579,7 +579,7 @@ class TestSubscriptionReactivation:
         service, _ = subscription_service
 
         # Set period end in the past
-        canceled_subscription.current_period_end = datetime.now(UTC) - timedelta(days=1)
+        canceled_subscription.current_period_end = datetime.now(timezone.utc) - timedelta(days=1)
 
         with patch.object(service, "get_subscription", return_value=canceled_subscription):
             with pytest.raises(SubscriptionError) as exc:
@@ -602,7 +602,7 @@ class TestProrationCalculation:
     @pytest.fixture
     def subscription_mid_period(self):
         """Subscription at mid-period (15 days remaining out of 30)."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -640,8 +640,8 @@ class TestProrationCalculation:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -662,8 +662,8 @@ class TestProrationCalculation:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     def test_proration_upgrade(

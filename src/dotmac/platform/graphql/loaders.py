@@ -60,8 +60,12 @@ class SessionLoader:
         if not usernames:
             return []
 
-        cache_key = lambda name: (tenant_id, name)
-        uncached_usernames = [username for username in usernames if cache_key(username) not in self._cache]
+        def cache_key(name):
+            return (tenant_id, name)
+
+        uncached_usernames = [
+            username for username in usernames if cache_key(username) not in self._cache
+        ]
 
         if uncached_usernames:
             # Import here to avoid circular imports
@@ -198,9 +202,7 @@ class PaymentCustomerLoader:
 
         if uncached_ids:
             # Query all customers at once
-            stmt = select(Customer).where(
-                Customer.id.in_(list(uncached_ids))
-            )
+            stmt = select(Customer).where(Customer.id.in_(list(uncached_ids)))
 
             result = await self.db.execute(stmt)
             customers = result.scalars().all()
@@ -233,9 +235,7 @@ class PaymentInvoiceLoader:
 
         if valid_ids:
             # Query all invoices at once
-            stmt = select(InvoiceEntity).where(
-                InvoiceEntity.invoice_id.in_(list(valid_ids))
-            )
+            stmt = select(InvoiceEntity).where(InvoiceEntity.invoice_id.in_(list(valid_ids)))
 
             result = await self.db.execute(stmt)
             invoices = result.scalars().all()

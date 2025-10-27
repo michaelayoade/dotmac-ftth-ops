@@ -2,7 +2,7 @@
 Tests for Alarm Service
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -117,7 +117,7 @@ class TestAlarmServiceCreation:
         service = AlarmService(session, test_tenant)
 
         # Create maintenance window
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         maintenance = MaintenanceWindow(
             tenant_id=test_tenant,
             title="Test Maintenance",
@@ -346,8 +346,8 @@ class TestAlarmServiceUpdates:
             resource_id="ont-001",
             parent_alarm_id=sample_alarm.id,
             correlation_id=sample_alarm.correlation_id,
-            first_occurrence=datetime.now(UTC),
-            last_occurrence=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc),
+            last_occurrence=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -478,8 +478,8 @@ class TestAlarmServiceStatistics:
         service = AlarmService(session, test_tenant)
 
         # Last hour only (should get 1-2 alarms depending on timing)
-        from_date = datetime.now(UTC) - timedelta(hours=1)
-        to_date = datetime.now(UTC)
+        from_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        to_date = datetime.now(timezone.utc)
 
         stats = await service.get_statistics(from_date, to_date)
 
@@ -596,7 +596,7 @@ class TestMaintenanceWindowManagement:
         service = AlarmService(session, test_tenant)
         user_id = uuid4()
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         window_create = MaintenanceWindowCreate(
             title="Network Upgrade",
             description="Upgrading core switches",
@@ -624,7 +624,7 @@ class TestMaintenanceWindowManagement:
         service = AlarmService(session, test_tenant)
 
         # Create window first
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         window_create = MaintenanceWindowCreate(
             title="Test Maintenance",
             start_time=now + timedelta(days=1),

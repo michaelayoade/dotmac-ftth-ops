@@ -4,7 +4,10 @@ Subscription management API router.
 Provides REST endpoints for managing subscription plans and customer subscriptions.
 """
 
-from datetime import UTC
+from datetime import timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status

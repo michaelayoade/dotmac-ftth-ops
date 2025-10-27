@@ -1,34 +1,23 @@
+import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DashboardPage from "../app/dashboard/page";
 import { useRouter } from "next/navigation";
-import { RBACProvider } from "@/contexts/RBACContext";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { getCurrentUser, logout } from "@/lib/auth";
+import { logger } from "@/lib/logger";
+import { apiClient } from "@/lib/api/client";
 
-// Mock Next.js router
 jest.mock("next/navigation", () => ({
   useRouter: jest.fn(),
 }));
 
-// Mock auth lib
 jest.mock("@/lib/auth", () => ({
   getCurrentUser: jest.fn(),
   logout: jest.fn(),
 }));
 
-// Mock config and logger
-jest.mock("@/lib/config", () => {
-  const actual = jest.requireActual("@/lib/config");
-  return {
-    ...actual,
-    platformConfig: {
-      ...actual.platformConfig,
-      apiBaseUrl: "http://localhost:8000",
-    },
-  };
-});
-
-jest.mock("@/lib/utils/logger", () => ({
+jest.mock("@/lib/logger", () => ({
   logger: {
     error: jest.fn(),
     info: jest.fn(),
@@ -37,8 +26,7 @@ jest.mock("@/lib/utils/logger", () => ({
   },
 }));
 
-// Mock api-client for RBAC
-jest.mock("@/lib/api-client", () => ({
+jest.mock("@/lib/api/client", () => ({
   apiClient: {
     get: jest.fn(),
     post: jest.fn(),
@@ -47,236 +35,307 @@ jest.mock("@/lib/api-client", () => ({
   },
 }));
 
-// Mock toast
-jest.mock("@/components/ui/use-toast", () => ({
-  useToast: () => ({
-    toast: jest.fn(),
-  }),
+jest.mock("@/lib/config", () => {
+  const actual = jest.requireActual("@/lib/config");
+  return {
+    ...actual,
+    platformConfig: {
+      ...actual.platformConfig,
+      features: {
+        ...actual.platformConfig.features,
+        enableRadius: true,
+        enableAutomation: true,
+        enableNetwork: true,
+      },
+    },
+  };
+});
+
+jest.mock("@/lib/feature-flags", () => ({
+  useFeatureFlag: jest.fn(),
 }));
 
-// Mock fetch globally
-global.fetch = jest.fn();
+jest.mock("@/contexts/RBACContext", () => {
+  const mockHasPermission = jest.fn();
+  return {
+    useRBAC: () => ({ hasPermission: mockHasPermission }),
+    RBACProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    __mockHasPermission: mockHasPermission,
+  };
+});
 
-import { getCurrentUser, logout } from "@/lib/auth";
-import { logger } from "@/lib/logger";
-import { apiClient } from "@/lib/api/client";
+const useFeatureFlagMock = jest.requireMock("@/lib/feature-flags").useFeatureFlag as jest.Mock;
+const hasPermissionMock = jest.requireMock("@/contexts/RBACContext")
+  .__mockHasPermission as jest.Mock;
+
+type ApiOverrides = Partial<{
+  serviceStats: { active_count: number; provisioning_count: number } | undefined;
+  serviceInstances: Array<Record<string, unknown>>;
+  systemHealth: Record<string, unknown>;
+  netboxHealth: Record<string, unknown>;
+  netboxSites: Array<Record<string, unknown>>;
+}>;
+
+const defaultServiceStats = { active_count: 24, provisioning_count: 6 };
+const defaultServiceInstances = [
+  {
+    id: "svc-1",
+    service_name: "FTTH Provisioning",
+    service_type: "fiber_service",
+    provisioning_status: "running",
+    status: "active",
+    created_at: "2024-01-01T00:00:00Z",
+  },
+];
+const defaultSubscribers = [
+  {
+    id: 1,
+    tenant_id: "tenant-1",
+    subscriber_id: "sub-1",
+    username: "alice",
+    enabled: true,
+    bandwidth_profile_id: "Premium",
+    created_at: "2024-02-01T12:00:00Z",
+  },
+];
+const defaultSessions = [
+  {
+    radacctid: 42,
+    tenant_id: "tenant-1",
+    subscriber_id: "sub-1",
+    username: "alice",
+    acctsessionid: "abc",
+    nasipaddress: "10.0.0.1",
+    framedipaddress: "192.168.0.1",
+    framedipv6address: null,
+    framedipv6prefix: null,
+    delegatedipv6prefix: null,
+    acctstarttime: "2024-02-01T11:00:00Z",
+    acctsessiontime: 3600,
+    acctinputoctets: 512,
+    acctoutputoctets: 1024,
+  },
+];
+const defaultSystemHealth = {
+  status: "healthy",
+  checks: {
+    database: { name: "database", status: "healthy", message: "ok", required: true },
+    redis: { name: "redis", status: "healthy", message: "ok", required: true },
+  },
+  timestamp: new Date().toISOString(),
+};
+const defaultNetboxHealth = { healthy: true, message: "NetBox healthy" };
+const defaultNetboxSites = [
+  { id: "site-1", name: "Central POP", physical_address: "123 Fiber Way", facility: null },
+];
+
+const setupApiMocks = (overrides: ApiOverrides = {}) => {
+  const responses: Record<string, unknown> = {
+    "/services/lifecycle/statistics": overrides.serviceStats ?? defaultServiceStats,
+    "/services/lifecycle/services": overrides.serviceInstances ?? defaultServiceInstances,
+    "/health": overrides.systemHealth ?? defaultSystemHealth,
+    "/netbox/health": overrides.netboxHealth ?? defaultNetboxHealth,
+    "/netbox/dcim/sites": overrides.netboxSites ?? defaultNetboxSites,
+  };
+
+  (apiClient.get as jest.Mock).mockImplementation((url: string) => {
+    const match = Object.keys(responses).find((key) => url.startsWith(key));
+    if (!match) {
+      throw new Error(`Unhandled apiClient.get call for URL: ${url}`);
+    }
+    return Promise.resolve({ data: responses[match] });
+  });
+};
+
+type FetchOverrides = Partial<{
+  subscribers: Array<Record<string, unknown>>;
+  sessions: Array<Record<string, unknown>>;
+}>;
+
+const setupFetchMocks = (overrides: FetchOverrides = {}) => {
+  const subscribers = overrides.subscribers ?? defaultSubscribers;
+  const sessions = overrides.sessions ?? defaultSessions;
+
+  const fetchMock = jest.fn((input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+
+    if (url.includes("/api/v1/radius/subscribers")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => subscribers,
+      });
+    }
+
+    if (url.includes("/api/v1/radius/sessions")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => sessions,
+      });
+    }
+
+    // Default empty response for other fetches
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({}),
+    });
+  });
+
+  (global.fetch as unknown) = fetchMock;
+};
+
+const renderWithProviders = (ui: React.ReactElement, queryClient: QueryClient) => {
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+};
+
+type PrimeOverrides = Partial<{
+  subscribers: typeof defaultSubscribers;
+  sessions: typeof defaultSessions;
+  serviceStats: typeof defaultServiceStats;
+  serviceInstances: typeof defaultServiceInstances;
+  systemHealth: typeof defaultSystemHealth;
+  netboxHealth: typeof defaultNetboxHealth;
+  netboxSites: typeof defaultNetboxSites;
+}>;
+
+const primeDashboardQueries = (queryClient: QueryClient, overrides: PrimeOverrides = {}) => {
+  const subscribers = overrides.subscribers ?? defaultSubscribers;
+  const sessions = overrides.sessions ?? defaultSessions;
+  const serviceStats = overrides.serviceStats ?? defaultServiceStats;
+  const serviceInstances = overrides.serviceInstances ?? defaultServiceInstances;
+  const systemHealth = overrides.systemHealth ?? defaultSystemHealth;
+  const netboxHealth = overrides.netboxHealth ?? defaultNetboxHealth;
+  const netboxSites = overrides.netboxSites ?? defaultNetboxSites;
+
+  queryClient.setQueryData(["radius-subscribers", 0, 5], {
+    data: subscribers,
+    total: subscribers.length,
+  });
+
+  queryClient.setQueryData(["radius-sessions"], {
+    data: sessions,
+    total: sessions.length,
+  });
+
+  queryClient.setQueryData(["services", "statistics"], serviceStats);
+
+  queryClient.setQueryData(
+    [
+      "services",
+      "instances",
+      { status: "provisioning", serviceType: null, limit: 5, offset: 0 },
+    ],
+    serviceInstances,
+  );
+
+  queryClient.setQueryData(["system", "health"], systemHealth);
+  queryClient.setQueryData(["netbox", "health"], netboxHealth);
+  queryClient.setQueryData(["netbox", "sites", { limit: 5, offset: 0 }], netboxSites);
+};
 
 describe("DashboardPage", () => {
   const mockPush = jest.fn();
   const mockReplace = jest.fn();
-  let queryClient: QueryClient;
+  let getItemSpy: jest.SpyInstance;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    queryClient = new QueryClient({
-      defaultOptions: {
-        queries: { retry: false },
-        mutations: { retry: false },
-      },
-    });
     (useRouter as jest.Mock).mockReturnValue({
       push: mockPush,
       replace: mockReplace,
     });
 
-    // Mock RBAC API calls with default empty responses
-    (apiClient.get as jest.Mock).mockResolvedValue({
-      roles: [],
-      permissions: [],
-      user_permissions: [],
-    });
+    hasPermissionMock.mockImplementation(() => true);
+    useFeatureFlagMock.mockImplementation((flag: string) => ({
+      enabled: flag === "radius-sessions" || flag === "radius-subscribers",
+    }));
+
+    setupApiMocks();
+    setupFetchMocks();
+
+    getItemSpy = jest.spyOn(window.localStorage.__proto__, "getItem").mockReturnValue("token");
   });
 
-  // Helper to render with required providers
-  const renderWithProviders = (component: React.ReactElement) => {
-    return render(
-      <QueryClientProvider client={queryClient}>
-        <RBACProvider>{component}</RBACProvider>
-      </QueryClientProvider>,
-    );
-  };
+  afterEach(() => {
+    getItemSpy.mockRestore();
+  });
 
-  it("renders loading state initially", () => {
-    // Mock to never resolve
+  const createQueryClient = () =>
+    new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+
+  it("renders loading state while user information is loading", () => {
     (getCurrentUser as jest.Mock).mockImplementation(() => new Promise(() => {}));
-    (global.fetch as jest.Mock).mockImplementation(() => new Promise(() => {}));
 
-    renderWithProviders(<DashboardPage />);
+    const queryClient = createQueryClient();
+    primeDashboardQueries(queryClient);
+    renderWithProviders(<DashboardPage />, queryClient);
 
-    expect(screen.getByText("Loading...")).toBeInTheDocument();
+    expect(screen.getByText("Loading network operations center…")).toBeInTheDocument();
   });
 
-  it("renders user information and health status when loaded", async () => {
-    // Mock successful user fetch
-    (getCurrentUser as jest.Mock).mockResolvedValueOnce({
+  it("renders network overview once user loads", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({
       id: "user-123",
-      email: "alice@example.com",
-      roles: ["admin", "user"],
+      email: "operator@example.com",
+      roles: ["Operator"],
     });
 
-    // Mock successful health fetch
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({
-        status: "healthy",
-        service: "api-gateway",
-        version: "1.0.0",
-      }),
-    });
+    const queryClient = createQueryClient();
+    primeDashboardQueries(queryClient);
+    renderWithProviders(<DashboardPage />, queryClient);
 
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText("Welcome back, alice@example.com")).toBeInTheDocument();
+      expect(screen.getByText("Network Operations Center")).toBeInTheDocument();
     });
 
-    // Check user info
-    expect(screen.getByText("User Profile")).toBeInTheDocument();
-    expect(screen.getByText("alice@example.com")).toBeInTheDocument();
-    expect(screen.getByText("user-123")).toBeInTheDocument();
-    expect(screen.getByText("admin, user")).toBeInTheDocument();
-
-    // Check API health
-    expect(screen.getByText("API Status")).toBeInTheDocument();
-    expect(screen.getByText("healthy")).toBeInTheDocument();
-    expect(screen.getByText("api-gateway")).toBeInTheDocument();
-    expect(screen.getByText("1.0.0")).toBeInTheDocument();
+    expect(screen.getByText("operator@example.com")).toBeInTheDocument();
+    expect(screen.getByText("Subscribers")).toHaveAttribute("href", "/dashboard/subscribers");
+    expect(screen.getByText("Active Subscribers")).toBeInTheDocument();
+    expect(screen.getByText("Recent subscribers")).toBeInTheDocument();
+    expect(screen.getByText("Provisioning pipeline")).toBeInTheDocument();
+    expect(screen.getByText("Network inventory")).toBeInTheDocument();
+    expect(screen.getByText("Platform health")).toBeInTheDocument();
   });
 
-  it("redirects to login when user fetch fails", async () => {
-    // Mock failed user fetch
-    (getCurrentUser as jest.Mock).mockRejectedValueOnce(new Error("Unauthorized"));
+  it("redirects to login when fetching the current user fails", async () => {
+    const error = new Error("Unauthorized");
+    (getCurrentUser as jest.Mock).mockRejectedValue(error);
 
-    // Mock health fetch
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
+    const queryClient = createQueryClient();
+    primeDashboardQueries(queryClient);
+    renderWithProviders(<DashboardPage />, queryClient);
 
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for redirect
     await waitFor(() => {
-      expect(logger.error).toHaveBeenCalledWith("Failed to fetch user", expect.any(Error));
+      expect(logger.error).toHaveBeenCalledWith("Failed to fetch user", error);
       expect(mockReplace).toHaveBeenCalledWith("/login");
     });
   });
 
-  it("handles health check failure gracefully", async () => {
-    // Mock successful user fetch
-    (getCurrentUser as jest.Mock).mockResolvedValueOnce({
+  it("logs out and navigates to login when Sign out is clicked", async () => {
+    (getCurrentUser as jest.Mock).mockResolvedValue({
       id: "user-123",
-      email: "alice@example.com",
+      email: "operator@example.com",
+      roles: ["Operator"],
     });
+    (logout as jest.Mock).mockResolvedValue(undefined);
 
-    // Mock failed health fetch
-    (global.fetch as jest.Mock).mockRejectedValueOnce(new Error("Network error"));
+    const queryClient = createQueryClient();
+    primeDashboardQueries(queryClient);
+    renderWithProviders(<DashboardPage />, queryClient);
 
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for error handling
-    await waitFor(() => {
-      expect(logger.error).toHaveBeenCalledWith("Failed to fetch health status", expect.any(Error));
-    });
-
-    // Should still render user info
-    expect(screen.getByText("Welcome back, alice@example.com")).toBeInTheDocument();
-    expect(screen.getByText("Unable to fetch status")).toBeInTheDocument();
-  });
-
-  it("handles logout correctly", async () => {
-    const user = userEvent.setup();
-
-    // Mock successful user fetch
-    (getCurrentUser as jest.Mock).mockResolvedValueOnce({
-      id: "user-123",
-      email: "alice@example.com",
-    });
-
-    // Mock health fetch
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
-
-    // Mock logout
-    (logout as jest.Mock).mockResolvedValueOnce(undefined);
-
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for render
     await waitFor(() => {
       expect(screen.getByText("Sign out")).toBeInTheDocument();
     });
 
-    // Click logout
-    await user.click(screen.getByText("Sign out"));
+    await userEvent.click(screen.getByText("Sign out"));
 
     await waitFor(() => {
       expect(logout).toHaveBeenCalled();
       expect(mockPush).toHaveBeenCalledWith("/login");
     });
-  });
-
-  it("renders platform services grid", async () => {
-    // Mock successful user fetch
-    (getCurrentUser as jest.Mock).mockResolvedValueOnce({
-      id: "user-123",
-      email: "alice@example.com",
-    });
-
-    // Mock health fetch
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
-
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for render
-    await waitFor(() => {
-      expect(screen.getByText("Platform Services")).toBeInTheDocument();
-    });
-
-    // Check services are rendered
-    expect(screen.getByText("Authentication")).toBeInTheDocument();
-    expect(screen.getByText("File Storage")).toBeInTheDocument();
-    expect(screen.getByText("Secrets Manager")).toBeInTheDocument();
-    expect(screen.getByText("Analytics")).toBeInTheDocument();
-    expect(screen.getByText("Communications")).toBeInTheDocument();
-    expect(screen.getByText("Search")).toBeInTheDocument();
-    expect(screen.getByText("Data Transfer")).toBeInTheDocument();
-    expect(screen.getByText("API Gateway")).toBeInTheDocument();
-  });
-
-  it("renders quick actions links", async () => {
-    // Mock successful user fetch
-    (getCurrentUser as jest.Mock).mockResolvedValueOnce({
-      id: "user-123",
-      email: "alice@example.com",
-    });
-
-    // Mock health fetch
-    (global.fetch as jest.Mock).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({}),
-    });
-
-    renderWithProviders(<DashboardPage />);
-
-    // Wait for render
-    await waitFor(() => {
-      expect(screen.getByText("Quick Actions")).toBeInTheDocument();
-    });
-
-    // Check quick action links
-    const customersLink = screen.getByText("Manage Customers");
-    const billingLink = screen.getByText("Billing Overview");
-    const apiKeysLink = screen.getByText("Manage API Keys");
-
-    expect(customersLink).toHaveAttribute("href", "/dashboard/customers");
-    expect(billingLink).toHaveAttribute("href", "/dashboard/billing");
-    expect(apiKeysLink).toHaveAttribute("href", "/dashboard/api-keys");
   });
 });

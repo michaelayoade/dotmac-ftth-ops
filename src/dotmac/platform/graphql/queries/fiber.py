@@ -14,7 +14,6 @@ Updated: 2025-10-19 - Implemented real database queries
 """
 
 from datetime import datetime
-from typing import Any
 from uuid import UUID
 
 import strawberry
@@ -23,23 +22,33 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from strawberry.types import Info
 
 from dotmac.platform.fiber.models import (
-    DistributionPoint as DistributionPointModel,
-    FiberCable as FiberCableModel,
-    FiberHealthMetric as FiberHealthMetricModel,
-    OTDRTestResult as OTDRTestResultModel,
-    ServiceArea as ServiceAreaModel,
-    SplicePoint as SplicePointModel,
+    CableInstallationType as DBCableInstallationType,
 )
 from dotmac.platform.fiber.models import (
-    CableInstallationType as DBCableInstallationType,
+    DistributionPoint as DistributionPointModel,
 )
 from dotmac.platform.fiber.models import (
     DistributionPointType as DBDistributionPointType,
 )
+from dotmac.platform.fiber.models import (
+    FiberCable as FiberCableModel,
+)
 from dotmac.platform.fiber.models import FiberCableStatus as DBFiberCableStatus
+from dotmac.platform.fiber.models import (
+    FiberHealthMetric as FiberHealthMetricModel,
+)
 from dotmac.platform.fiber.models import FiberHealthStatus as DBFiberHealthStatus
 from dotmac.platform.fiber.models import FiberType as DBFiberType
+from dotmac.platform.fiber.models import (
+    OTDRTestResult as OTDRTestResultModel,
+)
+from dotmac.platform.fiber.models import (
+    ServiceArea as ServiceAreaModel,
+)
 from dotmac.platform.fiber.models import ServiceAreaType as DBServiceAreaType
+from dotmac.platform.fiber.models import (
+    SplicePoint as SplicePointModel,
+)
 from dotmac.platform.fiber.models import SpliceStatus as DBSpliceStatus
 from dotmac.platform.graphql.types.fiber import (
     CableInstallationType,
@@ -110,9 +119,7 @@ class FiberQueries:
             )
 
         # Build query
-        query = select(FiberCableModel).where(
-            FiberCableModel.tenant_id == tenant_id
-        )
+        query = select(FiberCableModel).where(FiberCableModel.tenant_id == tenant_id)
 
         # Apply filters
         if status:
@@ -323,9 +330,7 @@ class FiberQueries:
             )
 
         # Build query
-        query = select(SplicePointModel).where(
-            SplicePointModel.tenant_id == tenant_id
-        )
+        query = select(SplicePointModel).where(SplicePointModel.tenant_id == tenant_id)
 
         # Apply filters
         if status:
@@ -339,9 +344,7 @@ class FiberQueries:
                 query = query.where(SplicePointModel.cable_id == cable_uuid)
             except ValueError:
                 # If not UUID, join with cable and filter by cable_id
-                query = query.join(FiberCableModel).where(
-                    FiberCableModel.cable_id == cable_id
-                )
+                query = query.join(FiberCableModel).where(FiberCableModel.cable_id == cable_id)
 
         if distribution_point_id:
             try:
@@ -365,9 +368,7 @@ class FiberQueries:
         splice_models = result.scalars().all()
 
         # Map to GraphQL types
-        splice_points = [
-            map_splice_point_model_to_graphql(splice) for splice in splice_models
-        ]
+        splice_points = [map_splice_point_model_to_graphql(splice) for splice in splice_models]
 
         return SplicePointConnection(
             splice_points=splice_points,
@@ -508,9 +509,7 @@ class FiberQueries:
             )
 
         # Build query
-        query = select(DistributionPointModel).where(
-            DistributionPointModel.tenant_id == tenant_id
-        )
+        query = select(DistributionPointModel).where(DistributionPointModel.tenant_id == tenant_id)
 
         # Apply filters
         if point_type:
@@ -530,10 +529,7 @@ class FiberQueries:
                 and_(
                     DistributionPointModel.total_ports.isnot(None),
                     DistributionPointModel.total_ports > 0,
-                    (
-                        DistributionPointModel.used_ports * 100.0
-                        / DistributionPointModel.total_ports
-                    )
+                    (DistributionPointModel.used_ports * 100.0 / DistributionPointModel.total_ports)
                     > 80,
                 )
             )
@@ -543,18 +539,14 @@ class FiberQueries:
         total_count = await db.scalar(total_count_query) or 0
 
         # Apply pagination
-        query = query.limit(limit).offset(offset).order_by(
-            DistributionPointModel.point_id
-        )
+        query = query.limit(limit).offset(offset).order_by(DistributionPointModel.point_id)
 
         # Execute query
         result = await db.execute(query)
         dp_models = result.scalars().all()
 
         # Map to GraphQL types
-        distribution_points = [
-            map_distribution_point_model_to_graphql(dp) for dp in dp_models
-        ]
+        distribution_points = [map_distribution_point_model_to_graphql(dp) for dp in dp_models]
 
         return DistributionPointConnection(
             distribution_points=distribution_points,
@@ -678,9 +670,7 @@ class FiberQueries:
             )
 
         # Build query
-        query = select(ServiceAreaModel).where(
-            ServiceAreaModel.tenant_id == tenant_id
-        )
+        query = select(ServiceAreaModel).where(ServiceAreaModel.tenant_id == tenant_id)
 
         # Apply filters
         if area_type:
@@ -691,9 +681,7 @@ class FiberQueries:
             query = query.where(ServiceAreaModel.is_serviceable == is_serviceable)
 
         if construction_status:
-            query = query.where(
-                ServiceAreaModel.construction_status == construction_status
-            )
+            query = query.where(ServiceAreaModel.construction_status == construction_status)
 
         # Get total count
         total_count_query = select(func.count()).select_from(query.subquery())
@@ -707,9 +695,7 @@ class FiberQueries:
         area_models = result.scalars().all()
 
         # Map to GraphQL types
-        service_areas = [
-            map_service_area_model_to_graphql(area) for area in area_models
-        ]
+        service_areas = [map_service_area_model_to_graphql(area) for area in area_models]
 
         return ServiceAreaConnection(
             service_areas=service_areas,
@@ -821,9 +807,7 @@ class FiberQueries:
         tenant_id = info.context["tenant_id"]
 
         # Build query
-        query = select(FiberHealthMetricModel).where(
-            FiberHealthMetricModel.tenant_id == tenant_id
-        )
+        query = select(FiberHealthMetricModel).where(FiberHealthMetricModel.tenant_id == tenant_id)
 
         # Apply filters
         if cable_id:
@@ -832,15 +816,11 @@ class FiberQueries:
                 query = query.where(FiberHealthMetricModel.cable_id == cable_uuid)
             except ValueError:
                 # Join with cable and filter by cable_id
-                query = query.join(FiberCableModel).where(
-                    FiberCableModel.cable_id == cable_id
-                )
+                query = query.join(FiberCableModel).where(FiberCableModel.cable_id == cable_id)
 
         if health_status:
             db_health_status = _map_graphql_health_status_to_db(health_status)
-            query = query.where(
-                FiberHealthMetricModel.health_status == db_health_status
-            )
+            query = query.where(FiberHealthMetricModel.health_status == db_health_status)
 
         # Order by most recent first
         query = query.order_by(FiberHealthMetricModel.measured_at.desc())
@@ -926,8 +906,10 @@ class FiberQueries:
         tenant_id = info.context["tenant_id"]
 
         # Total fiber infrastructure counts
-        total_cables_query = select(func.count()).select_from(FiberCableModel).where(
-            FiberCableModel.tenant_id == tenant_id
+        total_cables_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(FiberCableModel.tenant_id == tenant_id)
         )
         total_cables = await db.scalar(total_cables_query) or 0
 
@@ -941,25 +923,29 @@ class FiberQueries:
         )
         total_fiber_km = await db.scalar(total_fiber_km_query) or 0.0
 
-        total_dps_query = select(func.count()).select_from(
-            DistributionPointModel
-        ).where(DistributionPointModel.tenant_id == tenant_id)
+        total_dps_query = (
+            select(func.count())
+            .select_from(DistributionPointModel)
+            .where(DistributionPointModel.tenant_id == tenant_id)
+        )
         total_dps = await db.scalar(total_dps_query) or 0
 
-        total_splices_query = select(func.count()).select_from(SplicePointModel).where(
-            SplicePointModel.tenant_id == tenant_id
+        total_splices_query = (
+            select(func.count())
+            .select_from(SplicePointModel)
+            .where(SplicePointModel.tenant_id == tenant_id)
         )
         total_splices = await db.scalar(total_splices_query) or 0
 
         # Capacity metrics
-        total_capacity_query = select(
-            func.sum(DistributionPointModel.total_ports)
-        ).where(DistributionPointModel.tenant_id == tenant_id)
+        total_capacity_query = select(func.sum(DistributionPointModel.total_ports)).where(
+            DistributionPointModel.tenant_id == tenant_id
+        )
         total_capacity = await db.scalar(total_capacity_query) or 0
 
-        used_capacity_query = select(
-            func.sum(DistributionPointModel.used_ports)
-        ).where(DistributionPointModel.tenant_id == tenant_id)
+        used_capacity_query = select(func.sum(DistributionPointModel.used_ports)).where(
+            DistributionPointModel.tenant_id == tenant_id
+        )
         used_capacity = await db.scalar(used_capacity_query) or 0
 
         available_capacity = max(0, total_capacity - used_capacity)
@@ -968,48 +954,63 @@ class FiberQueries:
         )
 
         # Health status counts
-        healthy_query = select(func.count()).select_from(FiberCableModel).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status == DBFiberCableStatus.ACTIVE,
+        healthy_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.ACTIVE,
+                )
             )
         )
         healthy_cables = await db.scalar(healthy_query) or 0
 
-        degraded_query = select(func.count()).select_from(FiberCableModel).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status.in_(
-                    [DBFiberCableStatus.MAINTENANCE, DBFiberCableStatus.DAMAGED]
-                ),
+        degraded_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status.in_(
+                        [DBFiberCableStatus.MAINTENANCE, DBFiberCableStatus.DAMAGED]
+                    ),
+                )
             )
         )
         degraded_cables = await db.scalar(degraded_query) or 0
 
-        failed_query = select(func.count()).select_from(FiberCableModel).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status
-                == DBFiberCableStatus.DECOMMISSIONED,
+        failed_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.DECOMMISSIONED,
+                )
             )
         )
         failed_cables = await db.scalar(failed_query) or 0
 
         # Network health score (simplified)
-        network_health_score = (
-            (healthy_cables * 100.0 / total_cables) if total_cables > 0 else 0.0
-        )
+        network_health_score = (healthy_cables * 100.0 / total_cables) if total_cables > 0 else 0.0
 
         # Service area metrics
-        total_areas_query = select(func.count()).select_from(ServiceAreaModel).where(
-            ServiceAreaModel.tenant_id == tenant_id
+        total_areas_query = (
+            select(func.count())
+            .select_from(ServiceAreaModel)
+            .where(ServiceAreaModel.tenant_id == tenant_id)
         )
         total_areas = await db.scalar(total_areas_query) or 0
 
-        active_areas_query = select(func.count()).select_from(ServiceAreaModel).where(
-            and_(
-                ServiceAreaModel.tenant_id == tenant_id,
-                ServiceAreaModel.is_serviceable == True,  # noqa: E712
+        active_areas_query = (
+            select(func.count())
+            .select_from(ServiceAreaModel)
+            .where(
+                and_(
+                    ServiceAreaModel.tenant_id == tenant_id,
+                    ServiceAreaModel.is_serviceable == True,  # noqa: E712
+                )
             )
         )
         active_areas = await db.scalar(active_areas_query) or 0
@@ -1019,19 +1020,15 @@ class FiberQueries:
         )
         homes_passed = await db.scalar(homes_passed_query) or 0
 
-        homes_connected_query = select(
-            func.sum(ServiceAreaModel.homes_connected)
-        ).where(ServiceAreaModel.tenant_id == tenant_id)
+        homes_connected_query = select(func.sum(ServiceAreaModel.homes_connected)).where(
+            ServiceAreaModel.tenant_id == tenant_id
+        )
         homes_connected = await db.scalar(homes_connected_query) or 0
 
-        penetration_rate = (
-            (homes_connected * 100.0 / homes_passed) if homes_passed > 0 else 0.0
-        )
+        penetration_rate = (homes_connected * 100.0 / homes_passed) if homes_passed > 0 else 0.0
 
         # Average loss metrics
-        avg_attenuation_query = select(
-            func.avg(FiberCableModel.attenuation_db_per_km)
-        ).where(
+        avg_attenuation_query = select(func.avg(FiberCableModel.attenuation_db_per_km)).where(
             and_(
                 FiberCableModel.tenant_id == tenant_id,
                 FiberCableModel.attenuation_db_per_km.isnot(None),
@@ -1039,9 +1036,7 @@ class FiberQueries:
         )
         avg_attenuation = await db.scalar(avg_attenuation_query) or 0.0
 
-        avg_splice_loss_query = select(
-            func.avg(SplicePointModel.insertion_loss_db)
-        ).where(
+        avg_splice_loss_query = select(func.avg(SplicePointModel.insertion_loss_db)).where(
             and_(
                 SplicePointModel.tenant_id == tenant_id,
                 SplicePointModel.insertion_loss_db.isnot(None),
@@ -1050,40 +1045,50 @@ class FiberQueries:
         avg_splice_loss = await db.scalar(avg_splice_loss_query) or 0.0
 
         # Cable status counts
-        active_cables_query = select(func.count()).select_from(FiberCableModel).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status == DBFiberCableStatus.ACTIVE,
+        active_cables_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.ACTIVE,
+                )
             )
         )
         cables_active = await db.scalar(active_cables_query) or 0
 
-        inactive_cables_query = select(func.count()).select_from(
-            FiberCableModel
-        ).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status == DBFiberCableStatus.INACTIVE,
+        inactive_cables_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.INACTIVE,
+                )
             )
         )
         cables_inactive = await db.scalar(inactive_cables_query) or 0
 
-        construction_cables_query = select(func.count()).select_from(
-            FiberCableModel
-        ).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status == DBFiberCableStatus.UNDER_CONSTRUCTION,
+        construction_cables_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.UNDER_CONSTRUCTION,
+                )
             )
         )
         cables_under_construction = await db.scalar(construction_cables_query) or 0
 
-        maintenance_cables_query = select(func.count()).select_from(
-            FiberCableModel
-        ).where(
-            and_(
-                FiberCableModel.tenant_id == tenant_id,
-                FiberCableModel.status == DBFiberCableStatus.MAINTENANCE,
+        maintenance_cables_query = (
+            select(func.count())
+            .select_from(FiberCableModel)
+            .where(
+                and_(
+                    FiberCableModel.tenant_id == tenant_id,
+                    FiberCableModel.status == DBFiberCableStatus.MAINTENANCE,
+                )
             )
         )
         cables_maintenance = await db.scalar(maintenance_cables_query) or 0
@@ -1098,7 +1103,7 @@ class FiberQueries:
             )
         )
         result = await db.execute(high_loss_cables_query)
-        cables_with_high_loss = [cable_id for cable_id in result.scalars().all()]
+        cables_with_high_loss = list(result.scalars().all())
 
         # Query distribution points near capacity (utilization > 80%)
         capacity_threshold = 80.0
@@ -1108,13 +1113,17 @@ class FiberQueries:
                 DistributionPointModel.max_capacity.isnot(None),
                 DistributionPointModel.max_capacity > 0,
                 (
-                    (DistributionPointModel.current_capacity * 100.0 / DistributionPointModel.max_capacity)
+                    (
+                        DistributionPointModel.current_capacity
+                        * 100.0
+                        / DistributionPointModel.max_capacity
+                    )
                     > capacity_threshold
                 ),
             )
         )
         result = await db.execute(near_capacity_dps_query)
-        distribution_points_near_capacity = [dp_id for dp_id in result.scalars().all()]
+        distribution_points_near_capacity = list(result.scalars().all())
 
         # Query service areas needing expansion (penetration rate < 30%)
         penetration_threshold = 30.0
@@ -1131,7 +1140,7 @@ class FiberQueries:
             )
         )
         result = await db.execute(expansion_areas_query)
-        service_areas_needs_expansion = [area_id for area_id in result.scalars().all()]
+        service_areas_needs_expansion = list(result.scalars().all())
 
         return FiberNetworkAnalytics(
             total_fiber_km=float(total_fiber_km),
@@ -1224,13 +1233,13 @@ def map_cable_model_to_graphql(cable_model: FiberCableModel) -> FiberCable:
         is_active=cable_model.status == DBFiberCableStatus.ACTIVE,
         fiber_type=_map_db_fiber_type_to_graphql(cable_model.fiber_type),
         total_strands=cable_model.fiber_count,
-        available_strands=cable_model.fiber_count - (cable_model.max_capacity or 0) if cable_model.max_capacity else cable_model.fiber_count,
+        available_strands=cable_model.fiber_count - (cable_model.max_capacity or 0)
+        if cable_model.max_capacity
+        else cable_model.fiber_count,
         used_strands=cable_model.max_capacity or 0,
         manufacturer=cable_model.manufacturer,
         model=cable_model.model,
-        installation_type=_map_db_installation_type_to_graphql(
-            cable_model.installation_type
-        )
+        installation_type=_map_db_installation_type_to_graphql(cable_model.installation_type)
         if cable_model.installation_type
         else CableInstallationType.UNDERGROUND,
         route=cable_model.route_geojson if cable_model.route_geojson else None,
@@ -1241,9 +1250,15 @@ def map_cable_model_to_graphql(cable_model: FiberCableModel) -> FiberCable:
         warranty_expiry_date=cable_model.warranty_expiry_date,
         attenuation_db_per_km=cable_model.attenuation_db_per_km,
         max_capacity=cable_model.max_capacity,
-        splice_count=len(cable_model.splice_points) if hasattr(cable_model, 'splice_points') and cable_model.splice_points else 0,
-        health_status=_map_db_health_status_to_graphql(cable_model.health_metrics[0].health_status) if hasattr(cable_model, 'health_metrics') and cable_model.health_metrics else None,
-        last_tested_at=cable_model.health_metrics[0].measured_at if hasattr(cable_model, 'health_metrics') and cable_model.health_metrics else None,
+        splice_count=len(cable_model.splice_points)
+        if hasattr(cable_model, "splice_points") and cable_model.splice_points
+        else 0,
+        health_status=_map_db_health_status_to_graphql(cable_model.health_metrics[0].health_status)
+        if hasattr(cable_model, "health_metrics") and cable_model.health_metrics
+        else None,
+        last_tested_at=cable_model.health_metrics[0].measured_at
+        if hasattr(cable_model, "health_metrics") and cable_model.health_metrics
+        else None,
         notes=cable_model.notes,
         created_at=cable_model.created_at,
         updated_at=cable_model.updated_at,
@@ -1314,7 +1329,9 @@ def map_distribution_point_model_to_graphql(
         available_ports=available_ports,
         capacity_utilization_percent=float(utilization),
         is_near_capacity=utilization > 80.0,
-        connected_cables_count=len(dp_model.splice_points) if hasattr(dp_model, 'splice_points') and dp_model.splice_points else 0,
+        connected_cables_count=len(dp_model.splice_points)
+        if hasattr(dp_model, "splice_points") and dp_model.splice_points
+        else 0,
         manufacturer=dp_model.manufacturer,
         model=dp_model.model,
         installation_date=dp_model.installation_date,
@@ -1339,13 +1356,9 @@ def map_service_area_model_to_graphql(area_model: ServiceAreaModel) -> ServiceAr
     businesses_passed = area_model.businesses_passed or 0
     businesses_connected = area_model.businesses_connected or 0
 
-    penetration_rate = (
-        (homes_connected * 100.0 / homes_passed) if homes_passed > 0 else 0.0
-    )
+    penetration_rate = (homes_connected * 100.0 / homes_passed) if homes_passed > 0 else 0.0
     business_penetration_rate = (
-        (businesses_connected * 100.0 / businesses_passed)
-        if businesses_passed > 0
-        else 0.0
+        (businesses_connected * 100.0 / businesses_passed) if businesses_passed > 0 else 0.0
     )
 
     return ServiceArea(
@@ -1368,11 +1381,7 @@ def map_service_area_model_to_graphql(area_model: ServiceAreaModel) -> ServiceAr
         total_passed=homes_passed + businesses_passed,
         total_connected=homes_connected + businesses_connected,
         overall_penetration_percent=float(
-            (
-                (homes_connected + businesses_connected)
-                * 100.0
-                / (homes_passed + businesses_passed)
-            )
+            ((homes_connected + businesses_connected) * 100.0 / (homes_passed + businesses_passed))
             if (homes_passed + businesses_passed) > 0
             else 0.0
         ),

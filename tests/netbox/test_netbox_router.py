@@ -25,12 +25,13 @@ async def test_get_netbox_service_includes_tenant_id():
         max_retries=3,
     )
 
-    with patch(
-        "dotmac.platform.netbox.router.get_service_config",
-        new=AsyncMock(return_value=config),
-    ) as mock_get_config, patch(
-        "dotmac.platform.netbox.router.NetBoxClient"
-    ) as mock_client:
+    with (
+        patch(
+            "dotmac.platform.netbox.router.get_service_config",
+            new=AsyncMock(return_value=config),
+        ) as mock_get_config,
+        patch("dotmac.platform.netbox.router.NetBoxClient") as mock_client,
+    ):
         mock_service_instance = object()
         mock_client.return_value = mock_service_instance
 

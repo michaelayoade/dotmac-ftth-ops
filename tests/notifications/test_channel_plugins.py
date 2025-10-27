@@ -6,9 +6,16 @@ from typing import Any
 
 import pytest
 
-from dotmac.platform.notifications.channels.base import NotificationChannelProvider, NotificationContext
+from dotmac.platform.notifications.channels.base import (
+    NotificationChannelProvider,
+    NotificationContext,
+)
 from dotmac.platform.notifications.channels.factory import ChannelProviderFactory
-from dotmac.platform.notifications.models import NotificationChannel, NotificationPriority, NotificationType
+from dotmac.platform.notifications.models import (
+    NotificationChannel,
+    NotificationPriority,
+    NotificationType,
+)
 from dotmac.platform.notifications.plugins import get_plugin, register_plugin
 
 

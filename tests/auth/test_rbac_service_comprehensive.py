@@ -1,6 +1,6 @@
 """Comprehensive tests for RBAC service to achieve 90%+ coverage."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -368,7 +368,7 @@ class TestPermissionManagement:
         """Test granting permission with expiration."""
         user_id = uuid4()
         granted_by = uuid4()
-        expires_at = datetime.now(UTC) + timedelta(days=30)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=30)
 
         with patch.object(rbac_service, "_get_permission_by_name", return_value=mock_permission):
             mock_result = MagicMock()

@@ -7,8 +7,8 @@ the protocols that each vendor exposes (VOLTHA, CLI, SNMP, proprietary APIs,
 etc.).
 """
 
-from .service import AccessNetworkService, OLTOverview  # noqa: F401
 from .registry import AccessDriverRegistry, DriverDescriptor  # noqa: F401
+from .service import AccessNetworkService, OLTOverview  # noqa: F401
 
 __all__ = [
     "AccessNetworkService",

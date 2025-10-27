@@ -13,17 +13,18 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-def _is_async_session_like(value: Any) -> bool:
-    """Check if object behaves like AsyncSession (allows AsyncMock in tests)."""
-    return isinstance(value, AsyncSession) or hasattr(value, "execute")
-
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.rbac_service import RBACService
 from dotmac.platform.db import get_async_session
 
 logger = logging.getLogger(__name__)
+
+
+def _is_async_session_like(value: Any) -> bool:
+    """Check if object behaves like AsyncSession (allows AsyncMock in tests)."""
+    return isinstance(value, AsyncSession) or hasattr(value, "execute")
+
 
 security = HTTPBearer(auto_error=False)
 

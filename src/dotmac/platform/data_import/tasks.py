@@ -6,7 +6,10 @@ Handles chunked processing of large import files with progress tracking.
 
 import csv
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from pathlib import Path
 from typing import Any
 from uuid import UUID

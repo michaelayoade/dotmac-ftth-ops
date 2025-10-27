@@ -5,13 +5,14 @@ These tests exercise the lifecycle handler logic in isolation with patched
 dependencies to avoid touching real infrastructure components.
 """
 
-import pytest
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
-from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+import pytest
+
 from dotmac.platform.billing.models import BillingSubscriptionTable
+from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.router import _handle_status_lifecycle_events
 
@@ -72,7 +73,7 @@ class TestServiceSuspensionEndpoint:
             "old_status": "ACTIVE",
             "new_status": "SUSPENDED",
             "tenant_id": sample_customer_data["tenant_id"],
-            "changed_at": datetime.now(UTC).isoformat(),
+            "changed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Mock active subscriptions
@@ -82,8 +83,8 @@ class TestServiceSuspensionEndpoint:
             customer_id=sample_customer_data["customer_id"],
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={},
         )
 
@@ -124,8 +125,8 @@ class TestServiceSuspensionEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_basic",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(UTC),
-                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+                current_period_start=datetime.now(timezone.utc),
+                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
                 metadata_json={},
             ),
             BillingSubscriptionTable(
@@ -134,8 +135,8 @@ class TestServiceSuspensionEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_premium",
                 status=SubscriptionStatus.TRIALING.value,
-                current_period_start=datetime.now(UTC),
-                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+                current_period_start=datetime.now(timezone.utc),
+                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
                 metadata_json={},
             ),
         ]
@@ -152,9 +153,7 @@ class TestServiceReactivationEndpoint:
     """Test service reactivation via customer status change webhook."""
 
     @pytest.mark.asyncio
-    async def test_reactivate_customer_via_status_change(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_reactivate_customer_via_status_change(self, mock_db_session, mock_event_bus):
         """Test reactivating suspended customer via status change webhook."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
@@ -164,7 +163,7 @@ class TestServiceReactivationEndpoint:
             "old_status": "SUSPENDED",
             "new_status": "ACTIVE",
             "tenant_id": tenant_id,
-            "changed_at": datetime.now(UTC).isoformat(),
+            "changed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Mock suspended subscription
@@ -174,8 +173,8 @@ class TestServiceReactivationEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.PAUSED.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={
                 "suspension": {
                     "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -202,9 +201,7 @@ class TestServiceReactivationEndpoint:
             )
 
     @pytest.mark.asyncio
-    async def test_reactivate_restores_original_status(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_reactivate_restores_original_status(self, mock_db_session, mock_event_bus):
         """Test that reactivation restores the original subscription status."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
@@ -216,8 +213,8 @@ class TestServiceReactivationEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.PAUSED.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={
                 "suspension": {
                     "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -238,19 +235,17 @@ class TestChurnHandlingEndpoint:
     """Test churn handling via customer status change webhook."""
 
     @pytest.mark.asyncio
-    async def test_churn_customer_via_status_change(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_churn_customer_via_status_change(self, mock_db_session, mock_event_bus):
         """Test churning customer via status change webhook."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
-        status_change_payload = {
+        {
             "customer_id": customer_id,
             "old_status": "ACTIVE",
             "new_status": "CHURNED",
             "tenant_id": tenant_id,
-            "changed_at": datetime.now(UTC).isoformat(),
+            "changed_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Mock active subscription
@@ -260,8 +255,8 @@ class TestChurnHandlingEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={},
         )
 
@@ -273,9 +268,7 @@ class TestChurnHandlingEndpoint:
         # Churn event should be published
 
     @pytest.mark.asyncio
-    async def test_churn_cancels_at_period_end(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_churn_cancels_at_period_end(self, mock_db_session, mock_event_bus):
         """Test that churn schedules cancellation for period end."""
         from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
@@ -291,8 +284,8 @@ class TestChurnHandlingEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={},
         )
 
@@ -300,12 +293,15 @@ class TestChurnHandlingEndpoint:
         mock_result.scalars.return_value.all.return_value = [active_subscription]
         mock_db_session.execute.return_value = mock_result
 
-        with patch(
-            "dotmac.platform.billing.subscriptions.service.SubscriptionService",
-            return_value=mock_subscription_service,
-        ), patch(
-            "dotmac.platform.events.bus.get_event_bus",
-            return_value=mock_event_bus,
+        with (
+            patch(
+                "dotmac.platform.billing.subscriptions.service.SubscriptionService",
+                return_value=mock_subscription_service,
+            ),
+            patch(
+                "dotmac.platform.events.bus.get_event_bus",
+                return_value=mock_event_bus,
+            ),
         ):
             await _handle_status_lifecycle_events(
                 customer_id=UUID(customer_id),
@@ -319,9 +315,7 @@ class TestChurnHandlingEndpoint:
         assert call_kwargs["cancel_immediately"] is False
 
     @pytest.mark.asyncio
-    async def test_churn_handles_error_gracefully(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_churn_handles_error_gracefully(self, mock_db_session, mock_event_bus):
         """Test that churn handling continues even if one subscription fails."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
@@ -334,8 +328,8 @@ class TestChurnHandlingEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_basic",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(UTC),
-                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+                current_period_start=datetime.now(timezone.utc),
+                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
                 metadata_json={},
             ),
             BillingSubscriptionTable(
@@ -344,8 +338,8 @@ class TestChurnHandlingEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_premium",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(UTC),
-                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+                current_period_start=datetime.now(timezone.utc),
+                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
                 metadata_json={},
             ),
         ]
@@ -362,22 +356,20 @@ class TestChurnHandlingEndpoint:
 class TestEndToEndLifecycleWorkflow:
     """End-to-end test of complete customer lifecycle."""
 
-    async def test_complete_lifecycle_suspend_reactivate(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_complete_lifecycle_suspend_reactivate(self, mock_db_session, mock_event_bus):
         """Test complete workflow: active -> suspend -> reactivate."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
 
         # Step 1: Customer is ACTIVE with subscription
-        active_subscription = BillingSubscriptionTable(
+        BillingSubscriptionTable(
             subscription_id=f"sub_{uuid4().hex[:24]}",
             tenant_id=tenant_id,
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
             metadata_json={},
         )
 
@@ -390,12 +382,9 @@ class TestEndToEndLifecycleWorkflow:
         # This would be a comprehensive E2E test
         pass
 
-    async def test_complete_lifecycle_active_to_churned(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_complete_lifecycle_active_to_churned(self, mock_db_session, mock_event_bus):
         """Test complete workflow: active -> churned."""
-        customer_id = str(uuid4())
-        tenant_id = "test_tenant"
+        str(uuid4())
 
         # Step 1: Customer is ACTIVE with subscription
         # Step 2: Customer status changes to CHURNED
@@ -410,9 +399,7 @@ class TestEventDrivenWorkflow:
     """Test event-driven aspects of lifecycle management."""
 
     @pytest.mark.asyncio
-    async def test_suspension_triggers_downstream_events(
-        self, mock_event_bus
-    ):
+    async def test_suspension_triggers_downstream_events(self, mock_event_bus):
         """Test that suspension triggers expected downstream events."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
@@ -427,7 +414,7 @@ class TestEventDrivenWorkflow:
             data={
                 "customer_id": customer_id,
                 "tenant_id": tenant_id,
-                "suspended_at": datetime.now(UTC).isoformat(),
+                "suspended_at": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -435,9 +422,7 @@ class TestEventDrivenWorkflow:
         assert mock_event_bus.publish.call_count >= 1
 
     @pytest.mark.asyncio
-    async def test_churn_triggers_analytics_event(
-        self, mock_event_bus
-    ):
+    async def test_churn_triggers_analytics_event(self, mock_event_bus):
         """Test that churn publishes analytics data."""
         customer_id = str(uuid4())
         tenant_id = "test_tenant"
@@ -445,7 +430,7 @@ class TestEventDrivenWorkflow:
         churn_event_data = {
             "customer_id": customer_id,
             "tenant_id": tenant_id,
-            "churned_at": datetime.now(UTC).isoformat(),
+            "churned_at": datetime.now(timezone.utc).isoformat(),
             "new_status": "CHURNED",
             "subscriptions_affected": 2,
             "lifetime_value": 1250.00,
@@ -466,9 +451,7 @@ class TestErrorHandling:
     """Test error handling in lifecycle workflows."""
 
     @pytest.mark.asyncio
-    async def test_database_error_during_suspension(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_database_error_during_suspension(self, mock_db_session, mock_event_bus):
         """Test graceful handling of database errors during suspension."""
         # Mock database error
         mock_db_session.execute.side_effect = Exception("Database connection lost")
@@ -477,9 +460,7 @@ class TestErrorHandling:
         # Should not crash the application
 
     @pytest.mark.asyncio
-    async def test_event_bus_error_does_not_block_operation(
-        self, mock_db_session, mock_event_bus
-    ):
+    async def test_event_bus_error_does_not_block_operation(self, mock_db_session, mock_event_bus):
         """Test that event publishing errors don't block the operation."""
         # Mock event bus error
         mock_event_bus.publish.side_effect = Exception("Event bus unavailable")
@@ -488,9 +469,7 @@ class TestErrorHandling:
         # Should log error about event publishing
 
     @pytest.mark.asyncio
-    async def test_partial_subscription_cancellation_on_churn(
-        self, mock_db_session
-    ):
+    async def test_partial_subscription_cancellation_on_churn(self, mock_db_session):
         """Test that churn continues even if some subscriptions fail to cancel."""
         from dotmac.platform.billing.subscriptions.service import SubscriptionService
 

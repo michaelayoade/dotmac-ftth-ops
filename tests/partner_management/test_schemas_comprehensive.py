@@ -4,7 +4,7 @@ Comprehensive tests for partner management schemas.
 Tests Pydantic validation for partners, users, accounts, commissions, and referrals.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -258,7 +258,7 @@ class TestPartnerUpdateSchema:
 
     def test_partner_update_dates(self):
         """Test updating partner dates."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         update = PartnerUpdate(
             partnership_end_date=now,
@@ -543,7 +543,7 @@ class TestReferralLeadSchema:
     def test_referral_lead_update(self):
         """Test referral lead update schema."""
         customer_id = uuid4()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         update = ReferralLeadUpdate(
             status=ReferralStatus.CONVERTED,
@@ -559,7 +559,7 @@ class TestReferralLeadSchema:
 
     def test_referral_lead_status_progression(self):
         """Test typical referral status progression updates."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # New -> Contacted
         update1 = ReferralLeadUpdate(

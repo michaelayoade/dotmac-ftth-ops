@@ -87,7 +87,7 @@ class AnalyticsService:
             value=value,
             metric_type=metric_type,  # Pass the actual type
             unit=unit,  # Pass the unit
-            labels=labels
+            labels=labels,
         )
 
     async def query_events(self, **kwargs: Any) -> Any:
@@ -105,19 +105,27 @@ class AnalyticsService:
         if "start_date" in kwargs and kwargs["start_date"]:
             start_date = kwargs["start_date"]
             events = [
-                e for e in events
-                if e.get("timestamp") and (
-                    isinstance(e["timestamp"], datetime) and e["timestamp"] >= start_date
-                    or isinstance(e["timestamp"], str) and datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")) >= start_date
+                e
+                for e in events
+                if e.get("timestamp")
+                and (
+                    isinstance(e["timestamp"], datetime)
+                    and e["timestamp"] >= start_date
+                    or isinstance(e["timestamp"], str)
+                    and datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")) >= start_date
                 )
             ]
         if "end_date" in kwargs and kwargs["end_date"]:
             end_date = kwargs["end_date"]
             events = [
-                e for e in events
-                if e.get("timestamp") and (
-                    isinstance(e["timestamp"], datetime) and e["timestamp"] <= end_date
-                    or isinstance(e["timestamp"], str) and datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")) <= end_date
+                e
+                for e in events
+                if e.get("timestamp")
+                and (
+                    isinstance(e["timestamp"], datetime)
+                    and e["timestamp"] <= end_date
+                    or isinstance(e["timestamp"], str)
+                    and datetime.fromisoformat(e["timestamp"].replace("Z", "+00:00")) <= end_date
                 )
             ]
 
@@ -150,12 +158,13 @@ class AnalyticsService:
             if kwargs.get("start_date") or kwargs.get("end_date"):
                 # Log warning that time-series filtering is not implemented
                 import structlog
+
                 logger = structlog.get_logger(__name__)
                 logger.warning(
                     "Time-series filtering not yet implemented in query_metrics",
                     start_date=kwargs.get("start_date"),
                     end_date=kwargs.get("end_date"),
-                    note="Returning current snapshot only"
+                    note="Returning current snapshot only",
                 )
             return summary
 
@@ -175,18 +184,14 @@ class AnalyticsService:
         counters = summary.get("counters", {})
         if isinstance(counters, dict):
             filtered_summary["counters"] = {
-                name: value
-                for name, value in counters.items()
-                if metric_name_lower in name.lower()
+                name: value for name, value in counters.items() if metric_name_lower in name.lower()
             }
 
         # Filter gauges
         gauges = summary.get("gauges", {})
         if isinstance(gauges, dict):
             filtered_summary["gauges"] = {
-                name: value
-                for name, value in gauges.items()
-                if metric_name_lower in name.lower()
+                name: value for name, value in gauges.items() if metric_name_lower in name.lower()
             }
 
         # Filter histograms

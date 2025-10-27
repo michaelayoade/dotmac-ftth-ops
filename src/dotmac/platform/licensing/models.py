@@ -5,9 +5,12 @@ SQLAlchemy models for software licensing, activation, compliance, and auditing.
 """
 
 import os
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
-from typing import Any, cast
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -21,6 +24,8 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+)
+from sqlalchemy import (
     UUID as SQLUUID,
 )
 from sqlalchemy import Enum as SQLEnum
@@ -150,9 +155,7 @@ class License(BaseModel):
     __tablename__ = "licenses"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # License key (encrypted)
     license_key: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
@@ -176,9 +179,7 @@ class License(BaseModel):
     customer_id: Mapped[UUID | None] = mapped_column(
         SQLUUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True
     )
-    reseller_id: Mapped[str | None] = mapped_column(
-        String(36), nullable=True, index=True
-    )
+    reseller_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
     tenant_id: Mapped[str] = mapped_column(String(50), nullable=False)
 
     # License ownership
@@ -196,9 +197,7 @@ class License(BaseModel):
     issued_date: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
-    activation_date: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    activation_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     expiry_date: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )
@@ -256,9 +255,7 @@ class LicenseTemplate(BaseModel):
     __tablename__ = "license_templates"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Template identification
     template_name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -318,9 +315,7 @@ class Activation(BaseModel):
     __tablename__ = "license_activations"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # License relationship
     license_id: Mapped[str] = mapped_column(
@@ -359,9 +354,7 @@ class Activation(BaseModel):
     last_heartbeat: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), nullable=True, index=True
     )
-    deactivated_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    deactivated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     deactivation_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Location
@@ -406,9 +399,7 @@ class LicenseOrder(BaseModel):
     __tablename__ = "license_orders"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Order number (auto-generated)
     order_number: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
@@ -487,14 +478,10 @@ class ComplianceAudit(BaseModel):
     __tablename__ = "compliance_audits"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Audit classification
-    audit_type: Mapped[AuditType] = mapped_column(
-        SQLEnum(AuditType), nullable=False, index=True
-    )
+    audit_type: Mapped[AuditType] = mapped_column(SQLEnum(AuditType), nullable=False, index=True)
     customer_id: Mapped[UUID | None] = mapped_column(
         SQLUUID(as_uuid=True), ForeignKey("customers.id"), nullable=True, index=True
     )
@@ -528,9 +515,7 @@ class ComplianceAudit(BaseModel):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
-    completed_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
@@ -556,9 +541,7 @@ class ComplianceViolation(BaseModel):
     __tablename__ = "compliance_violations"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Violation classification
     violation_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
@@ -618,9 +601,7 @@ class LicenseEventLog(BaseModel):
     __tablename__ = "license_event_logs"
 
     # Primary key
-    id: Mapped[str] = mapped_column(
-        String(36), primary_key=True, default=lambda: str(uuid4())
-    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=lambda: str(uuid4()))
 
     # Event classification
     event_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)

@@ -4,7 +4,7 @@ Tests for CachedPricingEngine.
 Tests caching behavior for pricing rules and calculations.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -48,10 +48,10 @@ def sample_pricing_rule():
                 {"min_quantity": 50, "discount_percentage": 20},
             ]
         },
-        valid_from=datetime.now(UTC),
+        valid_from=datetime.now(timezone.utc),
         valid_until=None,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -239,7 +239,7 @@ class TestCalculatePrice:
             "total_discount_amount": 100.00,
             "final_price": 900.00,
             "applied_adjustments": [],
-            "calculation_timestamp": datetime.now(UTC).isoformat(),
+            "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
         }
         mock_cache.get.return_value = cached_result
 
@@ -317,12 +317,12 @@ class TestDeletePricingRule:
 
             # Verify multiple invalidation patterns were called
             invalidate_calls = [call[0][0] for call in mock_cache.invalidate_pattern.call_args_list]
-            assert any(
-                "pricing:rules" in pattern for pattern in invalidate_calls
-            ), "Should invalidate pricing rules list cache"
-            assert any(
-                "applicable" in pattern for pattern in invalidate_calls
-            ), "Should invalidate applicable rules cache"
+            assert any("pricing:rules" in pattern for pattern in invalidate_calls), (
+                "Should invalidate pricing rules list cache"
+            )
+            assert any("applicable" in pattern for pattern in invalidate_calls), (
+                "Should invalidate applicable rules cache"
+            )
 
 
 class TestCacheKeyGeneration:
@@ -380,7 +380,7 @@ class TestBatchOperations:
                 "total_discount_amount": 100.00,
                 "final_price": 900.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(UTC).isoformat(),
+                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
             },
             None,  # Miss
             {  # Hit
@@ -392,7 +392,7 @@ class TestBatchOperations:
                 "total_discount_amount": 200.00,
                 "final_price": 1800.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(UTC).isoformat(),
+                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
             },
         ]
         mock_cache.get.side_effect = cache_responses

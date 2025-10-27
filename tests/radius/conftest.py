@@ -31,7 +31,14 @@ async def ensure_radius_tables_exist(async_db_engine):
 
     # Recreate only RADIUS tables (checkfirst=True prevents errors if they exist)
     async with async_db_engine.begin() as conn:
-        radius_table_names = ['radcheck', 'radreply', 'radacct', 'radpostauth', 'nas', 'radius_bandwidth_profiles']
+        radius_table_names = [
+            "radcheck",
+            "radreply",
+            "radacct",
+            "radpostauth",
+            "nas",
+            "radius_bandwidth_profiles",
+        ]
         radius_tables = [
             Base.metadata.tables[name]
             for name in radius_table_names
@@ -45,7 +52,7 @@ async def ensure_radius_tables_exist(async_db_engine):
             )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_db_session):
     """Create a test tenant for RADIUS tests."""
     # Create a tenant
@@ -68,7 +75,7 @@ async def test_tenant(async_db_session):
     await async_db_session.commit()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant_2(async_db_session):
     """Create a second test tenant for isolation tests."""
     # Create a second tenant
@@ -91,7 +98,7 @@ async def test_tenant_2(async_db_session):
     await async_db_session.commit()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session, test_tenant):
     """Create a test user for RADIUS tests."""
     from uuid import uuid4
@@ -123,8 +130,58 @@ async def test_user(async_db_session, test_tenant):
 @pytest.fixture
 def test_app_with_radius(async_db_engine):
     """Test app with RADIUS router registered."""
+    import asyncio
+    import sqlalchemy
     from fastapi import FastAPI
     from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    # IMPORTANT: Create tables BEFORE creating the app
+    # This ensures tables exist when the router initializes
+    from dotmac.platform.db import Base
+
+    # Debug: print available tables
+    print(f"\nDEBUG: Tables in Base.metadata: {list(Base.metadata.tables.keys())[:20]}")
+    print(f"DEBUG: Looking for 'radcheck': {'radcheck' in Base.metadata.tables}")
+
+    async def create_all_tables():
+        # Use begin() for transactional DDL, but it auto-commits on context exit
+        async with async_db_engine.begin() as conn:
+            print("DEBUG: Creating all tables...")
+            # Try explicit table creation for RADIUS tables
+            radius_table_names = ['radcheck', 'radreply', 'radacct', 'radpostauth', 'nas', 'radius_bandwidth_profiles']
+            radius_tables = [Base.metadata.tables[name] for name in radius_table_names if name in Base.metadata.tables]
+            print(f"DEBUG: RADIUS tables to create: {[t.name for t in radius_tables]}")
+
+            def create_tables(sync_conn):
+                # Create all tables first
+                Base.metadata.create_all(sync_conn, checkfirst=True)
+                # Then specifically try creating RADIUS tables again
+                for table in radius_tables:
+                    print(f"DEBUG: Creating table {table.name}")
+                    try:
+                        table.create(sync_conn, checkfirst=True)
+                    except Exception as e:
+                        print(f"DEBUG: Error creating {table.name}: {e}")
+
+            await conn.run_sync(create_tables)
+            # Transaction will commit when exiting the context manager
+            print("DEBUG: Tables created successfully")
+
+        # Verify AFTER commit by creating a new connection
+        async with async_db_engine.connect() as verify_conn:
+            result = await verify_conn.execute(sqlalchemy.text("SELECT name FROM sqlite_master WHERE type='table'"))
+            tables = [row[0] for row in result]
+            print(f"DEBUG: Tables in database (after commit): {sorted(tables)[:30]}")
+            print(f"DEBUG: radcheck in database: {'radcheck' in tables}")
+
+    # Run table creation synchronously
+    try:
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(create_all_tables())
 
     app = FastAPI(title="RADIUS Test App")
 

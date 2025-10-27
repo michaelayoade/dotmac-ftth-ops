@@ -16,7 +16,7 @@ Marked as integration tests.
 
 import json
 import tempfile
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -732,7 +732,7 @@ class TestEndToEndWorkflows:
             df = pd.DataFrame(all_records)
 
             # Transform to new schema (add fields, rename, etc.)
-            df["migrated_at"] = datetime.now(UTC).isoformat()
+            df["migrated_at"] = datetime.now(timezone.utc).isoformat()
             df["status"] = "active"
             df = df.rename(columns={"id": "customer_id"})
 

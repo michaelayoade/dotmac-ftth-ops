@@ -11,8 +11,8 @@ import structlog
 from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from ..tenant import get_tenant_context
 from .. import tenant as tenant_module
+from ..tenant import get_tenant_context
 
 logger = structlog.get_logger(__name__)
 
@@ -24,9 +24,15 @@ class SimpleUser:
     can use for authentication and authorization checks.
     """
 
-    def __init__(self, user_id: str, username: str | None = None, email: str | None = None,
-                 tenant_id: str | None = None, roles: list[str] | None = None,
-                 scopes: list[str] | None = None):
+    def __init__(
+        self,
+        user_id: str,
+        username: str | None = None,
+        email: str | None = None,
+        tenant_id: str | None = None,
+        roles: list[str] | None = None,
+        scopes: list[str] | None = None,
+    ):
         self.id = user_id
         self.user_id = user_id
         self.username = username
@@ -103,7 +109,7 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                                 email=email,
                                 tenant_id=tenant_id_claim,
                                 roles=roles,
-                                scopes=scopes
+                                scopes=scopes,
                             )
 
                         if tenant_id_claim and tenant_id_claim != get_tenant_context():
@@ -140,7 +146,7 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                                     email=None,
                                     tenant_id=tenant_id_claim,
                                     roles=roles,
-                                    scopes=scopes
+                                    scopes=scopes,
                                 )
 
                             if tenant_id_claim and tenant_id_claim != get_tenant_context():
@@ -181,6 +187,19 @@ def create_audit_aware_dependency(user_info_dependency: Any) -> Any:
             request.state.email = getattr(user_info, "email", None)
             request.state.tenant_id = getattr(user_info, "tenant_id", None)
             request.state.roles = getattr(user_info, "roles", [])
+
+            # Populate user object for downstream middleware (e.g., AppBoundaryMiddleware)
+            permissions = getattr(user_info, "permissions", None)
+            request.state.user = SimpleUser(
+                user_id=user_info.user_id,
+                username=getattr(user_info, "username", None),
+                email=getattr(user_info, "email", None),
+                tenant_id=getattr(user_info, "tenant_id", None),
+                roles=getattr(user_info, "roles", []) or [],
+                scopes=list(permissions or [])
+                if permissions is not None
+                else getattr(user_info, "roles", []) or [],
+            )
 
             # Also set tenant in context var for database operations
             tenant_id = getattr(user_info, "tenant_id", None)

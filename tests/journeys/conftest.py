@@ -1,13 +1,15 @@
 """Fixtures for journey tests."""
 
-import pytest
-from datetime import datetime, UTC
+from datetime import timezone, datetime
 from uuid import uuid4
+
+import pytest
+import pytest_asyncio
 
 from dotmac.platform.tenant.models import Tenant
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_session):
     """Create a test tenant for journey tests."""
     tenant = Tenant(
@@ -15,7 +17,7 @@ async def test_tenant(async_session):
         name="Test Tenant",
         slug=f"test-tenant-{uuid4().hex[:8]}",
         is_active=True,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     async_session.add(tenant)
     await async_session.flush()

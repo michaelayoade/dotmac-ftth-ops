@@ -4,7 +4,7 @@ Comprehensive tests for billing reports models and enums.
 Tests report types, periods, and data structures.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 
@@ -240,8 +240,8 @@ class TestDateRangeCalculation:
 
         service = BillingReportService(AsyncMock())
 
-        custom_start = datetime(2024, 1, 1, tzinfo=UTC)
-        custom_end = datetime(2024, 3, 31, tzinfo=UTC)
+        custom_start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        custom_end = datetime(2024, 3, 31, tzinfo=timezone.utc)
 
         start, end = service._calculate_date_range(
             ReportPeriod.CUSTOM, custom_start=custom_start, custom_end=custom_end
@@ -266,7 +266,7 @@ class TestDateRangeCalculation:
         service = BillingReportService(AsyncMock())
 
         with pytest.raises(ValueError, match="Custom period requires start and end dates"):
-            service._calculate_date_range(ReportPeriod.CUSTOM, custom_start=datetime.now(UTC))
+            service._calculate_date_range(ReportPeriod.CUSTOM, custom_start=datetime.now(timezone.utc))
 
 
 class TestPreviousPeriodCalculation:
@@ -278,8 +278,8 @@ class TestPreviousPeriodCalculation:
 
         service = BillingReportService(AsyncMock())
 
-        start = datetime(2024, 3, 1, tzinfo=UTC)
-        end = datetime(2024, 3, 31, tzinfo=UTC)
+        start = datetime(2024, 3, 1, tzinfo=timezone.utc)
+        end = datetime(2024, 3, 31, tzinfo=timezone.utc)
 
         prev_start, prev_end = service._calculate_previous_period(start, end)
 
@@ -294,8 +294,8 @@ class TestPreviousPeriodCalculation:
 
         service = BillingReportService(AsyncMock())
 
-        start = datetime(2024, 3, 1, tzinfo=UTC)
-        end = datetime(2024, 4, 1, tzinfo=UTC)
+        start = datetime(2024, 3, 1, tzinfo=timezone.utc)
+        end = datetime(2024, 4, 1, tzinfo=timezone.utc)
 
         prev_start, prev_end = service._calculate_previous_period(start, end)
 
@@ -313,15 +313,15 @@ class TestPreviousPeriodCalculation:
 
         service = BillingReportService(AsyncMock())
 
-        start = datetime(2024, 3, 11, tzinfo=UTC)  # Monday
-        end = datetime(2024, 3, 18, tzinfo=UTC)  # Monday
+        start = datetime(2024, 3, 11, tzinfo=timezone.utc)  # Monday
+        end = datetime(2024, 3, 18, tzinfo=timezone.utc)  # Monday
 
         prev_start, prev_end = service._calculate_previous_period(start, end)
 
         # Should be exactly 7 days before
         assert (end - start).days == 7
         assert (prev_end - prev_start).days == 7
-        assert prev_start == datetime(2024, 3, 4, tzinfo=UTC)
+        assert prev_start == datetime(2024, 3, 4, tzinfo=timezone.utc)
 
 
 class TestGrowthRateCalculation:

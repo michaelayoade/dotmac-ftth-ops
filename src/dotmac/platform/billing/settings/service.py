@@ -4,7 +4,10 @@ Billing settings service
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -190,9 +193,7 @@ class BillingSettingsService:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
-    async def _save_settings(
-        self, tenant_id: str, settings: BillingSettings
-    ) -> BillingSettings:
+    async def _save_settings(self, tenant_id: str, settings: BillingSettings) -> BillingSettings:
         row = await self._get_settings_row(tenant_id)
         if row is None:
             row = BillingSettingsTable(
@@ -206,18 +207,14 @@ class BillingSettingsService:
         await self.db.refresh(row)
         return self._table_to_model(row)
 
-    def _apply_model_to_row(
-        self, row: BillingSettingsTable, settings: BillingSettings
-    ) -> None:
+    def _apply_model_to_row(self, row: BillingSettingsTable, settings: BillingSettings) -> None:
         row.tenant_id = settings.tenant_id
         row.settings_id = settings.settings_id or row.settings_id or str(uuid4())
         row.company_info = json.loads(settings.company_info.model_dump_json())
         row.tax_settings = json.loads(settings.tax_settings.model_dump_json())
         row.payment_settings = json.loads(settings.payment_settings.model_dump_json())
         row.invoice_settings = json.loads(settings.invoice_settings.model_dump_json())
-        row.notification_settings = json.loads(
-            settings.notification_settings.model_dump_json()
-        )
+        row.notification_settings = json.loads(settings.notification_settings.model_dump_json())
         row.features_enabled = dict(settings.features_enabled)
         row.custom_settings = dict(settings.custom_settings)
         row.api_settings = dict(settings.api_settings)

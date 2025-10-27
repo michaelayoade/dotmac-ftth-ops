@@ -12,7 +12,6 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.fault_management.models import OnCallScheduleType
 
-
 # ============================================================================
 # On-Call Schedule Schemas
 # ============================================================================

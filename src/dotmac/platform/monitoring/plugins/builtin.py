@@ -4,9 +4,9 @@ Built-in alert channel plugins (Slack, Discord, Teams, generic webhooks).
 
 from __future__ import annotations
 
-from datetime import datetime
 import json
-from typing import Any, TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 import httpx
 from jinja2 import Template, TemplateSyntaxError
@@ -260,14 +260,14 @@ class DiscordChannelPlugin(AlertChannelPlugin):
 class TeamsChannelPlugin(AlertChannelPlugin):
     plugin_id = "teams"
 
-    def validate(self, channel: AlertChannel) -> None:
+    def validate(self, channel: AlertChannelType) -> None:
         if not channel.webhook_url:
             raise ValueError("webhook_url is required for Microsoft Teams channels")
 
     async def send(
         self,
-        alert: Alert,
-        channel: AlertChannel,
+        alert: AlertType,
+        channel: AlertChannelType,
         client: httpx.AsyncClient,
     ) -> bool:
         payload = _format_teams_message(alert, channel)

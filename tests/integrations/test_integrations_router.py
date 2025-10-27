@@ -6,6 +6,7 @@ integration registry via REST endpoints.
 """
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from starlette.testclient import TestClient
 
@@ -19,7 +20,7 @@ from dotmac.platform.integrations import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def integration_registry():
     """Create a test integration registry with mock integrations."""
     from unittest.mock import AsyncMock

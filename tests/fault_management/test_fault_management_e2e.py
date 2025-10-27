@@ -4,7 +4,7 @@ End-to-End Tests for Fault Management System
 Tests complete workflows from event generation to alarm resolution.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -75,7 +75,7 @@ class TestDeviceFailureWorkflow:
                 customer_name="Acme Corp",
                 service_id=service_id,
                 service_name="Fiber 1Gbps",
-                start_date=datetime.now(UTC) - timedelta(days=30),
+                start_date=datetime.now(timezone.utc) - timedelta(days=30),
             ),
             user_id=user_id,
         )
@@ -259,7 +259,7 @@ class TestSLABreachWorkflow:
         service_id = uuid4()
 
         # Instance started 30 days ago
-        start_date = datetime.now(UTC) - timedelta(days=30)
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
 
         sla_instance = await sla_service.create_instance(
             SLAInstanceCreate(
@@ -362,7 +362,7 @@ class TestMaintenanceWindowWorkflow:
         user_id = uuid4()
 
         # Step 1: Schedule maintenance window for tomorrow
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         start_time = now + timedelta(days=1)
         end_time = start_time + timedelta(hours=4)
 
@@ -484,7 +484,7 @@ class TestAlarmEscalationWorkflow:
 
         # Step 2: Simulate 15 minutes passing (check unacknowledged)
         db_alarm = await session.get(Alarm, critical_alarm.id)
-        db_alarm.first_occurrence = datetime.now(UTC) - timedelta(minutes=15)
+        db_alarm.first_occurrence = datetime.now(timezone.utc) - timedelta(minutes=15)
         await session.commit()
 
         # In real system, Celery task would check for unacknowledged alarms
@@ -602,7 +602,7 @@ class TestCompleteNetworkOutageScenario:
                     customer_name=f"Customer {i}",
                     service_id=service_id,
                     service_name="Residential Fiber 100Mbps",
-                    start_date=datetime.now(UTC) - timedelta(days=60),
+                    start_date=datetime.now(timezone.utc) - timedelta(days=60),
                 ),
                 user_id=user_id,
             )

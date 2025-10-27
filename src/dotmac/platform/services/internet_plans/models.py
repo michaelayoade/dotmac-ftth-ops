@@ -162,7 +162,9 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
     # Additional services
     router_included: Mapped[bool] = mapped_column(default=False)
     installation_included: Mapped[bool] = mapped_column(default=False)
-    technical_support_level: Mapped[str | None] = mapped_column(String(50))  # basic, standard, premium
+    technical_support_level: Mapped[str | None] = mapped_column(
+        String(50)
+    )  # basic, standard, premium
 
     # Metadata
     tags: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
@@ -176,8 +178,7 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
 
     # Relationships
     subscriptions: Mapped[list["PlanSubscription"]] = relationship(
-        back_populates="plan",
-        lazy="select"
+        back_populates="plan", lazy="select"
     )
 
     # Constraints
@@ -185,7 +186,9 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
         CheckConstraint("download_speed > 0", name="check_download_speed_positive"),
         CheckConstraint("upload_speed > 0", name="check_upload_speed_positive"),
         CheckConstraint("monthly_price >= 0", name="check_monthly_price_non_negative"),
-        CheckConstraint("qos_priority >= 0 AND qos_priority <= 100", name="check_qos_priority_range"),
+        CheckConstraint(
+            "qos_priority >= 0 AND qos_priority <= 100", name="check_qos_priority_range"
+        ),
         Index("idx_plan_tenant_status", "tenant_id", "status"),
         Index("idx_plan_type_status", "plan_type", "status"),
         Index("idx_plan_code", "plan_code"),
@@ -248,7 +251,9 @@ class PlanSubscription(Base, TenantMixin, TimestampMixin):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
 
     # References
-    plan_id: Mapped[UUID] = mapped_column(ForeignKey("internet_service_plans.id"), nullable=False, index=True)
+    plan_id: Mapped[UUID] = mapped_column(
+        ForeignKey("internet_service_plans.id"), nullable=False, index=True
+    )
     customer_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     subscription_id: Mapped[UUID | None] = mapped_column()  # Link to billing subscription
 
@@ -264,7 +269,9 @@ class PlanSubscription(Base, TenantMixin, TimestampMixin):
     custom_monthly_price: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
 
     # Usage tracking
-    current_period_usage_gb: Mapped[Decimal] = mapped_column(Numeric(15, 2), default=Decimal("0.00"))
+    current_period_usage_gb: Mapped[Decimal] = mapped_column(
+        Numeric(15, 2), default=Decimal("0.00")
+    )
     last_usage_reset: Mapped[datetime | None] = mapped_column()
 
     # Status

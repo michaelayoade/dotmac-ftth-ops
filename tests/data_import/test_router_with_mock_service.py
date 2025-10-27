@@ -2,7 +2,7 @@
 
 import io
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -45,7 +45,10 @@ def auth_headers(mock_user):
         roles=mock_user.roles,
         permissions=mock_user.permissions,
     )
-    return {"Authorization": f"Bearer {token}"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": mock_user.tenant_id,
+    }
 
 
 @pytest.fixture
@@ -78,16 +81,16 @@ def create_mock_job(
     job.failed_records = 0
     job.progress_percentage = 100.0
     job.success_rate = 100.0
-    job.started_at = datetime.now(UTC)
-    job.completed_at = datetime.now(UTC)
+    job.started_at = datetime.now(timezone.utc)
+    job.completed_at = datetime.now(timezone.utc)
     job.duration_seconds = 10.5
     job.error_message = None
     job.celery_task_id = None
     job.summary = {}
     job.config = {}
     job.initiated_by = None
-    job.created_at = datetime.now(UTC)
-    job.updated_at = datetime.now(UTC)
+    job.created_at = datetime.now(timezone.utc)
+    job.updated_at = datetime.now(timezone.utc)
     return job
 
 

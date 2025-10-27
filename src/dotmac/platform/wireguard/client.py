@@ -10,7 +10,6 @@ import ipaddress
 import logging
 import re
 import secrets
-import tempfile
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -131,7 +130,7 @@ class WireGuardClient:
 
             if process.returncode != 0:
                 raise WireGuardClientError(
-                    f"Command failed: {' '.join(command)}\n" f"Error: {stderr.decode('utf-8')}"
+                    f"Command failed: {' '.join(command)}\nError: {stderr.decode('utf-8')}"
                 )
 
             return stdout.decode("utf-8"), stderr.decode("utf-8")
@@ -352,12 +351,12 @@ class WireGuardClient:
         config = f"""[Interface]
 PrivateKey = {peer_private_key}
 Address = {peer_address}
-DNS = {', '.join(dns_servers)}
+DNS = {", ".join(dns_servers)}
 
 [Peer]
 PublicKey = {server_public_key}
 Endpoint = {server_endpoint}
-AllowedIPs = {', '.join(allowed_ips)}
+AllowedIPs = {", ".join(allowed_ips)}
 """
 
         if persistent_keepalive:
@@ -461,7 +460,7 @@ AllowedIPs = {', '.join(allowed_ips)}
                 # Write preshared key to temp file in container with restrictive permissions
                 await self._docker_exec(
                     ["sh", "-c", f"umask 077 && tee {temp_filename} > /dev/null"],
-                    input_data=f"{preshared_key}\n".encode("utf-8"),
+                    input_data=f"{preshared_key}\n".encode(),
                 )
 
                 # Add preshared-key argument to command

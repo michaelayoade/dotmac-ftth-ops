@@ -12,8 +12,8 @@ from .base import (  # noqa: F401
     DriverConfig,
     DriverContext,
     OLTAlarm,
+    OltMetrics,
     ONUProvisionRequest,
     ONUProvisionResult,
-    OltMetrics,
 )
 from .voltha import VolthaDriver  # noqa: F401

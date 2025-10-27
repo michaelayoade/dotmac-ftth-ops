@@ -5,16 +5,16 @@ Tests the client against a mock GenieACS NBI server to validate
 real HTTP flow, error handling, and circuit breaker behavior.
 """
 
-import pytest
-import json
-from aiohttp import web
-from unittest.mock import patch
 import asyncio
+
+import pytest
+import pytest_asyncio
+from aiohttp import web
 
 from dotmac.platform.genieacs.client import GenieACSClient
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_genieacs_server(aiohttp_server):
     """
     Mock GenieACS NBI server for integration testing.
@@ -63,7 +63,7 @@ async def mock_genieacs_server(aiohttp_server):
         skip = int(request.query.get("skip", 0))
 
         # Apply pagination
-        paginated = mock_devices[skip:skip + limit]
+        paginated = mock_devices[skip : skip + limit]
         return web.json_response(paginated)
 
     async def get_device(request):
@@ -89,12 +89,15 @@ async def mock_genieacs_server(aiohttp_server):
             return web.json_response({"error": "Device not found"}, status=404)
 
         # Return task response
-        return web.json_response({
-            "_id": f"task-{request_count['tasks']}",
-            "device": device_id,
-            "name": task_data.get("name"),
-            "timestamp": 1234567890000,
-        }, status=200)
+        return web.json_response(
+            {
+                "_id": f"task-{request_count['tasks']}",
+                "device": device_id,
+                "name": task_data.get("name"),
+                "timestamp": 1234567890000,
+            },
+            status=200,
+        )
 
     async def get_presets(request):
         """GET /presets - List presets"""
@@ -138,6 +141,7 @@ async def mock_genieacs_server(aiohttp_server):
 def reset_circuit_breaker():
     """Reset circuit breaker state before each test"""
     from dotmac.platform.core.http_client import RobustHTTPClient
+
     RobustHTTPClient._circuit_breakers.clear()
     yield
     RobustHTTPClient._circuit_breakers.clear()
@@ -188,7 +192,9 @@ class TestGenieACSIntegration:
 
     @pytest.mark.asyncio
     @pytest.mark.integration
-    async def test_get_device_not_found_integration(self, mock_genieacs_server, reset_circuit_breaker):
+    async def test_get_device_not_found_integration(
+        self, mock_genieacs_server, reset_circuit_breaker
+    ):
         """Test getting non-existent device returns None"""
         client = GenieACSClient(base_url=str(mock_genieacs_server.make_url("/")))
 
@@ -205,7 +211,7 @@ class TestGenieACSIntegration:
         task = await client.create_task(
             device_id="test-device-1",
             task_name="refreshObject",
-            task_data={"objectName": "InternetGatewayDevice."}
+            task_data={"objectName": "InternetGatewayDevice."},
         )
 
         assert task is not None
@@ -225,13 +231,14 @@ class TestGenieACSIntegration:
 
     @pytest.mark.asyncio
     @pytest.mark.integration
-    async def test_set_parameter_values_integration(self, mock_genieacs_server, reset_circuit_breaker):
+    async def test_set_parameter_values_integration(
+        self, mock_genieacs_server, reset_circuit_breaker
+    ):
         """Test setting device parameters"""
         client = GenieACSClient(base_url=str(mock_genieacs_server.make_url("/")))
 
         result = await client.set_parameter_values(
-            "test-device-1",
-            {"InternetGatewayDevice.ManagementServer.PeriodicInformEnable": True}
+            "test-device-1", {"InternetGatewayDevice.ManagementServer.PeriodicInformEnable": True}
         )
 
         assert result is not None
@@ -289,10 +296,7 @@ class TestGenieACSCircuitBreaker:
     @pytest.mark.slow
     async def test_retry_on_network_errors(self, mock_genieacs_server, reset_circuit_breaker):
         """Test that client retries on network errors"""
-        client = GenieACSClient(
-            base_url=str(mock_genieacs_server.make_url("/")),
-            max_retries=2
-        )
+        client = GenieACSClient(base_url=str(mock_genieacs_server.make_url("/")), max_retries=2)
 
         # Test with a bad endpoint that doesn't exist
         with pytest.raises(Exception):
@@ -335,7 +339,7 @@ class TestGenieACSCircuitBreaker:
 
         client = GenieACSClient(
             base_url=str(mock_genieacs_server.make_url("/")),
-            timeout_seconds=1.0  # Short timeout
+            timeout_seconds=1.0,  # Short timeout
         )
 
         # Test with slow endpoint (2 second delay)

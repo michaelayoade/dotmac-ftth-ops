@@ -16,6 +16,7 @@ from dotmac.platform.tenant import (
 class TestTenantConfiguration:
     """Test tenant configuration behavior."""
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_default_configuration(self):
         """Test default configuration is single-tenant."""
         config = TenantConfiguration()
@@ -25,6 +26,7 @@ class TestTenantConfiguration:
         assert config.is_single_tenant
         assert not config.is_multi_tenant
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_single_tenant_configuration(self):
         """Test explicit single-tenant configuration."""
         config = TenantConfiguration(mode=TenantMode.SINGLE)
@@ -64,7 +66,7 @@ class TestTenantConfiguration:
         assert config.mode == TenantMode.MULTI
         assert config.require_tenant_header
 
-    @patch.dict(os.environ, {"TENANT_MODE": "single", "DEFAULT_TENANT_ID": "acme-corp"})
+    @patch.dict(os.environ, {"TENANT_MODE": "single", "DEFAULT_TENANT_ID": "acme-corp"}, clear=True)
     def test_environment_single_tenant(self):
         """Test single-tenant configuration from environment."""
         config = TenantConfiguration()

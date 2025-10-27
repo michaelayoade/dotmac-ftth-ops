@@ -3,19 +3,18 @@ Unit tests for Order Processing Service
 """
 
 import asyncio
-import pytest
-from decimal import Decimal
-from unittest.mock import Mock, patch, call
 
+import pytest
 from sqlalchemy.orm import Session
 
-from dotmac.platform.sales.models import Order, OrderStatus, OrderType
+from dotmac.platform.deployment.models import DeploymentType
+from dotmac.platform.sales.models import Order, OrderStatus
 from dotmac.platform.sales.schemas import OrderCreate, OrderSubmit
 from dotmac.platform.sales.service import (
     OrderProcessingService,
     TemplateMapper,
 )
-from dotmac.platform.deployment.models import DeploymentType
+
 from .conftest import create_order
 
 
@@ -36,7 +35,7 @@ class TestTemplateMapper:
 
     def test_map_by_package_code_professional(self, db: Session):
         """Test mapping by package code - professional"""
-        from dotmac.platform.deployment.models import DeploymentTemplate, DeploymentBackend
+        from dotmac.platform.deployment.models import DeploymentBackend, DeploymentTemplate
 
         # Create professional template
         template = DeploymentTemplate(
@@ -151,7 +150,7 @@ class TestOrderProcessingService:
         # Check items were created
         assert len(order.items) == len(sample_order_create.selected_services)
 
-        for item, service in zip(order.items, sample_order_create.selected_services):
+        for item, service in zip(order.items, sample_order_create.selected_services, strict=False):
             assert item.service_code == service.service_code
             assert item.name == service.name
             assert item.quantity == service.quantity
@@ -208,9 +207,7 @@ class TestOrderProcessingService:
         sample_order_submit: OrderSubmit,
     ):
         """Test successful order submission"""
-        result = asyncio.run(order_service.submit_order(
-            sample_order.id, sample_order_submit
-        ))
+        result = asyncio.run(order_service.submit_order(sample_order.id, sample_order_submit))
 
         assert result.status == OrderStatus.SUBMITTED
         assert result.payment_reference == sample_order_submit.payment_reference
@@ -397,9 +394,9 @@ class TestOrderProcessingService:
         mock_deployment_service,
     ):
         """Test deployment provisioning from order"""
-        instance = asyncio.run(order_service._provision_deployment_for_order(
-            sample_order, tenant_id=1, user_id=1
-        ))
+        instance = asyncio.run(
+            order_service._provision_deployment_for_order(sample_order, tenant_id=1, user_id=1)
+        )
 
         assert instance is not None
         assert instance.id is not None

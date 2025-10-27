@@ -52,18 +52,17 @@ class BillingService:
 
         # Create subscription request
         subscription_request = SubscriptionCreateRequest(
-            customer_id=str(customer_id),
-            plan_id=str(plan_id),
-            metadata={"created_by": "workflow"}
+            customer_id=str(customer_id), plan_id=str(plan_id), metadata={"created_by": "workflow"}
         )
 
         # Create the subscription
         subscription = await subscription_service.create_subscription(
-            subscription_data=subscription_request,
-            tenant_id=tenant_id
+            subscription_data=subscription_request, tenant_id=tenant_id
         )
 
-        logger.info(f"Created subscription {subscription.subscription_id} for customer {customer_id}")
+        logger.info(
+            f"Created subscription {subscription.subscription_id} for customer {customer_id}"
+        )
 
         return {
             "subscription_id": subscription.subscription_id,
@@ -108,14 +107,17 @@ class BillingService:
             try:
                 # Try to interpret order_id as a quote UUID and fetch currency
                 from sqlalchemy import select
+
                 from ..crm.models import Quote
 
                 try:
-                    quote_uuid = UUID(order_id) if isinstance(order_id, str) else UUID(str(order_id))
+                    quote_uuid = (
+                        UUID(order_id) if isinstance(order_id, str) else UUID(str(order_id))
+                    )
                     quote_stmt = select(Quote).where(Quote.id == quote_uuid)
                     quote_result = await self.db.execute(quote_stmt)
                     quote = quote_result.scalar_one_or_none()
-                    if quote and hasattr(quote, 'currency'):
+                    if quote and hasattr(quote, "currency"):
                         currency = quote.currency
                         logger.info(f"Currency retrieved from quote: {currency}")
                 except (ValueError, AttributeError):
@@ -162,7 +164,7 @@ class BillingService:
                     metadata={
                         "order_id": str(order_id),
                         "source": "workflow",
-                    }
+                    },
                 )
 
                 # Return plugin result with consistent format
@@ -172,7 +174,9 @@ class BillingService:
                     "amount": str(amount_decimal),
                     "payment_method": payment_method,
                     "status": plugin_result.get("status", "completed"),
-                    "transaction_id": plugin_result.get("transaction_id", plugin_result.get("payment_id")),
+                    "transaction_id": plugin_result.get(
+                        "transaction_id", plugin_result.get("payment_id")
+                    ),
                     "processed_at": datetime.utcnow().isoformat(),
                     "provider": plugin_result.get("provider", "plugin"),
                     "details": plugin_result,
@@ -208,6 +212,7 @@ class BillingService:
 
         # Get settings to check environment and plugin requirement
         from ..settings import get_settings
+
         settings = get_settings()
 
         # CRITICAL: Block fallback in production environment
@@ -226,24 +231,14 @@ class BillingService:
             )
 
         # Log prominent warning for development/testing
-        logger.warning(
-            "=" * 80
-        )
-        logger.warning(
-            f"⚠️  [MOCK PAYMENT] Using simulated payment processing for order {order_id}"
-        )
-        logger.warning(
-            "⚠️  NO REAL MONEY IS BEING COLLECTED"
-        )
-        logger.warning(
-            f"⚠️  Environment: {settings.environment.value}"
-        )
+        logger.warning("=" * 80)
+        logger.warning(f"⚠️  [MOCK PAYMENT] Using simulated payment processing for order {order_id}")
+        logger.warning("⚠️  NO REAL MONEY IS BEING COLLECTED")
+        logger.warning(f"⚠️  Environment: {settings.environment.value}")
         logger.warning(
             "⚠️  This is ONLY allowed in development/testing with BILLING__REQUIRE_PAYMENT_PLUGIN=false"
         )
-        logger.warning(
-            "=" * 80
-        )
+        logger.warning("=" * 80)
 
         payment_id = f"pay_mock_{secrets.token_hex(12)}"
         transaction_id = f"txn_mock_{secrets.token_hex(12)}"
@@ -300,7 +295,7 @@ class BillingService:
         Raises:
             ValueError: If subscription or customer not found
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
 
         from sqlalchemy import select
 
@@ -459,19 +454,15 @@ class BillingService:
             ValueError: If subscription not found or invalid extension period
             RuntimeError: If extension fails
         """
-        from datetime import UTC, datetime, timedelta
+        from datetime import datetime, timedelta, timezone
 
         from sqlalchemy import select, update
 
-        logger.info(
-            f"Extending subscription {subscription_id} by {extension_period} months"
-        )
+        logger.info(f"Extending subscription {subscription_id} by {extension_period} months")
 
         # Validate extension period
         if extension_period < 1 or extension_period > 36:
-            raise ValueError(
-                f"Invalid extension_period: {extension_period} (must be 1-36 months)"
-            )
+            raise ValueError(f"Invalid extension_period: {extension_period} (must be 1-36 months)")
 
         subscription_id_str = str(subscription_id)
 
@@ -619,20 +610,20 @@ class BillingService:
             ValueError: If quote not found, customer mismatch, or invalid status
             RuntimeError: If payment processing fails
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
         from uuid import UUID
 
         from sqlalchemy import select
 
         from ..crm.models import Quote, QuoteStatus
 
-        logger.info(
-            f"Processing renewal payment for customer {customer_id}, quote {quote_id}"
-        )
+        logger.info(f"Processing renewal payment for customer {customer_id}, quote {quote_id}")
 
         # Convert IDs to UUIDs
         try:
-            customer_uuid = UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            customer_uuid = (
+                UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            )
             quote_uuid = UUID(quote_id) if isinstance(quote_id, str) else UUID(str(quote_id))
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid ID format: {e}") from e
@@ -650,7 +641,8 @@ class BillingService:
 
             if not quote:
                 raise ValueError(
-                    f"Quote {quote_id} not found" + (f" for tenant {tenant_id}" if tenant_id else "")
+                    f"Quote {quote_id} not found"
+                    + (f" for tenant {tenant_id}" if tenant_id else "")
                 )
 
             # 2. Validate quote status
@@ -702,13 +694,15 @@ class BillingService:
 
             # Add payment metadata to quote
             quote_metadata = quote.metadata_ or {}
-            quote_metadata.update({
-                "payment_processed_at": datetime.now(UTC).isoformat(),
-                "payment_id": payment_result["payment_id"],
-                "transaction_id": payment_result["transaction_id"],
-                "payment_method": payment_method,
-                "payment_provider": payment_result.get("provider", "unknown"),
-            })
+            quote_metadata.update(
+                {
+                    "payment_processed_at": datetime.now(UTC).isoformat(),
+                    "payment_id": payment_result["payment_id"],
+                    "transaction_id": payment_result["transaction_id"],
+                    "payment_method": payment_method,
+                    "payment_provider": payment_result.get("provider", "unknown"),
+                }
+            )
             quote.metadata_ = quote_metadata
 
             # Commit quote updates
@@ -788,7 +782,7 @@ class BillingService:
         Raises:
             ValueError: If customer or service not found
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
 
         from sqlalchemy import select, update
 
@@ -847,10 +841,12 @@ class BillingService:
             sub_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.customer_id == customer_id_str,
                 BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.status.in_([
-                    SubscriptionStatus.TRIAL,
-                    SubscriptionStatus.PENDING,
-                ])
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.TRIAL,
+                        SubscriptionStatus.PENDING,
+                    ]
+                ),
             )
 
             sub_result = await self.db.execute(sub_stmt)
@@ -864,7 +860,9 @@ class BillingService:
                         .where(BillingSubscriptionTable.id == subscription.id)
                         .values(
                             status=SubscriptionStatus.ACTIVE,
-                            activated_at=datetime.now(UTC) if not subscription.activated_at else subscription.activated_at,
+                            activated_at=datetime.now(UTC)
+                            if not subscription.activated_at
+                            else subscription.activated_at,
                         )
                     )
                     await self.db.execute(sub_update)

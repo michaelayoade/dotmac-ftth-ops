@@ -5,9 +5,12 @@ Comprehensive service layer for managing ISP service lifecycle including
 provisioning, activation, suspension, resumption, and termination workflows.
 """
 
-from datetime import UTC, datetime, timedelta
-from typing import Any
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from types import SimpleNamespace
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, select
@@ -1079,7 +1082,9 @@ class LifecycleOrchestrationService:
         )
         if legacy_mode:
             if failed:
-                failed_message = next((r.message for r in results if not r.success), "Bulk operation failed")
+                failed_message = next(
+                    (r.message for r in results if not r.success), "Bulk operation failed"
+                )
                 raise BusinessRuleError(failed_message)
             services: list[ServiceInstance] = []
             for result in results:

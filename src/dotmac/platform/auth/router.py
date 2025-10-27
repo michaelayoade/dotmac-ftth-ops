@@ -4,11 +4,13 @@ Authentication router for FastAPI.
 Provides login, register, token refresh endpoints with rate limiting.
 """
 
-import inspect
 import json
 import secrets
 from collections.abc import AsyncGenerator
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, Literal
 
 import structlog
@@ -29,8 +31,8 @@ from dotmac.platform.auth.core import (
     verify_password,
 )
 from dotmac.platform.auth.email_service import get_auth_email_service
-from dotmac.platform.auth.mfa_service import mfa_service
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
+from dotmac.platform.auth.mfa_service import mfa_service
 from dotmac.platform.communications.models import (
     CommunicationLog,
     CommunicationStatus,
@@ -78,9 +80,7 @@ def set_auth_cookies(response: Response, access_token: str, refresh_token: str) 
     # Cookie settings - secure only in production (requires HTTPS)
     secure = settings.is_production
     # Use 'lax' for development to allow cross-origin requests, 'strict' for production
-    samesite: Literal["strict", "lax", "none"] = (
-        "strict" if settings.is_production else "lax"
-    )
+    samesite: Literal["strict", "lax", "none"] = "strict" if settings.is_production else "lax"
 
     # Set access token cookie (15 minutes)
     response.set_cookie(
@@ -137,7 +137,7 @@ def get_token_from_cookie(request: Request, cookie_name: str) -> str | None:
 
 async def get_auth_session(
     session: AsyncSession = Depends(get_session_dependency),
-) -> AsyncGenerator[AsyncSession, None]:
+) -> AsyncGenerator[AsyncSession]:
     """Adapter to reuse the shared session dependency helper with DI overrides."""
     yield session
 
@@ -149,7 +149,9 @@ async def get_async_session() -> AsyncGenerator[AsyncSession]:  # pragma: no cov
 
 
 # Create router
-auth_router = APIRouter(prefix="/auth", )
+auth_router = APIRouter(
+    prefix="/auth",
+)
 # Alias used by external imports/tests that expect `router`
 router = auth_router
 
@@ -157,6 +159,7 @@ router = auth_router
 async def _auth_exception_handler(request: Request, exc: AuthError) -> JSONResponse:
     """Convert AuthError exceptions to HTTP responses for router-only apps."""
     return JSONResponse(status_code=get_http_status(exc), content=exc.to_dict())
+
 
 # Register handler when running inside router-only applications that include this router.
 try:
@@ -323,6 +326,7 @@ async def _authenticate_and_issue_tokens(
             description=f"Failed login attempt for username: {username}",
             severity=ActivitySeverity.HIGH,
             details={"username": username, "reason": "invalid_credentials"},
+            session=session,
         )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -711,9 +715,7 @@ async def verify_2fa_login(
     """
     try:
         user_service = UserService(session)
-        pending_session = await session_manager.get_session(
-            f"2fa_pending:{verify_request.user_id}"
-        )
+        pending_session = await session_manager.get_session(f"2fa_pending:{verify_request.user_id}")
         tenant_scope = None
         if isinstance(pending_session, dict):
             tenant_scope = pending_session.get("tenant_id")
@@ -919,6 +921,7 @@ async def register(
                 "email": register_request.email,
                 "reason": "user_already_exists",
             },
+            session=session,
         )
         # Generic error message to prevent user enumeration
         raise HTTPException(
@@ -999,6 +1002,7 @@ async def register(
                 "reason": "user_creation_error",
                 "error": str(e),
             },
+            session=session,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -1749,7 +1753,9 @@ async def get_current_user_endpoint(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -1928,7 +1934,9 @@ async def update_current_user_profile(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2051,7 +2059,9 @@ async def upload_avatar(
 
         # Update user's avatar_url
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2129,7 +2139,9 @@ async def delete_avatar(
 
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2244,7 +2256,9 @@ async def send_verification_email(
         from dotmac.platform.user_management.models import EmailVerificationToken
 
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2395,7 +2409,9 @@ async def confirm_email_verification(
 
         # Update user's email and mark as verified
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2497,7 +2513,9 @@ async def change_password(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2608,7 +2626,9 @@ async def enable_2fa(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2705,7 +2725,9 @@ async def verify_2fa_setup(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2784,7 +2806,9 @@ async def disable_2fa(
     """
     try:
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(
@@ -2890,7 +2914,9 @@ async def regenerate_backup_codes(
     try:
         # Get user from database
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(current_user.user_id, **_tenant_scope_kwargs(current_user))
+        user = await user_service.get_user_by_id(
+            current_user.user_id, **_tenant_scope_kwargs(current_user)
+        )
 
         if not user:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
@@ -3269,7 +3295,9 @@ async def confirm_phone_verification(
 
         # Update user
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if user:
             user.phone = phone
@@ -3314,7 +3342,9 @@ async def setup_2fa(
         import qrcode
 
         user_service = UserService(session)
-        user = await user_service.get_user_by_id(user_info.user_id, **_tenant_scope_kwargs(user_info))
+        user = await user_service.get_user_by_id(
+            user_info.user_id, **_tenant_scope_kwargs(user_info)
+        )
 
         if not user:
             raise HTTPException(status_code=404, detail="User not found")

@@ -433,7 +433,9 @@ class RobustHTTPClient:
     async def close(self) -> None:
         """Close HTTP client and cleanup resources."""
         # Fixed: Include auth_key in pool key to match the key used in __init__
-        pool_key = f"{self.service_name}:{self.tenant_id or 'default'}:{self.base_url}:{self.auth_key}"
+        pool_key = (
+            f"{self.service_name}:{self.tenant_id or 'default'}:{self.base_url}:{self.auth_key}"
+        )
         if pool_key in self._client_pool:
             await self._client_pool[pool_key].aclose()
             del self._client_pool[pool_key]

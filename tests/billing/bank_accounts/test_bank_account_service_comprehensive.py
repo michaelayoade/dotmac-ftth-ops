@@ -4,7 +4,7 @@ Comprehensive tests for BankAccountService and ManualPaymentService.
 Tests bank account management and manual payment processing with real DB.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -354,7 +354,7 @@ class TestManualPaymentServiceCash:
             bank_account_id=1,
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-001",
             cashier_name="John Doe",
         )
@@ -382,8 +382,8 @@ class TestManualPaymentServiceCheck:
             bank_account_id=1,
             amount=Decimal("500.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
-            received_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
+            received_date=datetime.now(timezone.utc),
             check_number="CHK-001",
             check_bank_name="Customer Bank",
         )
@@ -410,8 +410,8 @@ class TestManualPaymentServiceBankTransfer:
             payment_method=PaymentMethodType.WIRE_TRANSFER,
             amount=Decimal("1000.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
-            received_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
+            received_date=datetime.now(timezone.utc),
             sender_name="Customer Company",
             sender_bank="Customer Bank",
             sender_account_last_four="9876",
@@ -438,8 +438,8 @@ class TestManualPaymentServiceMobileMoney:
             bank_account_id=1,
             amount=Decimal("50.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
-            received_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
+            received_date=datetime.now(timezone.utc),
             mobile_number="+1234567890",
             mobile_provider="M-Pesa",
         )
@@ -469,7 +469,7 @@ class TestManualPaymentServiceSearch:
             bank_account_id=1,
             amount=Decimal("75.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-001",
         )
         await service.record_cash_payment("tenant-123", payment_data, "user-123")
@@ -493,7 +493,7 @@ class TestManualPaymentServiceSearch:
             bank_account_id=1,
             amount=Decimal("85.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-002",
         )
         created = await service.record_cash_payment("tenant-123", payment_data, "user-123")
@@ -521,7 +521,7 @@ class TestManualPaymentServiceVerification:
             bank_account_id=1,
             amount=Decimal("95.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-003",
         )
         created = await service.record_cash_payment("tenant-123", payment_data, "user-123")
@@ -559,7 +559,7 @@ class TestManualPaymentServiceReconciliation:
             bank_account_id=1,
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-004",
         )
         payment1 = await service.record_cash_payment("tenant-123", payment1_data, "user-123")
@@ -570,7 +570,7 @@ class TestManualPaymentServiceReconciliation:
             bank_account_id=1,
             amount=Decimal("200.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-004",
         )
         payment2 = await service.record_cash_payment("tenant-123", payment2_data, "user-123")
@@ -596,7 +596,7 @@ class TestManualPaymentServiceReconciliation:
             bank_account_id=1,
             amount=Decimal("50.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             cash_register_id="REG-005",
         )
         created = await service.record_cash_payment("tenant-123", payment_data, "user-123")

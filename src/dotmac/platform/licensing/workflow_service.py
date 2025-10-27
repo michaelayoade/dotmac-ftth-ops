@@ -6,7 +6,10 @@ Enhanced with comprehensive error handling, retry logic, and metrics.
 """
 
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy import select
@@ -160,8 +163,7 @@ class LicenseService(WorkflowServiceBase):
                 customer = await self.with_retry(fetch_customer)
                 if customer:
                     issued_to = (
-                        f"{customer.first_name} {customer.last_name}".strip()
-                        or customer.email
+                        f"{customer.first_name} {customer.last_name}".strip() or customer.email
                     )
                 else:
                     issued_to = f"Customer {customer_id_str}"
@@ -188,9 +190,7 @@ class LicenseService(WorkflowServiceBase):
 
             # Get product version from template metadata or default
             product_version = (
-                template.metadata_.get("product_version", "1.0")
-                if template.metadata_
-                else "1.0"
+                template.metadata_.get("product_version", "1.0") if template.metadata_ else "1.0"
             )
 
             # Build license creation request from template
@@ -223,9 +223,7 @@ class LicenseService(WorkflowServiceBase):
                 user_id=None,  # System-generated license
             )
 
-            license_obj = await self.with_retry(
-                licensing_service.create_license, license_data
-            )
+            license_obj = await self.with_retry(licensing_service.create_license, license_data)
 
         # Return workflow-compatible response (transaction committed by context manager)
         return {
@@ -396,16 +394,18 @@ class LicenseService(WorkflowServiceBase):
             for i in range(license_count):
                 # Build metadata including partner information
                 license_metadata = metadata or {}
-                license_metadata.update({
-                    "partner_id": str(partner_uuid),
-                    "partner_allocated": True,
-                    "partner_name": quota_check.get("partner_name", ""),
-                    "partner_number": quota_check.get("partner_number", ""),
-                    "allocation_index": i + 1,
-                    "allocation_count": license_count,
-                    "allocated_at": datetime.now(UTC).isoformat(),
-                    "engagement_type": partner_account.engagement_type,
-                })
+                license_metadata.update(
+                    {
+                        "partner_id": str(partner_uuid),
+                        "partner_allocated": True,
+                        "partner_name": quota_check.get("partner_name", ""),
+                        "partner_number": quota_check.get("partner_number", ""),
+                        "allocation_index": i + 1,
+                        "allocation_count": license_count,
+                        "allocated_at": datetime.now(UTC).isoformat(),
+                        "engagement_type": partner_account.engagement_type,
+                    }
+                )
 
                 # Issue license using the existing method with partner context
                 license_info = await self.issue_license(

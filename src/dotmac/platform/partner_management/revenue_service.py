@@ -5,7 +5,10 @@ Provides revenue tracking, commission calculation, and payout management
 for partner portal following project patterns.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from uuid import UUID, uuid4
 

@@ -1,7 +1,7 @@
 """Tests for user management models."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 from dotmac.platform.user_management.models import User
 
@@ -87,7 +87,7 @@ class TestUserModel:
 
     def test_user_model_to_dict(self):
         """Test User model to_dict method."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         user = User(
             username="testuser",
             email="test@example.com",
@@ -180,7 +180,7 @@ class TestUserModel:
             email="test@example.com",
             password_hash="hashed_password",
             failed_login_attempts=3,
-            locked_until=datetime.now(UTC),
+            locked_until=datetime.now(timezone.utc),
             last_login_ip="192.168.1.1",
         )
 

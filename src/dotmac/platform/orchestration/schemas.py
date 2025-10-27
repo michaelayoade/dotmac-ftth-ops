@@ -49,9 +49,7 @@ class ProvisionSubscriberRequest(BaseModel):
     service_country: str | None = Field("USA", description="Country")
 
     # Service plan characteristics
-    bandwidth_mbps: int | None = Field(
-        None, gt=0, description="Bandwidth allocation in Mbps"
-    )
+    bandwidth_mbps: int | None = Field(None, gt=0, description="Bandwidth allocation in Mbps")
     connection_type: str | None = Field(
         None, description="Connection type: ftth, fttb, wireless, hybrid"
     )
@@ -71,7 +69,9 @@ class ProvisionSubscriberRequest(BaseModel):
     installation_notes: str | None = Field(None, description="Installation notes")
 
     # Options
-    auto_activate: bool = Field(True, description="Automatically activate service after provisioning")
+    auto_activate: bool = Field(
+        True, description="Automatically activate service after provisioning"
+    )
     send_welcome_email: bool = Field(True, description="Send welcome email to customer")
     create_radius_account: bool = Field(True, description="Create RADIUS authentication")
     allocate_ip_from_netbox: bool = Field(True, description="Allocate IP from NetBox")
@@ -108,7 +108,9 @@ class ProvisionSubscriberRequest(BaseModel):
     def ensure_minimum_identifiers(self) -> "ProvisionSubscriberRequest":
         """Ensure the request contains at least one identifier for the subscriber."""
         if not any([self.email, self.username, self.customer_id]):
-            raise ValueError("Provisioning request must include at least email, username, or customer_id")
+            raise ValueError(
+                "Provisioning request must include at least email, username, or customer_id"
+            )
         return self
 
     @field_validator("first_name", "last_name")
@@ -128,7 +130,9 @@ class DeprovisionSubscriberRequest(BaseModel):
     subscriber_id: str | None = Field(None, description="Subscriber ID to deprovision")
     customer_id: str | None = Field(None, description="Customer ID to deprovision")
     reason: str = Field(..., description="Reason for deprovisioning")
-    terminate_immediately: bool = Field(False, description="Terminate immediately or at end of billing cycle")
+    terminate_immediately: bool = Field(
+        False, description="Terminate immediately or at end of billing cycle"
+    )
     termination_date: datetime | None = Field(None, description="Requested termination date")
     force: bool = Field(False, description="Force deprovision even if clean-up fails")
     refund_amount: float | None = Field(None, ge=0, description="Refund amount if applicable")

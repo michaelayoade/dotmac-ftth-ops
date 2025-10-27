@@ -12,23 +12,21 @@ This ensures:
 - Downstream effects (notifications, provisioning) are created
 """
 
-import pytest
-from datetime import datetime, UTC, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+
+from dotmac.platform.billing.core.enums import InvoiceStatus
+from dotmac.platform.billing.invoicing.service import InvoiceService
+from dotmac.platform.billing.subscriptions.models import (
+    BillingCycle,
+    SubscriptionStatus,
+)
+from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.tenant.models import Tenant
-from dotmac.platform.billing.subscriptions.models import (
-    Subscription,
-    SubscriptionStatus,
-    SubscriptionPlan as BillingPlan,
-    BillingCycle,
-)
-from dotmac.platform.services.internet_plans.models import PlanType
-from dotmac.platform.billing.core.enums import InvoiceStatus
-from dotmac.platform.billing.subscriptions.service import SubscriptionService
-from dotmac.platform.billing.invoicing.service import InvoiceService
 
 
 @pytest.mark.asyncio
@@ -68,7 +66,7 @@ class TestServiceLifecycleJourneyImproved:
             first_name="Lifecycle",
             last_name="Test",
             email=f"lifecycle_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -93,7 +91,7 @@ class TestServiceLifecycleJourneyImproved:
             tenant_id=test_tenant.id,
             customer_id=customer.id,
             plan_id=plan.plan_id,
-            start_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc),
         )
 
         assert subscription.status == SubscriptionStatus.ACTIVE
@@ -109,14 +107,16 @@ class TestServiceLifecycleJourneyImproved:
             tenant_id=test_tenant.id,
             customer_id=customer.id,
             subscription_id=subscription.subscription_id,
-            line_items=[{
-                "description": f"{plan.name} - First month",
-                "quantity": 1,
-                "unit_price": float(plan.price),
-                "amount": float(plan.price),
-            }],
+            line_items=[
+                {
+                    "description": f"{plan.name} - First month",
+                    "quantity": 1,
+                    "unit_price": float(plan.price),
+                    "amount": float(plan.price),
+                }
+            ],
             currency="USD",
-            due_date=datetime.now(UTC) + timedelta(days=7),
+            due_date=datetime.now(timezone.utc) + timedelta(days=7),
         )
 
         assert invoice1.invoice_id is not None
@@ -139,7 +139,7 @@ class TestServiceLifecycleJourneyImproved:
             tenant_id=test_tenant.id,
             invoice_id=invoice1.invoice_id,
             payment_id=str(uuid4()),  # Simulated payment
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
         )
 
         # Refresh to see updated status
@@ -149,7 +149,9 @@ class TestServiceLifecycleJourneyImproved:
         )
 
         assert invoice1_updated.status == InvoiceStatus.PAID
-        print(f"✅ Step 3: First invoice paid via InvoiceService - {invoice1_updated.invoice_number}")
+        print(
+            f"✅ Step 3: First invoice paid via InvoiceService - {invoice1_updated.invoice_number}"
+        )
 
         # ===================================================================
         # Step 4: Generate renewal invoice (simulating renewal process)
@@ -158,17 +160,19 @@ class TestServiceLifecycleJourneyImproved:
         # In production, this would be triggered by a scheduled job
         # But we need to test the invoice generation logic
 
-        renewal_date = datetime.now(UTC) + timedelta(days=30)
+        renewal_date = datetime.now(timezone.utc) + timedelta(days=30)
         invoice2 = await invoicing_service.create_invoice(
             tenant_id=test_tenant.id,
             customer_id=customer.id,
             subscription_id=subscription.subscription_id,
-            line_items=[{
-                "description": f"{plan.name} - Renewal",
-                "quantity": 1,
-                "unit_price": float(plan.price),
-                "amount": float(plan.price),
-            }],
+            line_items=[
+                {
+                    "description": f"{plan.name} - Renewal",
+                    "quantity": 1,
+                    "unit_price": float(plan.price),
+                    "amount": float(plan.price),
+                }
+            ],
             currency="USD",
             due_date=renewal_date + timedelta(days=7),
         )
@@ -184,7 +188,9 @@ class TestServiceLifecycleJourneyImproved:
         )
 
         assert invoice2_open.status in [InvoiceStatus.OPEN, InvoiceStatus.SENT]
-        print(f"✅ Step 4: Renewal invoice generated via InvoiceService - {invoice2_open.invoice_number}")
+        print(
+            f"✅ Step 4: Renewal invoice generated via InvoiceService - {invoice2_open.invoice_number}"
+        )
 
         # ===================================================================
         # Step 5: Suspend service for non-payment
@@ -203,7 +209,7 @@ class TestServiceLifecycleJourneyImproved:
         # For now, we'll simulate marking it as PAST_DUE then SUSPENDED
 
         # Get the subscription again
-        sub_before_suspend = await subscription_service.get_subscription(
+        await subscription_service.get_subscription(
             subscription_id=subscription.subscription_id,
             tenant_id=test_tenant.id,
         )
@@ -213,7 +219,7 @@ class TestServiceLifecycleJourneyImproved:
         # For now, document that suspension logic should be tested separately
 
         print(f"✅ Step 5: Checked overdue invoices - {len(overdue_invoices)} found")
-        print(f"⚠️  NOTE: Suspension workflow should be tested separately via workflow service")
+        print("⚠️  NOTE: Suspension workflow should be tested separately via workflow service")
 
         # ===================================================================
         # Step 6: Resume service after payment (using service method)
@@ -227,7 +233,7 @@ class TestServiceLifecycleJourneyImproved:
                 tenant_id=test_tenant.id,
                 invoice_id=invoice2_open.invoice_id,
                 payment_id=str(uuid4()),
-                payment_date=datetime.now(UTC),
+                payment_date=datetime.now(timezone.utc),
             )
 
         # Now reactivate the subscription using the SERVICE METHOD
@@ -239,7 +245,7 @@ class TestServiceLifecycleJourneyImproved:
         )
 
         assert reactivated_subscription.status == SubscriptionStatus.ACTIVE
-        print(f"✅ Step 6: Service reactivated via SubscriptionService.reactivate_subscription()")
+        print("✅ Step 6: Service reactivated via SubscriptionService.reactivate_subscription()")
 
         # ===================================================================
         # Step 7: Cancel service using SubscriptionService
@@ -257,12 +263,12 @@ class TestServiceLifecycleJourneyImproved:
 
         assert cancelled_subscription.status == SubscriptionStatus.CANCELLED
         assert cancelled_subscription.cancelled_at is not None
-        print(f"✅ Step 7: Service cancelled via SubscriptionService.cancel_subscription()")
+        print("✅ Step 7: Service cancelled via SubscriptionService.cancel_subscription()")
 
         # Commit all changes
         await async_session.commit()
 
-        print(f"""
+        print("""
         ✅ Complete Service Lifecycle Journey Tested (Using Services!):
         1. ✅ Activation: via SubscriptionService.create_subscription()
         2. ✅ First Invoice: via InvoiceService.create_invoice()
@@ -297,7 +303,7 @@ class TestServiceLifecycleJourneyImproved:
             first_name="Upgrade",
             last_name="Customer",
             email=f"upgrade_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -326,7 +332,7 @@ class TestServiceLifecycleJourneyImproved:
             tenant_id=test_tenant.id,
             customer_id=customer.id,
             plan_id=basic_plan.plan_id,
-            start_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc),
         )
 
         print(f"✅ Initial: {basic_plan.name} - ${basic_plan.price}/month")
@@ -339,7 +345,7 @@ class TestServiceLifecycleJourneyImproved:
             subscription_id=subscription.subscription_id,
             tenant_id=test_tenant.id,
             new_plan_id=premium_plan.plan_id,
-            change_date=datetime.now(UTC),
+            change_date=datetime.now(timezone.utc),
             proration_behavior="create_prorations",  # Calculate proration
             changed_by=str(uuid4()),
         )
@@ -401,7 +407,7 @@ class TestServiceLifecycleBestPractices:
             first_name="Test",
             last_name="User",
             email="test@example.com",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -421,7 +427,7 @@ class TestServiceLifecycleBestPractices:
             tenant_id=test_tenant.id,
             customer_id=customer.id,
             plan_id=plan.plan_id,
-            start_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc),
         )
 
         # ✅ CORRECT: Assert on service response

@@ -4,8 +4,12 @@ Diagnostics Service.
 Network troubleshooting and diagnostic operations for ISP services.
 """
 
-from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any, Awaitable
+from collections.abc import Awaitable
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 import structlog

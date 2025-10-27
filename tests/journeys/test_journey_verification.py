@@ -6,6 +6,7 @@ These tests actually verify the system rather than just documenting it.
 """
 
 import pytest
+from fastapi.testclient import TestClient
 
 
 @pytest.mark.asyncio
@@ -15,7 +16,7 @@ class TestJourneyAPIEndpoints:
     def test_authentication_endpoints_exist(self, test_app):
         """Verify authentication endpoints are registered in FastAPI."""
         # Get all routes from the FastAPI app
-        routes = {route.path for route in test_app.routes if hasattr(route, 'path')}
+        routes = {route.path for route in test_app.routes if hasattr(route, "path")}
 
         # Find authentication-related endpoints
         auth_endpoints = [r for r in routes if "/auth" in r.lower() or "/login" in r.lower()]
@@ -36,11 +37,11 @@ class TestJourneyAPIEndpoints:
 
         assert has_auth_capability, "Should have authentication/login capability"
 
-        print(f"\n✅ Authentication infrastructure verified")
+        print("\n✅ Authentication infrastructure verified")
 
     def test_customer_management_endpoints_exist(self, test_app):
         """Verify customer management endpoints are registered."""
-        routes = {route.path for route in test_app.routes if hasattr(route, 'path')}
+        routes = {route.path for route in test_app.routes if hasattr(route, "path")}
 
         # Check for customer endpoints
         customer_endpoints = [r for r in routes if "/customers" in r]
@@ -57,14 +58,16 @@ class TestJourneyAPIEndpoints:
 
     def test_subscription_endpoints_exist(self, test_app):
         """Verify subscription endpoints are registered."""
-        routes = {route.path for route in test_app.routes if hasattr(route, 'path')}
+        routes = {route.path for route in test_app.routes if hasattr(route, "path")}
 
         subscription_endpoints = [r for r in routes if "/subscriptions" in r]
 
         assert len(subscription_endpoints) > 0, "Subscription endpoints should exist"
 
         # Check for critical subscription operations
-        has_create = any("/subscriptions" == r or r.endswith("/subscriptions/") for r in subscription_endpoints)
+        has_create = any(
+            "/subscriptions" == r or r.endswith("/subscriptions/") for r in subscription_endpoints
+        )
         has_cancel = any("cancel" in r.lower() for r in subscription_endpoints)
 
         print(f"\n✅ Subscription endpoints verified: {len(subscription_endpoints)} endpoints")
@@ -73,7 +76,7 @@ class TestJourneyAPIEndpoints:
 
     def test_billing_endpoints_exist(self, test_app):
         """Verify billing/invoice endpoints are registered."""
-        routes = {route.path for route in test_app.routes if hasattr(route, 'path')}
+        routes = {route.path for route in test_app.routes if hasattr(route, "path")}
 
         billing_endpoints = [r for r in routes if "/invoices" in r or "/billing" in r]
 
@@ -83,16 +86,29 @@ class TestJourneyAPIEndpoints:
 
     def test_service_endpoints_exist(self, test_app):
         """Verify service provisioning endpoints are registered."""
-        routes = {route.path for route in test_app.routes if hasattr(route, 'path')}
+        routes = {route.path for route in test_app.routes if hasattr(route, "path")}
 
         service_endpoints = [r for r in routes if "/services" in r]
 
-        # Services might be under different routes, so document what exists
+        # Check for alternative service-related routes if /services not found
         if len(service_endpoints) == 0:
-            print("\n⚠️  No /services endpoints found")
-            print("   Service operations may be under /subscriptions or /radius")
+            # Look for service operations in other endpoint namespaces
+            subscription_services = [r for r in routes if "/subscriptions" in r]
+            radius_services = [r for r in routes if "/radius" in r]
 
-        print(f"\n📋 Service-related endpoints: {len(service_endpoints)}")
+            # At least one service-related endpoint namespace should exist
+            total_service_related = len(subscription_services) + len(radius_services)
+
+            assert total_service_related > 0, (
+                "No service provisioning endpoints found. Expected /services, /subscriptions, "
+                "or /radius endpoints for service management."
+            )
+
+            print(f"\n✅ Service operations available via:")
+            print(f"   - Subscriptions: {len(subscription_services)} endpoints")
+            print(f"   - RADIUS: {len(radius_services)} endpoints")
+        else:
+            print(f"\n✅ Service-related endpoints verified: {len(service_endpoints)} endpoints")
 
 
 @pytest.mark.asyncio
@@ -102,19 +118,19 @@ class TestJourneyNotificationConfiguration:
     async def test_notification_channels_configured(self):
         """Verify notification channels are available."""
         from dotmac.platform.notifications.channels.factory import ChannelProviderFactory
+        from dotmac.platform.notifications.models import NotificationChannel
 
-        # Verify factory can create channels
-        factory = ChannelProviderFactory()
+        # Test that email channel provider is available (critical for journey)
+        # Email is a critical channel for customer notifications - must be available
+        email_provider = ChannelProviderFactory.get_provider(NotificationChannel.EMAIL)
 
-        # Test that email channel is available (critical for journey)
-        try:
-            email_channel = factory.create("email")
-            assert email_channel is not None, "Email channel should be available"
-            print("\n✅ Email notification channel configured")
-        except Exception as e:
-            # Email channel might require configuration, so just verify factory works
-            print(f"\n📋 Email channel requires configuration: {e}")
-            print("   ChannelProviderFactory is available")
+        assert email_provider is not None, (
+            "Email notification channel must be available for customer journey. "
+            "Email notifications are critical for onboarding, billing, and support workflows. "
+            "Check that the email plugin is registered and enabled in configuration."
+        )
+
+        print("\n✅ Email notification channel configured and available")
 
     async def test_notification_service_available(self):
         """Verify notification service can be imported and initialized."""
@@ -136,13 +152,13 @@ class TestJourneyNotificationConfiguration:
         # Check that handlers can be registered
         # Note: handlers might not be registered yet as they're typically registered
         # when modules import event handlers
-        handler_count = len(event_bus._handlers) if hasattr(event_bus, '_handlers') else 0
+        handler_count = len(event_bus._handlers) if hasattr(event_bus, "_handlers") else 0
 
         print(f"\n✅ EventBus available ({handler_count} event types registered)")
 
         # Just verify the bus exists and is usable
-        assert hasattr(event_bus, 'subscribe'), "EventBus should have subscribe method"
-        assert hasattr(event_bus, 'publish'), "EventBus should have publish method"
+        assert hasattr(event_bus, "subscribe"), "EventBus should have subscribe method"
+        assert hasattr(event_bus, "publish"), "EventBus should have publish method"
 
 
 @pytest.mark.asyncio
@@ -162,8 +178,10 @@ class TestJourneyIntegrationPoints:
         from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
         # Verify service exists and has expected methods
-        assert hasattr(SubscriptionService, 'change_plan'), "Should have plan change method"
-        assert hasattr(SubscriptionService, 'cancel_subscription'), "Should have cancellation method"
+        assert hasattr(SubscriptionService, "change_plan"), "Should have plan change method"
+        assert hasattr(SubscriptionService, "cancel_subscription"), (
+            "Should have cancellation method"
+        )
 
         print("\n✅ Subscription service with plan management available")
 
@@ -174,7 +192,7 @@ class TestJourneyIntegrationPoints:
         assert CustomerService is not None
 
         # Verify key methods exist
-        assert hasattr(CustomerService, 'create_customer'), "Should support customer creation"
+        assert hasattr(CustomerService, "create_customer"), "Should support customer creation"
 
         print("\n✅ Customer service available")
 
@@ -191,7 +209,7 @@ class TestJourneyDocumentation:
         assert os.path.exists(doc_path), f"Journey documentation should exist at {doc_path}"
 
         # Verify it has content
-        with open(doc_path, 'r') as f:
+        with open(doc_path) as f:
             content = f.read()
 
         assert len(content) > 1000, "Documentation should have substantial content"
@@ -225,14 +243,13 @@ if __name__ == "__main__":
 
     For conceptual journey documentation, see: docs/CUSTOMER_JOURNEY.md
     """
-    import asyncio
     from dotmac.platform.main import create_application
 
     app = create_application()
     client = TestClient(app)
 
     print("Running journey verification tests...")
-    print("="*80)
+    print("=" * 80)
 
     # Run tests
     test_class = TestJourneyAPIEndpoints()
@@ -242,5 +259,5 @@ if __name__ == "__main__":
     test_class.test_billing_endpoints_exist(client)
     test_class.test_service_endpoints_exist(client)
 
-    print("\n" + "="*80)
+    print("\n" + "=" * 80)
     print("See docs/CUSTOMER_JOURNEY.md for detailed journey documentation")

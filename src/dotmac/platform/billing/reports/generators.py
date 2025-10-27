@@ -4,7 +4,10 @@ Specialized report generators for billing
 
 import logging
 from collections.abc import Mapping
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from enum import Enum
 from typing import Any, cast

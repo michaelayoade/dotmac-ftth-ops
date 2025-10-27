@@ -25,7 +25,10 @@ IPv6 Support:
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg,misc,no-untyped-call"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -799,10 +802,14 @@ def register_handlers(saga: Any) -> None:
     # Compensation handlers
     saga.register_compensation_handler("delete_customer_handler", delete_customer_handler)
     saga.register_compensation_handler("delete_subscriber_handler", delete_subscriber_handler)
-    saga.register_compensation_handler("delete_radius_account_handler", delete_radius_account_handler)
+    saga.register_compensation_handler(
+        "delete_radius_account_handler", delete_radius_account_handler
+    )
     saga.register_compensation_handler("release_ip_handler", release_ip_handler)
     saga.register_compensation_handler("deactivate_onu_handler", deactivate_onu_handler)
     saga.register_compensation_handler("unconfigure_cpe_handler", unconfigure_cpe_handler)
-    saga.register_compensation_handler("delete_billing_service_handler", delete_billing_service_handler)
+    saga.register_compensation_handler(
+        "delete_billing_service_handler", delete_billing_service_handler
+    )
 
     logger.info("Registered all provision_subscriber workflow handlers")

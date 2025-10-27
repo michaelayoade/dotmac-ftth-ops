@@ -8,13 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.netbox.schemas import (
-    IPAddressCreate,
-    DualStackAllocationRequest,
-    DualStackAllocationResponse,
     BulkIPAllocationRequest,
     BulkIPAllocationResponse,
-    IPUtilizationResponse,
+    DualStackAllocationRequest,
+    DualStackAllocationResponse,
+    IPAddressCreate,
     IPAddressResponse,
+    IPUtilizationResponse,
 )
 
 
@@ -118,7 +118,6 @@ class TestDualStackAllocation:
 
     def test_dual_stack_response(self):
         """Test dual-stack allocation response."""
-        from datetime import datetime
 
         ipv4 = IPAddressResponse(
             id=100,

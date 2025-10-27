@@ -4,7 +4,10 @@ Logs API router.
 Provides REST endpoints for application log retrieval and filtering.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, cast
 
@@ -429,7 +432,9 @@ class LogsService:
 
             # Apply tenant isolation to severity query
             if not current_user.is_platform_admin and current_user.tenant_id:
-                severity_query = severity_query.where(AuditActivity.tenant_id == current_user.tenant_id)
+                severity_query = severity_query.where(
+                    AuditActivity.tenant_id == current_user.tenant_id
+                )
 
             if start_time:
                 severity_query = severity_query.where(AuditActivity.created_at >= start_time)

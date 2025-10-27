@@ -8,6 +8,7 @@ Run with: pytest tests/integration/test_frontend_backend_smoke.py -v
 """
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
 from dotmac.platform.main import app
@@ -287,7 +288,7 @@ class TestCrossModuleIntegration:
 
 
 # Fixtures for smoke tests
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client():
     """Provide async HTTP client for testing."""
     from httpx import ASGITransport, AsyncClient

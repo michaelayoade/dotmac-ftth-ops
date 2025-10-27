@@ -147,7 +147,12 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
                 detail={
                     "error": "Platform access requires platform-level permissions",
                     "path": path,
-                    "required_scopes": ["platform:*", "platform_super_admin", "platform_support", "platform_finance"],
+                    "required_scopes": [
+                        "platform:*",
+                        "platform_super_admin",
+                        "platform_support",
+                        "platform_finance",
+                    ],
                     "help": "Contact your platform administrator for access",
                 },
             )

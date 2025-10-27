@@ -1,6 +1,6 @@
 """Tests for Invoice Commands (CQRS Pattern)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -59,7 +59,7 @@ class TestCreateInvoiceCommand:
 
     def test_create_invoice_command_with_optional_fields(self):
         """Test command with all optional fields"""
-        due_date = datetime.now(UTC) + timedelta(days=30)
+        due_date = datetime.now(timezone.utc) + timedelta(days=30)
 
         command = CreateInvoiceCommand(
             tenant_id="tenant-1",
@@ -148,8 +148,8 @@ class TestInvoiceCommandHandler:
                 total_amount=10000,
                 remaining_balance=10000,
                 status="draft",
-                issue_date=datetime.now(UTC),
-                due_date=datetime.now(UTC) + timedelta(days=30),
+                issue_date=datetime.now(timezone.utc),
+                due_date=datetime.now(timezone.utc) + timedelta(days=30),
             )
             mock_create.return_value = mock_invoice
 

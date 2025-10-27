@@ -15,12 +15,12 @@ from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
+from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel
 
-from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.platform_admin import is_platform_admin
 from dotmac.platform.db import get_async_session
 from dotmac.platform.monitoring.alert_webhook_router import (
@@ -31,8 +31,8 @@ from dotmac.platform.monitoring.alert_webhook_router import (
     cache_channels,
     get_alert_router,
 )
-from dotmac.platform.monitoring.plugins import get_plugin, register_builtin_plugins
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
+from dotmac.platform.monitoring.plugins import get_plugin, register_builtin_plugins
 
 logger = structlog.get_logger(__name__)
 
@@ -46,11 +46,9 @@ router = APIRouter(prefix="/alerts", tags=["Alert Management"])
 # ==========================================
 
 
-def _channel_to_response(channel: AlertChannel) -> "AlertChannelResponse":
+def _channel_to_response(channel: AlertChannel) -> AlertChannelResponse:
     """Convert channel configuration to API response."""
-    severities = (
-        [severity.value for severity in channel.severities] if channel.severities else None
-    )
+    severities = [severity.value for severity in channel.severities] if channel.severities else None
     return AlertChannelResponse(
         id=channel.id,
         name=channel.name,

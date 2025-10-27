@@ -4,19 +4,20 @@ Unit tests for Internet Service Plan Validator
 Tests the comprehensive validation logic for service plan configurations.
 """
 
-import pytest
 from datetime import time
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+
 from dotmac.platform.services.internet_plans.models import (
-    InternetServicePlan,
-    SpeedUnit,
-    DataUnit,
-    PlanType,
-    PlanStatus,
-    ThrottlePolicy,
     BillingCycle,
+    DataUnit,
+    InternetServicePlan,
+    PlanStatus,
+    PlanType,
+    SpeedUnit,
+    ThrottlePolicy,
 )
 from dotmac.platform.services.internet_plans.schemas import PlanValidationRequest
 from dotmac.platform.services.internet_plans.validator import PlanValidator
@@ -108,8 +109,7 @@ class TestPlanValidatorSpeedValidation:
         assert result.overall_status == "failed"
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "speed_download_positive" and not r.passed
-            for r in result.results
+            r.check_name == "speed_download_positive" and not r.passed for r in result.results
         )
 
     def test_asymmetric_speed_ratio_warning(self, basic_plan):
@@ -139,10 +139,7 @@ class TestPlanValidatorSpeedValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "burst_speed_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "burst_speed_configured" and r.passed for r in result.results)
 
     def test_burst_speed_lower_than_normal_fails(self, basic_plan):
         """Test burst speed must be higher than normal speed."""
@@ -154,10 +151,7 @@ class TestPlanValidatorSpeedValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "burst_speed_higher" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "burst_speed_higher" and not r.passed for r in result.results)
 
     def test_burst_speed_without_duration_fails(self, basic_plan):
         """Test burst speed requires duration."""
@@ -170,8 +164,7 @@ class TestPlanValidatorSpeedValidation:
 
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "burst_duration_required" and not r.passed
-            for r in result.results
+            r.check_name == "burst_duration_required" and not r.passed for r in result.results
         )
 
 
@@ -187,10 +180,7 @@ class TestPlanValidatorDataCapValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "data_cap_unlimited" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "data_cap_unlimited" and r.passed for r in result.results)
 
     def test_data_cap_without_amount_fails(self, basic_plan):
         """Test data cap enabled without amount fails."""
@@ -203,8 +193,7 @@ class TestPlanValidatorDataCapValidation:
 
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "data_cap_amount_positive" and not r.passed
-            for r in result.results
+            r.check_name == "data_cap_amount_positive" and not r.passed for r in result.results
         )
 
     def test_throttle_policy_requires_throttled_speed(self, basic_plan):
@@ -221,8 +210,7 @@ class TestPlanValidatorDataCapValidation:
 
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "throttle_speed_required" and not r.passed
-            for r in result.results
+            r.check_name == "throttle_speed_required" and not r.passed for r in result.results
         )
 
     def test_throttled_speed_must_be_lower(self, basic_plan):
@@ -238,10 +226,7 @@ class TestPlanValidatorDataCapValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "throttle_speed_lower" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "throttle_speed_lower" and not r.passed for r in result.results)
 
     def test_valid_throttle_configuration(self, basic_plan):
         """Test valid throttle configuration."""
@@ -257,10 +242,7 @@ class TestPlanValidatorDataCapValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "throttle_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "throttle_configured" and r.passed for r in result.results)
 
     def test_overage_charge_requires_price(self, basic_plan):
         """Test overage charge policy requires price."""
@@ -276,8 +258,7 @@ class TestPlanValidatorDataCapValidation:
 
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "overage_price_required" and not r.passed
-            for r in result.results
+            r.check_name == "overage_price_required" and not r.passed for r in result.results
         )
 
     def test_valid_overage_configuration(self, basic_plan):
@@ -294,10 +275,7 @@ class TestPlanValidatorDataCapValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "overage_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "overage_configured" and r.passed for r in result.results)
 
     def test_fup_requires_threshold(self, basic_plan):
         """Test FUP enabled requires threshold."""
@@ -313,8 +291,7 @@ class TestPlanValidatorDataCapValidation:
 
         assert result.failed_checks > 0
         assert any(
-            r.check_name == "fup_threshold_required" and not r.passed
-            for r in result.results
+            r.check_name == "fup_threshold_required" and not r.passed for r in result.results
         )
 
     def test_fup_threshold_below_data_cap(self, basic_plan):
@@ -331,10 +308,7 @@ class TestPlanValidatorDataCapValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "fup_below_cap" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "fup_below_cap" and not r.passed for r in result.results)
 
 
 class TestPlanValidatorPricingValidation:
@@ -348,10 +322,7 @@ class TestPlanValidatorPricingValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info", "warning"]
-        assert any(
-            r.check_name == "price_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "price_configured" and r.passed for r in result.results)
 
     def test_negative_price_fails(self, basic_plan):
         """Test negative monthly price fails."""
@@ -362,10 +333,7 @@ class TestPlanValidatorPricingValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "price_non_negative" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "price_non_negative" and not r.passed for r in result.results)
 
     def test_zero_price_warning(self, basic_plan):
         """Test zero price triggers warning."""
@@ -377,8 +345,7 @@ class TestPlanValidatorPricingValidation:
 
         assert result.warning_checks > 0
         assert any(
-            r.check_name == "price_zero_warning" and r.severity == "warning"
-            for r in result.results
+            r.check_name == "price_zero_warning" and r.severity == "warning" for r in result.results
         )
 
     def test_price_per_mbps_calculation(self, basic_plan):
@@ -388,14 +355,9 @@ class TestPlanValidatorPricingValidation:
 
         result = validator.validate(request)
 
-        assert any(
-            r.check_name == "price_per_mbps" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "price_per_mbps" and r.passed for r in result.results)
         # Find the result and check details
-        price_per_mbps_result = next(
-            r for r in result.results if r.check_name == "price_per_mbps"
-        )
+        price_per_mbps_result = next(r for r in result.results if r.check_name == "price_per_mbps")
         assert "price_per_mbps" in price_per_mbps_result.details
         # 50.00 / 100 Mbps = 0.50
         assert abs(price_per_mbps_result.details["price_per_mbps"] - 0.50) < 0.01
@@ -410,8 +372,7 @@ class TestPlanValidatorPricingValidation:
 
         assert result.warning_checks > 0
         assert any(
-            r.check_name == "setup_fee_high" and r.severity == "warning"
-            for r in result.results
+            r.check_name == "setup_fee_high" and r.severity == "warning" for r in result.results
         )
 
 
@@ -422,16 +383,13 @@ class TestPlanValidatorTimeRestrictionsValidation:
         """Test plan without time restrictions."""
         basic_plan.has_time_restrictions = False
         validator = PlanValidator(basic_plan)
-        request = PlanValidationRequest(
-            validate_speeds=False, validate_time_restrictions=True
-        )
+        request = PlanValidationRequest(validate_speeds=False, validate_time_restrictions=True)
 
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
         assert any(
-            r.check_name == "time_restrictions_disabled" and r.passed
-            for r in result.results
+            r.check_name == "time_restrictions_disabled" and r.passed for r in result.results
         )
 
     def test_time_restrictions_require_times(self, basic_plan):
@@ -440,17 +398,12 @@ class TestPlanValidatorTimeRestrictionsValidation:
         basic_plan.unrestricted_start_time = None
         basic_plan.unrestricted_end_time = None
         validator = PlanValidator(basic_plan)
-        request = PlanValidationRequest(
-            validate_speeds=False, validate_time_restrictions=True
-        )
+        request = PlanValidationRequest(validate_speeds=False, validate_time_restrictions=True)
 
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "time_range_required" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "time_range_required" and not r.passed for r in result.results)
 
     def test_valid_time_restrictions(self, basic_plan):
         """Test valid time restrictions configuration."""
@@ -459,17 +412,12 @@ class TestPlanValidatorTimeRestrictionsValidation:
         basic_plan.unrestricted_end_time = time(6, 0)  # 6 AM
         basic_plan.unrestricted_data_unlimited = True
         validator = PlanValidator(basic_plan)
-        request = PlanValidationRequest(
-            validate_speeds=False, validate_time_restrictions=True
-        )
+        request = PlanValidationRequest(validate_speeds=False, validate_time_restrictions=True)
 
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "time_range_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "time_range_configured" and r.passed for r in result.results)
 
 
 class TestPlanValidatorQoSValidation:
@@ -484,10 +432,7 @@ class TestPlanValidatorQoSValidation:
         result = validator.validate(request)
 
         assert result.overall_status in ["passed", "info"]
-        assert any(
-            r.check_name == "qos_configured" and r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "qos_configured" and r.passed for r in result.results)
 
     def test_qos_priority_below_range_fails(self, basic_plan):
         """Test QoS priority below 0 fails."""
@@ -498,10 +443,7 @@ class TestPlanValidatorQoSValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "qos_priority_range" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "qos_priority_range" and not r.passed for r in result.results)
 
     def test_qos_priority_above_range_fails(self, basic_plan):
         """Test QoS priority above 100 fails."""
@@ -512,10 +454,7 @@ class TestPlanValidatorQoSValidation:
         result = validator.validate(request)
 
         assert result.failed_checks > 0
-        assert any(
-            r.check_name == "qos_priority_range" and not r.passed
-            for r in result.results
-        )
+        assert any(r.check_name == "qos_priority_range" and not r.passed for r in result.results)
 
     def test_qos_priority_levels(self, basic_plan):
         """Test QoS priority level classification."""

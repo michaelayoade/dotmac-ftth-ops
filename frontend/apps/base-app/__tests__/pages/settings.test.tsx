@@ -1,111 +1,88 @@
-/**
- * Tests for Settings Page
- *
- * Covers the main settings dashboard that displays different setting categories.
- */
-
 import React from "react";
-import { render, screen } from "@testing-library/react";
-import "@testing-library/jest-dom";
+import { render, screen, waitFor } from "@testing-library/react";
+import SettingsHubPage from "../../app/dashboard/settings/page";
+import { apiClient } from "@/lib/api/client";
 
-// Mock Next.js router
-const mockPush = jest.fn();
-jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: mockPush,
-    pathname: "/dashboard/settings",
-  }),
+jest.mock("@/components/auth/PermissionGuard", () => ({
+  RouteGuard: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
-// Mock the settings page component
-// Since it's a dynamic route, we'll create a mock that matches the expected structure
-const MockSettingsPage = () => {
-  return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Settings</h1>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <div className="p-6 border rounded-lg" data-testid="profile-settings">
-          <h2 className="text-xl font-semibold">Profile</h2>
-          <p className="text-sm text-gray-600">Manage your personal information</p>
-        </div>
-        <div className="p-6 border rounded-lg" data-testid="organization-settings">
-          <h2 className="text-xl font-semibold">Organization</h2>
-          <p className="text-sm text-gray-600">Manage organization settings</p>
-        </div>
-        <div className="p-6 border rounded-lg" data-testid="billing-settings">
-          <h2 className="text-xl font-semibold">Billing</h2>
-          <p className="text-sm text-gray-600">Manage billing and subscriptions</p>
-        </div>
-        <div className="p-6 border rounded-lg" data-testid="notifications-settings">
-          <h2 className="text-xl font-semibold">Notifications</h2>
-          <p className="text-sm text-gray-600">Configure notification preferences</p>
-        </div>
-        <div className="p-6 border rounded-lg" data-testid="integrations-settings">
-          <h2 className="text-xl font-semibold">Integrations</h2>
-          <p className="text-sm text-gray-600">Manage third-party integrations</p>
-        </div>
-        <div className="p-6 border rounded-lg" data-testid="plugins-settings">
-          <h2 className="text-xl font-semibold">Plugins</h2>
-          <p className="text-sm text-gray-600">Manage installed plugins</p>
-        </div>
-      </div>
-    </div>
-  );
-};
+jest.mock("@/lib/api/client", () => ({
+  apiClient: {
+    get: jest.fn(),
+  },
+}));
 
-describe("Settings Page", () => {
+describe("SettingsHubPage", () => {
   beforeEach(() => {
-    mockPush.mockClear();
+    jest.clearAllMocks();
+    (apiClient.get as jest.Mock).mockResolvedValue({
+      data: {
+        username: "jdoe",
+        email: "jdoe@example.com",
+        roles: ["Admin"],
+        full_name: "Jane Doe",
+      },
+    });
   });
 
-  it("should render the settings dashboard", () => {
-    render(<MockSettingsPage />);
+  it("renders the settings hub with configuration areas", async () => {
+    render(<SettingsHubPage />);
 
-    // Check page title
     expect(screen.getByText("Settings")).toBeInTheDocument();
-  });
 
-  it("should display all settings categories", () => {
-    render(<MockSettingsPage />);
+    await waitFor(() => {
+      expect(screen.getByText("Configuration Areas")).toBeInTheDocument();
+    });
 
-    // Check that all setting categories are present
-    expect(screen.getByTestId("profile-settings")).toBeInTheDocument();
-    expect(screen.getByTestId("organization-settings")).toBeInTheDocument();
-    expect(screen.getByTestId("billing-settings")).toBeInTheDocument();
-    expect(screen.getByTestId("notifications-settings")).toBeInTheDocument();
-    expect(screen.getByTestId("integrations-settings")).toBeInTheDocument();
-    expect(screen.getByTestId("plugins-settings")).toBeInTheDocument();
-  });
-
-  it("should display category titles", () => {
-    render(<MockSettingsPage />);
-
+    expect(apiClient.get).toHaveBeenCalledWith("/auth/me");
     expect(screen.getByText("Profile")).toBeInTheDocument();
     expect(screen.getByText("Organization")).toBeInTheDocument();
-    expect(screen.getByText("Billing")).toBeInTheDocument();
+    expect(screen.getByText("Billing Preferences")).toBeInTheDocument();
     expect(screen.getByText("Notifications")).toBeInTheDocument();
     expect(screen.getByText("Integrations")).toBeInTheDocument();
-    expect(screen.getByText("Plugins")).toBeInTheDocument();
+    expect(screen.getByText("API Tokens")).toBeInTheDocument();
   });
 
-  it("should display category descriptions", () => {
-    render(<MockSettingsPage />);
+  it("displays user information banner when data is fetched", async () => {
+    render(<SettingsHubPage />);
 
-    expect(screen.getByText("Manage your personal information")).toBeInTheDocument();
-    expect(screen.getByText("Manage organization settings")).toBeInTheDocument();
-    expect(screen.getByText("Manage billing and subscriptions")).toBeInTheDocument();
-    expect(screen.getByText("Configure notification preferences")).toBeInTheDocument();
-    expect(screen.getByText("Manage third-party integrations")).toBeInTheDocument();
-    expect(screen.getByText("Manage installed plugins")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Jane Doe")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("jdoe@example.com")).toBeInTheDocument();
+    expect(screen.getByText(/Organization: Personal/i)).toBeInTheDocument();
+    expect(screen.getByText("Edit Profile")).toHaveAttribute(
+      "href",
+      "/dashboard/settings/profile",
+    );
+    expect(screen.getByText("Security Settings")).toHaveAttribute(
+      "href",
+      "/dashboard/settings/security",
+    );
   });
 
-  it("should have proper grid layout classes", () => {
-    const { container } = render(<MockSettingsPage />);
+  it("renders quick actions and help links", async () => {
+    render(<SettingsHubPage />);
 
-    const grid = container.querySelector(".grid");
-    expect(grid).toBeInTheDocument();
-    expect(grid).toHaveClass("gap-6");
-    expect(grid).toHaveClass("md:grid-cols-2");
-    expect(grid).toHaveClass("lg:grid-cols-3");
+    await waitFor(() => {
+      expect(screen.getByText("Quick Actions")).toBeInTheDocument();
+    });
+
+    expect(screen.getByText("Change Password")).toHaveAttribute(
+      "href",
+      "/dashboard/settings/security#change-password",
+    );
+    expect(screen.getByText("Enable 2FA")).toHaveAttribute(
+      "href",
+      "/dashboard/settings/security#2fa",
+    );
+    expect(screen.getByText("Export Data")).toHaveAttribute(
+      "href",
+      "/dashboard/settings/privacy#export",
+    );
+    expect(screen.getByText("Documentation")).toHaveAttribute("href", "/docs/settings");
+    expect(screen.getByText("Contact Support")).toHaveAttribute("href", "/support");
   });
 });

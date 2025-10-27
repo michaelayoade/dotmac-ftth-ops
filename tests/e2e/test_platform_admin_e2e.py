@@ -4,7 +4,7 @@ E2E tests for Platform Admin features.
 Tests cross-tenant administration, impersonation, analytics, and system management.
 """
 
-from datetime import UTC
+from datetime import timezone
 
 import pytest
 import pytest_asyncio
@@ -54,7 +54,10 @@ def platform_admin_headers(platform_admin_id, platform_admin_tenant):
             "is_platform_admin": True,
         },
     )
-    return {"Authorization": f"Bearer {token}"}
+    return {
+        "Authorization": f"Bearer {token}",
+        "X-Tenant-ID": platform_admin_tenant,
+    }
 
 
 @pytest_asyncio.fixture
@@ -167,7 +170,7 @@ async def seed_multi_tenant_data(db_session):
             current_users=tenant_data["users"],
             current_api_calls=0,
             current_storage_gb=0,
-            created_at=datetime.now(UTC) - timedelta(days=30),
+            created_at=datetime.now(timezone.utc) - timedelta(days=30),
         )
         db_session.add(tenant)
 
@@ -179,7 +182,7 @@ async def seed_multi_tenant_data(db_session):
                 password_hash="hashed_password",
                 tenant_id=tenant_data["tenant_id"],
                 is_active=True,
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             db_session.add(user)
 
@@ -191,7 +194,7 @@ async def seed_multi_tenant_data(db_session):
                 last_name="Test",
                 email=f"customer{i}@{tenant_data['slug']}.com",
                 tenant_id=tenant_data["tenant_id"],
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             db_session.add(customer)
 
@@ -203,7 +206,7 @@ async def seed_multi_tenant_data(db_session):
         status=TenantStatus.ACTIVE,
         plan_type=TenantPlanType.ENTERPRISE,
         billing_cycle=BillingCycle.YEARLY,
-        created_at=datetime.now(UTC) - timedelta(days=365),
+        created_at=datetime.now(timezone.utc) - timedelta(days=365),
     )
     db_session.add(admin_tenant)
 
@@ -215,7 +218,7 @@ async def seed_multi_tenant_data(db_session):
         tenant_id="platform-admin-tenant",
         is_active=True,
         is_platform_admin=True,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     db_session.add(platform_admin)
 

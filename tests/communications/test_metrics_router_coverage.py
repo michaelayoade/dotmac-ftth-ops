@@ -5,7 +5,7 @@ Focuses on testing the _get_communication_stats_cached function
 and error handling paths in the endpoint.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -32,7 +32,7 @@ class TestGetCommunicationStatsCached:
     async def test_stats_with_data(self, async_db_session: AsyncSession):
         """Test stats calculation with actual data."""
         # Create test data
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         logs = [
             CommunicationLog(
                 id=uuid4(),
@@ -142,7 +142,7 @@ class TestGetCommunicationStatsCached:
     async def test_stats_without_tenant_filter(self, async_db_session: AsyncSession):
         """Test stats calculation without tenant isolation."""
         # Create data for multiple tenants
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         logs = [
             CommunicationLog(
                 id=uuid4(),
@@ -181,7 +181,7 @@ class TestGetCommunicationStatsCached:
     @pytest.mark.asyncio
     async def test_stats_different_periods(self, async_db_session: AsyncSession):
         """Test stats for different time periods."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create logs at different times
         old_log = CommunicationLog(

@@ -4,10 +4,10 @@ GraphQL queries for Orchestration Service.
 Provides queries for workflows, provisioning status, and statistics.
 """
 
+from typing import cast
 
 import strawberry
 import structlog
-from typing import cast
 
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.orchestration import (
@@ -103,7 +103,9 @@ class OrchestrationQueries:
             service = OrchestrationService(db=db, tenant_id=tenant_id)
 
             # Convert GraphQL enums to database enums
-            workflow_type = DBWorkflowType(filter.workflow_type.value) if filter.workflow_type else None
+            workflow_type = (
+                DBWorkflowType(filter.workflow_type.value) if filter.workflow_type else None
+            )
             status = DBWorkflowStatus(filter.status.value) if filter.status else None
 
             # Fetch workflows
@@ -250,10 +252,12 @@ class OrchestrationQueries:
                 db.query(func.count(WorkflowModel.id))
                 .filter(
                     WorkflowModel.tenant_id == tenant_id,
-                    WorkflowModel.status.in_([
-                        DBWorkflowStatus.PENDING,
-                        DBWorkflowStatus.RUNNING,
-                    ]),
+                    WorkflowModel.status.in_(
+                        [
+                            DBWorkflowStatus.PENDING,
+                            DBWorkflowStatus.RUNNING,
+                        ]
+                    ),
                     WorkflowModel.input_data["customer_id"].astext == customer_id,
                 )
                 .scalar(),

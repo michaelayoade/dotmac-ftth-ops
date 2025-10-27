@@ -4,7 +4,10 @@ GraphQL queries for Customer Management.
 Provides efficient customer queries with batched loading of activities and notes.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
@@ -12,9 +15,7 @@ from uuid import UUID
 import strawberry
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
-    JSONScalar: TypeAlias = Any
+    type JSONScalar = Any
 else:
     from strawberry.scalars import JSON as JSONScalar
 import structlog
@@ -40,7 +41,8 @@ from dotmac.platform.graphql.types.customer import (
 )
 from dotmac.platform.graphql.types.subscription import Subscription
 from dotmac.platform.subscribers.models import Subscriber
-from dotmac.platform.ticketing.models import Ticket as TicketModel, TicketStatus
+from dotmac.platform.ticketing.models import Ticket as TicketModel
+from dotmac.platform.ticketing.models import TicketStatus
 from dotmac.platform.wireless.models import WirelessClient
 
 logger = structlog.get_logger(__name__)
@@ -116,12 +118,9 @@ class CustomerQueries:
             return None
 
         # Fetch customer within tenant scope
-        stmt = (
-            select(CustomerModel)
-            .where(
-                CustomerModel.id == customer_uuid,
-                CustomerModel.tenant_id == tenant_id,
-            )
+        stmt = select(CustomerModel).where(
+            CustomerModel.id == customer_uuid,
+            CustomerModel.tenant_id == tenant_id,
         )
         result = await db.execute(stmt)
         customer_model = result.scalar_one_or_none()
@@ -137,9 +136,7 @@ class CustomerQueries:
             activity_loader = info.context.loaders.get_customer_activity_loader()
             activities_list = await activity_loader.load_many([str(customer_model.id)])
             if activities_list and activities_list[0]:
-                customer.activities = [
-                    CustomerActivity.from_model(a) for a in activities_list[0]
-                ]
+                customer.activities = [CustomerActivity.from_model(a) for a in activities_list[0]]
 
         # Batch load notes if requested
         if include_notes:
@@ -181,12 +178,9 @@ class CustomerQueries:
         db: AsyncSession = context.db
 
         # Build base query
-        stmt = (
-            select(CustomerModel)
-            .where(
-                CustomerModel.deleted_at.is_(None),
-                CustomerModel.tenant_id == tenant_id,
-            )
+        stmt = select(CustomerModel).where(
+            CustomerModel.deleted_at.is_(None),
+            CustomerModel.tenant_id == tenant_id,
         )
 
         # Apply filters
@@ -262,9 +256,7 @@ class CustomerQueries:
         count_stmt = (
             select(
                 func.count().label("total"),
-                func.count()
-                .filter(CustomerModel.status == CustomerStatus.ACTIVE)
-                .label("active"),
+                func.count().filter(CustomerModel.status == CustomerStatus.ACTIVE).label("active"),
                 func.count()
                 .filter(CustomerModel.status == CustomerStatus.PROSPECT)
                 .label("prospect"),
@@ -665,7 +657,9 @@ class CustomerQueries:
                         ),
                         "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
                         "paid_at": invoice.paid_at.isoformat() if invoice.paid_at else None,
-                        "created_at": invoice.created_at.isoformat() if invoice.created_at else None,
+                        "created_at": invoice.created_at.isoformat()
+                        if invoice.created_at
+                        else None,
                     }
                 )
 
@@ -674,9 +668,7 @@ class CustomerQueries:
                     total_overdue += remaining_decimal
 
             billing_info["invoices"] = invoice_entries
-            billing_info["outstanding_balance"] = str(
-                total_outstanding.quantize(Decimal("0.01"))
-            )
+            billing_info["outstanding_balance"] = str(total_outstanding.quantize(Decimal("0.01")))
             billing_info["overdue_balance"] = str(total_overdue.quantize(Decimal("0.01")))
 
         return billing_info

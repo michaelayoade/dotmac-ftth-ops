@@ -4,7 +4,10 @@ VOLTHA Service Layer
 Business logic for PON network management via VOLTHA.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import structlog
 from fastapi import HTTPException
@@ -912,7 +915,7 @@ class VOLTHAService:
         )
 
         try:
-            result = await self.client.acknowledge_alarm(
+            await self.client.acknowledge_alarm(
                 alarm_id=alarm_id,
                 acknowledged_by=request.acknowledged_by,
                 note=request.note,
@@ -929,8 +932,7 @@ class VOLTHAService:
         except Exception as e:
             logger.error("voltha.acknowledge_alarm.error", alarm_id=alarm_id, error=str(e))
             raise HTTPException(
-                status_code=500,
-                detail=f"Failed to acknowledge alarm: {str(e)}"
+                status_code=500, detail=f"Failed to acknowledge alarm: {str(e)}"
             ) from e
 
     async def clear_alarm(
@@ -958,7 +960,7 @@ class VOLTHAService:
         )
 
         try:
-            result = await self.client.clear_alarm(
+            await self.client.clear_alarm(
                 alarm_id=alarm_id,
                 cleared_by=request.cleared_by,
                 note=request.note,
@@ -974,7 +976,4 @@ class VOLTHAService:
 
         except Exception as e:
             logger.error("voltha.clear_alarm.error", alarm_id=alarm_id, error=str(e))
-            raise HTTPException(
-                status_code=500,
-                detail=f"Failed to clear alarm: {str(e)}"
-            ) from e
+            raise HTTPException(status_code=500, detail=f"Failed to clear alarm: {str(e)}") from e

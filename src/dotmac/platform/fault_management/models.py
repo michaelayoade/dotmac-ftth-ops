@@ -4,7 +4,10 @@ Fault Management Database Models
 Models for alarms, alarm correlation, SLA tracking, and breach detection.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum as PyEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -327,7 +330,10 @@ class SLAInstance(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any
         "period_start", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
     end_date: Mapped[datetime] = mapped_column(
-        "period_end", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC) + timedelta(days=30)
+        "period_end",
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC) + timedelta(days=30),
     )
 
     # Downtime tracking (minutes)
@@ -515,7 +521,9 @@ class OnCallSchedule(BaseModel):  # type: ignore[misc]
     timezone: Mapped[str] = mapped_column(String(100), default="UTC")
 
     # Metadata (using metadata_ to avoid SQLAlchemy reserved name)
-    metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -591,7 +599,9 @@ class OnCallRotation(BaseModel):  # type: ignore[misc]
     )  # User acknowledged the rotation
 
     # Metadata (using metadata_ to avoid SQLAlchemy reserved name)
-    metadata_: Mapped[dict[str, Any]] = mapped_column("metadata", JSON, default=dict, nullable=False)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(

@@ -14,7 +14,10 @@ import json
 import os
 import secrets
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, cast
 from uuid import UUID
@@ -455,7 +458,9 @@ class SessionManager:
         # SECURITY: Disable fallback automatically in production environments
         try:
             environment = getattr(settings, "environment", None)
-            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+            env_value = (
+                getattr(environment, "value", str(environment)) if environment else "development"
+            )
         except Exception:  # pragma: no cover - defensive
             env_value = "development"
 
@@ -709,7 +714,9 @@ class APIKeyService:
         self._deserialize: Callable[[str], dict[str, Any]] = json.loads
         try:
             environment = getattr(settings, "environment", None)
-            env_value = getattr(environment, "value", str(environment)) if environment else "development"
+            env_value = (
+                getattr(environment, "value", str(environment)) if environment else "development"
+            )
         except Exception:  # pragma: no cover
             env_value = "development"
         self._fallback_allowed = str(env_value).lower() != "production"
@@ -825,7 +832,9 @@ class APIKeyService:
                 return key_data
 
             if not self._fallback_allowed:
-                logger.error("API key verification failed: Redis unavailable and fallback disabled.")
+                logger.error(
+                    "API key verification failed: Redis unavailable and fallback disabled."
+                )
                 return None
 
             # Fallback to memory (also uses hash)
@@ -1051,14 +1060,25 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
 def create_access_token(user_id: str, **kwargs: Any) -> str:
     """Create access token."""
-    user_uuid = ensure_uuid(user_id)
-    return jwt_service.create_access_token(str(user_uuid), kwargs)
+    try:
+        subject = str(ensure_uuid(user_id))
+    except ValueError:
+        # Allow non-UUID identifiers (e.g., legacy string IDs) for token creation
+        subject = str(user_id)
+
+    additional_claims = kwargs or None
+    return jwt_service.create_access_token(subject, additional_claims)
 
 
 def create_refresh_token(user_id: str, **kwargs: Any) -> str:
     """Create refresh token."""
-    user_uuid = ensure_uuid(user_id)
-    return jwt_service.create_refresh_token(str(user_uuid), kwargs)
+    try:
+        subject = str(ensure_uuid(user_id))
+    except ValueError:
+        subject = str(user_id)
+
+    additional_claims = kwargs or None
+    return jwt_service.create_refresh_token(subject, additional_claims)
 
 
 # ============================================
@@ -1074,7 +1094,12 @@ def configure_auth(
     redis_url: str | None = None,
 ) -> None:
     """Configure auth services."""
-    global JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, REDIS_URL
+    global \
+        JWT_SECRET, \
+        JWT_ALGORITHM, \
+        ACCESS_TOKEN_EXPIRE_MINUTES, \
+        REFRESH_TOKEN_EXPIRE_DAYS, \
+        REDIS_URL
     global jwt_service, session_manager, oauth_service, api_key_service
 
     # Dynamic configuration requires "constant" reassignment
@@ -1092,8 +1117,7 @@ def configure_auth(
     # Recreate services with new config
     jwt_service = JWTService(JWT_SECRET, JWT_ALGORITHM)
     session_manager = SessionManager(
-        redis_url=REDIS_URL,
-        fallback_enabled=not _require_redis_for_sessions
+        redis_url=REDIS_URL, fallback_enabled=not _require_redis_for_sessions
     )
     oauth_service = OAuthService()
     api_key_service = APIKeyService(REDIS_URL)

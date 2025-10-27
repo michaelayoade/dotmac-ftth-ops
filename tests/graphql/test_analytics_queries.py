@@ -4,16 +4,17 @@ Tests for GraphQL analytics queries.
 Tests dashboard and metrics queries using Strawberry test client.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.graphql.schema import schema
 from dotmac.platform.version import get_version
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def graphql_client():
     """Create GraphQL test client using schema.execute."""
     # We'll use schema.execute directly instead of test client
@@ -131,7 +132,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with patch(
@@ -174,7 +175,7 @@ class TestAnalyticsQueries:
             "customer_growth_rate": 15.5,
             "churn_rate": 3.3,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with patch(
@@ -207,6 +208,14 @@ class TestAnalyticsQueries:
                         activeCustomers
                         churnRate
                     }
+                    communications {
+                        totalSent
+                        delivered
+                        failed
+                        deliveryRate
+                        emailSent
+                        smsSent
+                    }
                     monitoring {
                         errorRate
                         totalRequests
@@ -228,7 +237,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         mock_customer_data = {
@@ -239,18 +248,26 @@ class TestAnalyticsQueries:
             "customer_growth_rate": 15.5,
             "churn_rate": 3.3,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         mock_communications_data = {
-            "total_emails": 500,
-            "delivered_emails": 480,
-            "failed_emails": 20,
-            "total_sms": 100,
-            "delivered_sms": 95,
-            "failed_sms": 5,
+            "total_sent": 600,
+            "total_delivered": 575,
+            "total_failed": 25,
+            "total_bounced": 10,
+            "total_pending": 5,
+            "delivery_rate": 95.83,
+            "failure_rate": 4.17,
+            "bounce_rate": 1.67,
+            "emails_sent": 500,
+            "sms_sent": 100,
+            "webhooks_sent": 0,
+            "push_sent": 0,
+            "open_rate": 0.0,
+            "click_rate": 0.0,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         mock_file_data = {
@@ -258,7 +275,7 @@ class TestAnalyticsQueries:
             "total_size": 1024000000,
             "files_uploaded": 30,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         mock_auth_data = {
@@ -269,7 +286,7 @@ class TestAnalyticsQueries:
             "successful_logins": 1150,
             "failed_logins": 50,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         mock_monitoring_data = {
@@ -288,7 +305,7 @@ class TestAnalyticsQueries:
             "high_latency_requests": 10,
             "timeout_count": 2,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with (
@@ -329,6 +346,14 @@ class TestAnalyticsQueries:
         # Verify customer data
         assert data["customers"]["totalCustomers"] == 150
         assert data["customers"]["churnRate"] == 3.3
+
+        # Verify communications data
+        assert data["communications"]["totalSent"] == 600
+        assert data["communications"]["delivered"] == 575
+        assert data["communications"]["failed"] == 25
+        assert data["communications"]["deliveryRate"] == 95.83
+        assert data["communications"]["emailSent"] == 500
+        assert data["communications"]["smsSent"] == 100
 
         # Verify monitoring data
         assert data["monitoring"]["totalRequests"] == 1000
@@ -401,7 +426,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "7d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with patch(

@@ -6,16 +6,17 @@ Minimal version with graceful handling of missing dependencies.
 import asyncio
 import os
 import sys
-from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, Mock
-
-import pytest
 
 # ---------------------------------------------------------------------------
 # MinIO stub (provides minimal interface for tests without real dependency)
 # ---------------------------------------------------------------------------
 import types
+from pathlib import Path
+from typing import Any
+from unittest.mock import AsyncMock, Mock
+
+import pytest
+import pytest_asyncio
 
 os.environ.setdefault("TENANT_MODE", "single")
 
@@ -187,10 +188,10 @@ except ImportError:
 try:
     from sqlalchemy import create_engine
     from sqlalchemy.engine import make_url
+    from sqlalchemy.exc import OperationalError
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     from sqlalchemy.orm import Session, sessionmaker  # noqa: F401
     from sqlalchemy.pool import StaticPool
-    from sqlalchemy.exc import OperationalError
 
     HAS_SQLALCHEMY = True
 except ImportError:
@@ -221,10 +222,10 @@ except (ImportError, ValueError):
 if HAS_DATABASE_BASE:
     try:
         # Import essential models that have cross-dependencies
-        from dotmac.platform.tenant.models import Tenant  # noqa: F401
         from dotmac.platform.customer_management.models import Customer  # noqa: F401
-        from dotmac.platform.subscribers.models import Subscriber  # noqa: F401
         from dotmac.platform.radius.models import RadCheck  # noqa: F401
+        from dotmac.platform.subscribers.models import Subscriber  # noqa: F401
+        from dotmac.platform.tenant.models import Tenant  # noqa: F401
     except ImportError:
         pass  # Models not available, tests will handle gracefully
 
@@ -577,7 +578,7 @@ if HAS_SQLALCHEMY:
 
     except ImportError:
         # Fallback to regular pytest fixture
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def async_db_engine(request):
             """Async database engine for tests.
 
@@ -675,7 +676,7 @@ if HAS_SQLALCHEMY:
 
     except ImportError:
         # Fallback to regular pytest fixture
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def async_db_session(async_db_engine):
             """Async database session."""
             SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
@@ -741,12 +742,16 @@ if HAS_FASTAPI:
         # Setup auth override for testing
         # Override get_current_user to return test user
         try:
-            from dotmac.platform.auth.core import TokenType, UserInfo, jwt_service
+            from fastapi import Request
+
+            from dotmac.platform.auth.core import JWTService, TokenType, UserInfo, jwt_service
             from dotmac.platform.auth.dependencies import (
                 get_current_user,
                 get_current_user_optional,
             )
-            from fastapi import Request
+
+            # Use the same JWT service as the production code to ensure tokens are compatible
+            test_jwt_service = jwt_service
 
             async def _resolve_user_from_request(request: Request) -> UserInfo | None:
                 token = None
@@ -758,7 +763,7 @@ if HAS_FASTAPI:
                 if not token:
                     return None
                 try:
-                    claims = jwt_service.verify_token(token, expected_type=TokenType.ACCESS)
+                    claims = test_jwt_service.verify_token(token, expected_type=TokenType.ACCESS)
                     return UserInfo(
                         user_id=claims.get("sub", ""),
                         email=claims.get("email"),
@@ -773,11 +778,16 @@ if HAS_FASTAPI:
 
             def _default_user() -> UserInfo:
                 return UserInfo(
-                    user_id="test-user-123",
+                    user_id="550e8400-e29b-41d4-a716-446655440000",  # Valid UUID format
                     email="test@example.com",
                     username="testuser",
                     roles=["admin"],
-                    permissions=["read", "write", "admin"],
+                    permissions=[
+                        "read", "write", "admin",
+                        "billing:subscriptions:write", "billing:subscriptions:read",
+                        "billing:invoices:write", "billing:invoices:read",
+                        "billing:payments:write", "billing:payments:read",
+                    ],
                     tenant_id="test-tenant",
                     is_platform_admin=True,
                 )
@@ -843,6 +853,21 @@ if HAS_FASTAPI:
         except ImportError:
             pass
 
+        # Override RBAC service to bypass permission checks in tests
+        # This allows tests to focus on API behavior without setting up the full RBAC database schema
+        try:
+            from unittest.mock import AsyncMock, patch
+
+            # Create a patcher that makes user_has_all_permissions always return True
+            rbac_patcher = patch(
+                "dotmac.platform.auth.rbac_service.RBACService.user_has_all_permissions",
+                new_callable=AsyncMock,
+                return_value=True
+            )
+            rbac_patcher.start()
+        except ImportError:
+            pass
+
         # ============================================================================
         # Register ALL module routers for testing
         # ============================================================================
@@ -901,7 +926,7 @@ if HAS_FASTAPI:
             from dotmac.platform.billing.subscriptions.router import router as subscriptions_router
 
             app.include_router(
-                subscriptions_router, prefix="/api/v1/billing/subscriptions", tags=["Subscriptions"]
+                subscriptions_router, prefix="/api/v1/billing", tags=["Subscriptions"]
             )
         except ImportError:
             pass
@@ -1024,6 +1049,14 @@ if HAS_FASTAPI:
             from dotmac.platform.customer_management.router import router as customer_router
 
             app.include_router(customer_router, prefix="/api/v1/customers", tags=["Customers"])
+        except ImportError:
+            pass
+
+        # Customer Portal
+        try:
+            from dotmac.platform.customer_portal.router import router as customer_portal_router
+
+            app.include_router(customer_portal_router, prefix="/api/v1", tags=["Customer Portal"])
         except ImportError:
             pass
 
@@ -1228,7 +1261,7 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.jobs.router import router as jobs_router
 
-            app.include_router(jobs_router, prefix="", tags=["Jobs"])
+            app.include_router(jobs_router, prefix="/api/v1", tags=["Jobs"])
         except ImportError:
             pass
 
@@ -1242,12 +1275,23 @@ if HAS_FASTAPI:
         except ImportError:
             pass
 
-        return app
+        # Yield app for test execution, then cleanup
+        yield app
+
+        # Cleanup after test completes
+        app.dependency_overrides.clear()
 
     class _HybridResponse:
         """Wrapper that supports both sync and async access to HTTP responses."""
 
-        def __init__(self, sync_client: TestClient, app: Any, method: str, args: tuple[Any, ...], kwargs: dict[str, Any]):
+        def __init__(
+            self,
+            sync_client: TestClient,
+            app: Any,
+            method: str,
+            args: tuple[Any, ...],
+            kwargs: dict[str, Any],
+        ):
             self._sync_client = sync_client
             self._app = app
             self._method = method
@@ -1266,7 +1310,10 @@ if HAS_FASTAPI:
 
         def __await__(self):
             async def _run() -> Any:
-                from httpx import ASGITransport, AsyncClient  # Local import to avoid global dependency
+                from httpx import (  # Local import to avoid global dependency
+                    ASGITransport,
+                    AsyncClient,
+                )
 
                 transport = ASGITransport(app=self._app)
                 async with AsyncClient(
@@ -1341,15 +1388,19 @@ if HAS_FASTAPI:
                     "scopes": ["read", "write", "admin"],
                     "tenant_id": "test-tenant",
                     "email": "test@example.com",
+                    "username": "testuser",
                 },
             )
 
-            # Create async client without default auth headers so tests can control Authorization
+            # Create async client with authentication headers
             transport = ASGITransport(app=test_app)
             async with AsyncClient(
                 transport=transport,
                 base_url="http://testserver",
-                headers={"X-Tenant-ID": "test-tenant"},
+                headers={
+                    "Authorization": f"Bearer {test_token}",
+                    "X-Tenant-ID": "test-tenant",
+                },
             ) as client:
                 yield client
 
@@ -1435,7 +1486,7 @@ if HAS_FASTAPI:
 
     except ImportError:
         # Fallback if pytest_asyncio not available
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def authenticated_client(test_app):
             """Async test client with authentication for testing protected endpoints."""
             from httpx import ASGITransport, AsyncClient
@@ -1452,6 +1503,7 @@ if HAS_FASTAPI:
                     "scopes": ["read", "write", "admin"],
                     "tenant_id": "test-tenant",
                     "email": "test@example.com",
+                    "username": "testuser",
                 },
             )
 
@@ -1481,7 +1533,7 @@ else:
 
 
 # Async cleanup fixture
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_cleanup():
     """Fixture to track and cleanup async tasks."""
     tasks = []
@@ -1521,6 +1573,69 @@ def test_environment():
         # Restore original environment
         os.environ.clear()
         os.environ.update(original_env)
+
+
+@pytest.fixture(autouse=True, scope="function")
+def cleanup_fastapi_state(request):
+    """Automatically clean up FastAPI app state after each test.
+
+    This prevents test isolation issues by:
+    - Clearing dependency overrides
+    - Resetting router state
+    - Clearing event handlers (if accumulated)
+
+    Runs for ALL tests automatically (autouse=True).
+    """
+    # Setup - nothing needed before test
+    yield
+
+    # Cleanup after test
+    if HAS_FASTAPI:
+        # Try to find any FastAPI app instances in the test and clean them up
+        # This catches cases where tests create their own apps
+        for item in dir(request):
+            try:
+                obj = getattr(request, item)
+                if hasattr(obj, "__class__") and obj.__class__.__name__ == "FastAPI":
+                    if hasattr(obj, "dependency_overrides"):
+                        obj.dependency_overrides.clear()
+            except (AttributeError, TypeError):
+                pass
+
+
+@pytest.fixture(autouse=True, scope="function")
+def cleanup_registry():
+    """Provide cleanup registry for automatic resource cleanup.
+
+    This fixture:
+    1. Resets the registry before each test
+    2. Provides the registry to the test
+    3. Runs all registered cleanup handlers after the test
+
+    Usage in tests:
+        def test_my_feature(cleanup_registry):
+            resource = create_resource()
+            cleanup_registry.register(
+                resource.close,
+                priority=CleanupPriority.FILE_HANDLES,
+                name="my_resource"
+            )
+            # resource.close() called automatically after test
+
+    See tests/CLEANUP_REGISTRY_INTEGRATION.md for more examples.
+    """
+    from tests.helpers.cleanup_registry import (
+        get_cleanup_registry,
+        reset_cleanup_registry,
+    )
+
+    reset_cleanup_registry()
+    registry = get_cleanup_registry()
+
+    yield registry
+
+    # Automatic cleanup in priority order
+    registry.cleanup_all()
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -1790,7 +1905,7 @@ if HAS_SQLALCHEMY:
             jwt_service = JWTService(algorithm="HS256", secret="test-secret-key-for-testing-only")
 
             test_token = jwt_service.create_access_token(
-                subject="test-user-123",
+                subject="550e8400-e29b-41d4-a716-446655440000",
                 additional_claims={
                     "scopes": ["read", "write", "admin"],
                     "tenant_id": "test-tenant",
@@ -1805,7 +1920,7 @@ if HAS_SQLALCHEMY:
 
     except ImportError:
         # Fallback fixtures if pytest_asyncio not available
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def async_session(async_db_engine):
             """Async database session for billing integration tests."""
             SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
@@ -1820,7 +1935,7 @@ if HAS_SQLALCHEMY:
                     await session.close()
                     await asyncio.sleep(0)
 
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def test_payment_method(async_session):
             """Create test payment method in real database."""
             from uuid import uuid4
@@ -1856,7 +1971,7 @@ if HAS_SQLALCHEMY:
             provider.charge_payment_method = AsyncMock()
             return provider
 
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def test_subscription_plan(async_session):
             """Create test subscription plan."""
             from decimal import Decimal
@@ -1881,7 +1996,7 @@ if HAS_SQLALCHEMY:
             await async_session.refresh(plan)
             return plan
 
-        @pytest.fixture
+        @pytest_asyncio.fixture
         async def client(test_app):
             """Async HTTP client for integration tests."""
             from httpx import ASGITransport, AsyncClient
@@ -1901,7 +2016,7 @@ if HAS_SQLALCHEMY:
             jwt_service = JWTService(algorithm="HS256", secret="test-secret-key-for-testing-only")
 
             test_token = jwt_service.create_access_token(
-                subject="test-user-123",
+                subject="550e8400-e29b-41d4-a716-446655440000",
                 additional_claims={
                     "scopes": ["read", "write", "admin"],
                     "tenant_id": "test-tenant",
@@ -1915,7 +2030,7 @@ if HAS_SQLALCHEMY:
             }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def unauthenticated_client(async_db_engine):
     """
     HTTP client WITHOUT auth override for testing authentication enforcement.
@@ -1984,3 +2099,187 @@ async def unauthenticated_client(async_db_engine):
         yield client
 
     app.dependency_overrides.clear()
+
+
+# =============================================================================
+# Celery Configuration Fixtures
+# =============================================================================
+
+
+@pytest.fixture(autouse=True, scope="session")
+def configure_celery_for_tests():
+    """
+    Configure Celery to run tasks synchronously in tests.
+
+    This fixture enables eager mode so Celery tasks execute immediately
+    in the same process instead of being queued for worker processing.
+    This is essential for testing async tasks that interact with the database.
+    """
+    try:
+        from dotmac.platform.celery_app import celery_app
+
+        # Store original settings
+        original_always_eager = celery_app.conf.get("task_always_eager", False)
+        original_eager_propagates = celery_app.conf.get("task_eager_propagates", True)
+
+        # Configure for synchronous execution
+        celery_app.conf.update(
+            task_always_eager=True,  # Execute tasks synchronously
+            task_eager_propagates=True,  # Propagate exceptions from tasks
+        )
+
+        yield
+
+        # Restore original settings
+        celery_app.conf.update(
+            task_always_eager=original_always_eager,
+            task_eager_propagates=original_eager_propagates,
+        )
+    except ImportError:
+        # Celery not available, skip configuration
+        yield
+
+# ============================================================================
+# Authenticated Client Fixtures
+# ============================================================================
+
+@pytest.fixture
+def test_user() -> "UserInfo":
+    """
+    Create a test user with admin permissions for authentication.
+    
+    Returns:
+        UserInfo with full admin access and common permissions
+    """
+    from uuid import uuid4
+    from dotmac.platform.auth.core import UserInfo
+    
+    return UserInfo(
+        user_id=str(uuid4()),
+        tenant_id=f"test_tenant_{uuid4()}",
+        email="test@example.com",
+        is_platform_admin=True,
+        username="testuser",
+        roles=["admin"],
+        permissions=[
+            "read", "write", "admin",
+            "access:read", "access:write",
+            "billing:read", "billing:write",
+            "billing:subscriptions:read", "billing:subscriptions:write",
+            "billing:invoices:read", "billing:invoices:write",
+            "billing:payments:read", "billing:payments:write",
+            "customer:read", "customer:write",
+        ],
+    )
+
+
+@pytest.fixture
+def authenticated_client(test_app: "FastAPI", test_user: "UserInfo"):
+    """
+    Create a TestClient with authentication already configured.
+    
+    This fixture:
+    - Overrides get_current_user dependency
+    - Returns a TestClient ready for authenticated API calls
+    - Automatically cleans up dependency overrides after test
+    
+    Args:
+        fastapi_app: The FastAPI application instance
+        test_user: The authenticated user info
+        
+    Returns:
+        TestClient configured with authentication
+        
+    Example:
+        def test_my_endpoint(authenticated_client):
+            response = authenticated_client.get("/api/v1/my-endpoint")
+            assert response.status_code == 200
+    """
+    from starlette.testclient import TestClient
+    from dotmac.platform.auth.core import get_current_user
+    
+    # Override authentication
+    test_app.dependency_overrides[get_current_user] = lambda: test_user
+
+    # Create client
+    client = TestClient(test_app)
+
+    yield client
+
+    # Cleanup
+    test_app.dependency_overrides.clear()
+
+
+@pytest.fixture
+def authenticated_client_with_tenant(test_app: "FastAPI", test_user: "UserInfo"):
+    """
+    Create a TestClient that automatically adds X-Tenant-ID header.
+
+    This fixture wraps the TestClient to automatically include the
+    X-Tenant-ID header in all requests.
+
+    Args:
+        test_app: The FastAPI application instance
+        test_user: The authenticated user info
+        
+    Returns:
+        TestClient with automatic tenant header injection
+        
+    Example:
+        def test_tenant_scoped_endpoint(authenticated_client_with_tenant):
+            # X-Tenant-ID header automatically added
+            response = authenticated_client_with_tenant.get("/api/v1/customers")
+            assert response.status_code == 200
+    """
+    from starlette.testclient import TestClient
+    from dotmac.platform.auth.core import get_current_user
+
+    # Override authentication
+    test_app.dependency_overrides[get_current_user] = lambda: test_user
+
+    # Create base client
+    base_client = TestClient(test_app)
+    
+    # Wrapper class that adds tenant header automatically
+    class TenantAwareClient:
+        def __init__(self, client: TestClient, tenant_id: str):
+            self._client = client
+            self._tenant_id = tenant_id
+            
+        def _add_tenant_header(self, kwargs: dict) -> dict:
+            """Add X-Tenant-ID header to request kwargs."""
+            headers = kwargs.get("headers", {})
+            if isinstance(headers, dict):
+                headers = headers.copy()
+            else:
+                # Convert headers list/tuple to dict
+                headers = dict(headers) if headers else {}
+            headers["X-Tenant-ID"] = self._tenant_id
+            kwargs["headers"] = headers
+            return kwargs
+            
+        def get(self, *args, **kwargs):
+            return self._client.get(*args, **self._add_tenant_header(kwargs))
+            
+        def post(self, *args, **kwargs):
+            return self._client.post(*args, **self._add_tenant_header(kwargs))
+            
+        def put(self, *args, **kwargs):
+            return self._client.put(*args, **self._add_tenant_header(kwargs))
+            
+        def patch(self, *args, **kwargs):
+            return self._client.patch(*args, **self._add_tenant_header(kwargs))
+            
+        def delete(self, *args, **kwargs):
+            return self._client.delete(*args, **self._add_tenant_header(kwargs))
+            
+        def __getattr__(self, name):
+            """Proxy other attributes to base client."""
+            return getattr(self._client, name)
+    
+    wrapped_client = TenantAwareClient(base_client, test_user.tenant_id)
+
+    yield wrapped_client
+
+    # Cleanup
+    test_app.dependency_overrides.clear()

@@ -8,7 +8,6 @@ Allows per-tenant, per-severity, and per-alert-type routing configuration.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
@@ -17,7 +16,7 @@ import structlog
 from pydantic import BaseModel, Field
 
 from dotmac.platform.core.caching import cache_get, cache_set
-from dotmac.platform.monitoring.plugins import get_plugin, register_builtin_plugins
+from dotmac.platform.monitoring.plugins import get_plugin
 
 ALERT_CHANNEL_CACHE_KEY = "monitoring:alert_channels"
 
@@ -77,7 +76,9 @@ class Alert(BaseModel):
     @property
     def description(self) -> str:
         """Get alert description."""
-        return self.annotations.get("description", self.annotations.get("summary", "No description"))
+        return self.annotations.get(
+            "description", self.annotations.get("summary", "No description")
+        )
 
 
 class AlertmanagerWebhook(BaseModel):

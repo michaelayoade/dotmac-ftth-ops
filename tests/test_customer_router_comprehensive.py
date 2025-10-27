@@ -4,7 +4,7 @@ Comprehensive tests for Customer Management Router.
 Tests all endpoints with proper mocking to achieve high coverage.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
@@ -245,7 +245,7 @@ class TestGetCustomerEndpoints:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerResponse.model_validate"
         ) as mock_validate:
-            now = datetime.now(UTC)
+            now = datetime.now(timezone.utc)
             mock_response = CustomerResponse(
                 id=uuid4(),
                 customer_number=customer_number,
@@ -320,7 +320,7 @@ class TestUpdateCustomerEndpoint:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerResponse.model_validate"
         ) as mock_validate:
-            now = datetime.now(UTC)
+            now = datetime.now(timezone.utc)
             mock_response = CustomerResponse(
                 id=customer_id,
                 customer_number="CUST001",
@@ -492,7 +492,7 @@ class TestSearchCustomersEndpoint:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerResponse.model_validate"
         ) as mock_validate:
-            now = datetime.now(UTC)
+            now = datetime.now(timezone.utc)
             mock_response = CustomerResponse(
                 id=uuid4(),
                 customer_number="CUST001",
@@ -601,7 +601,7 @@ class TestCustomerActivitiesEndpoints:
                 description="Follow-up call",
                 metadata={},
                 performed_by=UUID("1440baf0-92cb-4a7e-8af1-53a2905b4651"),
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             mock_validate.return_value = mock_response
 
@@ -666,7 +666,7 @@ class TestCustomerActivitiesEndpoints:
                 description="Follow-up call",
                 metadata={},
                 performed_by=UUID("1440baf0-92cb-4a7e-8af1-53a2905b4651"),
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             mock_validate.return_value = mock_response
 
@@ -726,7 +726,7 @@ class TestCustomerNotesEndpoints:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerNoteResponse.model_validate"
         ) as mock_validate:
-            now = datetime.now(UTC)
+            now = datetime.now(timezone.utc)
             mock_response = CustomerNoteResponse(
                 id=uuid4(),
                 customer_id=customer_id,
@@ -792,7 +792,7 @@ class TestCustomerNotesEndpoints:
         with patch(
             "dotmac.platform.customer_management.schemas.CustomerNoteResponse.model_validate"
         ) as mock_validate:
-            now = datetime.now(UTC)
+            now = datetime.now(timezone.utc)
             mock_response = CustomerNoteResponse(
                 id=uuid4(),
                 customer_id=customer_id,
@@ -922,7 +922,7 @@ class TestCustomerSegmentsEndpoints:
         # Create a mock segment with all required attributes
         mock_segment = MagicMock()
         segment_id = uuid4()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Set all the attributes that the router will access
         mock_segment.id = segment_id

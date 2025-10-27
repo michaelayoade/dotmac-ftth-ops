@@ -6,11 +6,11 @@ import os
 
 import hvac
 import pytest
-import redis
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
+import redis
 from dotmac.platform.observability.manager import ObservabilityManager
 
 pytestmark = pytest.mark.asyncio

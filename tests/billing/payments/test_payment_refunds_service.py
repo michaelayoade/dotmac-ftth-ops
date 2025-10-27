@@ -2,7 +2,7 @@
 Tests for payment refund functionality.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -130,7 +130,7 @@ class TestPaymentRefunds:
     ):
         """Test refund with idempotency key"""
         # Setup
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         existing_refund = MagicMock(spec=PaymentEntity)
         existing_refund.tenant_id = "test-tenant"
         existing_refund.payment_id = "refund_456"

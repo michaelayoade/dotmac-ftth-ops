@@ -157,12 +157,14 @@ class TestUserService:
     @pytest.mark.asyncio
     async def test_create_user_duplicate_username(self, user_service, mock_user):
         """Test user creation with duplicate username."""
+        from sqlalchemy.exc import IntegrityError
+
         # Mock that user already exists
         user_service.session.execute = AsyncMock(
             return_value=Mock(scalar_one_or_none=Mock(return_value=mock_user))
         )
 
-        with pytest.raises(ValueError, match="Username testuser already exists"):
+        with pytest.raises(IntegrityError, match="Username testuser already exists"):
             await user_service.create_user(
                 username="testuser",
                 email="new@example.com",

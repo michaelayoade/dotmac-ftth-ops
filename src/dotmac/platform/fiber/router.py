@@ -15,9 +15,9 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..auth.core import UserInfo
 from ..auth.dependencies import get_current_user
 from ..db import get_session_dependency
-from ..auth.core import UserInfo
 from .models import (
     CableInstallationType,
     DistributionPointType,
@@ -25,7 +25,6 @@ from .models import (
     FiberHealthStatus,
     FiberType,
     ServiceAreaType,
-    SpliceStatus,
 )
 from .schemas import (
     CapacityPlanningResponse,
@@ -33,7 +32,6 @@ from .schemas import (
     CoverageSummaryResponse,
     DistributionPointCreate,
     DistributionPointResponse,
-    DistributionPointUpdate,
     FiberCableCreate,
     FiberCableResponse,
     FiberCableUpdate,
@@ -45,10 +43,6 @@ from .schemas import (
     PortUtilizationResponse,
     ServiceAreaCreate,
     ServiceAreaResponse,
-    ServiceAreaUpdate,
-    SplicePointCreate,
-    SplicePointResponse,
-    SplicePointUpdate,
 )
 from .service import FiberService
 
@@ -143,7 +137,9 @@ async def list_cables(
     try:
         fiber_type_enum = _parse_enum(fiber_type, FiberType, "fiber_type")
         status_enum = _parse_enum(status_filter, FiberCableStatus, "status")
-        installation_enum = _parse_enum(installation_type, CableInstallationType, "installation_type")
+        installation_enum = _parse_enum(
+            installation_type, CableInstallationType, "installation_type"
+        )
 
         cables = await service.list_cables(
             fiber_type=fiber_type_enum,
@@ -171,7 +167,9 @@ async def list_cables(
 )
 async def get_cable(
     cable_id: str,
-    include_relations: bool = Query(False, description="Include splice points, health metrics, and OTDR tests"),
+    include_relations: bool = Query(
+        False, description="Include splice points, health metrics, and OTDR tests"
+    ),
     service: FiberService = Depends(get_fiber_service),
 ) -> FiberCableResponse:
     """Get fiber cable by ID"""

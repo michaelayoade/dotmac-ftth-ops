@@ -16,6 +16,7 @@ This E2E test suite covers the following modules:
 from unittest.mock import AsyncMock, patch
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -44,7 +45,7 @@ def mock_audit_log():
         yield mock_log
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def secrets_app(mock_vault_settings, mock_audit_log):
     """Create FastAPI app with secrets router for E2E testing."""
     from dotmac.platform.auth.core import UserInfo
@@ -70,7 +71,7 @@ async def secrets_app(mock_vault_settings, mock_audit_log):
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(secrets_app):
     """Async HTTP client for E2E testing."""
     transport = ASGITransport(app=secrets_app)

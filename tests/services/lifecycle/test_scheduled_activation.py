@@ -5,10 +5,11 @@ Tests the ability to schedule service activations for future dates
 and automatically execute them via cron/scheduler.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.services.lifecycle.models import (
     ServiceInstance,
@@ -18,7 +19,7 @@ from dotmac.platform.services.lifecycle.models import (
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def provisioned_service(async_session) -> ServiceInstance:
     """Create a provisioned service ready for activation."""
     service = ServiceInstance(
@@ -49,7 +50,7 @@ async def test_schedule_service_activation(async_session, provisioned_service: S
     service = LifecycleOrchestrationService(async_session)
 
     # Schedule activation for 1 hour from now
-    activation_time = datetime.now(UTC) + timedelta(hours=1)
+    activation_time = datetime.now(timezone.utc) + timedelta(hours=1)
 
     result = await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
@@ -82,7 +83,7 @@ async def test_schedule_activation_invalid_status(
     provisioned_service.status = ServiceStatus.ACTIVE
     await async_session.commit()
 
-    activation_time = datetime.now(UTC) + timedelta(hours=1)
+    activation_time = datetime.now(timezone.utc) + timedelta(hours=1)
 
     result = await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
@@ -102,7 +103,7 @@ async def test_get_services_due_for_activation_past(
     service = LifecycleOrchestrationService(async_session)
 
     # Schedule activation for 1 hour ago (already due)
-    past_time = datetime.now(UTC) - timedelta(hours=1)
+    past_time = datetime.now(timezone.utc) - timedelta(hours=1)
     provisioned_service.service_metadata["scheduled_activation_datetime"] = past_time.isoformat()
     await async_session.commit()
 
@@ -121,7 +122,7 @@ async def test_get_services_due_for_activation_future(
     service = LifecycleOrchestrationService(async_session)
 
     # Schedule activation for 1 hour from now (not yet due)
-    future_time = datetime.now(UTC) + timedelta(hours=1)
+    future_time = datetime.now(timezone.utc) + timedelta(hours=1)
     provisioned_service.service_metadata["scheduled_activation_datetime"] = future_time.isoformat()
     await async_session.commit()
 
@@ -155,7 +156,7 @@ async def test_scheduled_activation_workflow_end_to_end(
     service = LifecycleOrchestrationService(async_session)
 
     # Step 1: Schedule activation for now (immediately due)
-    activation_time = datetime.now(UTC)
+    activation_time = datetime.now(timezone.utc)
     await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
         tenant_id="test-tenant",
@@ -169,7 +170,7 @@ async def test_scheduled_activation_workflow_end_to_end(
     # Step 3: Manually activate (simulating what the task would do)
     service_instance = due_services[0]
     service_instance.status = ServiceStatus.ACTIVE
-    service_instance.activated_at = datetime.now(UTC)
+    service_instance.activated_at = datetime.now(timezone.utc)
 
     if "scheduled_activation_datetime" in service_instance.service_metadata:
         del service_instance.service_metadata["scheduled_activation_datetime"]
@@ -194,9 +195,9 @@ async def test_multiple_scheduled_activations(async_session):
     # Create 3 services with different activation times
     services = []
     activation_times = [
-        datetime.now(UTC) - timedelta(hours=2),  # Past - should be due
-        datetime.now(UTC) - timedelta(minutes=30),  # Past - should be due
-        datetime.now(UTC) + timedelta(hours=1),  # Future - not due
+        datetime.now(timezone.utc) - timedelta(hours=2),  # Past - should be due
+        datetime.now(timezone.utc) - timedelta(minutes=30),  # Past - should be due
+        datetime.now(timezone.utc) + timedelta(hours=1),  # Future - not due
     ]
 
     for i, activation_time in enumerate(activation_times):
@@ -232,7 +233,7 @@ async def test_scheduled_activation_tenant_isolation(async_session):
     """Test that scheduled activations respect tenant boundaries."""
     service = LifecycleOrchestrationService(async_session)
 
-    past_time = datetime.now(UTC) - timedelta(hours=1)
+    past_time = datetime.now(timezone.utc) - timedelta(hours=1)
 
     # Create services for different tenants
     service1 = ServiceInstance(

@@ -7,7 +7,7 @@ to be provided by core modules or external packages.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Dict, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 import httpx
 
@@ -20,19 +20,19 @@ class AlertChannelPlugin(Protocol):
 
     plugin_id: str
 
-    def validate(self, channel: "AlertChannel") -> None:
+    def validate(self, channel: AlertChannel) -> None:
         """Validate the supplied channel configuration."""
 
     async def send(
         self,
-        alert: "Alert",
-        channel: "AlertChannel",
+        alert: Alert,
+        channel: AlertChannel,
         client: httpx.AsyncClient,
     ) -> bool:
         """Deliver the alert using the provided HTTP client."""
 
 
-_registry: Dict[str, AlertChannelPlugin] = {}
+_registry: dict[str, AlertChannelPlugin] = {}
 _builtin_registered = False
 
 

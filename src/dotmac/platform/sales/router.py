@@ -25,7 +25,7 @@ from ..deployment.service import DeploymentService
 from ..events.bus import EventBus
 from ..notifications.service import NotificationService
 from ..tenant.service import TenantService
-from .models import Order, OrderStatus, ServiceActivation
+from .models import OrderStatus
 from .schemas import (
     ActivationProgress,
     OrderCreate,
@@ -39,10 +39,14 @@ from .schemas import (
 from .service import ActivationOrchestrator, OrderProcessingService
 
 # Public router (no authentication required)
-public_router = APIRouter(prefix="/api/public/orders", )
+public_router = APIRouter(
+    prefix="/api/public/orders",
+)
 
 # Internal router (authentication required)
-router = APIRouter(prefix="/orders", )
+router = APIRouter(
+    prefix="/orders",
+)
 
 
 def get_order_service(
@@ -138,22 +142,42 @@ def create_quick_order(
     # Package service mappings
     package_services = {
         "starter": [
-            ServiceSelection(service_code="subscriber-provisioning", name="Subscriber Management", quantity=1),
-            ServiceSelection(service_code="billing-invoicing", name="Billing & Invoicing", quantity=1),
+            ServiceSelection(
+                service_code="subscriber-provisioning", name="Subscriber Management", quantity=1
+            ),
+            ServiceSelection(
+                service_code="billing-invoicing", name="Billing & Invoicing", quantity=1
+            ),
         ],
         "professional": [
-            ServiceSelection(service_code="subscriber-provisioning", name="Subscriber Management", quantity=1),
-            ServiceSelection(service_code="billing-invoicing", name="Billing & Invoicing", quantity=1),
+            ServiceSelection(
+                service_code="subscriber-provisioning", name="Subscriber Management", quantity=1
+            ),
+            ServiceSelection(
+                service_code="billing-invoicing", name="Billing & Invoicing", quantity=1
+            ),
             ServiceSelection(service_code="radius-aaa", name="RADIUS AAA", quantity=1),
-            ServiceSelection(service_code="network-monitoring", name="Network Monitoring", quantity=1),
+            ServiceSelection(
+                service_code="network-monitoring", name="Network Monitoring", quantity=1
+            ),
         ],
         "enterprise": [
-            ServiceSelection(service_code="subscriber-provisioning", name="Subscriber Management", quantity=1),
-            ServiceSelection(service_code="billing-invoicing", name="Billing & Invoicing", quantity=1),
+            ServiceSelection(
+                service_code="subscriber-provisioning", name="Subscriber Management", quantity=1
+            ),
+            ServiceSelection(
+                service_code="billing-invoicing", name="Billing & Invoicing", quantity=1
+            ),
             ServiceSelection(service_code="radius-aaa", name="RADIUS AAA", quantity=1),
-            ServiceSelection(service_code="network-monitoring", name="Network Monitoring", quantity=1),
-            ServiceSelection(service_code="analytics-reporting", name="Analytics & Reporting", quantity=1),
-            ServiceSelection(service_code="automation-workflows", name="Automation Workflows", quantity=1),
+            ServiceSelection(
+                service_code="network-monitoring", name="Network Monitoring", quantity=1
+            ),
+            ServiceSelection(
+                service_code="analytics-reporting", name="Analytics & Reporting", quantity=1
+            ),
+            ServiceSelection(
+                service_code="automation-workflows", name="Automation Workflows", quantity=1
+            ),
         ],
     }
 
@@ -163,11 +187,13 @@ def create_quick_order(
     # Add any additional services
     if request.additional_services:
         for service_code in request.additional_services:
-            services.append(ServiceSelection(
-                service_code=service_code,
-                name=service_code.replace("-", " ").title(),
-                quantity=1,
-            ))
+            services.append(
+                ServiceSelection(
+                    service_code=service_code,
+                    name=service_code.replace("-", " ").title(),
+                    quantity=1,
+                )
+            )
 
     order_request = OrderCreate(
         customer_email=request.email,
@@ -216,8 +242,7 @@ def get_public_order_status(
     order = service.get_order_by_number(order_number)
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_number} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_number} not found"
         )
 
     # Calculate progress
@@ -310,8 +335,7 @@ def get_order(
         ) from exc
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_id} not found"
         )
 
     return OrderResponse.model_validate(order)
@@ -413,10 +437,7 @@ def update_order_status(
             detail=str(exc),
         ) from exc
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
 @router.delete("/{order_id}")
@@ -448,15 +469,9 @@ def cancel_order(
     except ValueError as e:
         error_msg = str(e)
         if "not found" in error_msg:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=error_msg
-            )
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=error_msg)
         else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=error_msg
-            )
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=error_msg)
 
 
 # ============================================================================
@@ -492,8 +507,7 @@ def list_order_activations(
         ) from exc
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_id} not found"
         )
 
     activations = orchestrator.get_service_activations(order_id)
@@ -528,8 +542,7 @@ def get_activation_progress(
         ) from exc
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_id} not found"
         )
 
     progress_data = orchestrator.get_activation_progress(order_id)
@@ -545,8 +558,7 @@ def get_activation_progress(
         overall_status=progress_data["overall_status"],
         progress_percent=progress_data["progress_percent"],
         activations=[
-            ServiceActivationResponse.model_validate(a)
-            for a in progress_data["activations"]
+            ServiceActivationResponse.model_validate(a) for a in progress_data["activations"]
         ],
     )
 
@@ -580,8 +592,7 @@ def retry_failed_activations(
         ) from exc
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Order {order_id} not found"
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Order {order_id} not found"
         )
 
     return orchestrator.retry_failed_activations(order_id)

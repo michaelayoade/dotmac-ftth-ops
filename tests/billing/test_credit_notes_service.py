@@ -1,10 +1,10 @@
 """Comprehensive tests for the credit note service."""
 
+from datetime import timezone, datetime, timedelta
+from uuid import uuid4
+
 import pytest
 from sqlalchemy import select
-
-from datetime import UTC, datetime, timedelta
-from uuid import uuid4
 
 from dotmac.platform.billing.core.entities import CreditNoteEntity, InvoiceEntity
 from dotmac.platform.billing.core.enums import (
@@ -13,8 +13,8 @@ from dotmac.platform.billing.core.enums import (
     InvoiceStatus,
     PaymentStatus,
 )
-from dotmac.platform.billing.credit_notes.service import CreditNoteService
 from dotmac.platform.billing.core.exceptions import InsufficientCreditError
+from dotmac.platform.billing.credit_notes.service import CreditNoteService
 
 
 class _DummyMetrics:
@@ -46,7 +46,9 @@ def credit_note_service(async_db_session, monkeypatch):
     return CreditNoteService(async_db_session), dummy_metrics
 
 
-async def _create_invoice(async_db_session, tenant_id: str, customer_id: str, total: int = 27500) -> InvoiceEntity:
+async def _create_invoice(
+    async_db_session, tenant_id: str, customer_id: str, total: int = 27500
+) -> InvoiceEntity:
     invoice = InvoiceEntity(
         invoice_id=str(uuid4()),
         tenant_id=tenant_id,
@@ -54,8 +56,8 @@ async def _create_invoice(async_db_session, tenant_id: str, customer_id: str, to
         customer_id=customer_id,
         billing_email=f"{customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=total,
         tax_amount=0,
@@ -166,7 +168,9 @@ async def test_create_credit_note_amount_exceeds_invoice_raises(
             tenant_id=test_tenant_id,
             invoice_id=invoice.invoice_id,
             reason=CreditReason.BILLING_ERROR,
-            line_items=[{"description": "Excessive credit", "amount": 999999, "unit_price": 999999}],
+            line_items=[
+                {"description": "Excessive credit", "amount": 999999, "unit_price": 999999}
+            ],
         )
 
 

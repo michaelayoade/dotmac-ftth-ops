@@ -4,7 +4,10 @@ On-Call Schedule Service
 Service layer for managing on-call schedules and rotations.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -14,7 +17,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.models import (
     Alarm,
-    AlarmSeverity,
     OnCallRotation,
     OnCallSchedule,
 )
@@ -58,41 +60,33 @@ class OnCallScheduleService:
             current_time = datetime.now(UTC)
 
         # Build query for active rotations at current time
-        rotation_query = (
-            select(OnCallRotation)
-            .where(
-                and_(
-                    OnCallRotation.tenant_id == self.tenant_id,
-                    OnCallRotation.is_active == True,  # noqa: E712
-                    OnCallRotation.start_time <= current_time,
-                    OnCallRotation.end_time > current_time,
-                )
+        rotation_query = select(OnCallRotation).where(
+            and_(
+                OnCallRotation.tenant_id == self.tenant_id,
+                OnCallRotation.is_active == True,  # noqa: E712
+                OnCallRotation.start_time <= current_time,
+                OnCallRotation.end_time > current_time,
             )
         )
 
         # If alarm provided, filter by severity
         if alarm and alarm.severity:
             # Get schedules that match alarm severity
-            schedule_query = (
-                select(OnCallSchedule.id)
-                .where(
-                    and_(
-                        OnCallSchedule.tenant_id == self.tenant_id,
-                        OnCallSchedule.is_active == True,  # noqa: E712
-                        or_(
-                            # Empty list means all severities
-                            OnCallSchedule.alarm_severities == [],
-                            # Or severity is in the list
-                            OnCallSchedule.alarm_severities.contains([alarm.severity.value]),
-                        ),
-                    )
+            schedule_query = select(OnCallSchedule.id).where(
+                and_(
+                    OnCallSchedule.tenant_id == self.tenant_id,
+                    OnCallSchedule.is_active == True,  # noqa: E712
+                    or_(
+                        # Empty list means all severities
+                        OnCallSchedule.alarm_severities == [],
+                        # Or severity is in the list
+                        OnCallSchedule.alarm_severities.contains([alarm.severity.value]),
+                    ),
                 )
             )
 
             # Filter rotations by schedule
-            rotation_query = rotation_query.where(
-                OnCallRotation.schedule_id.in_(schedule_query)
-            )
+            rotation_query = rotation_query.where(OnCallRotation.schedule_id.in_(schedule_query))
 
         # Execute rotation query
         result = await self.session.execute(rotation_query)
@@ -108,7 +102,7 @@ class OnCallScheduleService:
             return []
 
         # Get unique user IDs
-        user_ids = list(set(rotation.user_id for rotation in rotations))
+        user_ids = list({rotation.user_id for rotation in rotations})
 
         # Fetch users
         user_query = select(User).where(
@@ -271,9 +265,7 @@ class OnCallScheduleService:
         Returns:
             List of schedules
         """
-        query = select(OnCallSchedule).where(
-            OnCallSchedule.tenant_id == self.tenant_id
-        )
+        query = select(OnCallSchedule).where(OnCallSchedule.tenant_id == self.tenant_id)
 
         if is_active is not None:
             query = query.where(OnCallSchedule.is_active == is_active)
@@ -302,9 +294,7 @@ class OnCallScheduleService:
         Returns:
             List of rotations
         """
-        query = select(OnCallRotation).where(
-            OnCallRotation.tenant_id == self.tenant_id
-        )
+        query = select(OnCallRotation).where(OnCallRotation.tenant_id == self.tenant_id)
 
         if schedule_id:
             query = query.where(OnCallRotation.schedule_id == schedule_id)

@@ -8,7 +8,10 @@ Handlers optimize for read performance using:
 4. Minimal data transformation
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 
@@ -438,7 +441,9 @@ class PaymentQueryHandler:
                 payment_type = getattr(payment, "payment_method_type", None)
                 data["payment_method"] = str(payment_type) if payment_type else "unknown"
             if "customer_name" not in data or not data["customer_name"]:
-                data["customer_name"] = getattr(payment, "customer_name", "") or getattr(payment, "customer_id", "")
+                data["customer_name"] = getattr(payment, "customer_name", "") or getattr(
+                    payment, "customer_id", ""
+                )
             items.append(PaymentListItem.model_validate(data))
 
         return {

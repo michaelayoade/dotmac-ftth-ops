@@ -10,6 +10,8 @@ if not hasattr(auth_dependencies, "require_user"):
 
 from dotmac.platform.network_monitoring.router import (
     get_monitoring_service,
+)
+from dotmac.platform.network_monitoring.router import (
     router as monitoring_router,
 )
 from dotmac.platform.network_monitoring.schemas import (
@@ -78,9 +80,7 @@ class _StubMonitoringService:
 
 
 @pytest.mark.asyncio
-async def test_network_overview_api_integration(
-    test_app, authenticated_client
-) -> None:
+async def test_network_overview_api_integration(test_app, authenticated_client) -> None:
     """
     Ensure the REST network overview endpoint returns tenant-scoped data along with
     the upstream data source status map.
@@ -90,7 +90,10 @@ async def test_network_overview_api_integration(
 
     # Ensure the network monitoring router is registered on the test app
     existing_paths = {getattr(route, "path", "") for route in test_app.router.routes}
-    if "/network/overview" not in existing_paths and "/api/v1/network/overview" not in existing_paths:
+    if (
+        "/network/overview" not in existing_paths
+        and "/api/v1/network/overview" not in existing_paths
+    ):
         test_app.include_router(monitoring_router, prefix="/api/v1")
 
     # Override the monitoring service dependency for the duration of this test

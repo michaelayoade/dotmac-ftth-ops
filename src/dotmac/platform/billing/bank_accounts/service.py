@@ -5,7 +5,10 @@ Bank account and manual payment service
 import hashlib
 import logging
 import secrets
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 from sqlalchemy import and_, func, select

@@ -8,7 +8,7 @@ Tests all customer management router endpoints following the Two-Tier Testing St
 Coverage Target: 85%+ for router endpoints
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -35,6 +35,8 @@ def test_client(
     """Create a test client for the FastAPI app with customer deps overridden."""
     from dotmac.platform.customer_management.router import (
         get_customer_service,
+    )
+    from dotmac.platform.customer_management.router import (
         router as customer_router,
     )
 
@@ -114,15 +116,9 @@ def test_client(
     app.dependency_overrides[get_customer_service] = lambda: mock_service
     user = mock_auth_dependency
     app.dependency_overrides[get_current_user] = lambda user=user: user
-    app.dependency_overrides[require_customer_impersonate] = (
-        lambda user=user: user
-    )
-    app.dependency_overrides[require_customer_manage_status] = (
-        lambda user=user: user
-    )
-    app.dependency_overrides[require_customer_reset_password] = (
-        lambda user=user: user
-    )
+    app.dependency_overrides[require_customer_impersonate] = lambda user=user: user
+    app.dependency_overrides[require_customer_manage_status] = lambda user=user: user
+    app.dependency_overrides[require_customer_reset_password] = lambda user=user: user
 
     with TestClient(app) as client:
         client.mock_customer_service = mock_service  # type: ignore[attr-defined]
@@ -341,7 +337,7 @@ class TestCustomerCRUDEndpoints:
     async def test_delete_customer_soft(
         self, test_client, mock_auth_dependency, mock_tenant_dependency
     ):
-        """Test soft delete customer."""
+        """Test soft delete customer with non-existent ID."""
         customer_id = str(uuid4())
 
         response = test_client.delete(
@@ -349,13 +345,14 @@ class TestCustomerCRUDEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [204, 404, 401]
+        # Idempotent delete - returns 204 even for non-existent customer
+        assert response.status_code == 204
 
     @pytest.mark.asyncio
     async def test_delete_customer_hard(
         self, test_client, mock_auth_dependency, mock_tenant_dependency
     ):
-        """Test hard delete customer."""
+        """Test hard delete customer with non-existent ID."""
         customer_id = str(uuid4())
 
         response = test_client.delete(
@@ -363,7 +360,8 @@ class TestCustomerCRUDEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [204, 404, 401]
+        # Idempotent delete - returns 204 even for non-existent customer
+        assert response.status_code == 204
 
 
 class TestCustomerSearchEndpoint:
@@ -518,7 +516,7 @@ class TestCustomerActivitiesEndpoints:
             performed_by=str(uuid4()),
             ip_address="192.0.2.10",
             user_agent="pytest-client",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         test_client.mock_customer_service.add_activity.return_value = activity_response  # type: ignore[attr-defined]
@@ -591,8 +589,8 @@ class TestCustomerNotesEndpoints:
             content=note_data["content"],
             is_internal=True,
             created_by_id=str(uuid4()),
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         test_client.mock_customer_service.add_note.return_value = note_response  # type: ignore[attr-defined]
@@ -634,7 +632,8 @@ class TestCustomerNotesEndpoints:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        assert response.status_code in [200, 401, 500]
+        # Should return 200 with empty list or 404 if customer doesn't exist
+        assert response.status_code in [200, 404]
 
 
 class TestCustomerMetricsEndpoints:
@@ -696,9 +695,9 @@ class TestCustomerSegmentsEndpoints:
             is_dynamic=True,
             priority=10,
             member_count=25,
-            last_calculated=datetime.now(UTC),
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            last_calculated=datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         test_client.mock_customer_service.create_segment.return_value = segment_response  # type: ignore[attr-defined]
@@ -742,7 +741,9 @@ class TestCustomerRouterAuthorization:
         original_dependency = test_client.app.dependency_overrides.get(get_current_user)
 
         def raise_unauthorized() -> None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+            )
 
         test_client.app.dependency_overrides[get_current_user] = raise_unauthorized
 
@@ -766,7 +767,9 @@ class TestCustomerRouterAuthorization:
         original_dependency = test_client.app.dependency_overrides.get(get_current_user)
 
         def raise_unauthorized() -> None:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+            )
 
         test_client.app.dependency_overrides[get_current_user] = raise_unauthorized
 
@@ -800,8 +803,8 @@ class TestCustomerRouterErrorHandling:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Should fail validation
-        assert response.status_code in [400, 422, 401]
+        # Should fail validation - expect 422 Unprocessable Entity for invalid email format
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_get_customer_invalid_uuid(
@@ -813,8 +816,8 @@ class TestCustomerRouterErrorHandling:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Should fail validation
-        assert response.status_code in [400, 422, 401]
+        # Should fail validation - expect 422 Unprocessable Entity for invalid UUID format
+        assert response.status_code == 422
 
     @pytest.mark.asyncio
     async def test_update_customer_not_found(
@@ -830,5 +833,138 @@ class TestCustomerRouterErrorHandling:
             headers={"Authorization": "Bearer fake-token"},
         )
 
-        # Should return 404
-        assert response.status_code in [404, 401, 500]
+        # Should return 404 Not Found for non-existent customer
+        assert response.status_code == 404
+
+
+@pytest.mark.asyncio
+class TestCustomerManagementPermissions:
+    """Test that customer management endpoints properly enforce RBAC permissions."""
+
+    @pytest.fixture(autouse=True)
+    def setup_rbac_mocks(self):
+        """Set up RBAC service mocks for permission tests."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        # Mock that always denies permissions
+        self.mock_rbac_deny = MagicMock()
+        # Use AsyncMock for async method so FastAPI can await it
+        self.mock_rbac_deny.user_has_all_permissions = AsyncMock(return_value=False)
+
+    def test_impersonate_requires_impersonate_permission(self, test_app):
+        """Test POST /customers/{customer_id}/impersonate requires customer.impersonate permission."""
+        from fastapi.testclient import TestClient
+        from unittest.mock import patch
+        from uuid import uuid4
+        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        # Setup authentication
+        test_user = UserInfo(
+            user_id="test-user-123",
+            email="test@example.com",
+            username="testuser",
+            roles=["user"],
+            permissions=[],  # No permissions
+            tenant_id="test-tenant-123",
+            is_platform_admin=False,
+        )
+        test_app.dependency_overrides[get_current_user] = lambda: test_user
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                f"/api/v1/customers/{uuid4()}/impersonate",
+                headers={"X-Tenant-ID": "test-tenant-123"}
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["customer.impersonate"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+        # Cleanup
+        test_app.dependency_overrides.clear()
+
+    def test_manage_status_requires_manage_status_permission(self, test_app):
+        """Test PATCH /customers/{customer_id}/status requires customer.manage_status permission."""
+        from fastapi.testclient import TestClient
+        from unittest.mock import patch
+        from uuid import uuid4
+        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        # Setup authentication
+        test_user = UserInfo(
+            user_id="test-user-123",
+            email="test@example.com",
+            username="testuser",
+            roles=["user"],
+            permissions=[],  # No permissions
+            tenant_id="test-tenant-123",
+            is_platform_admin=False,
+        )
+        test_app.dependency_overrides[get_current_user] = lambda: test_user
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/customers/{uuid4()}/status",
+                json={"status": "active", "reason": "test"},
+                headers={"X-Tenant-ID": "test-tenant-123"}
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["customer.manage_status"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+        # Cleanup
+        test_app.dependency_overrides.clear()
+
+    def test_reset_password_requires_reset_password_permission(self, test_app):
+        """Test POST /customers/{customer_id}/reset-password requires customer.reset_password permission."""
+        from fastapi.testclient import TestClient
+        from unittest.mock import patch
+        from uuid import uuid4
+        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        # Setup authentication
+        test_user = UserInfo(
+            user_id="test-user-123",
+            email="test@example.com",
+            username="testuser",
+            roles=["user"],
+            permissions=[],  # No permissions
+            tenant_id="test-tenant-123",
+            is_platform_admin=False,
+        )
+        test_app.dependency_overrides[get_current_user] = lambda: test_user
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                f"/api/v1/customers/{uuid4()}/reset-password",
+                headers={"X-Tenant-ID": "test-tenant-123"}
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["customer.reset_password"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+        # Cleanup
+        test_app.dependency_overrides.clear()

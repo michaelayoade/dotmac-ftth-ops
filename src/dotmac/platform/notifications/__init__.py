@@ -15,8 +15,10 @@ from dotmac.platform.notifications.models import (
     NotificationType,
 )
 from dotmac.platform.notifications.plugins import (
-    register_plugin as register_notification_plugin,
     list_plugins as list_notification_plugins,
+)
+from dotmac.platform.notifications.plugins import (
+    register_plugin as register_notification_plugin,
 )
 from dotmac.platform.notifications.service import NotificationService
 

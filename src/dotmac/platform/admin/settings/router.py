@@ -7,7 +7,7 @@ with proper admin authentication and audit logging.
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -255,9 +255,11 @@ async def bulk_update_settings(
 
 @router.post("/backup", response_model=SettingsBackup)
 async def create_settings_backup(
-    name: str,
-    description: str | None = None,
-    categories: list[SettingsCategory] | None = None,
+    name: str = Body(..., description="Backup name"),
+    description: str | None = Body(None, description="Optional backup description"),
+    categories: list[SettingsCategory] | None = Body(
+        None, description="Categories to backup (all if not specified)"
+    ),
     session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.backup")),
 ) -> SettingsBackup:

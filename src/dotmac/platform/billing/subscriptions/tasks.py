@@ -9,10 +9,10 @@ This module contains Celery tasks for:
 """
 
 import structlog
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import app
 from dotmac.platform.database import get_async_session_context
+
 from .service import SubscriptionService
 
 logger = structlog.get_logger(__name__)
@@ -78,5 +78,5 @@ def setup_periodic_tasks(sender, **kwargs):
     sender.add_periodic_task(
         900.0,  # 15 minutes in seconds
         process_scheduled_plan_changes_task.s(),
-        name="process-scheduled-plan-changes-every-15min"
+        name="process-scheduled-plan-changes-every-15min",
     )

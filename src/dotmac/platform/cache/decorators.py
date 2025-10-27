@@ -319,9 +319,9 @@ def _generate_cache_key(
                     # Hash complex objects
                     # MD5 used for cache key generation, not security
                     value_str = json.dumps(param_value, sort_keys=True, default=str)
-                    value_hash = hashlib.md5(
-                        value_str.encode(), usedforsecurity=False
-                    ).hexdigest()[:8]  # nosec B324
+                    value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[
+                        :8
+                    ]  # nosec B324
                     key_parts.append(f"{param_name}:{value_hash}")
             except Exception:
                 # Skip unpicklable objects

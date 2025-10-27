@@ -11,7 +11,6 @@ from dotmac.platform.graphql.schema import schema
 from dotmac.platform.network_monitoring.schemas import (
     AlertSeverity,
     DeviceType,
-    DeviceTypeSummary,
     NetworkAlertResponse,
     NetworkOverviewResponse,
 )

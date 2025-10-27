@@ -8,7 +8,8 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends
 
-from ..settings import Settings, get_settings, settings as runtime_settings
+from ..settings import Settings, get_settings
+from ..settings import settings as runtime_settings
 
 router = APIRouter(prefix="/platform")
 
@@ -75,7 +76,7 @@ _PLATFORM_HEALTH_SUMMARY: dict[str, str] = {
 
 @router.get("/config")
 async def get_platform_config(
-    settings: Annotated[Settings, Depends(get_settings)]
+    settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict[str, Any]:
     """
     Get public platform configuration.
@@ -88,9 +89,7 @@ async def get_platform_config(
 
     Note: Sensitive settings (secrets, passwords) are NOT included.
     """
-    features_payload = {
-        flag: getattr(settings.features, flag) for flag in PUBLIC_FEATURE_FLAGS
-    }
+    features_payload = {flag: getattr(settings.features, flag) for flag in PUBLIC_FEATURE_FLAGS}
 
     return {
         "app": {

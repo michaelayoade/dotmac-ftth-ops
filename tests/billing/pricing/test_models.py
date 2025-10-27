@@ -4,7 +4,7 @@ Tests for billing pricing models.
 Covers Pydantic model validation, enums, and pricing logic.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -63,7 +63,7 @@ class TestPricingRule:
                 discount_type=DiscountType.PERCENTAGE,
                 discount_value=Decimal("-10"),  # Negative discount
                 is_active=True,
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
 
         errors = exc_info.value.errors()
@@ -80,7 +80,7 @@ class TestPricingRule:
                 discount_value=Decimal("10"),
                 min_quantity=0,  # Invalid - must be positive
                 is_active=True,
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
 
     def test_pricing_rule_validation_invalid_max_uses(self):
@@ -94,7 +94,7 @@ class TestPricingRule:
                 discount_value=Decimal("10"),
                 max_uses=0,  # Invalid - must be positive
                 is_active=True,
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
 
     def test_pricing_rule_business_methods(self, sample_pricing_rule):
@@ -112,7 +112,7 @@ class TestPricingRule:
         assert rule.can_be_applied(quantity=1) is False  # Below min_quantity
 
         # Test with time constraints
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         future_rule = PricingRule(
             rule_id="rule_future",
             tenant_id="test-tenant",
@@ -141,7 +141,7 @@ class TestPricingRule:
 
     def test_pricing_rule_usage_limits(self):
         """Test pricing rule usage limit logic."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Rule with usage limit
         limited_rule = PricingRule(
@@ -181,7 +181,7 @@ class TestPricingRule:
             name="Test Rule",
             discount_type=DiscountType.PERCENTAGE,
             discount_value=Decimal("10"),
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         assert rule.description is None
@@ -386,7 +386,7 @@ class TestPricingRuleCreateRequest:
 
     def test_create_request_date_validation(self):
         """Test pricing rule creation request date validation."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Test end date before start date
         with pytest.raises(ValidationError):
@@ -513,7 +513,7 @@ class TestPricingRuleResponse:
 
     def test_pricing_rule_response_creation(self):
         """Test pricing rule response model creation."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         response = PricingRuleResponse(
             rule_id="rule_123",
             tenant_id="test-tenant",

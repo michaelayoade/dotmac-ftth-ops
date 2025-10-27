@@ -41,6 +41,13 @@ TENANT_ROUTER_CONFIGS = [
         "description": "Customer relationship management",
     },
     {
+        "module_path": "dotmac.platform.customer_portal.router",
+        "router_name": "router",
+        "prefix": "",  # Module has /customer prefix
+        "tags": ["ISP - Customer Portal"],
+        "description": "Customer self-service portal",
+    },
+    {
         "module_path": "dotmac.platform.contacts.router",
         "router_name": "router",
         "prefix": "",  # Module has /contacts prefix
@@ -54,6 +61,13 @@ TENANT_ROUTER_CONFIGS = [
         "tags": ["ISP - CRM"],
         "description": "Lead management and sales",
     },
+    {
+        "module_path": "dotmac.platform.sales.router",
+        "router_name": "router",
+        "prefix": "",  # Module has /orders prefix
+        "tags": ["ISP - Sales"],
+        "description": "Sales order management",
+    },
     # Network & AAA
     {
         "module_path": "dotmac.platform.radius.router",
@@ -61,6 +75,13 @@ TENANT_ROUTER_CONFIGS = [
         "prefix": "",  # Module has /radius prefix
         "tags": ["ISP - RADIUS"],
         "description": "RADIUS AAA and session management",
+    },
+    {
+        "module_path": "dotmac.platform.access.router",
+        "router_name": "router",
+        "prefix": "/api/v1",  # Router defines /access prefix
+        "tags": ["ISP - Access Network"],
+        "description": "OLT and PON access network management",
     },
     {
         "module_path": "dotmac.platform.netbox.router",
@@ -373,6 +394,13 @@ TENANT_ROUTER_CONFIGS = [
         "tags": ["ISP - Notifications"],
         "description": "User notifications",
     },
+    {
+        "module_path": "dotmac.platform.communications.router",
+        "router_name": "router",
+        "prefix": "",  # Module has /communications prefix
+        "tags": ["ISP - Communications"],
+        "description": "Email and SMS communications",
+    },
 ]
 
 
@@ -470,8 +498,7 @@ def create_tenant_app() -> FastAPI:
         "\n" + "=" * 60 + "\n"
         f"🚀 Tenant App Registration Complete\n"
         f"   ✅ Registered: {registered_count} routers\n"
-        f"   ⚠️  Skipped: {failed_count} routers\n"
-        + "=" * 60
+        f"   ⚠️  Skipped: {failed_count} routers\n" + "=" * 60
     )
 
     # Health check

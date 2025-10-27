@@ -11,10 +11,8 @@ from datetime import datetime, timedelta
 from enum import Enum
 from typing import Any
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from dotmac.platform.db import Base
 
 logger = logging.getLogger(__name__)
 
@@ -470,7 +468,8 @@ class AlertEvaluator:
         # Dual-stack adoption (below threshold is bad)
         if (
             metrics.dual_stack_percentage > 0
-            and metrics.dual_stack_percentage <= self.THRESHOLDS["dual_stack_percentage"]["critical"]
+            and metrics.dual_stack_percentage
+            <= self.THRESHOLDS["dual_stack_percentage"]["critical"]
         ):
             alerts.append(
                 {
@@ -539,7 +538,10 @@ class AlertEvaluator:
             )
 
         # Packet loss
-        if metrics.ipv4_packet_loss_percentage >= self.THRESHOLDS["ipv4_packet_loss_percentage"]["critical"]:
+        if (
+            metrics.ipv4_packet_loss_percentage
+            >= self.THRESHOLDS["ipv4_packet_loss_percentage"]["critical"]
+        ):
             alerts.append(
                 {
                     "severity": "critical",
@@ -550,7 +552,10 @@ class AlertEvaluator:
                 }
             )
 
-        if metrics.ipv6_packet_loss_percentage >= self.THRESHOLDS["ipv6_packet_loss_percentage"]["critical"]:
+        if (
+            metrics.ipv6_packet_loss_percentage
+            >= self.THRESHOLDS["ipv6_packet_loss_percentage"]["critical"]
+        ):
             alerts.append(
                 {
                     "severity": "critical",

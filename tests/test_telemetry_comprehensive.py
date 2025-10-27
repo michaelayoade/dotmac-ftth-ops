@@ -19,8 +19,6 @@ from unittest.mock import Mock, patch
 
 from fastapi import FastAPI
 
-from dotmac.platform.version import get_version
-
 from dotmac.platform.telemetry import (
     configure_structlog,
     create_resource,
@@ -33,7 +31,7 @@ from dotmac.platform.telemetry import (
     setup_telemetry,
     setup_tracing,
 )
-
+from dotmac.platform.version import get_version
 
 CURRENT_VERSION = get_version()
 

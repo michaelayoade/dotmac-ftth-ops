@@ -5,7 +5,10 @@ Provides efficient payment queries with batched loading of related
 customer and invoice data via DataLoaders.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from uuid import UUID
 
@@ -60,12 +63,9 @@ class PaymentQueries:
             return None
 
         # Fetch payment
-        stmt = (
-            select(PaymentEntity)
-            .where(
-                PaymentEntity.payment_id == payment_id,
-                PaymentEntity.tenant_id == tenant_id,
-            )
+        stmt = select(PaymentEntity).where(
+            PaymentEntity.payment_id == payment_id,
+            PaymentEntity.tenant_id == tenant_id,
         )
         result = await db.execute(stmt)
         payment_entity = result.scalar_one_or_none()
@@ -215,28 +215,26 @@ class PaymentQueries:
                         invoice_idx += 1
 
         # Calculate aggregated metrics from the filtered set
-        metrics_stmt = (
-            select(
-                func.sum(PaymentEntity.amount).label("total"),
-                func.sum(
-                    case(
-                        (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
-                        else_=0,
-                    )
-                ).label("succeeded"),
-                func.sum(
-                    case(
-                        (PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount),
-                        else_=0,
-                    )
-                ).label("pending"),
-                func.sum(
-                    case(
-                        (PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount),
-                        else_=0,
-                    )
-                ).label("failed"),
-            )
+        metrics_stmt = select(
+            func.sum(PaymentEntity.amount).label("total"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("succeeded"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("pending"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("failed"),
         )
 
         metrics_stmt = metrics_stmt.where(PaymentEntity.tenant_id == tenant_id)
@@ -299,18 +297,12 @@ class PaymentQueries:
         # Build base query
         stmt = select(
             func.count(PaymentEntity.payment_id).label("total"),
-            func.count(
-                case((PaymentEntity.status == PaymentStatus.SUCCEEDED, 1))
-            ).label("succeeded"),
-            func.count(
-                case((PaymentEntity.status == PaymentStatus.PENDING, 1))
-            ).label("pending"),
-            func.count(
-                case((PaymentEntity.status == PaymentStatus.FAILED, 1))
-            ).label("failed"),
-            func.count(
-                case((PaymentEntity.status == PaymentStatus.REFUNDED, 1))
-            ).label("refunded"),
+            func.count(case((PaymentEntity.status == PaymentStatus.SUCCEEDED, 1))).label(
+                "succeeded"
+            ),
+            func.count(case((PaymentEntity.status == PaymentStatus.PENDING, 1))).label("pending"),
+            func.count(case((PaymentEntity.status == PaymentStatus.FAILED, 1))).label("failed"),
+            func.count(case((PaymentEntity.status == PaymentStatus.REFUNDED, 1))).label("refunded"),
             func.sum(
                 case(
                     (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),

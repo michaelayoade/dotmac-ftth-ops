@@ -8,10 +8,10 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.radius.schemas import (
-    RADIUSSubscriberCreate,
-    RADIUSSubscriberUpdate,
-    RADIUSSubscriberResponse,
     RADIUSSessionResponse,
+    RADIUSSubscriberCreate,
+    RADIUSSubscriberResponse,
+    RADIUSSubscriberUpdate,
 )
 
 

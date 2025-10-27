@@ -11,12 +11,12 @@ Tests the complete subscription lifecycle including:
 - Renewal processing
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from sqlalchemy.ext.asyncio import AsyncSession
+import pytest_asyncio
 
 from dotmac.platform.billing.models import (
     BillingSubscriptionEventTable,
@@ -25,38 +25,38 @@ from dotmac.platform.billing.models import (
 )
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
-    SubscriptionPlanCreateRequest,
     SubscriptionCreateRequest,
+    SubscriptionPlanCreateRequest,
     SubscriptionStatus,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def subscription_service(async_db_session):
     """Create subscription service with database session."""
     return SubscriptionService(db_session=async_db_session)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant_id():
     """Generate test tenant ID."""
     return str(uuid4())
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_customer_id():
     """Generate test customer ID."""
     return str(uuid4())
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_product_id():
     """Generate test product ID."""
     return str(uuid4())
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def basic_plan(subscription_service, test_tenant_id, test_product_id):
     """Create a basic monthly subscription plan."""
     plan_request = SubscriptionPlanCreateRequest(
@@ -73,7 +73,7 @@ async def basic_plan(subscription_service, test_tenant_id, test_product_id):
     return plan
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def premium_plan(subscription_service, test_tenant_id, test_product_id):
     """Create a premium monthly subscription plan."""
     plan_request = SubscriptionPlanCreateRequest(
@@ -120,6 +120,7 @@ class TestSubscriptionPlanManagement:
 
         # Verify in database using query instead of get (composite PK issue)
         from sqlalchemy import select
+
         result = await async_db_session.execute(
             select(BillingSubscriptionPlanTable).where(
                 BillingSubscriptionPlanTable.plan_id == plan.plan_id
@@ -130,13 +131,9 @@ class TestSubscriptionPlanManagement:
         assert db_plan.name == "Test Plan"
 
     @pytest.mark.asyncio
-    async def test_list_plans(
-        self, subscription_service, basic_plan, premium_plan
-    ):
+    async def test_list_plans(self, subscription_service, basic_plan, premium_plan):
         """Test listing subscription plans."""
-        plans = await subscription_service.list_plans(
-            tenant_id=basic_plan.tenant_id
-        )
+        plans = await subscription_service.list_plans(tenant_id=basic_plan.tenant_id)
 
         assert len(plans) >= 2
         plan_names = {p.name for p in plans}
@@ -144,13 +141,10 @@ class TestSubscriptionPlanManagement:
         assert "Premium Monthly Plan" in plan_names
 
     @pytest.mark.asyncio
-    async def test_get_plan_by_id(
-        self, subscription_service, basic_plan
-    ):
+    async def test_get_plan_by_id(self, subscription_service, basic_plan):
         """Test retrieving a plan by ID."""
         plan = await subscription_service.get_plan(
-            plan_id=basic_plan.plan_id,
-            tenant_id=basic_plan.tenant_id
+            plan_id=basic_plan.plan_id, tenant_id=basic_plan.tenant_id
         )
 
         assert plan is not None
@@ -172,8 +166,7 @@ class TestSubscriptionLifecycle:
         )
 
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         assert subscription is not None
@@ -184,11 +177,12 @@ class TestSubscriptionLifecycle:
         assert subscription.trial_end is not None
 
         # Trial should be 14 days from now
-        expected_trial_end = datetime.now(UTC) + timedelta(days=14)
+        expected_trial_end = datetime.now(timezone.utc) + timedelta(days=14)
         assert abs((subscription.trial_end - expected_trial_end).total_seconds()) < 60
 
         # Verify in database using query instead of get (composite PK issue)
         from sqlalchemy import select
+
         result = await async_db_session.execute(
             select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.subscription_id == subscription.subscription_id
@@ -200,8 +194,12 @@ class TestSubscriptionLifecycle:
 
     @pytest.mark.asyncio
     async def test_create_subscription_no_trial(
-        self, subscription_service, test_tenant_id, test_customer_id,
-        test_product_id, async_db_session
+        self,
+        subscription_service,
+        test_tenant_id,
+        test_customer_id,
+        test_product_id,
+        async_db_session,
     ):
         """Test creating a subscription without trial period."""
         # Create plan with no trial
@@ -222,8 +220,7 @@ class TestSubscriptionLifecycle:
             plan_id=plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=test_tenant_id
+            subscription_request, tenant_id=test_tenant_id
         )
 
         assert subscription.status == SubscriptionStatus.ACTIVE
@@ -240,8 +237,7 @@ class TestSubscriptionLifecycle:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         # Cancel at period end
@@ -268,8 +264,7 @@ class TestSubscriptionLifecycle:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         # Cancel immediately
@@ -295,8 +290,7 @@ class TestSubscriptionLifecycle:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         await subscription_service.cancel_subscription(
@@ -331,12 +325,15 @@ class TestPlanChanges:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         # Upgrade to premium
-        from dotmac.platform.billing.subscriptions.models import SubscriptionPlanChangeRequest, ProrationBehavior
+        from dotmac.platform.billing.subscriptions.models import (
+            ProrationBehavior,
+            SubscriptionPlanChangeRequest,
+        )
+
         change_request = SubscriptionPlanChangeRequest(
             new_plan_id=premium_plan.plan_id,
             proration_behavior=ProrationBehavior.CREATE_PRORATIONS,
@@ -363,12 +360,15 @@ class TestPlanChanges:
             plan_id=premium_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=premium_plan.tenant_id
+            subscription_request, tenant_id=premium_plan.tenant_id
         )
 
         # Downgrade to basic
-        from dotmac.platform.billing.subscriptions.models import SubscriptionPlanChangeRequest, ProrationBehavior
+        from dotmac.platform.billing.subscriptions.models import (
+            ProrationBehavior,
+            SubscriptionPlanChangeRequest,
+        )
+
         change_request = SubscriptionPlanChangeRequest(
             new_plan_id=basic_plan.plan_id,
             proration_behavior=ProrationBehavior.CREATE_PRORATIONS,
@@ -397,8 +397,7 @@ class TestUsageTracking:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         # Record usage - API requires separate records for each metric
@@ -480,12 +479,12 @@ class TestSubscriptionEvents:
             plan_id=basic_plan.plan_id,
         )
         subscription = await subscription_service.create_subscription(
-            subscription_request,
-            tenant_id=basic_plan.tenant_id
+            subscription_request, tenant_id=basic_plan.tenant_id
         )
 
         # Check for CREATED event
         from sqlalchemy import select
+
         result = await async_db_session.execute(
             select(BillingSubscriptionEventTable).where(
                 BillingSubscriptionEventTable.subscription_id == subscription.subscription_id
@@ -522,7 +521,9 @@ async def test_complete_subscription_workflow(
         trial_days=14,
         is_active=True,
     )
-    basic_plan = await subscription_service.create_plan(basic_plan_request, tenant_id=test_tenant_id)
+    basic_plan = await subscription_service.create_plan(
+        basic_plan_request, tenant_id=test_tenant_id
+    )
 
     premium_plan_request = SubscriptionPlanCreateRequest(
         product_id=test_product_id,
@@ -533,7 +534,9 @@ async def test_complete_subscription_workflow(
         trial_days=7,
         is_active=True,
     )
-    premium_plan = await subscription_service.create_plan(premium_plan_request, tenant_id=test_tenant_id)
+    premium_plan = await subscription_service.create_plan(
+        premium_plan_request, tenant_id=test_tenant_id
+    )
 
     # Step 2: Subscribe to basic plan
     subscription_request = SubscriptionCreateRequest(
@@ -541,13 +544,16 @@ async def test_complete_subscription_workflow(
         plan_id=basic_plan.plan_id,
     )
     subscription = await subscription_service.create_subscription(
-        subscription_request,
-        tenant_id=test_tenant_id
+        subscription_request, tenant_id=test_tenant_id
     )
     assert subscription.status == SubscriptionStatus.TRIALING
 
     # Step 3: Upgrade to premium
-    from dotmac.platform.billing.subscriptions.models import SubscriptionPlanChangeRequest, ProrationBehavior
+    from dotmac.platform.billing.subscriptions.models import (
+        ProrationBehavior,
+        SubscriptionPlanChangeRequest,
+    )
+
     change_request = SubscriptionPlanChangeRequest(
         new_plan_id=premium_plan.plan_id,
         proration_behavior=ProrationBehavior.CREATE_PRORATIONS,
@@ -605,8 +611,8 @@ async def test_complete_subscription_workflow(
     assert reactivated_subscription.status == SubscriptionStatus.ACTIVE
 
     print("\n✅ Complete E2E subscription workflow test passed!")
-    print(f"  - Created 2 plans")
+    print("  - Created 2 plans")
     print(f"  - Created subscription: {subscription.subscription_id}")
     print(f"  - Upgraded plan: {basic_plan.name} → {premium_plan.name}")
-    print(f"  - Recorded usage: api_calls=5000, storage_gb=50")
-    print(f"  - Canceled and reactivated successfully")
+    print("  - Recorded usage: api_calls=5000, storage_gb=50")
+    print("  - Canceled and reactivated successfully")

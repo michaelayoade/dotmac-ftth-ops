@@ -4,22 +4,22 @@ Tests for Orchestration Service
 Unit tests for orchestration service business logic with mocked dependencies.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from dotmac.platform.orchestration.service import OrchestrationService
+import pytest
+
 from dotmac.platform.orchestration.models import (
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
 )
 from dotmac.platform.orchestration.schemas import (
-    ProvisionSubscriberRequest,
-    DeprovisionSubscriberRequest,
     ActivateServiceRequest,
+    DeprovisionSubscriberRequest,
+    ProvisionSubscriberRequest,
     SuspendServiceRequest,
 )
+from dotmac.platform.orchestration.service import OrchestrationService
 
 
 class TestOrchestrationServiceInitialization:
@@ -42,7 +42,7 @@ class TestOrchestrationServiceInitialization:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers") as mock_register:
-            service = OrchestrationService(db, "tenant-1")
+            OrchestrationService(db, "tenant-1")
             mock_register.assert_called_once()
 
 
@@ -70,7 +70,9 @@ class TestProvisionSubscriberWorkflow:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_provision_subscriber_workflow") as mock_workflow:
+            with patch(
+                "dotmac.platform.orchestration.service.get_provision_subscriber_workflow"
+            ) as mock_workflow:
                 service = OrchestrationService(db, tenant_id)
 
                 # Create a real workflow object to return from saga
@@ -126,22 +128,26 @@ class TestProvisionSubscriberWorkflow:
             with patch("dotmac.platform.orchestration.service.get_provision_subscriber_workflow"):
                 service = OrchestrationService(db, "tenant-1")
 
-                service.saga.execute_workflow = AsyncMock(return_value=MagicMock(
-                    workflow_id="wf-ipv6",
-                    status=WorkflowStatus.COMPLETED,
-                    output_data={
-                        "customer_id": "cust-ipv6",
-                        "ipv6_configured": True,
-                    },
-                ))
+                service.saga.execute_workflow = AsyncMock(
+                    return_value=MagicMock(
+                        workflow_id="wf-ipv6",
+                        status=WorkflowStatus.COMPLETED,
+                        output_data={
+                            "customer_id": "cust-ipv6",
+                            "ipv6_configured": True,
+                        },
+                    )
+                )
 
-                result = await service.provision_subscriber(request)
+                await service.provision_subscriber(request)
 
                 # Verify IPv6 data was included
                 call_args = db.add.call_args
                 if call_args:
                     workflow = call_args[0][0]
-                    assert "ipv6_address" in workflow.input_data or "username" in workflow.input_data
+                    assert (
+                        "ipv6_address" in workflow.input_data or "username" in workflow.input_data
+                    )
 
 
 @pytest.mark.asyncio
@@ -161,17 +167,19 @@ class TestDeprovisionSubscriberWorkflow:
             with patch("dotmac.platform.orchestration.service.get_deprovision_subscriber_workflow"):
                 service = OrchestrationService(db, "tenant-1")
 
-                service.saga.execute_workflow = AsyncMock(return_value=MagicMock(
-                    workflow_id="wf-deprov",
-                    status=WorkflowStatus.COMPLETED,
-                    output_data={
-                        "deprovisioned": True,
-                        "radius_deleted": True,
-                        "customer_deleted": True,
-                    },
-                ))
+                service.saga.execute_workflow = AsyncMock(
+                    return_value=MagicMock(
+                        workflow_id="wf-deprov",
+                        status=WorkflowStatus.COMPLETED,
+                        output_data={
+                            "deprovisioned": True,
+                            "radius_deleted": True,
+                            "customer_deleted": True,
+                        },
+                    )
+                )
 
-                result = await service.deprovision_subscriber(request)
+                await service.deprovision_subscriber(request)
 
                 assert db.add.called
                 assert db.commit.called
@@ -194,13 +202,15 @@ class TestActivateServiceWorkflow:
             with patch("dotmac.platform.orchestration.service.get_activate_service_workflow"):
                 service = OrchestrationService(db, "tenant-1")
 
-                service.saga.execute_workflow = AsyncMock(return_value=MagicMock(
-                    workflow_id="wf-activate",
-                    status=WorkflowStatus.COMPLETED,
-                    output_data={"activated": True},
-                ))
+                service.saga.execute_workflow = AsyncMock(
+                    return_value=MagicMock(
+                        workflow_id="wf-activate",
+                        status=WorkflowStatus.COMPLETED,
+                        output_data={"activated": True},
+                    )
+                )
 
-                result = await service.activate_service(request)
+                await service.activate_service(request)
 
                 assert db.add.called
 
@@ -222,13 +232,15 @@ class TestSuspendServiceWorkflow:
             with patch("dotmac.platform.orchestration.service.get_suspend_service_workflow"):
                 service = OrchestrationService(db, "tenant-1")
 
-                service.saga.execute_workflow = AsyncMock(return_value=MagicMock(
-                    workflow_id="wf-suspend",
-                    status=WorkflowStatus.COMPLETED,
-                    output_data={"suspended": True},
-                ))
+                service.saga.execute_workflow = AsyncMock(
+                    return_value=MagicMock(
+                        workflow_id="wf-suspend",
+                        status=WorkflowStatus.COMPLETED,
+                        output_data={"suspended": True},
+                    )
+                )
 
-                result = await service.suspend_service(request)
+                await service.suspend_service(request)
 
                 assert db.add.called
 
@@ -291,7 +303,9 @@ class TestWorkflowManagement:
         ]
 
         db.query.return_value.filter.return_value.count.return_value = 5
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_workflows[:3]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_workflows[
+            :3
+        ]
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
             service = OrchestrationService(db, "tenant-1")
@@ -383,7 +397,7 @@ class TestWorkflowRetry:
 
                 mock_get_def.return_value = {"name": "provision_subscriber", "steps": []}
 
-                result = await service.retry_workflow("wf-failed")
+                await service.retry_workflow("wf-failed")
 
                 assert service.saga.retry_failed_workflow.called
                 assert db.commit.called
@@ -410,7 +424,9 @@ class TestWorkflowRetry:
             service = OrchestrationService(db, "tenant-1")
 
             # Mock saga to raise error
-            service.saga.retry_failed_workflow = AsyncMock(side_effect=ValueError("Max retries exceeded"))
+            service.saga.retry_failed_workflow = AsyncMock(
+                side_effect=ValueError("Max retries exceeded")
+            )
 
             with pytest.raises(ValueError, match="Max retries exceeded"):
                 await service.retry_workflow("wf-exhausted")
@@ -441,7 +457,7 @@ class TestWorkflowCancellation:
             # Mock saga cancel
             service.saga.cancel_workflow = AsyncMock(return_value=mock_workflow)
 
-            result = await service.cancel_workflow("wf-running")
+            await service.cancel_workflow("wf-running")
 
             assert service.saga.cancel_workflow.called
             assert db.commit.called
@@ -465,7 +481,9 @@ class TestWorkflowCancellation:
             service = OrchestrationService(db, "tenant-1")
 
             # Mock saga to raise error
-            service.saga.cancel_workflow = AsyncMock(side_effect=ValueError("Cannot cancel completed workflow"))
+            service.saga.cancel_workflow = AsyncMock(
+                side_effect=ValueError("Cannot cancel completed workflow")
+            )
 
             with pytest.raises(ValueError, match="Cannot cancel"):
                 await service.cancel_workflow("wf-completed")

@@ -5,6 +5,7 @@ Configures OTLP exporters and auto-instrumentation for FastAPI, SQLAlchemy, and 
 """
 
 import os
+import warnings
 from collections.abc import Sequence
 from weakref import WeakSet
 
@@ -30,6 +31,14 @@ from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 from structlog.typing import Processor
 
 from dotmac.platform.settings import settings
+
+# Silence third-party deprecation warning (OpenTelemetry still imports pkg_resources internally)
+warnings.filterwarnings(
+    "ignore",
+    category=UserWarning,
+    message="pkg_resources is deprecated as an API",
+    module="opentelemetry.instrumentation.dependencies",
+)
 
 # Track which FastAPI apps have already been instrumented to avoid duplicate middleware wiring.
 _FASTAPI_INSTRUMENTED_APPS: "WeakSet[FastAPI]" = WeakSet()
@@ -331,9 +340,7 @@ def instrument_libraries(app: FastAPI | None = None) -> None:
                         "Failed to instrument FastAPI", error=message
                     )
             except Exception as e:
-                structlog.get_logger(__name__).warning(
-                    "Failed to instrument FastAPI", error=str(e)
-                )
+                structlog.get_logger(__name__).warning("Failed to instrument FastAPI", error=str(e))
     elif app:
         structlog.get_logger(__name__).debug("FastAPI instrumentation disabled by settings")
 

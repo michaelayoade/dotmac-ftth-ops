@@ -4,7 +4,7 @@ Final comprehensive tests for secrets/metrics_router.py to achieve 90%+ coverage
 Approach: Patch the cached function directly to bypass cache and test calculation logic.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -56,7 +56,7 @@ def create_mock_activity(
     mock.activity_type = activity_type
     mock.user_id = user_id
     mock.resource_id = resource_id
-    mock.timestamp = timestamp or datetime.now(UTC)
+    mock.timestamp = timestamp or datetime.now(timezone.utc)
     mock.created_at = mock.timestamp
     mock.details = details or {}
     mock.action = action
@@ -75,7 +75,7 @@ class TestSecretsMetricsEndpointWithMocks:
         mock_session = AsyncMock()
 
         # Create mock activities
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         mock_activities = [
             create_mock_activity(
                 ActivityType.SECRET_ACCESSED, "user1", "db/password", now - timedelta(days=1)
@@ -112,7 +112,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         def mock_execute(query):
             """Return different results based on query."""
@@ -161,7 +161,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create activities with failed access indicators
         failed_activities = [
@@ -199,7 +199,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create activities at different hours
         activities = [
@@ -233,7 +233,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # User1: 5 accesses, User2: 3 accesses
         activities = []
@@ -278,7 +278,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # secret-1: 4 accesses, secret-2: 2 accesses
         activities = []
@@ -323,7 +323,7 @@ class TestSecretsMetricsEndpointWithMocks:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         def mock_execute(query):
             mock_result = Mock()
@@ -455,7 +455,7 @@ class TestSecretsMetricsCalculationDirect:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create mock activities
         mock_activities = [
@@ -489,7 +489,7 @@ class TestSecretsMetricsCalculationDirect:
         from dotmac.platform.audit.models import ActivityType
 
         mock_session = AsyncMock()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         def mock_execute(query):
             mock_result = Mock()
@@ -540,7 +540,7 @@ class TestSecretsMetricsResponseModel:
             "secrets_created_last_7d": 2,
             "secrets_deleted_last_7d": 1,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         response = SecretsMetricsResponse(**data)
@@ -568,7 +568,7 @@ class TestSecretsMetricsResponseModel:
             "secrets_created_last_7d": 0,
             "secrets_deleted_last_7d": 0,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         response = SecretsMetricsResponse(**data)

@@ -2,18 +2,13 @@
 Integration tests for Sales Order API
 """
 
-import pytest
-from fastapi.testclient import TestClient
 from decimal import Decimal
 
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from dotmac.platform.sales.models import Order, OrderStatus, ServiceActivation
-from dotmac.platform.sales.schemas import (
-    OrderCreate,
-    OrderSubmit,
-    QuickOrderRequest,
-)
+
 from .conftest import create_order, create_service_activation
 
 
@@ -338,9 +333,7 @@ class TestActivationAPI:
         sample_service_activations: list[ServiceActivation],
     ):
         """Test getting activation progress"""
-        response = auth_client.get(
-            f"/api/v1/orders/{sample_order.id}/activations/progress"
-        )
+        response = auth_client.get(f"/api/v1/orders/{sample_order.id}/activations/progress")
 
         assert response.status_code == 200
         data = response.json()
@@ -368,9 +361,7 @@ class TestActivationAPI:
             activation_status="failed",
         )
 
-        response = auth_client.post(
-            f"/api/v1/orders/{sample_order.id}/activations/retry"
-        )
+        response = auth_client.post(f"/api/v1/orders/{sample_order.id}/activations/retry")
 
         assert response.status_code == 200
         data = response.json()
@@ -383,9 +374,7 @@ class TestActivationAPI:
         sample_order: Order,
     ):
         """Test retrying when no failed activations"""
-        response = auth_client.post(
-            f"/api/v1/orders/{sample_order.id}/activations/retry"
-        )
+        response = auth_client.post(f"/api/v1/orders/{sample_order.id}/activations/retry")
 
         assert response.status_code == 200
         data = response.json()

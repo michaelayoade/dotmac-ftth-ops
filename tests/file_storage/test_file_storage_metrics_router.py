@@ -5,7 +5,7 @@ Tests caching, rate limiting, tenant isolation, and error handling
 for the file storage statistics endpoint.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -18,7 +18,7 @@ class TestFileStorageStatsEndpoint:
     @pytest.fixture
     def mock_file_metadata(self):
         """Create mock file metadata."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return [
             MagicMock(
                 file_id="1",
@@ -65,7 +65,7 @@ class TestFileStorageStatsEndpoint:
                 "other_size_mb": 56.0,
                 "avg_file_size_mb": 10.24,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -104,7 +104,7 @@ class TestFileStorageStatsEndpoint:
                 "other_size_mb": 0.5,
                 "avg_file_size_mb": 1.0,
                 "period": "7d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -136,7 +136,7 @@ class TestFileStorageStatsEndpoint:
                 "other_size_mb": 0.0,
                 "avg_file_size_mb": 0.0,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -204,7 +204,7 @@ class TestFileStorageStatsEndpoint:
                 "other_size_mb": 5.0,
                 "avg_file_size_mb": 1.0,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
             mock_cached.return_value = mock_data
 
@@ -245,7 +245,7 @@ class TestFileStorageStatsTenantIsolation:
                 "other_size_mb": 0.5,
                 "avg_file_size_mb": 1.0,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(

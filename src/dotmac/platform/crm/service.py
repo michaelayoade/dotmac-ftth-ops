@@ -9,7 +9,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -531,8 +531,12 @@ class QuoteService:
 
         # Extract subscription details
         service_plan_name = subscription_data.get("plan_name", "Subscription Renewal")
-        bandwidth = subscription_data.get("bandwidth", subscription_data.get("service_plan_speed", "N/A"))
-        monthly_recurring_charge = Decimal(str(subscription_data.get("amount", subscription_data.get("renewal_price", "0"))))
+        bandwidth = subscription_data.get(
+            "bandwidth", subscription_data.get("service_plan_speed", "N/A")
+        )
+        monthly_recurring_charge = Decimal(
+            str(subscription_data.get("amount", subscription_data.get("renewal_price", "0")))
+        )
         billing_cycle = subscription_data.get("billing_cycle", "monthly")
         contract_term_months = subscription_data.get("contract_term_months", 12)
 
@@ -575,7 +579,9 @@ class QuoteService:
             "renewal": True,
             "customer_id": str(customer_id),
             "subscription_id": subscription_data.get("subscription_id"),
-            "original_price": str(subscription_data.get("amount", subscription_data.get("renewal_price", "0"))),
+            "original_price": str(
+                subscription_data.get("amount", subscription_data.get("renewal_price", "0"))
+            ),
             "discount_percentage": str(discount_percentage) if discount_percentage else None,
             "billing_cycle": billing_cycle,
         }
@@ -626,7 +632,9 @@ class QuoteService:
             valid_until=valid_until,
             line_items=line_items,
             metadata_=metadata,
-            notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount" if discount_percentage else "Renewal quote for existing customer",
+            notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount"
+            if discount_percentage
+            else "Renewal quote for existing customer",
             created_by=str(created_by_id) if created_by_id else None,
         )
 

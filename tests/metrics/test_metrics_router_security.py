@@ -1,6 +1,7 @@
+from unittest.mock import AsyncMock
+
 import pytest
 from fastapi import HTTPException
-from unittest.mock import AsyncMock
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.metrics.router import (

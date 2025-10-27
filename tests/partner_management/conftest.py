@@ -11,11 +11,11 @@ from sqlalchemy.pool import StaticPool
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 
-from dotmac.platform.db import Base
 from dotmac.platform.auth.models import user_roles  # noqa: F401
-from dotmac.platform.user_management.models import User  # noqa: F401
 from dotmac.platform.billing.core.entities import InvoiceEntity  # noqa: F401
+from dotmac.platform.db import Base
 from dotmac.platform.tenant import set_current_tenant_id
+from dotmac.platform.user_management.models import User  # noqa: F401
 from tests.test_utils import TenantContext
 
 # Import partner management models to ensure they're registered

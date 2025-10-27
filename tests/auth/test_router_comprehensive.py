@@ -10,11 +10,12 @@ Targets uncovered lines in router.py focusing on:
 - Cookie-based auth
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -24,7 +25,7 @@ from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):
     """Create a test user in the database."""
     user = User(
@@ -38,8 +39,8 @@ async def test_user(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -128,8 +129,8 @@ async def test_login_inactive_user(router_app: FastAPI, async_db_session):
         is_active=False,  # Account disabled
         is_verified=True,
         mfa_enabled=False,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(inactive_user)
     await async_db_session.commit()

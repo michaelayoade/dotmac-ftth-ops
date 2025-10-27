@@ -41,6 +41,7 @@ class ONUProvisionResult(BaseModel):
     """Result of the provisioning workflow."""
 
     success: bool
+    onu_id: str | None = None
     message: str | None = None
     applied_config: dict[str, Any] = Field(default_factory=dict)
 
@@ -195,5 +196,4 @@ class BaseOLTDriver(abc.ABC):
 class Tr069ACSClient(Protocol):
     """Minimal protocol describing the TR-069 ACS interactions drivers expect."""
 
-    async def apply_profile(self, serial_number: str, profile: dict[str, Any]) -> None:
-        ...
+    async def apply_profile(self, serial_number: str, profile: dict[str, Any]) -> None: ...

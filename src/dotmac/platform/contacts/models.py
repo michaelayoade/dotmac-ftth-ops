@@ -30,7 +30,6 @@ from sqlalchemy.sql import func
 from dotmac.platform.db import Base
 from dotmac.platform.db.types import JSONBCompat
 
-
 # Association table for many-to-many contact labels
 contact_to_labels = Table(
     "contact_to_labels",

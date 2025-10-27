@@ -46,7 +46,9 @@ class ProvisionPayload(BaseModel):
     subscriber_id: str | None = Field(default=None, description="Optional subscriber identifier")
     vlan: int | None = Field(default=None, description="Service VLAN")
     line_profile_id: str | None = Field(default=None, description="Driver-specific line profile")
-    service_profile_id: str | None = Field(default=None, description="Driver-specific service profile")
+    service_profile_id: str | None = Field(
+        default=None, description="Driver-specific service profile"
+    )
     bandwidth_profile: str | None = Field(default=None, description="Bandwidth profile name")
 
 
@@ -93,10 +95,14 @@ async def list_logical_devices(service: AccessServiceDep) -> LogicalDeviceListRe
 
 
 @router.get("/logical-devices/{device_id}", response_model=LogicalDeviceDetailResponse)
-async def get_logical_device(device_id: str, service: AccessServiceDep) -> LogicalDeviceDetailResponse:
+async def get_logical_device(
+    device_id: str, service: AccessServiceDep
+) -> LogicalDeviceDetailResponse:
     detail = await service.get_logical_device(device_id)
     if not detail:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Logical device not found")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Logical device not found"
+        )
     return detail
 
 
@@ -122,7 +128,9 @@ async def operate_device(
 ) -> dict[str, bool]:
     success = await service.operate_device(device_id, operation, olt_id)
     if not success:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Operation not supported")
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED, detail="Operation not supported"
+        )
     return {"success": True}
 
 
@@ -135,7 +143,14 @@ async def get_alarms_v2(service: AccessServiceDep) -> VOLTHAAlarmListResponse:
 async def get_device_alarms(device_id: str, service: AccessServiceDep) -> VOLTHAAlarmListResponse:
     alarms = await service.get_alarms_v2()
     filtered = [alarm for alarm in alarms.alarms if alarm.resource_id == device_id]
-    return VOLTHAAlarmListResponse(alarms=filtered, total=len(filtered))
+    active = sum(1 for alarm in filtered if alarm.state != "CLEARED")
+    cleared = sum(1 for alarm in filtered if alarm.state == "CLEARED")
+    return VOLTHAAlarmListResponse(
+        alarms=filtered,
+        total=len(filtered),
+        active=active,
+        cleared=cleared
+    )
 
 
 @router.post("/alarms/{alarm_id}/acknowledge")
@@ -179,7 +194,10 @@ async def list_onus(olt_id: str, service: AccessServiceDep) -> list[DeviceDiscov
     try:
         return await service.list_onus(olt_id)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc
 
 
 @router.get("/olts/{olt_id}/metrics", response_model=OltMetrics)
@@ -187,7 +205,10 @@ async def collect_metrics(olt_id: str, service: AccessServiceDep) -> OltMetrics:
     try:
         return await service.collect_metrics(olt_id)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc
 
 
 @router.get("/olts/{olt_id}/alarms", response_model=list[OLTAlarm])
@@ -195,7 +216,10 @@ async def fetch_alarms(olt_id: str, service: AccessServiceDep) -> list[OLTAlarm]
     try:
         return await service.fetch_alarms(olt_id)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc
 
 
 @router.post("/olts/{olt_id}/onus", response_model=ONUProvisionResult)
@@ -220,7 +244,10 @@ async def provision_onu(
     try:
         return await service.provision_onu(olt_id, request)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc
 
 
 @router.delete("/olts/{olt_id}/onus/{onu_id}", response_model=bool)
@@ -228,7 +255,10 @@ async def remove_onu(olt_id: str, onu_id: str, service: AccessServiceDep) -> boo
     try:
         return await service.remove_onu(olt_id, onu_id)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc
 
 
 @router.post("/olts/{olt_id}/onus/{onu_id}/service-profile", response_model=ONUProvisionResult)
@@ -241,4 +271,7 @@ async def apply_service_profile(
     try:
         return await service.apply_service_profile(olt_id, onu_id, profile)
     except NotImplementedError as exc:
-        raise HTTPException(status_code=status.HTTP_501_NOT_IMPLEMENTED, detail=str(exc) or "Operation not supported") from exc
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail=str(exc) or "Operation not supported",
+        ) from exc

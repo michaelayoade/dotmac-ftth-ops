@@ -9,7 +9,7 @@ Tests the complete flow:
 5. Query Handler → Read Models
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -284,10 +284,10 @@ class TestInvoiceQueryE2E:
         mock_invoice.remaining_balance = 100000
         mock_invoice.currency = "USD"
         mock_invoice.status = "draft"
-        mock_invoice.created_at = datetime.now(UTC)
-        mock_invoice.updated_at = datetime.now(UTC)
-        mock_invoice.issue_date = datetime.now(UTC)
-        mock_invoice.due_date = datetime.now(UTC) + timedelta(days=30)
+        mock_invoice.created_at = datetime.now(timezone.utc)
+        mock_invoice.updated_at = datetime.now(timezone.utc)
+        mock_invoice.issue_date = datetime.now(timezone.utc)
+        mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=30)
         mock_invoice.finalized_at = None
         mock_invoice.paid_at = None
         mock_invoice.voided_at = None

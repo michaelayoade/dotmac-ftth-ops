@@ -241,7 +241,7 @@ async def get_variant(name: str, context: dict[str, Any] | None = None) -> str:
 
     # Simple A/B test based on user_id hash
     if context and "user_id" in context:
-        digest = sha256(f"{name}:{context['user_id']}".encode("utf-8")).digest()
+        digest = sha256(f"{name}:{context['user_id']}".encode()).digest()
         bucket = int.from_bytes(digest[:8], "big") % 100
         return "variant_a" if bucket < 50 else "variant_b"
 

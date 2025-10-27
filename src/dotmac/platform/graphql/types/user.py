@@ -9,17 +9,16 @@ and profile change history via DataLoaders.
 
 # DEBUG sentinel
 
+from collections.abc import Sequence
 from datetime import datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Protocol, Sequence
+from typing import TYPE_CHECKING, Any, Protocol
 from uuid import UUID
 
 import strawberry
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
-    JSONScalar: TypeAlias = Any
+    type JSONScalar = Any
 else:
     from strawberry.scalars import JSON as JSONScalar
 
@@ -110,6 +109,8 @@ class UserModel(Protocol):
     metadata: dict[str, Any] | None
     teams: Sequence[Any] | None
     preferences: dict[str, Any] | None
+
+
 @strawberry.enum
 class UserStatusEnum(str, Enum):
     """User account status."""
@@ -245,7 +246,9 @@ class ProfileChangeRecord:
     ip_address: str | None
 
     @classmethod
-    def from_model(cls, record: ProfileChangeRecordModel, changed_by_username: str | None = None) -> "ProfileChangeRecord":
+    def from_model(
+        cls, record: ProfileChangeRecordModel, changed_by_username: str | None = None
+    ) -> "ProfileChangeRecord":
         """Convert SQLAlchemy ProfileChangeHistory model to GraphQL type."""
         return cls(
             id=strawberry.ID(str(record.id)),

@@ -5,7 +5,10 @@ Metric aggregation utilities for analytics processing.
 import statistics
 from collections import defaultdict, deque
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from .base import Metric

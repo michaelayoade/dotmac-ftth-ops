@@ -4,7 +4,10 @@ Communications router.
 FastAPI router for communications services.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from smtplib import SMTPException
 from typing import Any
 
@@ -447,9 +450,7 @@ async def cancel_bulk_email_job(
 
 
 @router.get("/tasks/{task_id}")
-async def get_task_status(
-    task_id: str, current_user: UserInfo = Depends(require_admin)
-) -> Any:
+async def get_task_status(task_id: str, current_user: UserInfo = Depends(require_admin)) -> Any:
     """Get the status of a background task."""
     task_service = get_task_service()
     return task_service.get_task_status(task_id)

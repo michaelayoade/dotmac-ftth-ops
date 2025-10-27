@@ -10,7 +10,7 @@ This file focuses on covering the gaps left by existing tests, particularly:
 - Overdue invoice checking
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -74,8 +74,8 @@ class TestInvoiceCreation:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -122,7 +122,7 @@ class TestInvoiceCreation:
             )
 
         # Due date should be 15 days from now
-        expected_due_date = datetime.now(UTC) + timedelta(days=15)
+        expected_due_date = datetime.now(timezone.utc) + timedelta(days=15)
         assert result.due_date.date() == expected_due_date.date()
 
     @pytest.mark.asyncio
@@ -142,7 +142,7 @@ class TestInvoiceCreation:
             )
 
         # Default should be 30 days
-        expected_due_date = datetime.now(UTC) + timedelta(days=30)
+        expected_due_date = datetime.now(timezone.utc) + timedelta(days=30)
         assert result.due_date.date() == expected_due_date.date()
 
 
@@ -176,8 +176,8 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -234,8 +234,8 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -274,8 +274,8 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -332,8 +332,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -377,8 +377,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -422,8 +422,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -474,8 +474,8 @@ class TestOverdueInvoices:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC) - timedelta(days=40),
-            due_date=datetime.now(UTC) - timedelta(days=10),  # 10 days overdue
+            issue_date=datetime.now(timezone.utc) - timedelta(days=40),
+            due_date=datetime.now(timezone.utc) - timedelta(days=10),  # 10 days overdue
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -497,8 +497,8 @@ class TestOverdueInvoices:
             customer_id="cust-456",
             billing_email="test2@example.com",
             billing_address={"street": "456 Oak Ave"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=200,
             tax_amount=20,
@@ -537,8 +537,8 @@ class TestOverdueInvoices:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC) - timedelta(days=40),
-            due_date=datetime.now(UTC) - timedelta(days=10),
+            issue_date=datetime.now(timezone.utc) - timedelta(days=40),
+            due_date=datetime.now(timezone.utc) - timedelta(days=10),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -592,7 +592,7 @@ class TestPrivateHelperMethods:
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
 
         # Create first invoice (use 6-digit padding to match service format)
         invoice1 = InvoiceEntity(
@@ -602,8 +602,8 @@ class TestPrivateHelperMethods:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,

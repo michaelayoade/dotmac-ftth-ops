@@ -5,7 +5,10 @@ Main FastAPI application entry point for DotMac Platform Services.
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -81,6 +84,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     import structlog
 
     logger = structlog.get_logger(__name__)
+    print("DotMac Platform Services starting...")
+
+    # Ensure telemetry is configured (lifespan may be used outside create_application)
+    try:
+        telemetry_configured = bool(getattr(app.state, "telemetry_configured", False))
+    except AttributeError:
+        telemetry_configured = False
+
+    if not telemetry_configured:
+        setup_telemetry(app)
+        if hasattr(app, "state"):
+            app.state.telemetry_configured = True
 
     # Structured startup event
     logger.info(
@@ -120,6 +135,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             failed_services=failed_services,
             emoji="❌",
         )
+        print(f"Required services unavailable: {', '.join(failed_services)}")
     elif not all_healthy:
         optional_failed = [c.name for c in checks if not c.required and not c.is_healthy]
         logger.warning(
@@ -127,8 +143,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             optional_failed_services=optional_failed,
             emoji="⚠️",
         )
+        print(f"Optional services unavailable: {', '.join(optional_failed)}")
     else:
         logger.info("service.startup.all_services_healthy", emoji="✅")
+        print("All services healthy")
 
     # Fail fast in production if required services are missing
     if not all_healthy:
@@ -138,6 +156,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
                 failed_services=failed_services,
                 environment=settings.environment,
             )
+            print("Startup failed due to required service outage")
             raise RuntimeError(f"Required services unavailable: {failed_services}")
         else:
             logger.warning(
@@ -146,6 +165,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
                     c.name for c in checks if not c.required and not c.is_healthy
                 ],
             )
+            print("Running in degraded mode")
 
     # Load secrets from Vault/OpenBao if configured
     try:
@@ -157,23 +177,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         if settings.is_production:
             logger.error("secrets.load.production_failure", error=str(e))
             raise
+        print(f"Using default secrets (Vault unavailable: {e})")
 
     # Initialize database
     try:
         init_db()
         logger.info("database.init.success", emoji="✅")
+        print("Database initialized")
     except Exception as e:
         logger.error("database.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production
         if settings.is_production:
             raise
+        print(f"Database initialization failed: {e}")
 
     # Initialize Redis
     try:
         await init_redis()
         logger.info("redis.init.success", emoji="✅")
+        print("Redis initialized")
     except Exception as e:
         logger.error("redis.init.failed", error=str(e), emoji="❌")
+        print(f"Redis initialization failed: {e}")
         raise
 
     # Seed RBAC permissions/roles after database init
@@ -196,11 +221,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.warning("auth.default_admin.failed", error=str(e), emoji="⚠️")
 
     logger.info("service.startup.complete", healthy=all_healthy, emoji="🎉")
+    print("Startup complete")
 
     yield
 
     # Shutdown with structured logging
     logger.info("service.shutdown.begin", emoji="👋")
+    print("Shutting down")
 
     # Cleanup Redis connections
     try:
@@ -232,6 +259,10 @@ def create_application() -> FastAPI:
         and settings.observability.otel_enabled
     ):
         setup_telemetry(app)
+        try:
+            app.state.telemetry_configured = True
+        except AttributeError:
+            pass
 
     # Get logger after telemetry is configured
     logger = structlog.get_logger(__name__)
@@ -239,32 +270,9 @@ def create_application() -> FastAPI:
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-    # Add TrustedHostMiddleware for host header validation
-    # Protects against host header poisoning attacks
-    if settings.trusted_hosts and len(settings.trusted_hosts) > 0:
-        logger.info(
-            "trusted_host_middleware_enabled",
-            trusted_hosts=settings.trusted_hosts,
-            count=len(settings.trusted_hosts),
-        )
-        app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
-    else:
-        # In production, require trusted_hosts to be set
-        if settings.is_production:
-            logger.error(
-                "trusted_hosts_not_configured_in_production",
-                deployment_mode=settings.DEPLOYMENT_MODE,
-            )
-            raise ValueError(
-                "TRUSTED_HOSTS must be configured in production. "
-                "Set the environment variable or add to settings. "
-                "Example: TRUSTED_HOSTS=example.com,api.example.com"
-            )
-        logger.warning(
-            "trusted_host_middleware_disabled",
-            reason="No trusted_hosts configured",
-            environment=settings.DEPLOYMENT_MODE,
-        )
+    # Enforce trusted host validation (defaults to wildcard in development)
+    allowed_hosts = settings.trusted_hosts if settings.trusted_hosts else ["*"]
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
     # Add error tracking middleware (should be early in the chain)
     # Tracks HTTP errors and exceptions in Prometheus
@@ -281,13 +289,11 @@ def create_application() -> FastAPI:
     if settings.DEPLOYMENT_MODE == "single_tenant":
         app.add_middleware(SingleTenantMiddleware)
 
-    # Add app boundary middleware to enforce platform/tenant route separation
-    # This runs after tenant context is set but before audit logging
-    # NOTE: Auth middleware runs via route dependencies, so user context is set in request.state
-    app.add_middleware(AppBoundaryMiddleware)
-
-    # Add audit context middleware for user tracking
+    # Add audit context middleware before boundary enforcement so user context is available
     app.add_middleware(AuditContextMiddleware)
+
+    # Add app boundary middleware to enforce platform/tenant route separation
+    app.add_middleware(AppBoundaryMiddleware)
 
     # Configure CORS last so it wraps responses generated by upstream middleware.
     if settings.cors.enabled:

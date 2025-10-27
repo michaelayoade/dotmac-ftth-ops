@@ -5,6 +5,7 @@ Tests for Two-Factor Authentication (2FA) endpoints.
 import uuid
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 
@@ -24,7 +25,7 @@ def app():
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session):
     """Create a test user in the database."""
     # Use ORM instead of raw SQL - let SQLAlchemy handle all fields
@@ -65,7 +66,7 @@ def mock_user_info(test_user):
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app, async_db_session, mock_user_info):
     """Create async test client."""
     from unittest.mock import AsyncMock, patch

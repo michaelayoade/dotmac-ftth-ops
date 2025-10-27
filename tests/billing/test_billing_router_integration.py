@@ -5,7 +5,7 @@ Strategy: Use REAL database, mock ONLY external APIs (payment providers, event b
 Focus: Test API contracts, authentication, validation, database integration
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -48,7 +48,7 @@ class TestPaymentsRouter:
         from dotmac.platform.billing.core.entities import PaymentEntity
 
         # Create test failed payments in database
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payment1 = PaymentEntity(
             tenant_id="test-tenant",  # Must match test_app tenant override
             amount=10000,  # $100
@@ -484,15 +484,15 @@ class TestRateLimiting:
         from dotmac.platform.core.rate_limiting import get_limiter, reset_limiter
         from dotmac.platform.settings import settings
 
-        # Ensure Redis URL is set for rate limiting storage (required for pytest-xdist)
-        # The rate limiter looks for RATE_LIMIT_STORAGE_URL, not REDIS_URL
-        redis_url = os.environ.get("REDIS_URL", "redis://localhost:6379/2")
-        os.environ["RATE_LIMIT_STORAGE_URL"] = redis_url
+        # Use in-memory storage for tests (Redis may not be available in test environment)
+        # This still validates rate limiting logic without requiring Redis infrastructure
+        storage_url = "memory://"
+        os.environ["RATE_LIMIT_STORAGE_URL"] = storage_url
 
         # Force reload settings to pick up the new environment variable
-        settings.rate_limit.storage_url = redis_url
+        settings.rate_limit.storage_url = storage_url
 
-        # Reset and recreate limiter with Redis storage
+        # Reset and recreate limiter with in-memory storage
         reset_limiter()
         limiter_instance = get_limiter()
         original_enabled = limiter_instance.enabled

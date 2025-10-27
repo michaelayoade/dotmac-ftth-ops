@@ -106,7 +106,8 @@ def tenant_id():
 @pytest.fixture
 def user_id():
     """Standard user ID for E2E tests."""
-    return "e2e-test-user"
+    # Use a fixed UUID for consistency across test runs
+    return "12345678-1234-5678-1234-567812345678"
 
 
 @pytest_asyncio.fixture
@@ -129,13 +130,13 @@ async def async_client(db_engine, tenant_id, user_id):
         expire_on_commit=False,
     )
 
-    # Create mock user
+    # Create mock user with admin permissions for e2e tests
     def mock_get_current_user():
         return UserInfo(
             user_id=user_id,
             tenant_id=tenant_id,
-            email=f"{user_id}@test.com",
-            permissions=[],
+            email="e2e-test@example.com",
+            permissions=["read", "write", "admin", "user:read", "user:write", "admin:read", "admin:write"],
         )
 
     # Create async generator for session override - creates a new session for each request
@@ -150,9 +151,31 @@ async def async_client(db_engine, tenant_id, user_id):
     # Patch get_current_tenant_id function to always return e2e tenant_id
     # This is necessary because some code calls get_current_tenant_id() as a function
     # rather than using it as a FastAPI dependency
-    from unittest.mock import patch
+    from unittest.mock import AsyncMock, patch
 
+    from dotmac.platform.auth.models import Role
     from dotmac.platform.db import get_session_dependency
+
+    # Mock RBAC service to return admin role for e2e user
+    async def mock_get_user_roles(self, user_id):
+        # Return mock admin role for e2e tests (self param needed for instance method)
+        from uuid import uuid4
+
+        admin_role = Role(
+            id=uuid4(),
+            name="admin",
+            display_name="Administrator",
+            description="Administrator role for e2e tests",
+        )
+        return [admin_role]
+
+    # Patch RBACService.get_user_roles
+    from dotmac.platform.auth import rbac_service
+
+    rbac_patch = patch.object(
+        rbac_service.RBACService, "get_user_roles", new=mock_get_user_roles
+    )
+    rbac_patch.start()
 
     # Override app dependencies
     app.dependency_overrides[get_async_session] = override_get_async_session
@@ -181,7 +204,35 @@ async def async_client(db_engine, tenant_id, user_id):
             yield client
     finally:
         # Stop patches
+        rbac_patch.stop()
         tenant_patch.stop()
         router_tenant_patch.stop()
         # Clear overrides after test
         app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def client(async_client):
+    """Alias for async_client for compatibility with tests using 'client' parameter."""
+    yield async_client
+
+
+@pytest.fixture
+def auth_headers(tenant_id, user_id):
+    """Auth headers for e2e tests."""
+    from dotmac.platform.auth.core import JWTService
+
+    jwt_service = JWTService(algorithm="HS256", secret="test-secret-key-for-e2e-tests")
+    test_token = jwt_service.create_access_token(
+        subject=user_id,  # Use UUID from user_id fixture
+        additional_claims={
+            "scopes": ["read", "write", "admin"],
+            "tenant_id": tenant_id,
+            "email": "e2e-test@example.com",
+        },
+    )
+
+    return {
+        "Authorization": f"Bearer {test_token}",
+        "X-Tenant-ID": tenant_id,
+    }

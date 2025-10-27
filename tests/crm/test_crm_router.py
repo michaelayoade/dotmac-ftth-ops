@@ -5,6 +5,7 @@ Tests for BSS Phase 1 CRM endpoints including leads, quotes, and site surveys.
 """
 
 from datetime import datetime
+from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
@@ -87,7 +88,7 @@ class TestLeadEndpoints:
         """Test listing leads."""
         # Create test leads
         lead1 = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Alice",
             last_name="Smith",
@@ -98,7 +99,7 @@ class TestLeadEndpoints:
             status=LeadStatus.NEW,
         )
         lead2 = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Bob",
             last_name="Jones",
@@ -132,7 +133,7 @@ class TestLeadEndpoints:
     ):
         """Test getting a specific lead by ID."""
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Test",
             last_name="Lead",
@@ -164,7 +165,7 @@ class TestLeadEndpoints:
     ):
         """Test updating lead status."""
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Update",
             last_name="Test",
@@ -200,7 +201,7 @@ class TestLeadEndpoints:
         # Create leads with different statuses
         for i, status in enumerate([LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.CONVERTED]):
             lead = Lead(
-                id=str(pytest.uuid4()),
+                id=str(uuid4()),
                 tenant_id=str(test_tenant.id),
                 first_name=f"Lead{i}",
                 last_name="Test",
@@ -237,7 +238,7 @@ class TestQuoteEndpoints:
         """Test creating a new quote."""
         # Create a lead first
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Quote",
             last_name="Customer",
@@ -283,7 +284,7 @@ class TestQuoteEndpoints:
         """Test listing all quotes."""
         # Create test lead and quote
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Quote",
             last_name="List",
@@ -297,7 +298,7 @@ class TestQuoteEndpoints:
         await db_session.commit()
 
         quote = Quote(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
             quote_number="Q-TEST-001",
@@ -334,7 +335,7 @@ class TestSiteSurveyEndpoints:
         """Test creating a new site survey."""
         # Create a lead first
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Survey",
             last_name="Customer",
@@ -381,7 +382,7 @@ class TestSiteSurveyEndpoints:
         """Test listing all site surveys."""
         # Create test lead and survey
         lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             first_name="Survey",
             last_name="List",
@@ -395,7 +396,7 @@ class TestSiteSurveyEndpoints:
         await db_session.commit()
 
         survey = SiteSurvey(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
             scheduled_at=datetime.fromisoformat("2025-11-01T10:00:00"),
@@ -427,9 +428,9 @@ class TestCRMTenantIsolation:
     ):
         """Test that leads are isolated by tenant."""
         # Create lead for a different tenant
-        other_tenant_id = str(pytest.uuid4())
+        other_tenant_id = str(uuid4())
         other_lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=other_tenant_id,
             first_name="Other",
             last_name="Tenant",
@@ -462,9 +463,9 @@ class TestCRMTenantIsolation:
     ):
         """Test that users cannot access leads from other tenants."""
         # Create lead for a different tenant
-        other_tenant_id = str(pytest.uuid4())
+        other_tenant_id = str(uuid4())
         other_lead = Lead(
-            id=str(pytest.uuid4()),
+            id=str(uuid4()),
             tenant_id=other_tenant_id,
             first_name="Other",
             last_name="Tenant",

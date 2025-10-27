@@ -4,7 +4,10 @@ import asyncio
 import json
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from fnmatch import fnmatch
 from typing import Any, Protocol
 
@@ -280,9 +283,7 @@ class EventBus:
             handler: Handler function to remove
         """
         registry = (
-            self._pattern_handlers
-            if event_type in self._pattern_handlers
-            else self._handlers
+            self._pattern_handlers if event_type in self._pattern_handlers else self._handlers
         )
 
         if event_type in registry:

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import pytest
 
-from dotmac.platform.file_storage.service import FileStorageService
 from dotmac.platform.file_storage.factory import get_storage_backend
-from dotmac.platform.file_storage.plugins import register_plugin, get_plugin
+from dotmac.platform.file_storage.plugins import register_plugin
+from dotmac.platform.file_storage.service import FileStorageService
 
 
 class _DummyStorageBackend:

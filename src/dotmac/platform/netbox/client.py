@@ -200,10 +200,6 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         """Delete prefix by ID"""
         await self._netbox_request("DELETE", f"ipam/prefixes/{prefix_id}/")
 
-    async def delete_prefix(self, prefix_id: int) -> None:
-        """Delete prefix by ID"""
-        await self._netbox_request("DELETE", f"ipam/prefixes/{prefix_id}/")
-
     async def get_available_ips(self, prefix_id: int, limit: int = 10) -> list[dict[str, Any]]:
         """Get available IP addresses in a prefix"""
         response = await self._netbox_request(
@@ -359,7 +355,9 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
                     target_count=count,
                     error=str(e),
                 )
-                raise ValueError(f"Bulk allocation failed after {len(allocated_ips)} IPs: {e}") from e
+                raise ValueError(
+                    f"Bulk allocation failed after {len(allocated_ips)} IPs: {e}"
+                ) from e
 
         logger.info(
             "bulk_allocation.success",
@@ -392,10 +390,6 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         """Delete VRF by ID"""
         await self._netbox_request("DELETE", f"ipam/vrfs/{vrf_id}/")
 
-    async def delete_vrf(self, vrf_id: int) -> None:
-        """Delete VRF by ID"""
-        await self._netbox_request("DELETE", f"ipam/vrfs/{vrf_id}/")
-
     # =========================================================================
     # DCIM Operations (Devices, Sites, Racks)
     # =========================================================================
@@ -423,10 +417,6 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         """Create new site"""
         response = await self._netbox_request("POST", "dcim/sites/", json=data)
         return cast(dict[str, Any], response)
-
-    async def delete_site(self, site_id: int) -> None:
-        """Delete site by ID"""
-        await self._netbox_request("DELETE", f"dcim/sites/{site_id}/")
 
     async def delete_site(self, site_id: int) -> None:
         """Delete site by ID"""
@@ -693,10 +683,6 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         """Create new tenant"""
         response = await self._netbox_request("POST", "tenancy/tenants/", json=data)
         return cast(dict[str, Any], response)
-
-    async def delete_tenant(self, tenant_id: int) -> None:
-        """Delete tenant by ID"""
-        await self._netbox_request("DELETE", f"tenancy/tenants/{tenant_id}/")
 
     async def delete_tenant(self, tenant_id: int) -> None:
         """Delete tenant by ID"""

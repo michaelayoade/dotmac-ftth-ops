@@ -11,11 +11,6 @@ Supports:
 """
 
 import ipaddress
-import re
-from typing import Any
-
-from pydantic import field_validator
-
 
 # ============================================================================
 # Core Validation Functions
@@ -437,7 +432,7 @@ class IPv6NetworkValidator:
 
         # Normalize IPv6 part
         try:
-            parts = v.split('/')
+            v.split("/")
             network = ipaddress.IPv6Network(v, strict=strict)
             return str(network)
         except Exception:

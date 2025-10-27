@@ -7,7 +7,7 @@ Coverage Target: 85-90% invoice service coverage.
 """
 
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -890,7 +890,7 @@ class TestInvoiceLifecycle:
         service = InvoiceService(async_session)
 
         # Create invoice with past due date
-        past_due_date = datetime.now(UTC) - timedelta(days=5)
+        past_due_date = datetime.now(timezone.utc) - timedelta(days=5)
 
         with patch("dotmac.platform.billing.invoicing.service.get_event_bus") as mock_event_bus:
             mock_event_bus.return_value.publish = AsyncMock()

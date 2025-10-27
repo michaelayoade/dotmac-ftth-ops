@@ -20,10 +20,12 @@ from dotmac.platform.billing.subscriptions.models import Subscription as Subscri
 from dotmac.platform.core import Money
 from dotmac.platform.customer_management.models import (
     CommunicationChannel,
-    Customer as CustomerEntity,
     CustomerStatus,
     CustomerTier,
     CustomerType,
+)
+from dotmac.platform.customer_management.models import (
+    Customer as CustomerEntity,
 )
 
 from .aggregates import Customer, Invoice, InvoiceLineItem, Payment, Subscription
@@ -54,9 +56,7 @@ class InvoiceMapper:
         from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 
         status_value = (
-            InvoiceStatus(invoice.status)
-            if isinstance(invoice.status, str)
-            else invoice.status
+            InvoiceStatus(invoice.status) if isinstance(invoice.status, str) else invoice.status
         )
         payment_status_value = (
             PaymentStatus(invoice.payment_status)
@@ -152,7 +152,7 @@ class InvoiceMapper:
         Returns:
             InvoiceModel for API responses
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
 
         return InvoiceModel(
             tenant_id=invoice.tenant_id,
@@ -223,9 +223,7 @@ class PaymentMapper:
         from dotmac.platform.billing.core.enums import PaymentStatus
 
         status_value = (
-            PaymentStatus(payment.status)
-            if isinstance(payment.status, str)
-            else payment.status
+            PaymentStatus(payment.status) if isinstance(payment.status, str) else payment.status
         )
 
         return PaymentEntity(
@@ -335,7 +333,7 @@ class SubscriptionMapper:
     @staticmethod
     def to_model(subscription: Subscription) -> SubscriptionModel:
         """Convert Subscription aggregate to SubscriptionModel."""
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
 
         from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 
@@ -374,7 +372,9 @@ class CustomerMapper:
     def to_entity(customer: Customer) -> CustomerEntity:
         """Convert Customer aggregate to CustomerEntity."""
         # Split name into first/last for required fields
-        display_name = customer.name or (customer.email.split("@", 1)[0] if customer.email else "Customer")
+        display_name = customer.name or (
+            customer.email.split("@", 1)[0] if customer.email else "Customer"
+        )
         name_parts = display_name.strip().split()
         first_name = name_parts[0] if name_parts else "Customer"
         last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else first_name

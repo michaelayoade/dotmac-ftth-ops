@@ -2,8 +2,8 @@
 Simple tests for API Keys Metrics Router to improve coverage.
 """
 
-from datetime import UTC, datetime
-from unittest.mock import patch
+from datetime import timezone, datetime
+from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
@@ -20,21 +20,33 @@ def metrics_app():
     app = FastAPI()
     app.include_router(api_keys_metrics_router, prefix="/api-keys/metrics")
 
-    # Override get_current_user to return a test user
+    # Create test user
+    test_user = UserInfo(
+        user_id=str(uuid4()),
+        email="test@example.com",
+        username="testuser",
+        roles=["admin"],
+        permissions=["api-keys:metrics:read"],  # Correct permission format
+        tenant_id="test-tenant-123",
+        is_platform_admin=False,
+    )
+
+    # Override get_current_user to return test user
     async def override_get_current_user():
-        return UserInfo(
-            user_id=str(uuid4()),
-            email="test@example.com",
-            username="testuser",
-            roles=["admin"],
-            permissions=["api_keys.read"],
-            tenant_id="test-tenant-123",
-            is_platform_admin=False,
-        )
+        return test_user
+
+    # Create mock database session
+    mock_db = AsyncMock()
+    mock_db.execute = AsyncMock(return_value=AsyncMock(scalars=AsyncMock(return_value=AsyncMock(all=AsyncMock(return_value=[])))))
+
+    async def override_get_async_session():
+        return mock_db
 
     from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.db import get_async_session
 
     app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_async_session] = override_get_async_session
 
     return app
 
@@ -42,8 +54,11 @@ def metrics_app():
 @pytest.mark.asyncio
 async def test_get_api_key_metrics_success(metrics_app: FastAPI):
     """Test successful API key metrics retrieval."""
-    # Mock the cache and data fetching
+    # Patch RBAC service to bypass permission checks
     with patch(
+        "dotmac.platform.auth.rbac_service.RBACService.user_has_all_permissions",
+        return_value=True,
+    ), patch(
         "dotmac.platform.auth.api_keys_metrics_router._fetch_all_api_keys_metadata"
     ) as mock_fetch:
         # Return empty list to simulate no API keys
@@ -76,7 +91,7 @@ async def test_get_api_key_metrics_success(metrics_app: FastAPI):
 @pytest.mark.asyncio
 async def test_get_api_key_metrics_with_data(metrics_app: FastAPI):
     """Test API key metrics with sample data."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     sample_keys = [
         {
             "key_id": "key-1",
@@ -86,6 +101,7 @@ async def test_get_api_key_metrics_with_data(metrics_app: FastAPI):
             "expires_at": (now.replace(year=now.year + 1)).isoformat(),
             "scopes": ["read:data", "write:data"],
             "request_count": 100,
+            "tenant_id": "test-tenant-123",  # Add tenant_id to match filtering
         },
         {
             "key_id": "key-2",
@@ -95,12 +111,19 @@ async def test_get_api_key_metrics_with_data(metrics_app: FastAPI):
             "expires_at": None,
             "scopes": ["read:data"],
             "request_count": 0,
+            "tenant_id": "test-tenant-123",  # Add tenant_id to match filtering
         },
     ]
 
+    # Patch RBAC service to bypass permission checks
     with patch(
-        "dotmac.platform.auth.api_keys_metrics_router._fetch_all_api_keys_metadata"
+        "dotmac.platform.auth.rbac_service.RBACService.user_has_all_permissions",
+        return_value=True,
+    ), patch(
+        "dotmac.platform.auth.api_keys_metrics_router._fetch_all_api_keys_metadata",
+        new_callable=AsyncMock,
     ) as mock_fetch:
+        # AsyncMock properly handles async functions
         mock_fetch.return_value = sample_keys
 
         transport = ASGITransport(app=metrics_app)
@@ -119,7 +142,11 @@ async def test_get_api_key_metrics_with_data(metrics_app: FastAPI):
 @pytest.mark.asyncio
 async def test_get_api_key_metrics_custom_period(metrics_app: FastAPI):
     """Test API key metrics with custom time period."""
+    # Patch RBAC service to bypass permission checks
     with patch(
+        "dotmac.platform.auth.rbac_service.RBACService.user_has_all_permissions",
+        return_value=True,
+    ), patch(
         "dotmac.platform.auth.api_keys_metrics_router._fetch_all_api_keys_metadata"
     ) as mock_fetch:
         mock_fetch.return_value = []

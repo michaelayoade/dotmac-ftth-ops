@@ -5,7 +5,10 @@ Intelligent alarm correlation to reduce noise and identify root causes.
 """
 
 import re
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -39,9 +42,7 @@ class CorrelationEngine:
         self.session = session
         self.tenant_id = tenant_id
 
-    def _normalize_rule_conditions(
-        self, rule: AlarmRule
-    ) -> tuple[dict[str, Any], int]:
+    def _normalize_rule_conditions(self, rule: AlarmRule) -> tuple[dict[str, Any], int]:
         """Normalize legacy rule conditions into parent/child mappings."""
         conditions = rule.conditions or {}
         time_window = rule.time_window or 300
@@ -276,7 +277,9 @@ class CorrelationEngine:
 
         candidate = result.scalar_one_or_none()
 
-        if candidate and (not parent_conditions or self._matches_fields(candidate, parent_conditions)):
+        if candidate and (
+            not parent_conditions or self._matches_fields(candidate, parent_conditions)
+        ):
             return candidate
 
         return None

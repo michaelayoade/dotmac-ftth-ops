@@ -9,12 +9,11 @@ Tests the complete payment workflow including:
 - Refund processing
 """
 
-from datetime import UTC, datetime
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
 import pytest
+
 from dotmac.platform.plugins.builtin.paystack_plugin import PaystackPaymentPlugin
 
 
@@ -120,10 +119,12 @@ class TestPaystackPaymentInitialization:
     async def test_initialize_payment_success(self):
         """Test successful payment initialization"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         # Mock Paystack API response
         mock_response = {
@@ -136,7 +137,9 @@ class TestPaystackPaymentInitialization:
             },
         }
 
-        with patch.object(plugin.paystack_client.transactions, "initialize", return_value=mock_response):
+        with patch.object(
+            plugin.paystack_client.transactions, "initialize", return_value=mock_response
+        ):
             result = await plugin.process_payment(
                 amount=100.00,
                 currency="NGN",
@@ -158,20 +161,24 @@ class TestPaystackPaymentInitialization:
     async def test_initialize_payment_converts_amount_to_kobo(self):
         """Test that amount is correctly converted to kobo"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
-        mock_initialize = MagicMock(return_value={
-            "status": True,
-            "message": "Authorization URL created",
-            "data": {
-                "authorization_url": "https://checkout.paystack.com/abc123",
-                "access_code": "abc123",
-                "reference": "ref_1234567890",
-            },
-        })
+        mock_initialize = MagicMock(
+            return_value={
+                "status": True,
+                "message": "Authorization URL created",
+                "data": {
+                    "authorization_url": "https://checkout.paystack.com/abc123",
+                    "access_code": "abc123",
+                    "reference": "ref_1234567890",
+                },
+            }
+        )
 
         with patch.object(plugin.paystack_client.transactions, "initialize", mock_initialize):
             await plugin.process_payment(
@@ -190,10 +197,12 @@ class TestPaystackPaymentInitialization:
     async def test_initialize_payment_with_metadata(self):
         """Test payment initialization includes metadata"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         metadata = {
             "customer_email": "test@example.com",
@@ -202,14 +211,16 @@ class TestPaystackPaymentInitialization:
             "invoice_id": "inv_67890",
         }
 
-        mock_initialize = MagicMock(return_value={
-            "status": True,
-            "data": {
-                "authorization_url": "https://checkout.paystack.com/abc123",
-                "access_code": "abc123",
-                "reference": "ref_1234567890",
-            },
-        })
+        mock_initialize = MagicMock(
+            return_value={
+                "status": True,
+                "data": {
+                    "authorization_url": "https://checkout.paystack.com/abc123",
+                    "access_code": "abc123",
+                    "reference": "ref_1234567890",
+                },
+            }
+        )
 
         with patch.object(plugin.paystack_client.transactions, "initialize", mock_initialize):
             await plugin.process_payment(
@@ -231,10 +242,12 @@ class TestPaystackPaymentInitialization:
     async def test_initialize_payment_api_error(self):
         """Test handling of Paystack API errors"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with patch.object(
             plugin.paystack_client.transactions,
@@ -257,10 +270,12 @@ class TestPaystackTransactionVerification:
     async def test_verify_payment_success(self):
         """Test successful payment verification"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         mock_response = {
             "status": True,
@@ -281,7 +296,9 @@ class TestPaystackTransactionVerification:
             },
         }
 
-        with patch.object(plugin.paystack_client.transactions, "verify", return_value=mock_response):
+        with patch.object(
+            plugin.paystack_client.transactions, "verify", return_value=mock_response
+        ):
             result = await plugin.verify_payment("ref_1234567890")
 
         assert result["status"] == "completed"
@@ -295,10 +312,12 @@ class TestPaystackTransactionVerification:
     async def test_verify_payment_failed(self):
         """Test verification of failed payment"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         mock_response = {
             "status": True,
@@ -314,7 +333,9 @@ class TestPaystackTransactionVerification:
             },
         }
 
-        with patch.object(plugin.paystack_client.transactions, "verify", return_value=mock_response):
+        with patch.object(
+            plugin.paystack_client.transactions, "verify", return_value=mock_response
+        ):
             result = await plugin.verify_payment("ref_1234567890")
 
         assert result["status"] == "failed"
@@ -324,10 +345,12 @@ class TestPaystackTransactionVerification:
     async def test_verify_payment_not_found(self):
         """Test verification of non-existent transaction"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with patch.object(
             plugin.paystack_client.transactions,
@@ -349,10 +372,12 @@ class TestPaystackWebhookValidation:
         import json
 
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         webhook_data = {
             "event": "charge.success",
@@ -367,7 +392,7 @@ class TestPaystackWebhookValidation:
         # Generate valid HMAC-SHA512 signature
         payload_json = json.dumps(webhook_data, separators=(",", ":"))
         signature = hmac.new(
-            "sk_test_1234567890abcdef".encode("utf-8"),
+            b"sk_test_1234567890abcdef",
             payload_json.encode("utf-8"),
             hashlib.sha512,
         ).hexdigest()
@@ -382,10 +407,12 @@ class TestPaystackWebhookValidation:
     async def test_process_webhook_charge_success(self):
         """Test processing successful charge webhook"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         webhook_data = {
             "event": "charge.success",
@@ -415,10 +442,12 @@ class TestPaystackRefunds:
     async def test_refund_payment_success(self):
         """Test successful refund processing"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         mock_response = {
             "status": True,
@@ -455,10 +484,12 @@ class TestPaystackRefunds:
     async def test_refund_payment_partial(self):
         """Test partial refund processing"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         mock_response = {
             "status": True,
@@ -487,10 +518,12 @@ class TestPaystackRefunds:
     async def test_refund_payment_api_error(self):
         """Test handling of refund API errors"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with patch.object(
             plugin.paystack_client.refunds,
@@ -512,10 +545,12 @@ class TestPaystackEdgeCases:
     async def test_payment_with_zero_amount(self):
         """Test payment initialization with zero amount"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with pytest.raises(ValueError, match="Amount must be greater than zero"):
             await plugin.process_payment(
@@ -529,10 +564,12 @@ class TestPaystackEdgeCases:
     async def test_payment_with_negative_amount(self):
         """Test payment initialization with negative amount"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with pytest.raises(ValueError, match="Amount must be greater than zero"):
             await plugin.process_payment(
@@ -546,18 +583,22 @@ class TestPaystackEdgeCases:
     async def test_payment_with_unsupported_currency(self):
         """Test payment with unsupported currency"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
-        mock_initialize = MagicMock(return_value={
-            "status": True,
-            "data": {
-                "authorization_url": "https://checkout.paystack.com/abc123",
-                "reference": "ref_1234567890",
-            },
-        })
+        mock_initialize = MagicMock(
+            return_value={
+                "status": True,
+                "data": {
+                    "authorization_url": "https://checkout.paystack.com/abc123",
+                    "reference": "ref_1234567890",
+                },
+            }
+        )
 
         with patch.object(plugin.paystack_client.transactions, "initialize", mock_initialize):
             await plugin.process_payment(
@@ -575,10 +616,12 @@ class TestPaystackEdgeCases:
     async def test_payment_without_customer_email(self):
         """Test payment fails without customer email"""
         plugin = PaystackPaymentPlugin()
-        await plugin.configure({
-            "secret_key": "sk_test_1234567890abcdef",
-            "public_key": "pk_test_1234567890abcdef",
-        })
+        await plugin.configure(
+            {
+                "secret_key": "sk_test_1234567890abcdef",
+                "public_key": "pk_test_1234567890abcdef",
+            }
+        )
 
         with pytest.raises(ValueError, match="customer_email is required"):
             await plugin.process_payment(

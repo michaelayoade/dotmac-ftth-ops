@@ -4,10 +4,11 @@ This file tests the LogsService class directly (not through HTTP endpoints)
 to cover the missing 36% in logs_router.py
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
@@ -15,7 +16,7 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.monitoring.logs_router import LogLevel, LogsService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def logs_service(async_db_session: AsyncSession):
     """Create LogsService instance."""
     return LogsService(async_db_session)
@@ -35,7 +36,7 @@ def platform_admin_user():
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_audit_activities(async_db_session: AsyncSession):
     """Create sample audit activities for logs."""
     activities = [
@@ -48,7 +49,7 @@ async def sample_audit_activities(async_db_session: AsyncSession):
             tenant_id="test-tenant",
             action="login",
             ip_address="192.168.1.1",
-            created_at=datetime.now(UTC) - timedelta(hours=1),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=1),
         ),
         AuditActivity(
             id=uuid4(),
@@ -59,7 +60,7 @@ async def sample_audit_activities(async_db_session: AsyncSession):
             tenant_id="test-tenant",
             action="api_request",
             ip_address="192.168.1.2",
-            created_at=datetime.now(UTC) - timedelta(hours=2),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=2),
         ),
         AuditActivity(
             id=uuid4(),
@@ -69,7 +70,7 @@ async def sample_audit_activities(async_db_session: AsyncSession):
             user_id=str(uuid4()),
             tenant_id="test-tenant",
             action="process_payment",
-            created_at=datetime.now(UTC) - timedelta(hours=3),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=3),
         ),
     ]
 
@@ -126,9 +127,7 @@ class TestGetLogsMethod:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test getting logs filtered by service."""
-        response = await logs_service.get_logs(
-            current_user=platform_admin_user, service="user"
-        )
+        response = await logs_service.get_logs(current_user=platform_admin_user, service="user")
 
         assert isinstance(response.logs, list)
 
@@ -137,8 +136,8 @@ class TestGetLogsMethod:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test getting logs with time range."""
-        start_time = datetime.now(UTC) - timedelta(hours=4)
-        end_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc) - timedelta(hours=4)
+        end_time = datetime.now(timezone.utc)
 
         response = await logs_service.get_logs(
             current_user=platform_admin_user, start_time=start_time, end_time=end_time
@@ -151,9 +150,7 @@ class TestGetLogsMethod:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test getting logs with search term."""
-        response = await logs_service.get_logs(
-            current_user=platform_admin_user, search="login"
-        )
+        response = await logs_service.get_logs(current_user=platform_admin_user, search="login")
 
         assert isinstance(response.logs, list)
 
@@ -199,8 +196,8 @@ class TestGetLogStatsMethod:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test getting log stats with time range."""
-        start_time = datetime.now(UTC) - timedelta(hours=4)
-        end_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc) - timedelta(hours=4)
+        end_time = datetime.now(timezone.utc)
 
         stats = await logs_service.get_log_stats(
             current_user=platform_admin_user, start_time=start_time, end_time=end_time
@@ -265,12 +262,10 @@ class TestLogsServiceErrorHandling:
     """Test error handling in LogsService."""
 
     @pytest.mark.asyncio
-    async def test_get_logs_with_invalid_time_range(
-        self, logs_service, platform_admin_user
-    ):
+    async def test_get_logs_with_invalid_time_range(self, logs_service, platform_admin_user):
         """Test handling of invalid time range."""
-        start_time = datetime.now(UTC)
-        end_time = datetime.now(UTC) - timedelta(hours=1)  # End before start
+        start_time = datetime.now(timezone.utc)
+        end_time = datetime.now(timezone.utc) - timedelta(hours=1)  # End before start
 
         # Should handle gracefully (return empty or raise)
         response = await logs_service.get_logs(
@@ -284,9 +279,7 @@ class TestLogsServiceErrorHandling:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test handling of large page size."""
-        response = await logs_service.get_logs(
-            current_user=platform_admin_user, page_size=10000
-        )
+        response = await logs_service.get_logs(current_user=platform_admin_user, page_size=10000)
 
         assert isinstance(response.logs, list)
 
@@ -322,8 +315,8 @@ class TestCombinedFilters:
         self, logs_service, sample_audit_activities, platform_admin_user
     ):
         """Test using all filters together."""
-        start_time = datetime.now(UTC) - timedelta(hours=4)
-        end_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc) - timedelta(hours=4)
+        end_time = datetime.now(timezone.utc)
 
         response = await logs_service.get_logs(
             current_user=platform_admin_user,

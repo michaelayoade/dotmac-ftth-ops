@@ -99,16 +99,22 @@ def backend(monkeypatch: pytest.MonkeyPatch) -> tuple[ElasticsearchBackend, Stub
     )
     monkeypatch.setattr(
         "dotmac.platform.search.elasticsearch_backend.settings",
-        types.SimpleNamespace(external_services=types.SimpleNamespace(elasticsearch_url="http://es")),
+        types.SimpleNamespace(
+            external_services=types.SimpleNamespace(elasticsearch_url="http://es")
+        ),
     )
     backend = ElasticsearchBackend()
     return backend, stub_client
 
 
 @pytest.mark.asyncio
-async def test_create_index_creates_when_missing(backend: tuple[ElasticsearchBackend, StubClient]) -> None:
+async def test_create_index_creates_when_missing(
+    backend: tuple[ElasticsearchBackend, StubClient],
+) -> None:
     instance, client = backend
-    created = await instance.create_index("docs", mappings={"properties": {"field": {"type": "text"}}})
+    created = await instance.create_index(
+        "docs", mappings={"properties": {"field": {"type": "text"}}}
+    )
     assert created is True
     assert client.indices.exists_result is True
     assert "docs" in client.indices.created
@@ -116,7 +122,7 @@ async def test_create_index_creates_when_missing(backend: tuple[ElasticsearchBac
 
 @pytest.mark.asyncio
 async def test_create_index_returns_false_when_exists(
-    backend: tuple[ElasticsearchBackend, StubClient]
+    backend: tuple[ElasticsearchBackend, StubClient],
 ) -> None:
     instance, client = backend
     client.indices.exists_result = True
@@ -125,7 +131,9 @@ async def test_create_index_returns_false_when_exists(
 
 
 @pytest.mark.asyncio
-async def test_delete_index_handles_not_found(backend: tuple[ElasticsearchBackend, StubClient]) -> None:
+async def test_delete_index_handles_not_found(
+    backend: tuple[ElasticsearchBackend, StubClient],
+) -> None:
     instance, client = backend
     client.indices.delete_should_raise = NotFoundError(
         message="missing",
@@ -147,7 +155,9 @@ async def test_index_adds_search_text(backend: tuple[ElasticsearchBackend, StubC
 
 
 @pytest.mark.asyncio
-async def test_bulk_index_counts_successful(backend: tuple[ElasticsearchBackend, StubClient]) -> None:
+async def test_bulk_index_counts_successful(
+    backend: tuple[ElasticsearchBackend, StubClient],
+) -> None:
     instance, client = backend
     count = await instance.bulk_index(
         "docs",
@@ -183,7 +193,9 @@ async def test_search_returns_results(backend: tuple[ElasticsearchBackend, StubC
     assert client.search_payloads[0]["highlight"] is None
 
 
-def test_build_query_handles_multiple_modes(backend: tuple[ElasticsearchBackend, StubClient]) -> None:
+def test_build_query_handles_multiple_modes(
+    backend: tuple[ElasticsearchBackend, StubClient],
+) -> None:
     instance, _ = backend
 
     full_text = instance._build_query(SearchQuery(query="hello", limit=10))
@@ -199,9 +211,7 @@ def test_build_query_handles_multiple_modes(backend: tuple[ElasticsearchBackend,
     )
     assert "prefix" in prefix["bool"]["must"][0]
 
-    fuzzy = instance._build_query(
-        SearchQuery(query="helo", limit=10, search_type=SearchType.FUZZY)
-    )
+    fuzzy = instance._build_query(SearchQuery(query="helo", limit=10, search_type=SearchType.FUZZY))
     assert fuzzy["bool"]["must"][0]["fuzzy"]["search_text"]["value"] == "helo"
 
     with_filters = instance._build_query(

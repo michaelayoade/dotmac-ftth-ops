@@ -4,7 +4,10 @@ On-Call Schedule API Router
 FastAPI router for on-call schedule and rotation management.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 import structlog
@@ -19,7 +22,6 @@ from dotmac.platform.fault_management.oncall_schemas import (
     CurrentOnCallResponse,
     OnCallRotationCreate,
     OnCallRotationResponse,
-    OnCallRotationUpdate,
     OnCallScheduleCreate,
     OnCallScheduleResponse,
     OnCallScheduleUpdate,
@@ -165,7 +167,8 @@ async def update_oncall_schedule(
         setattr(schedule, field, value)
 
     # Update timestamp
-    from datetime import UTC
+    from datetime import timezone
+
     schedule.updated_at = datetime.now(UTC)
 
     await db.flush()
@@ -352,17 +355,19 @@ async def get_current_oncall(
         # Find matching user
         matching_user = next((u for u in oncall_users if u.id == rotation.user_id), None)
         if matching_user:
-            response.append({
-                "user_id": rotation.user_id,
-                "user_email": matching_user.email,
-                "user_name": f"{matching_user.first_name} {matching_user.last_name}",
-                "schedule_id": schedule.id,
-                "schedule_name": schedule.name,
-                "rotation_id": rotation.id,
-                "start_time": rotation.start_time,
-                "end_time": rotation.end_time,
-                "is_override": rotation.is_override,
-            })
+            response.append(
+                {
+                    "user_id": rotation.user_id,
+                    "user_email": matching_user.email,
+                    "user_name": f"{matching_user.first_name} {matching_user.last_name}",
+                    "schedule_id": schedule.id,
+                    "schedule_name": schedule.name,
+                    "rotation_id": rotation.id,
+                    "start_time": rotation.start_time,
+                    "end_time": rotation.end_time,
+                    "is_override": rotation.is_override,
+                }
+            )
 
     logger.debug(
         "oncall.current.retrieved",

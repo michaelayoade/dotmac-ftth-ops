@@ -5,10 +5,11 @@ This test suite achieves 90%+ coverage on plugins/router.py by testing
 all API endpoints with realistic data and minimal mocking.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -79,7 +80,7 @@ class FakeNotificationPlugin(NotificationProvider):
             status="healthy" if self.configured else "unhealthy",
             message="Plugin is configured" if self.configured else "Not configured",
             details={"configured": self.configured},
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
     async def test_connection(self, config: dict) -> PluginTestResult:
@@ -140,7 +141,7 @@ def fake_plugin():
     return FakeNotificationPlugin()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def setup_registry(fake_plugin):
     """Setup a fresh registry with a test plugin."""
     # Get the global registry

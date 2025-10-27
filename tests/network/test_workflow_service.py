@@ -2,11 +2,11 @@
 Unit tests for the network workflow service.
 """
 
+import ipaddress
 import sys
 from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
-import ipaddress
 import pytest
 
 from dotmac.platform.network.workflow_service import NetworkService
@@ -37,7 +37,9 @@ async def test_allocate_resources_filters_by_tenant():
 
 
 @pytest.mark.asyncio
-async def test_allocate_resources_uses_fallback_when_netbox_unavailable(monkeypatch: pytest.MonkeyPatch):
+async def test_allocate_resources_uses_fallback_when_netbox_unavailable(
+    monkeypatch: pytest.MonkeyPatch,
+):
     session = create_async_session_mock()
     customer = SimpleNamespace(email="tenant.user@example.com", tenant_id="tenant-abc")
     result_mock = AsyncMock()

@@ -9,7 +9,7 @@ This test file focuses on:
 5. Avoiding over-mocking
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -130,7 +130,7 @@ def create_tenant_data(
         company_size=kwargs.get("company_size"),
         industry=kwargs.get("industry"),
         country=kwargs.get("country"),
-        timezone=kwargs.get("timezone", "UTC"),
+        timezone=kwargs.get("timezone", "timezone.utc"),
     )
 
 
@@ -188,7 +188,7 @@ class TestCreateTenant:
         tenant = await tenant_service.create_tenant(tenant_data)
 
         # Trial should be ~14 days from now
-        expected_trial_end = datetime.now(UTC) + timedelta(days=14)
+        expected_trial_end = datetime.now(timezone.utc) + timedelta(days=14)
         assert abs((tenant.trial_ends_at - expected_trial_end).total_seconds()) < 5
 
     @pytest.mark.asyncio
@@ -429,7 +429,7 @@ class TestDeleteTenant:
         with patch.object(
             tenant,
             "soft_delete",
-            side_effect=lambda: setattr(tenant, "deleted_at", datetime.now(UTC)),
+            side_effect=lambda: setattr(tenant, "deleted_at", datetime.now(timezone.utc)),
         ):
             await tenant_service.delete_tenant("tenant-123", deleted_by="user-789")
 
@@ -531,7 +531,7 @@ class TestTenantUsageTracking:
 
         fake_db.execute = mock_execute
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         usage_data = TenantUsageCreate(
             period_start=now,
             period_end=now + timedelta(hours=1),

@@ -372,7 +372,9 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         task_data = None
         if task_kwargs:
             task_data = {
-                _snake_to_camel(key): value for key, value in task_kwargs.items() if value is not None
+                _snake_to_camel(key): value
+                for key, value in task_kwargs.items()
+                if value is not None
             }
         return await self.create_task(device_id=device_id, task_name=task_name, task_data=task_data)
 

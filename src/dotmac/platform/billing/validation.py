@@ -6,7 +6,10 @@ dates, SKUs, and business rules validation.
 """
 
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal, InvalidOperation
 from typing import Any
 

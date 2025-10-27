@@ -2,21 +2,21 @@
 Fixtures for tenant management tests.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.tenant.models import TenantInvitationStatus, TenantPlanType, TenantStatus
-from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 from dotmac.platform.tenant.provisioning_service import TenantProvisioningService
+from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 from dotmac.platform.tenant.usage_billing_integration import (
     TenantUsageBillingIntegration,
 )
-from tests.shared_fixtures import mock_user_service as shared_mock_user_service
 
 
 @pytest.fixture
@@ -167,11 +167,11 @@ def mock_tenant_service() -> AsyncMock:
             company_size=None,
             industry=None,
             country=None,
-            timezone="UTC",
+            timezone="timezone.utc",
             logo_url=None,
             primary_color=None,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
             deleted_at=None,
             # Properties
             is_trial=False,
@@ -224,7 +224,7 @@ def mock_tenant_service() -> AsyncMock:
             if permanent:
                 del created_tenants[tenant_id]
             else:
-                created_tenants[tenant_id].deleted_at = datetime.now(UTC)
+                created_tenants[tenant_id].deleted_at = datetime.now(timezone.utc)
                 created_tenants[tenant_id].is_deleted = True
         else:
             # Try to get from mock_get_tenant
@@ -232,7 +232,7 @@ def mock_tenant_service() -> AsyncMock:
             if permanent:
                 pass  # Can't really delete from mock_get_tenant
             else:
-                tenant.deleted_at = datetime.now(UTC)
+                tenant.deleted_at = datetime.now(timezone.utc)
                 tenant.is_deleted = True
 
     async def mock_restore_tenant(tenant_id, restored_by=None):
@@ -340,11 +340,11 @@ def mock_tenant_service() -> AsyncMock:
             company_size=None,
             industry=None,
             country=None,
-            timezone="UTC",
+            timezone="timezone.utc",
             logo_url=None,
             primary_color=None,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
             deleted_at=None,
             # Properties
             is_trial=True,
@@ -373,7 +373,7 @@ def mock_tenant_service() -> AsyncMock:
             # Update existing
             setting.value = setting_data.value
             setting.value_type = getattr(setting_data, "value_type", "string")
-            setting.updated_at = datetime.now(UTC)
+            setting.updated_at = datetime.now(timezone.utc)
         else:
             # Create new
             setting_id = len(tenant_settings) + 1
@@ -385,8 +385,8 @@ def mock_tenant_service() -> AsyncMock:
                 value_type=getattr(setting_data, "value_type", "string"),
                 description=getattr(setting_data, "description", None),
                 is_encrypted=getattr(setting_data, "is_encrypted", False),
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             tenant_settings[key] = setting
 
@@ -434,8 +434,8 @@ def mock_tenant_service() -> AsyncMock:
             active_users=usage_data.active_users if hasattr(usage_data, "active_users") else 0,
             bandwidth_gb=usage_data.bandwidth_gb if hasattr(usage_data, "bandwidth_gb") else 0,
             metrics=usage_data.metrics if hasattr(usage_data, "metrics") else {},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         usage_records.append(usage_record)
         return usage_record
@@ -463,10 +463,10 @@ def mock_tenant_service() -> AsyncMock:
             invited_by=invited_by,
             status=TenantInvitationStatus.PENDING,
             token=f"token-{invitation_id}",
-            expires_at=datetime.now(UTC) + timedelta(days=7),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=7),
             accepted_at=None,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
             is_pending=True,
             is_expired=False,
         )
@@ -485,7 +485,7 @@ def mock_tenant_service() -> AsyncMock:
         for inv in invitations:
             if inv.token == token:
                 inv.status = TenantInvitationStatus.ACCEPTED
-                inv.accepted_at = datetime.now(UTC)
+                inv.accepted_at = datetime.now(timezone.utc)
                 return inv
         raise TenantNotFoundError("Invitation not found")
 
@@ -520,7 +520,7 @@ def mock_tenant_service() -> AsyncMock:
                 value = getattr(tenant_data, field)
                 if value is not None:
                     setattr(tenant, field, value)
-        tenant.updated_at = datetime.now(UTC)
+        tenant.updated_at = datetime.now(timezone.utc)
         return tenant
 
     async def mock_bulk_update_status(tenant_ids, status, updated_by=None):
@@ -581,7 +581,7 @@ def mock_tenant_service() -> AsyncMock:
 
         # Update features dict (features is already a dict)
         tenant.features.update(features)
-        tenant.updated_at = datetime.now(UTC)
+        tenant.updated_at = datetime.now(timezone.utc)
         return tenant
 
     async def mock_update_metadata(tenant_id, custom_metadata, updated_by=None):
@@ -595,7 +595,7 @@ def mock_tenant_service() -> AsyncMock:
 
         # Update custom_metadata dict (custom_metadata is already a dict)
         tenant.custom_metadata.update(custom_metadata)
-        tenant.updated_at = datetime.now(UTC)
+        tenant.updated_at = datetime.now(timezone.utc)
         return tenant
 
     service.update_tenant_features = AsyncMock(side_effect=mock_update_features)
@@ -688,7 +688,7 @@ def mock_provisioning_service() -> AsyncMock:
     return service
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(
     mock_tenant_service: AsyncMock,
     mock_subscription_service: AsyncMock,
@@ -729,7 +729,7 @@ async def client(
         yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def authenticated_client(
     mock_tenant_service: AsyncMock,
     mock_subscription_service: AsyncMock,
@@ -756,8 +756,10 @@ async def authenticated_client(
     )
     from dotmac.platform.tenant.onboarding_router import router as onboarding_router
     from dotmac.platform.tenant.router import (
-        get_tenant_service as get_tenant_service_main,
         get_tenant_provisioning_service,
+    )
+    from dotmac.platform.tenant.router import (
+        get_tenant_service as get_tenant_service_main,
     )
     from dotmac.platform.tenant.usage_billing_router import (
         get_subscription_service,
@@ -820,11 +822,13 @@ async def authenticated_client(
         yield client
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(authenticated_client: AsyncClient) -> AsyncClient:
     """Alias for authenticated_client for backwards compatibility."""
     return authenticated_client
+
+
 @pytest.fixture
-def mock_user_service(shared_mock_user_service: AsyncMock) -> AsyncMock:
-    """Re-export shared mock user service for tenant tests."""
-    return shared_mock_user_service
+def mock_user_service() -> AsyncMock:
+    """Create mock user service for tenant tests."""
+    return AsyncMock()

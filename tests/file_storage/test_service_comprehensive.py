@@ -6,7 +6,7 @@ Tests all storage backends: Local, Memory, and MinIO/S3.
 
 import shutil
 import tempfile
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -29,7 +29,7 @@ class TestFileMetadata:
 
     def test_file_metadata_creation(self):
         """Test creating FileMetadata."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         metadata = FileMetadata(
             file_id="test-123",
             file_name="document.pdf",
@@ -50,7 +50,7 @@ class TestFileMetadata:
 
     def test_file_metadata_to_dict(self):
         """Test converting FileMetadata to dict."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         metadata = FileMetadata(
             file_id="test-123",
             file_name="test.txt",
@@ -73,7 +73,7 @@ class TestFileMetadata:
             file_name="test.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             # Optional fields not provided
         )
 
@@ -674,7 +674,7 @@ class TestMinIOFileStorageEdgeCases:
             file_name="test.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             path="/uploads",
         )
         storage.metadata_store["test-123"] = file_metadata
@@ -736,7 +736,7 @@ class TestMinIOFileStorageEdgeCases:
             file_name="test.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             path="/uploads/docs",
             tenant_id="default",
         )
@@ -761,7 +761,7 @@ class TestMinIOFileStorageEdgeCases:
                 file_name=f"file{i}.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 path="/uploads" if i < 3 else "/downloads",
                 tenant_id="default" if i % 2 == 0 else "tenant-2",
             )
@@ -862,7 +862,7 @@ class TestMinIOFileStorageEdgeCases:
             file_name="test.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             path="/custom/path",
             tenant_id="tenant-1",
         )
@@ -893,7 +893,7 @@ class TestMinIOFileStorageEdgeCases:
             file_name="test.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             tenant_id="default",
         )
         storage.metadata_store[file_id] = file_metadata
@@ -922,7 +922,7 @@ class TestMinIOFileStorageEdgeCases:
             file_name="delete.txt",
             file_size=100,
             content_type="text/plain",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             tenant_id="default",
         )
         storage.metadata_store[file_id] = file_metadata

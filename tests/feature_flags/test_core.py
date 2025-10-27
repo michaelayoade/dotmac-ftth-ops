@@ -688,8 +688,9 @@ class TestDecorator:
             def is_running(self) -> bool:
                 return True
 
-        with patch("dotmac.platform.feature_flags.core.is_enabled", async_enabled), patch(
-            "asyncio.get_running_loop", return_value=DummyLoop()
+        with (
+            patch("dotmac.platform.feature_flags.core.is_enabled", async_enabled),
+            patch("asyncio.get_running_loop", return_value=DummyLoop()),
         ):
             result = decorated_function()
 

@@ -10,29 +10,34 @@ Tests all 14 wireless query resolvers with:
 - Data mapping
 """
 
-import pytest
 from datetime import datetime, timedelta
-from typing import Any, Dict, List
+
+import pytest
+import pytest_asyncio
 
 from dotmac.platform.graphql.schema import schema
+from dotmac.platform.tenant.models import Tenant
+from dotmac.platform.user_management.models import User
 from dotmac.platform.wireless.models import (
-    WirelessDevice,
-    WirelessClient as WirelessClientModel,
-    CoverageZone as CoverageZoneModel,
+    CoverageType,
     DeviceStatus,
     DeviceType,
     Frequency,
-    CoverageType,
-    WirelessRadio,
     RadioProtocol,
+    WirelessDevice,
+    WirelessRadio,
 )
-from dotmac.platform.user_management.models import User
-from dotmac.platform.tenant.models import Tenant
-
+from dotmac.platform.wireless.models import (
+    CoverageZone as CoverageZoneModel,
+)
+from dotmac.platform.wireless.models import (
+    WirelessClient as WirelessClientModel,
+)
 
 # ============================================================================
 # Test Fixtures
 # ============================================================================
+
 
 @pytest.fixture
 def graphql_client():
@@ -41,7 +46,7 @@ def graphql_client():
     return schema
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def graphql_context(async_db_session, test_user: User):
     """Create a GraphQL context with authenticated user and real async db."""
     from dotmac.platform.auth.core import UserInfo
@@ -63,7 +68,7 @@ async def graphql_context(async_db_session, test_user: User):
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_db_session) -> Tenant:
     """Create a test tenant."""
     tenant = Tenant(
@@ -77,7 +82,7 @@ async def test_tenant(async_db_session) -> Tenant:
     return tenant
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session, test_tenant: Tenant) -> User:
     """Create a test user."""
     user = User(
@@ -94,8 +99,8 @@ async def test_user(async_db_session, test_tenant: Tenant) -> User:
     return user
 
 
-@pytest.fixture
-async def sample_access_points(async_db_session, test_tenant: Tenant) -> List[WirelessDevice]:
+@pytest_asyncio.fixture
+async def sample_access_points(async_db_session, test_tenant: Tenant) -> list[WirelessDevice]:
     """Create sample access points for testing."""
     access_points = []
 
@@ -217,12 +222,10 @@ async def sample_access_points(async_db_session, test_tenant: Tenant) -> List[Wi
     return access_points
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_wireless_clients(
-    async_db_session,
-    test_tenant: Tenant,
-    sample_access_points: List[WirelessDevice]
-) -> List[WirelessClientModel]:
+    async_db_session, test_tenant: Tenant, sample_access_points: list[WirelessDevice]
+) -> list[WirelessClientModel]:
     """Create sample wireless clients for testing."""
     clients = []
 
@@ -281,12 +284,10 @@ async def sample_wireless_clients(
     return clients
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_coverage_zones(
-    async_db_session,
-    test_tenant: Tenant,
-    sample_access_points: List[WirelessDevice]
-) -> List[CoverageZoneModel]:
+    async_db_session, test_tenant: Tenant, sample_access_points: list[WirelessDevice]
+) -> list[CoverageZoneModel]:
     """Create sample coverage zones for testing."""
     zones = []
 
@@ -343,6 +344,7 @@ async def sample_coverage_zones(
 # ============================================================================
 # Access Point Query Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_access_points_list(graphql_client, graphql_context, sample_access_points):
@@ -401,7 +403,9 @@ async def test_access_points_pagination(graphql_client, graphql_context, sample_
 
 
 @pytest.mark.asyncio
-async def test_access_points_filter_by_status(graphql_client, graphql_context, sample_access_points):
+async def test_access_points_filter_by_status(
+    graphql_client, graphql_context, sample_access_points
+):
     """Test filtering access points by status."""
     query = """
         query {
@@ -538,6 +542,7 @@ async def test_access_points_by_site(graphql_client, graphql_context, sample_acc
 # Wireless Client Query Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_wireless_clients_list(graphql_client, graphql_context, sample_wireless_clients):
     """Test wireless_clients list query."""
@@ -565,7 +570,9 @@ async def test_wireless_clients_list(graphql_client, graphql_context, sample_wir
 
 
 @pytest.mark.asyncio
-async def test_wireless_clients_filter_by_band(graphql_client, graphql_context, sample_wireless_clients):
+async def test_wireless_clients_filter_by_band(
+    graphql_client, graphql_context, sample_wireless_clients
+):
     """Test filtering wireless clients by frequency band."""
     query = """
         query {
@@ -622,9 +629,7 @@ async def test_wireless_client_detail(graphql_client, graphql_context, sample_wi
 
 @pytest.mark.asyncio
 async def test_wireless_clients_by_access_point(
-    graphql_client, graphql_context,
-    sample_access_points,
-    sample_wireless_clients
+    graphql_client, graphql_context, sample_access_points, sample_wireless_clients
 ):
     """Test wireless_clients_by_access_point query."""
     ap = sample_access_points[0]
@@ -648,7 +653,9 @@ async def test_wireless_clients_by_access_point(
 
 
 @pytest.mark.asyncio
-async def test_wireless_clients_by_customer(graphql_client, graphql_context, sample_wireless_clients):
+async def test_wireless_clients_by_customer(
+    graphql_client, graphql_context, sample_wireless_clients
+):
     """Test wireless_clients_by_customer query."""
     query = """
         query {
@@ -672,6 +679,7 @@ async def test_wireless_clients_by_customer(graphql_client, graphql_context, sam
 # ============================================================================
 # Coverage Zone Query Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_coverage_zones_list(graphql_client, graphql_context, sample_coverage_zones):
@@ -751,6 +759,7 @@ async def test_coverage_zones_by_site(graphql_client, graphql_context, sample_co
 # RF Analytics Query Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_rf_analytics(graphql_client, graphql_context, sample_access_points):
     """Test rf_analytics query."""
@@ -800,8 +809,11 @@ async def test_channel_utilization(graphql_client, graphql_context, sample_acces
 # Dashboard and Metrics Query Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
-async def test_wireless_site_metrics(graphql_client, graphql_context, sample_access_points, sample_wireless_clients):
+async def test_wireless_site_metrics(
+    graphql_client, graphql_context, sample_access_points, sample_wireless_clients
+):
     """Test wireless_site_metrics query."""
     query = """
         query {
@@ -827,7 +839,9 @@ async def test_wireless_site_metrics(graphql_client, graphql_context, sample_acc
 
 
 @pytest.mark.asyncio
-async def test_wireless_dashboard(graphql_client, graphql_context, sample_access_points, sample_wireless_clients):
+async def test_wireless_dashboard(
+    graphql_client, graphql_context, sample_access_points, sample_wireless_clients
+):
     """Test wireless_dashboard query."""
     query = """
         query {
@@ -860,10 +874,10 @@ async def test_wireless_dashboard(graphql_client, graphql_context, sample_access
 # Tenant Isolation Tests
 # ============================================================================
 
+
 @pytest.mark.asyncio
 async def test_tenant_isolation(graphql_client, async_db_session, sample_access_points):
     """Test that queries only return data for the authenticated tenant."""
-    from unittest.mock import MagicMock
     from dotmac.platform.auth.core import UserInfo
 
     # Create a different tenant
@@ -892,7 +906,12 @@ async def test_tenant_isolation(graphql_client, async_db_session, sample_access_
         extra_metadata={
             "site": {"id": "other-site", "name": "Building Z"},
             "location": {"building": "Building Z"},
-            "rf_metrics": {"signal_strength_dbm": -50.0, "noise_floor_dbm": -90.0, "snr": 40.0, "channel_utilization_percent": 20.0},
+            "rf_metrics": {
+                "signal_strength_dbm": -50.0,
+                "noise_floor_dbm": -90.0,
+                "snr": 40.0,
+                "channel_utilization_percent": 20.0,
+            },
             "performance": {"connected_clients": 5},
             "channel": 44,
             "channel_width": 80,
@@ -980,6 +999,7 @@ async def test_tenant_isolation(graphql_client, async_db_session, sample_access_
 # ============================================================================
 # Error Handling Tests
 # ============================================================================
+
 
 @pytest.mark.asyncio
 async def test_access_point_not_found(graphql_client, graphql_context):

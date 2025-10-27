@@ -4,8 +4,8 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
-from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.services.lifecycle.models import ServiceType
+from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 
 
 @pytest.mark.asyncio
@@ -21,9 +21,7 @@ async def test_subscriber_defaults(async_db_session):
     await async_db_session.flush()
     await async_db_session.commit()
 
-    result = await async_db_session.scalar(
-        select(Subscriber).where(Subscriber.id == subscriber.id)
-    )
+    result = await async_db_session.scalar(select(Subscriber).where(Subscriber.id == subscriber.id))
 
     assert result is not None
     assert result.status is SubscriberStatus.PENDING

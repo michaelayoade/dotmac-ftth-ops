@@ -5,7 +5,10 @@ Provides REST API endpoints for managing feature flags with proper authenticatio
 validation, and comprehensive management capabilities.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog

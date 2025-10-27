@@ -18,6 +18,7 @@ This E2E test suite covers the following modules:
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -25,7 +26,7 @@ from httpx import ASGITransport, AsyncClient
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def data_transfer_app():
     """Create FastAPI app with data transfer router for E2E testing."""
     from dotmac.platform.auth.core import UserInfo
@@ -51,7 +52,7 @@ async def data_transfer_app():
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(data_transfer_app):
     """Async HTTP client for E2E testing."""
     transport = ASGITransport(app=data_transfer_app)

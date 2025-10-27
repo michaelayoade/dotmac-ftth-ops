@@ -101,9 +101,7 @@ async def seed_builtin_workflows(
             logger.error(f"Failed to create workflow '{workflow_name}': {e}")
             # Continue with other workflows even if one fails
 
-    logger.info(
-        f"Workflow seeding complete: {created_count} created, {skipped_count} skipped"
-    )
+    logger.info(f"Workflow seeding complete: {created_count} created, {skipped_count} skipped")
 
 
 async def cleanup_workflow_system(db_session: AsyncSession) -> None:

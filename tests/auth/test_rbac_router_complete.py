@@ -10,7 +10,7 @@ Tests cover:
 - Request/Response models
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -435,7 +435,7 @@ class TestUserPermissionManagement:
             f"/api/v1/rbac/users/{user_id}/permissions",
             json={
                 "permission_name": "special.feature",
-                "expires_at": (datetime.now(UTC) + timedelta(days=30)).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
                 "reason": "Temporary access",
             },
         )

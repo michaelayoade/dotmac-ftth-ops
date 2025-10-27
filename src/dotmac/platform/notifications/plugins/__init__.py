@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, Protocol
+from typing import Any, Protocol
 
 from ..models import NotificationChannel
 
@@ -20,7 +20,7 @@ class NotificationChannelPlugin(Protocol):
         """Instantiate and return a NotificationChannelProvider."""
 
 
-_registry: Dict[NotificationChannel, NotificationChannelPlugin] = {}
+_registry: dict[NotificationChannel, NotificationChannelPlugin] = {}
 _builtin_registered = False
 
 

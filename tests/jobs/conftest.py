@@ -5,6 +5,7 @@ Jobs test fixtures
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,7 +13,7 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.redis_client import get_redis_client
-from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
+from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
 
 @pytest.fixture
@@ -21,7 +22,7 @@ def db_session(async_db_session: AsyncSession) -> AsyncSession:
     return async_db_session
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_db_session: AsyncSession) -> Tenant:
     """
     Create a test tenant for jobs tests.
@@ -51,7 +52,7 @@ async def test_tenant(async_db_session: AsyncSession) -> Tenant:
         await async_db_session.rollback()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(
     authenticated_client: AsyncClient,
     async_db_session: AsyncSession,
@@ -77,7 +78,7 @@ async def async_client(
     # Override current user dependency to use test tenant ID
     async def override_get_current_user():
         return UserInfo(
-            user_id="test-user-123",
+            user_id="550e8400-e29b-41d4-a716-446655440000",  # Valid UUID format
             tenant_id=test_tenant.id,  # Use actual test tenant ID
             email="test@example.com",
             roles=["admin"],

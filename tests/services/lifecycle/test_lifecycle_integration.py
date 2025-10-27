@@ -4,13 +4,13 @@ Integration tests for service lifecycle workflows.
 Tests complete lifecycle: provision → activate → suspend → resume → terminate
 """
 
-from datetime import UTC, datetime, timedelta
+import inspect
+from datetime import timezone, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
-import inspect
-from typing import Any
-
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -63,13 +63,13 @@ def test_tenant_id() -> str:
     return "tenant-lifecycle-test"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def lifecycle_service(db_session: AsyncSession) -> LifecycleOrchestrationService:
     """Create LifecycleOrchestrationService instance."""
     return LifecycleOrchestrationService(db_session)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
     """Create test customer for lifecycle tests."""
     customer = Customer(
@@ -111,7 +111,7 @@ def test_service_provision_request(test_customer: Customer) -> ServiceProvisionR
             "vlan_id": 100,
         },
         installation_address="123 Test St, Test City, TS 12345",
-        installation_scheduled_date=datetime.now(UTC) + timedelta(days=7),
+        installation_scheduled_date=datetime.now(timezone.utc) + timedelta(days=7),
     )
 
 
@@ -832,7 +832,9 @@ class TestLifecycleEvents:
 
         assert len(events) >= 1
         assert all(e.event_type == LifecycleEventType.PROVISION_COMPLETED for e in events)
-@pytest.fixture
+
+
+@pytest_asyncio.fixture
 async def db_session(async_db_session: AsyncSession) -> AsyncSession:
     """Alias async session fixture expected by tests."""
     return async_db_session

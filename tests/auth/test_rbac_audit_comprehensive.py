@@ -1,6 +1,6 @@
 """Comprehensive tests for RBAC audit logging."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -126,7 +126,7 @@ class TestRBACAuditLogger:
         role_id = str(uuid4())
         assigned_by = str(uuid4())
         tenant_id = "tenant-123"
-        expires_at = datetime.now(UTC).isoformat()
+        expires_at = datetime.now(timezone.utc).isoformat()
 
         await audit_logger.log_role_assigned(
             user_id=user_id,
@@ -180,7 +180,7 @@ class TestRBACAuditLogger:
         permission_id = str(uuid4())
         granted_by = str(uuid4())
         tenant_id = "tenant-123"
-        expires_at = datetime.now(UTC).isoformat()
+        expires_at = datetime.now(timezone.utc).isoformat()
 
         await audit_logger.log_permission_granted(
             user_id=user_id,

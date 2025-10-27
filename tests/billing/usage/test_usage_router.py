@@ -1,7 +1,7 @@
 """Tests for the usage billing router."""
 
-from datetime import UTC, datetime, timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from datetime import timezone, datetime, timedelta
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID, uuid4
 
 import pytest
@@ -72,11 +72,9 @@ async def _set_tenant_currency(session: AsyncSession, tenant_id: str, currency: 
 
 def _expected_total(quantity: str, unit_price: str) -> int:
     """Helper for expected cents calculation."""
-    result = (
-        Decimal(quantity)
-        * Decimal(unit_price)
-        * Decimal("100")
-    ).quantize(Decimal("1"), rounding=ROUND_HALF_UP)
+    result = (Decimal(quantity) * Decimal(unit_price) * Decimal("100")).quantize(
+        Decimal("1"), rounding=ROUND_HALF_UP
+    )
     return int(result)
 
 
@@ -88,7 +86,7 @@ async def test_create_usage_record_uses_tenant_currency(
     customer_id = await _create_customer(async_db_session, tenant_id)
     await _set_tenant_currency(async_db_session, tenant_id, "EUR")
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payload = {
         "subscription_id": "sub-usage-eur",
         "customer_id": str(customer_id),
@@ -127,7 +125,7 @@ async def test_create_usage_record_allows_currency_override_header(
     customer_id = await _create_customer(async_db_session, tenant_id)
     await _set_tenant_currency(async_db_session, tenant_id, "EUR")
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payload = {
         "subscription_id": "sub-usage-override",
         "customer_id": str(customer_id),

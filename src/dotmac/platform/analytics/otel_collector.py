@@ -2,8 +2,12 @@
 OpenTelemetry collector implementation for SigNoz integration.
 """
 
+import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -587,12 +591,37 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         """Close the collector and flush pending data."""
         await self.flush()
 
-        # Shutdown providers
-        if hasattr(self, "meter"):
-            metrics.get_meter_provider().shutdown()
+        meter_provider = None
+        if metrics and hasattr(metrics, "get_meter_provider"):
+            try:
+                meter_provider = metrics.get_meter_provider()
+            except Exception:  # pragma: no cover - defensive guard
+                meter_provider = None
 
-        if hasattr(self, "tracer"):
-            trace.get_tracer_provider().shutdown()
+        tracer_provider = None
+        if trace and hasattr(trace, "get_tracer_provider"):
+            try:
+                tracer_provider = trace.get_tracer_provider()
+            except Exception:  # pragma: no cover - defensive guard
+                tracer_provider = None
+
+        in_test_mode = (
+            os.environ.get("PYTEST_CURRENT_TEST")
+            or getattr(self.config, "environment", "") == "test"
+            or os.environ.get("OTEL_ENABLED") == "false"
+        )
+
+        if not in_test_mode:
+            if meter_provider and hasattr(meter_provider, "shutdown"):
+                meter_provider.shutdown()
+            if tracer_provider and hasattr(tracer_provider, "shutdown"):
+                tracer_provider.shutdown()
+        else:
+            # Avoid shutting down global providers during tests; just flush buffers.
+            if meter_provider and hasattr(meter_provider, "force_flush"):
+                meter_provider.force_flush()
+            if tracer_provider and hasattr(tracer_provider, "force_flush"):
+                tracer_provider.force_flush()
 
 
 class SimpleAnalyticsCollector(BaseAnalyticsCollector):

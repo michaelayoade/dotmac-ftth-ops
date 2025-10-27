@@ -8,6 +8,7 @@ clean up allocated resources.
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.services.lifecycle.models import (
     ProvisioningStatus,
@@ -19,7 +20,7 @@ from dotmac.platform.services.lifecycle.models import (
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def failed_service_with_workflow(
     async_session,
 ) -> tuple[ServiceInstance, ProvisioningWorkflow]:

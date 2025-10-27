@@ -16,8 +16,10 @@ from dotmac.platform.auth.core import (
     UserInfo,
     api_key_header,
     bearer_scheme,
-    get_current_user as _auth_get_current_user,
     oauth2_scheme,
+)
+from dotmac.platform.auth.core import (
+    get_current_user as _auth_get_current_user,
 )
 from dotmac.platform.billing._typing_helpers import rate_limit
 from dotmac.platform.billing.exceptions import AddonNotFoundError
@@ -95,8 +97,7 @@ def _normalize_user(candidate: Any) -> UserInfo | None:
         data = candidate
     else:
         data = {
-            "user_id": getattr(candidate, "user_id", None)
-            or getattr(candidate, "id", None),
+            "user_id": getattr(candidate, "user_id", None) or getattr(candidate, "id", None),
             "email": getattr(candidate, "email", None),
             "username": getattr(candidate, "username", None),
             "roles": getattr(candidate, "roles", None),
@@ -240,9 +241,10 @@ async def get_available_addons(
 
     try:
         # Get tenant's current plan ID from their subscription
+        from sqlalchemy import select
+
         from dotmac.platform.billing.models import BillingSubscriptionTable
         from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
-        from sqlalchemy import select
 
         plan_id = None
         stmt = (

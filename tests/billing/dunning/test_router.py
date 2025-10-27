@@ -18,10 +18,8 @@ def mock_user():
     )
 
 
-@pytest.fixture
-def auth_headers():
-    """Mock authentication headers."""
-    return {"Authorization": "Bearer test-token"}
+# Note: auth_headers fixture is provided by tests/billing/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
 
 
 @pytest.mark.asyncio

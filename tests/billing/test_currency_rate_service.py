@@ -131,4 +131,6 @@ async def test_refresh_rates_skips_inverse_when_precision_exceeded(async_db_sess
     result = await async_db_session.execute(select(ExchangeRate))
     records = result.scalars().all()
     assert any(rate.base_currency == "USD" and rate.target_currency == "VND" for rate in records)
-    assert not any(rate.base_currency == "VND" and rate.target_currency == "USD" for rate in records)
+    assert not any(
+        rate.base_currency == "VND" and rate.target_currency == "USD" for rate in records
+    )

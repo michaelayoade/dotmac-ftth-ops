@@ -9,10 +9,8 @@ This module tests the fixes for:
 5. bank_accounts router having duplicate /billing prefix
 """
 
-from datetime import UTC, datetime
-from decimal import Decimal
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -22,7 +20,6 @@ from dotmac.platform.billing.core.enums import (
     PaymentMethodType,
     PaymentStatus,
 )
-from dotmac.platform.billing.core.exceptions import PaymentError
 from dotmac.platform.billing.payments.service import PaymentService
 from tests.billing.payments.conftest_service import (
     setup_mock_db_result,
@@ -58,8 +55,8 @@ class TestRetryFailedPaymentHandlers:
                 "last_four": "4242",
             },
             extra_data={"invoice_ids": ["inv_1"]},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         # Payment method for retry
@@ -74,8 +71,8 @@ class TestRetryFailedPaymentHandlers:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         # Setup mocks
@@ -102,7 +99,7 @@ class TestRetryFailedPaymentHandlers:
         service._handle_payment_failure = AsyncMock()
 
         # Retry the payment
-        result = await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
+        await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
 
         # Verify _handle_payment_success was called
         assert service._handle_payment_success.called
@@ -135,8 +132,8 @@ class TestRetryFailedPaymentHandlers:
                 "brand": "Visa",
                 "last_four": "4242",
             },
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         payment_method = PaymentMethodEntity(
@@ -150,8 +147,8 @@ class TestRetryFailedPaymentHandlers:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -173,7 +170,7 @@ class TestRetryFailedPaymentHandlers:
         service._handle_payment_failure = AsyncMock()
 
         # Retry the payment
-        result = await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
+        await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
 
         # Verify _handle_payment_failure was called
         assert service._handle_payment_failure.called
@@ -201,8 +198,8 @@ class TestRetryMissingProviderHandling:
             retry_count=0,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"payment_method_id": "pm_123"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -217,7 +214,7 @@ class TestRetryMissingProviderHandling:
             mock_settings.billing.payment_retry_attempts = 3
             mock_settings.billing.payment_retry_exponential_base_hours = 1
 
-            result = await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
+            await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
 
             # Should FAIL in production mode
             assert payment.status == PaymentStatus.FAILED
@@ -242,8 +239,8 @@ class TestRetryMissingProviderHandling:
             retry_count=0,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"payment_method_id": "pm_123"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -258,7 +255,7 @@ class TestRetryMissingProviderHandling:
             mock_settings.billing.payment_retry_attempts = 3
             mock_settings.billing.payment_retry_exponential_base_hours = 1
 
-            result = await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
+            await service.retry_failed_payment(tenant_id="tenant_1", payment_id="pay_123")
 
             # Should mock success in development mode
             assert payment.status == PaymentStatus.SUCCEEDED
@@ -288,8 +285,8 @@ class TestRefundDefaultAmount:
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa"},
             provider_payment_id="pi_123",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -308,7 +305,7 @@ class TestRefundDefaultAmount:
             mock_bus.return_value.publish = AsyncMock()
 
             # Refund WITHOUT specifying amount - should default to remaining $70.00
-            result = await service.refund_payment(
+            await service.refund_payment(
                 tenant_id="tenant_1",
                 payment_id="pay_123",
                 # amount not specified
@@ -339,8 +336,8 @@ class TestRefundDefaultAmount:
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa"},
             provider_payment_id="pi_123",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -358,7 +355,7 @@ class TestRefundDefaultAmount:
             mock_bus.return_value.publish = AsyncMock()
 
             # Refund WITHOUT specifying amount - should default to full $50.00
-            result = await service.refund_payment(
+            await service.refund_payment(
                 tenant_id="tenant_1",
                 payment_id="pay_123",
             )
@@ -392,11 +389,11 @@ class TestBankAccountsRouter:
     @pytest.mark.asyncio
     async def test_bank_accounts_endpoint_can_accept_async_session(self):
         """Test that bank account endpoints can work with AsyncSession"""
-        from dotmac.platform.billing.bank_accounts.router import create_bank_account
-        from dotmac.platform.billing.bank_accounts.models import CompanyBankAccountCreate
-        from dotmac.platform.auth.core import UserInfo
-        from sqlalchemy.ext.asyncio import AsyncSession
         import inspect
+
+        from sqlalchemy.ext.asyncio import AsyncSession
+
+        from dotmac.platform.billing.bank_accounts.router import create_bank_account
 
         # Verify the endpoint signature accepts AsyncSession
         sig = inspect.signature(create_bank_account)

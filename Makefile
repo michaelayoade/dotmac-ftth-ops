@@ -1,6 +1,6 @@
 # DotMac Platform Services - Simplified Makefile
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint typecheck typecheck-mypy typecheck-pyright
 
 # Colors
 CYAN := \033[0;36m
@@ -46,6 +46,7 @@ help:
 	@echo "  make test                   Run all tests"
 	@echo "  make test-fast              Run fast tests (no coverage)"
 	@echo "  make lint                   Run linting"
+	@echo "  make typecheck              Run mypy and pyright"
 	@echo ""
 	@echo "$(GREEN)Database:$(NC)"
 	@echo "  make db-migrate             Run database migrations"
@@ -197,6 +198,14 @@ test:
 
 test-fast:
 	@poetry run pytest -v --tb=short
+
+typecheck: typecheck-mypy typecheck-pyright
+
+typecheck-mypy:
+	@poetry run mypy --strict src/dotmac/platform/db.py src/dotmac/platform/db/testing.py
+
+typecheck-pyright:
+	@poetry run pyright
 
 test-integration:
 	@./scripts/run_integration_tests.sh

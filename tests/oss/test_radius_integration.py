@@ -10,7 +10,7 @@ Tests complete RADIUS workflows including:
 - Integration with service lifecycle
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -438,8 +438,8 @@ class TestRADIUSUsageMonitoring:
         # Get usage statistics
         usage_query = RADIUSUsageQuery(
             subscriber_id="sub_radius_001",
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
         usage = await service.get_subscriber_usage(usage_query)
 
@@ -482,8 +482,8 @@ class TestRADIUSUsageMonitoring:
 
         # Get tenant usage summary
         usage_query = RADIUSUsageQuery(
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
         summary = await service.get_tenant_usage_summary(usage_query)
 

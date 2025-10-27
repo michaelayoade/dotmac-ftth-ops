@@ -10,8 +10,6 @@ from datetime import datetime
 import strawberry
 
 from dotmac.platform.graphql.types.network import (
-    AlertSeverityEnum,
-    DeviceHealth,
     DeviceStatusEnum,
     DeviceTypeEnum,
     NetworkAlert,

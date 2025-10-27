@@ -348,7 +348,9 @@ class PrometheusExporter:
     @staticmethod
     def record_ip_allocation_failure(tenant_id: str, ip_version: str, reason: str) -> None:
         """Record a failed IP allocation."""
-        ip_allocation_failure.labels(tenant_id=tenant_id, ip_version=ip_version, reason=reason).inc()
+        ip_allocation_failure.labels(
+            tenant_id=tenant_id, ip_version=ip_version, reason=reason
+        ).inc()
 
     @staticmethod
     def record_latency(tenant_id: str, ip_version: str, latency_ms: float) -> None:

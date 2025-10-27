@@ -7,6 +7,7 @@ Tests complete lifecycle: campaign creation → execution → action logging →
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,14 +27,14 @@ from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 from dotmac.platform.customer_management.models import Customer
 
 
-@pytest.fixture
-async def dunning_service(db_session: AsyncSession) -> DunningService:
+@pytest_asyncio.fixture
+async def dunning_service(async_session: AsyncSession) -> DunningService:
     """Create DunningService instance."""
-    return DunningService(db_session)
+    return DunningService(async_session)
 
 
-@pytest.fixture
-async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
+@pytest_asyncio.fixture
+async def test_customer(async_session: AsyncSession, test_tenant_id: str) -> Customer:
     """Create test customer for dunning tests."""
     customer = Customer(
         id=uuid4(),
@@ -42,8 +43,8 @@ async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Custom
         name="Dunning Test Customer",
         phone="+1234567890",
     )
-    db_session.add(customer)
-    await db_session.flush()
+    async_session.add(customer)
+    await async_session.flush()
     return customer
 
 
@@ -90,7 +91,7 @@ class TestDunningCampaignManagement:
         dunning_service: DunningService,
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test successful campaign creation."""
         # Create campaign
@@ -99,7 +100,7 @@ class TestDunningCampaignManagement:
             data=test_campaign_data,
             created_by_user_id=uuid4(),
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify campaign created
         assert campaign.id is not None
@@ -144,7 +145,7 @@ class TestDunningCampaignManagement:
         dunning_service: DunningService,
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test retrieving campaign by ID."""
         # Create campaign
@@ -152,7 +153,7 @@ class TestDunningCampaignManagement:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Retrieve campaign
         retrieved = await dunning_service.get_campaign(
@@ -185,7 +186,7 @@ class TestDunningCampaignManagement:
         dunning_service: DunningService,
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test updating campaign."""
         # Create campaign
@@ -193,7 +194,7 @@ class TestDunningCampaignManagement:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Update campaign
         update_data = DunningCampaignUpdate(
@@ -206,7 +207,7 @@ class TestDunningCampaignManagement:
             tenant_id=test_tenant_id,
             data=update_data,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         assert updated.name == "Updated Campaign Name"
         assert updated.trigger_after_days == 14
@@ -219,7 +220,7 @@ class TestDunningCampaignManagement:
         dunning_service: DunningService,
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test deleting campaign."""
         # Create campaign
@@ -227,7 +228,7 @@ class TestDunningCampaignManagement:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        await db_session.commit()
+        await async_session.commit()
         campaign_id = campaign.id
 
         # Delete campaign
@@ -235,7 +236,7 @@ class TestDunningCampaignManagement:
             campaign_id=campaign_id,
             tenant_id=test_tenant_id,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify deleted
         with pytest.raises(EntityNotFoundError):
@@ -250,7 +251,7 @@ class TestDunningCampaignManagement:
         dunning_service: DunningService,
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test listing campaigns with filters."""
         # Create multiple campaigns
@@ -262,7 +263,7 @@ class TestDunningCampaignManagement:
                 tenant_id=test_tenant_id,
                 data=data,
             )
-        await db_session.commit()
+        await async_session.commit()
 
         # List all campaigns
         all_campaigns = await dunning_service.list_campaigns(tenant_id=test_tenant_id)
@@ -286,7 +287,7 @@ class TestDunningExecution:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test creating dunning execution."""
         # Create campaign
@@ -294,7 +295,7 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Create execution
         execution = await dunning_service.create_execution(
@@ -305,7 +306,7 @@ class TestDunningExecution:
             invoice_id="in_test456",
             outstanding_amount=10000,  # $100.00
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify execution created
         assert execution.id is not None
@@ -329,7 +330,7 @@ class TestDunningExecution:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test executing email action."""
         # Create campaign and execution
@@ -344,21 +345,21 @@ class TestDunningExecution:
             customer_id=test_customer.id,
             outstanding_amount=10000,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Execute first action (email)
         result = await dunning_service.execute_next_action(
             execution_id=execution.id,
             tenant_id=test_tenant_id,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify action executed
         assert result.status == "success"
         assert result.action_type == DunningActionType.EMAIL
 
         # Refresh execution from database
-        await db_session.refresh(execution)
+        await async_session.refresh(execution)
         assert execution.current_step == 1
         assert execution.status == DunningExecutionStatus.IN_PROGRESS
         assert len(execution.execution_log) == 1
@@ -367,7 +368,7 @@ class TestDunningExecution:
 
         # Verify action log created
         stmt = select(DunningActionLog).where(DunningActionLog.execution_id == execution.id)
-        result = await db_session.execute(stmt)
+        result = await async_session.execute(stmt)
         logs = result.scalars().all()
         assert len(logs) == 1
         assert logs[0].action_type == DunningActionType.EMAIL
@@ -381,7 +382,7 @@ class TestDunningExecution:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test executing complete campaign sequence."""
         # Create campaign and execution
@@ -396,7 +397,7 @@ class TestDunningExecution:
             customer_id=test_customer.id,
             outstanding_amount=15000,  # $150.00
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Execute all 3 actions
         for step in range(3):
@@ -404,8 +405,8 @@ class TestDunningExecution:
                 execution_id=execution.id,
                 tenant_id=test_tenant_id,
             )
-            await db_session.commit()
-            await db_session.refresh(execution)
+            await async_session.commit()
+            await async_session.refresh(execution)
 
             assert result.status == "success"
             assert execution.current_step == step + 1
@@ -418,7 +419,7 @@ class TestDunningExecution:
 
         # Verify all action logs created
         stmt = select(DunningActionLog).where(DunningActionLog.execution_id == execution.id)
-        result = await db_session.execute(stmt)
+        result = await async_session.execute(stmt)
         logs = result.scalars().all()
         assert len(logs) == 3
         assert logs[0].action_type == DunningActionType.EMAIL
@@ -432,7 +433,7 @@ class TestDunningExecution:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test canceling execution."""
         # Create campaign and execution
@@ -447,14 +448,14 @@ class TestDunningExecution:
             customer_id=test_customer.id,
             outstanding_amount=10000,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Execute first action
         await dunning_service.execute_next_action(
             execution_id=execution.id,
             tenant_id=test_tenant_id,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Cancel execution
         user_id = uuid4()
@@ -464,10 +465,10 @@ class TestDunningExecution:
             canceled_by_user_id=user_id,
             reason="Payment received",
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify execution canceled
-        await db_session.refresh(execution)
+        await async_session.refresh(execution)
         assert execution.status == DunningExecutionStatus.CANCELED
         assert execution.canceled_reason == "Payment received"
         assert execution.canceled_by_user_id == user_id
@@ -480,7 +481,7 @@ class TestDunningExecution:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test recording payment recovery updates campaign stats."""
         # Create campaign and execution
@@ -495,7 +496,7 @@ class TestDunningExecution:
             customer_id=test_customer.id,
             outstanding_amount=10000,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Record payment recovery
         recovered_amount = 10000  # Full amount
@@ -504,15 +505,15 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             recovered_amount=recovered_amount,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify execution updated
-        await db_session.refresh(execution)
+        await async_session.refresh(execution)
         assert execution.recovered_amount == 10000
         assert execution.status == DunningExecutionStatus.COMPLETED
 
         # Verify campaign stats updated
-        await db_session.refresh(campaign)
+        await async_session.refresh(campaign)
         assert campaign.successful_executions == 1
         assert campaign.total_recovered_amount == 10000
 
@@ -527,7 +528,7 @@ class TestDunningStatistics:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test retrieving campaign statistics."""
         # Create campaign
@@ -552,7 +553,7 @@ class TestDunningStatistics:
                     tenant_id=test_tenant_id,
                     recovered_amount=5000 * (i + 1),
                 )
-        await db_session.commit()
+        await async_session.commit()
 
         # Get campaign stats
         stats = await dunning_service.get_campaign_stats(
@@ -574,7 +575,7 @@ class TestDunningStatistics:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test retrieving overall dunning statistics."""
         # Create 2 campaigns
@@ -599,7 +600,7 @@ class TestDunningStatistics:
                 tenant_id=test_tenant_id,
                 recovered_amount=10000,
             )
-        await db_session.commit()
+        await async_session.commit()
 
         # Get overall stats
         stats = await dunning_service.get_dunning_stats(tenant_id=test_tenant_id)
@@ -621,7 +622,7 @@ class TestDunningEdgeCases:
         test_tenant_id: str,
         test_campaign_data: DunningCampaignCreate,
         test_customer: Customer,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test execution retry logic when action fails."""
         # Create campaign with max_retries=2
@@ -639,14 +640,14 @@ class TestDunningEdgeCases:
             customer_id=test_customer.id,
             outstanding_amount=10000,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Simulate action failure by forcing error condition
         # (In real implementation, this would be tested with mocked email/SMS service)
         # For now, verify retry_count can be incremented
         execution.retry_count = 1
-        await db_session.commit()
-        await db_session.refresh(execution)
+        await async_session.commit()
+        await async_session.refresh(execution)
 
         assert execution.retry_count == 1
         assert execution.status == DunningExecutionStatus.PENDING
@@ -656,7 +657,7 @@ class TestDunningEdgeCases:
         self,
         dunning_service: DunningService,
         test_tenant_id: str,
-        db_session: AsyncSession,
+        async_session: AsyncSession,
     ):
         """Test that exclusion rules prevent execution."""
         # Create campaign with exclusion rules
@@ -678,7 +679,7 @@ class TestDunningEdgeCases:
             tenant_id=test_tenant_id,
             data=data,
         )
-        await db_session.commit()
+        await async_session.commit()
 
         # Verify exclusion rules stored correctly
         assert campaign.exclusion_rules["min_lifetime_value"] == 5000.0

@@ -9,18 +9,16 @@ This module contains tests for specific bug fixes:
 5. All search filters implementation
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import func, select, update
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import (
     ActivityType,
     Customer,
-    CustomerActivity,
     CustomerStatus,
     CustomerTier,
     CustomerType,
@@ -133,7 +131,7 @@ class TestActivityMetadataFix:
                 "priority": "high",
                 "tags": ["urgent", "refund"],
             },
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         activity_data = CustomerActivityCreate(
@@ -358,7 +356,9 @@ class TestPaginationFix:
             await service.create_customer(customer_data)
 
         # Get all customers sorted to compare
-        all_params = CustomerSearchParams(page=1, page_size=15, sort_by="first_name", sort_order="asc")
+        all_params = CustomerSearchParams(
+            page=1, page_size=15, sort_by="first_name", sort_order="asc"
+        )
         all_customers, _ = await service.search_customers(
             all_params,
             limit=15,
@@ -432,7 +432,7 @@ class TestSoftDeleteUniquenessConstraint:
         await service.create_customer(customer_data)
 
         # Act - try to create another customer with same email (should fail)
-        customer_data_2 = CustomerCreate(
+        CustomerCreate(
             first_name="Jane",
             last_name="Doe",
             email="unique@example.com",  # Same email
@@ -486,7 +486,9 @@ class TestSearchFiltersImplementation:
         service = CustomerService(async_session)
 
         # Create customers with different statuses
-        for i, status in enumerate([CustomerStatus.ACTIVE, CustomerStatus.INACTIVE, CustomerStatus.SUSPENDED]):
+        for i, status in enumerate(
+            [CustomerStatus.ACTIVE, CustomerStatus.INACTIVE, CustomerStatus.SUSPENDED]
+        ):
             customer_data = CustomerCreate(
                 first_name=f"Customer{i}",
                 last_name="Test",
@@ -615,7 +617,7 @@ class TestSearchFiltersImplementation:
             await service.create_customer(customer_data)
 
         # Act - filter for customers created today
-        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
         params = CustomerSearchParams(created_after=today_start)
         results, _ = await service.search_customers(params, limit=50, offset=0)
 
@@ -859,7 +861,7 @@ class TestNetworkParameterSearch:
                 first_name=f"Customer{i}",
                 last_name="Test",
                 email=f"subnet{i}@example.com",
-                static_ip_assigned=f"10.0.1.{10+i}",
+                static_ip_assigned=f"10.0.1.{10 + i}",
             )
             await service.create_customer(customer_data)
 
@@ -1027,7 +1029,7 @@ class TestNetworkParameterSearch:
                 first_name=f"IP{i}",
                 last_name="Customer",
                 email=f"ipsort{i}@example.com",
-                static_ip_assigned=f"192.168.1.{100+i}",
+                static_ip_assigned=f"192.168.1.{100 + i}",
             )
             await service.create_customer(customer_data)
 

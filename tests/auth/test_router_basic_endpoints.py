@@ -2,7 +2,7 @@
 Basic tests for main auth router endpoints to improve coverage.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -57,8 +57,8 @@ async def test_verify_endpoint_with_valid_token(auth_test_app: FastAPI, mock_db_
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
     # Mock the user lookup
@@ -133,8 +133,8 @@ async def test_me_endpoint_authenticated(auth_test_app: FastAPI, mock_db_session
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
     # Mock user lookup
@@ -197,9 +197,9 @@ async def test_register_endpoint(auth_test_app: FastAPI, mock_db_session):
         if not hasattr(user, "id") or user.id is None:
             user.id = uuid4()
         if not hasattr(user, "created_at") or user.created_at is None:
-            user.created_at = datetime.now(UTC)
+            user.created_at = datetime.now(timezone.utc)
         if not hasattr(user, "updated_at") or user.updated_at is None:
-            user.updated_at = datetime.now(UTC)
+            user.updated_at = datetime.now(timezone.utc)
 
     mock_db_session.refresh = AsyncMock(side_effect=set_user_id)
 
@@ -271,8 +271,8 @@ async def test_logout_endpoint(auth_test_app: FastAPI, mock_db_session):
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
     # Mock user lookup
@@ -318,8 +318,8 @@ async def test_change_password_endpoint(auth_test_app: FastAPI, mock_db_session)
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
     # Mock user lookup
@@ -368,8 +368,8 @@ async def test_2fa_enable_endpoint(auth_test_app: FastAPI, mock_db_session):
         is_active=True,
         is_verified=True,
         mfa_enabled=False,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
     # Mock user lookup

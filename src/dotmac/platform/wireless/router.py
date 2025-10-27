@@ -6,7 +6,10 @@ REST API endpoints for wireless network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 import structlog
@@ -89,7 +92,9 @@ async def create_device(
 )
 async def list_devices(
     device_type: DeviceType | None = Query(None, description="Filter by device type"),
-    status_filter: DeviceStatus | None = Query(None, alias="status", description="Filter by status"),
+    status_filter: DeviceStatus | None = Query(
+        None, alias="status", description="Filter by status"
+    ),
     site_name: str | None = Query(None, description="Filter by site name"),
     limit: int = Query(100, ge=1, le=500),
     offset: int = Query(0, ge=0),
@@ -530,7 +535,9 @@ async def list_signal_measurements(
             limit=limit,
             offset=offset,
         )
-        return [SignalMeasurementResponse.model_validate(m, from_attributes=True) for m in measurements]
+        return [
+            SignalMeasurementResponse.model_validate(m, from_attributes=True) for m in measurements
+        ]
     except Exception as e:
         logger.exception("wireless.signal_measurements.list.failed", error=str(e))
         raise HTTPException(

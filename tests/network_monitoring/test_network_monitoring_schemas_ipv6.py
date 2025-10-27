@@ -8,8 +8,8 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.network_monitoring.schemas import (
-    DeviceHealthResponse,
     CPEMetrics,
+    DeviceHealthResponse,
     DeviceStatus,
     DeviceType,
 )

@@ -4,10 +4,11 @@ Jobs Router Integration Tests
 Tests for BSS Phase 1 async job tracking endpoints.
 """
 
+from uuid import uuid4
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
 
 from dotmac.platform.jobs.models import Job, JobStatus
 from dotmac.platform.tenant.models import Tenant
@@ -32,7 +33,7 @@ class TestJobEndpoints:
             "parameters": {"file_path": "/tmp/test.csv", "batch_size": 10},
         }
 
-        response = await async_client.post(
+        response = async_client.post(
             "/api/v1/jobs",
             json=job_data,
             headers=auth_headers,
@@ -58,7 +59,7 @@ class TestJobEndpoints:
             # Missing title and items_total
         }
 
-        response = await async_client.post(
+        response = async_client.post(
             "/api/v1/jobs",
             json=job_data,
             headers=auth_headers,
@@ -98,7 +99,7 @@ class TestJobEndpoints:
         db_session.add_all([job1, job2])
         await db_session.commit()
 
-        response = await async_client.get(
+        response = async_client.get(
             "/api/v1/jobs",
             headers=auth_headers,
         )
@@ -132,7 +133,7 @@ class TestJobEndpoints:
         db_session.add(job)
         await db_session.commit()
 
-        response = await async_client.get(
+        response = async_client.get(
             f"/api/v1/jobs/{job.id}",
             headers=auth_headers,
         )
@@ -172,7 +173,7 @@ class TestJobEndpoints:
             "items_failed": 5,
         }
 
-        response = await async_client.patch(
+        response = async_client.patch(
             f"/api/v1/jobs/{job.id}",
             json=update_data,
             headers=auth_headers,
@@ -194,7 +195,7 @@ class TestJobEndpoints:
     ):
         """Test cancelling a running job."""
         job = Job(
-                    id=str(uuid4()),
+            id=str(uuid4()),
             tenant_id=str(test_tenant.id),
             job_type="data_import",
             title="Cancel Test Job",
@@ -205,7 +206,7 @@ class TestJobEndpoints:
         db_session.add(job)
         await db_session.commit()
 
-        response = await async_client.post(
+        response = async_client.post(
             f"/api/v1/jobs/{job.id}/cancel",
             headers=auth_headers,
         )
@@ -226,7 +227,7 @@ class TestJobEndpoints:
         # Create jobs with different statuses
         for i, status in enumerate([JobStatus.PENDING, JobStatus.RUNNING, JobStatus.COMPLETED]):
             job = Job(
-                    id=str(uuid4()),
+                id=str(uuid4()),
                 tenant_id=str(test_tenant.id),
                 job_type="data_import",
                 title=f"Job {i}",
@@ -237,7 +238,7 @@ class TestJobEndpoints:
             db_session.add(job)
         await db_session.commit()
 
-        response = await async_client.get(
+        response = async_client.get(
             f"/api/v1/jobs?status={JobStatus.RUNNING.value}",
             headers=auth_headers,
         )
@@ -269,7 +270,7 @@ class TestJobEndpoints:
             db_session.add(job)
         await db_session.commit()
 
-        response = await async_client.get(
+        response = async_client.get(
             "/api/v1/jobs?job_type=data_import",
             headers=auth_headers,
         )
@@ -310,7 +311,7 @@ class TestJobEndpoints:
             db_session.add(job)
         await db_session.commit()
 
-        response = await async_client.get(
+        response = async_client.get(
             "/api/v1/jobs/statistics",
             headers=auth_headers,
         )
@@ -352,7 +353,7 @@ class TestJobTenantIsolation:
         await db_session.commit()
 
         # List jobs should not include other tenant's job
-        response = await async_client.get(
+        response = async_client.get(
             "/api/v1/jobs",
             headers=auth_headers,
         )
@@ -385,7 +386,7 @@ class TestJobTenantIsolation:
         await db_session.commit()
 
         # Try to access the other tenant's job
-        response = await async_client.get(
+        response = async_client.get(
             f"/api/v1/jobs/{other_job.id}",
             headers=auth_headers,
         )

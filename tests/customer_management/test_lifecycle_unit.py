@@ -7,14 +7,14 @@ Tests the three lifecycle event handlers:
 - Churn handling (status change to CHURNED/INACTIVE)
 """
 
-import pytest
-from datetime import UTC, datetime
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timezone, datetime
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
-from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+import pytest
+
 from dotmac.platform.billing.models import BillingSubscriptionTable
+from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 
 
 @pytest.fixture
@@ -44,8 +44,8 @@ def sample_active_subscription():
         customer_id="cust_123",
         plan_id="plan_basic",
         status=SubscriptionStatus.ACTIVE.value,
-        current_period_start=datetime.now(UTC),
-        current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+        current_period_start=datetime.now(timezone.utc),
+        current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
         metadata_json={},
     )
 
@@ -59,8 +59,8 @@ def sample_paused_subscription():
         customer_id="cust_123",
         plan_id="plan_basic",
         status=SubscriptionStatus.PAUSED.value,
-        current_period_start=datetime.now(UTC),
-        current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+        current_period_start=datetime.now(timezone.utc),
+        current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
         metadata_json={
             "suspension": {
                 "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -80,7 +80,6 @@ class TestServiceSuspension:
     ):
         """Test suspending customer's active subscriptions."""
         customer_id = "cust_123"
-        tenant_id = "test_tenant"
 
         # Mock query result
         mock_result = MagicMock()
@@ -112,16 +111,13 @@ class TestServiceSuspension:
         for subscription in active_subscriptions:
             update_stmt = (
                 update(BillingSubscriptionTable)
-                .where(
-                    BillingSubscriptionTable.subscription_id
-                    == subscription.subscription_id
-                )
+                .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
                 .values(
                     status=SubscriptionStatus.PAUSED.value,
                     metadata_json={
                         **(subscription.metadata_json or {}),
                         "suspension": {
-                            "suspended_at": datetime.now(UTC).isoformat(),
+                            "suspended_at": datetime.now(timezone.utc).isoformat(),
                             "original_status": subscription.status,
                             "reason": "customer_suspended",
                         },
@@ -174,11 +170,10 @@ class TestServiceSuspension:
         mock_result.scalars.return_value.all.return_value = [sample_active_subscription]
         mock_db_session.execute.return_value = mock_result
 
-        from sqlalchemy import select, update
+        from sqlalchemy import select
 
         subscription_stmt = select(BillingSubscriptionTable).where(
-            BillingSubscriptionTable.customer_id
-            == sample_active_subscription.customer_id,
+            BillingSubscriptionTable.customer_id == sample_active_subscription.customer_id,
             BillingSubscriptionTable.status.in_(
                 [
                     SubscriptionStatus.ACTIVE.value,
@@ -193,7 +188,7 @@ class TestServiceSuspension:
         for subscription in active_subscriptions:
             # Build the metadata that would be stored
             suspension_metadata = {
-                "suspended_at": datetime.now(UTC).isoformat(),
+                "suspended_at": datetime.now(timezone.utc).isoformat(),
                 "original_status": subscription.status,
                 "reason": "customer_suspended",
             }
@@ -245,10 +240,7 @@ class TestServiceReactivation:
 
             update_stmt = (
                 update(BillingSubscriptionTable)
-                .where(
-                    BillingSubscriptionTable.subscription_id
-                    == subscription.subscription_id
-                )
+                .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
                 .values(status=original_status, metadata_json=updated_metadata)
             )
             await mock_db_session.execute(update_stmt)
@@ -277,8 +269,7 @@ class TestServiceReactivation:
         from sqlalchemy import select
 
         subscription_stmt = select(BillingSubscriptionTable).where(
-            BillingSubscriptionTable.customer_id
-            == sample_paused_subscription.customer_id,
+            BillingSubscriptionTable.customer_id == sample_paused_subscription.customer_id,
             BillingSubscriptionTable.status == SubscriptionStatus.PAUSED.value,
         )
 
@@ -331,8 +322,7 @@ class TestServiceReactivation:
         from sqlalchemy import select
 
         subscription_stmt = select(BillingSubscriptionTable).where(
-            BillingSubscriptionTable.customer_id
-            == sample_paused_subscription.customer_id,
+            BillingSubscriptionTable.customer_id == sample_paused_subscription.customer_id,
             BillingSubscriptionTable.status == SubscriptionStatus.PAUSED.value,
         )
 
@@ -357,7 +347,6 @@ class TestChurnHandling:
     ):
         """Test that churning customer cancels all active subscriptions."""
         customer_id = "cust_123"
-        tenant_id = "test_tenant"
 
         # Mock query result
         mock_result = MagicMock()
@@ -385,9 +374,7 @@ class TestChurnHandling:
         # This tests the query logic
 
     @pytest.mark.asyncio
-    async def test_churn_cancels_at_period_end(
-        self, mock_db_session, sample_active_subscription
-    ):
+    async def test_churn_cancels_at_period_end(self, mock_db_session, sample_active_subscription):
         """Test that churn cancellation is scheduled for period end, not immediate."""
         from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
@@ -448,8 +435,8 @@ class TestChurnHandling:
                 customer_id="cust_123",
                 plan_id="plan_premium",
                 status=SubscriptionStatus.TRIALING.value,
-                current_period_start=datetime.now(UTC),
-                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
+                current_period_start=datetime.now(timezone.utc),
+                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
                 metadata_json={},
             ),
         ]
@@ -521,7 +508,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "suspended_at": datetime.now(UTC).isoformat(),
+                "suspended_at": datetime.now(timezone.utc).isoformat(),
                 "reason": "customer_suspended",
             },
         )
@@ -542,7 +529,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "reactivated_at": datetime.now(UTC).isoformat(),
+                "reactivated_at": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -562,7 +549,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "churned_at": datetime.now(UTC).isoformat(),
+                "churned_at": datetime.now(timezone.utc).isoformat(),
                 "new_status": new_status,
                 "subscriptions_affected": 2,
             },

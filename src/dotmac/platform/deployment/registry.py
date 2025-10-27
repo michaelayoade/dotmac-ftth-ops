@@ -44,14 +44,19 @@ class DeploymentRegistry:
 
     def get_instance(self, instance_id: int) -> DeploymentInstance | None:
         """Get deployment instance by ID"""
-        return self.db.query(DeploymentInstance).filter(DeploymentInstance.id == instance_id).first()
+        return (
+            self.db.query(DeploymentInstance).filter(DeploymentInstance.id == instance_id).first()
+        )
 
     def get_instance_by_tenant(self, tenant_id: int, environment: str) -> DeploymentInstance | None:
         """Get deployment instance for tenant and environment"""
         return (
             self.db.query(DeploymentInstance)
             .filter(
-                and_(DeploymentInstance.tenant_id == tenant_id, DeploymentInstance.environment == environment)
+                and_(
+                    DeploymentInstance.tenant_id == tenant_id,
+                    DeploymentInstance.environment == environment,
+                )
             )
             .first()
         )
@@ -93,7 +98,9 @@ class DeploymentRegistry:
         total = query.count()
 
         # Apply pagination and ordering
-        instances = query.order_by(desc(DeploymentInstance.created_at)).offset(skip).limit(limit).all()
+        instances = (
+            query.order_by(desc(DeploymentInstance.created_at)).offset(skip).limit(limit).all()
+        )
 
         return instances, total
 
@@ -152,7 +159,9 @@ class DeploymentRegistry:
 
     def get_template(self, template_id: int) -> DeploymentTemplate | None:
         """Get deployment template by ID"""
-        return self.db.query(DeploymentTemplate).filter(DeploymentTemplate.id == template_id).first()
+        return (
+            self.db.query(DeploymentTemplate).filter(DeploymentTemplate.id == template_id).first()
+        )
 
     def get_template_by_name(self, name: str) -> DeploymentTemplate | None:
         """Get deployment template by name"""
@@ -207,7 +216,11 @@ class DeploymentRegistry:
 
     def get_execution(self, execution_id: int) -> DeploymentExecution | None:
         """Get execution by ID"""
-        return self.db.query(DeploymentExecution).filter(DeploymentExecution.id == execution_id).first()
+        return (
+            self.db.query(DeploymentExecution)
+            .filter(DeploymentExecution.id == execution_id)
+            .first()
+        )
 
     def update_execution(self, execution_id: int, **updates) -> DeploymentExecution | None:
         """Update execution record"""
@@ -230,7 +243,11 @@ class DeploymentRegistry:
         return execution
 
     def list_executions(
-        self, instance_id: int | None = None, operation: str | None = None, skip: int = 0, limit: int = 100
+        self,
+        instance_id: int | None = None,
+        operation: str | None = None,
+        skip: int = 0,
+        limit: int = 100,
     ) -> tuple[list[DeploymentExecution], int]:
         """List executions with filters"""
         query = self.db.query(DeploymentExecution)
@@ -241,13 +258,19 @@ class DeploymentRegistry:
             query = query.filter(DeploymentExecution.operation == operation)
 
         total = query.count()
-        executions = query.order_by(desc(DeploymentExecution.started_at)).offset(skip).limit(limit).all()
+        executions = (
+            query.order_by(desc(DeploymentExecution.started_at)).offset(skip).limit(limit).all()
+        )
 
         return executions, total
 
-    def get_latest_execution(self, instance_id: int, operation: str | None = None) -> DeploymentExecution | None:
+    def get_latest_execution(
+        self, instance_id: int, operation: str | None = None
+    ) -> DeploymentExecution | None:
         """Get latest execution for instance"""
-        query = self.db.query(DeploymentExecution).filter(DeploymentExecution.instance_id == instance_id)
+        query = self.db.query(DeploymentExecution).filter(
+            DeploymentExecution.instance_id == instance_id
+        )
 
         if operation:
             query = query.filter(DeploymentExecution.operation == operation)
@@ -299,7 +322,9 @@ class DeploymentRegistry:
             .all()
         )
 
-    def update_instance_health(self, instance_id: int, health: DeploymentHealth) -> DeploymentInstance | None:
+    def update_instance_health(
+        self, instance_id: int, health: DeploymentHealth
+    ) -> DeploymentInstance | None:
         """Update instance health status from health check"""
         instance = self.get_instance(instance_id)
         if not instance:
@@ -331,7 +356,9 @@ class DeploymentRegistry:
 
         total = query.count()
         active = query.filter(DeploymentInstance.state == DeploymentState.ACTIVE).count()
-        provisioning = query.filter(DeploymentInstance.state == DeploymentState.PROVISIONING).count()
+        provisioning = query.filter(
+            DeploymentInstance.state == DeploymentState.PROVISIONING
+        ).count()
         failed = query.filter(DeploymentInstance.state == DeploymentState.FAILED).count()
         suspended = query.filter(DeploymentInstance.state == DeploymentState.SUSPENDED).count()
 
@@ -363,11 +390,16 @@ class DeploymentRegistry:
                 func.count(DeploymentInstance.id).label("instance_count"),
             )
             .join(DeploymentInstance, DeploymentInstance.template_id == DeploymentTemplate.id)
-            .group_by(DeploymentTemplate.id, DeploymentTemplate.name, DeploymentTemplate.display_name)
+            .group_by(
+                DeploymentTemplate.id, DeploymentTemplate.name, DeploymentTemplate.display_name
+            )
             .all()
         )
 
-        return [{"template_name": r.name, "display_name": r.display_name, "instances": r.instance_count} for r in results]
+        return [
+            {"template_name": r.name, "display_name": r.display_name, "instances": r.instance_count}
+            for r in results
+        ]
 
     def get_resource_allocation(self, tenant_id: int | None = None) -> dict:
         """Get total resource allocation"""
@@ -379,8 +411,12 @@ class DeploymentRegistry:
             query = query.filter(DeploymentInstance.tenant_id == tenant_id)
 
         total_cpu = query.with_entities(func.sum(DeploymentInstance.allocated_cpu)).scalar() or 0
-        total_memory = query.with_entities(func.sum(DeploymentInstance.allocated_memory_gb)).scalar() or 0
-        total_storage = query.with_entities(func.sum(DeploymentInstance.allocated_storage_gb)).scalar() or 0
+        total_memory = (
+            query.with_entities(func.sum(DeploymentInstance.allocated_memory_gb)).scalar() or 0
+        )
+        total_storage = (
+            query.with_entities(func.sum(DeploymentInstance.allocated_storage_gb)).scalar() or 0
+        )
 
         return {
             "total_cpu_cores": total_cpu,
@@ -390,7 +426,9 @@ class DeploymentRegistry:
 
     # Bulk Operations
 
-    def bulk_update_state(self, instance_ids: list[int], state: DeploymentState, reason: str | None = None) -> int:
+    def bulk_update_state(
+        self, instance_ids: list[int], state: DeploymentState, reason: str | None = None
+    ) -> int:
         """Bulk update instance states"""
         updated = (
             self.db.query(DeploymentInstance)
@@ -433,14 +471,21 @@ class AsyncDeploymentRegistry:
 
     async def get_instance(self, instance_id: int) -> DeploymentInstance | None:
         """Get deployment instance by ID"""
-        result = await self.db.execute(select(DeploymentInstance).where(DeploymentInstance.id == instance_id))
+        result = await self.db.execute(
+            select(DeploymentInstance).where(DeploymentInstance.id == instance_id)
+        )
         return result.scalar_one_or_none()
 
-    async def get_instance_by_tenant(self, tenant_id: int, environment: str) -> DeploymentInstance | None:
+    async def get_instance_by_tenant(
+        self, tenant_id: int, environment: str
+    ) -> DeploymentInstance | None:
         """Get deployment instance for tenant and environment"""
         result = await self.db.execute(
             select(DeploymentInstance).where(
-                and_(DeploymentInstance.tenant_id == tenant_id, DeploymentInstance.environment == environment)
+                and_(
+                    DeploymentInstance.tenant_id == tenant_id,
+                    DeploymentInstance.environment == environment,
+                )
             )
         )
         return result.scalar_one_or_none()

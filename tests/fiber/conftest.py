@@ -3,6 +3,7 @@ Fixtures for fiber infrastructure tests.
 """
 
 import pytest
+import pytest_asyncio
 from fastapi import HTTPException, Request, status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,13 +12,13 @@ from dotmac.platform.auth.core import JWTService, UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.redis_client import get_redis_client
-from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
+from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
 # Import shared fixtures
 from tests.shared_fixtures import *  # noqa: F401, F403
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_db_session: AsyncSession) -> Tenant:
     """Create a test tenant for fiber tests."""
     from uuid import uuid4
@@ -58,7 +59,7 @@ def db_session(async_db_session: AsyncSession) -> AsyncSession:
     return async_db_session
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(
     authenticated_client,
     async_db_session: AsyncSession,
@@ -85,7 +86,9 @@ async def client(
     async def override_get_current_user(request: Request):
         auth_header = request.headers.get("Authorization")
         if not auth_header:
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+            )
 
         return UserInfo(
             user_id="test-user-123",
@@ -114,7 +117,7 @@ async def client(
     app.dependency_overrides.pop(get_current_user, None)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_headers(test_tenant: Tenant) -> dict[str, str]:
     """Authorization headers scoped to the test tenant."""
 

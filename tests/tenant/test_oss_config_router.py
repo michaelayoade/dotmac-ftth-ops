@@ -1,5 +1,7 @@
 """Tests for tenant OSS configuration router."""
 
+import os
+
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
@@ -13,6 +15,10 @@ from dotmac.platform.db import get_session_dependency
 from dotmac.platform.tenant.dependencies import require_tenant_admin
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.tenant.oss_router import router
+
+# Get the actual NETBOX_URL and API_TOKEN from environment for assertions
+EXPECTED_NETBOX_URL = os.getenv("NETBOX_URL", "http://localhost:8080")
+EXPECTED_NETBOX_API_TOKEN = os.getenv("NETBOX_API_TOKEN", None)
 
 
 @pytest_asyncio.fixture
@@ -64,7 +70,7 @@ def test_get_default_configuration(oss_client: TestClient) -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["service"] == "netbox"
-    assert payload["config"]["url"] == "http://localhost:8080"
+    assert payload["config"]["url"] == EXPECTED_NETBOX_URL
     assert payload["overrides"] == {}
 
 
@@ -88,6 +94,6 @@ def test_update_and_reset_configuration(
     final_resp = oss_client.get("/api/v1/tenant/oss/netbox")
     assert final_resp.status_code == 200
     final_data = final_resp.json()
-    assert final_data["config"]["url"] == "http://localhost:8080"
-    assert final_data["config"]["api_token"] is None
+    assert final_data["config"]["url"] == EXPECTED_NETBOX_URL
+    assert final_data["config"]["api_token"] == EXPECTED_NETBOX_API_TOKEN
     assert final_data["overrides"] == {}

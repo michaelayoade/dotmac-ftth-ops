@@ -8,10 +8,9 @@ This module tests the fixes for:
 4. Fractional currency truncation in offline payments
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
 import pytest
 
@@ -51,8 +50,8 @@ class TestCustomerIdValidation:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment_method)
@@ -90,8 +89,8 @@ class TestCustomerIdValidation:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment_method)
@@ -144,8 +143,8 @@ class TestRefundUnitMismatch:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -158,7 +157,7 @@ class TestRefundUnitMismatch:
             mock_bus.return_value.publish = AsyncMock()
 
             # Process refund with amount in minor units (500 cents = $5.00)
-            result = await service.process_refund_notification(
+            await service.process_refund_notification(
                 tenant_id="tenant_1",
                 payment_id="pay_123",
                 refund_amount=Decimal("500"),  # In minor units (cents)
@@ -189,8 +188,8 @@ class TestRefundUnitMismatch:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -202,7 +201,7 @@ class TestRefundUnitMismatch:
             mock_bus.return_value.publish = AsyncMock()
 
             # Process full refund with amount in minor units
-            result = await service.process_refund_notification(
+            await service.process_refund_notification(
                 tenant_id="tenant_1",
                 payment_id="pay_123",
                 refund_amount=Decimal("1000"),  # Full amount in minor units
@@ -237,8 +236,8 @@ class TestTransactionLoggingForRefunds:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -289,8 +288,8 @@ class TestTransactionLoggingForRefunds:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         created_transactions = []
@@ -357,7 +356,7 @@ class TestOfflinePaymentFractionalCurrency:
             mock_bus.return_value.publish = AsyncMock()
 
             # Record offline payment with fractional amount
-            payment = await service.record_offline_payment(
+            await service.record_offline_payment(
                 tenant_id="tenant_1",
                 customer_id="cust_1",
                 amount=Decimal("123.45"),  # $123.45
@@ -394,12 +393,12 @@ class TestOfflinePaymentFractionalCurrency:
             for amount_decimal, expected_minor in test_cases:
                 created_payments = []
 
-                def mock_add(entity):
-                    created_payments.append(entity)
+                def mock_add(entity, payments=created_payments):
+                    payments.append(entity)
 
                 mock_db.add = MagicMock(side_effect=mock_add)
 
-                payment = await service.record_offline_payment(
+                await service.record_offline_payment(
                     tenant_id="tenant_1",
                     customer_id="cust_1",
                     amount=amount_decimal,
@@ -409,9 +408,9 @@ class TestOfflinePaymentFractionalCurrency:
                 )
 
                 assert len(created_payments) == 1
-                assert (
-                    created_payments[0].amount == expected_minor
-                ), f"For {amount_decimal}, expected {expected_minor}, got {created_payments[0].amount}"
+                assert created_payments[0].amount == expected_minor, (
+                    f"For {amount_decimal}, expected {expected_minor}, got {created_payments[0].amount}"
+                )
 
     @pytest.mark.asyncio
     async def test_offline_payment_with_float_input(self):
@@ -433,7 +432,7 @@ class TestOfflinePaymentFractionalCurrency:
             mock_bus.return_value.publish = AsyncMock()
 
             # Record offline payment with float amount (not recommended but should work)
-            payment = await service.record_offline_payment(
+            await service.record_offline_payment(
                 tenant_id="tenant_1",
                 customer_id="cust_1",
                 amount=123.45,  # float instead of Decimal

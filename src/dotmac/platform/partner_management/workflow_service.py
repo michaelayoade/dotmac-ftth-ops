@@ -5,7 +5,10 @@ Provides workflow-compatible methods for partner management operations.
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import UUID
@@ -244,8 +247,12 @@ class PartnerService:
 
         # Convert IDs to UUIDs
         try:
-            partner_uuid = UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
-            customer_uuid = UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            partner_uuid = (
+                UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
+            )
+            customer_uuid = (
+                UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            )
             invoice_uuid = UUID(invoice_id) if invoice_id else None
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid ID format: {e}") from e
@@ -262,9 +269,7 @@ class PartnerService:
             partner = partner_result.scalar_one_or_none()
 
             if not partner:
-                raise ValueError(
-                    f"Partner not found for tenant {tenant_id}: {partner_id}"
-                )
+                raise ValueError(f"Partner not found for tenant {tenant_id}: {partner_id}")
 
             if partner.status != PartnerStatus.ACTIVE:
                 logger.warning(

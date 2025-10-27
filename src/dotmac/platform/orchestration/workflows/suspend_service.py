@@ -18,7 +18,10 @@ without fully deprovisioning them (e.g., for non-payment, customer request).
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -175,9 +178,11 @@ async def suspend_billing_service_handler(
     logger.info("Suspending billing service")
 
     # Find service by subscriber_id
-    service = db.query(ServiceEntity).filter(
-        ServiceEntity.subscriber_id == context["subscriber_id"]
-    ).first()
+    service = (
+        db.query(ServiceEntity)
+        .filter(ServiceEntity.subscriber_id == context["subscriber_id"])
+        .first()
+    )
 
     if service:
         service.status = "suspended"
@@ -237,9 +242,7 @@ async def disable_radius_handler(
     tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
     if not tenant_id:
         # Try to get tenant_id from subscriber
-        subscriber = db.query(Subscriber).filter(
-            Subscriber.id == context["subscriber_id"]
-        ).first()
+        subscriber = db.query(Subscriber).filter(Subscriber.id == context["subscriber_id"]).first()
         if subscriber:
             tenant_id = subscriber.tenant_id
         else:
@@ -447,10 +450,14 @@ def register_handlers(saga: Any) -> None:
     saga.register_step_handler("update_subscriber_status_handler", update_subscriber_status_handler)
 
     # Compensation handlers
-    saga.register_compensation_handler("reactivate_billing_service_handler", reactivate_billing_service_handler)
+    saga.register_compensation_handler(
+        "reactivate_billing_service_handler", reactivate_billing_service_handler
+    )
     saga.register_compensation_handler("enable_radius_handler", enable_radius_handler)
     saga.register_compensation_handler("enable_onu_handler", enable_onu_handler)
     saga.register_compensation_handler("enable_cpe_handler", enable_cpe_handler)
-    saga.register_compensation_handler("revert_subscriber_status_handler", revert_subscriber_status_handler)
+    saga.register_compensation_handler(
+        "revert_subscriber_status_handler", revert_subscriber_status_handler
+    )
 
     logger.info("Registered all suspend_service workflow handlers")

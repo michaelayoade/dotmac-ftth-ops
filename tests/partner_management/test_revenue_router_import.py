@@ -62,9 +62,9 @@ def test_revenue_router_dependencies_are_defined():
     for route in router.routes:
         # Check that dependencies are callable (not None or undefined)
         for dependency in route.dependencies:
-            assert callable(
-                dependency.dependency
-            ), f"Route {route.path} has non-callable dependency"
+            assert callable(dependency.dependency), (
+                f"Route {route.path} has non-callable dependency"
+            )
 
 
 def test_commission_details_endpoint_uses_correct_dependency():
@@ -114,9 +114,9 @@ def test_commission_details_endpoint_uses_correct_dependency():
             if hasattr(dependency_metadata, "dependency"):
                 dependency_func = dependency_metadata.dependency
                 # Verify it's get_portal_partner (by name or callable)
-                assert (
-                    dependency_func.__name__ == "get_portal_partner"
-                ), f"Expected get_portal_partner, got {dependency_func.__name__}"
+                assert dependency_func.__name__ == "get_portal_partner", (
+                    f"Expected get_portal_partner, got {dependency_func.__name__}"
+                )
             else:
                 # If we got here without Depends, fail the test
                 raise AssertionError(

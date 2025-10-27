@@ -7,7 +7,10 @@ alert routing survives process restarts and can be shared across data centres.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy import JSON, Boolean, DateTime, String

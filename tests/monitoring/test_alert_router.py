@@ -15,10 +15,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.db import get_async_session
 from dotmac.platform.monitoring.alert_router import router as alert_router
 from dotmac.platform.monitoring.alert_webhook_router import cache_channels, get_alert_router
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
-from dotmac.platform.db import get_async_session
 
 
 def _make_admin() -> UserInfo:

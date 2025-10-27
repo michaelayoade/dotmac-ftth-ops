@@ -157,9 +157,7 @@ class WorkflowEventHandler:
             )
 
         except Exception as e:
-            logger.error(
-                f"Failed to handle partner.customer.created event: {e}", exc_info=True
-            )
+            logger.error(f"Failed to handle partner.customer.created event: {e}", exc_info=True)
             raise
 
     async def handle_subscription_expiring(self, event: Any) -> None:
@@ -197,9 +195,7 @@ class WorkflowEventHandler:
             )
 
         except Exception as e:
-            logger.error(
-                f"Failed to handle subscription.expiring event: {e}", exc_info=True
-            )
+            logger.error(f"Failed to handle subscription.expiring event: {e}", exc_info=True)
             raise
 
     async def handle_isp_installation_scheduled(self, event: Any) -> None:
@@ -241,9 +237,7 @@ class WorkflowEventHandler:
             )
 
         except Exception as e:
-            logger.error(
-                f"Failed to handle isp.installation.scheduled event: {e}", exc_info=True
-            )
+            logger.error(f"Failed to handle isp.installation.scheduled event: {e}", exc_info=True)
             raise
 
     async def handle_workflow_completed(self, event: Any) -> None:

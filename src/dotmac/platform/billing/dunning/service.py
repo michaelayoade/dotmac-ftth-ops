@@ -4,7 +4,10 @@ Dunning & Collections Service Layer.
 Handles business logic for automated collection workflows.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -75,7 +78,7 @@ class DunningService:
             exclusion_rules=exclusion_rules_json,
             priority=data.priority,
             is_active=data.is_active,
-            created_by_user_id=created_by_user_id,
+            created_by=str(created_by_user_id) if created_by_user_id else None,
         )
 
         self.session.add(campaign)
@@ -176,7 +179,7 @@ class DunningService:
             else:
                 setattr(campaign, field, value)
 
-        campaign.updated_by_user_id = updated_by_user_id
+        campaign.updated_by = str(updated_by_user_id) if updated_by_user_id else None
         await self.session.flush()
 
         return campaign
@@ -228,7 +231,7 @@ class DunningService:
         # Soft delete by marking as inactive
         campaign.is_active = False
         if deleted_by_user_id:
-            campaign.updated_by_user_id = deleted_by_user_id
+            campaign.updated_by = str(deleted_by_user_id)
 
         await self.session.flush()
 

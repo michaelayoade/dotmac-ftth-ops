@@ -4,29 +4,29 @@ Integration tests for service lifecycle journey.
 Tests service activation, usage, suspension, resumption, and cancellation.
 """
 
-import pytest
-from datetime import datetime, UTC, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
-from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.customer_management.service import CustomerService
-from dotmac.platform.customer_management.schemas import CustomerCreate
-from dotmac.platform.tenant.models import Tenant
-from dotmac.platform.billing.subscriptions.models import (
-    SubscriptionStatus,
-    BillingCycle,
-    SubscriptionPlanChangeRequest,
-    ProrationBehavior,
-)
+import pytest
+
+from dotmac.platform.billing.core.enums import InvoiceStatus
+from dotmac.platform.billing.core.models import Invoice
 from dotmac.platform.billing.models import (
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
+from dotmac.platform.billing.subscriptions.models import (
+    BillingCycle,
+    ProrationBehavior,
+    SubscriptionPlanChangeRequest,
+    SubscriptionStatus,
+)
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
-from dotmac.platform.services.internet_plans.models import PlanType
-from dotmac.platform.billing.core.models import Invoice
-from dotmac.platform.billing.core.enums import InvoiceStatus
+from dotmac.platform.customer_management.models import Customer
+from dotmac.platform.customer_management.schemas import CustomerCreate
+from dotmac.platform.customer_management.service import CustomerService
+from dotmac.platform.tenant.models import Tenant
 
 
 @pytest.mark.asyncio
@@ -58,7 +58,7 @@ class TestServiceLifecycleJourney:
             first_name="Lifecycle",
             last_name="Test",
             email=f"lifecycle_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -81,7 +81,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Step 1: Activate service
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription = BillingSubscriptionTable(
             id=uuid4(),
             tenant_id=test_tenant.id,
@@ -168,7 +168,7 @@ class TestServiceLifecycleJourney:
 
         assert subscription.status == SubscriptionStatus.SUSPENDED
         assert invoice2.status == InvoiceStatus.OVERDUE
-        print(f"✅ Step 5: Service suspended - non-payment")
+        print("✅ Step 5: Service suspended - non-payment")
 
         # Step 6: Resume service after payment
         payment_date = past_due_date + timedelta(days=2)
@@ -182,7 +182,7 @@ class TestServiceLifecycleJourney:
 
         assert subscription.status == SubscriptionStatus.ACTIVE
         assert invoice2.status == InvoiceStatus.PAID
-        print(f"✅ Step 6: Service resumed - payment received")
+        print("✅ Step 6: Service resumed - payment received")
 
         # Step 7: Cancel service
         cancellation_date = payment_date + timedelta(days=15)
@@ -203,8 +203,8 @@ class TestServiceLifecycleJourney:
         2. ✅ First Invoice: {invoice1.invoice_number} (PAID)
         3. ✅ Service Period: 30 days
         4. ✅ Renewal Invoice: {invoice2.invoice_number}
-        5. ✅ Suspension: {subscription.suspended_at.date() if subscription.suspended_at else 'N/A'}
-        6. ✅ Resumption: {subscription.resumed_at.date() if subscription.resumed_at else 'N/A'}
+        5. ✅ Suspension: {subscription.suspended_at.date() if subscription.suspended_at else "N/A"}
+        6. ✅ Resumption: {subscription.resumed_at.date() if subscription.resumed_at else "N/A"}
         7. ✅ Cancellation: {subscription.cancelled_at.date()}
         """)
 
@@ -254,7 +254,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Create subscription using SQLAlchemy table (initial setup)
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -289,7 +289,9 @@ class TestServiceLifecycleJourney:
         # Assertions on business side effects
         assert updated_subscription.plan_id == premium_plan_id, "Plan should be updated"
         assert proration_result is not None, "Proration should be calculated for mid-cycle upgrade"
-        assert proration_result.proration_amount != Decimal("0"), "Proration amount should be non-zero"
+        assert proration_result.proration_amount != Decimal("0"), (
+            "Proration amount should be non-zero"
+        )
 
         # Verify proration reflects price difference
         # Basic: $19.99/month, Premium: $49.99/month
@@ -338,7 +340,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Create active subscription
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -357,10 +359,11 @@ class TestServiceLifecycleJourney:
 
         # Pause service (vacation hold) - Direct DB mutation with business logic validation
         # Note: In a full implementation, this would use a pause() service method
-        pause_date = datetime.now(UTC)
+        pause_date = datetime.now(timezone.utc)
 
         # Retrieve subscription for update
-        from sqlalchemy import select, and_
+        from sqlalchemy import and_, select
+
         stmt = select(BillingSubscriptionTable).where(
             and_(
                 BillingSubscriptionTable.subscription_id == subscription_id,
@@ -386,10 +389,10 @@ class TestServiceLifecycleJourney:
         # - Billing suspended
         # - Pause credit/adjustment created
 
-        print(f"✅ Service paused")
+        print("✅ Service paused")
 
         # Resume service
-        resume_date = datetime.now(UTC)
+        resume_date = datetime.now(timezone.utc)
 
         # Retrieve subscription again
         result = await async_session.execute(stmt)
@@ -410,7 +413,7 @@ class TestServiceLifecycleJourney:
         # - Billing period extended by pause duration
         # - Resume notification sent
 
-        print(f"✅ Service resumed")
+        print("✅ Service resumed")
 
         print(f"""
         ✅ Pause/Resume Journey Complete (With Side-Effect Validation):
@@ -464,7 +467,7 @@ class TestServiceLifecycleEdgeCases:
         await async_session.flush()
 
         # Create subscription
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -491,12 +494,16 @@ class TestServiceLifecycleEdgeCases:
         )
 
         # Assertions on business side effects
-        assert cancelled_subscription.status == SubscriptionStatus.ENDED.value, "Should be immediately ended"
+        assert cancelled_subscription.status == SubscriptionStatus.ENDED.value, (
+            "Should be immediately ended"
+        )
         assert cancelled_subscription.ended_at is not None, "ended_at should be set"
         assert cancelled_subscription.canceled_at is not None, "canceled_at should be set"
 
         # Verify cancellation happened within a short time
-        time_since_activation = (cancelled_subscription.canceled_at - activation_time).total_seconds()
+        time_since_activation = (
+            cancelled_subscription.canceled_at - activation_time
+        ).total_seconds()
         assert time_since_activation < 86400, "Should be cancelled within 24 hours"
 
         # In a complete implementation, we would also assert:

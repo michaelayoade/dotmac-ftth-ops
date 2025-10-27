@@ -139,7 +139,9 @@ class LeadConvertToCustomerRequest(BaseModel):
     service_coordinates: dict[str, Any] | None = None
 
     # Installation details
-    installation_status: str | None = Field(None, pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$")
+    installation_status: str | None = Field(
+        None, pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$"
+    )
     scheduled_installation_date: datetime | None = None
     installation_notes: str | None = None
 

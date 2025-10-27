@@ -23,6 +23,12 @@ from ..auth.platform_admin import (
 )
 from ..database import get_async_session
 from .models import TenantInvitationStatus, TenantPlanType, TenantStatus
+from .provisioning_service import (
+    TenantProvisioningConflictError,
+    TenantProvisioningJobNotFoundError,
+    TenantProvisioningService,
+)
+from .provisioning_tasks import enqueue_tenant_provisioning
 from .schemas import (
     TenantBulkDeleteRequest,
     TenantBulkStatusUpdate,
@@ -49,12 +55,6 @@ from .service import (
     TenantNotFoundError,
     TenantService,
 )
-from .provisioning_service import (
-    TenantProvisioningConflictError,
-    TenantProvisioningJobNotFoundError,
-    TenantProvisioningService,
-)
-from .provisioning_tasks import enqueue_tenant_provisioning
 
 logger = structlog.get_logger(__name__)
 
@@ -73,6 +73,7 @@ async def get_tenant_provisioning_service(
 ) -> TenantProvisioningService:
     """Get provisioning service instance."""
     return TenantProvisioningService(db)
+
 
 TENANT_READ_PERMISSION = "platform:tenants:read"
 TENANT_WRITE_PERMISSION = "platform:tenants:write"

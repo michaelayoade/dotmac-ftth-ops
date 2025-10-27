@@ -8,7 +8,7 @@ Tests all Pydantic models and their validation logic including:
 - Custom validators and error cases
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -137,7 +137,7 @@ class TestEventTrackRequest:
     def test_event_track_request_valid_full(self):
         """Test valid EventTrackRequest with all fields."""
         properties = {"source": "web", "page": "/signup", "utm_campaign": "summer2023"}
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         request = EventTrackRequest(
             event_name="user_signup",
@@ -270,7 +270,7 @@ class TestMetricRecordRequest:
     def test_metric_record_request_valid_full(self):
         """Test valid MetricRecordRequest with all fields."""
         tags = {"service": "api", "endpoint": "/users", "method": "GET"}
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         request = MetricRecordRequest(
             metric_name="api.response_time",
@@ -470,7 +470,7 @@ class TestResponseModels:
 
     def test_event_track_response(self):
         """Test EventTrackResponse creation."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         response = EventTrackResponse(
             event_id="evt_123", event_name="user_signup", timestamp=timestamp
         )
@@ -483,7 +483,7 @@ class TestResponseModels:
 
     def test_event_track_response_with_message(self):
         """Test EventTrackResponse with custom message."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         response = EventTrackResponse(
             event_id="evt_456",
             event_name="page_view",
@@ -500,7 +500,7 @@ class TestResponseModels:
 
     def test_metric_record_response(self):
         """Test MetricRecordResponse creation."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         response = MetricRecordResponse(
             metric_id="met_789",
             metric_name="response_time",
@@ -518,7 +518,7 @@ class TestResponseModels:
 
     def test_metric_data_point(self):
         """Test MetricDataPoint creation."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         tags = {"service": "api", "region": "us-west-1"}
 
         data_point = MetricDataPoint(timestamp=timestamp, value=89.3, tags=tags)
@@ -529,8 +529,8 @@ class TestResponseModels:
 
     def test_metric_series(self):
         """Test MetricSeries creation."""
-        timestamp1 = datetime.now(UTC)
-        timestamp2 = datetime.now(UTC)
+        timestamp1 = datetime.now(timezone.utc)
+        timestamp2 = datetime.now(timezone.utc)
 
         data_points = [
             MetricDataPoint(timestamp=timestamp1, value=100.0),
@@ -548,7 +548,7 @@ class TestResponseModels:
 
     def test_event_data(self):
         """Test EventData creation."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         properties = {"page": "/signup", "referrer": "google.com"}
 
         event_data = EventData(
@@ -571,7 +571,7 @@ class TestResponseModels:
 
     def test_events_query_response(self):
         """Test EventsQueryResponse creation."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         events = [
             EventData(
                 event_id="evt_1", event_name="signup", event_type="user_action", timestamp=timestamp
@@ -643,8 +643,8 @@ class TestResponseModels:
             ReportSection(title="Details", data={"breakdown": {"web": 600, "mobile": 400}}),
         ]
 
-        generated_at = datetime.now(UTC)
-        period = {"start": datetime.now(UTC), "end": datetime.now(UTC)}
+        generated_at = datetime.now(timezone.utc)
+        period = {"start": datetime.now(timezone.utc), "end": datetime.now(timezone.utc)}
 
         response = ReportResponse(
             report_id="rpt_123",
@@ -695,7 +695,7 @@ class TestResponseModels:
             ),
         ]
 
-        generated_at = datetime.now(UTC)
+        generated_at = datetime.now(timezone.utc)
 
         response = DashboardResponse(
             dashboard_id="dash_123",
@@ -714,7 +714,7 @@ class TestResponseModels:
     def test_analytics_error_response(self):
         """Test AnalyticsErrorResponse creation."""
         # Test with manual timestamp (due to timezone.utc lambda issue)
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         details = {"field": "metric_name", "constraint": "pattern"}
 
         error = AnalyticsErrorResponse(
@@ -733,7 +733,7 @@ class TestResponseModels:
 
     def test_analytics_error_response_minimal(self):
         """Test AnalyticsErrorResponse with minimal fields."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         error = AnalyticsErrorResponse(
             error="NETWORK_ERROR", message="Connection failed", timestamp=timestamp
@@ -752,7 +752,7 @@ class TestModelSerialization:
     def test_event_track_request_serialization(self):
         """Test EventTrackRequest serialization/deserialization."""
         properties = {"source": "web", "page": "/signup"}
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         original = EventTrackRequest(
             event_name="user_signup",
@@ -780,7 +780,7 @@ class TestModelSerialization:
     def test_metric_record_request_serialization(self):
         """Test MetricRecordRequest serialization."""
         tags = {"service": "api", "method": "GET"}
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         original = MetricRecordRequest(
             metric_name="response_time",
@@ -903,7 +903,7 @@ class TestModelValidationEdgeCases:
 
         # EventTrackResponse defaults
         event_resp = EventTrackResponse(
-            event_id="test", event_name="test", timestamp=datetime.now(UTC)
+            event_id="test", event_name="test", timestamp=datetime.now(timezone.utc)
         )
         assert event_resp.status == "tracked"
         assert event_resp.message is None
@@ -914,7 +914,7 @@ class TestModelValidationEdgeCases:
             metric_name="test",
             value=1.0,
             unit="count",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
         assert metric_resp.status == "recorded"
 
@@ -930,6 +930,6 @@ class TestModelValidationEdgeCases:
             dashboard_id="test",
             period=DashboardPeriod.DAY,
             widgets=[],
-            generated_at=datetime.now(UTC),
+            generated_at=datetime.now(timezone.utc),
         )
         assert dashboard_resp.refresh_interval == 60

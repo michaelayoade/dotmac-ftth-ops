@@ -4,7 +4,10 @@ Billing reports service - Main orchestrator for all billing reports
 
 import asyncio
 import logging
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, cast
 
@@ -87,7 +90,9 @@ class BillingReportService:
             self.revenue_generator.get_revenue_summary(tenant_id, prev_start, prev_end),
             self.customer_generator.get_customer_metrics(tenant_id, start_date, end_date),
             self.aging_generator.get_aging_summary(tenant_id),
-            self.tax_generator.tax_service.get_tax_liability_report(tenant_id, start_date, end_date),
+            self.tax_generator.tax_service.get_tax_liability_report(
+                tenant_id, start_date, end_date
+            ),
         )
 
         # Calculate growth rates
@@ -270,12 +275,12 @@ class BillingReportService:
             data_section["aging"] = await self.aging_generator.get_aging_summary(tenant_id)
 
         if "tax" in metrics:
-            data_section["tax"] = (
-                await self.tax_generator.tax_service.get_tax_summary_by_jurisdiction(
-                    tenant_id,
-                    filters.get("start_date"),
-                    filters.get("end_date"),
-                )
+            data_section[
+                "tax"
+            ] = await self.tax_generator.tax_service.get_tax_summary_by_jurisdiction(
+                tenant_id,
+                filters.get("start_date"),
+                filters.get("end_date"),
             )
 
         return report_data

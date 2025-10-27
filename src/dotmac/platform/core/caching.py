@@ -195,7 +195,9 @@ def cache_clear(namespace: str | None = None, *, flush_all: bool = False) -> Non
             if flush_all:
                 client.flushdb()
             else:
-                keys_to_clear = [key for key in _tracked_keys if namespace is None or key.startswith(namespace)]
+                keys_to_clear = [
+                    key for key in _tracked_keys if namespace is None or key.startswith(namespace)
+                ]
                 for idx in range(0, len(keys_to_clear), 500):
                     batch = keys_to_clear[idx : idx + 500]
                     if batch:
@@ -209,7 +211,9 @@ def cache_clear(namespace: str | None = None, *, flush_all: bool = False) -> Non
         _tracked_keys.clear()
         return
 
-    keys_for_removal = [key for key in _tracked_keys if namespace is None or key.startswith(namespace)]
+    keys_for_removal = [
+        key for key in _tracked_keys if namespace is None or key.startswith(namespace)
+    ]
 
     for key in keys_for_removal:
         memory_cache.pop(key, None)

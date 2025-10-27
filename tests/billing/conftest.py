@@ -5,11 +5,12 @@ Provides reusable fixtures for testing billing components.
 """
 
 import os
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+import pytest_asyncio
 
 # Set test environment
 os.environ["TESTING"] = "1"
@@ -104,6 +105,19 @@ def user_id():
     return "user-789"
 
 
+@pytest.fixture
+def auth_headers(tenant_id):
+    """Authentication headers with tenant ID for billing API tests.
+
+    Includes both Authorization token and X-Tenant-ID header.
+    This fixture is inherited by all billing submodules.
+    """
+    return {
+        "Authorization": "Bearer test-token",
+        "X-Tenant-ID": tenant_id,
+    }
+
+
 # ========================================
 # Product Catalog Fixtures
 # ========================================
@@ -119,7 +133,7 @@ def sample_product_category():
         description="Development and productivity software",
         is_active=True,
         metadata={"department": "engineering"},
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         updated_at=None,
     )
 
@@ -140,7 +154,7 @@ def sample_product():
         is_active=True,
         usage_rates={"api_calls": Decimal("0.01"), "storage_gb": Decimal("0.50")},
         metadata={"tier": "professional"},
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         updated_at=None,
     )
 
@@ -161,7 +175,7 @@ def usage_based_product():
         is_active=True,
         usage_rates={"api_calls": Decimal("0.001"), "bandwidth_gb": Decimal("0.10")},
         metadata={"rate_limited": True},
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         updated_at=None,
     )
 
@@ -215,7 +229,7 @@ def sample_subscription_plan():
         overage_rates={"api_calls": Decimal("0.001"), "storage_gb": Decimal("0.50")},
         is_active=True,
         metadata={"tier": "professional"},
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         updated_at=None,
     )
 
@@ -223,7 +237,7 @@ def sample_subscription_plan():
 @pytest.fixture
 def sample_subscription(sample_subscription_plan):
     """Sample subscription for testing."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     return Subscription(
         subscription_id="sub_123",
         tenant_id="test-tenant-123",
@@ -302,7 +316,7 @@ def sample_pricing_rule():
         priority=100,
         is_active=True,
         metadata={"campaign": "q4-2024"},
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         updated_at=None,
     )
 
@@ -379,7 +393,7 @@ def mock_integration_service():
 # ========================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def mock_db_session():
     """Mock database session for testing."""
     session = AsyncMock()
@@ -421,7 +435,7 @@ def mock_db_product():
     db_product.is_active = True
     db_product.usage_rates = {"api_calls": "0.01"}
     db_product.metadata_json = {"test": True}
-    db_product.created_at = datetime.now(UTC)
+    db_product.created_at = datetime.now(timezone.utc)
     db_product.updated_at = None
     return db_product
 
@@ -432,7 +446,7 @@ def mock_db_subscription():
     # Use mock instead of importing to avoid conflicts
     BillingSubscriptionTable = MagicMock
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     db_subscription = MagicMock(spec=BillingSubscriptionTable)
     db_subscription.subscription_id = "sub_123"
     db_subscription.tenant_id = "test-tenant-123"
@@ -478,7 +492,7 @@ def mock_db_pricing_rule():
     db_rule.priority = 100
     db_rule.is_active = True
     db_rule.metadata_json = {"test": True}
-    db_rule.created_at = datetime.now(UTC)
+    db_rule.created_at = datetime.now(timezone.utc)
     db_rule.updated_at = None
     return db_rule
 
@@ -507,7 +521,7 @@ class TestDataBuilder:
             "is_active": True,
             "usage_rates": {},
             "metadata": {},
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -531,7 +545,7 @@ class TestDataBuilder:
             "overage_rates": {},
             "is_active": True,
             "metadata": {},
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -540,7 +554,7 @@ class TestDataBuilder:
     @staticmethod
     def build_subscription(**overrides) -> Subscription:
         """Build a subscription with optional field overrides."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         defaults = {
             "subscription_id": "sub_test",
             "tenant_id": "test-tenant",
@@ -584,7 +598,7 @@ class TestDataBuilder:
             "priority": 100,
             "is_active": True,
             "metadata": {},
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -664,7 +678,7 @@ def billing_error_scenarios():
 # ========================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def router_client(async_session, test_app):
     """
     HTTP client for router integration tests with proper session override.
@@ -694,7 +708,7 @@ async def router_client(async_session, test_app):
     test_app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def unauth_client(async_session):
     """
     HTTP client for testing unauthorized access (401/403 scenarios).
@@ -738,7 +752,7 @@ async def unauth_client(async_session):
         from dotmac.platform.billing.subscriptions.router import router as subscriptions_router
 
         app.include_router(
-            subscriptions_router, prefix="/api/v1/billing/subscriptions", tags=["Subscriptions"]
+            subscriptions_router, prefix="/api/v1/billing", tags=["Subscriptions"]
         )
     except ImportError:
         pass
@@ -750,7 +764,7 @@ async def unauth_client(async_session):
     app.dependency_overrides.clear()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def error_mock_client(test_app):
     """
     HTTP client for testing error handling with mocked dependencies.
@@ -920,7 +934,7 @@ def test_customer_id():
 # =============================================================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def active_card_payment_method(
     async_db_session: AsyncSession, test_tenant_id, test_customer_id
 ):
@@ -967,7 +981,7 @@ def payment_method_entity(test_tenant_id, test_customer_id):
 # =============================================================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_draft_invoice(async_db_session: AsyncSession, test_tenant_id, test_customer_id):
     """Create a draft invoice in the database."""
     invoice = Invoice(
@@ -977,8 +991,8 @@ async def sample_draft_invoice(async_db_session: AsyncSession, test_tenant_id, t
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=10000,  # $100.00 in cents
         tax_amount=1000,  # $10.00
@@ -997,7 +1011,7 @@ async def sample_draft_invoice(async_db_session: AsyncSession, test_tenant_id, t
     return invoice
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_open_invoice(async_db_session: AsyncSession, test_tenant_id, test_customer_id):
     """Create an open (finalized) invoice in the database."""
     invoice = Invoice(
@@ -1007,8 +1021,8 @@ async def sample_open_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=25000,  # $250.00
         tax_amount=2500,  # $25.00
@@ -1027,7 +1041,7 @@ async def sample_open_invoice(async_db_session: AsyncSession, test_tenant_id, te
     return invoice
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, test_customer_id):
     """Create a paid invoice in the database."""
     invoice = Invoice(
@@ -1037,8 +1051,8 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(UTC) - timedelta(days=5),
-        due_date=datetime.now(UTC) + timedelta(days=25),
+        issue_date=datetime.now(timezone.utc) - timedelta(days=5),
+        due_date=datetime.now(timezone.utc) + timedelta(days=25),
         currency="USD",
         subtotal=50000,  # $500.00
         tax_amount=5000,  # $50.00
@@ -1049,7 +1063,7 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         credit_applications=[],
         status=InvoiceStatus.PAID,
         payment_status=PaymentStatus.SUCCEEDED,
-        paid_at=datetime.now(UTC) - timedelta(days=3),
+        paid_at=datetime.now(timezone.utc) - timedelta(days=3),
         created_by="test-system",
     )
     async_db_session.add(invoice)
@@ -1068,8 +1082,8 @@ def invoice_entity(test_tenant_id, test_customer_id):
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=10000,
         tax_amount=1000,
@@ -1088,7 +1102,7 @@ def invoice_entity(test_tenant_id, test_customer_id):
 # =============================================================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_successful_payment(
     async_db_session: AsyncSession,
     test_tenant_id,
@@ -1113,7 +1127,7 @@ async def sample_successful_payment(
         provider_payment_id="pi_test_123",
         provider_fee=30,
         retry_count=0,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -1121,7 +1135,7 @@ async def sample_successful_payment(
     return payment
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_failed_payment(
     async_db_session: AsyncSession,
     test_tenant_id,
@@ -1147,7 +1161,7 @@ async def sample_failed_payment(
         provider_fee=0,
         failure_reason="Your card was declined.",
         retry_count=1,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -1170,7 +1184,7 @@ def payment_entity(test_tenant_id, test_customer_id):
         provider="stripe",
         provider_payment_id="pi_test_123",
         retry_count=0,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
         extra_data={},
     )
 
@@ -1180,7 +1194,7 @@ def payment_entity(test_tenant_id, test_customer_id):
 # =============================================================================
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def complete_billing_scenario(
     async_db_session: AsyncSession,
     test_tenant_id,
@@ -1238,3 +1252,107 @@ def mock_payment_service():
     service.process_refund = AsyncMock()
     service.process_refund_notification = AsyncMock()
     return service
+
+
+# =============================================================================
+# FIXTURE FACTORIES (New Pattern - See tests/FIXTURE_ORGANIZATION.md)
+# =============================================================================
+#
+# These are example fixtures using the new fixture factory pattern.
+# See tests/helpers/fixture_factories.py for the base classes
+# and tests/fixtures/example_factories.py for more examples.
+#
+
+
+@pytest.fixture
+def invoice_dict_factory():
+    """Factory for creating invoice test dictionaries.
+
+    Example:
+        def test_invoices(invoice_dict_factory):
+            inv1 = invoice_dict_factory(amount=100)
+            inv2 = invoice_dict_factory(amount=200, status="paid")
+            # No cleanup needed for dicts
+    """
+    counter = [0]
+
+    def _create(
+        amount: Decimal = Decimal("100.00"),
+        status: str = "pending",
+        customer_id: str | None = None,
+        **kwargs,
+    ) -> dict:
+        counter[0] += 1
+        if customer_id is None:
+            customer_id = f"cust_test_{counter[0]}"
+
+        return {
+            "id": f"inv_test_{counter[0]}",
+            "amount": amount,
+            "status": status,
+            "customer_id": customer_id,
+            "created_at": datetime.now(timezone.utc),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+            **kwargs,
+        }
+
+    return _create
+
+
+@pytest.fixture
+def subscription_dict_factory():
+    """Factory for creating subscription test dictionaries.
+
+    Example:
+        def test_subscriptions(subscription_dict_factory):
+            sub1 = subscription_dict_factory(plan="basic", status="active")
+            sub2 = subscription_dict_factory(plan="premium")
+    """
+    counter = [0]
+
+    def _create(
+        plan: str = "basic",
+        status: str = "active",
+        customer_id: str | None = None,
+        **kwargs,
+    ) -> dict:
+        counter[0] += 1
+        if customer_id is None:
+            customer_id = f"cust_test_{counter[0]}"
+
+        return {
+            "id": f"sub_test_{counter[0]}",
+            "plan_id": plan,
+            "status": status,
+            "customer_id": customer_id,
+            "billing_cycle": "monthly",
+            "start_date": datetime.now(timezone.utc),
+            **kwargs,
+        }
+
+    return _create
+
+
+# =============================================================================
+# NOTE: For database model factories, see tests/fixtures/example_factories.py
+# for template implementations using ModelFactory base class.
+#
+# Example usage:
+#     from tests.helpers.fixture_factories import ModelFactory
+#
+#     class InvoiceFactory(ModelFactory):
+#         model_class = Invoice
+#         id_prefix = "inv_test"
+#
+#         def get_defaults(self):
+#             return {
+#                 "amount": Decimal("100.00"),
+#                 "status": "pending",
+#             }
+#
+#     @pytest_asyncio.fixture
+#     async def invoice_factory(async_db_session):
+#         factory = InvoiceFactory(async_db_session)
+#         yield factory
+#         await factory.cleanup_all()
+# =============================================================================

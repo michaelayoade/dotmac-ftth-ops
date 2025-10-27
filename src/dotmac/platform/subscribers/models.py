@@ -6,7 +6,6 @@ A Subscriber is the network-level representation of a service connection,
 which may be linked to a Customer (billing entity) but tracks different concerns.
 """
 
-import bcrypt
 import hashlib
 import secrets
 from datetime import datetime
@@ -14,6 +13,7 @@ from enum import Enum
 from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
+import bcrypt
 from sqlalchemy import (
     JSON,
     DateTime,
@@ -21,7 +21,6 @@ from sqlalchemy import (
     Index,
     String,
     Text,
-    event,
     text,
 )
 from sqlalchemy import Enum as SQLEnum
@@ -51,7 +50,9 @@ class PasswordHashingMethod(str, Enum):
     BCRYPT = "bcrypt"  # Bcrypt (strongest, but may not be supported by all NAS)
 
 
-def hash_radius_password(password: str, method: PasswordHashingMethod = PasswordHashingMethod.SHA256) -> str:
+def hash_radius_password(
+    password: str, method: PasswordHashingMethod = PasswordHashingMethod.SHA256
+) -> str:
     """
     Hash a RADIUS password using the specified method.
 
@@ -121,7 +122,7 @@ def verify_radius_password(password: str, hashed_password: str) -> bool:
     elif method_str == "bcrypt":
         # Bcrypt verification
         try:
-            return bcrypt.checkpw(password.encode(), stored_hash.encode('utf-8'))
+            return bcrypt.checkpw(password.encode(), stored_hash.encode("utf-8"))
         except (ValueError, TypeError):
             return False
     else:
@@ -140,8 +141,9 @@ def generate_random_password(length: int = 16) -> str:
         Random alphanumeric password
     """
     import string
+
     alphabet = string.ascii_letters + string.digits
-    return ''.join(secrets.choice(alphabet) for _ in range(length))
+    return "".join(secrets.choice(alphabet) for _ in range(length))
 
 
 class SubscriberStatus(str, Enum):
@@ -210,8 +212,8 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         String(255),
         nullable=False,
         comment="RADIUS password - stored with hash method prefix (e.g., 'sha256:abc123...'). "
-                "Use set_password() method to hash automatically. "
-                "Supports: cleartext (insecure), md5 (legacy), sha256 (recommended), bcrypt (future).",
+        "Use set_password() method to hash automatically. "
+        "Supports: cleartext (insecure), md5 (legacy), sha256 (recommended), bcrypt (future).",
     )
     password_hash_method: Mapped[str] = mapped_column(
         String(20),

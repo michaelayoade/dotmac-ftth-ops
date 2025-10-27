@@ -73,7 +73,9 @@ class Order(Base, TimestampMixin):
 
     # Order details
     order_type: OrderType = Column(Enum(OrderType), nullable=False)  # type: ignore[assignment]
-    status: OrderStatus = Column(Enum(OrderStatus), default=OrderStatus.DRAFT, nullable=False, index=True)  # type: ignore[assignment]
+    status: OrderStatus = Column(
+        Enum(OrderStatus), default=OrderStatus.DRAFT, nullable=False, index=True
+    )  # type: ignore[assignment]
     status_message = Column(Text)
 
     # Customer information
@@ -133,7 +135,9 @@ class Order(Base, TimestampMixin):
 
     # Relationships
     items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
-    activations = relationship("ServiceActivation", back_populates="order", cascade="all, delete-orphan")
+    activations = relationship(
+        "ServiceActivation", back_populates="order", cascade="all, delete-orphan"
+    )
     tenant = relationship("Tenant", foreign_keys=[tenant_id])
     deployment_instance = relationship("DeploymentInstance", foreign_keys=[deployment_instance_id])
 
@@ -203,7 +207,9 @@ class ServiceActivation(Base, TimestampMixin):
     # Service details
     service_code = Column(String(100), nullable=False, index=True)
     service_name = Column(String(255), nullable=False)
-    activation_status: ActivationStatus = Column(Enum(ActivationStatus), default=ActivationStatus.PENDING, nullable=False, index=True)  # type: ignore[assignment]
+    activation_status: ActivationStatus = Column(
+        Enum(ActivationStatus), default=ActivationStatus.PENDING, nullable=False, index=True
+    )  # type: ignore[assignment]
 
     # Activation tracking
     started_at = Column(DateTime)

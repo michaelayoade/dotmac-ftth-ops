@@ -1,6 +1,6 @@
 """Tests for Payment Query Handlers (CQRS Pattern)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -77,8 +77,8 @@ class TestPaymentQueryHandler:
         """Test get payment statistics with aggregations"""
         query = GetPaymentStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock aggregation result
@@ -108,8 +108,8 @@ class TestPaymentQueryHandler:
         """Test payment statistics with no data"""
         query = GetPaymentStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock empty result
@@ -150,8 +150,8 @@ class TestPaymentStatisticsCalculations:
 
         query = GetPaymentStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=7),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=7),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock all payments succeeded
@@ -179,8 +179,8 @@ class TestPaymentStatisticsCalculations:
 
         query = GetPaymentStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=7),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=7),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock no payments

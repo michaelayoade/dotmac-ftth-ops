@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.voltha.client import VOLTHAClient
-from dotmac.platform.voltha.service import VOLTHAService
 from dotmac.platform.voltha.schemas import ONUProvisionRequest
+from dotmac.platform.voltha.service import VOLTHAService
 
 
 def make_service_with_client() -> tuple[VOLTHAService, MagicMock]:
@@ -26,9 +26,7 @@ class TestVOLTHAServiceStatistics:
     async def test_get_pon_statistics_aggregates_values(self):
         service, client = make_service_with_client()
 
-        client.get_logical_devices = AsyncMock(
-            return_value=[{"id": "olt-1"}, {"id": "olt-2"}]
-        )
+        client.get_logical_devices = AsyncMock(return_value=[{"id": "olt-1"}, {"id": "olt-2"}])
         client.get_devices = AsyncMock(
             return_value=[
                 {"id": "onu-1", "connect_status": "REACHABLE"},
@@ -514,6 +512,7 @@ class TestVOLTHAServiceAlarmOperations:
     async def test_acknowledge_alarm_error(self):
         """Test that acknowledge_alarm handles errors properly."""
         from fastapi import HTTPException
+
         from dotmac.platform.voltha.schemas import AlarmAcknowledgeRequest
 
         service, client = make_service_with_client()
@@ -567,6 +566,7 @@ class TestVOLTHAServiceAlarmOperations:
     async def test_clear_alarm_error(self):
         """Test that clear_alarm handles errors properly."""
         from fastapi import HTTPException
+
         from dotmac.platform.voltha.schemas import AlarmClearRequest
 
         service, client = make_service_with_client()

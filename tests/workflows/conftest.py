@@ -2,13 +2,12 @@
 Pytest fixtures for workflow router tests.
 """
 
-import pytest
-from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
 
-from dotmac.platform.workflows.models import Workflow, WorkflowExecution, WorkflowStatus, StepStatus
+import pytest
+import pytest_asyncio
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 
 @pytest.fixture
@@ -47,21 +46,21 @@ def sample_workflow():
                     "service": "test_service",
                     "method": "test_method",
                     "params": {"param1": "value1"},
-                    "max_retries": 3
+                    "max_retries": 3,
                 },
                 {
                     "name": "step2",
                     "type": "transform",
                     "transform_type": "map",
-                    "mapping": {"input": "output"}
-                }
+                    "mapping": {"input": "output"},
+                },
             ]
         },
         "is_active": True,
         "version": "1.0.0",
         "tags": {"category": "test", "priority": "low"},
         "created_at": "2025-01-01T12:00:00",
-        "updated_at": "2025-01-01T12:00:00"
+        "updated_at": "2025-01-01T12:00:00",
     }
 
 
@@ -82,7 +81,7 @@ def sample_workflow_execution():
         "tenant_id": 1,
         "created_at": "2025-01-01T12:05:00",
         "updated_at": "2025-01-01T12:10:00",
-        "steps": []
+        "steps": [],
     }
 
 
@@ -99,9 +98,9 @@ def sample_workflow_definition():
                 "params": {
                     "ipv4_prefix_id": 1,
                     "ipv6_prefix_id": 2,
-                    "description": "Test allocation"
+                    "description": "Test allocation",
                 },
-                "max_retries": 3
+                "max_retries": 3,
             },
             {
                 "name": "create_radius_account",
@@ -112,10 +111,10 @@ def sample_workflow_definition():
                     "subscriber_id": "${context.subscriber_id}",
                     "username": "${context.username}",
                     "framed_ipv4_address": "${step_allocate_ip_result.ipv4}",
-                    "framed_ipv6_address": "${step_allocate_ip_result.ipv6}"
+                    "framed_ipv6_address": "${step_allocate_ip_result.ipv6}",
                 },
-                "max_retries": 2
-            }
+                "max_retries": 2,
+            },
         ]
     }
 
@@ -124,13 +123,14 @@ def sample_workflow_definition():
 def mock_current_user():
     """Mock current user for authentication."""
     from dotmac.platform.auth.core import UserInfo
+
     return UserInfo(
         user_id="00000000-0000-0000-0000-000000000001",
         email="test@example.com",
         tenant_id="00000000-0000-0000-0000-000000000001",
         roles=["admin"],
         permissions=["workflows:create", "workflows:read", "workflows:update", "workflows:delete"],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
 
@@ -147,22 +147,22 @@ def mock_rbac_service():
     return mock_rbac
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(mock_workflow_service, mock_current_user, mock_rbac_service, monkeypatch):
     """Async HTTP client with workflow router registered and dependencies mocked."""
-    from dotmac.platform.workflows.router import (
-        router as workflow_router,
-        get_workflow_service,
-    )
+    import dotmac.platform.auth.rbac_dependencies
     from dotmac.platform.auth.core import get_current_user
     from dotmac.platform.db import get_async_session
-    import dotmac.platform.auth.rbac_dependencies
+    from dotmac.platform.workflows.router import (
+        get_workflow_service,
+    )
+    from dotmac.platform.workflows.router import (
+        router as workflow_router,
+    )
 
     # Monkeypatch RBACService class to return our mock instance
     monkeypatch.setattr(
-        dotmac.platform.auth.rbac_dependencies,
-        'RBACService',
-        lambda db: mock_rbac_service
+        dotmac.platform.auth.rbac_dependencies, "RBACService", lambda db: mock_rbac_service
     )
 
     app = FastAPI()

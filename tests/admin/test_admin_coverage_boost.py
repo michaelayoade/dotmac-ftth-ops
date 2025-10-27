@@ -95,14 +95,19 @@ class TestValidationEdgeCases:
     @pytest.mark.asyncio
     async def test_validate_settings_generic_exception(self):
         """Test validation with generic exception (lines 232-234)."""
+        from unittest.mock import PropertyMock
+
         service = SettingsManagementService()
 
-        # Mock the settings object to raise exception during validation
-        with patch.object(service.settings, "database") as mock_database:
-            mock_database.model_dump.side_effect = RuntimeError("Unexpected error")
+        # Mock the settings object's model_dump to raise exception during validation
+        # Need to mock at a deeper level to trigger the exception in _run_validation_checks
+        original_database = service.settings.database
 
+        with patch.object(
+            type(service.settings.database), "model_dump", side_effect=RuntimeError("Unexpected error")
+        ):
             result = service.validate_settings(
-                category=SettingsCategory.DATABASE, updates={"database": "test"}
+                category=SettingsCategory.DATABASE, updates={"url": "test"}
             )
 
             # Should catch generic exception (lines 232-234)
@@ -241,6 +246,13 @@ class TestBackupEdgeCases:
         mock_session = AsyncMock()
         mock_session.add = MagicMock()
         mock_session.commit = AsyncMock()
+        mock_session.get = AsyncMock(return_value=None)  # No DB backup, use in-memory
+
+        # Configure execute() to return a result with scalar_one_or_none() returning None
+        mock_result = AsyncMock()
+        mock_result.scalar_one_or_none = MagicMock(return_value=None)
+        mock_session.execute = AsyncMock(return_value=mock_result)
+
         mock_session.__aenter__ = AsyncMock(return_value=mock_session)
         mock_session.__aexit__ = AsyncMock(return_value=None)
 
@@ -254,8 +266,23 @@ class TestBackupEdgeCases:
                 backup_id=backup_id, user_id="user-123", user_email="user@example.com"
             )
 
-        # When changes dict is empty, the category should not be added to restored (line 362 if check fails)
-        # However, if the restore found ANY valid fields from the original backup, it will restore them
-        # So this test might need adjustment based on actual behavior
-        # For now, verify that restore completed (may be 0 or may include defaults)
-        assert isinstance(restored, dict)
+        # When changes dict is empty (all fields were non-existent),
+        # the category is still persisted but no audit entry is created
+        assert isinstance(restored, dict), "Restore should return a dict"
+
+        # The category is still added to restored even with no valid field changes
+        assert SettingsCategory.DATABASE in restored
+
+        # Verify db_session.add was called exactly once for AdminSettingsStore
+        # (not twice - no audit entry should be added when changes is empty)
+        assert mock_session.add.call_count == 1, (
+            "Expected 1 call to session.add (for AdminSettingsStore), "
+            f"but got {mock_session.add.call_count}"
+        )
+
+        # Verify it was called with AdminSettingsStore, not AdminSettingsAuditEntry
+        from dotmac.platform.admin.settings.models import AdminSettingsStore
+        call_args = mock_session.add.call_args[0][0]
+        assert isinstance(call_args, AdminSettingsStore), (
+            "Expected session.add to be called with AdminSettingsStore when there are no changes"
+        )

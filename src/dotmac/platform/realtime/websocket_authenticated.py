@@ -13,7 +13,6 @@ from uuid import UUID
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
 from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.dunning.models import DunningCampaign
 from dotmac.platform.db import async_session_maker
@@ -54,8 +53,7 @@ def _check_control_command_rate_limit(user_id: str, command_type: str) -> tuple[
     # Clean up old entries
     if user_id in _ws_control_command_history:
         _ws_control_command_history[user_id] = [
-            (ts, cmd) for ts, cmd in _ws_control_command_history[user_id]
-            if ts > cutoff_time
+            (ts, cmd) for ts, cmd in _ws_control_command_history[user_id] if ts > cutoff_time
         ]
 
     # Count recent commands
@@ -148,8 +146,12 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisCli
                                         "session_id": session_id,
                                         "username": session.username,
                                         "status": "active" if session.is_active else "inactive",
-                                        "start_time": session.acctstarttime.isoformat() if session.acctstarttime else None,
-                                        "stop_time": session.acctstoptime.isoformat() if session.acctstoptime else None,
+                                        "start_time": session.acctstarttime.isoformat()
+                                        if session.acctstarttime
+                                        else None,
+                                        "stop_time": session.acctstoptime.isoformat()
+                                        if session.acctstoptime
+                                        else None,
                                         "nas_ip": session.nasipaddress,
                                         "input_bytes": session.acctinputoctets,
                                         "output_bytes": session.acctoutputoctets,

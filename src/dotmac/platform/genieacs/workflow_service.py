@@ -69,7 +69,7 @@ class GenieACSService:
         Raises:
             ValueError: If device not found or configuration invalid
         """
-        from datetime import UTC, datetime
+        from datetime import datetime, timezone
 
         from .client import GenieACSClient
         from .service import GenieACSService
@@ -95,8 +95,7 @@ class GenieACSService:
                 # Device might not have checked in yet
                 # Check if device exists with different ID format
                 devices = await genieacs_client.get_devices(
-                    query={"_deviceId._SerialNumber": device_serial},
-                    limit=1
+                    query={"_deviceId._SerialNumber": device_serial}, limit=1
                 )
 
                 if not devices:
@@ -144,7 +143,7 @@ class GenieACSService:
                     device_id,
                     {
                         "_tags": [config_template, f"customer-{customer_id_str}"],
-                    }
+                    },
                 )
                 logger.info(f"Applied template tag '{config_template}' to device {device_id}")
                 tasks_created.append(f"tag:{config_template}")
@@ -158,10 +157,16 @@ class GenieACSService:
             # Configure WiFi if provided
             if wifi_ssid:
                 # Standard TR-069 WiFi parameters
-                params_to_set["InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"] = wifi_ssid
+                params_to_set["InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.SSID"] = (
+                    wifi_ssid
+                )
                 if wifi_password:
-                    params_to_set["InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase"] = wifi_password
-                    params_to_set["InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BeaconType"] = "WPA2PSK"
+                    params_to_set[
+                        "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.PreSharedKey.1.KeyPassphrase"
+                    ] = wifi_password
+                    params_to_set[
+                        "InternetGatewayDevice.LANDevice.1.WLANConfiguration.1.BeaconType"
+                    ] = "WPA2PSK"
 
             # Configure ACS management URL if provided
             if management_url:
@@ -174,14 +179,9 @@ class GenieACSService:
             # Apply parameter changes if any
             if params_to_set:
                 try:
-                    await genieacs_client.set_parameter_values(
-                        device_id,
-                        params_to_set
-                    )
+                    await genieacs_client.set_parameter_values(device_id, params_to_set)
                     tasks_created.append("setParameterValues")
-                    logger.info(
-                        f"Set {len(params_to_set)} parameters on device {device_id}"
-                    )
+                    logger.info(f"Set {len(params_to_set)} parameters on device {device_id}")
                 except Exception as e:
                     logger.error(f"Failed to set parameters: {e}")
                     # Don't fail the entire provisioning if parameter setting fails
@@ -220,10 +220,7 @@ class GenieACSService:
             }
 
         except Exception as e:
-            logger.error(
-                f"Failed to provision device {device_serial}: {e}",
-                exc_info=True
-            )
+            logger.error(f"Failed to provision device {device_serial}: {e}", exc_info=True)
             return {
                 "device_id": device_serial,
                 "customer_id": customer_id_str,

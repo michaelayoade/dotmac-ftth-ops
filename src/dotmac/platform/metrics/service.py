@@ -4,7 +4,10 @@ Metrics Service
 Computes and caches ISP operational metrics and KPIs.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import structlog
 from sqlalchemy import and_, func, or_, select
@@ -23,8 +26,8 @@ from dotmac.platform.metrics.schemas import (
     SubscriberMetrics,
     SupportMetrics,
 )
-from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.radius.models import NAS, RadAcct, RadiusBandwidthProfile
+from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.ticketing.models import (
     Ticket,
@@ -101,13 +104,13 @@ class MetricsService:
         """Compute subscriber metrics."""
         session = self._require_session()
 
-        status_counts: dict[SubscriberStatus, int] = {status: 0 for status in SubscriberStatus}
+        status_counts: dict[SubscriberStatus, int] = dict.fromkeys(SubscriberStatus, 0)
         status_stmt = (
             select(Subscriber.status, func.count(Subscriber.id))
             .where(Subscriber.tenant_id == tenant_id, Subscriber.deleted_at.is_(None))
             .group_by(Subscriber.status)
         )
-        for status, count in (await session.execute(status_stmt)):
+        for status, count in await session.execute(status_stmt):
             if status is None:
                 continue
             status_counts[status] = int(count or 0)
@@ -124,23 +127,29 @@ class MetricsService:
             day=1, hour=0, minute=0, second=0, microsecond=0
         )
 
-        new_this_month = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.activation_date.isnot(None),
-                Subscriber.activation_date >= first_day_of_month,
-                Subscriber.deleted_at.is_(None),
+        new_this_month = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.activation_date.isnot(None),
+                    Subscriber.activation_date >= first_day_of_month,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        churned_this_month = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.termination_date.isnot(None),
-                Subscriber.termination_date >= first_day_of_month,
-                Subscriber.deleted_at.is_(None),
+        churned_this_month = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.termination_date.isnot(None),
+                    Subscriber.termination_date >= first_day_of_month,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         growth = new_this_month - churned_this_month
         churn_rate = round((churned_this_month / total * 100), 2) if total else 0.0
@@ -169,7 +178,8 @@ class MetricsService:
         olt_devices = [
             nas
             for nas in (await session.execute(nas_stmt)).scalars().all()
-            if (nas.type or "").lower().find("olt") != -1 or (nas.description or "").lower().find("olt") != -1
+            if (nas.type or "").lower().find("olt") != -1
+            or (nas.description or "").lower().find("olt") != -1
         ]
 
         olt_count = len(olt_devices)
@@ -179,57 +189,61 @@ class MetricsService:
         olts_online = 0
         if olt_devices:
             recent_cutoff = datetime.now(UTC) - timedelta(minutes=15)
-            olt_identifiers = {
-                str(nas.nasname)
-                for nas in olt_devices
-                if nas.nasname
-            }
+            olt_identifiers = {str(nas.nasname) for nas in olt_devices if nas.nasname}
             if olt_identifiers:
-                active_stmt = (
-                    select(func.distinct(RadAcct.nasipaddress))
-                    .where(
-                        RadAcct.tenant_id == tenant_id,
-                        RadAcct.acctstoptime.is_(None),
-                        RadAcct.nasipaddress.in_(olt_identifiers),
-                        or_(
-                            RadAcct.acctupdatetime.is_(None),
-                            RadAcct.acctupdatetime >= recent_cutoff,
-                        ),
-                    )
+                active_stmt = select(func.distinct(RadAcct.nasipaddress)).where(
+                    RadAcct.tenant_id == tenant_id,
+                    RadAcct.acctstoptime.is_(None),
+                    RadAcct.nasipaddress.in_(olt_identifiers),
+                    or_(
+                        RadAcct.acctupdatetime.is_(None),
+                        RadAcct.acctupdatetime >= recent_cutoff,
+                    ),
                 )
                 active_olt_addresses = {
                     str(addr) for addr in (await session.execute(active_stmt)).scalars().all()
                 }
                 olts_online = sum(
-                    1 for nas in olt_devices if nas.nasname and str(nas.nasname) in active_olt_addresses
+                    1
+                    for nas in olt_devices
+                    if nas.nasname and str(nas.nasname) in active_olt_addresses
                 )
 
         # Subscriber-based ONU counts
-        onu_count = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.onu_serial.isnot(None),
-                Subscriber.deleted_at.is_(None),
+        onu_count = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.onu_serial.isnot(None),
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        onus_online = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.onu_serial.isnot(None),
-                Subscriber.status == SubscriberStatus.ACTIVE,
-                Subscriber.deleted_at.is_(None),
+        onus_online = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.onu_serial.isnot(None),
+                    Subscriber.status == SubscriberStatus.ACTIVE,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
         onus_offline = max(onu_count - onus_online, 0)
 
-        pon_ports_utilized = await session.scalar(
-            select(func.count(func.distinct(Subscriber.onu_serial))).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.onu_serial.isnot(None),
-                Subscriber.deleted_at.is_(None),
+        pon_ports_utilized = (
+            await session.scalar(
+                select(func.count(func.distinct(Subscriber.onu_serial))).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.onu_serial.isnot(None),
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         utilization_percent = (
             round(pon_ports_utilized / pon_ports_total * 100, 1) if pon_ports_total else 0.0
@@ -259,7 +273,9 @@ class MetricsService:
             if signal <= -28.0:
                 degraded_onus += 1
 
-        avg_signal_dbm = round(sum(signal_values) / len(signal_values), 1) if signal_values else None
+        avg_signal_dbm = (
+            round(sum(signal_values) / len(signal_values), 1) if signal_values else None
+        )
 
         return NetworkMetrics(
             olt_count=olt_count,
@@ -279,12 +295,15 @@ class MetricsService:
         session = self._require_session()
 
         active_statuses = (TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.WAITING)
-        open_tickets = await session.scalar(
-            select(func.count(Ticket.id)).where(
-                Ticket.tenant_id == tenant_id,
-                Ticket.status.in_(active_statuses),
+        open_tickets = (
+            await session.scalar(
+                select(func.count(Ticket.id)).where(
+                    Ticket.tenant_id == tenant_id,
+                    Ticket.status.in_(active_statuses),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         # Response time (minutes)
         response_rows = await session.execute(
@@ -300,9 +319,11 @@ class MetricsService:
             delta_minutes = (first_response_at - created_at).total_seconds() / 60
             if delta_minutes >= 0:
                 response_durations.append(delta_minutes)
-        avg_response_time_minutes = round(
-            sum(response_durations) / len(response_durations), 1
-        ) if response_durations else 0.0
+        avg_response_time_minutes = (
+            round(sum(response_durations) / len(response_durations), 1)
+            if response_durations
+            else 0.0
+        )
 
         # Resolution time (hours)
         resolution_minutes = [
@@ -314,22 +335,30 @@ class MetricsService:
                         Ticket.resolution_time_minutes.isnot(None),
                     )
                 )
-            ).scalars().all()
+            )
+            .scalars()
+            .all()
             if minutes is not None and minutes >= 0
         ]
-        avg_resolution_time_hours = round(
-            (sum(resolution_minutes) / len(resolution_minutes)) / 60, 2
-        ) if resolution_minutes else 0.0
+        avg_resolution_time_hours = (
+            round((sum(resolution_minutes) / len(resolution_minutes)) / 60, 2)
+            if resolution_minutes
+            else 0.0
+        )
 
         # SLA compliance
         sla_values = (
-            await session.execute(
-                select(Ticket.sla_breached).where(
-                    Ticket.tenant_id == tenant_id,
-                    Ticket.sla_due_date.isnot(None),
+            (
+                await session.execute(
+                    select(Ticket.sla_breached).where(
+                        Ticket.tenant_id == tenant_id,
+                        Ticket.sla_due_date.isnot(None),
+                    )
                 )
             )
-        ).scalars().all()
+            .scalars()
+            .all()
+        )
         if sla_values:
             compliant = sum(1 for breached in sla_values if not breached)
             sla_compliance_percent = round(compliant / len(sla_values) * 100, 1)
@@ -340,20 +369,26 @@ class MetricsService:
         week_ago = now - timedelta(days=7)
         two_weeks_ago = now - timedelta(days=14)
 
-        tickets_this_week = await session.scalar(
-            select(func.count(Ticket.id)).where(
-                Ticket.tenant_id == tenant_id,
-                Ticket.created_at >= week_ago,
+        tickets_this_week = (
+            await session.scalar(
+                select(func.count(Ticket.id)).where(
+                    Ticket.tenant_id == tenant_id,
+                    Ticket.created_at >= week_ago,
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        tickets_last_week = await session.scalar(
-            select(func.count(Ticket.id)).where(
-                Ticket.tenant_id == tenant_id,
-                Ticket.created_at >= two_weeks_ago,
-                Ticket.created_at < week_ago,
+        tickets_last_week = (
+            await session.scalar(
+                select(func.count(Ticket.id)).where(
+                    Ticket.tenant_id == tenant_id,
+                    Ticket.created_at >= two_weeks_ago,
+                    Ticket.created_at < week_ago,
+                )
             )
-        ) or 0
+            or 0
+        )
 
         return SupportMetrics(
             open_tickets=open_tickets,
@@ -368,13 +403,16 @@ class MetricsService:
         """Compute revenue and financial metrics."""
         session = self._require_session()
 
-        active_subscribers = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.status == SubscriberStatus.ACTIVE,
-                Subscriber.deleted_at.is_(None),
+        active_subscribers = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.status == SubscriberStatus.ACTIVE,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         arpu = await self._calculate_arpu(tenant_id, active_subscribers)
         mrr = active_subscribers * arpu
@@ -386,23 +424,29 @@ class MetricsService:
             InvoiceStatus.OVERDUE,
             InvoiceStatus.PARTIALLY_PAID,
         )
-        outstanding_ar_minor_units = await session.scalar(
-            select(func.sum(InvoiceEntity.remaining_balance)).where(
-                InvoiceEntity.tenant_id == tenant_id,
-                InvoiceEntity.status.in_(collectible_statuses),
-                InvoiceEntity.remaining_balance > 0,
+        outstanding_ar_minor_units = (
+            await session.scalar(
+                select(func.sum(InvoiceEntity.remaining_balance)).where(
+                    InvoiceEntity.tenant_id == tenant_id,
+                    InvoiceEntity.status.in_(collectible_statuses),
+                    InvoiceEntity.remaining_balance > 0,
+                )
             )
-        ) or 0
+            or 0
+        )
 
         thirty_days_ago = datetime.now(UTC) - timedelta(days=30)
-        overdue_30_minor_units = await session.scalar(
-            select(func.sum(InvoiceEntity.remaining_balance)).where(
-                InvoiceEntity.tenant_id == tenant_id,
-                InvoiceEntity.status.in_(collectible_statuses),
-                InvoiceEntity.remaining_balance > 0,
-                InvoiceEntity.due_date < thirty_days_ago,
+        overdue_30_minor_units = (
+            await session.scalar(
+                select(func.sum(InvoiceEntity.remaining_balance)).where(
+                    InvoiceEntity.tenant_id == tenant_id,
+                    InvoiceEntity.status.in_(collectible_statuses),
+                    InvoiceEntity.remaining_balance > 0,
+                    InvoiceEntity.due_date < thirty_days_ago,
+                )
             )
-        ) or 0
+            or 0
+        )
 
         return RevenueMetrics(
             mrr=round(mrr, 2),
@@ -449,48 +493,62 @@ class MetricsService:
         period_days = max(1, min(period_days, 365))
         period_start = datetime.now(UTC) - timedelta(days=period_days)
 
-        total_subscribers = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id, Subscriber.deleted_at.is_(None)
+        total_subscribers = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id, Subscriber.deleted_at.is_(None)
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        active_subscribers = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.status == SubscriberStatus.ACTIVE,
-                Subscriber.deleted_at.is_(None),
+        active_subscribers = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.status == SubscriberStatus.ACTIVE,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        new_subscribers = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.activation_date.isnot(None),
-                Subscriber.activation_date >= period_start,
-                Subscriber.deleted_at.is_(None),
+        new_subscribers = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.activation_date.isnot(None),
+                    Subscriber.activation_date >= period_start,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
-        churned_subscribers = await session.scalar(
-            select(func.count(Subscriber.id)).where(
-                Subscriber.tenant_id == tenant_id,
-                Subscriber.termination_date.isnot(None),
-                Subscriber.termination_date >= period_start,
-                Subscriber.deleted_at.is_(None),
+        churned_subscribers = (
+            await session.scalar(
+                select(func.count(Subscriber.id)).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.termination_date.isnot(None),
+                    Subscriber.termination_date >= period_start,
+                    Subscriber.deleted_at.is_(None),
+                )
             )
-        ) or 0
+            or 0
+        )
 
         net_growth = new_subscribers - churned_subscribers
-        churn_rate = round((churned_subscribers / total_subscribers * 100), 2) if total_subscribers else 0.0
+        churn_rate = (
+            round((churned_subscribers / total_subscribers * 100), 2) if total_subscribers else 0.0
+        )
 
-        status_counts: dict[SubscriberStatus, int] = {status: 0 for status in SubscriberStatus}
+        status_counts: dict[SubscriberStatus, int] = dict.fromkeys(SubscriberStatus, 0)
         status_stmt = (
             select(Subscriber.status, func.count(Subscriber.id))
             .where(Subscriber.tenant_id == tenant_id, Subscriber.deleted_at.is_(None))
             .group_by(Subscriber.status)
         )
-        for status, count in (await session.execute(status_stmt)):
+        for status, count in await session.execute(status_stmt):
             if status is None:
                 continue
             status_counts[status] = int(count or 0)

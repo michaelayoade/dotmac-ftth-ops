@@ -5,7 +5,10 @@ Production-ready user models using SQLAlchemy 2.0.
 """
 
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy import JSON, Boolean, ForeignKey, String, Text, UniqueConstraint
@@ -13,8 +16,6 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base, TenantMixin, TimestampMixin
-
-
 
 try:  # Ensure dependent tables are registered for metadata creation in tests
     from dotmac.platform.contacts.models import Contact  # noqa: F401
@@ -31,6 +32,7 @@ except Exception:  # pragma: no cover - optional dependency
             Column("updated_at", String(32), nullable=True),
             extend_existing=True,
         )
+
 
 class User(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """User model for authentication and authorization."""
@@ -365,9 +367,7 @@ class UserDevice(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     # Device information
     device_token: Mapped[str] = mapped_column(String(512), nullable=False, index=True)
-    device_type: Mapped[str] = mapped_column(
-        String(20), nullable=False
-    )  # ios, android, web
+    device_type: Mapped[str] = mapped_column(String(20), nullable=False)  # ios, android, web
     device_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     device_model: Mapped[str | None] = mapped_column(String(255), nullable=True)
     os_version: Mapped[str | None] = mapped_column(String(50), nullable=True)

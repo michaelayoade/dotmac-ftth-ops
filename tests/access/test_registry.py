@@ -1,8 +1,6 @@
-import asyncio
 from pathlib import Path
 
 import pytest
-from pydantic import BaseModel
 
 from dotmac.platform.access.drivers.base import (
     BaseOLTDriver,
@@ -10,7 +8,6 @@ from dotmac.platform.access.drivers.base import (
     DriverCapabilities,
     DriverConfig,
     DriverContext,
-    OLTAlarm,
     OltMetrics,
     ONUProvisionRequest,
     ONUProvisionResult,
@@ -26,6 +23,20 @@ class DummyDriver(BaseOLTDriver):
 
     async def get_capabilities(self):
         return DriverCapabilities()
+
+    async def list_logical_devices(self):
+        """Return logical device (OLT) information."""
+        return [{"id": self.config.olt_id, "type": "olt", "state": "active"}]
+
+    async def list_devices(self):
+        """Return physical device/ONU information."""
+        return [{"id": "0/1/1/1", "serial": "TEST1234", "state": "online"}]
+
+    async def get_device(self, device_id: str):
+        """Return a specific device."""
+        if device_id == "0/1/1/1":
+            return {"id": device_id, "serial": "TEST1234", "state": "online"}
+        return None
 
     async def provision_onu(self, request: ONUProvisionRequest):
         return ONUProvisionResult(success=True)
@@ -53,6 +64,14 @@ class DummyDriver(BaseOLTDriver):
 
     async def restore_configuration(self, payload: bytes):
         return None
+
+    async def operate_device(self, device_id: str, operation: str) -> bool:
+        """Perform a device operation (enable/disable/reboot)."""
+        return True
+
+    async def get_health(self):
+        """Return health information."""
+        return {"status": "healthy", "olt_id": self.config.olt_id}
 
 
 @pytest.mark.asyncio

@@ -2,7 +2,7 @@
 Shared fixtures for customer management tests.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -20,9 +20,9 @@ except Exception:  # pragma: no cover - fallback during partial installs
 
 # Ensure dependent tables are registered when SQLAlchemy metadata is created in tests
 try:  # pragma: no cover - best effort imports for test setup
-    import dotmac.platform.user_management.models  # noqa: F401
     import dotmac.platform.billing.models  # noqa: F401
     import dotmac.platform.licensing.models  # noqa: F401
+    import dotmac.platform.user_management.models  # noqa: F401
 except Exception:  # pragma: no cover - optional during partial installs
     pass
 
@@ -42,7 +42,7 @@ def _build_customer_kwargs(
         CustomerType,
     )
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     customer_uuid = customer_id or uuid4()
 
     base_kwargs: dict[str, Any] = {
@@ -60,7 +60,7 @@ def _build_customer_kwargs(
         "customer_type": CustomerType.INDIVIDUAL,
         "preferred_channel": CommunicationChannel.EMAIL,
         "preferred_language": "en",
-        "timezone": "UTC",
+        "timezone": "timezone.utc",
         "opt_in_marketing": False,
         "opt_in_updates": True,
         "email_verified": True,
@@ -255,7 +255,7 @@ def sample_customer_dict() -> dict[str, Any]:
         "status": "active",
         "preferred_channel": "email",
         "preferred_language": "en",
-        "timezone": "UTC",
+        "timezone": "timezone.utc",
         "opt_in_marketing": False,
         "opt_in_updates": True,
         "email_verified": True,

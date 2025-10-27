@@ -2,6 +2,9 @@
 End-to-End GraphQL Cookie Authentication Test.
 
 Tests that GraphQL queries work with HttpOnly cookie authentication.
+
+These are integration tests that require a running server at localhost:8000.
+They will be skipped if the server is not available.
 """
 
 import asyncio
@@ -9,22 +12,49 @@ import asyncio
 import httpx
 import pytest
 
+# Check if server is available
+async def is_server_available(base_url: str = "http://localhost:8000") -> bool:
+    """Check if the test server is running."""
+    try:
+        async with httpx.AsyncClient(base_url=base_url, timeout=2.0) as client:
+            response = await client.get("/health")
+            return response.status_code == 200
+    except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.TimeoutException):
+        return False
 
-@pytest.mark.asyncio
+
+# Mark all tests in this module as integration tests
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
+
+
 async def test_graphql_cookie_auth():
-    """Test GraphQL authentication using HttpOnly cookies."""
+    """Test GraphQL authentication using HttpOnly cookies.
+
+    NOTE: This is an E2E integration test that requires a running server.
+    The test will be skipped if the server is not available.
+    """
 
     base_url = "http://localhost:8000"
 
+    # Check if server is available first
+    if not await is_server_available(base_url):
+        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+
     async with httpx.AsyncClient(base_url=base_url) as client:
         # Step 1: Login and get cookie
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={
-                "username": "admin",
-                "password": "admin",  # Use actual test credentials
-            },
-        )
+        try:
+            login_response = await client.post(
+                "/api/v1/auth/login",
+                json={
+                    "username": "admin",
+                    "password": "admin",  # Use actual test credentials
+                },
+            )
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
+            pytest.skip(f"Cannot connect to test server: {e}")
 
         assert login_response.status_code == 200, f"Login failed: {login_response.text}"
 
@@ -57,7 +87,9 @@ async def test_graphql_cookie_auth():
             cookies=cookies,  # Send cookies with request
         )
 
-        assert graphql_response.status_code == 200, f"GraphQL request failed: {graphql_response.text}"
+        assert graphql_response.status_code == 200, (
+            f"GraphQL request failed: {graphql_response.text}"
+        )
 
         graphql_data = graphql_response.json()
         assert "data" in graphql_data, f"GraphQL response missing data: {graphql_data}"
@@ -84,7 +116,9 @@ async def test_graphql_cookie_auth():
         if subscribers_response.status_code == 200:
             subscribers_data = subscribers_response.json()
             if "errors" in subscribers_data:
-                print(f"⚠️  Subscribers query error (may not be implemented): {subscribers_data['errors']}")
+                print(
+                    f"⚠️  Subscribers query error (may not be implemented): {subscribers_data['errors']}"
+                )
             else:
                 subscribers = subscribers_data.get("data", {}).get("subscribers", [])
                 print(f"✅ Subscribers query successful: Found {len(subscribers)} subscribers")
@@ -106,14 +140,24 @@ async def test_graphql_cookie_auth():
         print("✅ Audit context should be set via cookie auth (manual verification needed)")
 
 
-@pytest.mark.asyncio
 async def test_platform_config_endpoint():
-    """Test that platform config endpoint returns correct structure."""
+    """Test that platform config endpoint returns correct structure.
+
+    NOTE: This is an E2E integration test that requires a running server.
+    The test will be skipped if the server is not available.
+    """
 
     base_url = "http://localhost:8000"
 
+    # Check if server is available first
+    if not await is_server_available(base_url):
+        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+
     async with httpx.AsyncClient(base_url=base_url) as client:
-        response = await client.get("/api/v1/platform/config")
+        try:
+            response = await client.get("/api/v1/platform/config")
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
+            pytest.skip(f"Cannot connect to test server: {e}")
 
         assert response.status_code == 200, f"Config endpoint failed: {response.text}"
 
@@ -149,21 +193,31 @@ async def test_platform_config_endpoint():
         print(f"   Cookie auth: {config['auth']['cookie_based']}")
 
 
-@pytest.mark.asyncio
 async def test_real_time_cookie_auth():
-    """Test that real-time endpoints accept cookie authentication."""
+    """Test that real-time endpoints accept cookie authentication.
+
+    NOTE: This is an E2E integration test that requires a running server.
+    The test will be skipped if the server is not available.
+    """
 
     base_url = "http://localhost:8000"
 
+    # Check if server is available first
+    if not await is_server_available(base_url):
+        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+
     async with httpx.AsyncClient(base_url=base_url) as client:
         # Login first
-        login_response = await client.post(
-            "/api/v1/auth/login",
-            json={
-                "username": "admin",
-                "password": "admin",
-            },
-        )
+        try:
+            login_response = await client.post(
+                "/api/v1/auth/login",
+                json={
+                    "username": "admin",
+                    "password": "admin",
+                },
+            )
+        except (httpx.ConnectError, httpx.RemoteProtocolError) as e:
+            pytest.skip(f"Cannot connect to test server: {e}")
 
         assert login_response.status_code == 200
         cookies = login_response.cookies

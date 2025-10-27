@@ -4,7 +4,7 @@ Comprehensive testing of FastAPI endpoints with authentication, validation, and 
 """
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 from unittest.mock import Mock
 
@@ -68,7 +68,7 @@ class APIEndpointHandler:
 
         return {
             "status": "healthy",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "version": self._version,
             "checks": checks,
         }
@@ -97,7 +97,7 @@ class APIEndpointHandler:
             "name": profile_data["name"],
             "email": profile_data["email"],
             "tenant_id": current_user.tenant_id,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "active": True,
         }
 
@@ -160,7 +160,7 @@ class APIEndpointHandler:
             "name": update_data.get("name", "Test User"),
             "email": update_data.get("email", "test@example.com"),
             "bio": update_data.get("bio", ""),
-            "updated_at": datetime.now(UTC).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         return {"profile": updated_profile, "status_code": 200}
@@ -223,7 +223,7 @@ class APIEndpointHandler:
             "name": key_data["name"],
             "api_key": f"dotmac_live_{hash(key_data['name']) % 1000000:06d}",
             "user_id": current_user.user_id,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "active": True,
         }
 

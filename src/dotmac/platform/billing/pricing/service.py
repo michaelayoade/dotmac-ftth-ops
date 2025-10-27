@@ -4,7 +4,10 @@ Pricing engine service.
 Simple pricing calculations with rule-based discounts - first match wins approach.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -79,9 +82,7 @@ class PricingEngine:
         if rule_data.discount_type == DiscountType.PERCENTAGE:
             max_discount = settings.billing.max_discount_percentage
             if rule_data.discount_value > max_discount:
-                raise InvalidPricingRuleError(
-                    f"Percentage discount cannot exceed {max_discount}%"
-                )
+                raise InvalidPricingRuleError(f"Percentage discount cannot exceed {max_discount}%")
 
         # Create database record
         db_rule = BillingPricingRuleTable(

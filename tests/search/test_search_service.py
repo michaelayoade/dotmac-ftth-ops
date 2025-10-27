@@ -5,6 +5,7 @@ Tests for search service implementation.
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.search.interfaces import (
     SearchFilter,
@@ -30,7 +31,7 @@ class TestInMemorySearchBackend:
         """Create in-memory search backend."""
         return InMemorySearchBackend()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def populated_backend(self, backend):
         """Create backend with test data."""
         await backend.create_index("test_index")
@@ -637,7 +638,7 @@ class TestInMemorySearchBackendAdditional:
         """Create in-memory search backend."""
         return InMemorySearchBackend()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def populated_backend(self, backend):
         """Create backend with test data including various data types."""
         await backend.create_index("test_index")

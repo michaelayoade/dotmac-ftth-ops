@@ -6,7 +6,7 @@ load balancing, traffic policies, and other resilience patterns.
 """
 
 import time
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -311,7 +311,7 @@ class TestServiceCall:
         call_id = str(uuid4())
         trace_id = str(uuid4())
         span_id = str(uuid4())
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         call = ServiceCall(
             call_id=call_id,
@@ -342,7 +342,7 @@ class TestServiceCall:
         call_id = str(uuid4())
         trace_id = str(uuid4())
         span_id = str(uuid4())
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         call = ServiceCall(
             call_id=call_id,

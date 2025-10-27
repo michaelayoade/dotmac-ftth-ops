@@ -13,25 +13,22 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel, ConfigDict, Field
 from reportlab.lib import colors
-from reportlab.lib.pagesizes import A4, letter
+from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
-from reportlab.lib.units import inch, mm
+from reportlab.lib.units import inch
 from reportlab.platypus import (
-    PageBreak,
     Paragraph,
     SimpleDocTemplate,
     Spacer,
     Table,
     TableStyle,
 )
-from reportlab.platypus.flowables import HRFlowable
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.billing.invoicing.money_service import MoneyInvoiceService
-from dotmac.platform.billing.money_models import MoneyInvoice
 from dotmac.platform.billing.payment_methods.models import (
     AddPaymentMethodRequest,
     PaymentMethodResponse,
@@ -154,8 +151,8 @@ async def calculate_usage_from_radius(
     total_output_bytes = row.total_output or 0
 
     # Convert bytes to GB
-    download_gb = total_input_bytes / (1024 ** 3)
-    upload_gb = total_output_bytes / (1024 ** 3)
+    download_gb = total_input_bytes / (1024**3)
+    upload_gb = total_output_bytes / (1024**3)
 
     return download_gb, upload_gb
 
@@ -190,8 +187,8 @@ async def get_daily_usage_breakdown(
 
     daily_data = []
     for row in result:
-        download_gb = (row.download_bytes or 0) / (1024 ** 3)
-        upload_gb = (row.upload_bytes or 0) / (1024 ** 3)
+        download_gb = (row.download_bytes or 0) / (1024**3)
+        upload_gb = (row.upload_bytes or 0) / (1024**3)
         daily_data.append(
             UsageDataPoint(
                 date=row.day.strftime("%Y-%m-%d"),
@@ -237,8 +234,8 @@ async def get_hourly_usage_breakdown(
 
     hourly_data = []
     for row in result:
-        download_gb = (row.download_bytes or 0) / (1024 ** 3)
-        upload_gb = (row.upload_bytes or 0) / (1024 ** 3)
+        download_gb = (row.download_bytes or 0) / (1024**3)
+        upload_gb = (row.upload_bytes or 0) / (1024**3)
         hourly_data.append(
             UsageDataPoint(
                 date=row.hour.strftime("%H:%M"),
@@ -298,7 +295,7 @@ def generate_usage_report_pdf(
     customer_info = f"""
     <b>Customer:</b> {customer.first_name} {customer.last_name}<br/>
     <b>Email:</b> {customer.email}<br/>
-    <b>Report Period:</b> {report_data.period.get('start', 'N/A')} to {report_data.period.get('end', 'N/A')}<br/>
+    <b>Report Period:</b> {report_data.period.get("start", "N/A")} to {report_data.period.get("end", "N/A")}<br/>
     <b>Generated:</b> {datetime.now().strftime("%B %d, %Y at %I:%M %p")}
     """
     story.append(Paragraph(customer_info, styles["Normal"]))
@@ -315,7 +312,7 @@ def generate_usage_report_pdf(
         ["Uploaded", f"{summary.get('upload_gb', 0):.2f} GB"],
         ["Data Cap", f"{summary.get('limit_gb', 'Unlimited')} GB"],
         ["Usage %", f"{summary.get('usage_percentage', 0):.1f}%"],
-        ["Days Remaining", str(summary.get('days_remaining', 'N/A'))],
+        ["Days Remaining", str(summary.get("days_remaining", "N/A"))],
     ]
 
     summary_table = Table(summary_data, colWidths=[2.5 * inch, 2.5 * inch])
@@ -346,12 +343,14 @@ def generate_usage_report_pdf(
 
         daily_data = [["Date", "Download (GB)", "Upload (GB)", "Total (GB)"]]
         for entry in report_data.daily_usage[:30]:  # Limit to 30 days
-            daily_data.append([
-                entry.get("date", ""),
-                f"{entry.get('download', 0):.2f}",
-                f"{entry.get('upload', 0):.2f}",
-                f"{entry.get('download', 0) + entry.get('upload', 0):.2f}",
-            ])
+            daily_data.append(
+                [
+                    entry.get("date", ""),
+                    f"{entry.get('download', 0):.2f}",
+                    f"{entry.get('upload', 0):.2f}",
+                    f"{entry.get('download', 0) + entry.get('upload', 0):.2f}",
+                ]
+            )
 
         daily_table = Table(daily_data, colWidths=[1.5 * inch, 1.5 * inch, 1.5 * inch, 1.5 * inch])
         daily_table.setStyle(
@@ -420,14 +419,10 @@ async def get_usage_history(
         )
 
         # Get daily breakdown
-        daily_usage = await get_daily_usage_breakdown(
-            customer, start_date, end_date, db
-        )
+        daily_usage = await get_daily_usage_breakdown(customer, start_date, end_date, db)
 
         # Get hourly breakdown (last 24h)
-        hourly_usage = await get_hourly_usage_breakdown(
-            customer, start_date, end_date, db
-        )
+        hourly_usage = await get_hourly_usage_breakdown(customer, start_date, end_date, db)
 
         return UsageHistoryResponse(
             period_start=start_date,

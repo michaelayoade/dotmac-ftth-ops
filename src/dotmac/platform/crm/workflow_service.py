@@ -51,7 +51,11 @@ class CRMService:
             raise ValueError("Quote ID must be UUID string, not int. Check workflow context.")
 
         quote_uuid = UUID(str(quote_id)) if not isinstance(quote_id, UUID) else quote_id
-        accepted_by_uuid = UUID(str(accepted_by)) if accepted_by and not isinstance(accepted_by, UUID) else accepted_by
+        accepted_by_uuid = (
+            UUID(str(accepted_by))
+            if accepted_by and not isinstance(accepted_by, UUID)
+            else accepted_by
+        )
 
         # Get tenant_id from quote (in a real scenario, this would come from context)
         # For now, we'll need to fetch the quote first to get tenant_id
@@ -136,8 +140,14 @@ class CRMService:
 
         # Convert IDs to UUIDs
         try:
-            customer_uuid = UUID(str(customer_id)) if not isinstance(customer_id, UUID) else customer_id
-            subscription_uuid = UUID(str(subscription_id)) if not isinstance(subscription_id, UUID) else subscription_id
+            customer_uuid = (
+                UUID(str(customer_id)) if not isinstance(customer_id, UUID) else customer_id
+            )
+            subscription_uuid = (
+                UUID(str(subscription_id))
+                if not isinstance(subscription_id, UUID)
+                else subscription_id
+            )
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid ID format: {e}") from e
 
@@ -179,7 +189,9 @@ class CRMService:
                 "bandwidth": getattr(subscription, "bandwidth", "N/A"),
                 "amount": float(subscription.amount),
                 "renewal_price": float(subscription.amount),  # Could apply renewal pricing logic
-                "billing_cycle": subscription.billing_cycle.value if hasattr(subscription.billing_cycle, "value") else str(subscription.billing_cycle),
+                "billing_cycle": subscription.billing_cycle.value
+                if hasattr(subscription.billing_cycle, "value")
+                else str(subscription.billing_cycle),
                 "contract_term_months": renewal_term,
                 "service_plan_speed": getattr(subscription, "service_plan_speed", None),
             }
@@ -275,10 +287,7 @@ class CRMService:
         # Get the most recent completed survey for this lead
         survey_stmt = (
             select(SiteSurvey)
-            .where(
-                SiteSurvey.lead_id == lead.id,
-                SiteSurvey.status == SiteSurveyStatus.COMPLETED
-            )
+            .where(SiteSurvey.lead_id == lead.id, SiteSurvey.status == SiteSurveyStatus.COMPLETED)
             .order_by(SiteSurvey.completed_at.desc())
         )
         survey_result = await self.db.execute(survey_stmt)

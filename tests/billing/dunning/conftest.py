@@ -4,6 +4,7 @@ import os
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
@@ -22,7 +23,21 @@ from dotmac.platform.billing.dunning.schemas import (
 from dotmac.platform.db import Base
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture
+async def async_client(test_app):
+    """Async HTTP client for dunning API tests.
+
+    Creates an httpx AsyncClient for testing async endpoints.
+    Includes authentication headers and tenant ID.
+    """
+    from httpx import ASGITransport, AsyncClient
+
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        yield client
+
+
+@pytest_asyncio.fixture(scope="function")
 async def async_session():
     """Create an async database session for testing."""
     engine = create_async_engine(
@@ -96,7 +111,7 @@ def sample_campaign_data():
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_campaign(async_session, test_tenant_id, test_user_id, sample_campaign_data):
     """Create a sample dunning campaign."""
     from dotmac.platform.billing.dunning.service import DunningService
@@ -112,7 +127,7 @@ async def sample_campaign(async_session, test_tenant_id, test_user_id, sample_ca
     return campaign
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_execution(async_session, sample_campaign, test_tenant_id, test_customer_id):
     """Create a sample dunning execution."""
     from dotmac.platform.billing.dunning.service import DunningService

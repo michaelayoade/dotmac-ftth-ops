@@ -5,18 +5,20 @@ Tests HTTP endpoints, request validation, response formatting, and error handlin
 for the customer management API.
 """
 
-import pytest
-from fastapi import status
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
-from typing import Any
-from uuid import uuid4
 from datetime import datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
+
+import pytest
+import pytest_asyncio
+from fastapi import FastAPI, status
+from httpx import ASGITransport, AsyncClient
 
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
+
     def __init__(self, **kwargs: Any):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -43,7 +45,7 @@ def sample_customer_dict() -> dict[str, Any]:
         "country": "US",
         "preferred_channel": "email",
         "preferred_language": "en",
-        "timezone": "UTC",
+        "timezone": "timezone.utc",
         "opt_in_marketing": False,
         "opt_in_updates": True,
         "email_verified": True,
@@ -57,15 +59,16 @@ def sample_customer_dict() -> dict[str, Any]:
         "metadata_": {},
         "custom_fields": {},
         "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(monkeypatch):
     """Async HTTP client with customer management router."""
-    from dotmac.platform.customer_management.router import router as customer_router, get_customer_service
-    from dotmac.platform.auth.core import get_current_user, UserInfo
+    from dotmac.platform.auth.core import UserInfo, get_current_user
+    from dotmac.platform.customer_management.router import get_customer_service
+    from dotmac.platform.customer_management.router import router as customer_router
     from dotmac.platform.db import get_session_dependency
 
     # Create mocks fresh for each test
@@ -99,28 +102,34 @@ async def async_client(monkeypatch):
             "customer.update",
             "customer.delete",
         ],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
     # Mock JWT service
     mock_jwt = MagicMock()
     mock_jwt.create_access_token = MagicMock(return_value="mock_token")
     import dotmac.platform.auth.core
-    monkeypatch.setattr(dotmac.platform.auth.core, 'jwt_service', mock_jwt)
+
+    monkeypatch.setattr(dotmac.platform.auth.core, "jwt_service", mock_jwt)
 
     # Mock audit logging
     async def mock_log(*args, **kwargs):
         pass
+
     import dotmac.platform.audit
-    monkeypatch.setattr(dotmac.platform.audit, 'log_user_activity', mock_log)
+
+    monkeypatch.setattr(dotmac.platform.audit, "log_user_activity", mock_log)
 
     # Mock email service
     mock_email = MagicMock()
     mock_email.send_password_reset_email = AsyncMock(return_value=("sent", "token"))
+
     def get_email():
         return mock_email
+
     import dotmac.platform.auth.email_service
-    monkeypatch.setattr(dotmac.platform.auth.email_service, 'get_auth_email_service', get_email)
+
+    monkeypatch.setattr(dotmac.platform.auth.email_service, "get_auth_email_service", get_email)
 
     app = FastAPI()
 
@@ -135,6 +144,7 @@ async def async_client(monkeypatch):
         require_customer_manage_status,
         require_customer_reset_password,
     )
+
     app.dependency_overrides[require_customer_impersonate] = lambda: mock_user
     app.dependency_overrides[require_customer_manage_status] = lambda: mock_user
     app.dependency_overrides[require_customer_reset_password] = lambda: mock_user
@@ -153,9 +163,7 @@ class TestCustomerCRUD:
 
     @pytest.mark.asyncio
     async def test_create_customer_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test successful customer creation."""
         # Arrange
@@ -171,8 +179,8 @@ class TestCustomerCRUD:
                 "email": "john.doe@example.com",
                 "phone": "+1-555-0100",
                 "customer_type": "individual",
-                "tier": "standard"
-            }
+                "tier": "standard",
+            },
         )
 
         # Assert
@@ -184,9 +192,7 @@ class TestCustomerCRUD:
 
     @pytest.mark.asyncio
     async def test_get_customer_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test get customer by ID."""
         # Arrange
@@ -219,9 +225,7 @@ class TestCustomerCRUD:
 
     @pytest.mark.asyncio
     async def test_get_customer_by_number_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test get customer by customer number."""
         # Arrange
@@ -238,9 +242,7 @@ class TestCustomerCRUD:
 
     @pytest.mark.asyncio
     async def test_update_customer_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test customer update."""
         # Arrange
@@ -250,8 +252,7 @@ class TestCustomerCRUD:
 
         # Act
         response = await async_client.patch(
-            f"/api/v1/customers/{sample_customer_dict['id']}",
-            json={"phone": "+1-555-9999"}
+            f"/api/v1/customers/{sample_customer_dict['id']}", json={"phone": "+1-555-9999"}
         )
 
         # Assert
@@ -281,9 +282,7 @@ class TestCustomerSearch:
 
     @pytest.mark.asyncio
     async def test_search_customers_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test customer search."""
         # Arrange
@@ -292,8 +291,7 @@ class TestCustomerSearch:
 
         # Act
         response = await async_client.post(
-            "/api/v1/customers/search",
-            json={"status": "active", "page": 1, "page_size": 10}
+            "/api/v1/customers/search", json={"status": "active", "page": 1, "page_size": 10}
         )
 
         # Assert
@@ -322,7 +320,7 @@ class TestCustomerActivities:
             title="Premium Plan Purchase",
             description="Purchased Premium Plan",
             metadata={},
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         async_client.mock_service.add_activity.return_value = activity
 
@@ -332,8 +330,8 @@ class TestCustomerActivities:
             json={
                 "activity_type": "purchase",
                 "title": "Premium Plan Purchase",
-                "description": "Purchased Premium Plan"
-            }
+                "description": "Purchased Premium Plan",
+            },
         )
 
         # Assert
@@ -357,7 +355,7 @@ class TestCustomerActivities:
                 title="Activity 1",
                 description="Activity 1 description",
                 metadata={},
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
         ]
         async_client.mock_service.get_customer_activities.return_value = activities
@@ -377,9 +375,7 @@ class TestCustomerNotes:
     @pytest.mark.skip(reason="Service layer validation - needs investigation")
     @pytest.mark.asyncio
     async def test_add_customer_note_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test adding customer note."""
         # Arrange
@@ -393,7 +389,7 @@ class TestCustomerNotes:
             content="Important note content",
             is_internal=True,
             created_by_id=None,
-            created_at=datetime.utcnow()
+            created_at=datetime.utcnow(),
         )
         # Mock customer lookup first
         async_client.mock_service.get_customer.return_value = customer_obj
@@ -405,8 +401,8 @@ class TestCustomerNotes:
             json={
                 "subject": "Important Note",
                 "content": "Important note content",
-                "is_internal": True
-            }
+                "is_internal": True,
+            },
         )
 
         # Assert
@@ -417,9 +413,7 @@ class TestCustomerNotes:
     @pytest.mark.skip(reason="Service layer validation - needs investigation")
     @pytest.mark.asyncio
     async def test_get_customer_notes_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test get customer notes."""
         # Arrange
@@ -433,7 +427,7 @@ class TestCustomerNotes:
                 content="Note 1 content",
                 is_internal=False,
                 created_by_id=None,
-                created_at=datetime.utcnow()
+                created_at=datetime.utcnow(),
             )
         ]
         # Mock customer lookup first
@@ -486,7 +480,7 @@ class TestCustomerMetrics:
             "customers_by_status": {"active": 800},
             "customers_by_tier": {"standard": 600},
             "customers_by_type": {"individual": 900},
-            "top_segments": []
+            "top_segments": [],
         }
         async_client.mock_service.get_customer_metrics.return_value = metrics
 
@@ -520,7 +514,7 @@ class TestCustomerSegments:
             member_count=100,
             last_calculated=None,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
         async_client.mock_service.create_segment.return_value = segment
 
@@ -531,8 +525,8 @@ class TestCustomerSegments:
                 "name": "High Value",
                 "description": "High value customers",
                 "criteria": {"ltv__gte": 5000},
-                "is_dynamic": True
-            }
+                "is_dynamic": True,
+            },
         )
 
         # Assert
@@ -551,9 +545,7 @@ class TestCustomerSegments:
         async_client.mock_service.recalculate_segment.return_value = 150
 
         # Act
-        response = await async_client.post(
-            f"/api/v1/customers/segments/{segment_id}/recalculate"
-        )
+        response = await async_client.post(f"/api/v1/customers/segments/{segment_id}/recalculate")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -566,9 +558,7 @@ class TestAdminActions:
 
     @pytest.mark.asyncio
     async def test_impersonate_customer_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test customer impersonation."""
         # Arrange
@@ -588,9 +578,7 @@ class TestAdminActions:
 
     @pytest.mark.asyncio
     async def test_update_customer_status_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test updating customer status."""
         # Arrange
@@ -601,8 +589,7 @@ class TestAdminActions:
 
         # Act
         response = await async_client.patch(
-            f"/api/v1/customers/{sample_customer_dict['id']}/status",
-            json={"status": "suspended"}
+            f"/api/v1/customers/{sample_customer_dict['id']}/status", json={"status": "suspended"}
         )
 
         # Assert
@@ -612,9 +599,7 @@ class TestAdminActions:
 
     @pytest.mark.asyncio
     async def test_reset_customer_password_success(
-        self,
-        async_client: AsyncClient,
-        sample_customer_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
     ):
         """Test admin-initiated password reset."""
         # Arrange

@@ -4,7 +4,7 @@ Comprehensive tests for billing report service integration.
 Tests service orchestration, custom reports, and end-to-end scenarios.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -121,8 +121,8 @@ class TestExecutiveSummaryReport:
     async def test_generate_executive_summary_custom_period(self, report_service):
         """Test executive summary with custom date range."""
         tenant_id = "test-tenant"
-        custom_start = datetime(2024, 1, 1, tzinfo=UTC)
-        custom_end = datetime(2024, 3, 31, tzinfo=UTC)
+        custom_start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        custom_end = datetime(2024, 3, 31, tzinfo=timezone.utc)
 
         # Mock responses
         report_service.revenue_generator.get_revenue_summary = AsyncMock(
@@ -206,8 +206,8 @@ class TestSpecializedReports:
     async def test_generate_revenue_report(self, report_service):
         """Test generating detailed revenue report."""
         tenant_id = "test-tenant"
-        start_date = datetime(2024, 1, 1, tzinfo=UTC)
-        end_date = datetime(2024, 1, 31, tzinfo=UTC)
+        start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         expected_report = {
             "report_type": "revenue_detailed",
@@ -233,8 +233,8 @@ class TestSpecializedReports:
     async def test_generate_customer_report(self, report_service):
         """Test generating customer analysis report."""
         tenant_id = "test-tenant"
-        start_date = datetime(2024, 1, 1, tzinfo=UTC)
-        end_date = datetime(2024, 1, 31, tzinfo=UTC)
+        start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         expected_report = {
             "report_type": "customer_analysis",
@@ -259,7 +259,7 @@ class TestSpecializedReports:
     async def test_generate_aging_report(self, report_service):
         """Test generating aging report."""
         tenant_id = "test-tenant"
-        as_of_date = datetime(2024, 1, 31, tzinfo=UTC)
+        as_of_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         expected_report = {
             "report_type": "aging",
@@ -285,7 +285,7 @@ class TestSpecializedReports:
         report_service.aging_generator.generate_aging_report = AsyncMock(return_value={})
 
         with patch("dotmac.platform.billing.reports.service.datetime") as mock_datetime:
-            mock_now = datetime(2024, 1, 31, 12, 0, 0, tzinfo=UTC)
+            mock_now = datetime(2024, 1, 31, 12, 0, 0, tzinfo=timezone.utc)
             mock_datetime.utcnow.return_value = mock_now
 
             await report_service.generate_aging_report(tenant_id)
@@ -297,8 +297,8 @@ class TestSpecializedReports:
     async def test_generate_collections_report(self, report_service):
         """Test generating collections performance report."""
         tenant_id = "test-tenant"
-        start_date = datetime(2024, 1, 1, tzinfo=UTC)
-        end_date = datetime(2024, 1, 31, tzinfo=UTC)
+        start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         expected_report = {
             "report_type": "collections",
@@ -320,8 +320,8 @@ class TestSpecializedReports:
     async def test_generate_refunds_report(self, report_service):
         """Test generating refunds report."""
         tenant_id = "test-tenant"
-        start_date = datetime(2024, 1, 1, tzinfo=UTC)
-        end_date = datetime(2024, 1, 31, tzinfo=UTC)
+        start_date = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end_date = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         expected_report = {
             "report_type": "refunds",
@@ -350,8 +350,8 @@ class TestCustomReports:
         report_config = {
             "metrics": ["revenue"],
             "filters": {
-                "start_date": datetime(2024, 1, 1, tzinfo=UTC),
-                "end_date": datetime(2024, 1, 31, tzinfo=UTC),
+                "start_date": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "end_date": datetime(2024, 1, 31, tzinfo=timezone.utc),
             },
             "group_by": ["month"],
         }
@@ -374,8 +374,8 @@ class TestCustomReports:
         report_config = {
             "metrics": ["revenue", "customers", "aging", "tax"],
             "filters": {
-                "start_date": datetime(2024, 1, 1, tzinfo=UTC),
-                "end_date": datetime(2024, 1, 31, tzinfo=UTC),
+                "start_date": datetime(2024, 1, 1, tzinfo=timezone.utc),
+                "end_date": datetime(2024, 1, 31, tzinfo=timezone.utc),
             },
         }
 
@@ -420,7 +420,7 @@ class TestCustomReports:
         tenant_id = "test-tenant"
         report_config = {
             "metrics": ["revenue"],
-            "filters": {"start_date": datetime(2024, 1, 1, tzinfo=UTC)},
+            "filters": {"start_date": datetime(2024, 1, 1, tzinfo=timezone.utc)},
             "group_by": ["month", "product"],
         }
 

@@ -7,12 +7,13 @@ and reduce test failures across the codebase.
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 # ============================================================================
@@ -98,7 +99,7 @@ def create_mock_user_service() -> Mock:
             username="testuser",
             email="test@example.com",
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
     )
     service.update_user = AsyncMock(return_value=True)
@@ -159,7 +160,7 @@ def create_mock_auth_service() -> Mock:
             id=str(uuid4()),
             user_id="user123",
             token="session_token",
-            expires_at=datetime.now(UTC) + timedelta(hours=24),
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
         )
     )
     service.get_session = AsyncMock(return_value=None)
@@ -193,11 +194,11 @@ def create_mock_celery_app() -> Mock:
 
 def utcnow() -> datetime:
     """
-    Get current UTC datetime with timezone awareness.
+    Get current timezone.utc datetime with timezone awareness.
 
     Replaces deprecated datetime.now(timezone.utc).
     """
-    return datetime.now(UTC)
+    return datetime.now(timezone.utc)
 
 
 def mock_utcnow(target_datetime: datetime | None = None) -> Mock:
@@ -208,7 +209,7 @@ def mock_utcnow(target_datetime: datetime | None = None) -> Mock:
         target_datetime: Specific datetime to return, or current time if None.
     """
     if target_datetime is None:
-        target_datetime = datetime.now(UTC)
+        target_datetime = datetime.now(timezone.utc)
 
     return Mock(return_value=target_datetime)
 
@@ -297,8 +298,8 @@ def create_test_jwt(
         "sub": user_id,
         "scopes": scopes,
         "tenant_id": tenant_id,
-        "exp": datetime.now(UTC) + timedelta(hours=1),
-        "iat": datetime.now(UTC),
+        "exp": datetime.now(timezone.utc) + timedelta(hours=1),
+        "iat": datetime.now(timezone.utc),
         "type": "access",
         **kwargs,
     }
@@ -385,7 +386,7 @@ class AsyncTestCase:
     Base class for async test cases with common setup.
     """
 
-    @pytest.fixture(autouse=True)
+    @pytest_asyncio.fixture(autouse=True)
     async def setup_async(self):
         """Setup for async tests."""
         self.session = create_async_session_mock()

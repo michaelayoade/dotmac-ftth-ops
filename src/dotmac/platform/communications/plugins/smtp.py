@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import smtplib
 from typing import TYPE_CHECKING
 
 from ..plugins import EmailTransport, EmailTransportPlugin, register_plugin
@@ -12,13 +11,13 @@ if TYPE_CHECKING:  # pragma: no cover
 
 
 class SMTPEmailTransport(EmailTransport):
-    def __init__(self, service: "EmailService") -> None:
+    def __init__(self, service: EmailService) -> None:
         self.service = service
 
     async def send(
         self,
-        service: "EmailService",
-        message: "EmailMessage",
+        service: EmailService,
+        message: EmailMessage,
         message_id: str,
     ) -> None:
         mime_message = service._create_mime_message(message, message_id)
@@ -28,7 +27,7 @@ class SMTPEmailTransport(EmailTransport):
 class SMTPEmailTransportPlugin(EmailTransportPlugin):
     plugin_id = "communications.smtp"
 
-    def create_transport(self, service: "EmailService") -> EmailTransport:
+    def create_transport(self, service: EmailService) -> EmailTransport:
         return SMTPEmailTransport(service)
 
 

@@ -4,7 +4,6 @@ RADIUS subscriber and session GraphQL queries.
 Provides optimized queries for ISP subscriber management with batched session loading.
 """
 
-
 import strawberry
 import structlog
 from sqlalchemy import func, select
@@ -46,12 +45,9 @@ class RadiusQueries:
         from dotmac.platform.radius.models import RadCheck
 
         # Build query
-        stmt = (
-            select(RadCheck)
-            .where(
-                RadCheck.attribute == "Cleartext-Password",
-                RadCheck.tenant_id == tenant_id,
-            )
+        stmt = select(RadCheck).where(
+            RadCheck.attribute == "Cleartext-Password",
+            RadCheck.tenant_id == tenant_id,
         )
 
         # Apply search filter
@@ -218,9 +214,7 @@ class RadiusQueries:
         active_sessions = result_sessions.scalar() or 0
 
         # Calculate total data usage (in MB)
-        stmt_usage = select(
-            func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets)
-        ).where(
+        stmt_usage = select(func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets)).where(
             RadAcct.acctstoptime.is_(None),
             RadAcct.tenant_id == tenant_id,
         )

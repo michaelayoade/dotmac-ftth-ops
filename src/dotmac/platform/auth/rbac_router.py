@@ -20,7 +20,9 @@ from dotmac.platform.db import get_async_session
 if TYPE_CHECKING:
     from dotmac.platform.auth.models import Role
 
-router = APIRouter(prefix="", )
+router = APIRouter(
+    prefix="",
+)
 
 
 # ==================== Pydantic Models ====================

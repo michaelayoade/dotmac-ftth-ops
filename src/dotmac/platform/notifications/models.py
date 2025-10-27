@@ -35,6 +35,9 @@ class NotificationType(str, Enum):
     BANDWIDTH_LIMIT_REACHED = "bandwidth_limit_reached"
     CONNECTION_QUALITY_DEGRADED = "connection_quality_degraded"
 
+    # Fault/Alarm events
+    ALARM = "alarm"
+
     # Billing events
     INVOICE_GENERATED = "invoice_generated"
     INVOICE_DUE = "invoice_due"

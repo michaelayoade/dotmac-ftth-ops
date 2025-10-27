@@ -5,7 +5,10 @@ Production-ready service with database persistence, Celery tasks,
 and Prometheus metrics.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -28,7 +31,6 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
-from dotmac.platform.genieacs.service import GenieACSService
 from dotmac.platform.genieacs.schemas import FirmwareUpgradeResult as FirmwareUpgradeResultSchema
 from dotmac.platform.genieacs.schemas import (
     FirmwareUpgradeSchedule as FirmwareUpgradeScheduleSchema,
@@ -43,6 +45,7 @@ from dotmac.platform.genieacs.schemas import (
 )
 from dotmac.platform.genieacs.schemas import MassConfigJob as MassConfigJobSchema
 from dotmac.platform.genieacs.schemas import MassConfigResult as MassConfigResultSchema
+from dotmac.platform.genieacs.service import GenieACSService
 
 logger = structlog.get_logger(__name__)
 

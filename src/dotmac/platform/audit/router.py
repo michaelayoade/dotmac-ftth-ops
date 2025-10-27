@@ -2,7 +2,10 @@
 FastAPI router for audit and activity endpoints.
 """
 
-from datetime import UTC
+from datetime import timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -32,6 +35,10 @@ logger = structlog.get_logger(__name__)
 # Sentinel tenant ID used when platform administrators submit frontend logs without
 # specifying a target tenant. This keeps the logs queryable via the existing API.
 PLATFORM_ADMIN_TENANT_ID = "platform_admin_session"
+
+# Default tenant ID for anonymous/unauthenticated frontend logs
+# This allows frontend error tracking without requiring authentication
+ANONYMOUS_TENANT_ID = "anonymous_frontend"
 
 
 async def ensure_audit_access(
@@ -493,7 +500,8 @@ async def get_activity_details(
         # Query for the specific activity with resolved tenant_id
         query = select(AuditActivity).where(
             AuditActivity.id == activity_id,
-            AuditActivity.tenant_id == tenant_id,  # Now uses resolved tenant_id that works for platform admins
+            AuditActivity.tenant_id
+            == tenant_id,  # Now uses resolved tenant_id that works for platform admins
         )
 
         result = await session.execute(query)
@@ -588,7 +596,6 @@ async def create_frontend_logs(
                 timestamp_str = log_entry.metadata.get("timestamp")
 
                 # Determine tenant_id (handle anonymous users and platform admins)
-                tenant_id = None
                 resolved_tenant_id = None
 
                 if current_user:
@@ -611,8 +618,7 @@ async def create_frontend_logs(
                             )
                             resolved_tenant_id = header_tenant
 
-                # Skip only for anonymous users without tenant_id
-                # Platform admins' logs are preserved even without tenant context
+                # Handle users without tenant context
                 if not resolved_tenant_id:
                     if current_user and is_platform_admin(current_user):
                         # For platform admins, use sentinel value to preserve logs
@@ -623,13 +629,13 @@ async def create_frontend_logs(
                             message=log_entry.message[:50],
                         )
                     else:
-                        # Skip only for anonymous users (tenant_id is NOT NULL in the table)
-                        logger.warning(
-                            "Skipping frontend log without tenant_id (anonymous user)",
+                        # For anonymous users, use anonymous tenant to allow error tracking
+                        resolved_tenant_id = ANONYMOUS_TENANT_ID
+                        logger.debug(
+                            "Storing anonymous frontend log with default tenant",
                             message=log_entry.message[:50],
                             authenticated=current_user is not None,
                         )
-                        continue
 
                 # Create audit activity
                 await service.log_activity(

@@ -112,9 +112,7 @@ class TestAppBoundaryMiddleware:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_platform_route_blocked_in_single_tenant_mode(
-        self, middleware, mock_request
-    ):
+    async def test_platform_route_blocked_in_single_tenant_mode(self, middleware, mock_request):
         """Test that platform routes are blocked in single-tenant mode."""
         with patch("dotmac.platform.api.app_boundary_middleware.settings") as mock_settings:
             mock_settings.DEPLOYMENT_MODE = "single_tenant"
@@ -416,9 +414,7 @@ class TestSingleTenantMiddleware:
 
                 assert response.status_code == 200
                 mock_logger.warning.assert_called_once()
-                assert "single_tenant_mode_missing_tenant_id" in str(
-                    mock_logger.warning.call_args
-                )
+                assert "single_tenant_mode_missing_tenant_id" in str(mock_logger.warning.call_args)
 
 
 class TestMiddlewareIntegration:
@@ -490,9 +486,7 @@ class TestMiddlewareIntegration:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_hybrid_mode_platform_support_tenant_access(
-        self, app_middleware, mock_request
-    ):
+    async def test_hybrid_mode_platform_support_tenant_access(self, app_middleware, mock_request):
         """Test hybrid mode: platform support accessing tenant routes."""
         with patch("dotmac.platform.api.app_boundary_middleware.settings") as mock_settings:
             mock_settings.DEPLOYMENT_MODE = "hybrid"

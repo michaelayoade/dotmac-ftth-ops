@@ -4,20 +4,16 @@ Unit tests for Diagnostics Service
 Tests network troubleshooting and diagnostic operations.
 """
 
-import pytest
-from datetime import datetime, UTC
-from decimal import Decimal
-from typing import Any
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.diagnostics.models import (
     DiagnosticRun,
     DiagnosticType,
-    DiagnosticStatus,
-    DiagnosticSeverity,
 )
 from dotmac.platform.diagnostics.service import DiagnosticsService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
@@ -168,11 +164,12 @@ class TestDiagnosticsServiceInitialization:
     @pytest.mark.asyncio
     async def test_initialization_creates_default_services(self, mock_db_session):
         """Test service creates default service instances."""
-        with patch("dotmac.platform.radius.service.RADIUSService"), \
-             patch("dotmac.platform.netbox.service.NetBoxService"), \
-             patch("dotmac.platform.voltha.service.VOLTHAService"), \
-             patch("dotmac.platform.genieacs.service.GenieACSService"):
-
+        with (
+            patch("dotmac.platform.radius.service.RADIUSService"),
+            patch("dotmac.platform.netbox.service.NetBoxService"),
+            patch("dotmac.platform.voltha.service.VOLTHAService"),
+            patch("dotmac.platform.genieacs.service.GenieACSService"),
+        ):
             service = DiagnosticsService(db=mock_db_session)
 
             assert service.db == mock_db_session
@@ -187,18 +184,26 @@ class TestDiagnosticsServiceConnectivityCheck:
 
     @pytest.mark.asyncio
     async def test_check_subscriber_connectivity_active_subscriber(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_radius_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_radius_service,
     ):
         """Test connectivity check for active subscriber."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock RADIUS service
             mock_radius_service.get_subscriber_auth.return_value = {"username": "test_user"}
 
             # Run connectivity check
-            result = await diagnostics_service.check_subscriber_connectivity(
+            await diagnostics_service.check_subscriber_connectivity(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -219,11 +224,13 @@ class TestDiagnosticsServiceConnectivityCheck:
         mock_subscriber.status = SubscriberStatus.SUSPENDED
 
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Run connectivity check
-            result = await diagnostics_service.check_subscriber_connectivity(
+            await diagnostics_service.check_subscriber_connectivity(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -238,7 +245,9 @@ class TestDiagnosticsServiceConnectivityCheck:
     ):
         """Test connectivity check when subscriber not found."""
         # Mock _get_subscriber method to raise ValueError
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.side_effect = ValueError(f"Subscriber {subscriber_id} not found")
 
             # Should raise ValueError
@@ -254,11 +263,19 @@ class TestDiagnosticsServiceRADIUSCheck:
 
     @pytest.mark.asyncio
     async def test_get_radius_sessions_active_sessions(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_radius_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_radius_service,
     ):
         """Test getting active RADIUS sessions."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock RADIUS sessions
@@ -273,7 +290,7 @@ class TestDiagnosticsServiceRADIUSCheck:
             ]
 
             # Get RADIUS sessions
-            result = await diagnostics_service.get_radius_sessions(
+            await diagnostics_service.get_radius_sessions(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -283,18 +300,26 @@ class TestDiagnosticsServiceRADIUSCheck:
 
     @pytest.mark.asyncio
     async def test_get_radius_sessions_no_active_sessions(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_radius_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_radius_service,
     ):
         """Test getting RADIUS sessions when none are active."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock no active sessions
             mock_radius_service.get_active_sessions.return_value = []
 
             # Get RADIUS sessions
-            result = await diagnostics_service.get_radius_sessions(
+            await diagnostics_service.get_radius_sessions(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -308,11 +333,19 @@ class TestDiagnosticsServiceONUCheck:
 
     @pytest.mark.asyncio
     async def test_check_onu_status_healthy(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_voltha_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_voltha_service,
     ):
         """Test ONU status check when ONU is healthy."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock VOLTHA ONU status
@@ -324,7 +357,7 @@ class TestDiagnosticsServiceONUCheck:
             }
 
             # Check ONU status
-            result = await diagnostics_service.check_onu_status(
+            await diagnostics_service.check_onu_status(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -334,11 +367,19 @@ class TestDiagnosticsServiceONUCheck:
 
     @pytest.mark.asyncio
     async def test_check_onu_status_poor_signal(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_voltha_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_voltha_service,
     ):
         """Test ONU status check with poor optical signal."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock poor signal
@@ -348,7 +389,7 @@ class TestDiagnosticsServiceONUCheck:
             }
 
             # Check ONU status
-            result = await diagnostics_service.check_onu_status(
+            await diagnostics_service.check_onu_status(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -362,23 +403,31 @@ class TestDiagnosticsServiceCPECheck:
 
     @pytest.mark.asyncio
     async def test_check_cpe_status_online(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_genieacs_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_genieacs_service,
     ):
         """Test CPE status when device is online."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock GenieACS device status
             mock_genieacs_service.get_device_status.return_value = {
                 "status": "online",
-                "last_inform": datetime.now(UTC),
+                "last_inform": datetime.now(timezone.utc),
                 "software_version": "1.2.3",
                 "uptime": 86400,
             }
 
             # Check CPE status
-            result = await diagnostics_service.check_cpe_status(
+            await diagnostics_service.check_cpe_status(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -388,11 +437,19 @@ class TestDiagnosticsServiceCPECheck:
 
     @pytest.mark.asyncio
     async def test_check_cpe_status_offline(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_genieacs_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_genieacs_service,
     ):
         """Test CPE status when device is offline."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock offline device
@@ -402,7 +459,7 @@ class TestDiagnosticsServiceCPECheck:
             }
 
             # Check CPE status
-            result = await diagnostics_service.check_cpe_status(
+            await diagnostics_service.check_cpe_status(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -420,11 +477,13 @@ class TestDiagnosticsServiceIPVerification:
     ):
         """Test IP verification for subscriber with static IP."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Verify IP allocation
-            result = await diagnostics_service.verify_ip_allocation(
+            await diagnostics_service.verify_ip_allocation(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -441,11 +500,13 @@ class TestDiagnosticsServiceIPVerification:
         mock_subscriber.static_ipv4 = None
 
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Verify IP allocation
-            result = await diagnostics_service.verify_ip_allocation(
+            await diagnostics_service.verify_ip_allocation(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -459,18 +520,26 @@ class TestDiagnosticsServiceCPERestart:
 
     @pytest.mark.asyncio
     async def test_restart_cpe_success(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_genieacs_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_genieacs_service,
     ):
         """Test successful CPE restart."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock successful restart
             mock_genieacs_service.reboot_device.return_value = {"status": "success"}
 
             # Restart CPE
-            result = await diagnostics_service.restart_cpe(
+            await diagnostics_service.restart_cpe(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -480,18 +549,26 @@ class TestDiagnosticsServiceCPERestart:
 
     @pytest.mark.asyncio
     async def test_restart_cpe_failure(
-        self, diagnostics_service, tenant_id, subscriber_id, mock_subscriber, mock_db_session, mock_genieacs_service
+        self,
+        diagnostics_service,
+        tenant_id,
+        subscriber_id,
+        mock_subscriber,
+        mock_db_session,
+        mock_genieacs_service,
     ):
         """Test CPE restart failure."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock restart failure
             mock_genieacs_service.reboot_device.side_effect = Exception("Reboot failed")
 
             # Restart CPE
-            result = await diagnostics_service.restart_cpe(
+            await diagnostics_service.restart_cpe(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -517,7 +594,9 @@ class TestDiagnosticsServiceHealthCheck:
     ):
         """Test health check when all systems are healthy."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock all services returning healthy status
@@ -529,7 +608,7 @@ class TestDiagnosticsServiceHealthCheck:
             mock_genieacs_service.get_device_status.return_value = {"status": "online"}
 
             # Run health check
-            result = await diagnostics_service.run_health_check(
+            await diagnostics_service.run_health_check(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -552,7 +631,9 @@ class TestDiagnosticsServiceHealthCheck:
     ):
         """Test health check when some systems are failing."""
         # Mock _get_subscriber method
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
 
             # Mock failures
@@ -561,7 +642,7 @@ class TestDiagnosticsServiceHealthCheck:
             mock_genieacs_service.get_device_status.return_value = {"status": "offline"}
 
             # Run health check
-            result = await diagnostics_service.run_health_check(
+            await diagnostics_service.run_health_check(
                 tenant_id=tenant_id,
                 subscriber_id=subscriber_id,
             )
@@ -582,13 +663,17 @@ class TestDiagnosticsServiceHealthCheck:
         mock_genieacs_service,
     ):
         """Ensure health check no longer relies on asyncio.gather (prevents session reuse)."""
-        with patch.object(diagnostics_service, '_get_subscriber', new_callable=AsyncMock) as mock_get_sub:
+        with patch.object(
+            diagnostics_service, "_get_subscriber", new_callable=AsyncMock
+        ) as mock_get_sub:
             mock_get_sub.return_value = mock_subscriber
             mock_radius_service.get_active_sessions.return_value = []
             mock_voltha_service.get_onu_status.return_value = {"operational_state": "active"}
             mock_genieacs_service.get_device_status.return_value = {"status": "online"}
 
-            with patch("asyncio.gather", side_effect=AssertionError("asyncio.gather should not be called")):
+            with patch(
+                "asyncio.gather", side_effect=AssertionError("asyncio.gather should not be called")
+            ):
                 await diagnostics_service.run_health_check(
                     tenant_id=tenant_id,
                     subscriber_id=subscriber_id,
@@ -599,9 +684,7 @@ class TestDiagnosticsServiceDiagnosticRuns:
     """Test diagnostic run retrieval and listing."""
 
     @pytest.mark.asyncio
-    async def test_get_diagnostic_run_found(
-        self, diagnostics_service, tenant_id, mock_db_session
-    ):
+    async def test_get_diagnostic_run_found(self, diagnostics_service, tenant_id, mock_db_session):
         """Test retrieving existing diagnostic run."""
         diagnostic_id = uuid4()
 
@@ -615,7 +698,7 @@ class TestDiagnosticsServiceDiagnosticRuns:
         mock_db_session.execute.return_value = mock_result
 
         # Get diagnostic run
-        result = await diagnostics_service.get_diagnostic_run(
+        await diagnostics_service.get_diagnostic_run(
             tenant_id=tenant_id,
             diagnostic_id=diagnostic_id,
         )
@@ -648,9 +731,7 @@ class TestDiagnosticsServiceDiagnosticRuns:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_list_diagnostic_runs(
-        self, diagnostics_service, tenant_id, mock_db_session
-    ):
+    async def test_list_diagnostic_runs(self, diagnostics_service, tenant_id, mock_db_session):
         """Test listing diagnostic runs."""
         # Mock diagnostic runs
         mock_diagnostics = [
@@ -667,7 +748,7 @@ class TestDiagnosticsServiceDiagnosticRuns:
         mock_db_session.execute.return_value = mock_result
 
         # List diagnostic runs
-        result = await diagnostics_service.list_diagnostic_runs(
+        await diagnostics_service.list_diagnostic_runs(
             tenant_id=tenant_id,
             limit=10,
             offset=0,
@@ -693,7 +774,7 @@ class TestDiagnosticsServiceDiagnosticRuns:
         mock_db_session.execute.return_value = mock_result
 
         # List diagnostic runs for specific subscriber
-        result = await diagnostics_service.list_diagnostic_runs(
+        await diagnostics_service.list_diagnostic_runs(
             tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             limit=10,
@@ -710,50 +791,38 @@ class TestDiagnosticsServiceSummaryGeneration:
     def test_generate_summary_connectivity_check(self, diagnostics_service):
         """Test summary generation for connectivity check."""
         results = {"status": "online"}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.CONNECTIVITY_CHECK, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.CONNECTIVITY_CHECK, results)
         assert "ONLINE" in summary
 
     def test_generate_summary_radius_session(self, diagnostics_service):
         """Test summary generation for RADIUS session check."""
         results = {"active_sessions": 2}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.RADIUS_SESSION, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.RADIUS_SESSION, results)
         assert "2 active" in summary
 
     def test_generate_summary_onu_status(self, diagnostics_service):
         """Test summary generation for ONU status check."""
         results = {"optical_signal_level": -20.5}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.ONU_STATUS, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.ONU_STATUS, results)
         assert "-20.5" in summary
         assert "dBm" in summary
 
     def test_generate_summary_cpe_status(self, diagnostics_service):
         """Test summary generation for CPE status check."""
         results = {"status": "online"}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.CPE_STATUS, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.CPE_STATUS, results)
         assert "ONLINE" in summary
 
     def test_generate_summary_health_check(self, diagnostics_service):
         """Test summary generation for health check."""
         results = {"checks_passed": 4, "total_checks": 5}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.HEALTH_CHECK, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.HEALTH_CHECK, results)
         assert "4/5" in summary
 
     def test_generate_summary_bandwidth_test(self, diagnostics_service):
         """Test summary generation for bandwidth test."""
         results = {"download_mbps": 95.5, "upload_mbps": 48.2}
-        summary = diagnostics_service._generate_summary(
-            DiagnosticType.BANDWIDTH_TEST, results
-        )
+        summary = diagnostics_service._generate_summary(DiagnosticType.BANDWIDTH_TEST, results)
         assert "95.5" in summary
         assert "48.2" in summary
         assert "Mbps" in summary

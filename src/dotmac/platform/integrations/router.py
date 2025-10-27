@@ -16,7 +16,9 @@ from . import (
 from .models import IntegrationListResponse, IntegrationResponse
 
 logger = structlog.get_logger(__name__)
-integrations_router = APIRouter(prefix="/integrations", )
+integrations_router = APIRouter(
+    prefix="/integrations",
+)
 
 
 def _health_check_failure_message(exc: Exception | None = None) -> str:

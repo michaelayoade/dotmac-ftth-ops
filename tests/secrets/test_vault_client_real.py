@@ -9,6 +9,7 @@ from unittest.mock import Mock, patch
 
 import httpx
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.secrets.vault_client import (
     VaultAuthenticationError,
@@ -708,7 +709,7 @@ def fake_async_vault():
     return FakeVaultServer()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_vault_client_with_fake(fake_async_vault):
     """Create AsyncVaultClient with mocked async HTTP client using fake server."""
     from dotmac.platform.secrets.vault_client import AsyncVaultClient

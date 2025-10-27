@@ -1,6 +1,6 @@
 """Tests for CQRS Read Models (Pydantic Validation)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
 from pydantic import ValidationError
@@ -29,7 +29,7 @@ class TestInvoiceReadModels:
 
     def test_invoice_list_item_creation(self):
         """Test InvoiceListItem model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         invoice = InvoiceListItem(
             invoice_id="inv-123",
             invoice_number="INV-001",
@@ -60,7 +60,7 @@ class TestInvoiceReadModels:
 
     def test_invoice_detail_creation(self):
         """Test InvoiceDetail model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         invoice = InvoiceDetail(
             invoice_id="inv-123",
             invoice_number="INV-001",
@@ -112,7 +112,7 @@ class TestInvoiceReadModels:
 
     def test_invoice_statistics_creation(self):
         """Test InvoiceStatistics model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = InvoiceStatistics(
             total_count=100,
             draft_count=10,
@@ -143,7 +143,7 @@ class TestInvoiceReadModels:
 
     def test_customer_invoice_summary_creation(self):
         """Test CustomerInvoiceSummary model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         summary = CustomerInvoiceSummary(
             customer_id="cust-456",
             customer_name="John Doe",
@@ -198,7 +198,7 @@ class TestPaymentReadModels:
 
     def test_payment_list_item_creation(self):
         """Test PaymentListItem model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payment = PaymentListItem(
             payment_id="pay-123",
             invoice_id="inv-456",
@@ -219,7 +219,7 @@ class TestPaymentReadModels:
 
     def test_payment_detail_creation(self):
         """Test PaymentDetail model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payment = PaymentDetail(
             payment_id="pay-123",
             tenant_id="tenant-1",
@@ -249,7 +249,7 @@ class TestPaymentReadModels:
 
     def test_payment_statistics_creation(self):
         """Test PaymentStatistics model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = PaymentStatistics(
             total_count=100,
             succeeded_count=90,
@@ -273,7 +273,7 @@ class TestSubscriptionReadModels:
 
     def test_subscription_list_item_creation(self):
         """Test SubscriptionListItem model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription = SubscriptionListItem(
             subscription_id="sub-123",
             customer_id="cust-456",
@@ -297,7 +297,7 @@ class TestSubscriptionReadModels:
 
     def test_subscription_detail_creation(self):
         """Test SubscriptionDetail model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription = SubscriptionDetail(
             subscription_id="sub-123",
             tenant_id="tenant-1",
@@ -326,7 +326,7 @@ class TestSubscriptionReadModels:
 
     def test_subscription_statistics_creation(self):
         """Test SubscriptionStatistics model creation"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = SubscriptionStatistics(
             total_count=100,
             active_count=80,
@@ -354,7 +354,7 @@ class TestReadModelDefaults:
 
     def test_invoice_statistics_defaults(self):
         """Test InvoiceStatistics default values"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = InvoiceStatistics(
             period_start=now - timedelta(days=30),
             period_end=now,
@@ -377,7 +377,7 @@ class TestReadModelDefaults:
 
     def test_payment_statistics_defaults(self):
         """Test PaymentStatistics default values"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = PaymentStatistics(period_start=now - timedelta(days=30), period_end=now)
 
         assert stats.total_count == 0
@@ -389,7 +389,7 @@ class TestReadModelDefaults:
 
     def test_subscription_statistics_defaults(self):
         """Test SubscriptionStatistics default values"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         stats = SubscriptionStatistics(period_start=now - timedelta(days=30), period_end=now)
 
         assert stats.total_count == 0
@@ -426,8 +426,8 @@ class TestReadModelValidation:
             "payment_method": "card",
             "provider": "stripe",
             "external_payment_id": "pi_123",
-            "created_at": datetime.now(UTC),
-            "captured_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
+            "captured_at": datetime.now(timezone.utc),
             "refunded_at": None,
             "refund_amount": 0,
             "description": "Test payment",
@@ -440,7 +440,7 @@ class TestReadModelValidation:
 
     def test_subscription_detail_items_default_factory(self):
         """Test SubscriptionDetail items defaults to empty list"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription = SubscriptionDetail(
             subscription_id="sub-123",
             tenant_id="tenant-1",

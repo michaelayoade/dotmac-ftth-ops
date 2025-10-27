@@ -117,12 +117,12 @@ class TestDunningActionConfigSchema:
             type=DunningActionType.WEBHOOK,
             delay_days=0,
             webhook_url="https://example.com/webhook",
-            webhook_secret="secret123",
+            custom_config={"webhook_secret": "secret123"},
         )
 
         assert config.type == DunningActionType.WEBHOOK
         assert config.webhook_url == "https://example.com/webhook"
-        assert config.webhook_secret == "secret123"
+        assert config.custom_config["webhook_secret"] == "secret123"
 
     def test_negative_delay_days_rejected(self):
         """Test negative delay_days is rejected."""
@@ -160,24 +160,21 @@ class TestDunningExclusionRulesSchema:
         """Test valid exclusion rules."""
         rules = DunningExclusionRules(
             min_lifetime_value=1000.0,
-            max_missed_payments=2,
             customer_tiers=["premium", "enterprise"],
-            customer_ids=[uuid4(), uuid4()],
+            customer_tags=["vip", "trusted"],
         )
 
         assert rules.min_lifetime_value == 1000.0
-        assert rules.max_missed_payments == 2
         assert len(rules.customer_tiers) == 2
-        assert len(rules.customer_ids) == 2
+        assert len(rules.customer_tags) == 2
 
     def test_empty_exclusion_rules(self):
         """Test exclusion rules can be empty."""
         rules = DunningExclusionRules()
 
         assert rules.min_lifetime_value is None
-        assert rules.max_missed_payments is None
         assert rules.customer_tiers == []
-        assert rules.customer_ids == []
+        assert rules.customer_tags == []
 
     def test_negative_lifetime_value_rejected(self):
         """Test negative min_lifetime_value is rejected."""
@@ -186,12 +183,12 @@ class TestDunningExclusionRulesSchema:
 
         assert "min_lifetime_value" in str(exc_info.value)
 
-    def test_negative_max_missed_payments_rejected(self):
-        """Test negative max_missed_payments is rejected."""
+    def test_invalid_customer_tier_type_rejected(self):
+        """Test invalid customer tier types are rejected."""
         with pytest.raises(ValidationError) as exc_info:
-            DunningExclusionRules(max_missed_payments=-1)
+            DunningExclusionRules(customer_tiers="invalid")  # Should be list, not string
 
-        assert "max_missed_payments" in str(exc_info.value)
+        assert "customer_tiers" in str(exc_info.value)
 
 
 class TestDunningCampaignCreateSchema:

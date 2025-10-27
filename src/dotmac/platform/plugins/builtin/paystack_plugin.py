@@ -8,7 +8,10 @@ Handles payment processing, refunds, and payment verification through Paystack A
 from __future__ import annotations
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from dotmac.platform.plugins.interfaces import PaymentProvider
@@ -114,14 +117,12 @@ class PaystackPaymentPlugin(PaymentProvider):
         # Validate key formats
         if not secret_key.startswith(("sk_live_", "sk_test_")):
             raise ValueError(
-                "Invalid Paystack secret_key format. "
-                "Must start with 'sk_live_' or 'sk_test_'"
+                "Invalid Paystack secret_key format. Must start with 'sk_live_' or 'sk_test_'"
             )
 
         if not public_key.startswith(("pk_live_", "pk_test_")):
             raise ValueError(
-                "Invalid Paystack public_key format. "
-                "Must start with 'pk_live_' or 'pk_test_'"
+                "Invalid Paystack public_key format. Must start with 'pk_live_' or 'pk_test_'"
             )
 
         # Store configuration
@@ -303,9 +304,7 @@ class PaystackPaymentPlugin(PaymentProvider):
             RuntimeError: If plugin not configured or payment processing fails
         """
         if not self.configured or not self.paystack_client:
-            raise RuntimeError(
-                "Paystack plugin not configured. Call configure() first."
-            )
+            raise RuntimeError("Paystack plugin not configured. Call configure() first.")
 
         # Validate amount
         if amount <= 0:
@@ -324,6 +323,7 @@ class PaystackPaymentPlugin(PaymentProvider):
 
             # Generate unique reference
             import secrets
+
             reference = metadata.get("reference") or f"dotmac_{secrets.token_hex(12)}"
 
             # Prepare transaction data
@@ -354,14 +354,10 @@ class PaystackPaymentPlugin(PaymentProvider):
                 },
             )
 
-            response = self.paystack_client.transactions.initialize(
-                **transaction_data
-            )
+            response = self.paystack_client.transactions.initialize(**transaction_data)
 
             if not response or not response.get("status"):
-                raise RuntimeError(
-                    f"Paystack transaction initialization failed: {response}"
-                )
+                raise RuntimeError(f"Paystack transaction initialization failed: {response}")
 
             data = response.get("data", {})
 
@@ -450,6 +446,7 @@ class PaystackPaymentPlugin(PaymentProvider):
         except Exception as e:
             logger.error(f"Paystack payment verification failed: {e}")
             raise RuntimeError(f"Payment verification failed: {e}") from e
+
     async def refund_payment(
         self,
         payment_id: str,
@@ -527,7 +524,9 @@ class PaystackPaymentPlugin(PaymentProvider):
             return {
                 "refund_id": f"refund_{refund_id}",
                 "payment_id": payment_id,
-                "status": refund_status if refund_status in ["pending", "completed", "failed"] else "pending",
+                "status": refund_status
+                if refund_status in ["pending", "completed", "failed"]
+                else "pending",
                 "amount": float(refund_amount),
                 "currency": refund_data_response.get("currency", "NGN"),
                 "reason": reason or "Refund requested",
@@ -633,7 +632,9 @@ class PaystackPaymentPlugin(PaymentProvider):
             "amount": amount,
             "currency": data.get("currency", "NGN"),
             "reference": reference,
-            "customer_email": data.get("customer", {}).get("email") if isinstance(data.get("customer"), dict) else None,
+            "customer_email": data.get("customer", {}).get("email")
+            if isinstance(data.get("customer"), dict)
+            else None,
             "provider": "paystack",
             "webhook_id": data.get("id"),
             "paid_at": data.get("paid_at") or data.get("paidAt"),

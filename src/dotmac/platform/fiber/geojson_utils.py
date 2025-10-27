@@ -9,7 +9,6 @@ Provides helper functions for working with GeoJSON data in fiber infrastructure:
 """
 
 from typing import Any
-from uuid import UUID
 
 from dotmac.platform.fiber.models import (
     DistributionPoint,
@@ -18,13 +17,14 @@ from dotmac.platform.fiber.models import (
     SplicePoint,
 )
 
-
 # ============================================================================
 # Point Generation
 # ============================================================================
 
 
-def create_point(longitude: float, latitude: float, altitude: float | None = None) -> dict[str, Any]:
+def create_point(
+    longitude: float, latitude: float, altitude: float | None = None
+) -> dict[str, Any]:
     """
     Create a GeoJSON Point geometry.
 
@@ -246,7 +246,9 @@ def fiber_cable_to_feature(cable: FiberCable) -> dict[str, Any]:
         "length_km": float(cable.length_km) if cable.length_km else None,
         "manufacturer": cable.manufacturer,
         "model": cable.model,
-        "attenuation_db_per_km": float(cable.attenuation_db_per_km) if cable.attenuation_db_per_km else None,
+        "attenuation_db_per_km": float(cable.attenuation_db_per_km)
+        if cable.attenuation_db_per_km
+        else None,
         "max_capacity": cable.max_capacity,
         "start_site_id": cable.start_site_id,
         "end_site_id": cable.end_site_id,
@@ -289,7 +291,9 @@ def distribution_point_to_feature(point: DistributionPoint) -> dict[str, Any]:
         "used_ports": point.used_ports,
         "available_ports": (point.total_ports - point.used_ports) if point.total_ports else None,
         "utilization_percentage": (
-            (point.used_ports / point.total_ports * 100) if point.total_ports and point.total_ports > 0 else 0
+            (point.used_ports / point.total_ports * 100)
+            if point.total_ports and point.total_ports > 0
+            else 0
         ),
         "manufacturer": point.manufacturer,
         "model": point.model,
@@ -318,7 +322,9 @@ def splice_point_to_feature(splice: SplicePoint) -> dict[str, Any]:
         "id": str(splice.id),
         "splice_id": splice.splice_id,
         "cable_id": str(splice.cable_id),
-        "distribution_point_id": str(splice.distribution_point_id) if splice.distribution_point_id else None,
+        "distribution_point_id": str(splice.distribution_point_id)
+        if splice.distribution_point_id
+        else None,
         "status": splice.status.value,
         "splice_type": splice.splice_type,
         "enclosure_type": splice.enclosure_type,
@@ -349,7 +355,9 @@ def service_area_to_feature(area: ServiceArea) -> dict[str, Any]:
         (area.homes_connected / area.homes_passed * 100) if area.homes_passed > 0 else 0
     )
     commercial_penetration = (
-        (area.businesses_connected / area.businesses_passed * 100) if area.businesses_passed > 0 else 0
+        (area.businesses_connected / area.businesses_passed * 100)
+        if area.businesses_passed > 0
+        else 0
     )
 
     properties = {
@@ -531,7 +539,14 @@ def validate_geojson_geometry(geojson: dict[str, Any]) -> tuple[bool, str | None
         return False, "GeoJSON must have a 'type' field"
 
     geom_type = geojson["type"]
-    valid_types = ["Point", "LineString", "Polygon", "MultiPoint", "MultiLineString", "MultiPolygon"]
+    valid_types = [
+        "Point",
+        "LineString",
+        "Polygon",
+        "MultiPoint",
+        "MultiLineString",
+        "MultiPolygon",
+    ]
 
     if geom_type not in valid_types:
         return False, f"Invalid geometry type: {geom_type}"
@@ -544,7 +559,10 @@ def validate_geojson_geometry(geojson: dict[str, Any]) -> tuple[bool, str | None
     # Basic validation for each type
     if geom_type == "Point":
         if not isinstance(coordinates, list) or len(coordinates) < 2:
-            return False, "Point coordinates must be [longitude, latitude] or [longitude, latitude, altitude]"
+            return (
+                False,
+                "Point coordinates must be [longitude, latitude] or [longitude, latitude, altitude]",
+            )
 
     elif geom_type == "LineString":
         if not isinstance(coordinates, list) or len(coordinates) < 2:
@@ -558,6 +576,9 @@ def validate_geojson_geometry(geojson: dict[str, Any]) -> tuple[bool, str | None
                 return False, "Polygon ring must have at least 4 coordinate pairs"
             # Check if ring is closed (first and last coordinates are the same)
             if ring[0] != ring[-1]:
-                return False, "Polygon ring must be closed (first and last coordinates must be identical)"
+                return (
+                    False,
+                    "Polygon ring must be closed (first and last coordinates must be identical)",
+                )
 
     return True, None

@@ -7,12 +7,11 @@ This module tests the fixes for:
 3. Partial refund validation and tracking
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from fastapi import HTTPException
 
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.enums import PaymentMethodType, PaymentStatus
@@ -59,8 +58,8 @@ class TestMissingPaymentProviderHandling:
                 payment_method_type=PaymentMethodType.CARD,
                 payment_method_details={"pm_id": "pm_test"},
                 status=PaymentStatus.PENDING,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             # Process payment with missing provider
@@ -100,8 +99,8 @@ class TestMissingPaymentProviderHandling:
                 payment_method_type=PaymentMethodType.CARD,
                 payment_method_details={"pm_id": "pm_test"},
                 status=PaymentStatus.PENDING,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             # Process payment with missing provider
@@ -139,8 +138,8 @@ class TestMissingPaymentProviderHandling:
                 currency="USD",
                 provider="stripe",
                 status=PaymentStatus.SUCCEEDED,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             refund_entity = PaymentEntity(
@@ -151,8 +150,8 @@ class TestMissingPaymentProviderHandling:
                 currency="USD",
                 provider="stripe",
                 status=PaymentStatus.PENDING,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             # Process refund with missing provider
@@ -189,8 +188,8 @@ class TestMissingPaymentProviderHandling:
                 currency="USD",
                 provider="stripe",
                 status=PaymentStatus.SUCCEEDED,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             refund_entity = PaymentEntity(
@@ -201,8 +200,8 @@ class TestMissingPaymentProviderHandling:
                 currency="USD",
                 provider="stripe",
                 status=PaymentStatus.PENDING,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
 
             # Process refund with missing provider
@@ -238,8 +237,8 @@ class TestPartialRefundValidation:
             provider="stripe",
             status=PaymentStatus.PARTIALLY_REFUNDED,
             refund_amount=Decimal("300"),  # Already refunded $3.00
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -273,8 +272,8 @@ class TestPartialRefundValidation:
             provider="stripe",
             status=PaymentStatus.PARTIALLY_REFUNDED,
             refund_amount=Decimal("600"),  # Already refunded $6.00
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -309,8 +308,8 @@ class TestPartialRefundValidation:
             provider="stripe",
             status=PaymentStatus.SUCCEEDED,
             refund_amount=None,  # No refunds yet
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         refund_entity = PaymentEntity(
@@ -321,8 +320,8 @@ class TestPartialRefundValidation:
             currency="USD",
             provider="stripe",
             status=PaymentStatus.REFUNDED,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         service = PaymentService(db_session=mock_db, payment_providers={})
@@ -365,8 +364,8 @@ class TestPartialRefundValidation:
             provider="stripe",
             status=PaymentStatus.PARTIALLY_REFUNDED,
             refund_amount=Decimal("300"),  # $3.00 already refunded
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         refund_entity = PaymentEntity(
@@ -377,8 +376,8 @@ class TestPartialRefundValidation:
             currency="USD",
             provider="stripe",
             status=PaymentStatus.REFUNDED,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         service = PaymentService(db_session=mock_db, payment_providers={})
@@ -418,8 +417,8 @@ class TestPartialRefundValidation:
             provider="stripe",
             status=PaymentStatus.SUCCEEDED,
             refund_amount=None,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         refund_entity = PaymentEntity(
@@ -430,8 +429,8 @@ class TestPartialRefundValidation:
             currency="USD",
             provider="stripe",
             status=PaymentStatus.REFUNDED,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         service = PaymentService(db_session=mock_db, payment_providers={})

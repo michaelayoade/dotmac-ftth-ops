@@ -3,7 +3,10 @@ Receipt service for generating and managing payment receipts
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 from uuid import uuid4
 
@@ -51,11 +54,7 @@ class ReceiptService:
         invoice_ids: list[str] = []
         if getattr(payment, "invoices", None):
             invoice_ids.extend(
-                [
-                    link.invoice_id
-                    for link in payment.invoices
-                    if getattr(link, "invoice_id", None)
-                ]
+                [link.invoice_id for link in payment.invoices if getattr(link, "invoice_id", None)]
             )
         extra_invoice_id = cast(str | None, payment_extra.get("invoice_id"))
         if extra_invoice_id:
@@ -80,8 +79,10 @@ class ReceiptService:
 
         # Create receipt
         total_amount = payment.amount
-        subtotal = computed_subtotal if computed_subtotal else int(
-            payment_extra.get("subtotal", total_amount)
+        subtotal = (
+            computed_subtotal
+            if computed_subtotal
+            else int(payment_extra.get("subtotal", total_amount))
         )
         tax_amount = computed_tax if computed_tax else int(payment_extra.get("tax_amount", 0))
 
@@ -105,9 +106,7 @@ class ReceiptService:
                 customer_name = cast(str | None, payment_extra.get("customer_name"))
             customer_name = customer_name or customer_email or "Customer"
         else:
-            billing_address_raw = cast(
-                dict[str, Any], payment_extra.get("billing_address", {})
-            )
+            billing_address_raw = cast(dict[str, Any], payment_extra.get("billing_address", {}))
             customer_email = cast(str, payment_extra.get("customer_email", ""))
             customer_name = cast(
                 str, payment_extra.get("customer_name", customer_email or "Customer")
@@ -121,9 +120,7 @@ class ReceiptService:
 
         notes: str | None = None
         if invoices:
-            collected_notes = [
-                inv.notes for inv in invoices if getattr(inv, "notes", None)
-            ]
+            collected_notes = [inv.notes for inv in invoices if getattr(inv, "notes", None)]
             if collected_notes:
                 notes = "\n".join(cast(str, note) for note in collected_notes if note)
         if not notes:
@@ -383,18 +380,14 @@ class ReceiptService:
 
         max_sequence = 0
 
-        payment_stmt = select(PaymentEntity.extra_data).where(
-            PaymentEntity.tenant_id == tenant_id
-        )
+        payment_stmt = select(PaymentEntity.extra_data).where(PaymentEntity.tenant_id == tenant_id)
         payment_result = await self.db.execute(payment_stmt)
         for extra in payment_result.scalars():
             sequence = self._extract_sequence_from_extra(extra)
             if sequence > max_sequence:
                 max_sequence = sequence
 
-        invoice_stmt = select(InvoiceEntity.extra_data).where(
-            InvoiceEntity.tenant_id == tenant_id
-        )
+        invoice_stmt = select(InvoiceEntity.extra_data).where(InvoiceEntity.tenant_id == tenant_id)
         invoice_result = await self.db.execute(invoice_stmt)
         for extra in invoice_result.scalars():
             sequence = self._extract_sequence_from_extra(extra)
@@ -486,7 +479,10 @@ class ReceiptService:
                 tax_rate = 0.0
                 if invoice_entity.total_amount and invoice_entity.tax_amount:
                     tax_allocation = int(
-                        round((invoice_entity.tax_amount or 0) * (applied_amount / invoice_entity.total_amount))
+                        round(
+                            (invoice_entity.tax_amount or 0)
+                            * (applied_amount / invoice_entity.total_amount)
+                        )
                     )
                 if invoice_entity.subtotal:
                     tax_rate = float(
@@ -533,7 +529,10 @@ class ReceiptService:
                     tax_rate = 0.0
                     if invoice_entity.total_amount and invoice_entity.tax_amount:
                         tax_amount = int(
-                            round((invoice_entity.tax_amount or 0) * (applied_amount / invoice_entity.total_amount))
+                            round(
+                                (invoice_entity.tax_amount or 0)
+                                * (applied_amount / invoice_entity.total_amount)
+                            )
                         )
                     if invoice_entity.subtotal:
                         tax_rate = float(

@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from ..auth.core import UserInfo, get_current_user
-from ..auth.rbac_dependencies import require_any_permission, require_permission, require_permissions
+from ..auth.rbac_dependencies import require_any_permission, require_permissions
 from ..db import get_async_session, get_db
 from ..tenant import get_current_tenant_id
 from .models import WorkflowStatus, WorkflowType
@@ -389,39 +389,34 @@ async def list_workflows(
     **Required Permissions:** `orchestration.read`
     """
     try:
-            result = await service.list_workflows(
-                workflow_type=workflow_type,
-                status=status_filter,
-                limit=limit,
-                offset=offset,
-            )
+        result = await service.list_workflows(
+            workflow_type=workflow_type,
+            status=status_filter,
+            limit=limit,
+            offset=offset,
+        )
 
-            if isinstance(result, dict):
-                raw_workflows = result.get("workflows", [])
-                workflows = [
-                    WorkflowResponse.model_validate(item)
-                    if isinstance(item, dict)
-                    else item
-                    for item in raw_workflows
-                ]
-                total = result.get("total", len(workflows))
-                limit_value = result.get("limit", limit)
-                offset_value = result.get("offset", offset)
-            else:
-                workflows = [
-                    wf if isinstance(wf, WorkflowResponse) else wf
-                    for wf in list(result)
-                ]
-                total = getattr(result, "total", len(workflows))
-                limit_value = getattr(result, "limit", limit)
-                offset_value = getattr(result, "offset", offset)
+        if isinstance(result, dict):
+            raw_workflows = result.get("workflows", [])
+            workflows = [
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
+                for item in raw_workflows
+            ]
+            total = result.get("total", len(workflows))
+            limit_value = result.get("limit", limit)
+            offset_value = result.get("offset", offset)
+        else:
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
+            total = getattr(result, "total", len(workflows))
+            limit_value = getattr(result, "limit", limit)
+            offset_value = getattr(result, "offset", offset)
 
-            return WorkflowListResponse(
-                workflows=workflows,
-                total=total,
-                limit=limit_value,
-                offset=offset_value,
-            )
+        return WorkflowListResponse(
+            workflows=workflows,
+            total=total,
+            limit=limit_value,
+            offset=offset_value,
+        )
     except Exception as e:
         logger.exception(f"Error listing workflows: {e}")
         raise HTTPException(
@@ -474,7 +469,9 @@ async def get_workflow(
 async def retry_workflow(
     workflow_id: str,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: UserInfo = Depends(require_any_permission_with_cache("orchestration.update", "admin")),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache("orchestration.update", "admin")
+    ),
 ) -> WorkflowResponse:
     """
     Retry failed workflow.
@@ -505,7 +502,9 @@ async def retry_workflow(
 async def cancel_workflow(
     workflow_id: str,
     service: OrchestrationService = Depends(get_orchestration_service),
-    _current_user: UserInfo = Depends(require_any_permission_with_cache("orchestration.update", "admin")),
+    _current_user: UserInfo = Depends(
+        require_any_permission_with_cache("orchestration.update", "admin")
+    ),
 ) -> WorkflowResponse:
     """
     Cancel running workflow.
@@ -607,16 +606,11 @@ async def export_workflows_csv(
         )
         if isinstance(result, dict):
             workflows = [
-                WorkflowResponse.model_validate(item)
-                if isinstance(item, dict)
-                else item
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
                 for item in result.get("workflows", [])
             ]
         else:
-            workflows = [
-                wf if isinstance(wf, WorkflowResponse) else wf
-                for wf in list(result)
-            ]
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
         workflows = list(result)
         workflows = list(result)
 
@@ -625,18 +619,20 @@ async def export_workflows_csv(
         writer = csv.writer(output)
 
         # Write header
-        writer.writerow([
-            'Workflow ID',
-            'Type',
-            'Status',
-            'Started At',
-            'Completed At',
-            'Duration (seconds)',
-            'Retry Count',
-            'Error Message',
-            'Steps Completed',
-            'Total Steps',
-        ])
+        writer.writerow(
+            [
+                "Workflow ID",
+                "Type",
+                "Status",
+                "Started At",
+                "Completed At",
+                "Duration (seconds)",
+                "Retry Count",
+                "Error Message",
+                "Steps Completed",
+                "Total Steps",
+            ]
+        )
 
         # Write data rows
         for workflow in workflows:
@@ -644,33 +640,33 @@ async def export_workflows_csv(
             if workflow.started_at and workflow.completed_at:
                 duration = (workflow.completed_at - workflow.started_at).total_seconds()
 
-            steps_completed = sum(1 for step in workflow.steps if step.status == 'completed')
+            steps_completed = sum(1 for step in workflow.steps if step.status == "completed")
             total_steps = len(workflow.steps)
 
-            writer.writerow([
-                workflow.workflow_id,
-                workflow.workflow_type.value,
-                workflow.status.value,
-                workflow.started_at.isoformat() if workflow.started_at else '',
-                workflow.completed_at.isoformat() if workflow.completed_at else '',
-                f"{duration:.2f}" if duration else '',
-                workflow.retry_count,
-                workflow.error_message or '',
-                steps_completed,
-                total_steps,
-            ])
+            writer.writerow(
+                [
+                    workflow.workflow_id,
+                    workflow.workflow_type.value,
+                    workflow.status.value,
+                    workflow.started_at.isoformat() if workflow.started_at else "",
+                    workflow.completed_at.isoformat() if workflow.completed_at else "",
+                    f"{duration:.2f}" if duration else "",
+                    workflow.retry_count,
+                    workflow.error_message or "",
+                    steps_completed,
+                    total_steps,
+                ]
+            )
 
         # Create response with CSV content
         csv_content = output.getvalue()
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"workflows_export_{timestamp}.csv"
 
         return Response(
             content=csv_content,
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except Exception as e:
@@ -725,16 +721,11 @@ async def export_workflows_json(
         )
         if isinstance(result, dict):
             workflows = [
-                WorkflowResponse.model_validate(item)
-                if isinstance(item, dict)
-                else item
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
                 for item in result.get("workflows", [])
             ]
         else:
-            workflows = [
-                wf if isinstance(wf, WorkflowResponse) else wf
-                for wf in list(result)
-            ]
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
 
         # Get statistics for the export
         stats = await service.get_workflow_statistics()
@@ -756,7 +747,7 @@ async def export_workflows_json(
                 "success_rate": stats.success_rate,
                 "average_duration_seconds": stats.average_duration_seconds,
             },
-            "workflows": []
+            "workflows": [],
         }
 
         # Process each workflow
@@ -766,7 +757,9 @@ async def export_workflows_json(
                 "workflow_type": workflow.workflow_type.value,
                 "status": workflow.status.value,
                 "started_at": workflow.started_at.isoformat() if workflow.started_at else None,
-                "completed_at": workflow.completed_at.isoformat() if workflow.completed_at else None,
+                "completed_at": workflow.completed_at.isoformat()
+                if workflow.completed_at
+                else None,
                 "failed_at": workflow.failed_at.isoformat() if workflow.failed_at else None,
                 "retry_count": workflow.retry_count,
                 "error_message": workflow.error_message,
@@ -787,7 +780,9 @@ async def export_workflows_json(
                         "target_system": step.target_system,
                         "status": step.status.value,
                         "started_at": step.started_at.isoformat() if step.started_at else None,
-                        "completed_at": step.completed_at.isoformat() if step.completed_at else None,
+                        "completed_at": step.completed_at.isoformat()
+                        if step.completed_at
+                        else None,
                         "failed_at": step.failed_at.isoformat() if step.failed_at else None,
                         "error_message": step.error_message,
                         "retry_count": step.retry_count,
@@ -797,24 +792,22 @@ async def export_workflows_json(
 
                 workflow_data["steps_summary"] = {
                     "total": len(workflow.steps),
-                    "completed": sum(1 for s in workflow.steps if s.status == 'completed'),
-                    "failed": sum(1 for s in workflow.steps if s.status == 'failed'),
-                    "pending": sum(1 for s in workflow.steps if s.status == 'pending'),
+                    "completed": sum(1 for s in workflow.steps if s.status == "completed"),
+                    "failed": sum(1 for s in workflow.steps if s.status == "failed"),
+                    "pending": sum(1 for s in workflow.steps if s.status == "pending"),
                 }
 
             export_data["workflows"].append(workflow_data)
 
         # Create JSON response
         json_content = json.dumps(export_data, indent=2, default=str)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"workflows_export_{timestamp}.json"
 
         return Response(
             content=json_content,
             media_type="application/json",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except Exception as e:

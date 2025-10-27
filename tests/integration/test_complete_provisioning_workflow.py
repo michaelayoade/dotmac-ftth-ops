@@ -5,14 +5,14 @@ Tests the full subscriber provisioning flow across all systems:
 RADIUS + NetBox + WireGuard with dual-stack support.
 """
 
-import pytest
-from unittest.mock import AsyncMock, patch, MagicMock
-from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.radius.service import RADIUSService
-from dotmac.platform.netbox.client import NetBoxClient
-from dotmac.platform.wireguard.schemas import WireGuardServerCreate, WireGuardPeerCreate
+from dotmac.platform.wireguard.client import WireGuardClient
 from dotmac.platform.wireguard.service import WireGuardService
 
 
@@ -21,7 +21,21 @@ from dotmac.platform.wireguard.service import WireGuardService
 class TestCompleteProvisioningWorkflow:
     """End-to-end integration tests for complete provisioning."""
 
-    async def test_complete_dual_stack_provisioning_e2e(self, async_db_session):
+    @pytest.fixture
+    def mock_wireguard_client(self):
+        """Create a mock WireGuard client for testing."""
+        client = MagicMock(spec=WireGuardClient)
+
+        async def mock_generate_keypair():
+            return ("mock_private_key", "mock_public_key")
+
+        client.generate_keypair = mock_generate_keypair
+        client.add_peer = AsyncMock()
+        client.remove_peer = AsyncMock()
+        client.get_peer_stats = AsyncMock(return_value=None)
+        return client
+
+    async def test_complete_dual_stack_provisioning_e2e(self, async_db_session, mock_wireguard_client):
         """
         Test complete subscriber provisioning with all systems.
 
@@ -32,7 +46,7 @@ class TestCompleteProvisioningWorkflow:
         4. Verify all systems have consistent data
         """
         # Setup NetBox client
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.external_services.netbox_url = "http://netbox.test"
             mock_settings.external_services.vault_url = "http://vault.test"
             mock_settings.radius.shared_secret = "test_secret"
@@ -73,10 +87,7 @@ class TestCompleteProvisioningWorkflow:
             subscriber_ipv6 = ipv6["address"].split("/")[0]
 
             # 2. Create RADIUS subscriber
-            radius_service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            radius_service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             radius_data = RADIUSSubscriberCreate(
                 subscriber_id="subscriber001",
@@ -92,13 +103,10 @@ class TestCompleteProvisioningWorkflow:
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # 3. Create WireGuard VPN access
-            wg_service = WireGuardService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="test_tenant")
 
             # First create server if not exists
-            server_data = WireGuardServerCreate(
+            wg_server = await wg_service.create_server(
                 name="Main VPN Server",
                 server_ipv4="10.8.0.1/24",
                 server_ipv6="fd00:8::1/64",
@@ -106,18 +114,14 @@ class TestCompleteProvisioningWorkflow:
                 listen_port=51820,
             )
 
-            wg_server = await wg_service.create_server(server_data)
-
             # Create peer for subscriber
-            peer_data = WireGuardPeerCreate(
-                server_id=wg_server.server_id,
+            wg_peer = await wg_service.create_peer(
+                server_id=wg_server.id,
                 name="subscriber001 VPN",
                 description="VPN access for subscriber001",
                 customer_id="subscriber001",
                 # Auto-allocate VPN IPs (different from public IPs)
             )
-
-            wg_peer = await wg_service.create_peer(peer_data)
 
             # 4. Verify all systems consistent
             # Verify NetBox allocated IPs
@@ -138,7 +142,7 @@ class TestCompleteProvisioningWorkflow:
             assert retrieved is not None
             assert retrieved.framed_ipv4_address == subscriber_ipv4
 
-    async def test_provisioning_with_auto_allocation_e2e(self, async_db_session):
+    async def test_provisioning_with_auto_allocation_e2e(self, async_db_session, mock_wireguard_client):
         """
         Test provisioning with automatic IP allocation everywhere.
 
@@ -147,7 +151,7 @@ class TestCompleteProvisioningWorkflow:
         2. Use allocated IPs in RADIUS
         3. Auto-allocate VPN IPs in WireGuard
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.external_services.netbox_url = "http://netbox.test"
             mock_settings.external_services.vault_url = "http://vault.test"
             mock_settings.radius.shared_secret = "test_secret"
@@ -178,10 +182,7 @@ class TestCompleteProvisioningWorkflow:
             )
 
             # RADIUS with allocated IPs
-            radius_service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            radius_service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             radius_data = RADIUSSubscriberCreate(
                 subscriber_id="auto-sub002",
@@ -195,12 +196,9 @@ class TestCompleteProvisioningWorkflow:
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # WireGuard with auto VPN IPs
-            wg_service = WireGuardService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="test_tenant")
 
-            server_data = WireGuardServerCreate(
+            server = await wg_service.create_server(
                 name="Auto Alloc Server",
                 server_ipv4="10.9.0.1/24",
                 server_ipv6="fd00:9::1/64",
@@ -208,15 +206,11 @@ class TestCompleteProvisioningWorkflow:
                 listen_port=51820,
             )
 
-            server = await wg_service.create_server(server_data)
-
-            peer_data = WireGuardPeerCreate(
-                server_id=server.server_id,
+            peer = await wg_service.create_peer(
+                server_id=server.id,
                 name="auto-sub002 VPN",
                 customer_id="auto-sub002",
             )
-
-            peer = await wg_service.create_peer(peer_data)
 
             # Verify auto-allocations
             assert radius_sub.framed_ipv4_address == "100.64.2.10"
@@ -224,20 +218,17 @@ class TestCompleteProvisioningWorkflow:
             assert peer.peer_ipv4 is not None
             assert peer.peer_ipv6 is not None
 
-    async def test_provisioning_ipv4_only_legacy_support(self, async_db_session):
+    async def test_provisioning_ipv4_only_legacy_support(self, async_db_session, mock_wireguard_client):
         """
         Test backward compatibility with IPv4-only provisioning.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
             mock_settings.external_services.vault_url = "http://vault.test"
 
             # RADIUS IPv4-only
-            radius_service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            radius_service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             radius_data = RADIUSSubscriberCreate(
                 subscriber_id="legacy-sub003",
@@ -249,27 +240,20 @@ class TestCompleteProvisioningWorkflow:
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # WireGuard IPv4-only
-            wg_service = WireGuardService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="test_tenant")
 
-            server_data = WireGuardServerCreate(
+            server = await wg_service.create_server(
                 name="IPv4-Only Server",
                 server_ipv4="10.10.0.1/24",
                 public_endpoint="vpn4.isp.com:51820",
                 listen_port=51820,
             )
 
-            server = await wg_service.create_server(server_data)
-
-            peer_data = WireGuardPeerCreate(
-                server_id=server.server_id,
+            peer = await wg_service.create_peer(
+                server_id=server.id,
                 name="legacy-sub003 VPN",
                 customer_id="legacy-sub003",
             )
-
-            peer = await wg_service.create_peer(peer_data)
 
             # Verify IPv4-only
             assert radius_sub.framed_ipv4_address == "192.168.1.100"
@@ -277,7 +261,7 @@ class TestCompleteProvisioningWorkflow:
             assert peer.peer_ipv4 is not None
             assert peer.peer_ipv6 is None
 
-    async def test_deprovisioning_cleanup_e2e(self, async_db_session):
+    async def test_deprovisioning_cleanup_e2e(self, async_db_session, mock_wireguard_client):
         """
         Test complete cleanup when deprovisioning subscriber.
 
@@ -287,17 +271,14 @@ class TestCompleteProvisioningWorkflow:
         3. Verify all systems cleaned up
         4. Verify IPs can be reallocated
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
             mock_settings.external_services.vault_url = "http://vault.test"
             mock_settings.external_services.netbox_url = "http://netbox.test"
 
             # 1. Provision
-            radius_service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            radius_service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             radius_data = RADIUSSubscriberCreate(
                 subscriber_id="deprovision-sub004",
@@ -309,12 +290,9 @@ class TestCompleteProvisioningWorkflow:
 
             radius_sub = await radius_service.create_subscriber(radius_data)
 
-            wg_service = WireGuardService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="test_tenant")
 
-            server_data = WireGuardServerCreate(
+            server = await wg_service.create_server(
                 name="Deprov Server",
                 server_ipv4="10.11.0.1/24",
                 server_ipv6="fd00:11::1/64",
@@ -322,17 +300,13 @@ class TestCompleteProvisioningWorkflow:
                 listen_port=51820,
             )
 
-            server = await wg_service.create_server(server_data)
-
-            peer_data = WireGuardPeerCreate(
-                server_id=server.server_id,
+            peer = await wg_service.create_peer(
+                server_id=server.id,
                 name="deprovision-sub004 VPN",
                 customer_id="deprovision-sub004",
                 peer_ipv4="10.11.0.100",
                 peer_ipv6="fd00:11::100",
             )
-
-            peer = await wg_service.create_peer(peer_data)
 
             # Store IPs for reallocation test
             public_ipv4 = radius_sub.framed_ipv4_address
@@ -341,21 +315,21 @@ class TestCompleteProvisioningWorkflow:
             vpn_ipv6 = peer.peer_ipv6
 
             # 2. Deprovision
-            await wg_service.delete_peer(peer.peer_id)
+            await wg_service.delete_peer(peer.id)
             await radius_service.delete_subscriber("deprovision-sub004")
 
             # Mock NetBox IP deletion
             netbox = NetBoxClient(api_token="test_token")
             netbox.request = AsyncMock(return_value=None)
 
-            await netbox.delete_ip(ip_id=100)  # IPv4
-            await netbox.delete_ip(ip_id=200)  # IPv6
+            await netbox.delete_ip_address(ip_id=100)  # IPv4
+            await netbox.delete_ip_address(ip_id=200)  # IPv6
 
             # 3. Verify cleanup
             deleted_sub = await radius_service.get_subscriber("deprovision-sub004")
             assert deleted_sub is None
 
-            deleted_peer = await wg_service.get_peer(peer.peer_id)
+            deleted_peer = await wg_service.get_peer(peer.id)
             assert deleted_peer is None
 
             # 4. Verify IPs can be reallocated
@@ -370,30 +344,25 @@ class TestCompleteProvisioningWorkflow:
             new_sub = await radius_service.create_subscriber(new_radius_data)
             assert new_sub.framed_ipv4_address == public_ipv4
 
-            new_peer_data = WireGuardPeerCreate(
-                server_id=server.server_id,
+            new_peer = await wg_service.create_peer(
+                server_id=server.id,
                 name="new-sub005 VPN",
                 peer_ipv4=vpn_ipv4,  # Reuse
                 peer_ipv6=vpn_ipv6,  # Reuse
             )
-
-            new_peer = await wg_service.create_peer(new_peer_data)
             assert new_peer.peer_ipv4 == vpn_ipv4
 
     async def test_multi_tenant_provisioning_isolation(self, async_db_session):
         """
         Test tenant isolation across all provisioning systems.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
             mock_settings.external_services.vault_url = "http://vault.test"
 
             # Tenant A
-            radius_a = RADIUSService(
-                session=async_db_session,
-                tenant_id="tenant_a"
-            )
+            radius_a = RADIUSService(session=async_db_session, tenant_id="tenant_a")
 
             sub_a_data = RADIUSSubscriberCreate(
                 subscriber_id="tenant-a-sub001",
@@ -406,10 +375,7 @@ class TestCompleteProvisioningWorkflow:
             sub_a = await radius_a.create_subscriber(sub_a_data)
 
             # Tenant B (same IPs, different tenant)
-            radius_b = RADIUSService(
-                session=async_db_session,
-                tenant_id="tenant_b"
-            )
+            radius_b = RADIUSService(session=async_db_session, tenant_id="tenant_b")
 
             sub_b_data = RADIUSSubscriberCreate(
                 subscriber_id="tenant-b-sub001",
@@ -433,16 +399,14 @@ class TestCompleteProvisioningWorkflow:
         """
         Test bulk provisioning of 100 subscribers.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            radius_service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            radius_service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             import time
+
             start_time = time.time()
 
             # Provision 100 subscribers

@@ -141,7 +141,7 @@ class SQLAlchemyInvoiceRepository:
             invoice: Invoice aggregate to save
         """
         # Convert aggregate to entity and merge into session (handles upsert)
-       
+
         merged_entity = await self._db.merge(InvoiceMapper.to_entity(invoice))
         # Ensure session knows about the merged instance (useful for tests expecting add)
         self._db.add(merged_entity)

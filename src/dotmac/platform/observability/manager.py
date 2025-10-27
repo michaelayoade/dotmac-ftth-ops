@@ -252,7 +252,6 @@ class ObservabilityManager:
         setup_telemetry(app)
         self._instrumented_keys.add(key)
 
-
     def _snapshot_settings(self) -> None:
         """Remember original observability settings for later restore."""
         if self._original_settings is not None:
@@ -274,23 +273,32 @@ class ObservabilityManager:
             "environment": settings.environment,
         }
 
-
     def _restore_settings_overrides(self) -> None:
         """Restore observability settings to their snapshot values."""
         if not self._original_settings:
             return
 
         obs = settings.observability
-        obs.otel_service_name = self._original_settings.get("otel_service_name", obs.otel_service_name)
+        obs.otel_service_name = self._original_settings.get(
+            "otel_service_name", obs.otel_service_name
+        )
         obs.enable_tracing = self._original_settings.get("enable_tracing", obs.enable_tracing)
         obs.enable_metrics = self._original_settings.get("enable_metrics", obs.enable_metrics)
-        obs.enable_structured_logging = self._original_settings.get("enable_structured_logging", obs.enable_structured_logging)
-        obs.enable_correlation_ids = self._original_settings.get("enable_correlation_ids", obs.enable_correlation_ids)
+        obs.enable_structured_logging = self._original_settings.get(
+            "enable_structured_logging", obs.enable_structured_logging
+        )
+        obs.enable_correlation_ids = self._original_settings.get(
+            "enable_correlation_ids", obs.enable_correlation_ids
+        )
         obs.otel_endpoint = self._original_settings.get("otel_endpoint", obs.otel_endpoint)
         obs.otel_enabled = self._original_settings.get("otel_enabled", obs.otel_enabled)
-        obs.prometheus_enabled = self._original_settings.get("prometheus_enabled", obs.prometheus_enabled)
+        obs.prometheus_enabled = self._original_settings.get(
+            "prometheus_enabled", obs.prometheus_enabled
+        )
         obs.prometheus_port = self._original_settings.get("prometheus_port", obs.prometheus_port)
-        obs.tracing_sample_rate = self._original_settings.get("tracing_sample_rate", obs.tracing_sample_rate)
+        obs.tracing_sample_rate = self._original_settings.get(
+            "tracing_sample_rate", obs.tracing_sample_rate
+        )
         obs.log_level = self._original_settings.get("log_level", obs.log_level)
         settings.environment = self._original_settings.get("environment", settings.environment)
 

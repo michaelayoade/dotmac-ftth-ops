@@ -4,10 +4,10 @@ Unit tests for AWX Client
 Tests AWX client functionality with RobustHTTPClient architecture.
 """
 
-import pytest
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
+
 import httpx
+import pytest
 
 from dotmac.platform.ansible.client import AWXClient
 
@@ -16,6 +16,7 @@ from dotmac.platform.ansible.client import AWXClient
 def reset_circuit_breaker():
     """Reset circuit breaker state before each test to prevent pollution"""
     from dotmac.platform.core.http_client import RobustHTTPClient
+
     RobustHTTPClient._circuit_breakers.clear()
     yield
     RobustHTTPClient._circuit_breakers.clear()
@@ -53,19 +54,22 @@ class TestAWXClientInitialization:
 
     def test_client_initialization_with_env(self):
         """Test client initialization from environment variables"""
-        with patch.dict('sys.modules', {'dotmac.platform.settings': None}):
-            with patch.dict("os.environ", {
-                "AWX_URL": "http://awx:80",
-                "AWX_USERNAME": "admin",
-                "AWX_PASSWORD": "pass",
-            }):
+        with patch.dict("sys.modules", {"dotmac.platform.settings": None}):
+            with patch.dict(
+                "os.environ",
+                {
+                    "AWX_URL": "http://awx:80",
+                    "AWX_USERNAME": "admin",
+                    "AWX_PASSWORD": "pass",
+                },
+            ):
                 client = AWXClient()
                 assert client.base_url == "http://awx:80/"
                 assert client.auth == ("admin", "pass")
 
     def test_client_initialization_defaults_to_localhost(self):
         """Test client initialization defaults to localhost"""
-        with patch.dict('sys.modules', {'dotmac.platform.settings': None}):
+        with patch.dict("sys.modules", {"dotmac.platform.settings": None}):
             with patch.dict("os.environ", {}, clear=True):
                 client = AWXClient()
                 assert client.base_url == "http://localhost:80/"
@@ -79,7 +83,7 @@ class TestAWXJobTemplateOperations:
         """Test getting all job templates"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "results": [
                     {"id": 1, "name": "Provision Fiber"},
@@ -98,11 +102,11 @@ class TestAWXJobTemplateOperations:
         """Test getting single job template by ID"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "id": 1,
                 "name": "Provision Fiber",
-                "description": "Provision fiber service"
+                "description": "Provision fiber service",
             }
 
             result = await client.get_job_template(1)
@@ -116,11 +120,9 @@ class TestAWXJobTemplateOperations:
         """Test getting non-existent job template returns None"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.side_effect = httpx.HTTPStatusError(
-                "Not found",
-                request=MagicMock(),
-                response=MagicMock(status_code=404)
+                "Not found", request=MagicMock(), response=MagicMock(status_code=404)
             )
 
             result = await client.get_job_template(999)
@@ -132,12 +134,8 @@ class TestAWXJobTemplateOperations:
         """Test launching job template"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = {
-                "id": 123,
-                "status": "pending",
-                "name": "Test Job"
-            }
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": 123, "status": "pending", "name": "Test Job"}
 
             extra_vars = {"vlan_id": 100, "speed_mbps": 1000}
             result = await client.launch_job_template(1, extra_vars)
@@ -155,7 +153,7 @@ class TestAWXJobOperations:
         """Test getting all jobs"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "results": [
                     {"id": 1, "status": "successful"},
@@ -173,12 +171,8 @@ class TestAWXJobOperations:
         """Test getting single job by ID"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = {
-                "id": 1,
-                "status": "successful",
-                "elapsed": 45.5
-            }
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": 1, "status": "successful", "elapsed": 45.5}
 
             result = await client.get_job(1)
 
@@ -190,11 +184,8 @@ class TestAWXJobOperations:
         """Test canceling job"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = {
-                "id": 1,
-                "status": "canceled"
-            }
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"id": 1, "status": "canceled"}
 
             result = await client.cancel_job(1)
 
@@ -210,7 +201,7 @@ class TestAWXInventoryOperations:
         """Test getting all inventories"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "results": [
                     {"id": 1, "name": "OLT Inventory"},
@@ -232,7 +223,7 @@ class TestAWXHealthChecks:
         """Test successful ping"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {"ping": "pong"}
 
             result = await client.ping()
@@ -244,7 +235,7 @@ class TestAWXHealthChecks:
         """Test failed ping"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.side_effect = Exception("Connection failed")
 
             result = await client.ping()
@@ -259,10 +250,11 @@ class TestAWXErrorHandling:
     async def test_request_with_timeout(self):
         """Test request timeout handling"""
         import asyncio
+
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
-            mock_req.side_effect = asyncio.TimeoutError()
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
+            mock_req.side_effect = TimeoutError()
 
             with pytest.raises(asyncio.TimeoutError):
                 await client.get_jobs()
@@ -272,7 +264,7 @@ class TestAWXErrorHandling:
         """Test network error handling"""
         client = AWXClient(base_url="http://awx:80")
 
-        with patch.object(client, '_awx_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_awx_request", new_callable=AsyncMock) as mock_req:
             mock_req.side_effect = Exception("Connection refused")
 
             with pytest.raises(Exception) as exc_info:
@@ -296,21 +288,16 @@ class TestAWXAuthentication:
 
     def test_basic_auth(self):
         """Test basic authentication setup"""
-        client = AWXClient(
-            base_url="http://awx:80",
-            username="admin",
-            password="secret"
-        )
+        client = AWXClient(base_url="http://awx:80", username="admin", password="secret")
 
         assert client.auth == ("admin", "secret")
-        assert "Authorization" not in client.headers or "Bearer" not in client.headers.get("Authorization", "")
+        assert "Authorization" not in client.headers or "Bearer" not in client.headers.get(
+            "Authorization", ""
+        )
 
     def test_token_auth(self):
         """Test token authentication setup"""
-        client = AWXClient(
-            base_url="http://awx:80",
-            token="test-token"
-        )
+        client = AWXClient(base_url="http://awx:80", token="test-token")
 
         assert client.auth is None
         assert client.headers["Authorization"] == "Bearer test-token"
@@ -318,10 +305,7 @@ class TestAWXAuthentication:
     def test_token_takes_precedence(self):
         """Test that token takes precedence over username/password"""
         client = AWXClient(
-            base_url="http://awx:80",
-            username="admin",
-            password="secret",
-            token="test-token"
+            base_url="http://awx:80", username="admin", password="secret", token="test-token"
         )
 
         # Token should be used

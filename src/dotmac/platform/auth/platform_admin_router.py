@@ -132,17 +132,6 @@ class PlatformStats(BaseModel):
     system_health: str = "healthy"
 
 
-class CrossTenantSearchRequest(BaseModel):
-    """Request for cross-tenant search."""
-
-    model_config = ConfigDict()
-
-    query: str = Field(..., min_length=1)
-    resource_type: str | None = None
-    tenant_ids: list[str] | None = None
-    limit: int = Field(default=20, ge=1, le=100)
-
-
 class HealthCheckResponse(BaseModel):
     """Health check response for platform admin."""
 
@@ -603,14 +592,16 @@ async def _execute_cross_tenant_search(
             try:
                 response = await search_backend.search(index_name, search_query)
                 for result in response.results:
-                    all_results.append({
-                        "id": result.id,
-                        "type": result.type,
-                        "tenant_id": result.data.get("tenant_id", "unknown"),
-                        "resource_id": result.id,
-                        "score": result.score,
-                        "data": result.data,
-                    })
+                    all_results.append(
+                        {
+                            "id": result.id,
+                            "type": result.type,
+                            "tenant_id": result.data.get("tenant_id", "unknown"),
+                            "resource_id": result.id,
+                            "score": result.score,
+                            "data": result.data,
+                        }
+                    )
             except Exception as e:
                 logger.warning(
                     "search.index_error",

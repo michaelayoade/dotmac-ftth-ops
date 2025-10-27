@@ -168,7 +168,11 @@ class TestRADIUSService:
         assert updated is not None
         # Verify password was updated in radcheck
         radcheck = await service.repository.get_radcheck_by_username(test_tenant.id, "testuser@isp")
-        assert radcheck.value == "NewPass456!"
+        # Verify new password is bcrypt-hashed and can be verified
+        assert radcheck.value.startswith("bcrypt:$2b$")
+        from dotmac.platform.auth.core import pwd_context
+        stored_hash = radcheck.value.replace("bcrypt:", "")
+        assert pwd_context.verify("NewPass456!", stored_hash)
 
     async def test_update_subscriber_bandwidth_profile(self, async_db_session, test_tenant):
         """Test updating subscriber bandwidth profile"""
@@ -423,7 +427,7 @@ class TestRADIUSService:
         # Create NAS devices
         for i in range(3):
             nas_data = NASCreate(
-                nasname=f"192.168.1.{i+1}",
+                nasname=f"192.168.1.{i + 1}",
                 shortname=f"router{i:02d}",
                 type="mikrotik",
                 secret="secret123",

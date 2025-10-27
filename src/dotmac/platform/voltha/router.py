@@ -4,8 +4,6 @@ VOLTHA API Router
 FastAPI endpoints for VOLTHA PON management operations.
 """
 
-from typing import cast
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

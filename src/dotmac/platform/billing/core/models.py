@@ -460,7 +460,9 @@ class Service(BillingBaseModel):
 
     model_config = ConfigDict()
 
-    service_id: str = Field(default_factory=lambda: str(uuid4()), description="Unique service identifier")
+    service_id: str = Field(
+        default_factory=lambda: str(uuid4()), description="Unique service identifier"
+    )
 
     # References
     customer_id: str = Field(..., description="Customer identifier")
@@ -469,7 +471,9 @@ class Service(BillingBaseModel):
     plan_id: str | None = Field(None, description="Service plan identifier")
 
     # Service details
-    service_type: ServiceType = Field(default=ServiceType.BROADBAND, description="Service type category")
+    service_type: ServiceType = Field(
+        default=ServiceType.BROADBAND, description="Service type category"
+    )
     service_name: str = Field(..., min_length=1, max_length=255, description="Service name")
     service_description: str | None = Field(None, description="Service description")
 
@@ -490,10 +494,14 @@ class Service(BillingBaseModel):
 
     # Service configuration
     bandwidth_mbps: int | None = Field(None, ge=0, description="Bandwidth allocation in Mbps")
-    service_metadata: dict[str, Any] = Field(default_factory=dict, description="Service-specific metadata")
+    service_metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Service-specific metadata"
+    )
 
     # Pricing
-    monthly_price: int | None = Field(None, ge=0, description="Monthly price in minor currency units")
+    monthly_price: int | None = Field(
+        None, ge=0, description="Monthly price in minor currency units"
+    )
     currency: str = Field(default="USD", min_length=3, max_length=3, description="Currency code")
 
     # Notes

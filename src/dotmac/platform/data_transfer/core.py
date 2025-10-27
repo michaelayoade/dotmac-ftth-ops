@@ -4,7 +4,10 @@ Core classes and types for simplified data transfer using pandas.
 
 from abc import abstractmethod
 from collections.abc import AsyncGenerator, AsyncIterator
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from pathlib import Path
 from typing import Any, Protocol

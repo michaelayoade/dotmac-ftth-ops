@@ -7,7 +7,7 @@ Automatically tracks HTTP errors, exceptions, and request metrics using Promethe
 from __future__ import annotations
 
 import time
-from typing import Callable
+from collections.abc import Callable
 
 import structlog
 from fastapi import Request, Response
@@ -33,7 +33,6 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
         """Process request and track errors."""
         start_time = time.time()
         response: Response | None = None
-        error: Exception | None = None
 
         try:
             # Process request
@@ -66,7 +65,6 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             # Track unhandled exception
-            error = e
             tenant_id = getattr(request.state, "tenant_id", None)
 
             track_exception(
@@ -140,7 +138,7 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
 
             return response
 
-        except Exception as e:
+        except Exception:
             duration = time.time() - start_time
             tenant_id = getattr(request.state, "tenant_id", None) or "unknown"
 

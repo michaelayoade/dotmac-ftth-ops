@@ -5,7 +5,10 @@ Defines payment methods for tenants to securely store and manage
 cards, bank accounts, and other payment sources.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 
@@ -66,7 +69,9 @@ class PaymentMethod(BillingBaseModel):  # type: ignore[misc]
     # Card-specific fields
     card_brand: CardBrand | None = Field(None, description="Card brand (for card payments)")
     card_last4: str | None = Field(None, description="Last 4 digits of card", max_length=4)
-    card_exp_month: int | None = Field(None, description="Card expiration month (1-12)", ge=1, le=12)
+    card_exp_month: int | None = Field(
+        None, description="Card expiration month (1-12)", ge=1, le=12
+    )
     card_exp_year: int | None = Field(None, description="Card expiration year (e.g., 2025)")
     card_fingerprint: str | None = Field(
         None, description="Card fingerprint for duplicate detection"

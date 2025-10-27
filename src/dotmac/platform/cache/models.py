@@ -159,7 +159,9 @@ class CacheStatistics(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     total_requests: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cache_hits: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     cache_misses: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    hit_rate: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)  # Percentage (0.0-100.0)
+    hit_rate: Mapped[float] = mapped_column(
+        Float, nullable=False, default=0.0
+    )  # Percentage (0.0-100.0)
 
     # Performance metrics
     avg_hit_latency_ms: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)

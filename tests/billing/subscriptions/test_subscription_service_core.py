@@ -13,11 +13,12 @@ Tests critical subscription service workflows:
 Target: Increase subscription service coverage from 11.40% to 70%+
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.exceptions import (
@@ -70,7 +71,7 @@ def sample_plan_data() -> SubscriptionPlanCreateRequest:
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def subscription_service(async_session: AsyncSession):
     """Subscription service instance."""
     return SubscriptionService(db_session=async_session)
@@ -662,7 +663,7 @@ class TestSubscriptionRenewal:
 
         # Mock to create subscription with past period
 
-        past_time = datetime.now(UTC) - timedelta(days=5)
+        past_time = datetime.now(timezone.utc) - timedelta(days=5)
         with patch("dotmac.platform.billing.subscriptions.service.datetime") as mock_dt:
             mock_dt.now.return_value = past_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)

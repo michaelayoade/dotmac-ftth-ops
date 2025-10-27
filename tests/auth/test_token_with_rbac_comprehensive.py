@@ -8,7 +8,7 @@ Tests the RBAC-enhanced JWT token service including:
 - Token revocation and blacklisting
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
@@ -33,7 +33,7 @@ def jwt_service():
             "type": "access",
             "permissions": ["user.read", "user.write"],
             "roles": ["admin"],
-            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
+            "exp": (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp(),
         }
     )
     return service
@@ -549,7 +549,7 @@ class TestTokenRevocation:
     async def test_revoke_token_success(self, rbac_token_service, jwt_service, mock_cache):
         """Test successful token revocation."""
         token = "valid_token"
-        future_exp = (datetime.now(UTC) + timedelta(hours=1)).timestamp()
+        future_exp = (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp()
 
         jwt_service.verify_token.return_value = {
             "sub": str(uuid4()),
@@ -568,7 +568,7 @@ class TestTokenRevocation:
     async def test_revoke_token_already_expired(self, rbac_token_service, jwt_service, mock_cache):
         """Test revoking already expired token does nothing."""
         token = "expired_token"
-        past_exp = (datetime.now(UTC) - timedelta(hours=1)).timestamp()
+        past_exp = (datetime.now(timezone.utc) - timedelta(hours=1)).timestamp()
 
         jwt_service.verify_token.return_value = {
             "sub": str(uuid4()),

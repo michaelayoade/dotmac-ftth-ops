@@ -9,9 +9,9 @@ import logging
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from ..auth.core import UserInfo
 from ..auth.rbac_dependencies import require_permissions
 from ..dependencies import get_db
-from ..auth.core import UserInfo
 from ..settings import get_settings
 from .models import DeploymentBackend, DeploymentState, DeploymentType
 from .registry import DeploymentRegistry
@@ -92,7 +92,9 @@ async def list_templates(
     return templates
 
 
-@router.post("/templates", response_model=DeploymentTemplateResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/templates", response_model=DeploymentTemplateResponse, status_code=status.HTTP_201_CREATED
+)
 async def create_template(
     template: DeploymentTemplateCreate,
     db: Session = Depends(get_db),
@@ -174,7 +176,11 @@ async def list_instances(
     )
 
     return DeploymentListResponse(
-        instances=instances, total=total, page=skip // limit + 1, page_size=limit, pages=(total + limit - 1) // limit
+        instances=instances,
+        total=total,
+        page=skip // limit + 1,
+        page_size=limit,
+        pages=(total + limit - 1) // limit,
     )
 
 
@@ -260,7 +266,11 @@ async def provision_deployment(
         raise HTTPException(status_code=500, detail="Failed to provision deployment")
 
 
-@router.post("/instances/{instance_id}/upgrade", response_model=OperationResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/instances/{instance_id}/upgrade",
+    response_model=OperationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def upgrade_deployment(
     instance_id: int,
     request: UpgradeRequest,
@@ -270,7 +280,9 @@ async def upgrade_deployment(
 ):
     """Upgrade deployment"""
     try:
-        execution = await service.upgrade_deployment(instance_id=instance_id, request=request, triggered_by=current_user.user_id)
+        execution = await service.upgrade_deployment(
+            instance_id=instance_id, request=request, triggered_by=current_user.user_id
+        )
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -290,7 +302,11 @@ async def upgrade_deployment(
         raise HTTPException(status_code=500, detail="Failed to upgrade deployment")
 
 
-@router.post("/instances/{instance_id}/scale", response_model=OperationResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/instances/{instance_id}/scale",
+    response_model=OperationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def scale_deployment(
     instance_id: int,
     request: ScaleRequest,
@@ -300,7 +316,9 @@ async def scale_deployment(
 ):
     """Scale deployment resources"""
     try:
-        execution = await service.scale_deployment(instance_id=instance_id, request=request, triggered_by=current_user.user_id)
+        execution = await service.scale_deployment(
+            instance_id=instance_id, request=request, triggered_by=current_user.user_id
+        )
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -320,7 +338,11 @@ async def scale_deployment(
         raise HTTPException(status_code=500, detail="Failed to scale deployment")
 
 
-@router.post("/instances/{instance_id}/suspend", response_model=OperationResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/instances/{instance_id}/suspend",
+    response_model=OperationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def suspend_deployment(
     instance_id: int,
     request: SuspendRequest,
@@ -330,7 +352,9 @@ async def suspend_deployment(
 ):
     """Suspend deployment"""
     try:
-        execution = await service.suspend_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id)
+        execution = await service.suspend_deployment(
+            instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id
+        )
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -350,7 +374,11 @@ async def suspend_deployment(
         raise HTTPException(status_code=500, detail="Failed to suspend deployment")
 
 
-@router.post("/instances/{instance_id}/resume", response_model=OperationResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.post(
+    "/instances/{instance_id}/resume",
+    response_model=OperationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def resume_deployment(
     instance_id: int,
     request: ResumeRequest,
@@ -360,7 +388,9 @@ async def resume_deployment(
 ):
     """Resume suspended deployment"""
     try:
-        execution = await service.resume_deployment(instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id)
+        execution = await service.resume_deployment(
+            instance_id=instance_id, reason=request.reason, triggered_by=current_user.user_id
+        )
 
         registry = DeploymentRegistry(db)
         instance = registry.get_instance(instance_id)
@@ -380,7 +410,11 @@ async def resume_deployment(
         raise HTTPException(status_code=500, detail="Failed to resume deployment")
 
 
-@router.delete("/instances/{instance_id}", response_model=OperationResponse, status_code=status.HTTP_202_ACCEPTED)
+@router.delete(
+    "/instances/{instance_id}",
+    response_model=OperationResponse,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def destroy_deployment(
     instance_id: int,
     request: DestroyRequest,
@@ -391,7 +425,10 @@ async def destroy_deployment(
     """Destroy deployment"""
     try:
         execution = await service.destroy_deployment(
-            instance_id=instance_id, reason=request.reason, backup_data=request.backup_data, triggered_by=current_user.user_id
+            instance_id=instance_id,
+            reason=request.reason,
+            backup_data=request.backup_data,
+            triggered_by=current_user.user_id,
         )
 
         registry = DeploymentRegistry(db)
@@ -428,7 +465,9 @@ async def list_executions(
 ):
     """List execution history for instance"""
     registry = DeploymentRegistry(db)
-    executions, total = registry.list_executions(instance_id=instance_id, operation=operation, skip=skip, limit=limit)
+    executions, total = registry.list_executions(
+        instance_id=instance_id, operation=operation, skip=skip, limit=limit
+    )
     return executions
 
 
@@ -525,7 +564,9 @@ async def get_resource_allocation(
 # ============================================================================
 
 
-@router.post("/schedule", response_model=ScheduledDeploymentResponse, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/schedule", response_model=ScheduledDeploymentResponse, status_code=status.HTTP_201_CREATED
+)
 async def schedule_deployment(
     request: ScheduledDeploymentRequest,
     db: Session = Depends(get_db),

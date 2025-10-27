@@ -115,8 +115,9 @@ class TestCreateOrUpdateFlag:
 
         mock_list_flags = AsyncMock(side_effect=[{}, fake_flags])
 
-        with patch("dotmac.platform.feature_flags.router.set_flag") as mock_set_flag, patch(
-            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        with (
+            patch("dotmac.platform.feature_flags.router.set_flag") as mock_set_flag,
+            patch("dotmac.platform.feature_flags.router.list_flags", mock_list_flags),
         ):
             response = client.post("/feature-flags/flags/new_feature", json=request_data)
 
@@ -141,10 +142,16 @@ class TestCreateOrUpdateFlag:
         """Test creating flag with feature_flag_admin role."""
         request_data = {"enabled": True, "description": "Admin flag"}
 
-        mock_list_flags = AsyncMock(side_effect=[{}, {"admin_flag": {"enabled": True, "context": {}, "metadata": {}, "updated_at": 170}}])
+        mock_list_flags = AsyncMock(
+            side_effect=[
+                {},
+                {"admin_flag": {"enabled": True, "context": {}, "metadata": {}, "updated_at": 170}},
+            ]
+        )
 
-        with patch("dotmac.platform.feature_flags.router.set_flag"), patch(
-            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        with (
+            patch("dotmac.platform.feature_flags.router.set_flag"),
+            patch("dotmac.platform.feature_flags.router.list_flags", mock_list_flags),
         ):
             response = feature_flag_admin_client.post(
                 "/feature-flags/flags/admin_flag", json=request_data
@@ -183,10 +190,12 @@ class TestCreateOrUpdateFlag:
         """Test creating flag when service throws error."""
         request_data = {"enabled": True}
 
-        with patch(
-            "dotmac.platform.feature_flags.router.set_flag", side_effect=Exception("Redis error")
-        ), patch(
-            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
+        with (
+            patch(
+                "dotmac.platform.feature_flags.router.set_flag",
+                side_effect=Exception("Redis error"),
+            ),
+            patch("dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})),
         ):
             response = client.post("/feature-flags/flags/error_flag", json=request_data)
 
@@ -224,9 +233,7 @@ class TestGetFlag:
 
     def test_get_flag_not_found(self, client):
         """Test getting non-existent flag."""
-        with patch(
-            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
-        ):
+        with patch("dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})):
             response = client.get("/feature-flags/flags/nonexistent")
 
             assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -307,9 +314,7 @@ class TestListAllFlags:
 
     def test_list_flags_empty(self, client):
         """Test listing flags when none exist."""
-        with patch(
-            "dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})
-        ):
+        with patch("dotmac.platform.feature_flags.router.list_flags", AsyncMock(return_value={})):
             response = client.get("/feature-flags/flags")
 
             assert response.status_code == status.HTTP_200_OK
@@ -531,8 +536,9 @@ class TestBulkOperations:
         mock_set_flag = AsyncMock()
         mock_list_flags = AsyncMock(return_value={})
 
-        with patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag), patch(
-            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        with (
+            patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag),
+            patch("dotmac.platform.feature_flags.router.list_flags", mock_list_flags),
         ):
             response = client.post("/feature-flags/flags/bulk", json=request_data)
 
@@ -555,8 +561,9 @@ class TestBulkOperations:
         mock_set_flag = AsyncMock()
         mock_list_flags = AsyncMock(return_value={})
 
-        with patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag), patch(
-            "dotmac.platform.feature_flags.router.list_flags", mock_list_flags
+        with (
+            patch("dotmac.platform.feature_flags.router.set_flag", mock_set_flag),
+            patch("dotmac.platform.feature_flags.router.list_flags", mock_list_flags),
         ):
             response = client.post("/feature-flags/flags/bulk", json=request_data)
 

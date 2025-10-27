@@ -182,7 +182,9 @@ class Context(BaseContext):
                     detail="Authentication required for GraphQL access.",
                 )
 
-            payload: dict[str, Any] = jwt_service.verify_token(token, expected_type=TokenType.ACCESS)
+            payload: dict[str, Any] = jwt_service.verify_token(
+                token, expected_type=TokenType.ACCESS
+            )
             current_user = UserInfo(
                 user_id=str(payload.get("sub", "")),
                 tenant_id=payload.get("tenant_id"),

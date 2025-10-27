@@ -65,7 +65,9 @@ async def test_redis_indices_clean_up_on_status_change(monkeypatch):
     monkeypatch.setattr("dotmac.platform.events.storage.get_redis", lambda: fake_redis)
 
     storage = EventStorage(use_redis=True)
-    event = Event(event_type="billing.invoice.created", payload={}, metadata={"tenant_id": "tenant-1"})
+    event = Event(
+        event_type="billing.invoice.created", payload={}, metadata={"tenant_id": "tenant-1"}
+    )
 
     await storage.save_event(event)
 

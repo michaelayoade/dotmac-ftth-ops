@@ -8,12 +8,12 @@ High-level service for managing workflows and orchestrations.
 import logging
 from datetime import datetime
 from typing import Any
+from unittest.mock import MagicMock, Mock
 from uuid import uuid4
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
-from unittest.mock import MagicMock, Mock
 
 from .models import (
     OrchestrationWorkflow,
@@ -21,9 +21,6 @@ from .models import (
     WorkflowStepStatus,
     WorkflowType,
 )
-
-# Alias for convenience in queries
-Workflow = OrchestrationWorkflow
 from .saga import SagaOrchestrator
 from .schemas import (
     ActivateServiceRequest,
@@ -31,9 +28,9 @@ from .schemas import (
     ProvisionSubscriberRequest,
     ProvisionSubscriberResponse,
     SuspendServiceRequest,
-    WorkflowListResponse,
     WorkflowResponse,
     WorkflowStatsResponse,
+    WorkflowStepResponse,
 )
 from .workflows.activate_service import (
     get_activate_service_workflow,
@@ -59,6 +56,9 @@ from .workflows.suspend_service import (
 from .workflows.suspend_service import (
     register_handlers as register_suspend_handlers,
 )
+
+# Alias for convenience in queries
+Workflow = OrchestrationWorkflow
 
 logger = logging.getLogger(__name__)
 
@@ -198,9 +198,7 @@ class OrchestrationService:
 
             # Build response
             response = self._build_provision_response(workflow)
-            logger.info(
-                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
-            )
+            logger.info(f"Workflow {workflow.workflow_id} completed with status: {workflow.status}")
             return response
 
         except Exception as e:
@@ -208,7 +206,9 @@ class OrchestrationService:
             # Workflow is already updated by saga orchestrator
             raise
 
-    def _build_provision_response(self, workflow: OrchestrationWorkflow) -> ProvisionSubscriberResponse:
+    def _build_provision_response(
+        self, workflow: OrchestrationWorkflow
+    ) -> ProvisionSubscriberResponse:
         """Build provisioning response from workflow."""
         raw_context = getattr(workflow, "context", None)
         context = raw_context.copy() if isinstance(raw_context, dict) else {}
@@ -228,8 +228,7 @@ class OrchestrationService:
         total_steps: int | None = None
         if isinstance(steps, (list, tuple)):
             completed_steps = sum(
-                1 for step in steps
-                if getattr(step, "status", None) == WorkflowStepStatus.COMPLETED
+                1 for step in steps if getattr(step, "status", None) == WorkflowStepStatus.COMPLETED
             )
             total_steps = len(steps)
 
@@ -505,10 +504,7 @@ class OrchestrationService:
             query = base_query
             total = query.count()
             workflows = (
-                query.order_by(Workflow.created_at.desc())
-                .limit(limit)
-                .offset(actual_offset)
-                .all()
+                query.order_by(Workflow.created_at.desc()).limit(limit).offset(actual_offset).all()
             )
 
         workflow_responses = [self._to_workflow_response(w) for w in workflows]
@@ -628,9 +624,7 @@ class OrchestrationService:
             raise ValueError(f"Workflow not found: {workflow_id}")
 
         if workflow.status not in [WorkflowStatus.PENDING, WorkflowStatus.RUNNING]:
-            raise ValueError(
-                f"Cannot cancel workflow in status: {workflow.status}"
-            )
+            raise ValueError(f"Cannot cancel workflow in status: {workflow.status}")
 
         logger.info(f"Cancelling workflow: {workflow_id}")
 
@@ -702,14 +696,11 @@ class OrchestrationService:
 
         # Calculate average duration
         if self._is_async:
-            completed_stmt = (
-                select(Workflow.started_at, Workflow.completed_at)
-                .where(
-                    Workflow.tenant_id == self.tenant_id,
-                    Workflow.status == WorkflowStatus.COMPLETED,
-                    Workflow.completed_at.isnot(None),
-                    Workflow.started_at.isnot(None),
-                )
+            completed_stmt = select(Workflow.started_at, Workflow.completed_at).where(
+                Workflow.tenant_id == self.tenant_id,
+                Workflow.status == WorkflowStatus.COMPLETED,
+                Workflow.completed_at.isnot(None),
+                Workflow.started_at.isnot(None),
             )
             completed_rows = (await self._execute(completed_stmt)).all()
         else:
@@ -825,9 +816,7 @@ class OrchestrationService:
                 context={},
             )
 
-            logger.info(
-                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
-            )
+            logger.info(f"Workflow {workflow.workflow_id} completed with status: {workflow.status}")
             return self._to_workflow_response(workflow)
 
         except Exception as e:
@@ -900,9 +889,7 @@ class OrchestrationService:
                 context={},
             )
 
-            logger.info(
-                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
-            )
+            logger.info(f"Workflow {workflow.workflow_id} completed with status: {workflow.status}")
             return self._to_workflow_response(workflow)
 
         except Exception as e:
@@ -975,9 +962,7 @@ class OrchestrationService:
                 context={},
             )
 
-            logger.info(
-                f"Workflow {workflow.workflow_id} completed with status: {workflow.status}"
-            )
+            logger.info(f"Workflow {workflow.workflow_id} completed with status: {workflow.status}")
             return self._to_workflow_response(workflow)
 
         except Exception as e:

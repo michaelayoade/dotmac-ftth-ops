@@ -40,4 +40,4 @@ async def test_custom_email_plugin_is_used():
     response = await service.send_email(message)
 
     assert response.status == "sent"
-    assert getattr(service, "_dummy_transport").sent is True
+    assert service._dummy_transport.sent is True

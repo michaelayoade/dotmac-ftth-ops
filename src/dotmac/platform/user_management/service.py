@@ -5,7 +5,10 @@ Production-ready user service with proper database operations.
 """
 
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -224,9 +227,7 @@ class UserService:
             logger.error(f"Failed to update user {user_id}: {e}")
             raise
 
-    async def delete_user(
-        self, user_id: str | UUID, tenant_id: str | None = None
-    ) -> bool:
+    async def delete_user(self, user_id: str | UUID, tenant_id: str | None = None) -> bool:
         """Delete a user."""
         user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
@@ -339,9 +340,7 @@ class UserService:
                       If provided, only users in this tenant can authenticate.
         """
         # Try to find user by username or email within tenant scope
-        user = await self.get_user_by_username(
-            username_or_email, tenant_id=tenant_id
-        )
+        user = await self.get_user_by_username(username_or_email, tenant_id=tenant_id)
         if not user:
             user = await self.get_user_by_email(username_or_email, tenant_id=tenant_id)
 
@@ -394,9 +393,7 @@ class UserService:
         logger.info(f"User authenticated: {user.username}")
         return user
 
-    async def enable_mfa(
-        self, user_id: str | UUID, tenant_id: str | None = None
-    ) -> str:
+    async def enable_mfa(self, user_id: str | UUID, tenant_id: str | None = None) -> str:
         """Enable MFA for user and return secret."""
         user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:
@@ -411,9 +408,7 @@ class UserService:
         logger.info(f"MFA enabled for user: {user.username}")
         return secret
 
-    async def disable_mfa(
-        self, user_id: str | UUID, tenant_id: str | None = None
-    ) -> bool:
+    async def disable_mfa(self, user_id: str | UUID, tenant_id: str | None = None) -> bool:
         """Disable MFA for user."""
         user = await self.get_user_by_id(user_id, tenant_id=tenant_id)
         if not user:

@@ -5,7 +5,7 @@ These tests call router functions directly without TestClient
 to avoid async/greenlet issues and improve coverage.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -404,7 +404,7 @@ class TestRoleCRUDEndpointsDirect:
 
         request = PermissionGrantRequest(
             permission_name="grant.test",
-            expires_at=datetime.now(UTC) + timedelta(days=30),
+            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
             reason="Test grant",
         )
 

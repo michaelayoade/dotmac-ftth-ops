@@ -17,7 +17,10 @@ import hashlib
 import json
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -611,11 +614,11 @@ class ServiceMesh:
 
                 if attempt >= attempts or traffic_rule.retry_policy == RetryPolicy.NONE:
                     self._record_call_failure(service_call, time.time() - start_time, str(e))
-                    raise HTTPException(
-                        status_code=500, detail=f"Service call failed: {e}"
-                    ) from e
+                    raise HTTPException(status_code=500, detail=f"Service call failed: {e}") from e
 
-                wait_time = self._get_retry_delay(traffic_rule.retry_policy, attempt, circuit_breaker)
+                wait_time = self._get_retry_delay(
+                    traffic_rule.retry_policy, attempt, circuit_breaker
+                )
                 if wait_time > 0:
                     await asyncio.sleep(wait_time)
 

@@ -1,7 +1,7 @@
 """Fixed comprehensive tests for DataImportService."""
 
 import io
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -349,7 +349,7 @@ class TestImportJobStatusHandling:
             file_name="test.csv",
             file_size=1024,
             file_format="csv",
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
         )
 
         await import_service._update_job_status(job, ImportJobStatus.COMPLETED)

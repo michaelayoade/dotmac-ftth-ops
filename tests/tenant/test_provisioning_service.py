@@ -3,15 +3,16 @@ Tests for tenant provisioning service logic.
 """
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from dotmac.platform.tenant.models import (
     Base,
+    TenantDeploymentMode,
     TenantPlanType,
     TenantProvisioningStatus,
     TenantStatus,
-    TenantDeploymentMode,
 )
 from dotmac.platform.tenant.provisioning_service import (
     TenantProvisioningConflictError,
@@ -21,7 +22,7 @@ from dotmac.platform.tenant.schemas import TenantCreate, TenantProvisioningJobCr
 from dotmac.platform.tenant.service import TenantService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_db():
     """Create an in-memory database for provisioning tests."""
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
@@ -36,13 +37,13 @@ async def async_db():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def tenant_service(async_db: AsyncSession) -> TenantService:
     """Tenant service backed by the in-memory DB."""
     return TenantService(db=async_db)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def provisioning_service(async_db: AsyncSession) -> TenantProvisioningService:
     """Provisioning service under test."""
     return TenantProvisioningService(db=async_db)
@@ -119,9 +120,7 @@ async def test_update_status_transitions(
     assert in_progress.awx_job_id == 42
     assert in_progress.started_at is not None
 
-    completed = await provisioning_service.update_status(
-        job.id, TenantProvisioningStatus.SUCCEEDED
-    )
+    completed = await provisioning_service.update_status(job.id, TenantProvisioningStatus.SUCCEEDED)
     assert completed.finished_at is not None
     assert completed.status == TenantProvisioningStatus.SUCCEEDED
 

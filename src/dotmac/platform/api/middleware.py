@@ -173,7 +173,11 @@ class CircuitBreakerMiddleware(BaseHTTPMiddleware):
         path_parts = path.split("/")
 
         # /api/platform/v1/{service}/... or /api/tenant/v1/{service}/...
-        if len(path_parts) > 4 and path_parts[1] == "api" and path_parts[2] in ("platform", "tenant"):
+        if (
+            len(path_parts) > 4
+            and path_parts[1] == "api"
+            and path_parts[2] in ("platform", "tenant")
+        ):
             service = path_parts[4]  # service name after /api/{boundary}/v1/
             return service or "unknown"
 

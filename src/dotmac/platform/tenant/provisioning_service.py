@@ -4,8 +4,10 @@ Service layer coordinating tenant infrastructure provisioning jobs.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from typing import Any
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import structlog
 from sqlalchemy import Select, func, select
@@ -14,7 +16,6 @@ from sqlalchemy.orm import selectinload
 
 from .models import (
     Tenant,
-    TenantDeploymentMode,
     TenantProvisioningJob,
     TenantProvisioningStatus,
     TenantStatus,

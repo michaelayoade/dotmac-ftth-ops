@@ -140,9 +140,7 @@ class InternetPlanService:
         offset: int = 0,
     ) -> list[InternetServicePlanResponse]:
         """List plans with filters."""
-        stmt = select(InternetServicePlan).where(
-            InternetServicePlan.tenant_id == self.tenant_id
-        )
+        stmt = select(InternetServicePlan).where(InternetServicePlan.tenant_id == self.tenant_id)
 
         # Apply filters
         if plan_type:
@@ -301,7 +299,9 @@ class InternetPlanService:
             "Monthly Price": [f"{p.monthly_price} {p.currency}" for p in plan_responses],
             "Setup Fee": [f"{p.setup_fee} {p.currency}" for p in plan_responses],
             "QoS Priority": [p.qos_priority for p in plan_responses],
-            "Static IPs": [p.static_ip_count if p.static_ip_included else 0 for p in plan_responses],
+            "Static IPs": [
+                p.static_ip_count if p.static_ip_included else 0 for p in plan_responses
+            ],
             "Contract": [f"{p.minimum_contract_months} months" for p in plan_responses],
         }
 
@@ -310,14 +310,15 @@ class InternetPlanService:
 
         # Highest speed
         max_speed_plan = max(plans, key=lambda p: p.download_speed)
-        recommendations.append(f"Highest speed: {max_speed_plan.name} ({max_speed_plan.download_speed} {max_speed_plan.speed_unit})")
+        recommendations.append(
+            f"Highest speed: {max_speed_plan.name} ({max_speed_plan.download_speed} {max_speed_plan.speed_unit})"
+        )
 
         # Best value
         plans_with_prices = [p for p in plans if p.monthly_price > 0]
         if plans_with_prices:
             best_value_plan = max(
-                plans_with_prices,
-                key=lambda p: p.get_speed_mbps(download=True) / p.monthly_price
+                plans_with_prices, key=lambda p: p.get_speed_mbps(download=True) / p.monthly_price
             )
             recommendations.append(f"Best value: {best_value_plan.name}")
 
@@ -334,9 +335,7 @@ class InternetPlanService:
 
     # Subscription management
 
-    async def create_subscription(
-        self, data: PlanSubscriptionCreate
-    ) -> PlanSubscriptionResponse:
+    async def create_subscription(self, data: PlanSubscriptionCreate) -> PlanSubscriptionResponse:
         """Subscribe customer to a plan."""
         subscription = PlanSubscription(
             tenant_id=self.tenant_id,
@@ -380,9 +379,7 @@ class InternetPlanService:
         offset: int = 0,
     ) -> list[PlanSubscriptionResponse]:
         """List subscriptions with filters."""
-        stmt = select(PlanSubscription).where(
-            PlanSubscription.tenant_id == self.tenant_id
-        )
+        stmt = select(PlanSubscription).where(PlanSubscription.tenant_id == self.tenant_id)
 
         if plan_id:
             stmt = stmt.where(PlanSubscription.plan_id == plan_id)
@@ -463,9 +460,7 @@ class InternetPlanService:
         active_subscriptions = sub_result.scalar() or 0
 
         # Calculate MRR (assuming all on monthly billing for now)
-        plan_stmt = select(InternetServicePlan).where(
-            InternetServicePlan.id == plan_id
-        )
+        plan_stmt = select(InternetServicePlan).where(InternetServicePlan.id == plan_id)
         plan_result = await self.session.execute(plan_stmt)
         plan = plan_result.scalar_one_or_none()
 

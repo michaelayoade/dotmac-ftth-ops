@@ -4,7 +4,7 @@ Tests for file storage service.
 
 import hashlib
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -308,7 +308,7 @@ class TestLocalFileStorage:
 
         metadata.setdefault("metadata", {})
         metadata["metadata"]["description"] = "updated"
-        metadata["updated_at"] = datetime.now(UTC).isoformat()
+        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
 
         assert storage.apply_metadata_update(file_id, metadata) is True
 
@@ -511,7 +511,10 @@ class TestMinIOFileStorage:
         # Ensure deletion removes both object and metadata entry
         assert await storage.delete(file_id, "tenant1") is True
         assert await storage.retrieve(file_id, "tenant1") == (None, None)
-        metadata_key = (MinIOFileStorage._METADATA_TENANT, f"{MinIOFileStorage._METADATA_PREFIX}/{file_id}.json")
+        metadata_key = (
+            MinIOFileStorage._METADATA_TENANT,
+            f"{MinIOFileStorage._METADATA_PREFIX}/{file_id}.json",
+        )
         assert metadata_key not in in_memory_minio_client._store
 
 

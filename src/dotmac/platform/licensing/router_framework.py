@@ -1,4 +1,3 @@
-from typing import Any
 """
 API router for composable licensing framework.
 
@@ -11,6 +10,7 @@ Provides REST endpoints for:
 - Quota tracking and enforcement
 """
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -198,9 +198,7 @@ async def update_feature_module(
     db: AsyncSession = Depends(get_async_session),
 ) -> Any:
     """Update feature module."""
-    result = await db.execute(
-        select(FeatureModule).where(FeatureModule.id == module_id)
-    )
+    result = await db.execute(select(FeatureModule).where(FeatureModule.id == module_id))
     module = result.scalar_one_or_none()
 
     if not module:
@@ -319,9 +317,7 @@ async def get_quota_definition(
     db: AsyncSession = Depends(get_async_session),
 ) -> Any:
     """Get quota definition by ID."""
-    result = await db.execute(
-        select(QuotaDefinition).where(QuotaDefinition.id == quota_id)
-    )
+    result = await db.execute(select(QuotaDefinition).where(QuotaDefinition.id == quota_id))
     quota = result.scalar_one_or_none()
 
     if not quota:
@@ -341,9 +337,7 @@ async def update_quota_definition(
     db: AsyncSession = Depends(get_async_session),
 ) -> Any:
     """Update quota definition."""
-    result = await db.execute(
-        select(QuotaDefinition).where(QuotaDefinition.id == quota_id)
-    )
+    result = await db.execute(select(QuotaDefinition).where(QuotaDefinition.id == quota_id))
     quota = result.scalar_one_or_none()
 
     if not quota:
@@ -402,10 +396,8 @@ async def create_service_plan(
         result = await db.execute(
             select(ServicePlan)
             .options(
-                selectinload(ServicePlan.modules)
-                .selectinload(PlanModule.module),
-                selectinload(ServicePlan.quotas)
-                .selectinload(PlanQuotaAllocation.quota),
+                selectinload(ServicePlan.modules).selectinload(PlanModule.module),
+                selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
             )
             .where(ServicePlan.id == plan.id)
         )
@@ -484,9 +476,7 @@ async def update_service_plan(
     db: AsyncSession = Depends(get_async_session),
 ) -> Any:
     """Update service plan."""
-    result = await db.execute(
-        select(ServicePlan).where(ServicePlan.id == plan_id)
-    )
+    result = await db.execute(select(ServicePlan).where(ServicePlan.id == plan_id))
     plan = result.scalar_one_or_none()
 
     if not plan:
@@ -619,10 +609,8 @@ async def create_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.modules)
-                .selectinload(SubscriptionModule.module),
-                selectinload(TenantSubscription.quotas)
-                .selectinload(SubscriptionModule.quota),
+                selectinload(TenantSubscription.modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.quotas).selectinload(SubscriptionModule.quota),
             )
             .where(TenantSubscription.id == subscription.id)
         )
@@ -654,11 +642,13 @@ async def get_current_subscription(
         )
         .where(
             TenantSubscription.tenant_id == tenant.id,
-            TenantSubscription.status.in_([
-                SubscriptionStatus.TRIAL,
-                SubscriptionStatus.ACTIVE,
-                SubscriptionStatus.PAST_DUE,
-            ]),
+            TenantSubscription.status.in_(
+                [
+                    SubscriptionStatus.TRIAL,
+                    SubscriptionStatus.ACTIVE,
+                    SubscriptionStatus.PAST_DUE,
+                ]
+            ),
         )
         .order_by(TenantSubscription.created_at.desc())
     )
@@ -694,10 +684,12 @@ async def add_addon_to_current_subscription(
         select(TenantSubscription)
         .where(
             TenantSubscription.tenant_id == tenant.id,
-            TenantSubscription.status.in_([
-                SubscriptionStatus.TRIAL,
-                SubscriptionStatus.ACTIVE,
-            ]),
+            TenantSubscription.status.in_(
+                [
+                    SubscriptionStatus.TRIAL,
+                    SubscriptionStatus.ACTIVE,
+                ]
+            ),
         )
         .order_by(TenantSubscription.created_at.desc())
     )
@@ -755,10 +747,12 @@ async def remove_addon_from_current_subscription(
         select(TenantSubscription)
         .where(
             TenantSubscription.tenant_id == tenant.id,
-            TenantSubscription.status.in_([
-                SubscriptionStatus.TRIAL,
-                SubscriptionStatus.ACTIVE,
-            ]),
+            TenantSubscription.status.in_(
+                [
+                    SubscriptionStatus.TRIAL,
+                    SubscriptionStatus.ACTIVE,
+                ]
+            ),
         )
         .order_by(TenantSubscription.created_at.desc())
     )

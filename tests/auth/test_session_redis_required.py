@@ -18,6 +18,35 @@ from dotmac.platform.auth.core import SessionManager
 
 
 @pytest.fixture
+def restore_test_environment():
+    """Restore test environment after module reload tests.
+
+    This fixture ensures that modules reloaded during tests are reset to
+    the test environment configuration, preventing test pollution.
+    """
+    yield  # Let the test run first
+
+    # Cleanup: Reload modules with test environment
+    import importlib
+    from dotmac.platform import settings as settings_module
+    from dotmac.platform.auth import core
+
+    # Ensure we're back in test mode
+    test_env = {
+        "ENVIRONMENT": "development",
+        "REQUIRE_REDIS_SESSIONS": "false",
+    }
+
+    with patch.dict(os.environ, test_env, clear=False):
+        # Reset settings singleton
+        settings_module._settings = None
+
+        # Reload modules to restore test configuration
+        importlib.reload(settings_module)
+        importlib.reload(core)
+
+
+@pytest.fixture
 def mock_redis_available():
     """Mock Redis being available."""
     with patch("dotmac.platform.auth.core.REDIS_AVAILABLE", True):
@@ -287,7 +316,7 @@ class TestSessionManagerHealthCheck:
 class TestGlobalSessionManagerConfiguration:
     """Test that global session_manager respects production settings."""
 
-    def test_global_session_manager_production_mode(self):
+    def test_global_session_manager_production_mode(self, restore_test_environment):
         """Test that global session_manager is configured for production when ENV is set."""
         # Note: conftest.py sets REQUIRE_REDIS_SESSIONS=false by default for tests
         # We need to remove it to let production mode logic work
@@ -314,20 +343,20 @@ class TestGlobalSessionManagerConfiguration:
             importlib.reload(core)
 
             # ASSERTION: Production mode detected
-            assert (
-                core._is_production is True
-            ), f"Expected production mode, got: {core._is_production}"
+            assert core._is_production is True, (
+                f"Expected production mode, got: {core._is_production}"
+            )
             # In production, _require_redis_for_sessions should be True
             # It defaults to str(_is_production) which is "True", and "True".lower() == "true"
-            assert (
-                core._require_redis_for_sessions is True
-            ), f"Expected Redis required for sessions in production, got: {core._require_redis_for_sessions}"
+            assert core._require_redis_for_sessions is True, (
+                f"Expected Redis required for sessions in production, got: {core._require_redis_for_sessions}"
+            )
 
             # ASSERTION: SessionManager created without fallback
             # Note: Can't directly test fallback_enabled without inspecting private var
             # But the global instance should be created with fallback_enabled=False
 
-    def test_global_session_manager_development_mode(self):
+    def test_global_session_manager_development_mode(self, restore_test_environment):
         """Test that global session_manager allows fallback in development."""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
             # Reload modules to pick up new environment

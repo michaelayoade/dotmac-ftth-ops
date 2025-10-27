@@ -2,7 +2,7 @@
 Fixtures for payment service and router tests.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -49,7 +49,7 @@ def setup_mock_refresh(mock_db_session):
     """Helper to setup mock refresh that populates required entity fields"""
 
     async def mock_refresh(entity):
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         # Set required fields for PaymentEntity
         if hasattr(entity, "payment_id"):
             if not getattr(entity, "payment_id", None):
@@ -64,11 +64,15 @@ def setup_mock_refresh(mock_db_session):
                 entity.extra_data = {}
             # CRITICAL FIX: Ensure payment_method_type and payment_method_details are preserved
             # These fields must not be set to None during refresh
-            if not hasattr(entity, "payment_method_details") or entity.payment_method_details is None:
+            if (
+                not hasattr(entity, "payment_method_details")
+                or entity.payment_method_details is None
+            ):
                 entity.payment_method_details = {}
             # payment_method_type should be preserved if already set, but default if None
             if not hasattr(entity, "payment_method_type") or entity.payment_method_type is None:
                 from dotmac.platform.billing.models import PaymentMethodType
+
                 entity.payment_method_type = PaymentMethodType.CARD
         # Set required fields for PaymentMethodEntity
         if hasattr(entity, "payment_method_id"):
@@ -128,7 +132,7 @@ def payment_service(mock_payment_db_session, mock_payment_provider):
 @pytest.fixture
 def sample_payment_entity():
     """Create a sample payment entity"""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payment = MagicMock(spec=PaymentEntity)
     payment.tenant_id = "test-tenant"
     payment.payment_id = "payment_123"
@@ -162,7 +166,7 @@ def sample_payment_entity():
 @pytest.fixture
 def sample_payment_method_entity():
     """Create a sample payment method entity"""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     payment_method = MagicMock(spec=PaymentMethodEntity)
     payment_method.tenant_id = "test-tenant"
     payment_method.payment_method_id = "pm_789"

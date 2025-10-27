@@ -152,9 +152,7 @@ class RADIUSService:
                 profile_id=data.bandwidth_profile_id,
             )
             if profile_response is None:
-                raise ValueError(
-                    f"Bandwidth profile '{data.bandwidth_profile_id}' not found"
-                )
+                raise ValueError(f"Bandwidth profile '{data.bandwidth_profile_id}' not found")
 
         await self.session.commit()
 
@@ -401,7 +399,7 @@ class RADIUSService:
             # Get NAS from first active session
             nas_ip = str(sessions[0].nasipaddress)
             nas = await self.repository.get_nas_by_name(self.tenant_id, nas_ip)
-            if nas and hasattr(nas, 'vendor'):
+            if nas and hasattr(nas, "vendor"):
                 logger.debug(
                     "Resolved NAS vendor from active session",
                     username=username,
@@ -480,6 +478,7 @@ class RADIUSService:
         else:
             # Fallback to Mikrotik if vendor-aware mode disabled
             from dotmac.platform.radius.vendors import MikrotikBandwidthBuilder
+
             builder = MikrotikBandwidthBuilder()
             logger.info(
                 "Using Mikrotik bandwidth builder (vendor-aware disabled)",
@@ -502,9 +501,7 @@ class RADIUSService:
         # contain VRF, DNS, ACL, and other policy entries from other features
 
         # 1. Remove tracking attribute (marks all our bandwidth entries)
-        await self.repository.delete_radreply(
-            self.tenant_id, username, "X-Bandwidth-Profile-ID"
-        )
+        await self.repository.delete_radreply(self.tenant_id, username, "X-Bandwidth-Profile-ID")
 
         # 2. Remove vendor-specific bandwidth attributes
         # Mikrotik: Safe to remove all (bandwidth-only attribute)
@@ -538,9 +535,7 @@ class RADIUSService:
         # Juniper ERX policies: CAREFUL - only remove QoS-related entries
         # ERX-Qos-Profile-Name is bandwidth-specific, safe to remove
         # ERX-Ingress/Egress-Policy-Name may be used for ACLs, only remove if QoS-related
-        await self.repository.delete_radreply(
-            self.tenant_id, username, "ERX-Qos-Profile-Name"
-        )
+        await self.repository.delete_radreply(self.tenant_id, username, "ERX-Qos-Profile-Name")
         # Only remove ERX policies if they match QoS naming patterns (e.g., contain "-qos-")
         for attr in ["ERX-Ingress-Policy-Name", "ERX-Egress-Policy-Name"]:
             await self.repository.delete_radreply_by_value_pattern(

@@ -242,9 +242,7 @@ class SagaOrchestrator:
 
         # Get completed steps in reverse order
         completed_steps = [
-            step
-            for step in workflow.steps
-            if step.status == WorkflowStepStatus.COMPLETED
+            step for step in workflow.steps if step.status == WorkflowStepStatus.COMPLETED
         ]
         completed_steps.reverse()
 
@@ -254,13 +252,9 @@ class SagaOrchestrator:
             try:
                 success = await self._compensate_step(step)
                 if not success:
-                    compensation_errors.append(
-                        f"Step {step.step_name} compensation failed"
-                    )
+                    compensation_errors.append(f"Step {step.step_name} compensation failed")
             except Exception as e:
-                logger.exception(
-                    f"Exception during compensation of step {step.step_name}: {e}"
-                )
+                logger.exception(f"Exception during compensation of step {step.step_name}: {e}")
                 compensation_errors.append(
                     f"Step {step.step_name} compensation exception: {str(e)}"
                 )
@@ -299,8 +293,7 @@ class SagaOrchestrator:
         # Get the compensation handler
         if not step.compensation_handler:
             logger.warning(
-                f"No compensation handler for step {step.step_name}, "
-                "marking as compensated"
+                f"No compensation handler for step {step.step_name}, marking as compensated"
             )
             step.status = WorkflowStepStatus.COMPENSATED
             step.compensation_completed_at = datetime.utcnow()
@@ -309,9 +302,7 @@ class SagaOrchestrator:
 
         handler = self.compensation_handlers.get(step.compensation_handler)  # type: ignore[call-overload]
         if not handler:
-            logger.error(
-                f"Compensation handler not found: {step.compensation_handler}"
-            )
+            logger.error(f"Compensation handler not found: {step.compensation_handler}")
             step.status = WorkflowStepStatus.COMPENSATION_FAILED
             step.compensation_completed_at = datetime.utcnow()
             self.db.commit()
@@ -399,9 +390,7 @@ class SagaOrchestrator:
 
         return step
 
-    async def retry_failed_workflow(
-        self, workflow: OrchestrationWorkflow
-    ) -> OrchestrationWorkflow:
+    async def retry_failed_workflow(self, workflow: OrchestrationWorkflow) -> OrchestrationWorkflow:
         """
         Retry a failed workflow from the failed step.
 
@@ -412,14 +401,10 @@ class SagaOrchestrator:
             Updated workflow model
         """
         if workflow.status not in [WorkflowStatus.FAILED, WorkflowStatus.ROLLED_BACK]:
-            raise ValueError(
-                f"Cannot retry workflow in status: {workflow.status}"
-            )
+            raise ValueError(f"Cannot retry workflow in status: {workflow.status}")
 
         if workflow.retry_count >= workflow.max_retries:
-            raise ValueError(
-                f"Max retries ({workflow.max_retries}) exceeded"
-            )
+            raise ValueError(f"Max retries ({workflow.max_retries}) exceeded")
 
         logger.info(
             f"Retrying workflow {workflow.workflow_id} "

@@ -5,7 +5,7 @@ Following Dev B's successful approach with dependency overrides and mocks.
 Targets uncovered error handlers and edge cases.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import FastAPI
@@ -44,8 +44,8 @@ class TestTenantRouterPropertyAssignments:
         mock_tenant.current_users = 5
         mock_tenant.current_api_calls = 500
         mock_tenant.current_storage_gb = 5.0
-        mock_tenant.created_at = datetime.now(UTC)
-        mock_tenant.updated_at = datetime.now(UTC)
+        mock_tenant.created_at = datetime.now(timezone.utc)
+        mock_tenant.updated_at = datetime.now(timezone.utc)
         mock_tenant.deleted_at = None
         mock_tenant.trial_ends_at = None
         mock_tenant.subscription_starts_at = None
@@ -56,7 +56,7 @@ class TestTenantRouterPropertyAssignments:
         mock_tenant.company_size = None
         mock_tenant.industry = None
         mock_tenant.country = None
-        mock_tenant.timezone = "UTC"
+        mock_tenant.timezone = "timezone.utc"
         mock_tenant.logo_url = None
         mock_tenant.primary_color = None
         mock_tenant.features = {}

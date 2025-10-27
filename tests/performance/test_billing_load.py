@@ -1,6 +1,9 @@
 """
 Load testing for billing scenarios using locust.
 Tests high-volume billing operations under load.
+
+Note: Locust tests are skipped from the default test suite.
+Run manually with: locust -f tests/performance/test_billing_load.py --host=http://localhost:8000
 """
 
 import json
@@ -8,9 +11,13 @@ import random
 from datetime import datetime, timedelta
 
 import pytest
+
+# Conditionally import locust - skip if not installed
+locust = pytest.importorskip("locust", reason="Locust not installed - skip load tests")
 from locust import HttpUser, between, task
 
-pytestmark = pytest.mark.asyncio
+# Mark all tests in this module as performance tests (excluded from default suite)
+pytestmark = [pytest.mark.performance, pytest.mark.skip(reason="Performance tests - run manually")]
 
 
 # Install: pip install locust
@@ -205,8 +212,16 @@ class WebhookLoadTestUser(HttpUser):
 
 
 # Pytest-based load tests for CI
+# NOTE: These tests require a running API server and make real HTTP requests.
+# They are NOT suitable for the standard test suite and should be run manually
+# in a dedicated performance testing environment.
+@pytest.mark.skip(reason="Requires running API server - manual execution only")
 class TestBillingPerformance:
-    """Performance tests that can run in CI/CD."""
+    """Performance tests that can run in CI/CD with proper setup.
+
+    WARNING: These tests make real HTTP requests and mutate state.
+    Only run in isolated performance testing environments.
+    """
 
     @pytest.mark.performance
     @pytest.mark.asyncio

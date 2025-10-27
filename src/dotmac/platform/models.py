@@ -12,42 +12,13 @@ to ensure all models are registered.
 """
 
 # Core platform models
-from dotmac.platform.tenant.models import Tenant, TenantInvitation  # noqa: F401
-
-# Customer and user management
-from dotmac.platform.customer_management.models import Customer  # noqa: F401
-from dotmac.platform.subscribers.models import Subscriber  # noqa: F401
-from dotmac.platform.user_management.models import User  # noqa: F401
-from dotmac.platform.contacts.models import Contact  # noqa: F401
-
-# RADIUS and network
-from dotmac.platform.radius.models import (  # noqa: F401
-    NAS,
-    RadAcct,
-    RadCheck,
-    RadPostAuth,
-    RadReply,
-    RadiusBandwidthProfile,
+from dotmac.platform.analytics.models import (  # noqa: F401
+    AnalyticsEvent,
+    Metric,
 )
 
-# Billing models
-from dotmac.platform.billing.core.models import (  # noqa: F401
-    CreditApplication,
-    CreditNote,
-    CreditNoteLineItem,
-    Customer as BillingCustomer,
-    CustomerCredit,
-    Invoice,
-    InvoiceItem,
-    InvoiceLineItem,
-    Payment,
-    PaymentMethod,
-    Price,
-    Product as BillingProduct,
-    Service,
-    Subscription,
-    Transaction,
-)
+# Audit and analytics
+from dotmac.platform.audit.models import AuditActivity  # noqa: F401
 
 # Auth models
 from dotmac.platform.auth.models import (  # noqa: F401
@@ -55,22 +26,21 @@ from dotmac.platform.auth.models import (  # noqa: F401
     Role,
 )
 
-# Audit and analytics
-from dotmac.platform.audit.models import AuditActivity  # noqa: F401
-from dotmac.platform.analytics.models import (  # noqa: F401
-    AnalyticsEvent,
-    Metric,
-)
-
-# Orchestration and workflows
-from dotmac.platform.orchestration.models import (  # noqa: F401
-    OrchestrationWorkflow,
-    OrchestrationWorkflowStep,
-)
-from dotmac.platform.workflows.models import (  # noqa: F401
-    Workflow,
-    WorkflowExecution,
-    WorkflowExecutionStep,
+# Billing models
+from dotmac.platform.billing.core.models import (  # noqa: F401
+    CreditApplication,
+    CreditNote,
+    CreditNoteLineItem,
+    CustomerCredit,
+    Invoice,
+    InvoiceItem,
+    InvoiceLineItem,
+    Payment,
+    PaymentMethod,
+    Price,
+    Service,
+    Subscription,
+    Transaction,
 )
 
 # Communications
@@ -78,6 +48,44 @@ from dotmac.platform.communications.models import (  # noqa: F401
     EmailTemplate,
     SMSTemplate,
 )
+from dotmac.platform.contacts.models import Contact  # noqa: F401
+
+# CRM
+from dotmac.platform.crm.models import Lead, SiteSurvey  # noqa: F401
+
+# Customer and user management
+from dotmac.platform.customer_management.models import Customer  # noqa: F401
+
+# Deployment
+from dotmac.platform.deployment.models import Deployment  # noqa: F401
+
+# Jobs
+from dotmac.platform.jobs.models import Job, JobChain  # noqa: F401
+
+# Notifications
+from dotmac.platform.notifications.models import Notification  # noqa: F401
+
+# Orchestration and workflows
+from dotmac.platform.orchestration.models import (  # noqa: F401
+    OrchestrationWorkflow,
+    OrchestrationWorkflowStep,
+)
+
+# RADIUS and network
+from dotmac.platform.radius.models import (  # noqa: F401
+    NAS,
+    RadAcct,
+    RadCheck,
+    RadiusBandwidthProfile,
+    RadPostAuth,
+    RadReply,
+)
+from dotmac.platform.subscribers.models import Subscriber  # noqa: F401
+from dotmac.platform.tenant.models import Tenant, TenantInvitation  # noqa: F401
+
+# Ticketing
+from dotmac.platform.ticketing.models import Ticket, TicketMessage  # noqa: F401
+from dotmac.platform.user_management.models import User  # noqa: F401
 
 # Webhooks and events
 from dotmac.platform.webhooks.models import (  # noqa: F401
@@ -86,21 +94,6 @@ from dotmac.platform.webhooks.models import (  # noqa: F401
     WebhookEvent,
 )
 
-# Jobs
-from dotmac.platform.jobs.models import Job, JobChain  # noqa: F401
-
-# Deployment
-from dotmac.platform.deployment.models import Deployment  # noqa: F401
-
-# Notifications
-from dotmac.platform.notifications.models import Notification  # noqa: F401
-
-# CRM
-from dotmac.platform.crm.models import Lead, SiteSurvey  # noqa: F401
-
-# Ticketing
-from dotmac.platform.ticketing.models import Ticket, TicketMessage  # noqa: F401
-
 # Wireless
 from dotmac.platform.wireless.models import (  # noqa: F401
     AccessPoint,
@@ -108,6 +101,11 @@ from dotmac.platform.wireless.models import (  # noqa: F401
     Radio,
     SubscriberCPE,
     Tower,
+)
+from dotmac.platform.workflows.models import (  # noqa: F401
+    Workflow,
+    WorkflowExecution,
+    WorkflowExecutionStep,
 )
 
 # Services

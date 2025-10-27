@@ -5,7 +5,7 @@ Focuses on recommendation generation logic (lines 185-240 in usage_billing_route
 """
 
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -87,8 +87,8 @@ async def create_tenant_with_usage(
         current_api_calls=current_api_calls,
         current_storage_gb=Decimal(str(current_storage_gb)),
         current_users=current_users,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     return tenant
 

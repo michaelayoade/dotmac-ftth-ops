@@ -6,7 +6,10 @@ Business logic for license management, activation, compliance, and enforcement.
 
 import hashlib
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from types import SimpleNamespace
 from typing import Any
 from uuid import uuid4
@@ -20,24 +23,24 @@ from .models import (
     ActivationStatus,
     License,
     LicenseEventLog,
+    LicenseOrder,
     LicenseStatus,
     LicenseTemplate,
-    LicenseOrder,
     OrderStatus,
     PaymentStatus,
 )
 from .schemas import (
     ActivationCreate,
     LicenseCreate,
+    LicenseOrderCreate,
     LicenseRenewal,
-    LicenseTransfer,
-    LicenseUpdate,
     LicenseTemplateCreate,
     LicenseTemplateUpdate,
-    LicenseOrderCreate,
+    LicenseTransfer,
+    LicenseUpdate,
+    OfflineActivationRequest,
     OrderApproval,
     OrderCancellation,
-    OfflineActivationRequest,
     UsageMetrics,
 )
 
@@ -145,7 +148,9 @@ class LicensingService:
 
         # Handle features and restrictions
         if "features" in update_data and update_data["features"]:
-            update_data["features"] = {"features": [f.model_dump() for f in update_data["features"]]}
+            update_data["features"] = {
+                "features": [f.model_dump() for f in update_data["features"]]
+            }
 
         if "restrictions" in update_data and update_data["restrictions"]:
             update_data["restrictions"] = {
@@ -239,7 +244,9 @@ class LicensingService:
             event_data={"reason": reason},
         )
 
-        logger.warn("License suspended", license_id=license_id, reason=reason, tenant_id=self.tenant_id)
+        logger.warn(
+            "License suspended", license_id=license_id, reason=reason, tenant_id=self.tenant_id
+        )
 
         return license_obj
 
@@ -265,7 +272,9 @@ class LicensingService:
             event_data={"reason": reason},
         )
 
-        logger.warn("License revoked", license_id=license_id, reason=reason, tenant_id=self.tenant_id)
+        logger.warn(
+            "License revoked", license_id=license_id, reason=reason, tenant_id=self.tenant_id
+        )
 
         return license_obj
 
@@ -442,7 +451,9 @@ class LicensingService:
 
         return activation
 
-    async def validate_activation(self, activation_token: str) -> tuple[bool, Activation | None, License | None]:
+    async def validate_activation(
+        self, activation_token: str
+    ) -> tuple[bool, Activation | None, License | None]:
         """Validate an activation token."""
         result = await self.session.execute(
             select(Activation)
@@ -479,7 +490,9 @@ class LicensingService:
 
         return True, activation, license_obj
 
-    async def update_heartbeat(self, activation_token: str, metrics: UsageMetrics | None = None) -> dict[str, str]:
+    async def update_heartbeat(
+        self, activation_token: str, metrics: UsageMetrics | None = None
+    ) -> dict[str, str]:
         """Update activation heartbeat with usage metrics."""
         result = await self.session.execute(
             select(Activation).where(
@@ -523,7 +536,9 @@ class LicensingService:
             raise ValueError("Invalid license key")
 
         # Generate request code
-        request_data = f"{data.license_key}:{data.device_fingerprint}:{datetime.now(UTC).isoformat()}"
+        request_data = (
+            f"{data.license_key}:{data.device_fingerprint}:{datetime.now(UTC).isoformat()}"
+        )
         request_code = hashlib.sha256(request_data.encode()).hexdigest()[:16].upper()
 
         return {
@@ -535,15 +550,15 @@ class LicensingService:
             ),
         }
 
-    async def process_offline_activation(
-        self, request_code: str, response_code: str
-    ) -> Activation:
+    async def process_offline_activation(self, request_code: str, response_code: str) -> Activation:
         """Process offline activation with response code."""
         # In production, this would verify the response code signature
         # For now, we'll simulate the activation
         # This is a placeholder - actual implementation would validate cryptographic signatures
 
-        raise NotImplementedError("Offline activation processing requires cryptographic implementation")
+        raise NotImplementedError(
+            "Offline activation processing requires cryptographic implementation"
+        )
 
     # ==================== Helper Methods ====================
 
@@ -615,6 +630,7 @@ class LicensingService:
         )
         self.session.add(event)
         await self.session.flush()
+
     # ==================== Template Management ====================
 
     async def get_template(self, template_id: str) -> LicenseTemplate | None:
@@ -687,7 +703,9 @@ class LicensingService:
         await self.session.flush()
         return template
 
-    async def update_template(self, template_id: str, data: LicenseTemplateUpdate) -> LicenseTemplate:
+    async def update_template(
+        self, template_id: str, data: LicenseTemplateUpdate
+    ) -> LicenseTemplate:
         result = await self.session.execute(
             select(LicenseTemplate).where(
                 LicenseTemplate.id == template_id,
@@ -747,11 +765,11 @@ class LicensingService:
         )
 
         pricing_override_dict = (
-            data.pricing_override.model_dump()
-            if data.pricing_override
-            else None
+            data.pricing_override.model_dump() if data.pricing_override else None
         )
-        pricing_source = pricing_override_dict if pricing_override_dict is not None else template.pricing
+        pricing_source = (
+            pricing_override_dict if pricing_override_dict is not None else template.pricing
+        )
         base_price = float(pricing_source.get("base_price", 0))
         total_amount = base_price * data.quantity
 

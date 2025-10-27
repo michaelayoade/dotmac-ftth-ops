@@ -7,7 +7,7 @@ Request and response schemas for RADIUS API endpoints.
 from datetime import datetime
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from dotmac.platform.core.ip_validation import (
     IPv4AddressValidator,
@@ -35,14 +35,18 @@ class RADIUSSubscriberCreate(BaseModel):
 
     # IPv6 Support (NEW)
     framed_ipv6_address: str | None = Field(None, description="Static IPv6 address (optional)")
-    delegated_ipv6_prefix: str | None = Field(None, description="IPv6 prefix delegation (e.g., 2001:db8::/64)")
+    delegated_ipv6_prefix: str | None = Field(
+        None, description="IPv6 prefix delegation (e.g., 2001:db8::/64)"
+    )
 
     # Timeouts
     session_timeout: int | None = Field(None, gt=0, description="Session timeout in seconds")
     idle_timeout: int | None = Field(None, gt=0, description="Idle timeout in seconds")
 
     # Backward compatibility: map old field to new field
-    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
+    framed_ip_address: str | None = Field(
+        None, description="[DEPRECATED] Use framed_ipv4_address instead"
+    )
 
     @field_validator("username")
     @classmethod
@@ -97,7 +101,9 @@ class RADIUSSubscriberUpdate(BaseModel):
     enabled: bool | None = Field(None, description="Enable/disable RADIUS access")
 
     # Backward compatibility
-    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
+    framed_ip_address: str | None = Field(
+        None, description="[DEPRECATED] Use framed_ipv4_address instead"
+    )
 
     @field_validator("framed_ipv4_address")
     @classmethod

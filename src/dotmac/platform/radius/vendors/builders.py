@@ -10,7 +10,6 @@ from __future__ import annotations
 import structlog
 
 from dotmac.platform.radius.vendors.base import (
-    BandwidthAttributeBuilder,
     NASVendor,
     RadReplySpec,
 )
@@ -168,9 +167,7 @@ class CiscoBandwidthBuilder:
         input_rate_bps = upload_rate_kbps * 1000
         output_rate_bps = download_rate_kbps * 1000
 
-        return {
-            "Cisco-AVPair": f"subscriber:rate-limit={input_rate_bps} {output_rate_bps}"
-        }
+        return {"Cisco-AVPair": f"subscriber:rate-limit={input_rate_bps} {output_rate_bps}"}
 
 
 class HuaweiBandwidthBuilder:

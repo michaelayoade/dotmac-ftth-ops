@@ -6,12 +6,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from dotmac.platform.version import get_version
 from dotmac.platform.main import (
     app,
     create_application,
     lifespan,
 )
+from dotmac.platform.version import get_version
 
 
 class TestCreateApplication:
@@ -46,14 +46,12 @@ class TestCreateApplication:
 class TestLifespan:
     """Test lifespan context manager."""
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_startup_success(
         self,
         mock_print,
@@ -86,11 +84,9 @@ class TestLifespan:
         assert any("Startup complete" in str(call) for call in print_calls)
         assert any("Shutting down" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_startup_deps_failed_production(
         self, mock_print, mock_settings, mock_health_checker
     ):
@@ -113,14 +109,12 @@ class TestLifespan:
             async with lifespan(test_app):
                 pass
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_secrets_loading_error_dev(
         self,
         mock_print,
@@ -147,11 +141,9 @@ class TestLifespan:
         print_calls = [str(call) for call in mock_print.call_args_list]
         assert any("Using default secrets (Vault unavailable:" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.settings")
-    @pytest.mark.asyncio
     async def test_lifespan_secrets_loading_error_production(
         self, mock_settings, mock_load_secrets, mock_health_checker
     ):
@@ -310,14 +302,12 @@ class TestMissingCoverage:
             assert result is mock_response
             mock_handler.assert_called_once_with(request, exc)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_degraded_startup_dev(
         self,
         mock_print,
@@ -352,14 +342,12 @@ class TestMissingCoverage:
         print_calls = [str(call) for call in mock_print.call_args_list]
         assert any("Optional services unavailable: Redis" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_database_init_failure(
         self,
         mock_print,

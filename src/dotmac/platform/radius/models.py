@@ -43,8 +43,7 @@ class INET(TypeDecorator[str]):
 
 
 if TYPE_CHECKING:
-    from dotmac.platform.subscribers.models import Subscriber
-    from dotmac.platform.tenant.models import Tenant
+    pass
 
 
 class RadCheck(Base):  # type: ignore[misc]
@@ -268,17 +267,13 @@ class NAS(Base):  # type: ignore[misc]
         String(30),
         nullable=False,
         default="mikrotik",
-        comment="NAS vendor: mikrotik, cisco, huawei, juniper, generic"
+        comment="NAS vendor: mikrotik, cisco, huawei, juniper, generic",
     )
     model = Column(
-        String(64),
-        nullable=True,
-        comment="NAS model/hardware type for vendor-specific features"
+        String(64), nullable=True, comment="NAS model/hardware type for vendor-specific features"
     )
     firmware_version = Column(
-        String(32),
-        nullable=True,
-        comment="Firmware version for compatibility checks"
+        String(32), nullable=True, comment="Firmware version for compatibility checks"
     )
 
     ports = Column(Integer, nullable=True)

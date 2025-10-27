@@ -189,11 +189,10 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
     # Multi-vendor support
     default_vendor: str = Field(
         "mikrotik",
-        description="Default NAS vendor for new deployments (mikrotik, cisco, huawei, juniper, generic)"
+        description="Default NAS vendor for new deployments (mikrotik, cisco, huawei, juniper, generic)",
     )
     vendor_aware: bool = Field(
-        True,
-        description="Enable vendor-specific attribute generation and CoA handling"
+        True, description="Enable vendor-specific attribute generation and CoA handling"
     )
 
     def __init__(self, **data: Any):
@@ -492,9 +491,7 @@ class Settings(BaseSettings):
     )
 
     # Server configuration
-    host: str = Field(
-        "0.0.0.0", description="Server host"
-    )  # nosec B104 - Production deployments use proxy
+    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")
@@ -1034,7 +1031,7 @@ class Settings(BaseSettings):
         # Payment processing
         require_payment_plugin: bool = Field(
             True,
-            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing."
+            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing.",
         )
 
         # Payment gateway credentials (load from Vault in production)

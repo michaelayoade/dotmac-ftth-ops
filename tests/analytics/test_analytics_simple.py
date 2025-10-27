@@ -4,7 +4,7 @@ Simple tests for Analytics module to improve coverage.
 Tests core analytics functionality with actual available classes.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -63,7 +63,7 @@ class TestAnalyticsBaseClasses:
 
     def test_metric_creation(self):
         """Test Metric dataclass."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         metric = Metric(
             tenant_id="tenant123",
             timestamp=now,
@@ -357,7 +357,7 @@ class TestAnalyticsService:
         event_data = {
             "event_type": "user_login",
             "user_id": "user123",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         event_id = await analytics_service.track_event(**event_data)

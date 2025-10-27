@@ -301,7 +301,7 @@ class VaultConnectionManager:
 
         if self._async_client:
             if hasattr(type(self._async_client), "close_sync"):
-                close_sync = getattr(self._async_client, "close_sync")
+                close_sync = self._async_client.close_sync
                 close_sync()
             else:
                 result = self._async_client.close()

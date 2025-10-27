@@ -2,17 +2,19 @@
 Test fixtures for Sales-to-Activation Automation tests
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Generator
-from unittest.mock import Mock, AsyncMock
+from typing import Any
+from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+import pytest
+from sqlalchemy.orm import Session
 
+from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
 from dotmac.platform.db import Base
+from dotmac.platform.dependencies import get_deployment_service
+from dotmac.platform.deployment.models import DeploymentBackend, DeploymentTemplate
 from dotmac.platform.sales.models import (
     ActivationStatus,
     ActivationWorkflow,
@@ -28,9 +30,6 @@ from dotmac.platform.sales.schemas import (
     QuickOrderRequest,
     ServiceSelection,
 )
-from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
-from dotmac.platform.dependencies import get_deployment_service
-from dotmac.platform.deployment.models import DeploymentTemplate, DeploymentBackend
 
 
 @pytest.fixture
@@ -90,11 +89,13 @@ def client(test_client):
 # Use the global db_engine and db_session fixtures from tests/conftest.py
 # They already create tables for all models including sales and deployment
 
+
 @pytest.fixture
 def db(db_session):
     """Alias for db_session to match test expectations"""
     # Clean up service_activations table before each test to prevent pollution
     from sqlalchemy.exc import DatabaseError
+
     from dotmac.platform.sales.models import ServiceActivation
 
     try:
@@ -110,9 +111,9 @@ def db(db_session):
 
     # Clean up after test
     try:
-        db_session.query(ServiceActivation).filter(
-            ServiceActivation.order_id.isnot(None)
-        ).delete(synchronize_session=False)
+        db_session.query(ServiceActivation).filter(ServiceActivation.order_id.isnot(None)).delete(
+            synchronize_session=False
+        )
         db_session.commit()
     except DatabaseError:
         # Table doesn't exist or other DB error, skip cleanup
@@ -122,9 +123,7 @@ def db(db_session):
 @pytest.fixture
 def sample_tenant(db: Session):
     """Create a sample tenant for testing."""
-    from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
-
-    from dotmac.platform.db import Base
+    from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
     Base.metadata.create_all(db.get_bind(), checkfirst=True)
 
@@ -151,8 +150,6 @@ def sample_tenant(db: Session):
 def sample_deployment_template(db: Session) -> DeploymentTemplate:
     """Create a sample deployment template."""
     from dotmac.platform.deployment.models import DeploymentType
-
-    from dotmac.platform.db import Base
 
     Base.metadata.create_all(db.get_bind(), checkfirst=True)
 
@@ -224,9 +221,10 @@ def sample_quick_order() -> QuickOrderRequest:
 
 
 @pytest.fixture
-def sample_order(db: Session, sample_deployment_template: DeploymentTemplate, sample_tenant) -> Order:
+def sample_order(
+    db: Session, sample_deployment_template: DeploymentTemplate, sample_tenant
+) -> Order:
     """Create a sample order for testing."""
-    from dotmac.platform.db import Base
 
     Base.metadata.create_all(db.get_bind(), checkfirst=True)
 
@@ -380,16 +378,14 @@ def sample_order_submit() -> OrderSubmit:
 
 
 @pytest.fixture
-def client(test_client):
-    """Synchronous TestClient for sales API tests."""
-    return test_client
-
-
-@pytest.fixture
 def auth_client(client, auth_headers):
     """Authenticated TestClient with default headers for internal API tests."""
     original_all_permissions = RBACService.user_has_all_permissions
-    original_any_permission = RBACService.user_has_any_permission if hasattr(RBACService, "user_has_any_permission") else None
+    original_any_permission = (
+        RBACService.user_has_any_permission
+        if hasattr(RBACService, "user_has_any_permission")
+        else None
+    )
     original_get_permissions = RBACService.get_user_permissions
 
     async def _allow_all_permissions(self, user_id, permissions):  # noqa: D401
@@ -399,7 +395,7 @@ def auth_client(client, auth_headers):
         return True
 
     async def _return_permissions(self, user_id):  # noqa: D401
-        return set(["order.read", "order.submit", "order.process", "order.update", "order.delete"])
+        return {"order.read", "order.submit", "order.process", "order.update", "order.delete"}
 
     RBACService.user_has_all_permissions = _allow_all_permissions  # type: ignore[assignment]
     if original_any_permission is not None:

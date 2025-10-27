@@ -6,7 +6,10 @@ Provides workflow-compatible methods for customer management operations.
 
 import logging
 from contextlib import contextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -213,7 +216,9 @@ class CustomerService:
 
         # Convert partner_id to UUID
         try:
-            partner_uuid = UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
+            partner_uuid = (
+                UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
+            )
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid partner_id: {partner_id}") from e
 
@@ -283,7 +288,8 @@ class CustomerService:
                 ),
                 address_line2=billing_address.get("line2") or billing_address.get("address_line2"),
                 city=billing_address.get("city"),
-                state_province=billing_address.get("state") or billing_address.get("state_province"),
+                state_province=billing_address.get("state")
+                or billing_address.get("state_province"),
                 postal_code=billing_address.get("postal_code") or billing_address.get("zip"),
                 country=billing_address.get("country"),
                 service_address_line1=(
@@ -293,11 +299,21 @@ class CustomerService:
                     or service_address.get("address_line1")
                     or service_address.get("street")
                 ),
-                service_address_line2=service_address.get("line2") if isinstance(service_address, dict) else None,
-                service_city=service_address.get("city") if isinstance(service_address, dict) else None,
-                service_state_province=service_address.get("state") if isinstance(service_address, dict) else None,
-                service_postal_code=service_address.get("postal_code") if isinstance(service_address, dict) else None,
-                service_country=service_address.get("country") if isinstance(service_address, dict) else None,
+                service_address_line2=service_address.get("line2")
+                if isinstance(service_address, dict)
+                else None,
+                service_city=service_address.get("city")
+                if isinstance(service_address, dict)
+                else None,
+                service_state_province=service_address.get("state")
+                if isinstance(service_address, dict)
+                else None,
+                service_postal_code=service_address.get("postal_code")
+                if isinstance(service_address, dict)
+                else None,
+                service_country=service_address.get("country")
+                if isinstance(service_address, dict)
+                else None,
             )
 
             desired_status = customer_data.get("status", CustomerStatus.ACTIVE.value)

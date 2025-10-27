@@ -195,7 +195,9 @@ class DeploymentInstanceResponse(DeploymentInstanceBase):
 class DeploymentExecutionCreate(BaseModel):
     """Schema for creating deployment execution"""
 
-    operation: str = Field(..., pattern=r"^(provision|upgrade|suspend|resume|destroy|rollback|scale)$")
+    operation: str = Field(
+        ..., pattern=r"^(provision|upgrade|suspend|resume|destroy|rollback|scale)$"
+    )
     operation_config: dict[str, Any] | None = None
     to_version: str | None = Field(None, pattern=r"^\d+\.\d+\.\d+$")
 
@@ -387,9 +389,7 @@ class DeploymentListResponse(BaseModel):
 class ScheduledDeploymentRequest(BaseModel):
     """Request to schedule a deployment operation"""
 
-    operation: str = Field(
-        ..., pattern=r"^(provision|upgrade|scale|suspend|resume|destroy)$"
-    )
+    operation: str = Field(..., pattern=r"^(provision|upgrade|scale|suspend|resume|destroy)$")
     scheduled_at: datetime = Field(..., description="When to execute (for one-time schedules)")
 
     # Operation-specific requests (only one should be provided based on operation)
@@ -402,11 +402,12 @@ class ScheduledDeploymentRequest(BaseModel):
     )
 
     # Recurring schedule options (optional)
-    cron_expression: str | None = Field(
-        None, description="Cron schedule for recurring operations"
-    )
+    cron_expression: str | None = Field(None, description="Cron schedule for recurring operations")
     interval_seconds: int | None = Field(
-        None, description="Interval for recurring operations", ge=60, le=2592000  # 1 min to 30 days
+        None,
+        description="Interval for recurring operations",
+        ge=60,
+        le=2592000,  # 1 min to 30 days
     )
 
     metadata: dict[str, Any] | None = Field(default_factory=dict)

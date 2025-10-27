@@ -2,7 +2,6 @@
 Tests for Payment Methods Service - List and Get operations.
 """
 
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -17,9 +16,7 @@ pytestmark = pytest.mark.asyncio
 class TestListPaymentMethods:
     """Test listing payment methods."""
 
-    async def test_list_payment_methods_success(
-        self, mock_db_session, sample_payment_method_orm
-    ):
+    async def test_list_payment_methods_success(self, mock_db_session, sample_payment_method_orm):
         """Test successfully listing payment methods."""
         # Setup
         service = PaymentMethodService(mock_db_session)
@@ -48,9 +45,7 @@ class TestListPaymentMethods:
         assert len(result) == 0
         assert isinstance(result, list)
 
-    async def test_list_payment_methods_multiple(
-        self, mock_db_session, sample_payment_method_orm
-    ):
+    async def test_list_payment_methods_multiple(self, mock_db_session, sample_payment_method_orm):
         """Test listing multiple payment methods."""
         # Setup
         service = PaymentMethodService(mock_db_session)
@@ -73,9 +68,7 @@ class TestListPaymentMethods:
 class TestGetPaymentMethod:
     """Test getting specific payment method."""
 
-    async def test_get_payment_method_success(
-        self, mock_db_session, sample_payment_method_orm
-    ):
+    async def test_get_payment_method_success(self, mock_db_session, sample_payment_method_orm):
         """Test successfully getting a payment method."""
         # Setup
         service = PaymentMethodService(mock_db_session)
@@ -84,9 +77,7 @@ class TestGetPaymentMethod:
         )
 
         # Execute
-        result = await service.get_payment_method(
-            str(sample_payment_method_orm.id), "tenant-123"
-        )
+        result = await service.get_payment_method(str(sample_payment_method_orm.id), "tenant-123")
 
         # Verify
         assert result is not None
@@ -120,9 +111,7 @@ class TestGetPaymentMethod:
 class TestGetDefaultPaymentMethod:
     """Test getting default payment method."""
 
-    async def test_get_default_success(
-        self, mock_db_session, sample_payment_method_orm
-    ):
+    async def test_get_default_success(self, mock_db_session, sample_payment_method_orm):
         """Test successfully getting default payment method."""
         # Setup
         service = PaymentMethodService(mock_db_session)

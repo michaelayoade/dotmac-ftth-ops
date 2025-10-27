@@ -13,10 +13,13 @@ import re
 import shutil
 import tempfile
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Protocol, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Protocol
 
 import structlog
 from minio.error import S3Error
@@ -194,7 +197,9 @@ class LocalFileStorage:
         try:
             file_metadata = self._metadata_from_dict(metadata)
         except KeyError as exc:
-            logger.warning("Incomplete metadata payload for metadata update", file_id=file_id, missing=str(exc))
+            logger.warning(
+                "Incomplete metadata payload for metadata update", file_id=file_id, missing=str(exc)
+            )
             return False
 
         self._save_metadata(file_id, file_metadata)
@@ -569,7 +574,7 @@ class MinIOFileStorage:
     else:  # pragma: no cover - runtime alias
         _MinIOStorage = object  # type: ignore
 
-    def __init__(self, minio_client: '_MinIOStorage | None' = None) -> None:
+    def __init__(self, minio_client: "_MinIOStorage | None" = None) -> None:
         """Initialize MinIO storage."""
         if minio_client is None:
             from .minio_storage import MinIOStorage
@@ -642,7 +647,9 @@ class MinIOFileStorage:
                 tenant_id=self._METADATA_TENANT,
             )
         except S3Error as exc:
-            logger.error("Failed to delete metadata record from MinIO", file_id=file_id, error=str(exc))
+            logger.error(
+                "Failed to delete metadata record from MinIO", file_id=file_id, error=str(exc)
+            )
             raise
 
     def _load_metadata_from_storage(self, file_id: str) -> FileMetadata | None:
@@ -655,7 +662,9 @@ class MinIOFileStorage:
         except FileNotFoundError:
             return None
         except S3Error as exc:
-            logger.error("Failed to load metadata record from MinIO", file_id=file_id, error=str(exc))
+            logger.error(
+                "Failed to load metadata record from MinIO", file_id=file_id, error=str(exc)
+            )
             return None
 
         try:
@@ -1208,20 +1217,6 @@ class StorageBackendProtocol(Protocol):
     ) -> list[FileMetadata]: ...
 
     async def get_metadata(self, file_id: str) -> dict[str, Any] | None: ...
-
-    async def move(
-        self,
-        file_id: str,
-        destination: str,
-        tenant_id: str | None = None,
-    ) -> bool: ...
-
-    async def copy(
-        self,
-        file_id: str,
-        destination: str,
-        tenant_id: str | None = None,
-    ) -> str | None: ...
 
     async def move(
         self,

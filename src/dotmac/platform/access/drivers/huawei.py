@@ -50,7 +50,12 @@ class HuaweiCLIDriver(BaseOLTDriver):
     CONFIG_MODEL = HuaweiDriverConfig
 
     def __init__(self, config: DriverConfig, context: DriverContext | None = None) -> None:
-        super().__init__(config if isinstance(config, HuaweiDriverConfig) else HuaweiDriverConfig(**config.model_dump()), context)
+        super().__init__(
+            config
+            if isinstance(config, HuaweiDriverConfig)
+            else HuaweiDriverConfig(**config.model_dump()),
+            context,
+        )
         self._cli_lock = asyncio.Lock()
 
     # ------------------------------------------------------------------ #
@@ -61,7 +66,10 @@ class HuaweiCLIDriver(BaseOLTDriver):
         output = await self._run_cli_command("display ont info summary")
         devices: list[DeviceDiscovery] = []
         for line in output.splitlines():
-            match = re.search(r"(?P<frame>\d+)/(?P<slot>\d+)/(?P<port>\d+)\s+(?P<onu>\d+)\s+(?P<sn>[A-Z0-9]+)\s+(?P<state>\w+)", line)
+            match = re.search(
+                r"(?P<frame>\d+)/(?P<slot>\d+)/(?P<port>\d+)\s+(?P<onu>\d+)\s+(?P<sn>[A-Z0-9]+)\s+(?P<state>\w+)",
+                line,
+            )
             if not match:
                 continue
             port = f"{match.group('frame')}/{match.group('slot')}/{match.group('port')}"
@@ -119,7 +127,9 @@ class HuaweiCLIDriver(BaseOLTDriver):
                     "model": "Unknown",
                     "serial_number": onu.serial_number,
                     "oper_status": onu.state,
-                    "connect_status": "REACHABLE" if onu.state.lower() == "online" else "UNREACHABLE",
+                    "connect_status": "REACHABLE"
+                    if onu.state.lower() == "online"
+                    else "UNREACHABLE",
                     "metadata": onu.metadata,
                 }
             )
@@ -252,7 +262,10 @@ class HuaweiCLIDriver(BaseOLTDriver):
         output = await self._run_exec_command("display alarm active")
         alarms: list[OLTAlarm] = []
         for line in output.splitlines():
-            match = re.search(r"(?P<id>[A-Z0-9-]+)\s+(?P<severity>Critical|Major|Minor|Warning)\s+(?P<desc>.+)", line)
+            match = re.search(
+                r"(?P<id>[A-Z0-9-]+)\s+(?P<severity>Critical|Major|Minor|Warning)\s+(?P<desc>.+)",
+                line,
+            )
             if match:
                 alarms.append(
                     OLTAlarm(

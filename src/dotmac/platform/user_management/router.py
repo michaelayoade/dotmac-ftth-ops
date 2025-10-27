@@ -14,8 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.auth.platform_admin import is_platform_admin
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.tenant import get_current_tenant_id
 from dotmac.platform.user_management.service import UserService
@@ -23,7 +23,9 @@ from dotmac.platform.user_management.service import UserService
 logger = structlog.get_logger(__name__)
 
 # Create router
-user_router = APIRouter(prefix="/users", )
+user_router = APIRouter(
+    prefix="/users",
+)
 
 TARGET_TENANT_HEADER = "X-Target-Tenant-ID"
 TARGET_TENANT_QUERY_PARAMS = ("tenant_id", "target_tenant_id")

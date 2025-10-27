@@ -250,7 +250,9 @@ class NetworkMonitoringService:
         severity = self._map_alarm_severity(getattr(alarm, "severity", None))
         device_type = self._map_alarm_resource_type(getattr(alarm, "resource_type", None))
 
-        triggered_at = self._parse_timestamp(getattr(alarm, "first_occurrence", None)) or datetime.utcnow()
+        triggered_at = (
+            self._parse_timestamp(getattr(alarm, "first_occurrence", None)) or datetime.utcnow()
+        )
         acknowledged_at = self._parse_timestamp(getattr(alarm, "acknowledged_at", None))
         resolved_at = self._parse_timestamp(getattr(alarm, "resolved_at", None))
 
@@ -261,7 +263,7 @@ class NetworkMonitoringService:
         description = getattr(alarm, "description", None) or getattr(alarm, "message", "") or ""
 
         return NetworkAlertResponse(
-            alert_id=str(getattr(alarm, "alarm_id", None) or getattr(alarm, "id")),
+            alert_id=str(getattr(alarm, "alarm_id", None) or alarm.id),
             severity=severity,
             title=str(getattr(alarm, "title", "Alarm")),
             description=str(description),
@@ -276,9 +278,7 @@ class NetworkMonitoringService:
             metric_name=getattr(alarm, "alarm_type", None),
             tenant_id=str(getattr(alarm, "tenant_id", self.tenant_id)),
             alert_rule_id=(
-                str(getattr(alarm, "correlation_id"))
-                if getattr(alarm, "correlation_id", None)
-                else None
+                str(alarm.correlation_id) if getattr(alarm, "correlation_id", None) else None
             ),
             threshold_value=None,
             current_value=None,
@@ -362,7 +362,9 @@ class NetworkMonitoringService:
             last_inform_dt = None
             if last_inform:
                 last_inform_dt = datetime.fromisoformat(last_inform.replace("Z", "+00:00"))
-                minutes_since = (datetime.utcnow() - last_inform_dt.replace(tzinfo=None)).total_seconds() / 60
+                minutes_since = (
+                    datetime.utcnow() - last_inform_dt.replace(tzinfo=None)
+                ).total_seconds() / 60
                 status = DeviceStatus.ONLINE if minutes_since < 10 else DeviceStatus.OFFLINE
             else:
                 status = DeviceStatus.UNKNOWN
@@ -393,7 +395,9 @@ class NetworkMonitoringService:
                 .get("DeviceInfo", {})
                 .get("MemoryStatus", {})
                 .get("Total"),
-                firmware_version=cpe_data.get("Device", {}).get("DeviceInfo", {}).get("SoftwareVersion"),
+                firmware_version=cpe_data.get("Device", {})
+                .get("DeviceInfo", {})
+                .get("SoftwareVersion"),
                 model=cpe_data.get("Device", {}).get("DeviceInfo", {}).get("ModelName"),
                 tenant_id=self.tenant_id,
             )
@@ -477,9 +481,7 @@ class NetworkMonitoringService:
                 stats = await self._get_network_device_traffic(device_id)
             else:
                 # Return empty stats for unsupported types
-                stats = TrafficStatsResponse(
-                    device_id=device_id, device_name=f"Device {device_id}"
-                )
+                stats = TrafficStatsResponse(device_id=device_id, device_name=f"Device {device_id}")
 
             # Cache for 30 seconds
             cache_set(cache_key, stats.model_dump(), ttl=30)
@@ -603,10 +605,7 @@ class NetworkMonitoringService:
                 mac_address=cpe_data.get("_deviceId", {}).get("_SerialNumber", cpe_id),
                 wifi_enabled=wifi_data.get("Radio", {}).get("1", {}).get("Enable", False),
                 connected_clients=len(
-                    cpe_data.get("Device", {})
-                    .get("Hosts", {})
-                    .get("Host", {})
-                    .values()
+                    cpe_data.get("Device", {}).get("Hosts", {}).get("Host", {}).values()
                 ),
                 last_inform=datetime.fromisoformat(
                     cpe_data.get("_lastInform", "").replace("Z", "+00:00")
@@ -651,9 +650,7 @@ class NetworkMonitoringService:
             device_type_summary = self._calculate_device_type_summary(devices)
 
             # Get recent offline devices
-            recent_offline = [
-                d["id"] for d in devices if d["status"] == "offline"
-            ][:5]
+            recent_offline = [d["id"] for d in devices if d["status"] == "offline"][:5]
 
             data_source_status = {
                 **self._inventory_status,
@@ -880,9 +877,7 @@ class NetworkMonitoringService:
 
             # Get health for each device
             try:
-                health = await self.get_device_health(
-                    device_data["id"], dev_type, tenant_id
-                )
+                health = await self.get_device_health(device_data["id"], dev_type, tenant_id)
                 devices.append(health)
             except Exception as e:
                 logger.error(

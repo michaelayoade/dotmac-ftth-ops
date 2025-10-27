@@ -8,16 +8,18 @@ Tests all audit activity endpoints including:
 - Get single activity by ID
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
-from dotmac.platform.audit.router import ensure_audit_access, router as audit_router
+from dotmac.platform.audit.router import ensure_audit_access
+from dotmac.platform.audit.router import router as audit_router
 from dotmac.platform.auth.core import UserInfo, get_current_user, get_current_user_optional
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
@@ -57,7 +59,7 @@ def client(app: FastAPI, async_db_session: AsyncSession, test_user: UserInfo) ->
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
     """Create sample audit activities."""
     user_id = str(uuid4())
@@ -75,7 +77,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             resource_type="user",
             resource_id=user_id,
             ip_address="192.168.1.1",
-            created_at=datetime.now(UTC) - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         ),
         AuditActivity(
             id=uuid4(),
@@ -85,7 +87,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="logout",
             description="User logged out",
-            created_at=datetime.now(UTC) - timedelta(hours=12),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=12),
         ),
         # Medium severity activity
         AuditActivity(
@@ -98,7 +100,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             description="Secret created",
             resource_type="secret",
             resource_id=str(uuid4()),
-            created_at=datetime.now(UTC) - timedelta(days=2),
+            created_at=datetime.now(timezone.utc) - timedelta(days=2),
         ),
         # High severity activity
         AuditActivity(
@@ -109,7 +111,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="api_error",
             description="API error occurred",
-            created_at=datetime.now(UTC) - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         ),
         # Old activity (35 days ago)
         AuditActivity(
@@ -120,7 +122,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="create_user",
             description="User created",
-            created_at=datetime.now(UTC) - timedelta(days=35),
+            created_at=datetime.now(timezone.utc) - timedelta(days=35),
         ),
         # Different tenant activity (should be filtered out)
         AuditActivity(
@@ -131,7 +133,7 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="different-tenant",
             action="login",
             description="User logged in",
-            created_at=datetime.now(UTC) - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         ),
     ]
 
@@ -346,7 +348,7 @@ class TestRecentActivities:
         data = response.json()
 
         # Should only include activities from last 1 day
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         for activity in data:
             created_at = datetime.fromisoformat(activity["created_at"].replace("Z", "+00:00"))
             assert (now - created_at).days <= 1

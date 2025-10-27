@@ -50,7 +50,6 @@ Subscription Details:
 You can manage your subscription anytime in your billing dashboard: {dashboard_url}
         """,
     },
-
     "subscription_upgraded": {
         "subject": "Your plan has been upgraded to {new_plan_name}",
         "html": """
@@ -94,7 +93,6 @@ Next Billing Date: {next_billing_date}
 New Billing Amount: {new_price_formatted} / {billing_cycle}
         """,
     },
-
     "subscription_canceled": {
         "subject": "Your subscription has been canceled",
         "html": """
@@ -137,7 +135,6 @@ Reason: {feedback_reason}
 Reactivate: {reactivate_url}
         """,
     },
-
     # Payment Events
     "payment_succeeded": {
         "subject": "Payment Receipt - {amount_formatted}",
@@ -185,7 +182,6 @@ Payment Details:
 Download Invoice: {invoice_url}
         """,
     },
-
     "payment_failed": {
         "subject": "Payment Failed - Action Required",
         "html": """
@@ -231,7 +227,6 @@ We'll automatically retry the payment {retry_date}. Please update your payment m
 Update Payment Method: {update_payment_url}
         """,
     },
-
     # Invoice Events
     "invoice_generated": {
         "subject": "New Invoice #{invoice_number} - {amount_formatted}",
@@ -283,7 +278,6 @@ Payment will be automatically charged to your {payment_method} on {due_date}.
 View Invoice: {invoice_url}
         """,
     },
-
     # Add-on Events
     "addon_purchased": {
         "subject": "Add-on Activated: {addon_name}",
@@ -323,7 +317,6 @@ This add-on will be included in your next invoice on {next_billing_date}.
 Manage Add-ons: {addon_url}
         """,
     },
-
     # Usage Alerts
     "usage_limit_warning": {
         "subject": "Usage Alert: Approaching {metric_name} Limit",

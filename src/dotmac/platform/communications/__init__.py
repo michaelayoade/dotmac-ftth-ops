@@ -5,6 +5,8 @@ Provides a simple, clean API for the communications system using standard librar
 This replaces the complex 392-line __init__.py with a much simpler implementation.
 """
 
+# Version info
+from ..version import get_version
 from .email_service import (
     EmailMessage,
     EmailResponse,
@@ -13,8 +15,10 @@ from .email_service import (
     send_email,
 )
 from .plugins import (
-    register_plugin as register_email_plugin,
     list_plugins as list_email_plugins,
+)
+from .plugins import (
+    register_plugin as register_email_plugin,
 )
 from .router import router
 from .task_service import (
@@ -34,9 +38,6 @@ from .template_service import (
     quick_render,
     render_template,
 )
-
-# Version info
-from ..version import get_version
 
 __version__ = get_version()
 

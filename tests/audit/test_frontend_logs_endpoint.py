@@ -5,7 +5,7 @@ Tests the POST /api/v1/audit/frontend-logs endpoint that accepts
 batched frontend logs from the client application.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 from fastapi import status
@@ -43,7 +43,7 @@ class TestFrontendLogsEndpoint:
                     "message": "Test error from frontend",
                     "service": "frontend",
                     "metadata": {
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "userAgent": "Mozilla/5.0",
                         "url": "http://localhost:3000/test",
                         "errorCode": 500,
@@ -54,7 +54,7 @@ class TestFrontendLogsEndpoint:
                     "message": "Test warning from frontend",
                     "service": "frontend",
                     "metadata": {
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "userAgent": "Mozilla/5.0",
                         "url": "http://localhost:3000/test",
                     },
@@ -82,7 +82,7 @@ class TestFrontendLogsEndpoint:
                     "message": "User action logged",
                     "service": "frontend",
                     "metadata": {
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "userAgent": "Mozilla/5.0",
                         "url": "http://localhost:3000/dashboard",
                         "action": "button_click",
@@ -115,7 +115,7 @@ class TestFrontendLogsEndpoint:
                     "message": f"Test log message {i}",
                     "service": "frontend",
                     "metadata": {
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "index": i,
                     },
                 }
@@ -237,7 +237,7 @@ class TestFrontendLogsEndpoint:
                     "message": "Critical error occurred",
                     "service": "frontend",
                     "metadata": {
-                        "timestamp": datetime.now(UTC).isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                         "userAgent": "Test Agent",
                         "url": "http://test.com",
                         "errorDetails": "Stack trace here",

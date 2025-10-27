@@ -5,7 +5,7 @@ End-to-end tests for the complete alarm notification workflow including
 alarm creation, channel routing, user notification, and delivery tracking.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -30,12 +30,11 @@ from dotmac.platform.notifications.models import (
 from dotmac.platform.user_management.models import User
 
 
-@pytest.mark.skip(reason="Requires Celery infrastructure - task runs in isolated thread pool")
 class TestAlarmNotificationIntegration:
     """Integration tests for complete alarm notification workflow.
 
-    NOTE: These tests call actual Celery tasks which run in thread pools with
-    isolated async contexts. They need dedicated Celery test infrastructure.
+    Tests use Celery eager mode (configured in tests/conftest.py) which
+    executes tasks synchronously in the same process.
     """
 
     @pytest.mark.asyncio
@@ -239,23 +238,15 @@ class TestAlarmNotificationIntegration:
             source=AlarmSource.NETWORK_DEVICE,
             alarm_type="link.down",
             title="Fiber Link Down",
-            description="Link failure on uplink port",
+            description="No light detected on RX",
             resource_type="port",
             resource_id="port-001",
             resource_name="Uplink Port 1",
             subscriber_count=25,
             probable_cause="Fiber cut",
-            specific_problem="No light detected on RX",
         )
 
-        # Manually set alarm_name and other fields after creation
         alarm = await alarm_service.create(alarm_data)
-        result = await session.execute(select(Alarm).where(Alarm.id == alarm.id))
-        db_alarm = result.scalar_one()
-        db_alarm.alarm_name = "Fiber Link Down Alarm"
-        db_alarm.alarm_source = "OLT-001"
-        db_alarm.managed_object_instance = "OLT-001-Port-1"
-        await session.commit()
 
         # Mock notification service
         mock_notification = MagicMock()
@@ -267,18 +258,20 @@ class TestAlarmNotificationIntegration:
         # Execute: Send notifications
         result = send_alarm_notifications(str(alarm.id), test_tenant)
 
-        # Verify: Title and message content
+        # Verify: Title and message content match actual format
         call_args = mock_service_instance.create_notification.call_args
         title = call_args.kwargs["title"]
         message = call_args.kwargs["message"]
 
+        # Title format: "{severity.upper()} Alarm: {title}"
         assert "MAJOR Alarm:" in title
-        assert "Fiber Link Down Alarm" in title
-        assert "Source: OLT-001" in message
-        assert "Object: OLT-001-Port-1" in message
+        assert "Fiber Link Down" in title
+
+        # Message format uses: Type, Title, Resource, Impact, Cause, Details
+        assert "Resource: Uplink Port 1" in message
         assert "Impact: 25 subscribers affected" in message
         assert "Cause: Fiber cut" in message
-        assert "Problem: No light detected on RX" in message
+        assert "Details: No light detected on RX" in message
 
     @pytest.mark.asyncio
     async def test_multi_tenant_isolation(self, session: AsyncSession):
@@ -319,13 +312,11 @@ class TestAlarmNotificationIntegration:
             source=AlarmSource.NETWORK_DEVICE,
             status=AlarmStatus.ACTIVE,
             alarm_type="device.down",
-            title="Tenant 1 Alarm",
-            alarm_name="Tenant 1 Device Down",
-            alarm_source="Device-T1",
-            managed_object_instance="Device-T1",
+            title="Tenant 1 Device Down",
+            resource_name="Device-T1",
             subscriber_count=10,
-            first_occurrence=datetime.now(UTC),
-            last_occurrence=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc),
+            last_occurrence=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(alarm_tenant1)
@@ -381,12 +372,10 @@ class TestAlarmNotificationIntegration:
             status=AlarmStatus.ACTIVE,
             alarm_type="device.down",
             title="Test Alarm",
-            alarm_name="Test",
-            alarm_source="Device",
-            managed_object_instance="Device",
+            resource_name="Device",
             subscriber_count=10,
-            first_occurrence=datetime.now(UTC),
-            last_occurrence=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc),
+            last_occurrence=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -441,13 +430,11 @@ class TestAlarmNotificationIntegration:
             source=AlarmSource.NETWORK_DEVICE,
             status=AlarmStatus.ACTIVE,
             alarm_type="device.down",
-            title="Test",
-            alarm_name="Test",
-            alarm_source="Device",
-            managed_object_instance="Device",
+            title="Test Alarm",
+            resource_name="Device",
             subscriber_count=10,
-            first_occurrence=datetime.now(UTC),
-            last_occurrence=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc),
+            last_occurrence=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -531,12 +518,11 @@ class TestAlarmNotificationIntegration:
         assert "Occurrences: 3" in message
 
 
-@pytest.mark.skip(reason="Requires Celery infrastructure - task runs in isolated thread pool")
 class TestAlarmNotificationWorkflow:
     """Test complete workflow from alarm creation to notification delivery.
 
-    NOTE: These tests call actual Celery tasks which run in thread pools with
-    isolated async contexts. They need dedicated Celery test infrastructure.
+    Tests use Celery eager mode (configured in tests/conftest.py) which
+    executes tasks synchronously in the same process.
     """
 
     @pytest.mark.asyncio

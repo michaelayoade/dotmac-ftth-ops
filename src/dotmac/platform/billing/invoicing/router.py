@@ -79,7 +79,9 @@ class SendInvoiceEmailRequest(BaseModel):
 
     model_config = ConfigDict()
 
-    email: str | None = Field(None, description="Override recipient email (uses invoice billing_email if not provided)")
+    email: str | None = Field(
+        None, description="Override recipient email (uses invoice billing_email if not provided)"
+    )
 
 
 class SendPaymentReminderRequest(BaseModel):
@@ -319,7 +321,7 @@ async def send_invoice_email(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send invoice email"
+                detail="Failed to send invoice email",
             )
 
         # Get invoice to return details
@@ -356,7 +358,7 @@ async def send_payment_reminder(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send payment reminder"
+                detail="Failed to send payment reminder",
             )
 
         # Get invoice to return details

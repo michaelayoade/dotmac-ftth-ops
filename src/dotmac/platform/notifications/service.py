@@ -857,11 +857,7 @@ class NotificationService:
             users = result.scalars().all()
 
             # Filter by role (roles is JSON array)
-            target_users = [
-                user.id
-                for user in users
-                if role_filter in (user.roles or [])
-            ]
+            target_users = [user.id for user in users if role_filter in (user.roles or [])]
 
             logger.info(
                 "Role-based team notification",
@@ -884,11 +880,13 @@ class NotificationService:
 
         # Add team context to metadata
         team_metadata = metadata or {}
-        team_metadata.update({
-            "team_notification": True,
-            "team_size": len(target_users),
-            "role_filter": role_filter,
-        })
+        team_metadata.update(
+            {
+                "team_notification": True,
+                "team_size": len(target_users),
+                "role_filter": role_filter,
+            }
+        )
 
         for user_id in target_users:
             try:

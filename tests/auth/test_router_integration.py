@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +60,7 @@ def client(app, async_db_session):
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def active_user(async_db_session: AsyncSession):
     """Create an active test user in the database."""
     user = User(
@@ -79,7 +80,7 @@ async def active_user(async_db_session: AsyncSession):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def inactive_user(async_db_session: AsyncSession):
     """Create an inactive test user."""
     user = User(

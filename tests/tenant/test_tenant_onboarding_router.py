@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from httpx import AsyncClient
 
@@ -13,10 +14,13 @@ from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.tenant.service import TenantAlreadyExistsError
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def auth_headers(async_client: AsyncClient) -> dict[str, str]:
     """Provide authentication headers for onboarding API calls."""
-    return {"Authorization": "Bearer test-token"}
+    return {
+        "Authorization": "Bearer test-token",
+        "X-Tenant-ID": "test-tenant",
+    }
 
 
 class TestTenantOnboardingRouter:

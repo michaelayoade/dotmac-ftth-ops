@@ -1,0 +1,1149 @@
+2025-10-26 21:37:59 [info     ] Registering 12 platform routers deployment_mode=multi_tenant
+2025-10-26 21:37:59 [info     ] ✅ Cross-tenant platform administration registered module=dotmac.platform.auth.platform_admin_router prefix=/admin
+2025-10-26 21:38:03 [info     ] ✅ Tenant provisioning and lifecycle management registered module=dotmac.platform.tenant.router prefix=
+2025-10-26 21:38:04 [info     ] ✅ Automated tenant onboarding workflows registered module=dotmac.platform.tenant.onboarding_router prefix=
+2025-10-26 21:38:04 [info     ] ✅ Custom domain verification for tenants registered module=dotmac.platform.tenant.domain_verification_router prefix=
+2025-10-26 21:38:05 [info     ] ✅ SaaS licensing and activation management registered module=dotmac.platform.licensing.router prefix=/licensing
+2025-10-26 21:38:05 [info     ] ✅ Composable licensing with dynamic plan builder registered module=dotmac.platform.licensing.router_framework prefix=/licensing/framework
+2025-10-26 21:38:06 [info     ] ✅ Platform-wide settings and configuration registered module=dotmac.platform.admin.settings.router prefix=/admin/settings
+2025-10-26 21:38:06 [info     ] ✅ Platform-wide observability and traces registered module=dotmac.platform.monitoring.traces_router prefix=
+2025-10-26 21:38:06 [info     ] ✅ Platform-wide log aggregation registered module=dotmac.platform.monitoring.logs_router prefix=
+2025-10-26 21:38:06 [info     ] ✅ Platform-wide audit trail registered module=dotmac.platform.audit.router prefix=
+2025-10-26 21:38:07 [info     ] ✅ Platform-wide analytics and insights registered module=dotmac.platform.analytics.router prefix=
+2025-10-26 21:38:07 [info     ] ✅ Multi-tenant deployment orchestration registered module=dotmac.platform.deployment.router prefix=
+2025-10-26 21:38:07 [info     ] 
+============================================================
+🚀 Platform App Registration Complete
+   ✅ Registered: 12 routers
+   ⚠️  Skipped: 0 routers
+============================================================
+2025-10-26 21:38:10 [info     ] Initializing MinIO client      access_key=minioadmin bucket=dotmac endpoint=localhost:9000 secret_masked=mini***
+2025-10-26 21:38:10 [info     ] MinIO client created successfully with endpoint localhost:9000
+2025-10-26 21:38:10 [info     ] MinIO storage initialized
+2025-10-26 21:38:10 [info     ] FileStorageService initialized with minio backend
+2025-10-26 21:38:10 [info     ] Email service initialized      has_password=False host=localhost port=587 use_tls=True use_vault=False user=***
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.created handler=handle_ticket_created total_handlers=1
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.message.added handler=handle_ticket_message_added total_handlers=1
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.status_changed handler=handle_ticket_status_changed total_handlers=1
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.assigned handler=handle_ticket_assigned total_handlers=1
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.escalated.to_partner handler=handle_ticket_escalated_to_partner total_handlers=1
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.created handler=track_ticket_creation_analytics total_handlers=2
+2025-10-26 21:38:10 [info     ] Handler subscribed             event_type=ticket.status_changed handler=track_ticket_resolution_analytics total_handlers=2
+2025-10-26 21:38:16 [info     ] Registering 51 tenant routers  deployment_mode=multi_tenant
+2025-10-26 21:38:16 [info     ] ✅ Customer relationship management registered module=dotmac.platform.customer_management.router prefix=
+2025-10-26 21:38:16 [info     ] ✅ Customer self-service portal registered module=dotmac.platform.customer_portal.router prefix=
+2025-10-26 21:38:17 [info     ] ✅ Contact management registered module=dotmac.platform.contacts.router prefix=
+2025-10-26 21:38:17 [info     ] ✅ Lead management and sales registered module=dotmac.platform.crm.router prefix=
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=billing.invoice.created handler=on_invoice_created total_handlers=6
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=billing.invoice.finalized handler=on_invoice_finalized total_handlers=1
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=billing.payment.received handler=on_payment_received total_handlers=1
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=billing.payment.failed handler=on_payment_failed total_handlers=3
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=billing.subscription.renewed handler=on_subscription_renewed total_handlers=1
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=dunning.reminder.sent handler=on_dunning_reminder total_handlers=1
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=dunning.suspension_warning handler=on_dunning_suspension_warning total_handlers=1
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=ticket.created handler=on_ticket_created total_handlers=3
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=ticket.assigned handler=on_ticket_assigned total_handlers=2
+2025-10-26 21:38:17 [info     ] Handler subscribed             event_type=ticket.resolved handler=on_ticket_resolved total_handlers=1
+2025-10-26 21:38:17 [info     ] Notification event listeners registered
+2025-10-26 21:38:17 [info     ] ✅ Sales order management registered module=dotmac.platform.sales.router prefix=
+2025-10-26 21:38:17 [info     ] ✅ RADIUS AAA and session management registered module=dotmac.platform.radius.router prefix=
+2025-10-26 21:38:18 [info     ] ✅ OLT and PON access network management registered module=dotmac.platform.access.router prefix=/api/v1
+2025-10-26 21:38:18 [info     ] ✅ Network inventory and IPAM registered module=dotmac.platform.netbox.router prefix=
+2025-10-26 21:38:18 [info     ] ✅ CPE management (TR-069) registered module=dotmac.platform.genieacs.router prefix=
+2025-10-26 21:38:18 [info     ] ✅ PON/Fiber network management registered module=dotmac.platform.voltha.router prefix=
+2025-10-26 21:38:18 [info     ] ✅ Wireless infrastructure management registered module=dotmac.platform.wireless.router prefix=
+2025-10-26 21:38:18 [info     ] ✅ Network automation via Ansible registered module=dotmac.platform.ansible.router prefix=
+2025-10-26 21:38:19 [info     ] ✅ WireGuard VPN management registered module=dotmac.platform.wireguard.router prefix=/vpn
+2025-10-26 21:38:21 [info     ] ✅ Billing and payment management registered module=dotmac.platform.billing.router prefix=
+2025-10-26 21:38:21 [info     ] ✅ Product catalog management registered module=dotmac.platform.billing.catalog.router prefix=/billing/catalog
+2025-10-26 21:38:21 [info     ] ✅ Subscription management registered module=dotmac.platform.billing.subscriptions.router prefix=
+2025-10-26 21:38:21 [info     ] ✅ Pricing engine and rules registered module=dotmac.platform.billing.pricing.router prefix=
+2025-10-26 21:38:21 [info     ] ✅ Invoice management registered module=dotmac.platform.billing.invoicing.router prefix=/billing
+2025-10-26 21:38:21 [info     ] ✅ Money-based invoice operations registered module=dotmac.platform.billing.invoicing.money_router prefix=/billing/invoices
+2025-10-26 21:38:21 [info     ] ✅ Payment processing registered module=dotmac.platform.billing.payments.router prefix=/billing
+2025-10-26 21:38:21 [info     ] ✅ Payment receipts registered  module=dotmac.platform.billing.receipts.router prefix=/billing
+2025-10-26 21:38:21 [info     ] ✅ Credit notes and refunds registered module=dotmac.platform.billing.credit_notes.router prefix=/billing
+2025-10-26 21:38:28 [info     ] ✅ Bank accounts and cash registers registered module=dotmac.platform.billing.bank_accounts.router prefix=
+2025-10-26 21:38:28 [info     ] ✅ Billing configuration registered module=dotmac.platform.billing.settings.router prefix=/billing
+2025-10-26 21:38:28 [info     ] ✅ Payment reconciliation registered module=dotmac.platform.billing.reconciliation_router prefix=/billing
+2025-10-26 21:38:28 [info     ] ✅ Collections and dunning registered module=dotmac.platform.billing.dunning.router prefix=
+2025-10-26 21:38:28 [info     ] ✅ Billing webhook handlers registered module=dotmac.platform.billing.webhooks.router prefix=/billing
+2025-10-26 21:38:28 [info     ] ✅ Service provisioning and lifecycle registered module=dotmac.platform.services.lifecycle.router prefix=/services
+2025-10-26 21:38:29 [info     ] ✅ Subscriber provisioning workflows registered module=dotmac.platform.services.router prefix=
+2025-10-26 21:38:29 [info     ] ✅ Workflow orchestration and automation registered module=dotmac.platform.orchestration.router prefix=
+2025-10-26 21:38:29 [info     ] ✅ Internet service plan management registered module=dotmac.platform.services.internet_plans.router prefix=
+2025-10-26 21:38:29 [info     ] ✅ Usage tracking and billing registered module=dotmac.platform.tenant.usage_billing_router prefix=
+2025-10-26 21:38:29 [info     ] ✅ OSS integration configuration registered module=dotmac.platform.tenant.oss_router prefix=
+2025-10-26 21:38:29 [info     ] ✅ User management registered   module=dotmac.platform.user_management.router prefix=
+2025-10-26 21:38:29 [info     ] ✅ Team management registered   module=dotmac.platform.user_management.team_router prefix=
+2025-10-26 21:38:30 [info     ] ✅ Support ticketing registered module=dotmac.platform.ticketing.router prefix=
+2025-10-26 21:38:31 [info     ] ✅ Partner relationship management registered module=dotmac.platform.partner_management.router prefix=
+2025-10-26 21:38:31 [info     ] ✅ Partner self-service portal registered module=dotmac.platform.partner_management.portal_router prefix=/partners
+2025-10-26 21:38:31 [info     ] ✅ Partner revenue sharing registered module=dotmac.platform.partner_management.revenue_router prefix=/partners
+2025-10-26 21:38:31 [info     ] ✅ Workflow orchestration registered module=dotmac.platform.workflows.router prefix=/workflows
+2025-10-26 21:38:32 [info     ] ✅ Background job management registered module=dotmac.platform.jobs.router prefix=
+2025-10-26 21:38:32 [info     ] ✅ Job scheduling registered    module=dotmac.platform.jobs.scheduler_router prefix=
+2025-10-26 21:38:32 [info     ] ✅ Network diagnostics tools registered module=dotmac.platform.diagnostics.router prefix=/diagnostics
+2025-10-26 21:38:33 [info     ] ✅ Alarm and SLA monitoring registered module=dotmac.platform.fault_management.router prefix=/faults
+2025-10-26 21:38:33 [info     ] ✅ ISP metrics and KPIs registered module=dotmac.platform.metrics.router prefix=
+2025-10-26 21:38:33 [info     ] ✅ Webhook management registered module=dotmac.platform.webhooks.router prefix=
+2025-10-26 21:38:33 [info     ] ✅ External service integrations registered module=dotmac.platform.integrations.router prefix=
+2025-10-26 21:38:33 [info     ] ✅ Plugin management registered module=dotmac.platform.plugins.router prefix=/plugins
+2025-10-26 21:38:34 [info     ] ✅ Real-time updates (SSE/WebSocket) registered module=dotmac.platform.realtime.router prefix=
+2025-10-26 21:38:34 [info     ] ✅ User notifications registered module=dotmac.platform.notifications.router prefix=/notifications
+2025-10-26 21:38:34 [info     ] ✅ Email and SMS communications registered module=dotmac.platform.communications.router prefix=
+2025-10-26 21:38:34 [info     ] 
+============================================================
+🚀 Tenant App Registration Complete
+   ✅ Registered: 51 routers
+   ⚠️  Skipped: 0 routers
+============================================================
+........................................................................ [  0%]
+........................................................................ [  1%]
+...................................................................FFF.F [  2%]
+FFF....FFFFFFF.FFFFFFFFFFF.............................................. [  2%]
+................sss..................................................... [  3%]
+.......F.....F.F........FF..FFF...........F....FFFFFFF.................. [  4%]
+.........................................F.............................. [  5%]
+........................................................................ [  5%]
+........................................................................ [  6%]
+........................................................................ [  7%]
+........................................................................ [  8%]
+........................................................................ [  8%]
+........................................................................ [  9%]
+........................................................................ [ 10%]
+......FFFFFFF..FFFF.FFFFFFFF.FFFF....................................... [ 11%]
+.......FF.....FF........................................................ [ 11%]
+........................................................................ [ 12%]
+........................................................................ [ 13%]
+........................................................................ [ 13%]
+........................................................................ [ 14%]
+........................F............................................... [ 15%]
+...................................................................F.... [ 16%]
+........................................................................ [ 16%]
+........................................................................ [ 17%]
+........................................................................ [ 18%]
+........................................................................ [ 19%]
+........................................................................ [ 19%]
+........................................................................ [ 20%]
+..FFF...F............................................................... [ 21%]
+........................................................................ [ 22%]
+....................F................................................... [ 22%]
+.....................................FF................................. [ 23%]
+........................................................................ [ 24%]
+........................................F............................... [ 24%]
+...F.................................................................... [ 25%]
+........................................................................ [ 26%]
+........................................................................ [ 27%]
+............................F..............F..........F...FF.FF......F.. [ 27%]
+.......F.F.F...FF....................................................... [ 28%]
+.....F.......F........F................................................. [ 29%]
+........................................................................ [ 30%]
+........................................................................ [ 30%]
+........................................................................ [ 31%]
+..........F...FFEEEEEEEE............FFF.......F..............F.FFEEEEEEE [ 32%]
+EEEEEEEEEEEEEEEE.F.F....F...F...FF.FFFFFFF.FFF....FF.................... [ 33%]
+........................................................................ [ 33%]
+........FFFFFFFsFFFsFF...........................F..........F........... [ 34%]
+........................................FF..F.....FF.F.................. [ 35%]
+F......FF............................................................... [ 35%]
+........................................................................ [ 36%]
+................F....................................................... [ 37%]
+........................................................................ [ 38%]
+........................................................................ [ 38%]
+........................................................................ [ 39%]
+........................................................................ [ 40%]
+.........................................................s.............. [ 41%]
+..............................................................FFFFFFFFFF [ 41%]
+FFFFF.FFFF...........................ssssssssss......................... [ 42%]
+........................................................................ [ 43%]
+.................................................................EEEEEEE [ 44%]
+EEEEE..F....................FFF...FFFFFFFFFFFFFFFFFFFFFsssssssssssssssFF [ 44%]
+FFFFFFFssFFFF........................................................... [ 45%]
+.....................s.......ssssss..................................... [ 46%]
+........................................................................ [ 47%]
+........FFFF.FFFFF.FFFFFFF.............FFFFF.FFFFFFFFFFFFFFF............ [ 47%]
+........................................................................ [ 48%]
+........................................................................ [ 49%]
+........................................................................ [ 49%]
+........................................................................ [ 50%]
+........................................................................ [ 51%]
+........................................................................ [ 52%]
+...................FssFFFFFFFFFFFFFFFFFFFFFFFF.......................... [ 52%]
+..FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFFFFFFFFFFFFFFF..FFFFFFFFFFFFFFFFFFFF [ 53%]
+FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF [ 54%]
+FFFFFFFFFFFFFFFFFFFFFFFFFFF..................FFFFFFFFF....F...FFFFFFF... [ 55%]
+........................................................................ [ 55%]
+.....................................................ss................. [ 56%]
+........................................................................ [ 57%]
+...............................................................FFFF.FFFF [ 58%]
+FFFFFFF..F.FF.FFFFFF.F...FF..............................FFFFFFFFFFFFFFF [ 58%]
+FFFFFFFFF............................................................... [ 59%]
+........................................................................ [ 60%]
+........................................................................ [ 60%]
+........................................................................ [ 61%]
+..............................................F.FFFFFFF.....FFFFF..FFFFF [ 62%]
+.FEE..EE....EE.....FFFF.FFFF.FF.FF.FF..FF.F.FF...............E....F.F... [ 63%]
+..............FFFFFFFFFFFFFF............................................ [ 63%]
+....................................F.F.F....FFFF....................... [ 64%]
+...........................F...FFF.............................F........ [ 65%]
+........................................................................ [ 66%]
+...............................................F........................ [ 66%]
+....FF.................................................................. [ 67%]
+........................................................................ [ 68%]
+........................................................................ [ 69%]
+..................F..................................................... [ 69%]
+........................................................................ [ 70%]
+...........................................FFFFFFFFFFFFFFFFFFFFFFFFFFFFF [ 71%]
+........................................................................ [ 71%]
+...........................FFFFFFFFFFFFFFFFFFFFFF..................FFFFF [ 72%]
+FFFFFFFFFFFFFFFF.FFFFFFF...FFFFFFFFFFFFFFFFF............................ [ 73%]
+........................................................................ [ 74%]
+........................................................................ [ 74%]
+........................................................................ [ 75%]
+.................F.........................F............................ [ 76%]
+......................ssssssssssssssssss................................ [ 77%]
+........................................................................ [ 77%]
+........................................................................ [ 78%]
+........................................................................ [ 79%]
+........................................................................ [ 80%]
+........................................................................ [ 80%]
+..............................FFFFFFFFFF.FFFFFFFFFFFFFFFFFFFF........... [ 81%]
+......................................FFFFFFFFFFFFFFFFFF................ [ 82%]
+........................................................................ [ 83%]
+........................................................................ [ 83%]
+....................................................FFFF......FFF....... [ 84%]
+........................................................................ [ 85%]
+........................................................................ [ 85%]
+........................................................................ [ 86%]
+........................................................................ [ 87%]
+........................................................................ [ 88%]
+........................FFFFFFFFFF................FFFFFFFFFFFF.FFFFF.... [ 88%]
+........................................................................ [ 89%]
+........................................................................ [ 90%]
+..............................................FFFF...................... [ 91%]
+........................................................................ [ 91%]
+.........................................FFFFFFFFFFFFFFFFFFFFFFF.FFFFFFF [ 92%]
+F................................................FFFFFFFFFFFFFFFFFFFF.FF [ 93%]
+FF.............F........................................................ [ 94%]
+........................................................................ [ 94%]
+........................................................................ [ 95%]
+........................................................................ [ 96%]
+........................................................................ [ 96%]
+........................................................................ [ 97%]
+........................................................................ [ 98%]
+..................FFF................................................... [ 99%]
+...........FFFFFFFFFFFFF................................................ [ 99%]
+..........                                                               [100%]
+=========================== short test summary info ============================
+SKIPPED [1] tests/billing/usage/test_usage_billing_integration.py:10: UsageBillingService module not yet implemented
+SKIPPED [1] tests/integration/test_customer_contact_relationship.py:22: Integration test - requires full database schema
+SKIPPED [1] tests/netbox/test_netbox_integration.py:54: NetBox integration tests disabled. Set RUN_NETBOX_INTEGRATION=1 to enable.
+SKIPPED [1] tests/test_graphql_cookie_auth.py:44: Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app
+SKIPPED [1] tests/test_graphql_cookie_auth.py:154: Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app
+SKIPPED [1] tests/test_graphql_cookie_auth.py:207: Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app
+SKIPPED [1] tests/billing/invoicing/test_invoicing_router.py:201: Custom exception handling - service layer dependency
+SKIPPED [1] tests/billing/invoicing/test_invoicing_router.py:301: Custom exception handling - service layer dependency
+SKIPPED [1] tests/contacts/test_contact_caching.py:22: Caching disabled due to JSON serialization issues - see service.py line 179
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:44: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:60: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:78: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:123: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:142: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:155: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:194: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:207: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:242: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [1] tests/contacts/test_tenant_foreign_keys.py:261: Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE
+SKIPPED [15] tests/customer_management/test_customer_integration.py: Database I/O errors - 91% coverage already achieved via unit tests
+SKIPPED [1] tests/customer_management/test_customer_router.py:375: Service layer validation - needs investigation
+SKIPPED [1] tests/customer_management/test_customer_router.py:413: Service layer validation - needs investigation
+SKIPPED [1] tests/customer_management/test_models.py:121: Requires full database schema with unique indexes available
+SKIPPED [1] tests/customer_management/test_models.py:319: Requires full database schema with unique indexes available
+SKIPPED [1] tests/customer_management/test_models.py:347: Integration test - requires full database schema with relationships
+SKIPPED [1] tests/customer_management/test_models.py:381: Integration test - requires full database schema with relationships
+SKIPPED [1] tests/customer_management/test_models.py:410: Integration test - requires full database schema with relationships
+SKIPPED [1] tests/customer_management/test_models.py:479: Integration test - requires full database schema with relationships
+SKIPPED [1] tests/customer_management/test_models.py:540: Integration test - requires full database schema with relationships
+SKIPPED [1] tests/deployment/test_deployment_router.py:36: Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model
+SKIPPED [1] tests/deployment/test_deployment_router.py:67: Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model
+SKIPPED [1] tests/fault_management/test_alarm_archival.py:459: Requires MinIO instance
+SKIPPED [1] tests/fault_management/test_alarm_archival.py:466: Requires MinIO instance
+SKIPPED [18] tests/radius/test_radius_router.py: Router tests have database engine isolation issue - service layer is fully tested
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningExecution::test_create_execution_success
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningExecution::test_execute_action_email
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningExecution::test_execute_full_campaign_lifecycle
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningExecution::test_cancel_execution
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningExecution::test_record_payment_recovery
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningStatistics::test_get_campaign_stats
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningStatistics::test_get_overall_dunning_stats
+ERROR tests/billing/dunning/test_dunning_integration.py::TestDunningEdgeCases::test_execution_retry_on_failure
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_create_campaign_success
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_create_campaign_validation_error
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_create_campaign_unauthorized
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_list_campaigns
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_list_campaigns_filtered_by_active
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_get_campaign
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_get_campaign_not_found
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_update_campaign
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_delete_campaign
+ERROR tests/billing/dunning/test_router.py::TestCampaignEndpoints::test_get_campaign_stats
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_start_execution_success
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_start_execution_duplicate_subscription
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_list_executions
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_list_executions_filtered_by_status
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_get_execution
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_cancel_execution
+ERROR tests/billing/dunning/test_router.py::TestExecutionEndpoints::test_get_execution_logs
+ERROR tests/billing/dunning/test_router.py::TestStatisticsEndpoints::test_get_tenant_stats
+ERROR tests/billing/dunning/test_router.py::TestStatisticsEndpoints::test_get_pending_actions
+ERROR tests/billing/dunning/test_router.py::TestRateLimiting::test_campaign_creation_rate_limit
+ERROR tests/billing/dunning/test_router.py::TestErrorHandling::test_invalid_uuid_format
+ERROR tests/billing/dunning/test_router.py::TestErrorHandling::test_missing_required_fields
+ERROR tests/billing/dunning/test_router.py::TestErrorHandling::test_negative_outstanding_amount
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_create_lead_success
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_create_lead_missing_required_fields
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_list_leads
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_get_lead_by_id
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_update_lead_status
+ERROR tests/crm/test_crm_router.py::TestLeadEndpoints::test_filter_leads_by_status
+ERROR tests/crm/test_crm_router.py::TestQuoteEndpoints::test_create_quote
+ERROR tests/crm/test_crm_router.py::TestQuoteEndpoints::test_list_quotes
+ERROR tests/crm/test_crm_router.py::TestSiteSurveyEndpoints::test_create_site_survey
+ERROR tests/crm/test_crm_router.py::TestSiteSurveyEndpoints::test_list_site_surveys
+ERROR tests/crm/test_crm_router.py::TestCRMTenantIsolation::test_leads_are_tenant_isolated
+ERROR tests/crm/test_crm_router.py::TestCRMTenantIsolation::test_cannot_access_other_tenant_lead
+ERROR tests/integration/test_cross_module_dependencies.py::TestAuthTenantIntegration::test_auth_with_tenant_context
+ERROR tests/integration/test_cross_module_dependencies.py::TestAuthTenantIntegration::test_jwt_service_with_tenant_claims
+ERROR tests/integration/test_cross_module_dependencies.py::TestDataTransferStorageIntegration::test_data_transfer_with_file_storage
+ERROR tests/integration/test_cross_module_dependencies.py::TestDataTransferStorageIntegration::test_export_to_storage_integration
+ERROR tests/integration/test_cross_module_dependencies.py::TestEndToEndIntegration::test_user_authentication_flow
+ERROR tests/integration/test_cross_module_dependencies.py::TestEndToEndIntegration::test_data_processing_workflow
+ERROR tests/integration/test_module_interfaces.py::TestCrossModuleDataFlow::test_user_data_flow
+FAILED tests/test_db.py::TestDatabaseConnection::test_get_sync_engine - Asser...
+FAILED tests/test_db.py::TestDatabaseConnection::test_get_async_engine - Asse...
+FAILED tests/test_db.py::TestDatabaseUrls::test_get_database_url_with_url_setting
+FAILED tests/test_db.py::TestDatabaseUrls::test_get_database_url_postgresql_components
+FAILED tests/test_db.py::TestDatabaseUrls::test_get_async_database_url_postgresql
+FAILED tests/test_db.py::TestDatabaseUrls::test_get_async_database_url_sqlite
+FAILED tests/test_db.py::TestDatabaseUrls::test_get_async_database_url_other
+FAILED tests/test_db.py::TestSessionManagement::test_get_db_success - Asserti...
+FAILED tests/test_db.py::TestSessionManagement::test_get_db_exception - Asser...
+FAILED tests/test_db.py::TestSessionManagement::test_get_async_db_success - A...
+FAILED tests/test_db.py::TestSessionManagement::test_get_async_db_exception
+FAILED tests/test_db.py::TestSessionManagement::test_get_async_session - Attr...
+FAILED tests/test_db.py::TestSessionManagement::test_get_async_session_exception
+FAILED tests/test_db.py::TestSessionDependency::test_get_session_dependency_with_asyncmock
+FAILED tests/test_db.py::TestSessionDependency::test_get_session_dependency_with_context_manager
+FAILED tests/test_db.py::TestSessionDependency::test_get_session_dependency_with_awaitable_asyncmock
+FAILED tests/test_db.py::TestSessionDependency::test_get_session_dependency_with_awaitable_session
+FAILED tests/test_db.py::TestSessionDependency::test_get_session_dependency_with_plain_session
+FAILED tests/test_db.py::TestDatabaseOperations::test_create_all_tables - Ass...
+FAILED tests/test_db.py::TestDatabaseOperations::test_create_all_tables_async
+FAILED tests/test_db.py::TestDatabaseOperations::test_drop_all_tables - Asser...
+FAILED tests/test_db.py::TestDatabaseOperations::test_drop_all_tables_async
+FAILED tests/test_db.py::TestDatabaseOperations::test_init_db - AssertionErro...
+FAILED tests/test_db.py::TestHealthCheck::test_check_database_health_success
+FAILED tests/test_db.py::TestHealthCheck::test_check_database_health_failure
+FAILED tests/test_health_edge_cases.py::TestStartupDependenciesEdgeCases::test_ensure_infrastructure_running_output_content
+FAILED tests/test_main.py::TestLifespan::test_lifespan_startup_success - sqla...
+FAILED tests/test_main.py::TestLifespan::test_lifespan_secrets_loading_error_dev
+FAILED tests/test_main.py::TestMissingCoverage::test_lifespan_degraded_startup_dev
+FAILED tests/test_main.py::TestMissingCoverage::test_lifespan_database_init_failure
+FAILED tests/test_main.py::TestMissingCoverage::test_liveness_endpoint - asse...
+FAILED tests/test_main.py::TestMissingCoverage::test_api_info_endpoint - asse...
+FAILED tests/test_main.py::TestMissingCoverage::test_readiness_endpoint_health_ready
+FAILED tests/test_platform_init.py::TestPlatformInitialization::test_initialize_platform_services_with_configs
+FAILED tests/test_platform_init.py::TestPlatformModule::test_global_config_instance
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_jwt_service_success
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_jwt_service_import_error
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_secrets_manager_auto_backend
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_secrets_manager_explicit_backend
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_secrets_manager_import_error
+FAILED tests/test_platform_init.py::TestServiceFactories::test_create_observability_manager_success
+FAILED tests/test_tasks.py::TestCeleryTasks::test_idempotent_task_no_redis - ...
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_default_params
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_with_user_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_with_activity_type_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_with_severity_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_with_resource_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_with_days_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_pagination
+FAILED tests/audit/test_audit_router_comprehensive.py::TestListActivities::test_list_activities_without_user
+FAILED tests/audit/test_audit_router_comprehensive.py::TestRecentActivities::test_get_recent_activities_default
+FAILED tests/audit/test_audit_router_comprehensive.py::TestRecentActivities::test_get_recent_activities_with_limit
+FAILED tests/audit/test_audit_router_comprehensive.py::TestRecentActivities::test_get_recent_activities_with_days
+FAILED tests/audit/test_audit_router_comprehensive.py::TestUserActivities::test_get_user_activities
+FAILED tests/audit/test_audit_router_comprehensive.py::TestUserActivities::test_get_user_activities_with_limit
+FAILED tests/audit/test_audit_router_comprehensive.py::TestUserActivities::test_get_user_activities_nonexistent_user
+FAILED tests/audit/test_audit_router_comprehensive.py::TestActivitySummary::test_get_activity_summary_default
+FAILED tests/audit/test_audit_router_comprehensive.py::TestActivitySummary::test_get_activity_summary_with_days
+FAILED tests/audit/test_audit_router_comprehensive.py::TestSingleActivity::test_get_activity_by_id
+FAILED tests/audit/test_audit_router_comprehensive.py::TestSingleActivity::test_get_activity_nonexistent_id
+FAILED tests/audit/test_audit_router_comprehensive.py::TestSingleActivity::test_get_activity_invalid_uuid
+FAILED tests/audit/test_audit_router_comprehensive.py::TestTenantIsolation::test_tenant_isolation_in_listing
+FAILED tests/audit/test_audit_router_comprehensive.py::TestTenantIsolation::test_different_tenant_activities_not_visible
+FAILED tests/audit/test_audit_router_comprehensive.py::TestCombinedFilters::test_combined_user_and_severity_filter
+FAILED tests/audit/test_audit_router_comprehensive.py::TestCombinedFilters::test_combined_type_and_resource_filter
+FAILED tests/audit/test_frontend_logs_endpoint.py::TestFrontendLogsEndpoint::test_create_frontend_logs_authenticated
+FAILED tests/audit/test_frontend_logs_endpoint.py::TestFrontendLogsEndpoint::test_create_frontend_logs_batched
+FAILED tests/audit/test_frontend_logs_endpoint.py::TestFrontendLogsEndpoint::test_frontend_logs_stored_correctly
+FAILED tests/audit/test_frontend_logs_endpoint.py::TestFrontendLogsEndpoint::test_frontend_logs_severity_mapping
+FAILED tests/auth/test_rbac_coverage_boost.py::TestPermissionWildcards::test_user_has_all_permissions
+FAILED tests/auth/test_rbac_service_comprehensive.py::TestUserPermissions::test_user_has_all_permissions_failure
+FAILED tests/billing/test_config_comprehensive.py::TestBillingConfigFromEnv::test_from_env_with_stripe
+FAILED tests/billing/test_config_comprehensive.py::TestBillingConfigFromEnv::test_from_env_with_paypal
+FAILED tests/billing/test_config_comprehensive.py::TestBillingConfigFromEnv::test_from_env_with_tax_config
+FAILED tests/billing/test_config_comprehensive.py::TestBillingConfigFromEnv::test_from_env_with_webhook_config
+FAILED tests/billing/test_invoice_integration.py::TestInvoiceCreation::test_create_invoice_with_currency_normalization
+FAILED tests/billing/test_metrics_router_comprehensive.py::TestRouterIntegration::test_billing_router_exists
+FAILED tests/billing/test_metrics_router_comprehensive.py::TestRouterIntegration::test_customer_metrics_router_exists
+FAILED tests/billing/test_payment_integration.py::TestPaymentRefunds::test_cannot_refund_already_refunded_payment
+FAILED tests/billing/test_payment_service_unit.py::TestPaymentServiceBusinessRules::test_transaction_created_only_on_success
+FAILED tests/billing/test_subscription_e2e.py::TestSubscriptionLifecycle::test_cancel_subscription_at_period_end
+FAILED tests/billing/test_subscription_integration.py::TestSubscriptionCancellation::test_cancel_subscription_at_period_end
+FAILED tests/billing/test_subscription_invoice_integration.py::TestRefundInvoices::test_refund_invoice_on_cancellation
+FAILED tests/billing/test_subscription_load.py::TestSubscriptionLoadPerformance::test_list_subscriptions_pagination_performance
+FAILED tests/billing/test_subscription_load.py::TestSubscriptionLoadPerformance::test_concurrent_subscription_operations
+FAILED tests/billing/test_subscription_load.py::TestSubscriptionLoadPerformance::test_plan_change_performance_at_scale
+FAILED tests/billing/test_subscription_load.py::test_complete_load_test_scenario
+FAILED tests/billing/test_subscription_payment_integration.py::TestRefundProcessing::test_prorated_refund_on_cancellation
+FAILED tests/billing/test_subscription_service_unit.py::TestSubscriptionCancellation::test_cancel_subscription_at_period_end
+FAILED tests/billing/test_subscription_service_unit.py::TestSubscriptionCancellation::test_cancel_inactive_subscription_error
+FAILED tests/billing/test_subscription_service_unit.py::TestSubscriptionReactivation::test_reactivate_non_canceled_subscription_error
+FAILED tests/billing/test_subscription_webhooks.py::TestWebhookEventEmission::test_subscription_created_emits_webhook
+FAILED tests/billing/test_subscription_webhooks.py::TestWebhookEventEmission::test_plan_change_emits_webhook
+FAILED tests/billing/test_webhook_handlers.py::TestStripeWebhookHandler::test_process_charge_refunded
+FAILED tests/billing/addons/test_addon_router_integration.py::TestGetAvailableAddons::test_get_available_addons_unauthorized
+FAILED tests/billing/addons/test_addon_router_integration.py::TestGetAddonById::test_get_addon_not_found
+FAILED tests/billing/dunning/test_dunning_integration.py::TestDunningCampaignManagement::test_create_campaign_validation_error
+FAILED tests/billing/dunning/test_dunning_integration.py::TestDunningCampaignManagement::test_delete_campaign_success
+FAILED tests/billing/dunning/test_dunning_integration.py::TestDunningCampaignManagement::test_list_campaigns
+FAILED tests/billing/dunning/test_models.py::TestDunningActionConfigSchema::test_excessive_delay_days_rejected
+FAILED tests/billing/dunning/test_models.py::TestDunningActionConfigSchema::test_email_without_template_rejected
+FAILED tests/billing/dunning/test_models.py::TestDunningActionConfigSchema::test_webhook_without_url_rejected
+FAILED tests/billing/dunning/test_models.py::TestDunningCampaignCreateSchema::test_trigger_after_days_validation
+FAILED tests/billing/dunning/test_models.py::TestDunningCampaignModel::test_campaign_model_fields
+FAILED tests/billing/dunning/test_models.py::TestDunningExecutionModel::test_execution_model_fields
+FAILED tests/billing/dunning/test_models.py::TestDunningActionLogModel::test_action_log_model_fields
+FAILED tests/billing/dunning/test_service.py::TestDunningCampaignCRUD::test_create_campaign_validation_no_actions
+FAILED tests/billing/dunning/test_service.py::TestDunningCampaignCRUD::test_get_campaign_wrong_tenant
+FAILED tests/billing/dunning/test_service.py::TestDunningExecutions::test_start_execution_duplicate_subscription
+FAILED tests/billing/dunning/test_service.py::TestDunningExecutions::test_cancel_execution
+FAILED tests/billing/dunning/test_tasks.py::TestProcessPendingActions::test_process_pending_actions_success
+FAILED tests/billing/dunning/test_tasks.py::TestProcessPendingActions::test_process_pending_actions_no_pending
+FAILED tests/billing/dunning/test_tasks.py::TestProcessPendingActions::test_process_pending_actions_retry_on_failure
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_email_action_success
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_sms_action_success
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_suspend_service_action
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_terminate_service_action
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_webhook_action
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_action_failure
+FAILED tests/billing/dunning/test_tasks.py::TestExecuteDunningAction::test_execute_action_retry_on_transient_error
+FAILED tests/billing/dunning/test_tasks.py::TestActionExecutionLogic::test_execute_action_logs_created
+FAILED tests/billing/dunning/test_tasks.py::TestActionExecutionLogic::test_execute_action_execution_not_found
+FAILED tests/billing/dunning/test_tasks.py::TestIntegrationScenarios::test_full_dunning_workflow
+FAILED tests/billing/dunning/test_tasks.py::TestIntegrationScenarios::test_multi_step_execution_sequence
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_create_invoice_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_create_invoice_validation_error
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_get_invoice_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_get_invoice_not_found
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_list_invoices_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCRUD::test_list_invoices_with_filters
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceLifecycle::test_finalize_invoice_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceLifecycle::test_void_invoice_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceLifecycle::test_mark_invoice_paid_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceCredits::test_apply_credit_to_invoice_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceUtilities::test_check_overdue_invoices_success
+FAILED tests/billing/invoicing/test_invoicing_router.py::TestInvoiceUtilities::test_check_overdue_invoices_none_overdue
+FAILED tests/billing/payments/test_payment_creation_service.py::TestPaymentCreation::test_create_payment_no_provider_mock_success
+FAILED tests/billing/payments/test_payment_critical_fixes_batch3.py::TestRetryFailedPaymentHandlers::test_retry_success_calls_handle_payment_success
+FAILED tests/billing/payments/test_payment_refunds_service.py::TestPaymentRefunds::test_refund_failed_payment
+FAILED tests/billing/payments/test_payment_refunds_service.py::TestPaymentRefunds::test_refund_amount_exceeds_original
+FAILED tests/billing/payments/test_payment_refunds_service.py::TestPaymentRefunds::test_refund_no_provider_mock_success
+FAILED tests/billing/payments/test_payment_retry_service.py::TestRetryFailedPayments::test_retry_payment_no_provider_mock_success
+FAILED tests/billing/payments/test_payment_router_security.py::TestFailedPaymentsTenantIsolation::test_failed_payments_scoped_by_tenant
+FAILED tests/billing/payments/test_payment_router_security.py::TestFailedPaymentsTenantIsolation::test_failed_payments_different_tenants_isolated
+FAILED tests/billing/payments/test_payment_service_core.py::TestPaymentCreation::test_create_payment_without_provider
+FAILED tests/billing/payments/test_payment_service_core.py::TestPaymentRefunds::test_refund_payment_not_successful
+FAILED tests/billing/payments/test_payment_service_core.py::TestPaymentRefunds::test_refund_payment_exceeds_amount
+FAILED tests/billing/subscriptions/test_subscription_critical_fixes.py::TestCancelAtPeriodEnd::test_cancel_immediate_sets_status_ended
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_create_contact_requires_create_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_get_contact_requires_read_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_update_contact_requires_update_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_delete_contact_requires_delete_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_search_contacts_requires_read_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_add_contact_method_requires_update_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_record_activity_requires_manage_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_bulk_update_requires_update_permission
+FAILED tests/contacts/test_contacts_router_comprehensive.py::TestContactsPermissions::test_bulk_delete_requires_delete_permission
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_create_contact
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_get_contact
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_get_contact_not_found
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_update_contact
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_update_contact_not_found
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_delete_contact
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_search_contacts
+FAILED tests/contacts/test_router.py::TestContactEndpoints::test_search_contacts_with_filters
+FAILED tests/contacts/test_router.py::TestContactPermissions::test_create_requires_permission
+FAILED tests/contacts/test_router.py::TestContactPermissions::test_read_requires_permission
+FAILED tests/crm/test_crm_services.py::TestLeadService::test_get_lead_not_found
+FAILED tests/customer_management/test_bug_fixes.py::TestPaginationFix::test_pagination_returns_correct_page
+FAILED tests/customer_management/test_bug_fixes.py::TestPaginationFix::test_pagination_with_different_page_sizes
+FAILED tests/customer_management/test_bug_fixes.py::TestPaginationFix::test_pagination_offset_calculation
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_status
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_customer_type
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_tier
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_country
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_tags
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_date_range
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_lifetime_value_range
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_installation_status
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_connection_type
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_filter_by_service_location
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_dynamic_sorting_by_different_fields
+FAILED tests/customer_management/test_bug_fixes.py::TestSearchFiltersImplementation::test_combined_filters
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_static_ip_exact
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_ip_subnet
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_ipv6_prefix
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_bandwidth_profile
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_last_mile_technology
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_device_serial
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_search_by_router_id_in_devices
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_sort_by_static_ip
+FAILED tests/customer_management/test_bug_fixes.py::TestNetworkParameterSearch::test_combined_network_filters
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_create_customer_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_get_customer_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_get_customer_not_found
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_get_customer_by_number_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_update_customer_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerCRUD::test_delete_customer_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerSearch::test_search_customers_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerActivities::test_add_customer_activity_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerActivities::test_get_customer_activities_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerMetrics::test_record_purchase_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerMetrics::test_get_customer_metrics_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerSegments::test_create_segment_success
+FAILED tests/customer_management/test_customer_router.py::TestCustomerSegments::test_recalculate_segment_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestAuthenticationBoundaries::test_usage_history_requires_auth
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestAuthenticationBoundaries::test_payment_methods_require_auth
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestAuthenticationBoundaries::test_invoice_download_requires_auth
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestCustomerDataIsolation::test_customer_cannot_access_other_customer_invoice
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestUsageHistoryEndpoint::test_get_usage_history_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestUsageHistoryEndpoint::test_get_usage_history_different_time_ranges
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestUsageReportGeneration::test_generate_usage_report_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestUsageReportGeneration::test_generate_usage_report_pdf_structure
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestInvoiceDownload::test_download_invoice_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestInvoiceDownload::test_download_invoice_invalid_id
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestPaymentMethods::test_list_payment_methods_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestPaymentMethods::test_add_payment_method_success
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestPaymentMethods::test_set_default_payment_method
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestPaymentMethods::test_remove_payment_method
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestPaymentMethods::test_toggle_autopay
+FAILED tests/customer_portal/test_customer_portal_router_comprehensive.py::TestErrorHandling::test_usage_history_database_error
+FAILED tests/data_import/test_router_with_mock_service.py::TestUploadEndpoints::test_upload_csv_customers
+FAILED tests/data_import/test_router_with_mock_service.py::TestUploadEndpoints::test_upload_json_customers
+FAILED tests/data_import/test_router_with_mock_service.py::TestUploadEndpoints::test_upload_csv_invoices
+FAILED tests/data_import/test_router_with_mock_service.py::TestUploadEndpoints::test_upload_invalid_entity_type
+FAILED tests/data_import/test_router_with_mock_service.py::TestUploadEndpoints::test_upload_invalid_file_format
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_get_job_success
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_get_job_not_found
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_list_jobs
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_list_jobs_with_filters
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_get_job_status
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_get_job_status_not_found
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobManagement::test_get_job_status_with_celery_task
+FAILED tests/data_import/test_router_with_mock_service.py::TestFailureManagement::test_get_failures
+FAILED tests/data_import/test_router_with_mock_service.py::TestFailureManagement::test_export_failures_csv
+FAILED tests/data_import/test_router_with_mock_service.py::TestFailureManagement::test_export_failures_json
+FAILED tests/data_import/test_router_with_mock_service.py::TestFailureManagement::test_export_failures_not_found
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobCancellation::test_cancel_job_success
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobCancellation::test_cancel_nonexistent_job
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobCancellation::test_cancel_completed_job
+FAILED tests/data_import/test_router_with_mock_service.py::TestJobCancellation::test_cancel_job_with_celery_task
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentTemplates::test_list_templates_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentTemplates::test_get_template_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentTemplates::test_get_template_not_found
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentTemplates::test_update_template_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentInstances::test_list_instances_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentInstances::test_list_instances_filtered
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentInstances::test_get_instance_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentInstances::test_get_instance_not_found
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentInstances::test_get_instance_status_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_provision_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_provision_deployment_validation_error
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_upgrade_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_scale_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_suspend_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_resume_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentOperations::test_destroy_deployment_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentExecutions::test_list_executions_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentExecutions::test_get_execution_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentExecutions::test_get_execution_not_found
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentHealth::test_list_health_records_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentHealth::test_trigger_health_check_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentStatistics::test_get_deployment_stats_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentStatistics::test_get_template_usage_stats_success
+FAILED tests/deployment/test_deployment_router.py::TestDeploymentStatistics::test_get_resource_allocation_success
+FAILED tests/deployment/test_deployment_router.py::TestScheduledDeployments::test_schedule_deployment_success
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_create_and_retrieve_category
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_list_categories
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_create_product_complete_flow
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_list_products
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_get_product_by_id
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_update_product
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_update_product_price
+FAILED tests/e2e/test_billing_e2e.py::TestProductCatalogE2E::test_deactivate_product
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_create_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_list_pricing_rules
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_get_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_update_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_activate_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_deactivate_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_delete_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_calculate_price
+FAILED tests/e2e/test_billing_e2e.py::TestPricingRulesE2E::test_bulk_activate_rules
+FAILED tests/e2e/test_billing_e2e.py::TestPricingAndCatalogIntegrationE2E::test_product_with_pricing_rule_flow
+FAILED tests/e2e/test_billing_e2e.py::TestPricingAndCatalogIntegrationE2E::test_list_products_by_category_with_pricing
+FAILED tests/e2e/test_billing_e2e.py::TestPaymentWorkflowE2E::test_get_failed_payments
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_get_nonexistent_product
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_get_nonexistent_category
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_create_product_invalid_data
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_create_pricing_rule_invalid_data
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_update_nonexistent_product
+FAILED tests/e2e/test_billing_e2e.py::TestBillingCatalogErrorHandling::test_delete_nonexistent_pricing_rule
+FAILED tests/e2e/test_billing_e2e.py::TestBillingConcurrentOperations::test_create_multiple_products_concurrently
+FAILED tests/e2e/test_billing_e2e.py::TestBillingConcurrentOperations::test_create_multiple_categories_concurrently
+FAILED tests/e2e/test_billing_e2e.py::TestBillingListingAndFiltering::test_list_products_with_filters
+FAILED tests/e2e/test_billing_e2e.py::TestBillingListingAndFiltering::test_list_usage_based_products
+FAILED tests/e2e/test_communications_e2e.py::TestEmailSendingE2E::test_send_email_complete_flow
+FAILED tests/e2e/test_communications_e2e.py::TestEmailSendingE2E::test_send_email_validation_error
+FAILED tests/e2e/test_communications_e2e.py::TestEmailSendingE2E::test_send_email_service_failure
+FAILED tests/e2e/test_communications_e2e.py::TestEmailQueueingE2E::test_queue_email_for_background_processing
+FAILED tests/e2e/test_communications_e2e.py::TestEmailQueueingE2E::test_bulk_email_queue
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateManagementE2E::test_create_template_flow
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateManagementE2E::test_list_templates
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateManagementE2E::test_get_template_by_id
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateManagementE2E::test_delete_template
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateRenderingE2E::test_render_template_with_variables
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateRenderingE2E::test_quick_render_inline_template
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateRenderingE2E::test_render_template_missing_variables
+FAILED tests/e2e/test_communications_e2e.py::TestTemplateAndEmailIntegrationE2E::test_send_email_using_template
+FAILED tests/e2e/test_communications_e2e.py::TestCommunicationMetricsE2E::test_get_communication_stats
+FAILED tests/e2e/test_communications_e2e.py::TestCommunicationMetricsE2E::test_get_recent_activity
+FAILED tests/e2e/test_communications_e2e.py::TestCommunicationMetricsE2E::test_email_logging_integration
+FAILED tests/e2e/test_communications_e2e.py::TestBulkEmailWorkflowE2E::test_complete_bulk_email_workflow
+FAILED tests/e2e/test_communications_e2e.py::TestErrorHandlingE2E::test_render_nonexistent_template
+FAILED tests/e2e/test_communications_e2e.py::TestErrorHandlingE2E::test_delete_nonexistent_template
+FAILED tests/e2e/test_communications_e2e.py::TestConcurrentOperationsE2E::test_send_multiple_emails_concurrently
+FAILED tests/e2e/test_communications_e2e.py::TestConcurrentOperationsE2E::test_create_multiple_templates_concurrently
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerCreationE2E::test_create_customer_success
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerCreationE2E::test_create_customer_duplicate_email
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerCreationE2E::test_create_business_customer
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerRetrievalE2E::test_get_customer_by_id
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerRetrievalE2E::test_get_customer_not_found
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerRetrievalE2E::test_get_customer_by_number
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerUpdateE2E::test_update_customer_success
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerUpdateE2E::test_update_customer_not_found
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerDeletionE2E::test_delete_customer_soft
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerDeletionE2E::test_delete_customer_not_found
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerSearchE2E::test_search_customers_basic
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerSearchE2E::test_search_customers_with_filters
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerActivitiesE2E::test_add_customer_activity
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerActivitiesE2E::test_get_customer_activities
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerNotesE2E::test_add_customer_note
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerNotesE2E::test_get_customer_notes
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerMetricsE2E::test_record_purchase
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerMetricsE2E::test_get_customer_metrics_overview
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerSegmentationE2E::test_create_segment
+FAILED tests/e2e/test_customer_management_e2e.py::TestCustomerSegmentationE2E::test_recalculate_segment
+FAILED tests/e2e/test_customer_management_e2e.py::TestCompleteWorkflowsE2E::test_complete_customer_lifecycle
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_from_csv_file
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_from_database
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_from_s3
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_from_api
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_with_field_mapping
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_dry_run_mode
+FAILED tests/e2e/test_data_transfer_e2e.py::TestImportDataE2E::test_import_with_error_skipping
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_csv_file
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_json_with_compression
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_excel
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_s3
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_email
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_to_database
+FAILED tests/e2e/test_data_transfer_e2e.py::TestExportDataE2E::test_export_with_filters
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobStatusE2E::test_get_job_status_success
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobStatusE2E::test_get_job_status_invalid_uuid
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobStatusE2E::test_get_job_status_shows_timestamps
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobStatusE2E::test_get_job_status_shows_progress
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_all_jobs
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_jobs_with_pagination
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_jobs_filter_by_type
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_jobs_filter_by_status
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_jobs_combined_filters
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobListingE2E::test_list_jobs_empty_result
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobCancellationE2E::test_cancel_job_success
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobCancellationE2E::test_cancel_running_job
+FAILED tests/e2e/test_data_transfer_e2e.py::TestJobCancellationE2E::test_cancel_pending_job
+FAILED tests/e2e/test_data_transfer_e2e.py::TestFormatDiscoveryE2E::test_list_supported_formats
+FAILED tests/e2e/test_data_transfer_e2e.py::TestFormatDiscoveryE2E::test_format_details_include_metadata
+FAILED tests/e2e/test_data_transfer_e2e.py::TestFormatDiscoveryE2E::test_format_compression_types
+FAILED tests/e2e/test_data_transfer_e2e.py::TestFormatDiscoveryE2E::test_json_format_details
+FAILED tests/e2e/test_data_transfer_e2e.py::TestFormatDiscoveryE2E::test_excel_format_details
+FAILED tests/e2e/test_data_transfer_e2e.py::TestCompleteWorkflowE2E::test_complete_import_workflow
+FAILED tests/e2e/test_data_transfer_e2e.py::TestCompleteWorkflowE2E::test_complete_export_workflow
+FAILED tests/e2e/test_data_transfer_e2e.py::TestCompleteWorkflowE2E::test_format_discovery_before_import
+FAILED tests/e2e/test_data_transfer_e2e.py::TestCompleteWorkflowE2E::test_multiple_concurrent_jobs
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileUploadE2E::test_upload_file_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileUploadE2E::test_upload_file_without_path
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileUploadE2E::test_upload_file_too_large
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileUploadE2E::test_upload_file_storage_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileUploadE2E::test_upload_binary_file
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDownloadE2E::test_download_file_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDownloadE2E::test_download_file_not_found
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDownloadE2E::test_download_file_storage_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDownloadE2E::test_download_binary_file
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDownloadE2E::test_download_zero_byte_file
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDeleteE2E::test_delete_file_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDeleteE2E::test_delete_file_not_found
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileDeleteE2E::test_delete_file_storage_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileListE2E::test_list_files_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileListE2E::test_list_files_with_pagination
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileListE2E::test_list_files_with_path_filter
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileListE2E::test_list_files_empty
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileListE2E::test_list_files_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileMetadataE2E::test_get_metadata_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileMetadataE2E::test_get_metadata_not_found
+FAILED tests/e2e/test_file_storage_e2e.py::TestFileMetadataE2E::test_get_metadata_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_delete_success
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_delete_partial_failure
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_move_operation
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_copy_operation
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_unsupported_operation
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_missing_destination
+FAILED tests/e2e/test_file_storage_e2e.py::TestBatchOperationsE2E::test_batch_operation_error
+FAILED tests/e2e/test_file_storage_e2e.py::TestCompleteWorkflowE2E::test_complete_file_lifecycle
+FAILED tests/e2e/test_file_storage_e2e.py::TestCompleteWorkflowE2E::test_multi_file_upload_and_list
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminHealth::test_platform_admin_health_check
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminHealth::test_non_admin_cannot_access_health
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_list_all_tenants
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_list_tenants_pagination
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_tenant_counts_accurate
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_non_admin_cannot_list_tenants
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_get_tenant_detail
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_get_tenant_detail_not_found
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_get_tenant_detail_returns_billing_metrics_fields
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantListing::test_non_admin_cannot_get_tenant_detail
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformStats::test_get_platform_stats
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformStats::test_system_health_check
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformPermissions::test_list_platform_permissions
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantImpersonation::test_create_impersonation_token
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantImpersonation::test_impersonation_token_duration_limits
+FAILED tests/e2e/test_platform_admin_e2e.py::TestTenantImpersonation::test_non_admin_cannot_impersonate
+FAILED tests/e2e/test_platform_admin_e2e.py::TestCrossTenantSearch::test_cross_tenant_search
+FAILED tests/e2e/test_platform_admin_e2e.py::TestCrossTenantSearch::test_cross_tenant_search_with_tenant_filter
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAuditLog::test_get_recent_platform_actions
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAuditLog::test_audit_log_limit_validation
+FAILED tests/e2e/test_platform_admin_e2e.py::TestSystemManagement::test_clear_system_cache
+FAILED tests/e2e/test_platform_admin_e2e.py::TestSystemManagement::test_clear_all_caches
+FAILED tests/e2e/test_platform_admin_e2e.py::TestSystemManagement::test_get_system_configuration
+FAILED tests/e2e/test_platform_admin_e2e.py::TestSystemManagement::test_non_admin_cannot_manage_system
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminAuthorization::test_platform_admin_flag_required
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminAuthorization::test_specific_permissions_enforced
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminE2EWorkflow::test_complete_platform_monitoring_workflow
+FAILED tests/e2e/test_platform_admin_e2e.py::TestPlatformAdminE2EWorkflow::test_tenant_investigation_workflow
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_create_webhook_subscription_success
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_create_webhook_subscription_invalid_events
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_list_webhook_subscriptions
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_list_webhook_subscriptions_with_filters
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_get_webhook_subscription_by_id
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_get_webhook_subscription_not_found
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_update_webhook_subscription
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_delete_webhook_subscription
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookSubscriptionCRUD::test_rotate_webhook_secret
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookDelivery::test_manual_retry_delivery
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookEventBus::test_list_available_events
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookEventBus::test_get_event_details
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookDeliveryHistory::test_list_deliveries_for_subscription
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookDeliveryHistory::test_list_deliveries_with_status_filter
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookDeliveryHistory::test_list_all_recent_deliveries
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookDeliveryHistory::test_get_delivery_by_id
+FAILED tests/e2e/test_webhooks_e2e.py::TestWebhookLifecycleE2E::test_complete_webhook_lifecycle
+FAILED tests/feature_flags/test_router.py::TestCreateOrUpdateFlag::test_create_flag_success
+FAILED tests/feature_flags/test_router.py::TestCreateOrUpdateFlag::test_create_flag_feature_admin_permission
+FAILED tests/feature_flags/test_router.py::TestCreateOrUpdateFlag::test_create_flag_insufficient_permissions
+FAILED tests/feature_flags/test_router.py::TestCreateOrUpdateFlag::test_create_flag_invalid_name
+FAILED tests/feature_flags/test_router.py::TestCreateOrUpdateFlag::test_create_flag_service_error
+FAILED tests/feature_flags/test_router.py::TestGetFlag::test_get_flag_success
+FAILED tests/feature_flags/test_router.py::TestGetFlag::test_get_flag_not_found
+FAILED tests/feature_flags/test_router.py::TestGetFlag::test_get_flag_service_error
+FAILED tests/feature_flags/test_router.py::TestListAllFlags::test_list_all_flags
+FAILED tests/feature_flags/test_router.py::TestListAllFlags::test_list_enabled_flags_only
+FAILED tests/feature_flags/test_router.py::TestListAllFlags::test_list_flags_empty
+FAILED tests/feature_flags/test_router.py::TestDeleteFlag::test_delete_flag_success
+FAILED tests/feature_flags/test_router.py::TestDeleteFlag::test_delete_flag_not_found
+FAILED tests/feature_flags/test_router.py::TestDeleteFlag::test_delete_flag_insufficient_permissions
+FAILED tests/feature_flags/test_router.py::TestDeleteFlag::test_delete_flag_service_error
+FAILED tests/feature_flags/test_router.py::TestCheckFlag::test_check_flag_with_user_context
+FAILED tests/feature_flags/test_router.py::TestGetStatus::test_get_status_success
+FAILED tests/feature_flags/test_router.py::TestGetStatus::test_get_status_redis_unavailable
+FAILED tests/feature_flags/test_router.py::TestAdminEndpoints::test_clear_cache_success
+FAILED tests/feature_flags/test_router.py::TestAdminEndpoints::test_clear_cache_non_admin
+FAILED tests/feature_flags/test_router.py::TestAdminEndpoints::test_sync_redis_success
+FAILED tests/feature_flags/test_router.py::TestAdminEndpoints::test_sync_redis_non_admin
+FAILED tests/feature_flags/test_router.py::TestBulkOperations::test_bulk_update_success
+FAILED tests/feature_flags/test_router.py::TestBulkOperations::test_bulk_update_partial_failure
+FAILED tests/feature_flags/test_router.py::TestBulkOperations::test_bulk_update_insufficient_permissions
+FAILED tests/feature_flags/test_router.py::TestResponseModels::test_feature_flag_response_model
+FAILED tests/feature_flags/test_router.py::TestResponseModels::test_flag_status_response_health_calculation
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_create_fiber_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_list_fiber_cables
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_list_fiber_cables_with_filters
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_get_fiber_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_get_nonexistent_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_update_fiber_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_activate_fiber_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestFiberCableAPI::test_delete_fiber_cable
+FAILED tests/fiber/test_fiber_rest_api.py::TestDistributionPointAPI::test_create_distribution_point
+FAILED tests/fiber/test_fiber_rest_api.py::TestDistributionPointAPI::test_list_distribution_points
+FAILED tests/fiber/test_fiber_rest_api.py::TestDistributionPointAPI::test_get_port_utilization
+FAILED tests/fiber/test_fiber_rest_api.py::TestServiceAreaAPI::test_create_service_area
+FAILED tests/fiber/test_fiber_rest_api.py::TestServiceAreaAPI::test_list_service_areas
+FAILED tests/fiber/test_fiber_rest_api.py::TestServiceAreaAPI::test_get_coverage_statistics
+FAILED tests/fiber/test_fiber_rest_api.py::TestHealthMetricsAPI::test_record_health_metric
+FAILED tests/fiber/test_fiber_rest_api.py::TestHealthMetricsAPI::test_list_health_metrics
+FAILED tests/fiber/test_fiber_rest_api.py::TestHealthMetricsAPI::test_record_otdr_test
+FAILED tests/fiber/test_fiber_rest_api.py::TestHealthMetricsAPI::test_list_otdr_tests
+FAILED tests/fiber/test_fiber_rest_api.py::TestAnalyticsAPI::test_network_health_summary
+FAILED tests/fiber/test_fiber_rest_api.py::TestAnalyticsAPI::test_capacity_planning
+FAILED tests/fiber/test_fiber_rest_api.py::TestAnalyticsAPI::test_coverage_summary
+FAILED tests/fiber/test_fiber_rest_api.py::TestValidation::test_create_cable_invalid_fiber_count
+FAILED tests/fiber/test_fiber_rest_api.py::TestValidation::test_create_cable_duplicate_cable_id
+FAILED tests/fiber/test_fiber_rest_api.py::TestValidation::test_unauthorized_access
+FAILED tests/integration/test_bss_phase1_smoke.py::TestBSSPhase1RouterRegistration::test_jobs_router_registered
+FAILED tests/integration/test_bss_phase1_smoke.py::TestBSSPhase1RouterRegistration::test_dunning_router_registered
+FAILED tests/integration/test_bss_phase1_smoke.py::TestCRMSmoke::test_lead_creation_workflow
+FAILED tests/integration/test_bss_phase1_smoke.py::TestCRMSmoke::test_list_leads
+FAILED tests/integration/test_bss_phase1_smoke.py::TestCRMSmoke::test_list_quotes
+FAILED tests/integration/test_bss_phase1_smoke.py::TestCRMSmoke::test_list_site_surveys
+FAILED tests/integration/test_bss_phase1_smoke.py::TestJobsSmoke::test_job_creation_workflow
+FAILED tests/integration/test_bss_phase1_smoke.py::TestJobsSmoke::test_list_jobs
+FAILED tests/integration/test_bss_phase1_smoke.py::TestDunningSmoke::test_dunning_campaign_creation_workflow
+FAILED tests/integration/test_bss_phase1_smoke.py::TestDunningSmoke::test_list_campaigns
+FAILED tests/integration/test_bss_phase1_smoke.py::TestDunningSmoke::test_dunning_statistics
+FAILED tests/integration/test_bss_phase1_smoke.py::TestDunningSmoke::test_list_executions
+FAILED tests/integration/test_bss_phase1_smoke.py::TestBSSPhase1Integration::test_lead_to_customer_workflow
+FAILED tests/integration/test_bss_phase1_smoke.py::TestBSSPhase1Acceptance::test_api_documentation_includes_bss_phase1
+FAILED tests/integration/test_complete_provisioning_workflow.py::TestCompleteProvisioningWorkflow::test_complete_dual_stack_provisioning_e2e
+FAILED tests/integration/test_complete_provisioning_workflow.py::TestCompleteProvisioningWorkflow::test_provisioning_with_auto_allocation_e2e
+FAILED tests/integration/test_complete_provisioning_workflow.py::TestCompleteProvisioningWorkflow::test_provisioning_ipv4_only_legacy_support
+FAILED tests/integration/test_complete_provisioning_workflow.py::TestCompleteProvisioningWorkflow::test_deprovisioning_cleanup_e2e
+FAILED tests/integration/test_complete_provisioning_workflow.py::TestCompleteProvisioningWorkflow::test_bulk_provisioning_performance
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_provision_subscriber_with_dual_stack_ips_integration
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_provision_subscriber_ipv4_only_integration
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_provision_subscriber_ipv6_only_integration
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_update_subscriber_add_ipv6_to_ipv4_integration
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_provision_subscriber_with_bandwidth_profile_integration
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_bulk_provision_subscribers_dual_stack
+FAILED tests/integration/test_dual_stack_subscriber_provisioning.py::TestDualStackSubscriberProvisioning::test_delete_subscriber_cleanup_dual_stack
+FAILED tests/integration/test_frontend_backend_smoke.py::TestUserManagementEndpoints::test_list_users_endpoint_exists
+FAILED tests/integration/test_frontend_backend_smoke.py::TestSettingsEndpoints::test_list_categories_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestSettingsEndpoints::test_category_settings_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestPluginsEndpoints::test_list_plugins_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestPluginsEndpoints::test_plugin_instances_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestMonitoringEndpoints::test_metrics_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestMonitoringEndpoints::test_log_stats_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestDataTransferEndpoints::test_list_jobs_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestDataTransferEndpoints::test_formats_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestIntegrationsEndpoints::test_list_integrations_endpoint
+FAILED tests/integration/test_frontend_backend_smoke.py::TestCrossModuleIntegration::test_user_to_audit_flow
+FAILED tests/integration/test_frontend_backend_smoke.py::TestCrossModuleIntegration::test_settings_to_integrations_flow
+FAILED tests/integration/test_netbox_dual_stack_integration.py::TestNetBoxDualStackIntegration::test_allocate_dual_stack_with_tags
+FAILED tests/integration/test_netbox_dual_stack_integration.py::TestNetBoxDualStackIntegration::test_update_ip_dns_name
+FAILED tests/integration/test_phase1_smoke.py::TestDatabaseMigrations::test_all_phase1_tables_exist
+FAILED tests/integration/test_phase1_smoke.py::TestDatabaseMigrations::test_isp_customer_columns_exist
+FAILED tests/integration/test_phase1_smoke.py::TestDatabaseMigrations::test_ticket_isp_columns_exist
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_dual_stack_server_integration
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_ipv4_only_server_integration
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_peer_auto_dual_stack_allocation
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_multiple_peers_sequential_allocation
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_peer_ipv4_only_server
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_create_peer_manual_ips
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_peer_ip_conflict_detection
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_generate_peer_config_dual_stack
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_delete_peer_cleanup
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_peer_expiration
+FAILED tests/integration/test_wireguard_dual_stack_integration.py::TestWireGuardDualStackIntegration::test_server_capacity_limits
+FAILED tests/integrations/test_integrations_router.py::test_list_integrations
+FAILED tests/integrations/test_integrations_router.py::test_get_integration_details
+FAILED tests/integrations/test_integrations_router.py::test_health_check_integration
+FAILED tests/integrations/test_integrations_router.py::test_integration_response_schema
+FAILED tests/integrations/test_integrations_router.py::test_list_integrations_empty_registry
+FAILED tests/integrations/test_integrations_router.py::test_integration_types_are_valid
+FAILED tests/integrations/test_integrations_router.py::test_integration_status_values
+FAILED tests/journeys/test_service_lifecycle_journey.py::TestServiceLifecycleJourney::test_service_activation_to_cancellation_journey
+FAILED tests/journeys/test_service_lifecycle_journey_improved.py::TestServiceLifecycleJourneyImproved::test_service_activation_to_cancellation_journey_using_services
+FAILED tests/journeys/test_service_lifecycle_journey_improved.py::TestServiceLifecycleJourneyImproved::test_plan_upgrade_using_service_layer
+FAILED tests/journeys/test_service_lifecycle_journey_improved.py::TestServiceLifecycleBestPractices::test_demonstrates_service_layer_testing_pattern
+FAILED tests/licensing/test_licensing_router.py::TestSecurityValidation::test_emergency_code_success
+FAILED tests/monitoring/test_logs_endpoint.py::TestLogsEndpoint::test_get_log_stats
+FAILED tests/monitoring/test_logs_tenant_isolation.py::TestLogStatsTenantIsolation::test_regular_user_stats_only_own_tenant
+FAILED tests/monitoring/test_logs_tenant_isolation.py::TestLogStatsTenantIsolation::test_platform_admin_stats_all_tenants
+FAILED tests/network_monitoring/test_network_monitoring_api_integration.py::test_network_overview_api_integration
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_success
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_validation_error
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_empty_name
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_invalid_bandwidth
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_service_error
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberProvisioning::test_provision_subscriber_requires_permission
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberDeprovisioning::test_deprovision_subscriber_success
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberDeprovisioning::test_deprovision_subscriber_validation_error
+FAILED tests/orchestration/test_orchestration_router.py::TestSubscriberDeprovisioning::test_deprovision_subscriber_service_error
+FAILED tests/orchestration/test_orchestration_router.py::TestServiceActivation::test_activate_service_success
+FAILED tests/orchestration/test_orchestration_router.py::TestServiceActivation::test_activate_service_validation_error
+FAILED tests/orchestration/test_orchestration_router.py::TestServiceSuspension::test_suspend_service_success
+FAILED tests/orchestration/test_orchestration_router.py::TestServiceSuspension::test_suspend_service_validation_error
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_list_workflows_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_list_workflows_filtered_by_type
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_list_workflows_filtered_by_status
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_get_workflow_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_get_workflow_not_found
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_retry_workflow_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_retry_workflow_not_found
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_retry_workflow_invalid_state
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_cancel_workflow_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowManagement::test_cancel_workflow_not_found
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowStatistics::test_get_statistics_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowStatistics::test_get_statistics_filtered
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowExport::test_export_workflows_csv_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowExport::test_export_workflows_csv_filtered
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowExport::test_export_workflows_json_success
+FAILED tests/orchestration/test_orchestration_router.py::TestWorkflowExport::test_export_workflows_json_filtered
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDeviceManagement::test_discover_cpe_device
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDeviceManagement::test_get_device_info
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDeviceManagement::test_list_devices_by_tenant
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDeviceManagement::test_delete_device
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSParameterConfiguration::test_configure_wifi_parameters
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSParameterConfiguration::test_configure_wan_connection
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSParameterConfiguration::test_configure_management_server
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSParameterConfiguration::test_get_device_parameters
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSFirmwareManagement::test_trigger_firmware_upgrade
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSFirmwareManagement::test_schedule_firmware_upgrade
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSFirmwareManagement::test_bulk_firmware_upgrade
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDiagnostics::test_ping_diagnostic
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDiagnostics::test_traceroute_diagnostic
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSDiagnostics::test_speed_test_diagnostic
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSBulkOperations::test_bulk_parameter_update
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSBulkOperations::test_bulk_reboot
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSBulkOperations::test_bulk_factory_reset
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSServiceIntegration::test_provision_ont_for_new_service
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSServiceIntegration::test_update_ont_on_service_modification
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSServiceIntegration::test_reset_ont_on_service_termination
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSMonitoring::test_check_device_online_status
+FAILED tests/oss/test_genieacs_tr069_integration.py::TestGenieACSMonitoring::test_get_device_statistics
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxIPAddressManagement::test_allocate_ip_from_pool
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxIPAddressManagement::test_allocate_specific_ip
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxIPAddressManagement::test_update_ip_metadata
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxIPAddressManagement::test_release_ip_address
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxIPAddressManagement::test_bulk_ip_allocation
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxPrefixManagement::test_create_prefix_pool
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxPrefixManagement::test_get_available_prefixes
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxPrefixManagement::test_allocate_prefix_from_parent
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxPrefixManagement::test_prefix_utilization_tracking
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxVLANManagement::test_create_vlan
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxVLANManagement::test_assign_vlan_to_interface
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxVLANManagement::test_get_available_vlans
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxDeviceInterfaces::test_create_device_interface
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxDeviceInterfaces::test_assign_ip_to_interface
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxDeviceInterfaces::test_configure_interface_for_customer
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxServiceIntegration::test_provision_network_resources_for_service
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxServiceIntegration::test_reclaim_network_resources_on_termination
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxServiceIntegration::test_track_network_resource_lifecycle
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxReporting::test_get_ip_utilization_report
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxReporting::test_get_vlan_usage_report
+FAILED tests/oss/test_netbox_ipam_integration.py::TestNetBoxReporting::test_get_interface_status_report
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSubscriberLifecycle::test_update_subscriber_bandwidth
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSubscriberLifecycle::test_suspend_and_resume_subscriber
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSubscriberLifecycle::test_terminate_subscriber
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSessionManagement::test_start_radius_session
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSessionManagement::test_update_session_accounting
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSessionManagement::test_stop_radius_session
+FAILED tests/oss/test_radius_integration.py::TestRADIUSSessionManagement::test_get_active_sessions
+FAILED tests/oss/test_radius_integration.py::TestRADIUSNASConfiguration::test_create_nas_server
+FAILED tests/oss/test_radius_integration.py::TestRADIUSNASConfiguration::test_update_nas_secret
+FAILED tests/oss/test_radius_integration.py::TestRADIUSNASConfiguration::test_list_nas_servers
+FAILED tests/oss/test_radius_integration.py::TestRADIUSUsageMonitoring::test_get_subscriber_usage
+FAILED tests/oss/test_radius_integration.py::TestRADIUSUsageMonitoring::test_get_tenant_usage_summary
+FAILED tests/oss/test_radius_integration.py::TestRADIUSIntegrationWithLifecycle::test_provision_service_creates_radius_subscriber
+FAILED tests/oss/test_radius_integration.py::TestRADIUSIntegrationWithLifecycle::test_suspend_service_suspends_radius_access
+FAILED tests/oss/test_service_lifecycle_automation.py::TestEndToEndServiceProvisioning::test_full_fiber_service_provisioning_workflow
+FAILED tests/oss/test_service_lifecycle_automation.py::TestEndToEndServiceProvisioning::test_service_provisioning_with_validation_failure
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceModificationWorkflows::test_upgrade_service_bandwidth
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceModificationWorkflows::test_enable_managed_wifi
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceSuspensionWorkflows::test_suspend_service_for_nonpayment
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceSuspensionWorkflows::test_resume_service_after_payment
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceTerminationWorkflows::test_terminate_service_with_full_cleanup
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceLifecycleHealthChecks::test_automated_health_check_all_services
+FAILED tests/oss/test_service_lifecycle_automation.py::TestServiceLifecycleHealthChecks::test_detect_service_degradation
+FAILED tests/oss/test_service_lifecycle_automation.py::TestBulkServiceOperations::test_bulk_service_suspension
+FAILED tests/plugins/test_router_endpoints.py::TestPluginRouterEndpoints::test_bulk_health_check_with_error
+FAILED tests/plugins/test_router_endpoints_real.py::TestErrorHandlingPaths::test_bulk_health_check_with_errors
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_create_order_public_success
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_create_order_public_validation_error
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_create_quick_order_starter
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_create_quick_order_professional
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_get_order_status_public
+FAILED tests/sales/test_api.py::TestPublicOrderAPI::test_get_order_status_not_found
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_list_orders - asse...
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_list_orders_filter_by_status
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_list_orders_filter_by_email
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_get_order - assert...
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_submit_order - ass...
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_process_order - as...
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_update_order_status
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_cancel_order - ass...
+FAILED tests/sales/test_api.py::TestInternalOrderAPI::test_cancel_order_wrong_status
+FAILED tests/sales/test_api.py::TestActivationAPI::test_list_order_activations
+FAILED tests/sales/test_api.py::TestActivationAPI::test_get_activation_progress
+FAILED tests/sales/test_api.py::TestActivationAPI::test_retry_failed_activations
+FAILED tests/sales/test_api.py::TestActivationAPI::test_retry_no_failed_activations
+FAILED tests/sales/test_api.py::TestOrderStatisticsAPI::test_get_order_statistics
+FAILED tests/sales/test_api.py::TestOrderStatisticsAPI::test_statistics_revenue_calculation
+FAILED tests/sales/test_api.py::TestOrderStatisticsAPI::test_statistics_success_rate
+FAILED tests/sales/test_api.py::TestAPIAuthentication::test_public_api_no_auth_required
+FAILED tests/sales/test_api.py::TestAPIAuthentication::test_internal_api_requires_auth
+FAILED tests/sales/test_api.py::TestAPIAuthentication::test_internal_api_with_auth
+FAILED tests/sales/test_api.py::TestAPIPagination::test_list_orders_pagination
+FAILED tests/sales/test_api.py::TestAPIPagination::test_pagination_limits - a...
+FAILED tests/sales/test_api.py::TestAPIErrorHandling::test_invalid_order_id
+FAILED tests/sales/test_api.py::TestAPIErrorHandling::test_invalid_json_body
+FAILED tests/sales/test_api.py::TestAPIErrorHandling::test_missing_required_fields
+FAILED tests/sales/test_sales_router.py::TestOrderCRUD::test_list_orders_success
+FAILED tests/sales/test_sales_router.py::TestOrderCRUD::test_get_order_by_id_success
+FAILED tests/sales/test_sales_router.py::TestOrderCRUD::test_get_order_not_found
+FAILED tests/sales/test_sales_router.py::TestOrderCRUD::test_delete_order_success
+FAILED tests/sales/test_sales_router.py::TestOrderWorkflow::test_submit_order_success
+FAILED tests/sales/test_sales_router.py::TestOrderWorkflow::test_process_order_success
+FAILED tests/sales/test_sales_router.py::TestOrderWorkflow::test_update_order_status_success
+FAILED tests/sales/test_sales_router.py::TestServiceActivations::test_get_service_activations_success
+FAILED tests/sales/test_sales_router.py::TestServiceActivations::test_get_activation_progress_success
+FAILED tests/sales/test_sales_router.py::TestServiceActivations::test_retry_failed_activations_success
+FAILED tests/sales/test_sales_router.py::TestOrderStatistics::test_get_order_statistics_success
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_get_order_requires_read_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_submit_order_requires_submit_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_process_order_requires_process_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_update_order_requires_update_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_delete_order_requires_delete_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_list_orders_requires_read_permission
+FAILED tests/sales/test_sales_router.py::TestSalesOrderPermissions::test_search_orders_requires_read_permission
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPIAuthentication::test_get_secret_requires_authentication
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPIAuthentication::test_create_secret_requires_authentication
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPIAuthentication::test_delete_secret_requires_authentication
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPIAuthentication::test_list_secrets_requires_authentication
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPISecurityRegression::test_unauthenticated_cannot_dump_vault_data
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPISecurityRegression::test_empty_bearer_token_rejected
+FAILED tests/secrets/test_api_authentication.py::TestSecretsAPISecurityRegression::test_invalid_jwt_rejected
+FAILED tests/services/test_celery_tasks.py::TestProvisionSubscriberAsync::test_provision_subscriber_success
+FAILED tests/services/test_celery_tasks.py::TestProvisionSubscriberAsync::test_provision_subscriber_uuid_conversion
+FAILED tests/services/test_celery_tasks.py::TestProvisionSubscriberAsync::test_provision_subscriber_retry_on_failure
+FAILED tests/services/test_celery_tasks.py::TestProvisionSubscriberAsync::test_provision_subscriber_serialization
+FAILED tests/services/test_celery_tasks.py::TestDeprovisionSubscriberAsync::test_deprovision_subscriber_success
+FAILED tests/services/test_celery_tasks.py::TestDeprovisionSubscriberAsync::test_deprovision_subscriber_retry_on_failure
+FAILED tests/services/test_celery_tasks.py::TestConvertLeadToCustomerAsync::test_convert_lead_success
+FAILED tests/services/test_celery_tasks.py::TestConvertLeadToCustomerAsync::test_convert_lead_uuid_conversion
+FAILED tests/services/test_celery_tasks.py::TestConvertLeadToCustomerAsync::test_convert_lead_no_retry_on_failure
+FAILED tests/services/test_celery_tasks.py::TestAsyncSessionHandling::test_session_generator_properly_consumed
+FAILED tests/services/test_services_router_comprehensive.py::TestConvertLeadEndpoint::test_convert_lead_success
+FAILED tests/services/test_services_router_comprehensive.py::TestConvertLeadEndpoint::test_convert_lead_validation_error
+FAILED tests/services/test_services_router_comprehensive.py::TestConvertLeadEndpoint::test_convert_lead_not_found
+FAILED tests/services/test_services_router_comprehensive.py::TestConvertLeadEndpoint::test_convert_lead_invalid_payload
+FAILED tests/services/test_services_router_comprehensive.py::TestConvertLeadAsyncEndpoint::test_convert_lead_async_success
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberEndpoint::test_provision_subscriber_success
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberEndpoint::test_provision_subscriber_with_onu_and_cpe
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberEndpoint::test_provision_subscriber_validation_errors
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberEndpoint::test_provision_subscriber_customer_not_found
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberEndpoint::test_provision_subscriber_duplicate_username
+FAILED tests/services/test_services_router_comprehensive.py::TestProvisionSubscriberAsyncEndpoint::test_provision_subscriber_async_success
+FAILED tests/services/test_services_router_comprehensive.py::TestDeprovisionSubscriberEndpoint::test_deprovision_subscriber_success
+FAILED tests/services/test_services_router_comprehensive.py::TestSuspendSubscriberEndpoint::test_suspend_subscriber_success
+FAILED tests/services/test_services_router_comprehensive.py::TestReactivateSubscriberEndpoint::test_reactivate_subscriber_success
+FAILED tests/services/test_services_router_comprehensive.py::TestReactivateSubscriberEndpoint::test_reactivate_non_suspended_subscriber
+FAILED tests/services/test_services_router_comprehensive.py::TestTransactionRollback::test_convert_lead_rolls_back_on_error
+FAILED tests/services/test_services_router_comprehensive.py::TestTransactionRollback::test_provision_subscriber_rolls_back_on_error
+FAILED tests/tenant/test_provisioning_router.py::test_schedule_provisioning_job
+FAILED tests/tenant/test_provisioning_router.py::test_schedule_provisioning_job_conflict
+FAILED tests/tenant/test_provisioning_router.py::test_list_provisioning_jobs
+FAILED tests/tenant/test_provisioning_router.py::test_get_provisioning_job - ...
+FAILED tests/tenant/test_tenant_onboarding_router.py::TestTenantOnboardingRouter::test_onboarding_creates_tenant_with_admin
+FAILED tests/tenant/test_tenant_onboarding_router.py::TestTenantOnboardingRouter::test_onboarding_resumes_existing_tenant_when_allowed
+FAILED tests/tenant/test_tenant_onboarding_router.py::TestTenantOnboardingRouter::test_get_onboarding_status_endpoint
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_create_tenant_endpoint
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_create_tenant_duplicate_slug
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_list_tenants_endpoint
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_list_tenants_with_filters
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_list_tenants_with_search
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_get_tenant_by_id
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_get_tenant_by_slug
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_get_nonexistent_tenant
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_update_tenant
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_soft_delete_tenant
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantCRUDEndpoints::test_restore_tenant
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantSettingsEndpoints::test_create_setting
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantSettingsEndpoints::test_get_all_settings
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantSettingsEndpoints::test_get_specific_setting
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantSettingsEndpoints::test_delete_setting
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantUsageEndpoints::test_record_usage
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantUsageEndpoints::test_get_usage_history
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantUsageEndpoints::test_get_tenant_stats
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantInvitationEndpoints::test_create_invitation
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantInvitationEndpoints::test_list_invitations
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantInvitationEndpoints::test_revoke_invitation
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantFeatureEndpoints::test_update_features
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantFeatureEndpoints::test_update_metadata
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantBulkEndpoints::test_bulk_status_update
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantBulkEndpoints::test_bulk_delete
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantValidation::test_create_tenant_invalid_slug
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantValidation::test_create_tenant_missing_required_fields
+FAILED tests/tenant/test_tenant_router_comprehensive.py::TestTenantValidation::test_pagination_validation
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecordUsageWithBilling::test_record_usage_success
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecordUsageWithBilling::test_record_usage_with_subscription_id
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecordUsageWithBilling::test_record_usage_zero_values
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecordUsageWithBilling::test_record_usage_invalid_tenant
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecordUsageWithBilling::test_record_usage_missing_fields
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestSyncUsageToBilling::test_sync_usage_success
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestSyncUsageToBilling::test_sync_usage_with_subscription_id
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestSyncUsageToBilling::test_sync_usage_no_subscription
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageOverages::test_get_overages_with_overages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageOverages::test_get_overages_no_overages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageOverages::test_get_overages_with_date_range
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetBillingPreview::test_get_billing_preview_with_overages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetBillingPreview::test_get_billing_preview_without_overages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetBillingPreview::test_get_billing_preview_default_includes_overages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_normal
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_with_exceeded_limits
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_approaching_limits
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_usage_percentages
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_tenant_not_found
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestGetUsageBillingStatus::test_get_billing_status_includes_current_values
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestErrorHandling::test_record_usage_handles_service_error
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecommendationGeneration::test_recommendations_for_api_limit_exceeded
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecommendationGeneration::test_recommendations_for_storage_limit_exceeded
+FAILED tests/tenant/test_usage_billing_router_comprehensive.py::TestRecommendationGeneration::test_recommendations_for_user_limit_exceeded
+FAILED tests/unit/test_file_storage_metrics.py::test_metrics_iterates_all_batches
+FAILED tests/wireguard/test_wireguard_service.py::test_create_server_with_encryption_fallback
+FAILED tests/wireguard/test_wireguard_service.py::test_create_server_with_vault_storage
+FAILED tests/wireguard/test_wireguard_service.py::test_create_server_falls_back_when_vault_fails
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_create_workflow_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_create_workflow_validation_error
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_get_workflow_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_get_workflow_not_found
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_list_workflows_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUD::test_delete_workflow_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowExecution::test_execute_workflow_by_name_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowExecution::test_get_execution_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowExecution::test_list_executions_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUDExtended::test_update_workflow_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUDExtended::test_delete_workflow_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowCRUDExtended::test_cancel_execution_success
+FAILED tests/workflows/test_workflow_router.py::TestWorkflowStatistics::test_get_workflow_stats_success
+826 failed, 8864 passed, 65 skipped, 50 errors in 2820.28s (0:47:00)

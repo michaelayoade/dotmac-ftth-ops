@@ -17,7 +17,10 @@ import logging
 import time
 from collections.abc import Callable
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, TypeVar, cast
 
@@ -117,12 +120,8 @@ class MetricsCollector:
 
             metrics = self._metrics[operation].copy()
             if metrics["total_calls"] > 0:
-                metrics["avg_duration"] = (
-                    metrics["total_duration"] / metrics["total_calls"]
-                )
-                metrics["success_rate"] = (
-                    metrics["successful_calls"] / metrics["total_calls"] * 100
-                )
+                metrics["avg_duration"] = metrics["total_duration"] / metrics["total_calls"]
+                metrics["success_rate"] = metrics["successful_calls"] / metrics["total_calls"] * 100
             return metrics
 
         # Return all metrics
@@ -163,9 +162,11 @@ class CircuitBreaker:
 
         if self.state == CircuitState.OPEN:
             # Check if timeout has elapsed
-            if self.last_failure_time and (
-                datetime.utcnow() - self.last_failure_time
-            ).total_seconds() >= self.config.timeout:
+            if (
+                self.last_failure_time
+                and (datetime.utcnow() - self.last_failure_time).total_seconds()
+                >= self.config.timeout
+            ):
                 logger.info(f"Circuit breaker '{self.name}': Entering HALF_OPEN state")
                 self.state = CircuitState.HALF_OPEN
                 self.half_open_calls = 0
@@ -201,9 +202,7 @@ class CircuitBreaker:
 
         if self.state == CircuitState.HALF_OPEN:
             # Immediately reopen on failure in half-open
-            logger.warning(
-                f"Circuit breaker '{self.name}': Reopening circuit (still failing)"
-            )
+            logger.warning(f"Circuit breaker '{self.name}': Reopening circuit (still failing)")
             self.state = CircuitState.OPEN
             self.success_count = 0
             self.half_open_calls = 0
@@ -460,9 +459,7 @@ class WorkflowServiceBase:
                 result = await operation(*args, **kwargs)
 
                 if attempt > 1:
-                    logger.info(
-                        f"{self.service_name}.{op_name}: Succeeded on attempt {attempt}"
-                    )
+                    logger.info(f"{self.service_name}.{op_name}: Succeeded on attempt {attempt}")
 
                 return result
 
@@ -486,6 +483,7 @@ class WorkflowServiceBase:
                 # Add jitter to prevent thundering herd
                 if self.retry_config.jitter:
                     import random
+
                     delay *= random.uniform(0.5, 1.5)
 
                 logger.warning(
@@ -740,9 +738,11 @@ class WorkflowServiceBase:
                     # Extract resource_id from result if available
                     resource_id = None
                     if isinstance(result, dict):
-                        resource_id = result.get("license_id") or result.get(
-                            "notification_id"
-                        ) or result.get("order_id")
+                        resource_id = (
+                            result.get("license_id")
+                            or result.get("notification_id")
+                            or result.get("order_id")
+                        )
 
                     # Log success (with monitoring integration)
                     await self.log_response(
@@ -757,9 +757,7 @@ class WorkflowServiceBase:
 
                     # Log failure (with monitoring integration)
                     error_msg = f"{type(e).__name__}: {str(e)}"
-                    await self.log_response(
-                        op_name, None, duration, success=False, error=error_msg
-                    )
+                    await self.log_response(op_name, None, duration, success=False, error=error_msg)
 
                     raise
 

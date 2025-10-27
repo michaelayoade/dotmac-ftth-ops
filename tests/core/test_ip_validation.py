@@ -8,31 +8,28 @@ import pytest
 from pydantic import BaseModel, ValidationError, field_validator
 
 from dotmac.platform.core.ip_validation import (
-    # Core validation functions
-    is_valid_ipv4,
-    is_valid_ipv6,
-    is_valid_ipv4_network,
-    is_valid_ipv6_network,
-    is_valid_ip,
-    is_valid_ip_network,
+    IPAddressValidator,
+    IPv4AddressValidator,
+    IPv4NetworkValidator,
+    IPv6AddressValidator,
+    IPv6NetworkValidator,
     detect_ip_version,
-    normalize_ipv6,
-    is_private_ip,
+    is_link_local,
     is_loopback,
     is_multicast,
-    is_link_local,
-    # Pydantic validators
-    IPv4AddressValidator,
-    IPv6AddressValidator,
-    IPv4NetworkValidator,
-    IPv6NetworkValidator,
-    IPAddressValidator,
-    IPNetworkValidator,
+    is_private_ip,
+    is_valid_ip,
+    is_valid_ip_network,
+    # Core validation functions
+    is_valid_ipv4,
+    is_valid_ipv4_network,
+    is_valid_ipv6,
+    is_valid_ipv6_network,
+    normalize_ipv6,
     # Convenience functions
     validate_ipv4_address_field,
     validate_ipv6_address_field,
 )
-
 
 # ============================================================================
 # Core Validation Function Tests
@@ -117,7 +114,9 @@ class TestIPv6Validation:
         ]
         for input_addr, expected in test_cases:
             result = normalize_ipv6(input_addr)
-            assert result == expected, f"normalize_ipv6({input_addr}) should be {expected}, got {result}"
+            assert result == expected, (
+                f"normalize_ipv6({input_addr}) should be {expected}, got {result}"
+            )
 
     def test_normalize_invalid_ipv6(self):
         """Test normalization of invalid IPv6 returns None."""
@@ -150,7 +149,9 @@ class TestIPv4NetworkValidation:
             "2001:db8::/32",  # IPv6
         ]
         for net in invalid_networks:
-            assert not is_valid_ipv4_network(net, strict=True), f"Should reject invalid IPv4 network: {net}"
+            assert not is_valid_ipv4_network(net, strict=True), (
+                f"Should reject invalid IPv4 network: {net}"
+            )
 
         # Test no prefix separately - Python's ipaddress interprets "192.168.1.0" as /32
         # So we need to check for '/' in the string
@@ -188,7 +189,9 @@ class TestIPv6NetworkValidation:
             "192.168.1.0/24",  # IPv4
         ]
         for net in invalid_networks:
-            assert not is_valid_ipv6_network(net, strict=True), f"Should reject invalid IPv6 network: {net}"
+            assert not is_valid_ipv6_network(net, strict=True), (
+                f"Should reject invalid IPv6 network: {net}"
+            )
 
     def test_ipv6_network_non_strict(self):
         """Test IPv6 network validation in non-strict mode."""
@@ -558,9 +561,6 @@ class TestRealWorldUseCases:
             def validate_ipv6_prefix(cls, v):
                 return IPv6NetworkValidator.validate(v, strict=True)
 
-        config = NetworkConfig(
-            ipv4_prefix="10.0.0.0/8",
-            ipv6_prefix="2001:db8::/32"
-        )
+        config = NetworkConfig(ipv4_prefix="10.0.0.0/8", ipv6_prefix="2001:db8::/32")
         assert config.ipv4_prefix == "10.0.0.0/8"
         assert config.ipv6_prefix == "2001:db8::/32"

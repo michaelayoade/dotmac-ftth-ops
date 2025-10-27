@@ -10,8 +10,9 @@ from __future__ import annotations
 
 import importlib
 import pathlib
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Callable, Dict, Iterable, Mapping
+from typing import Any
 
 import yaml
 
@@ -31,7 +32,7 @@ class AccessDriverRegistry:
     """Registry for OLT drivers."""
 
     def __init__(self) -> None:
-        self._drivers: Dict[str, DriverDescriptor] = {}
+        self._drivers: dict[str, DriverDescriptor] = {}
 
     def register(self, descriptor: DriverDescriptor) -> None:
         if descriptor.config.olt_id in self._drivers:
@@ -53,7 +54,7 @@ class AccessDriverRegistry:
         file_path: str | pathlib.Path,
         *,
         context_factory: Callable[[dict[str, Any]], DriverContext] | None = None,
-    ) -> "AccessDriverRegistry":
+    ) -> AccessDriverRegistry:
         """
         Load registry definitions from a YAML file.
 
@@ -89,7 +90,9 @@ class AccessDriverRegistry:
                 if context_factory
                 else DriverContext(**context_kwargs)
             )
-            registry.register(DriverDescriptor(driver_cls=driver_cls, config=config, context=context))
+            registry.register(
+                DriverDescriptor(driver_cls=driver_cls, config=config, context=context)
+            )
         return registry
 
 

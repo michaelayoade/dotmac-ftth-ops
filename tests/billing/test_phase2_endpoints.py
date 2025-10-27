@@ -4,7 +4,7 @@ Comprehensive tests for Phase 2 operational monitoring endpoints.
 Tests expiring subscriptions and auth metrics endpoints with proper mocking.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -65,7 +65,7 @@ class TestExpiringSubscriptionsEndpoint:
     @pytest.mark.asyncio
     async def test_get_expiring_subscriptions_with_data(self, mock_session, mock_user):
         """Test expiring subscriptions with data."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Mock subscriptions expiring in next 30 days
         mock_subscriptions = [
@@ -117,7 +117,7 @@ class TestExpiringSubscriptionsEndpoint:
     @pytest.mark.asyncio
     async def test_get_expiring_subscriptions_custom_threshold(self, mock_session, mock_user):
         """Test expiring subscriptions with custom days threshold."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         mock_subscriptions = [
             Mock(

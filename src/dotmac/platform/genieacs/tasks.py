@@ -8,7 +8,10 @@ and mass configuration jobs.
 import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 
 import redis.asyncio as aioredis
@@ -17,7 +20,7 @@ from celery import Task
 from sqlalchemy import select
 
 from dotmac.platform.celery_app import celery_app
-from dotmac.platform.db import _async_session_maker
+from dotmac.platform.db import async_session_maker
 from dotmac.platform.genieacs.client import GenieACSClient
 from dotmac.platform.genieacs.models import (
     FirmwareUpgradeResult,
@@ -25,8 +28,8 @@ from dotmac.platform.genieacs.models import (
     MassConfigJob,
     MassConfigResult,
 )
-from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 from dotmac.platform.redis_client import RedisClientType
+from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
 logger = structlog.get_logger(__name__)
 
@@ -120,7 +123,7 @@ def execute_firmware_upgrade(self: Task, schedule_id: str) -> dict[str, Any]:
 
 async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[str, Any]:
     """Async implementation of firmware upgrade execution."""
-    async with _async_session_maker() as session:
+    async with async_session_maker() as session:
         # Get schedule
         result = await session.execute(
             select(FirmwareUpgradeSchedule).where(
@@ -364,7 +367,7 @@ def execute_mass_config(self: Task, job_id: str) -> dict[str, Any]:
 
 async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
     """Async implementation of mass configuration execution."""
-    async with _async_session_maker() as session:
+    async with async_session_maker() as session:
         # Get job
         result = await session.execute(select(MassConfigJob).where(MassConfigJob.job_id == job_id))
         job = result.scalar_one_or_none()
@@ -644,7 +647,7 @@ def check_scheduled_upgrades() -> dict[str, Any]:
 
 async def _check_scheduled_upgrades_async() -> dict[str, Any]:
     """Async implementation of scheduled upgrade checker."""
-    async with _async_session_maker() as session:
+    async with async_session_maker() as session:
         # Find schedules that are due
         now = datetime.now(UTC)
 

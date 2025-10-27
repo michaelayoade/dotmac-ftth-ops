@@ -263,7 +263,6 @@ async def load_secrets_from_vault(
         return
 
     # Create Vault client if not provided
-    created_client = False
     if vault_client is None:
         if HAS_VAULT_CONFIG:
             # Use configured client from vault_config
@@ -277,7 +276,6 @@ async def load_secrets_from_vault(
                 mount_path=settings_obj.vault.mount_path,
                 kv_version=settings_obj.vault.kv_version,
             )
-        created_client = True
 
     try:
         # Check Vault health
@@ -397,11 +395,15 @@ def validate_production_secrets(settings_obj: Settings) -> None:
     # Validate Paystack key format (should start with sk_ or pk_)
     if settings_obj.billing.paystack_secret_key:
         if not settings_obj.billing.paystack_secret_key.startswith(("sk_live_", "sk_test_")):
-            errors.append("Paystack secret key has invalid format (should start with sk_live_ or sk_test_)")
+            errors.append(
+                "Paystack secret key has invalid format (should start with sk_live_ or sk_test_)"
+            )
 
     if settings_obj.billing.paystack_public_key:
         if not settings_obj.billing.paystack_public_key.startswith(("pk_live_", "pk_test_")):
-            errors.append("Paystack public key has invalid format (should start with pk_live_ or pk_test_)")
+            errors.append(
+                "Paystack public key has invalid format (should start with pk_live_ or pk_test_)"
+            )
 
     if errors:
         error_msg = "Production secrets validation failed:\n" + "\n".join(

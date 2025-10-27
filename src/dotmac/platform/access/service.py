@@ -8,10 +8,10 @@ service so that callers can treat both implementations uniformly.
 
 from __future__ import annotations
 
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 
 import structlog
-
 from pydantic import BaseModel, Field
 
 from dotmac.platform.access.drivers import (
@@ -26,13 +26,15 @@ from dotmac.platform.access.drivers import (
 from dotmac.platform.access.registry import AccessDriverRegistry, DriverDescriptor
 from dotmac.platform.voltha.schemas import (
     Device as VolthaDevice,
+)
+from dotmac.platform.voltha.schemas import (
     DeviceDetailResponse,
     DeviceListResponse,
     LogicalDevice,
     LogicalDeviceDetailResponse,
     LogicalDeviceListResponse,
-    Port,
     PONStatistics,
+    Port,
     VOLTHAAlarm,
     VOLTHAAlarmListResponse,
     VOLTHAHealthResponse,
@@ -204,7 +206,9 @@ class AccessNetworkService:
         overall_healthy = all(result.get("healthy", False) for result in results)
         total_devices = sum(result.get("total_devices", 0) for result in results)
         state = "HEALTHY" if overall_healthy else "DEGRADED"
-        message = "; ".join(result.get("message", "") for result in results if result.get("message"))
+        message = "; ".join(
+            result.get("message", "") for result in results if result.get("message")
+        )
 
         return VOLTHAHealthResponse(
             healthy=overall_healthy,
@@ -324,7 +328,9 @@ class AccessNetworkService:
                 return DeviceDetailResponse(device=device, ports=port_models)
         return None
 
-    async def operate_device(self, device_id: str, operation: str, olt_id: str | None = None) -> bool:
+    async def operate_device(
+        self, device_id: str, operation: str, olt_id: str | None = None
+    ) -> bool:
         if olt_id:
             driver = self._driver(olt_id)
             return await driver.operate_device(device_id, operation)
@@ -386,7 +392,8 @@ class AccessNetworkService:
         online_onus = sum(
             1
             for onu in onus
-            if (onu.oper_status or "").upper() in {"ACTIVE", "ENABLED", "ONLINE"} or (onu.connect_status or "").upper() == "REACHABLE"
+            if (onu.oper_status or "").upper() in {"ACTIVE", "ENABLED", "ONLINE"}
+            or (onu.connect_status or "").upper() == "REACHABLE"
         )
 
         return OLTOverview(
@@ -471,8 +478,7 @@ class AccessNetworkService:
         )
 
         adapter_names = {
-            descriptor.driver_cls.__name__
-            for descriptor in self.registry.descriptors()
+            descriptor.driver_cls.__name__ for descriptor in self.registry.descriptors()
         }
 
         return PONStatistics(

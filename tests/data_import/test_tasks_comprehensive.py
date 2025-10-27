@@ -11,7 +11,7 @@ Tests cover:
 """
 
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 from uuid import uuid4
@@ -344,7 +344,7 @@ class TestCheckImportHealth:
         mock_result = {
             "status_counts": {},
             "recent_failures": 0,
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         for key in expected_keys:

@@ -15,10 +15,11 @@ Tests critical invoice service workflows:
 Target: Increase invoice service coverage from 9.97% to 70%+
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import (
@@ -69,7 +70,7 @@ def sample_line_items() -> list[dict]:
     ]
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def invoice_service(async_session: AsyncSession):
     """Invoice service instance."""
     return InvoiceService(db_session=async_session)
@@ -153,7 +154,7 @@ class TestInvoiceCreation:
         sample_line_items: list[dict],
     ):
         """Test invoice with custom due date."""
-        custom_due_date = datetime.now(UTC) + timedelta(days=60)
+        custom_due_date = datetime.now(timezone.utc) + timedelta(days=60)
 
         invoice = await invoice_service.create_invoice(
             tenant_id=tenant_id,
@@ -654,7 +655,7 @@ class TestOverdueInvoices:
     ):
         """Test checking for overdue invoices."""
         # Create invoice with past due date
-        past_due_date = datetime.now(UTC) - timedelta(days=10)
+        past_due_date = datetime.now(timezone.utc) - timedelta(days=10)
 
         invoice = await invoice_service.create_invoice(
             tenant_id=tenant_id,
@@ -738,7 +739,7 @@ class TestTenantIsolation:
         from unittest.mock import patch
 
         # Mock datetime to return a different year for second invoice
-        future_time = datetime(2026, 1, 1, tzinfo=UTC)
+        future_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
         with patch("dotmac.platform.billing.invoicing.service.datetime") as mock_dt:
             mock_dt.now.return_value = future_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)

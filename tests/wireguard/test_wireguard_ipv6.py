@@ -4,13 +4,13 @@ Tests for WireGuard Service with IPv6 Support
 Test dual-stack VPN server and peer management.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
-from datetime import datetime
 
-from dotmac.platform.wireguard.service import WireGuardService, WireGuardServiceError
-from dotmac.platform.wireguard.models import WireGuardServerStatus, WireGuardPeerStatus
+import pytest
+
+from dotmac.platform.wireguard.models import WireGuardServerStatus
+from dotmac.platform.wireguard.service import WireGuardService
 
 
 @pytest.fixture
@@ -30,9 +30,7 @@ def mock_session():
 def mock_client():
     """Mock WireGuard client"""
     client = AsyncMock()
-    client.generate_keypair = AsyncMock(
-        return_value=("private_key_test", "public_key_test")
-    )
+    client.generate_keypair = AsyncMock(return_value=("private_key_test", "public_key_test"))
     client.allocate_peer_ip = AsyncMock()
     client.generate_peer_config = AsyncMock(return_value="[Interface]\nPrivateKey = test")
     client.health_check = AsyncMock(return_value={"healthy": True})
@@ -58,12 +56,12 @@ class TestWireGuardServerDualStack:
     @pytest.mark.asyncio
     async def test_create_server_dual_stack(self, wireguard_service, mock_session):
         """Test creating dual-stack WireGuard server."""
-        with patch('dotmac.platform.wireguard.service.WireGuardServer') as MockServer:
+        with patch("dotmac.platform.wireguard.service.WireGuardServer") as MockServer:
             mock_server_instance = MagicMock()
             mock_server_instance.id = uuid4()
             MockServer.return_value = mock_server_instance
 
-            result = await wireguard_service.create_server(
+            await wireguard_service.create_server(
                 name="Test VPN Server",
                 public_endpoint="vpn.example.com:51820",
                 server_ipv4="10.8.0.1/24",
@@ -74,20 +72,20 @@ class TestWireGuardServerDualStack:
 
             # Verify server was created with correct parameters
             call_kwargs = MockServer.call_args.kwargs
-            assert call_kwargs['server_ipv4'] == "10.8.0.1/24"
-            assert call_kwargs['server_ipv6'] == "fd00:8::1/64"
-            assert call_kwargs['status'] == WireGuardServerStatus.ACTIVE
+            assert call_kwargs["server_ipv4"] == "10.8.0.1/24"
+            assert call_kwargs["server_ipv6"] == "fd00:8::1/64"
+            assert call_kwargs["status"] == WireGuardServerStatus.ACTIVE
             assert mock_session.add.called
             assert mock_session.commit.called
 
     @pytest.mark.asyncio
     async def test_create_server_ipv4_only(self, wireguard_service, mock_session):
         """Test creating IPv4-only server (backward compatibility)."""
-        with patch('dotmac.platform.wireguard.service.WireGuardServer') as MockServer:
+        with patch("dotmac.platform.wireguard.service.WireGuardServer") as MockServer:
             mock_server_instance = MagicMock()
             MockServer.return_value = mock_server_instance
 
-            result = await wireguard_service.create_server(
+            await wireguard_service.create_server(
                 name="IPv4 VPN Server",
                 public_endpoint="vpn.example.com:51820",
                 server_ipv4="10.9.0.1/24",
@@ -95,17 +93,19 @@ class TestWireGuardServerDualStack:
             )
 
             call_kwargs = MockServer.call_args.kwargs
-            assert call_kwargs['server_ipv4'] == "10.9.0.1/24"
-            assert call_kwargs['server_ipv6'] is None
+            assert call_kwargs["server_ipv4"] == "10.9.0.1/24"
+            assert call_kwargs["server_ipv6"] is None
 
     @pytest.mark.asyncio
-    async def test_create_server_with_dual_stack_default_routes(self, wireguard_service, mock_session):
+    async def test_create_server_with_dual_stack_default_routes(
+        self, wireguard_service, mock_session
+    ):
         """Test that dual-stack server includes both IPv4 and IPv6 default routes."""
-        with patch('dotmac.platform.wireguard.service.WireGuardServer') as MockServer:
+        with patch("dotmac.platform.wireguard.service.WireGuardServer") as MockServer:
             mock_server_instance = MagicMock()
             MockServer.return_value = mock_server_instance
 
-            result = await wireguard_service.create_server(
+            await wireguard_service.create_server(
                 name="Full Tunnel VPN",
                 public_endpoint="vpn.example.com:51820",
                 server_ipv4="10.8.0.1/24",
@@ -113,18 +113,22 @@ class TestWireGuardServerDualStack:
             )
 
             call_kwargs = MockServer.call_args.kwargs
-            assert "0.0.0.0/0" in call_kwargs['allowed_ips']
-            assert "::/0" in call_kwargs['allowed_ips']
+            assert "0.0.0.0/0" in call_kwargs["allowed_ips"]
+            assert "::/0" in call_kwargs["allowed_ips"]
 
 
 class TestWireGuardPeerDualStack:
     """Test WireGuard peer creation with dual-stack support."""
 
     @pytest.mark.asyncio
-    async def test_create_peer_dual_stack_auto_allocate(self, wireguard_service, mock_session, mock_client):
+    async def test_create_peer_dual_stack_auto_allocate(
+        self, wireguard_service, mock_session, mock_client
+    ):
         """Test creating peer with automatic dual-stack IP allocation."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer, \
-             patch('dotmac.platform.wireguard.service.select') as mock_select:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             # Mock server with dual-stack
@@ -162,7 +166,7 @@ class TestWireGuardPeerDualStack:
             mock_peer_instance.allowed_ips = ["0.0.0.0/0", "::/0"]
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="Test Peer",
                 description="Dual-stack test peer",
@@ -173,14 +177,16 @@ class TestWireGuardPeerDualStack:
 
             # Verify peer was created with both IPs
             call_kwargs = MockPeer.call_args.kwargs
-            assert call_kwargs['peer_ipv4'] == "10.8.0.2/32"
-            assert call_kwargs['peer_ipv6'] == "fd00:8::2/128"
+            assert call_kwargs["peer_ipv4"] == "10.8.0.2/32"
+            assert call_kwargs["peer_ipv6"] == "fd00:8::2/128"
 
     @pytest.mark.asyncio
     async def test_create_peer_ipv4_only_server(self, wireguard_service, mock_session, mock_client):
         """Test creating peer on IPv4-only server."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer, \
-             patch('dotmac.platform.wireguard.service.select') as mock_select:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             # Mock IPv4-only server
@@ -213,7 +219,7 @@ class TestWireGuardPeerDualStack:
             mock_peer_instance = MagicMock()
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="IPv4 Only Peer",
             )
@@ -223,13 +229,15 @@ class TestWireGuardPeerDualStack:
 
             # Verify peer created with only IPv4
             call_kwargs = MockPeer.call_args.kwargs
-            assert call_kwargs['peer_ipv4'] == "10.9.0.2/32"
-            assert call_kwargs['peer_ipv6'] is None
+            assert call_kwargs["peer_ipv4"] == "10.9.0.2/32"
+            assert call_kwargs["peer_ipv6"] is None
 
     @pytest.mark.asyncio
-    async def test_create_peer_with_static_dual_stack_ips(self, wireguard_service, mock_session, mock_client):
+    async def test_create_peer_with_static_dual_stack_ips(
+        self, wireguard_service, mock_session, mock_client
+    ):
         """Test creating peer with static dual-stack IPs."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer:
+        with patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer:
             server_id = uuid4()
 
             mock_server = MagicMock()
@@ -248,7 +256,7 @@ class TestWireGuardPeerDualStack:
             mock_peer_instance = MagicMock()
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="Static IP Peer",
                 peer_ipv4="10.8.0.100/32",
@@ -260,14 +268,18 @@ class TestWireGuardPeerDualStack:
 
             # Verify static IPs used
             call_kwargs = MockPeer.call_args.kwargs
-            assert call_kwargs['peer_ipv4'] == "10.8.0.100/32"
-            assert call_kwargs['peer_ipv6'] == "fd00:8::100/128"
+            assert call_kwargs["peer_ipv4"] == "10.8.0.100/32"
+            assert call_kwargs["peer_ipv6"] == "fd00:8::100/128"
 
     @pytest.mark.asyncio
-    async def test_peer_config_includes_both_ips(self, wireguard_service, mock_session, mock_client):
+    async def test_peer_config_includes_both_ips(
+        self, wireguard_service, mock_session, mock_client
+    ):
         """Test that peer config includes both IPv4 and IPv6 addresses."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer, \
-             patch('dotmac.platform.wireguard.service.select') as mock_select:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             mock_server = MagicMock()
@@ -301,7 +313,7 @@ class TestWireGuardPeerDualStack:
             mock_peer_instance.allowed_ips = ["0.0.0.0/0", "::/0"]
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="Config Test Peer",
             )
@@ -340,7 +352,7 @@ class TestWireGuardPeerConfigRegeneration:
         wireguard_service.get_server = AsyncMock(return_value=mock_server)
 
         # Regenerate config
-        result = await wireguard_service.regenerate_peer_config(peer_id)
+        await wireguard_service.regenerate_peer_config(peer_id)
 
         # Verify new config generated with both IPs
         mock_client.generate_peer_config.assert_called_once()
@@ -371,7 +383,7 @@ class TestWireGuardPeerConfigRegeneration:
         wireguard_service.get_server = AsyncMock(return_value=mock_server)
 
         # Regenerate config
-        result = await wireguard_service.regenerate_peer_config(peer_id)
+        await wireguard_service.regenerate_peer_config(peer_id)
 
         # Verify config generated with only IPv4
         call_kwargs = mock_client.generate_peer_config.call_args.kwargs
@@ -382,10 +394,14 @@ class TestWireGuardIPAllocationEdgeCases:
     """Test edge cases in IP allocation."""
 
     @pytest.mark.asyncio
-    async def test_ipv6_allocation_avoids_used_ips(self, wireguard_service, mock_session, mock_client):
+    async def test_ipv6_allocation_avoids_used_ips(
+        self, wireguard_service, mock_session, mock_client
+    ):
         """Test that IPv6 allocation avoids already-used addresses."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer, \
-             patch('dotmac.platform.wireguard.service.select') as mock_select:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             mock_server = MagicMock()
@@ -425,7 +441,7 @@ class TestWireGuardIPAllocationEdgeCases:
             mock_peer_instance.allowed_ips = ["0.0.0.0/0", "::/0"]
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="Allocation Test Peer",
             )
@@ -439,10 +455,14 @@ class TestWireGuardIPAllocationEdgeCases:
             assert "fd00:8::1/64" in used_ipv6s  # Server IP included
 
     @pytest.mark.asyncio
-    async def test_create_peer_partial_ipv6_input(self, wireguard_service, mock_session, mock_client):
+    async def test_create_peer_partial_ipv6_input(
+        self, wireguard_service, mock_session, mock_client
+    ):
         """Test creating peer with only IPv4 provided on dual-stack server."""
-        with patch('dotmac.platform.wireguard.service.WireGuardPeer') as MockPeer, \
-             patch('dotmac.platform.wireguard.service.select') as mock_select:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             mock_server = MagicMock()
@@ -475,7 +495,7 @@ class TestWireGuardIPAllocationEdgeCases:
             mock_peer_instance.allowed_ips = ["0.0.0.0/0", "::/0"]
             MockPeer.return_value = mock_peer_instance
 
-            result = await wireguard_service.create_peer(
+            await wireguard_service.create_peer(
                 server_id=server_id,
                 name="Partial Input Peer",
                 peer_ipv4="10.8.0.100/32",  # IPv4 provided
@@ -487,5 +507,5 @@ class TestWireGuardIPAllocationEdgeCases:
 
             # Verify both IPs assigned
             call_kwargs = MockPeer.call_args.kwargs
-            assert call_kwargs['peer_ipv4'] == "10.8.0.100/32"
-            assert call_kwargs['peer_ipv6'] == "fd00:8::2/128"
+            assert call_kwargs["peer_ipv4"] == "10.8.0.100/32"
+            assert call_kwargs["peer_ipv6"] == "fd00:8::2/128"

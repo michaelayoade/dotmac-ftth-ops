@@ -4,12 +4,25 @@ Base billing models and database tables.
 Provides foundation for all billing system components.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
 from pydantic import Field
-from sqlalchemy import JSON, Boolean, Column, DateTime, Index, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Column,
+    DateTime,
+    Index,
+    Numeric,
+    String,
+    Text,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.billing.core.models import (
@@ -313,7 +326,9 @@ class BillingAddonTable(BillingSQLModel):
     # Basic information
     name = Column(String(255), nullable=False)
     description = Column(Text, nullable=True)
-    addon_type = Column(String(20), nullable=False)  # feature, resource, service, user_seats, integration
+    addon_type = Column(
+        String(20), nullable=False
+    )  # feature, resource, service, user_seats, integration
     billing_type = Column(String(20), nullable=False)  # one_time, recurring, metered
 
     # Pricing
@@ -365,7 +380,9 @@ class BillingTenantAddonTable(BillingSQLModel):
     subscription_id = Column(String(50), nullable=True)
 
     # Current state
-    status = Column(String(20), nullable=False, default="active")  # active, canceled, ended, suspended
+    status = Column(
+        String(20), nullable=False, default="active"
+    )  # active, canceled, ended, suspended
     quantity = Column(Numeric(10, 0), nullable=False, default=1)
 
     # Billing dates

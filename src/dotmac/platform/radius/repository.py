@@ -146,9 +146,7 @@ class RADIUSRepository:
         Returns:
             Dictionary mapping hashing method to count of subscribers using it
         """
-        result = await self.session.execute(
-            select(RadCheck).where(RadCheck.tenant_id == tenant_id)
-        )
+        result = await self.session.execute(select(RadCheck).where(RadCheck.tenant_id == tenant_id))
         radchecks = result.scalars().all()
 
         stats: dict[str, int] = {

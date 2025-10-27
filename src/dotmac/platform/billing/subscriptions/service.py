@@ -4,8 +4,11 @@ Subscription management service.
 Handles complete subscription lifecycle with simple, clear operations.
 """
 
-from datetime import UTC, datetime, timedelta
 from calendar import monthrange
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -525,7 +528,10 @@ class SubscriptionService:
 
         # FIXED: Check cancel_at_period_end flag instead of CANCELED status
         # Since we keep status=ACTIVE when canceling at period end, we can't check status
-        if not subscription.cancel_at_period_end and subscription.status != SubscriptionStatus.CANCELED:
+        if (
+            not subscription.cancel_at_period_end
+            and subscription.status != SubscriptionStatus.CANCELED
+        ):
             raise SubscriptionError(
                 "Only subscriptions with pending cancellation (cancel_at_period_end) "
                 "or already canceled can be reactivated"
@@ -712,7 +718,9 @@ class SubscriptionService:
 
         if days_until_renewal > renewal_window_days:
             is_eligible = False
-            reasons.append(f"Too early to renew - {days_until_renewal} days remaining (renewal window: {renewal_window_days} days)")
+            reasons.append(
+                f"Too early to renew - {days_until_renewal} days remaining (renewal window: {renewal_window_days} days)"
+            )
 
         # 6. Check if customer is past due
         if subscription.is_past_due():
@@ -877,8 +885,11 @@ class SubscriptionService:
             "description": f"Subscription renewal for {plan.name}",
             "billing_cycle": plan.billing_cycle.value,
             "period_start": subscription.current_period_end,
-            "period_end": self._calculate_period_end(subscription.current_period_end, plan.billing_cycle),
-            "idempotency_key": idempotency_key or f"renewal_{subscription_id}_{datetime.now(UTC).timestamp()}",
+            "period_end": self._calculate_period_end(
+                subscription.current_period_end, plan.billing_cycle
+            ),
+            "idempotency_key": idempotency_key
+            or f"renewal_{subscription_id}_{datetime.now(UTC).timestamp()}",
             "metadata": {
                 "renewal": True,
                 "subscription_id": subscription_id,
@@ -1367,12 +1378,16 @@ class SubscriptionService:
     async def get_tenant_subscription(self, tenant_id: str) -> Subscription | None:
         """Get tenant's current active subscription."""
 
-        stmt = select(BillingSubscriptionTable).where(
-            and_(
-                BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.status.in_(["active", "trialing", "past_due"]),
+        stmt = (
+            select(BillingSubscriptionTable)
+            .where(
+                and_(
+                    BillingSubscriptionTable.tenant_id == tenant_id,
+                    BillingSubscriptionTable.status.in_(["active", "trialing", "past_due"]),
+                )
             )
-        ).order_by(BillingSubscriptionTable.created_at.desc())
+            .order_by(BillingSubscriptionTable.created_at.desc())
+        )
 
         result = await self.db.execute(stmt)
         db_subscription = result.scalar_one_or_none()

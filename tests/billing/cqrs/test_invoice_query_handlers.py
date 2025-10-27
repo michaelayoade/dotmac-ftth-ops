@@ -1,6 +1,6 @@
 """Tests for Invoice Query Handlers (CQRS Pattern)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -59,10 +59,10 @@ class TestInvoiceQueryHandler:
         mock_invoice.remaining_balance = 10000
         mock_invoice.currency = "USD"
         mock_invoice.status = InvoiceStatus.DRAFT
-        mock_invoice.created_at = datetime.now(UTC)
-        mock_invoice.updated_at = datetime.now(UTC)
-        mock_invoice.issue_date = datetime.now(UTC)
-        mock_invoice.due_date = datetime.now(UTC) + timedelta(days=30)
+        mock_invoice.created_at = datetime.now(timezone.utc)
+        mock_invoice.updated_at = datetime.now(timezone.utc)
+        mock_invoice.issue_date = datetime.now(timezone.utc)
+        mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=30)
         mock_invoice.finalized_at = None
         mock_invoice.paid_at = None
         mock_invoice.voided_at = None
@@ -123,8 +123,8 @@ class TestInvoiceQueryHandler:
             mock_invoice.remaining_balance = 10000
             mock_invoice.currency = "USD"
             mock_invoice.status = InvoiceStatus.DRAFT
-            mock_invoice.created_at = datetime.now(UTC)
-            mock_invoice.due_date = datetime.now(UTC) + timedelta(days=30)
+            mock_invoice.created_at = datetime.now(timezone.utc)
+            mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=30)
             mock_invoice.paid_at = None
             mock_invoice.line_items = []
             mock_invoice.payments = []
@@ -160,8 +160,8 @@ class TestInvoiceQueryHandler:
             tenant_id="tenant-1",
             customer_id="cust-456",
             status="open",
-            created_after=datetime.now(UTC) - timedelta(days=30),
-            created_before=datetime.now(UTC),
+            created_after=datetime.now(timezone.utc) - timedelta(days=30),
+            created_before=datetime.now(timezone.utc),
             page=1,
             page_size=50,
         )
@@ -199,8 +199,8 @@ class TestInvoiceQueryHandler:
             mock_invoice.remaining_balance = 10000
             mock_invoice.currency = "USD"
             mock_invoice.status = InvoiceStatus.OPEN
-            mock_invoice.created_at = datetime.now(UTC) - timedelta(days=60)
-            mock_invoice.due_date = datetime.now(UTC) - timedelta(days=10 * (i + 1))
+            mock_invoice.created_at = datetime.now(timezone.utc) - timedelta(days=60)
+            mock_invoice.due_date = datetime.now(timezone.utc) - timedelta(days=10 * (i + 1))
             mock_invoice.paid_at = None
             mock_invoice.line_items = []
             mock_invoice.payments = []
@@ -222,8 +222,8 @@ class TestInvoiceQueryHandler:
         """Test get invoice statistics with aggregations"""
         query = GetInvoiceStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock aggregation result
@@ -261,8 +261,8 @@ class TestInvoiceQueryHandler:
         """Test invoice statistics with no data"""
         query = GetInvoiceStatisticsQuery(
             tenant_id="tenant-1",
-            start_date=datetime.now(UTC) - timedelta(days=30),
-            end_date=datetime.now(UTC),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
+            end_date=datetime.now(timezone.utc),
         )
 
         # Mock empty result
@@ -313,8 +313,8 @@ class TestInvoiceListItemMapping:
         mock_invoice.remaining_balance = 5000
         mock_invoice.currency = "USD"
         mock_invoice.status = InvoiceStatus.OPEN
-        mock_invoice.created_at = datetime.now(UTC)
-        mock_invoice.due_date = datetime.now(UTC) + timedelta(days=15)
+        mock_invoice.created_at = datetime.now(timezone.utc)
+        mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=15)
         mock_invoice.paid_at = None
         mock_invoice.line_items = []
         mock_invoice.payments = []
@@ -350,7 +350,7 @@ class TestInvoiceDetailMapping:
 
     def test_map_to_detail(self, query_handler):
         """Test mapping invoice entity to detail view"""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         mock_invoice = MagicMock()
         mock_invoice.invoice_id = "inv-123"
         mock_invoice.invoice_number = "INV-001"

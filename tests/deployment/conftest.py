@@ -2,17 +2,18 @@
 Pytest fixtures for deployment router tests.
 """
 
-import pytest
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
 
-from dotmac.platform.deployment.models import DeploymentBackend, DeploymentState, DeploymentType
+import pytest
+import pytest_asyncio
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
 
 class MockObject:
     """Helper class to convert dict to object with attributes."""
+
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -63,6 +64,7 @@ def mock_deployment_registry():
 def mock_current_user():
     """Mock current user for authentication."""
     from dotmac.platform.auth.core import UserInfo
+
     return UserInfo(
         user_id="00000000-0000-0000-0000-000000000001",
         email="test@example.com",
@@ -83,7 +85,7 @@ def mock_current_user():
             "deployment.stats.read",
             "deployment.schedule.create",
         ],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
 
@@ -103,7 +105,6 @@ def mock_rbac_service():
 @pytest.fixture
 def sample_deployment_template():
     """Sample deployment template for testing."""
-    from datetime import datetime
     # Return MockObject with attributes that router can access
     return MockObject(
         id=1,
@@ -129,14 +130,13 @@ def sample_deployment_template():
         terraform_module_path=None,
         docker_compose_path=None,
         created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-        updated_at=datetime.fromisoformat("2025-01-01T12:00:00")
+        updated_at=datetime.fromisoformat("2025-01-01T12:00:00"),
     )
 
 
 @pytest.fixture
 def sample_deployment_instance():
     """Sample deployment instance for testing."""
-    from datetime import datetime
     # Return MockObject with attributes that router can access
     return MockObject(
         id=1,
@@ -167,14 +167,13 @@ def sample_deployment_instance():
         deployed_by=None,
         approved_by=None,
         created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-        updated_at=datetime.fromisoformat("2025-01-01T12:00:00")
+        updated_at=datetime.fromisoformat("2025-01-01T12:00:00"),
     )
 
 
 @pytest.fixture
 def sample_deployment_execution():
     """Sample deployment execution for testing."""
-    from datetime import datetime
     # Return MockObject with attributes that router can access
     return MockObject(
         id=1,
@@ -191,39 +190,37 @@ def sample_deployment_execution():
         triggered_by=1,  # User ID as integer
         error_message=None,
         created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-        updated_at=datetime.fromisoformat("2025-01-01T12:05:00")
+        updated_at=datetime.fromisoformat("2025-01-01T12:05:00"),
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(
     mock_deployment_service,
     mock_deployment_registry,
     mock_current_user,
     mock_rbac_service,
-    monkeypatch
+    monkeypatch,
 ):
     """Async HTTP client with deployment router registered and dependencies mocked."""
-    from dotmac.platform.deployment.router import (
-        router as deployment_router,
-        get_deployment_service,
-    )
-    from dotmac.platform.deployment.registry import DeploymentRegistry
+    import dotmac.platform.auth.rbac_dependencies
     from dotmac.platform.auth.core import get_current_user
     from dotmac.platform.dependencies import get_db
-    import dotmac.platform.auth.rbac_dependencies
+    from dotmac.platform.deployment.router import (
+        get_deployment_service,
+    )
+    from dotmac.platform.deployment.router import (
+        router as deployment_router,
+    )
 
     # Monkeypatch RBACService class to return our mock instance
     monkeypatch.setattr(
-        dotmac.platform.auth.rbac_dependencies,
-        'RBACService',
-        lambda db: mock_rbac_service
+        dotmac.platform.auth.rbac_dependencies, "RBACService", lambda db: mock_rbac_service
     )
 
     # Monkeypatch DeploymentRegistry to return our mock instance
     monkeypatch.setattr(
-        'dotmac.platform.deployment.router.DeploymentRegistry',
-        lambda db: mock_deployment_registry
+        "dotmac.platform.deployment.router.DeploymentRegistry", lambda db: mock_deployment_registry
     )
 
     app = FastAPI()

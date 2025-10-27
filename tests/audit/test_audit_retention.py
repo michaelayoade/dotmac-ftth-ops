@@ -4,7 +4,7 @@ Tests for audit retention and archiving functionality.
 
 import gzip
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -51,7 +51,7 @@ def old_activities(async_db_session):
     """Create old audit activities for retention testing."""
 
     async def _create_activities():
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         activities = []
 
         # Create activities of different ages and severities
@@ -198,7 +198,7 @@ class TestAuditRetentionService:
 
         # Verify correct activities remain (based on retention policy)
         for activity in remaining_activities:
-            days_old = (datetime.now(UTC) - activity.timestamp).days
+            days_old = (datetime.now(timezone.utc) - activity.timestamp).days
             expected_retention = retention_service.policy.severity_retention.get(
                 activity.severity, 90
             )
@@ -264,7 +264,7 @@ class TestAuditRetentionService:
                 "severity": ActivitySeverity.LOW,
                 "user_id": "user123",
                 "tenant_id": "test_tenant",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "resource_type": None,
                 "resource_id": None,
                 "action": "login",
@@ -313,7 +313,7 @@ class TestAuditRetentionService:
                 "severity": ActivitySeverity.LOW,
                 "user_id": "user123",
                 "tenant_id": "tenant1" if i % 2 == 0 else "tenant2",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "action": "login",
                 "description": f"Activity {i}",
                 "resource_type": None,

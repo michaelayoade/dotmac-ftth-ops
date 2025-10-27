@@ -11,6 +11,7 @@ Provides comprehensive fiber optic network infrastructure management including:
 - GeoJSON mapping and visualization utilities
 """
 
+from dotmac.platform.fiber import geojson_utils
 from dotmac.platform.fiber.models import (
     DistributionPoint,
     FiberCable,
@@ -20,7 +21,6 @@ from dotmac.platform.fiber.models import (
     SplicePoint,
 )
 from dotmac.platform.fiber.service import FiberService
-from dotmac.platform.fiber import geojson_utils
 
 __all__ = [
     "FiberCable",

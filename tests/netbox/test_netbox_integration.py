@@ -9,21 +9,21 @@ Skip with: pytest tests/netbox/ -v -m "not integration"
 """
 
 import os
-import asyncio
 import socket
-from urllib.parse import urlparse
 from urllib import request as urllib_request
 from urllib.error import URLError
+from urllib.parse import urlparse
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.core.http_client import RobustHTTPClient
 from dotmac.platform.netbox.client import NetBoxClient
-import pytest_asyncio
 
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
+
 
 def _netbox_available(url: str) -> bool:
     parsed = urlparse(url)
@@ -45,14 +45,10 @@ def _netbox_available(url: str) -> bool:
 
 
 NETBOX_URL_ENV = os.getenv("NETBOX_URL", "http://localhost:8080")
-NETBOX_TOKEN_ENV = os.getenv(
-    "NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567"
-)
+NETBOX_TOKEN_ENV = os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
 _bool_map = {"1", "true", "yes", "on"}
-RUN_NETBOX_INTEGRATION = (
-    os.getenv("RUN_NETBOX_INTEGRATION", "0").lower() in _bool_map
-)
+RUN_NETBOX_INTEGRATION = os.getenv("RUN_NETBOX_INTEGRATION", "0").lower() in _bool_map
 
 if not RUN_NETBOX_INTEGRATION:
     pytest.skip(
@@ -102,9 +98,7 @@ async def netbox_client(netbox_url, netbox_token):
         pool_key = f"netbox:default:{client.base_url}"
         RobustHTTPClient._client_pool.pop(pool_key, None)
         RobustHTTPClient._circuit_breakers.pop("netbox:default", None)
-        pytest.skip(
-            f"NetBox health check failed at {netbox_url}, skipping integration tests."
-        )
+        pytest.skip(f"NetBox health check failed at {netbox_url}, skipping integration tests.")
 
     try:
         yield client

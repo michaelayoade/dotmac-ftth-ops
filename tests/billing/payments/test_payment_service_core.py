@@ -17,6 +17,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -80,7 +81,7 @@ def mock_payment_provider():
     return provider
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def payment_service(async_session: AsyncSession, mock_payment_provider):
     """Payment service with mocked provider."""
     service = PaymentService(
@@ -90,7 +91,7 @@ async def payment_service(async_session: AsyncSession, mock_payment_provider):
     return service
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_payment_method(async_session: AsyncSession, tenant_id: str, customer_id: str):
     """Create a test payment method."""
     payment_method = PaymentMethodEntity(

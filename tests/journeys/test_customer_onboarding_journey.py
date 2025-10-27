@@ -4,29 +4,26 @@ Integration tests for complete customer onboarding journey.
 Tests the full workflow from user registration to active service.
 """
 
-import pytest
-from datetime import datetime, UTC, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
 from sqlalchemy.exc import IntegrityError
 
-from dotmac.platform.user_management.models import User
-from dotmac.platform.user_management.service import UserService
-from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.customer_management.service import CustomerService
-from dotmac.platform.customer_management.schemas import CustomerCreate
-from dotmac.platform.tenant.models import Tenant
-from dotmac.platform.billing.subscriptions.models import (
-    SubscriptionStatus,
-    BillingCycle,
-)
 from dotmac.platform.billing.models import (
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
+from dotmac.platform.billing.subscriptions.models import (
+    BillingCycle,
+    SubscriptionStatus,
+)
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
-from dotmac.platform.services.internet_plans.models import PlanType
+from dotmac.platform.customer_management.schemas import CustomerCreate
+from dotmac.platform.customer_management.service import CustomerService
+from dotmac.platform.tenant.models import Tenant
+from dotmac.platform.user_management.models import User
 
 
 @pytest.mark.asyncio
@@ -59,7 +56,7 @@ class TestCustomerOnboardingJourney:
             password_hash="$2b$12$test_hash",
             is_active=False,  # Not verified yet
             is_verified=False,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(user)
         await async_session.flush()
@@ -115,8 +112,8 @@ class TestCustomerOnboardingJourney:
         assert plan.price == Decimal("49.99")
 
         # Step 5: Create subscription using service layer
-        subscription_service = SubscriptionService(async_session)
-        now = datetime.now(UTC)
+        SubscriptionService(async_session)
+        now = datetime.now(timezone.utc)
 
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -175,7 +172,7 @@ class TestCustomerOnboardingJourney:
             password_hash="$2b$12$test_hash",
             is_active=True,
             is_verified=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
         async_session.add(user)
         await async_session.flush()
@@ -207,8 +204,8 @@ class TestCustomerOnboardingJourney:
         await async_session.flush()
 
         # Create subscription in trial using service layer
-        subscription_service = SubscriptionService(async_session)
-        now = datetime.now(UTC)
+        SubscriptionService(async_session)
+        now = datetime.now(timezone.utc)
 
         # Exercise the actual trial activation logic
         subscription = BillingSubscriptionTable(
@@ -279,10 +276,12 @@ class TestCustomerOnboardingJourneyFailures:
         )
 
         with pytest.raises(IntegrityError) as exc_info:
-            customer2 = await customer_service.create_customer(duplicate_data)
+            await customer_service.create_customer(duplicate_data)
             await async_session.flush()
 
-        assert "UNIQUE constraint failed" in str(exc_info.value) or "duplicate key value" in str(exc_info.value)
+        assert "UNIQUE constraint failed" in str(exc_info.value) or "duplicate key value" in str(
+            exc_info.value
+        )
 
         await async_session.rollback()
 
@@ -296,7 +295,7 @@ class TestCustomerOnboardingJourneyFailures:
         """Test registration fails with invalid email format."""
         from pydantic import ValidationError
 
-        customer_service = CustomerService(async_session)
+        CustomerService(async_session)
 
         # Test various invalid email formats
         invalid_emails = [
@@ -309,7 +308,7 @@ class TestCustomerOnboardingJourneyFailures:
 
         for email in invalid_emails:
             with pytest.raises(ValidationError) as exc_info:
-                customer_data = CustomerCreate(
+                CustomerCreate(
                     first_name="Test",
                     last_name="User",
                     email=email,
@@ -340,9 +339,7 @@ class TestCustomerOnboardingJourneyFailures:
         # the subscription to be created (no DB-level FK constraint), but the
         # service layer should validate.
 
-        from dotmac.platform.billing.exceptions import PlanNotFoundError
-
-        subscription_service = SubscriptionService(async_session)
+        SubscriptionService(async_session)
 
         # Attempting to use the service with a non-existent plan should raise an error
         # Note: This depends on the service implementation. If the service doesn't
@@ -350,7 +347,7 @@ class TestCustomerOnboardingJourneyFailures:
 
         # For now, verify that direct DB insertion works (no FK constraint)
         # but document that service layer should validate
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
             subscription_id=f"sub-{uuid4().hex[:8]}",
@@ -410,7 +407,7 @@ class TestCustomerOnboardingJourneyFailures:
             last_name="User",
             email="validation@example.com",
         )
-        customer1 = await customer_service.create_customer(customer_data)
+        await customer_service.create_customer(customer_data)
         await async_session.flush()
 
         # Attempt duplicate
@@ -421,7 +418,7 @@ class TestCustomerOnboardingJourneyFailures:
         )
 
         with pytest.raises(IntegrityError):
-            customer2 = await customer_service.create_customer(duplicate_data)
+            await customer_service.create_customer(duplicate_data)
             await async_session.flush()
 
         await async_session.rollback()

@@ -5,9 +5,9 @@ Tests the complete workflow from subscriber creation through RADIUS, NetBox,
 and WireGuard integration with IPv4 and IPv6 support.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
-from datetime import datetime
 
 from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.radius.service import RADIUSService
@@ -18,9 +18,7 @@ from dotmac.platform.radius.service import RADIUSService
 class TestDualStackSubscriberProvisioning:
     """Integration tests for complete dual-stack subscriber provisioning."""
 
-    async def test_provision_subscriber_with_dual_stack_ips_integration(
-        self, async_db_session
-    ):
+    async def test_provision_subscriber_with_dual_stack_ips_integration(self, async_db_session):
         """
         Test complete provisioning workflow with dual-stack IPs.
 
@@ -29,15 +27,12 @@ class TestDualStackSubscriberProvisioning:
         2. Verify RADIUS tables (radcheck, radreply) contain both IPv4 and IPv6
         3. Verify subscriber can be retrieved with correct IPs
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
             # Create service
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Create subscriber with both IPv4 and IPv6
             subscriber_data = RADIUSSubscriberCreate(
@@ -71,14 +66,11 @@ class TestDualStackSubscriberProvisioning:
         """
         Test provisioning subscriber with IPv4 only (backward compatibility).
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Create IPv4-only subscriber
             subscriber_data = RADIUSSubscriberCreate(
@@ -99,14 +91,11 @@ class TestDualStackSubscriberProvisioning:
         """
         Test provisioning subscriber with IPv6 only.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Create IPv6-only subscriber
             subscriber_data = RADIUSSubscriberCreate(
@@ -124,20 +113,15 @@ class TestDualStackSubscriberProvisioning:
             assert result.framed_ipv6_address == "2001:db8:300::10"
             assert result.framed_ipv6_prefix == "2001:db8:300::/64"
 
-    async def test_update_subscriber_add_ipv6_to_ipv4_integration(
-        self, async_db_session
-    ):
+    async def test_update_subscriber_add_ipv6_to_ipv4_integration(self, async_db_session):
         """
         Test upgrading existing IPv4-only subscriber to dual-stack.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # 1. Create IPv4-only subscriber
             subscriber_data = RADIUSSubscriberCreate(
@@ -166,27 +150,19 @@ class TestDualStackSubscriberProvisioning:
             assert updated.framed_ipv6_address == "2001:db8:400::200"
             assert updated.framed_ipv6_prefix == "2001:db8:400::/64"
 
-    async def test_provision_multiple_subscribers_tenant_isolation(
-        self, async_db_session
-    ):
+    async def test_provision_multiple_subscribers_tenant_isolation(self, async_db_session):
         """
         Test tenant isolation in dual-stack provisioning.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
             # Tenant A service
-            service_a = RADIUSService(
-                session=async_db_session,
-                tenant_id="tenant_a"
-            )
+            service_a = RADIUSService(session=async_db_session, tenant_id="tenant_a")
 
             # Tenant B service
-            service_b = RADIUSService(
-                session=async_db_session,
-                tenant_id="tenant_b"
-            )
+            service_b = RADIUSService(session=async_db_session, tenant_id="tenant_b")
 
             # Create subscriber in Tenant A
             subscriber_a = RADIUSSubscriberCreate(
@@ -218,20 +194,15 @@ class TestDualStackSubscriberProvisioning:
             tenant_a_sub = await service_a.get_subscriber("sub_tenant_b_001")
             assert tenant_a_sub is None  # Not accessible cross-tenant
 
-    async def test_provision_subscriber_with_bandwidth_profile_integration(
-        self, async_db_session
-    ):
+    async def test_provision_subscriber_with_bandwidth_profile_integration(self, async_db_session):
         """
         Test dual-stack provisioning with bandwidth profile.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Create subscriber with bandwidth limits
             subscriber_data = RADIUSSubscriberCreate(
@@ -241,7 +212,7 @@ class TestDualStackSubscriberProvisioning:
                 framed_ipv4_address="10.100.4.50",
                 framed_ipv6_address="2001:db8:500::50",
                 download_speed="100M",  # 100 Mbps
-                upload_speed="50M",     # 50 Mbps
+                upload_speed="50M",  # 50 Mbps
             )
 
             result = await service.create_subscriber(subscriber_data)
@@ -256,14 +227,11 @@ class TestDualStackSubscriberProvisioning:
         """
         Test bulk provisioning of dual-stack subscribers.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Provision 10 subscribers with sequential IPs
             created_subs = []
@@ -292,14 +260,11 @@ class TestDualStackSubscriberProvisioning:
         """
         Test subscriber deletion cleans up both IPv4 and IPv6 assignments.
         """
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.radius.shared_secret = "test_secret"
             mock_settings.is_production = False
 
-            service = RADIUSService(
-                session=async_db_session,
-                tenant_id="test_tenant"
-            )
+            service = RADIUSService(session=async_db_session, tenant_id="test_tenant")
 
             # Create dual-stack subscriber
             subscriber_data = RADIUSSubscriberCreate(

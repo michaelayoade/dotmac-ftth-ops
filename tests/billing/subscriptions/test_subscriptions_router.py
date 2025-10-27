@@ -9,11 +9,11 @@ Tests cover:
 - Cancellation and reactivation
 """
 
-import pytest
-from httpx import AsyncClient
-from fastapi import status
-from decimal import Decimal
 from datetime import datetime, timedelta
+
+import pytest
+from fastapi import status
+from httpx import AsyncClient
 
 
 class TestSubscriptionPlans:
@@ -21,10 +21,7 @@ class TestSubscriptionPlans:
 
     @pytest.mark.asyncio
     async def test_create_subscription_plan_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription_plan
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription_plan
     ):
         """Test successful subscription plan creation."""
         # Arrange
@@ -44,8 +41,8 @@ class TestSubscriptionPlans:
                 "trial_days": 14,
                 "included_usage": {"api_calls": 1000},
                 "overage_rates": {"api_calls": "0.01"},
-                "metadata": {}
-            }
+                "metadata": {},
+            },
         )
 
         # Assert
@@ -60,10 +57,7 @@ class TestSubscriptionPlans:
 
     @pytest.mark.asyncio
     async def test_list_subscription_plans_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription_plan
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription_plan
     ):
         """Test listing subscription plans."""
         # Arrange
@@ -81,10 +75,7 @@ class TestSubscriptionPlans:
 
     @pytest.mark.asyncio
     async def test_get_subscription_plan_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription_plan
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription_plan
     ):
         """Test getting a specific subscription plan."""
         # Arrange
@@ -101,13 +92,12 @@ class TestSubscriptionPlans:
 
     @pytest.mark.asyncio
     async def test_get_subscription_plan_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test getting a non-existent subscription plan."""
         # Arrange
         from dotmac.platform.billing.exceptions import PlanNotFoundError
+
         mock_subscription_service.get_plan.side_effect = PlanNotFoundError("Plan not found")
 
         # Act
@@ -122,10 +112,7 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_create_subscription_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test successful subscription creation."""
         # Arrange
@@ -134,11 +121,7 @@ class TestCustomerSubscriptions:
         # Act
         response = await async_client.post(
             "/api/v1/billing/subscriptions/",
-            json={
-                "customer_id": "cust-123",
-                "plan_id": "plan-123",
-                "metadata": {}
-            }
+            json={"customer_id": "cust-123", "plan_id": "plan-123", "metadata": {}},
         )
 
         # Assert
@@ -153,10 +136,7 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_list_subscriptions_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test listing subscriptions."""
         # Arrange
@@ -173,19 +153,14 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_list_subscriptions_filtered_by_customer(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test listing subscriptions filtered by customer."""
         # Arrange
         mock_subscription_service.list_subscriptions.return_value = [sample_subscription]
 
         # Act
-        response = await async_client.get(
-            "/api/v1/billing/subscriptions/?customer_id=cust-123"
-        )
+        response = await async_client.get("/api/v1/billing/subscriptions/?customer_id=cust-123")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -195,10 +170,7 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_get_subscription_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test getting a specific subscription."""
         # Arrange
@@ -216,9 +188,7 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_get_subscription_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test getting a non-existent subscription."""
         # Arrange
@@ -232,10 +202,7 @@ class TestCustomerSubscriptions:
 
     @pytest.mark.asyncio
     async def test_update_subscription_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test updating a subscription."""
         # Arrange
@@ -244,10 +211,7 @@ class TestCustomerSubscriptions:
         # Act
         response = await async_client.patch(
             "/api/v1/billing/subscriptions/sub-789",
-            json={
-                "custom_price": "89.99",
-                "metadata": {"discount": "10%"}
-            }
+            json={"custom_price": "89.99", "metadata": {"discount": "10%"}},
         )
 
         # Assert
@@ -261,10 +225,7 @@ class TestSubscriptionLifecycle:
 
     @pytest.mark.asyncio
     async def test_cancel_subscription_at_period_end(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test canceling a subscription at period end."""
         # Arrange
@@ -284,10 +245,7 @@ class TestSubscriptionLifecycle:
 
     @pytest.mark.asyncio
     async def test_cancel_subscription_immediately(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test canceling a subscription immediately."""
         # Arrange
@@ -308,10 +266,7 @@ class TestSubscriptionLifecycle:
 
     @pytest.mark.asyncio
     async def test_reactivate_subscription_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test reactivating a canceled subscription."""
         # Arrange
@@ -320,9 +275,7 @@ class TestSubscriptionLifecycle:
         mock_subscription_service.reactivate_subscription.return_value = reactivated_sub
 
         # Act
-        response = await async_client.post(
-            "/api/v1/billing/subscriptions/sub-789/reactivate"
-        )
+        response = await async_client.post("/api/v1/billing/subscriptions/sub-789/reactivate")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -335,7 +288,7 @@ class TestSubscriptionLifecycle:
         async_client: AsyncClient,
         mock_subscription_service,
         sample_subscription,
-        sample_proration_result
+        sample_proration_result,
     ):
         """Test changing subscription plan with proration."""
         # Arrange
@@ -346,10 +299,7 @@ class TestSubscriptionLifecycle:
         # Act
         response = await async_client.post(
             "/api/v1/billing/subscriptions/sub-789/change-plan",
-            json={
-                "new_plan_id": "plan-456",
-                "proration_behavior": "prorate"
-            }
+            json={"new_plan_id": "plan-456", "proration_behavior": "prorate"},
         )
 
         # Assert
@@ -364,11 +314,7 @@ class TestUsageTracking:
     """Tests for usage tracking endpoints."""
 
     @pytest.mark.asyncio
-    async def test_record_usage_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
-    ):
+    async def test_record_usage_success(self, async_client: AsyncClient, mock_subscription_service):
         """Test recording usage for a subscription."""
         # Arrange
         mock_subscription_service.record_usage.return_value = {"api_calls": 150}
@@ -376,11 +322,7 @@ class TestUsageTracking:
         # Act
         response = await async_client.post(
             "/api/v1/billing/subscriptions/sub-789/usage",
-            json={
-                "subscription_id": "sub-789",
-                "usage_type": "api_calls",
-                "quantity": 150
-            }
+            json={"subscription_id": "sub-789", "usage_type": "api_calls", "quantity": 150},
         )
 
         # Assert
@@ -391,9 +333,7 @@ class TestUsageTracking:
 
     @pytest.mark.asyncio
     async def test_get_subscription_usage_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test getting current usage for a subscription."""
         # Arrange
@@ -411,9 +351,7 @@ class TestUsageTracking:
 
     @pytest.mark.asyncio
     async def test_get_subscription_usage_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test getting usage for non-existent subscription."""
         # Arrange
@@ -431,10 +369,7 @@ class TestProrationPreview:
 
     @pytest.mark.asyncio
     async def test_preview_plan_change_proration_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_proration_result
+        self, async_client: AsyncClient, mock_subscription_service, sample_proration_result
     ):
         """Test previewing proration for plan change."""
         # Arrange
@@ -456,18 +391,13 @@ class TestExpiringSubscriptions:
     """Tests for expiring subscriptions endpoint."""
 
     @pytest.mark.asyncio
-    async def test_get_expiring_subscriptions_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_get_expiring_subscriptions_success(self, async_client: AsyncClient):
         """Test getting expiring subscriptions count."""
         # This endpoint queries the database directly, so we can't mock the service
         # It will return empty results but should not error
 
         # Act
-        response = await async_client.get(
-            "/api/v1/billing/subscriptions/expiring?days=30"
-        )
+        response = await async_client.get("/api/v1/billing/subscriptions/expiring?days=30")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -482,9 +412,7 @@ class TestSubscriptionRenewal:
 
     @pytest.mark.asyncio
     async def test_check_renewal_eligibility_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test checking subscription renewal eligibility."""
         # Arrange
@@ -498,7 +426,7 @@ class TestSubscriptionRenewal:
             "days_until_renewal": 15,
             "renewal_price": "99.99",
             "currency": "USD",
-            "blocking_reasons": []
+            "blocking_reasons": [],
         }
         mock_subscription_service.check_renewal_eligibility.return_value = eligibility
 
@@ -516,9 +444,7 @@ class TestSubscriptionRenewal:
 
     @pytest.mark.asyncio
     async def test_check_renewal_eligibility_not_eligible(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test renewal eligibility check when subscription not eligible."""
         # Arrange
@@ -532,7 +458,7 @@ class TestSubscriptionRenewal:
             "days_until_renewal": 0,
             "renewal_price": "99.99",
             "currency": "USD",
-            "blocking_reasons": ["Payment method expired"]
+            "blocking_reasons": ["Payment method expired"],
         }
         mock_subscription_service.check_renewal_eligibility.return_value = eligibility
 
@@ -550,10 +476,7 @@ class TestSubscriptionRenewal:
 
     @pytest.mark.asyncio
     async def test_extend_subscription_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service,
-        sample_subscription
+        self, async_client: AsyncClient, mock_subscription_service, sample_subscription
     ):
         """Test extending subscription to next billing period."""
         # Arrange
@@ -574,9 +497,7 @@ class TestSubscriptionRenewal:
 
     @pytest.mark.asyncio
     async def test_process_renewal_payment_success(
-        self,
-        async_client: AsyncClient,
-        mock_subscription_service
+        self, async_client: AsyncClient, mock_subscription_service
     ):
         """Test processing renewal payment."""
         # Arrange
@@ -587,7 +508,7 @@ class TestSubscriptionRenewal:
             "payment_method_id": "pm-123",
             "payment_intent_id": "pi-456",
             "status": "requires_action",
-            "client_secret": "secret_123"
+            "client_secret": "secret_123",
         }
         mock_subscription_service.process_renewal_payment.return_value = payment_details
 
@@ -609,7 +530,7 @@ class TestSubscriptionRenewal:
         async_client: AsyncClient,
         mock_subscription_service,
         sample_subscription,
-        sample_subscription_plan
+        sample_subscription_plan,
     ):
         """Test creating renewal quote."""
         # Arrange

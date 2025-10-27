@@ -122,9 +122,7 @@ class TestInvoiceServiceStatusManagement:
         with pytest.raises(InvalidInvoiceStatusError):
             await service.void_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
 
-    async def test_void_partially_paid_invoice_fails(
-        self, sample_tenant_id, mock_invoice_entity
-    ):
+    async def test_void_partially_paid_invoice_fails(self, sample_tenant_id, mock_invoice_entity):
         """Test voiding a partially paid invoice fails"""
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)

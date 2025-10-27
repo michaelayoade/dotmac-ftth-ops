@@ -2,7 +2,10 @@
 Product catalog service - simple CRUD operations with business logic.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4

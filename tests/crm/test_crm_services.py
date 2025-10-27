@@ -11,13 +11,12 @@ Tests for Lead, Quote, and Site Survey services including:
 from datetime import datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
+from dotmac.platform.core.exceptions import EntityNotFoundError
 from dotmac.platform.crm.models import (
     Lead,
     LeadSource,
@@ -63,7 +62,7 @@ class TestLeadService:
         mock_session.execute.return_value = mock_count_result
 
         service = LeadService(mock_session)
-        lead = await service.create_lead(
+        await service.create_lead(
             tenant_id=tenant_id,
             first_name="John",
             last_name="Doe",
@@ -147,7 +146,7 @@ class TestLeadService:
         mock_session.execute.return_value = mock_result
 
         service = LeadService(mock_session)
-        result = await service.qualify_lead(tenant_id, lead_id)
+        await service.qualify_lead(tenant_id, lead_id)
 
         assert mock_lead.status == LeadStatus.QUALIFIED
         assert mock_lead.qualified_at is not None
@@ -175,7 +174,7 @@ class TestLeadService:
 
         service = LeadService(mock_session)
         reason = "Not in serviceable area"
-        result = await service.disqualify_lead(tenant_id, lead_id, reason)
+        await service.disqualify_lead(tenant_id, lead_id, reason)
 
         assert mock_lead.status == LeadStatus.DISQUALIFIED
         assert mock_lead.disqualification_reason == reason
@@ -203,7 +202,7 @@ class TestLeadService:
         mock_session.execute.return_value = mock_result
 
         service = LeadService(mock_session)
-        result = await service.update_serviceability(
+        await service.update_serviceability(
             tenant_id=tenant_id,
             lead_id=lead_id,
             serviceability=Serviceability.SERVICEABLE,
@@ -241,7 +240,7 @@ class TestLeadService:
         mock_session.execute.return_value = mock_result
 
         service = LeadService(mock_session)
-        result = await service.convert_to_customer(tenant_id, lead_id, mock_customer)
+        await service.convert_to_customer(tenant_id, lead_id, mock_customer)
 
         assert mock_lead.converted_to_customer_id == customer_id
         assert mock_lead.status == LeadStatus.WON
@@ -290,7 +289,7 @@ class TestQuoteService:
         mock_session.execute.side_effect = [mock_lead_result, mock_count_result]
 
         service = QuoteService(mock_session)
-        quote = await service.create_quote(
+        await service.create_quote(
             tenant_id=tenant_id,
             lead_id=lead_id,
             service_plan_name="Fiber 100/100",
@@ -330,7 +329,7 @@ class TestQuoteService:
         mock_session.execute.return_value = mock_result
 
         service = QuoteService(mock_session)
-        result = await service.send_quote(tenant_id, quote_id)
+        await service.send_quote(tenant_id, quote_id)
 
         assert mock_quote.status == QuoteStatus.SENT
         assert mock_quote.sent_at is not None
@@ -364,7 +363,7 @@ class TestQuoteService:
             "signed_at": datetime.utcnow().isoformat(),
             "ip_address": "1.2.3.4",
         }
-        result = await service.accept_quote(tenant_id, quote_id, signature_data)
+        await service.accept_quote(tenant_id, quote_id, signature_data)
 
         assert mock_quote.status == QuoteStatus.ACCEPTED
         assert mock_quote.accepted_at is not None
@@ -397,7 +396,7 @@ class TestQuoteService:
 
         service = QuoteService(mock_session)
         reason = "Found better pricing elsewhere"
-        result = await service.reject_quote(tenant_id, quote_id, reason)
+        await service.reject_quote(tenant_id, quote_id, reason)
 
         assert mock_quote.status == QuoteStatus.REJECTED
         assert mock_quote.rejected_at is not None
@@ -437,7 +436,7 @@ class TestSiteSurveyService:
 
         service = SiteSurveyService(mock_session)
         scheduled_date = datetime.utcnow() + timedelta(days=7)
-        survey = await service.schedule_survey(
+        await service.schedule_survey(
             tenant_id=tenant_id,
             lead_id=lead_id,
             scheduled_date=scheduled_date,
@@ -482,7 +481,7 @@ class TestSiteSurveyService:
         mock_session.execute.return_value = mock_result
 
         service = SiteSurveyService(mock_session)
-        result = await service.complete_survey(
+        await service.complete_survey(
             tenant_id=tenant_id,
             survey_id=survey_id,
             serviceability=Serviceability.SERVICEABLE,
@@ -517,6 +516,6 @@ class TestSiteSurveyService:
         mock_session.execute.return_value = mock_result
 
         service = SiteSurveyService(mock_session)
-        result = await service.cancel_survey(tenant_id, survey_id)
+        await service.cancel_survey(tenant_id, survey_id)
 
         assert mock_survey.status == SiteSurveyStatus.CANCELED

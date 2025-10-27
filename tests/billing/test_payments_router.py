@@ -1,10 +1,11 @@
 """Tests for billing payments router."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -39,11 +40,11 @@ def client(async_db_session: AsyncSession):
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_failed_payments(async_db_session: AsyncSession):
     """Create sample failed payments for testing."""
     payments = []
-    base_time = datetime.now(UTC)
+    base_time = datetime.now(timezone.utc)
 
     for i in range(3):
         payment = PaymentEntity(
@@ -64,7 +65,7 @@ async def sample_failed_payments(async_db_session: AsyncSession):
     return payments
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_successful_payments(async_db_session: AsyncSession):
     """Create sample successful payments (should not be counted)."""
     payment = PaymentEntity(
@@ -76,7 +77,7 @@ async def sample_successful_payments(async_db_session: AsyncSession):
         status=PaymentStatus.SUCCEEDED,
         payment_method_type=PaymentMethodType.CARD,
         provider="stripe",
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -97,7 +98,7 @@ class TestGetFailedPayments:
         data = response.json()
 
         assert data["count"] == 3
-        assert data["total_amount"] == 600.0  # 100 + 200 + 300 cents
+        assert data["total_amount"] == 6.0  # 100 + 200 + 300 cents = $6.00
         assert "oldest_failure" in data
         assert "newest_failure" in data
 
@@ -126,7 +127,7 @@ class TestGetFailedPayments:
 
         # Should only count the 3 failed payments, not the successful one
         assert data["count"] == 3
-        assert data["total_amount"] == 600.0  # 100 + 200 + 300 cents
+        assert data["total_amount"] == 6.0  # 100 + 200 + 300 cents = $6.00
 
     @pytest.mark.asyncio
     async def test_get_failed_payments_only_last_30_days(self, client, async_db_session):
@@ -141,7 +142,7 @@ class TestGetFailedPayments:
             status=PaymentStatus.FAILED,
             payment_method_type=PaymentMethodType.CARD,
             provider="stripe",
-            created_at=datetime.now(UTC) - timedelta(days=31),
+            created_at=datetime.now(timezone.utc) - timedelta(days=31),
         )
         async_db_session.add(old_payment)
 
@@ -155,7 +156,7 @@ class TestGetFailedPayments:
             status=PaymentStatus.FAILED,
             payment_method_type=PaymentMethodType.CARD,
             provider="stripe",
-            created_at=datetime.now(UTC) - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         )
         async_db_session.add(recent_payment)
         await async_db_session.commit()
@@ -167,7 +168,7 @@ class TestGetFailedPayments:
 
         # Should only count the recent payment
         assert data["count"] == 1
-        assert data["total_amount"] == 25000.0  # 250.00 in cents
+        assert data["total_amount"] == 250.0  # 25000 cents = $250.00
 
     @pytest.mark.asyncio
     async def test_get_failed_payments_exception_handling(self, client):

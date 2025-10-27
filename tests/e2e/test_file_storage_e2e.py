@@ -16,30 +16,17 @@ This E2E test suite covers the following modules:
 """
 
 import io
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 
-from dotmac.platform.auth.core import create_access_token
-
 # Pytest marker for E2E tests
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
-
-@pytest.fixture
-def auth_headers(user_id, tenant_id):
-    """Create authentication headers with JWT token for API requests."""
-    token = create_access_token(
-        user_id=user_id,
-        username="testuser",
-        email="test@example.com",
-        tenant_id=tenant_id,
-        roles=["user"],
-        permissions=["read", "write"],
-    )
-    return {"Authorization": f"Bearer {token}"}
+# Note: auth_headers fixture is provided by tests/e2e/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
 
 
 @pytest.fixture
@@ -144,7 +131,7 @@ class TestFileUploadE2E:
         call_args = mock_storage_service.store_file.call_args
         path = call_args.kwargs["path"]
         assert "uploads/e2e-test-tenant/e2e-test-user" in path
-        assert datetime.now(UTC).strftime("%Y/%m/%d") in path
+        assert datetime.now(timezone.utc).strftime("%Y/%m/%d") in path
 
     @pytest.mark.asyncio
     async def test_upload_file_too_large(self, mock_storage_service, async_client, auth_headers):
@@ -301,9 +288,7 @@ class TestFileDownloadE2E:
         assert response.headers["content-type"] == "image/jpeg"
 
     @pytest.mark.asyncio
-    async def test_download_zero_byte_file(
-        self, mock_storage_service, async_client, auth_headers
-    ):
+    async def test_download_zero_byte_file(self, mock_storage_service, async_client, auth_headers):
         """Ensure zero-byte files can be downloaded successfully."""
         file_id = str(uuid4())
         metadata = {
@@ -400,7 +385,7 @@ class TestFileListE2E:
                 file_name="file1.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 path="uploads/e2e-test-user/documents",
             ),
             FileMetadata(
@@ -408,7 +393,7 @@ class TestFileListE2E:
                 file_name="file2.pdf",
                 file_size=200,
                 content_type="application/pdf",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 path="uploads/e2e-test-user/documents",
             ),
         ]
@@ -511,7 +496,7 @@ class TestFileMetadataE2E:
             "file_name": "document.pdf",
             "file_size": 1024,
             "content_type": "application/pdf",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "checksum": "abc123def456",
             "custom_field": "custom_value",
             "tenant_id": tenant_id,  # Required for tenant validation
@@ -810,7 +795,7 @@ class TestCompleteWorkflowE2E:
                 file_name=f"file{i}.txt",
                 file_size=10,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             for i, fid in enumerate(file_ids)
         ]

@@ -4,7 +4,7 @@ Unit tests for analytics router helper functions and utilities.
 Tests helper functions, datetime handling, and router configuration.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import MagicMock, patch
 
 from dotmac.platform.analytics.router import (
@@ -19,33 +19,33 @@ class TestHelperFunctions:
     """Test analytics router helper functions."""
 
     def test_ensure_utc_with_none(self):
-        """Test _ensure_utc with None returns current UTC time."""
+        """Test _ensure_utc with None returns current timezone.utc time."""
         result = _ensure_utc(None)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         # Should be recent (within last second)
-        assert (datetime.now(UTC) - result).total_seconds() < 1
+        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
 
     def test_ensure_utc_with_naive_datetime(self):
-        """Test _ensure_utc with naive datetime adds UTC timezone."""
+        """Test _ensure_utc with naive datetime adds timezone.utc timezone."""
         naive_dt = datetime(2024, 1, 1, 12, 0, 0)
         result = _ensure_utc(naive_dt)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         assert result.year == 2024
         assert result.month == 1
         assert result.day == 1
 
     def test_ensure_utc_with_aware_datetime(self):
-        """Test _ensure_utc with aware datetime converts to UTC."""
-        aware_dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        """Test _ensure_utc with aware datetime converts to timezone.utc."""
+        aware_dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         result = _ensure_utc(aware_dt)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         assert result == aware_dt
 
     def test_ensure_utc_with_string_z_suffix(self):
         """Test _ensure_utc with ISO string ending in Z."""
         iso_string = "2024-01-01T12:00:00Z"
         result = _ensure_utc(iso_string)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         assert result.year == 2024
         assert result.month == 1
         assert result.day == 1
@@ -54,27 +54,27 @@ class TestHelperFunctions:
         """Test _ensure_utc with ISO string without Z."""
         iso_string = "2024-01-01T12:00:00"
         result = _ensure_utc(iso_string)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         assert result.year == 2024
 
     def test_ensure_utc_with_invalid_string(self):
         """Test _ensure_utc with invalid string returns current time."""
         invalid_string = "not a datetime"
         result = _ensure_utc(invalid_string)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         # Should be recent (within last second)
-        assert (datetime.now(UTC) - result).total_seconds() < 1
+        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
 
     def test_ensure_utc_with_other_type(self):
         """Test _ensure_utc with non-datetime/string type returns current time."""
         result = _ensure_utc(12345)
-        assert result.tzinfo == UTC
+        assert result.tzinfo == timezone.utc
         # Should be recent (within last second)
-        assert (datetime.now(UTC) - result).total_seconds() < 1
+        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
 
     def test_isoformat_with_datetime(self):
         """Test _isoformat formats datetime correctly."""
-        dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
+        dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         result = _isoformat(dt)
         assert isinstance(result, str)
         assert "2024-01-01" in result
@@ -91,33 +91,46 @@ class TestAnalyticsServiceDependency:
     """Test analytics service dependency injection."""
 
     def test_get_analytics_service_creates_instance(self):
-        """Test get_analytics_service creates service instance."""
-        # Reset global
-        import dotmac.platform.analytics.router as router_module
+        """Test get_analytics_service creates service instance with required params."""
+        # Create mock request and user
+        mock_request = MagicMock()
+        mock_user = MagicMock()
+        mock_user.tenant_id = "test-tenant"
+        mock_user.is_platform_admin = False
 
-        router_module._analytics_service = None
+        # Patch the service factory function
+        with patch("dotmac.platform.analytics.service.get_analytics_service") as mock_get_service:
+            mock_service = MagicMock()
+            mock_get_service.return_value = mock_service
 
-        # Service is imported inside the function, so patch it there
-        with patch("dotmac.platform.analytics.service.AnalyticsService") as MockService:
-            mock_instance = MagicMock()
-            MockService.return_value = mock_instance
+            service = get_analytics_service(mock_request, mock_user)
 
-            service = get_analytics_service()
-
-            MockService.assert_called_once()
-            assert service == mock_instance
+            # Verify service factory was called with tenant_id
+            mock_get_service.assert_called_once()
+            call_kwargs = mock_get_service.call_args[1]
+            assert call_kwargs["tenant_id"] == "test-tenant"
+            assert service == mock_service
 
     def test_get_analytics_service_reuses_instance(self):
-        """Test get_analytics_service reuses existing instance."""
-        import dotmac.platform.analytics.router as router_module
+        """Test get_analytics_service reuses cached instance."""
+        # Create mock request and user
+        mock_request = MagicMock()
+        mock_user = MagicMock()
+        mock_user.tenant_id = "test-tenant"
+        mock_user.is_platform_admin = False
 
-        # Set up existing instance
-        existing_service = MagicMock()
-        router_module._analytics_service = existing_service
+        # Patch the service factory to return same instance
+        with patch("dotmac.platform.analytics.service.get_analytics_service") as mock_get_service:
+            mock_service = MagicMock()
+            mock_get_service.return_value = mock_service
 
-        service = get_analytics_service()
+            # Call twice
+            service1 = get_analytics_service(mock_request, mock_user)
+            service2 = get_analytics_service(mock_request, mock_user)
 
-        assert service == existing_service
+            # Both should return the cached instance
+            assert service1 == service2
+            assert service1 == mock_service
 
 
 class TestRouterConfiguration:

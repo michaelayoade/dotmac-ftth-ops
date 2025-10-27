@@ -6,14 +6,17 @@ Business logic for fiber optic network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
 import structlog
 from sqlalchemy import Select, func, select
-from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .models import (
     CableInstallationType,
@@ -113,7 +116,9 @@ class FiberService:
 
         return cable
 
-    async def get_cable(self, cable_id: UUID | str, include_relations: bool = False) -> FiberCable | None:
+    async def get_cable(
+        self, cable_id: UUID | str, include_relations: bool = False
+    ) -> FiberCable | None:
         """Get fiber cable by ID or cable_id"""
         filters = [
             FiberCable.tenant_id == self.tenant_id,
@@ -168,12 +173,7 @@ class FiberService:
         if end_site_id:
             filters.append(FiberCable.end_site_id == end_site_id)
 
-        stmt = (
-            select(FiberCable)
-            .where(*filters)
-            .offset(offset)
-            .limit(limit)
-        )
+        stmt = select(FiberCable).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -224,7 +224,9 @@ class FiberService:
 
         return True
 
-    async def activate_cable(self, cable_id: UUID | str, activated_by: str | None = None) -> FiberCable | None:
+    async def activate_cable(
+        self, cable_id: UUID | str, activated_by: str | None = None
+    ) -> FiberCable | None:
         """Activate a fiber cable (mark as active and operational)"""
         cable = await self.get_cable(cable_id)
         if not cable:
@@ -340,12 +342,7 @@ class FiberService:
         if site_id:
             filters.append(DistributionPoint.site_id == site_id)
 
-        stmt = (
-            select(DistributionPoint)
-            .where(*filters)
-            .offset(offset)
-            .limit(limit)
-        )
+        stmt = select(DistributionPoint).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -383,7 +380,9 @@ class FiberService:
         if not point or point.total_ports is None:
             return {}
 
-        utilization_pct = (point.used_ports / point.total_ports * 100) if point.total_ports > 0 else 0
+        utilization_pct = (
+            (point.used_ports / point.total_ports * 100) if point.total_ports > 0 else 0
+        )
         available_ports = point.total_ports - point.used_ports
 
         return {
@@ -489,12 +488,7 @@ class FiberService:
         if construction_status:
             filters.append(ServiceArea.construction_status == construction_status)
 
-        stmt = (
-            select(ServiceArea)
-            .where(*filters)
-            .offset(offset)
-            .limit(limit)
-        )
+        stmt = select(ServiceArea).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -653,12 +647,7 @@ class FiberService:
         if distribution_point_id:
             filters.append(SplicePoint.distribution_point_id == distribution_point_id)
 
-        stmt = (
-            select(SplicePoint)
-            .where(*filters)
-            .offset(offset)
-            .limit(limit)
-        )
+        stmt = select(SplicePoint).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
         return result.scalars().all()
 
@@ -980,7 +969,9 @@ class FiberService:
                 "homes_passed": total_homes_passed,
                 "homes_connected": total_homes_connected,
                 "penetration_percentage": round(
-                    (total_homes_connected / total_homes_passed * 100) if total_homes_passed > 0 else 0,
+                    (total_homes_connected / total_homes_passed * 100)
+                    if total_homes_passed > 0
+                    else 0,
                     2,
                 ),
             },

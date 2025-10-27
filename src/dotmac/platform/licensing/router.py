@@ -19,7 +19,6 @@ from .models import (
     License,
     LicenseOrder,
     LicenseTemplate,
-    OrderStatus,
 )
 from .schemas import (
     ActivationCreate,
@@ -40,11 +39,6 @@ from .schemas import (
     LicenseTemplateCreate,
     LicenseTemplateResponse,
     LicenseTemplateUpdate,
-    LicensePricing,
-    TemplateFeature,
-    TemplateRestriction,
-    LicenseFeature,
-    LicenseRestriction,
     LicenseTransfer,
     LicenseUpdate,
     LicenseValidationRequest,
@@ -84,12 +78,12 @@ def _serialize_template(template: LicenseTemplate) -> LicenseTemplateResponse:
         pricing_raw = pricing_raw.model_dump()
 
     payload = {
-        "id": getattr(template, "id"),
-        "template_name": getattr(template, "template_name"),
-        "product_id": getattr(template, "product_id"),
+        "id": template.id,
+        "template_name": template.template_name,
+        "product_id": template.product_id,
         "description": getattr(template, "description", None),
-        "license_type": getattr(template, "license_type"),
-        "license_model": getattr(template, "license_model"),
+        "license_type": template.license_type,
+        "license_model": template.license_model,
         "default_duration": getattr(template, "default_duration", 0),
         "max_activations": getattr(template, "max_activations", 0),
         "features": features_raw,
@@ -135,7 +129,9 @@ def _serialize_order(order: LicenseOrder) -> LicenseOrderResponse:
         "fulfillment_method": order.fulfillment_method,
         "status": order.status,
         "total_amount": float(order.total_amount or 0),
-        "discount_applied": float(order.discount_applied) if order.discount_applied is not None else None,
+        "discount_applied": float(order.discount_applied)
+        if order.discount_applied is not None
+        else None,
         "payment_status": order.payment_status,
         "invoice_id": str(order.invoice_id) if order.invoice_id else None,
         "subscription_id": order.subscription_id,
@@ -228,7 +224,9 @@ async def get_license_by_key(
     return {"data": LicenseResponse.model_validate(license_obj)}
 
 
-@router.post("/licenses", response_model=dict[str, LicenseResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/licenses", response_model=dict[str, LicenseResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_license(
     data: LicenseCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -290,7 +288,9 @@ async def suspend_license(
 ) -> Any:
     """Suspend a license."""
     try:
-        license_obj = await service.suspend_license(license_id, data.get("reason", "No reason provided"))
+        license_obj = await service.suspend_license(
+            license_id, data.get("reason", "No reason provided")
+        )
         await service.session.commit()
         return {"data": LicenseResponse.model_validate(license_obj)}
     except ValueError as e:
@@ -309,7 +309,9 @@ async def revoke_license(
 ) -> Any:
     """Revoke a license permanently."""
     try:
-        license_obj = await service.revoke_license(license_id, data.get("reason", "No reason provided"))
+        license_obj = await service.revoke_license(
+            license_id, data.get("reason", "No reason provided")
+        )
         await service.session.commit()
         return {"data": LicenseResponse.model_validate(license_obj)}
     except ValueError as e:
@@ -342,7 +344,11 @@ async def transfer_license(
 # ==================== Activation Management ====================
 
 
-@router.post("/activations", response_model=dict[str, ActivationResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/activations",
+    response_model=dict[str, ActivationResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def activate_license(
     data: ActivationCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -429,7 +435,9 @@ async def validate_activation(
     return {"data": response}
 
 
-@router.post("/activations/{activation_id}/deactivate", response_model=dict[str, ActivationResponse])
+@router.post(
+    "/activations/{activation_id}/deactivate", response_model=dict[str, ActivationResponse]
+)
 async def deactivate_license(
     activation_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -547,7 +555,11 @@ async def get_template(
     return {"data": _serialize_template(template)}
 
 
-@router.post("/templates", response_model=dict[str, LicenseTemplateResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/templates",
+    response_model=dict[str, LicenseTemplateResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_template(
     data: LicenseTemplateCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -626,7 +638,9 @@ async def get_order(
     return {"data": _serialize_order(order)}
 
 
-@router.post("/orders", response_model=dict[str, LicenseOrderResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/orders", response_model=dict[str, LicenseOrderResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_order(
     data: LicenseOrderCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -757,7 +771,7 @@ async def generate_emergency_code(
 ) -> Any:
     """Generate emergency override code."""
     import secrets
-    from datetime import UTC, datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
     emergency_code = secrets.token_hex(8).upper()
     valid_until = datetime.now(UTC) + timedelta(hours=24)

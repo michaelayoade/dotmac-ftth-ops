@@ -9,10 +9,47 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
+
+
+@pytest_asyncio.fixture
+async def tenant_a_user(async_db_session):
+    """Create user in tenant-a."""
+    user = User(
+        id=uuid4(),
+        username="tenant_a_user",
+        email="a@example.com",
+        password_hash="hashed",
+        tenant_id="tenant-a",
+        is_active=True,
+        is_verified=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.flush()
+    await async_db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def tenant_b_user(async_db_session):
+    """Create user in tenant-b."""
+    user = User(
+        id=uuid4(),
+        username="tenant_b_user",
+        email="b@example.com",
+        password_hash="hashed",
+        tenant_id="tenant-b",
+        is_active=True,
+        is_verified=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.flush()
+    await async_db_session.refresh(user)
+    return user
 
 
 class TestUserServiceTenantRequirements:
@@ -137,40 +174,6 @@ class TestUserServiceTenantRequirements:
 
 class TestUserServiceCrossTenantPrevention:
     """Test that UserService prevents cross-tenant data access."""
-
-    @pytest.fixture
-    async def tenant_a_user(self, async_db_session):
-        """Create user in tenant-a."""
-        user = User(
-            id=uuid4(),
-            username="tenant_a_user",
-            email="a@example.com",
-            password_hash="hashed",
-            tenant_id="tenant-a",
-            is_active=True,
-            is_verified=True,
-        )
-        async_db_session.add(user)
-        await async_db_session.flush()
-        await async_db_session.refresh(user)
-        return user
-
-    @pytest.fixture
-    async def tenant_b_user(self, async_db_session):
-        """Create user in tenant-b."""
-        user = User(
-            id=uuid4(),
-            username="tenant_b_user",
-            email="b@example.com",
-            password_hash="hashed",
-            tenant_id="tenant-b",
-            is_active=True,
-            is_verified=True,
-        )
-        async_db_session.add(user)
-        await async_db_session.flush()
-        await async_db_session.refresh(user)
-        return user
 
     @pytest.fixture
     def user_service(self, async_db_session):

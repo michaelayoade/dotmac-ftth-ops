@@ -1,7 +1,7 @@
 """Tests for user management API router."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock
 from urllib.parse import urlencode
 
@@ -39,8 +39,8 @@ def sample_user():
         is_verified=True,
         is_superuser=False,
         mfa_enabled=False,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
         tenant_id="tenant-123",
     )
 
@@ -72,6 +72,7 @@ def admin_user(sample_user):
 @pytest.fixture
 def request_factory():
     """Factory to build ASGI Request objects for router tests."""
+
     def _build_request(
         headers: dict[str, str] | None = None, query_params: dict[str, str] | None = None
     ) -> Request:
@@ -455,9 +456,7 @@ class TestUserManagementEndpoints:
         mock_user_service.update_user.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_update_user_not_found(
-        self, admin_user, mock_user_service, request_factory
-    ):
+    async def test_update_user_not_found(self, admin_user, mock_user_service, request_factory):
         """Test updating user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import update_user
@@ -515,9 +514,7 @@ class TestUserManagementEndpoints:
         )
 
     @pytest.mark.asyncio
-    async def test_delete_user_not_found(
-        self, admin_user, mock_user_service, request_factory
-    ):
+    async def test_delete_user_not_found(self, admin_user, mock_user_service, request_factory):
         """Test deleting user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import delete_user
@@ -555,9 +552,7 @@ class TestUserManagementEndpoints:
         )
 
     @pytest.mark.asyncio
-    async def test_disable_user_not_found(
-        self, admin_user, mock_user_service, request_factory
-    ):
+    async def test_disable_user_not_found(self, admin_user, mock_user_service, request_factory):
         """Test disabling user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import disable_user
@@ -595,9 +590,7 @@ class TestUserManagementEndpoints:
         )
 
     @pytest.mark.asyncio
-    async def test_enable_user_not_found(
-        self, admin_user, mock_user_service, request_factory
-    ):
+    async def test_enable_user_not_found(self, admin_user, mock_user_service, request_factory):
         """Test enabling user that doesn't exist."""
         # Arrange
         from dotmac.platform.user_management.router import enable_user

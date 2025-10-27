@@ -9,7 +9,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, constr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, constr, field_validator
 
 from .models import ActivationStatus, OrderStatus, OrderType
 

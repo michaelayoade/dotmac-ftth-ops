@@ -9,7 +9,7 @@ These tests verify the fixes for the HIGH severity security issue where
 API keys bypassed tenant isolation by not storing/populating tenant_id.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -159,7 +159,7 @@ class TestAPIKeyTenantIsolation:
             "name": "Tenant 1 Key",
             "scopes": ["read"],
             "tenant_id": "tenant-1",  # Stored with tenant binding
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         mock_redis.get = AsyncMock(return_value=json.dumps(stored_data))

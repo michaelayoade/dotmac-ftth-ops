@@ -310,7 +310,7 @@ async def bulk_health_check(
             health_check = await registry.health_check_plugin(instance_id)
             results.append(health_check)
         except Exception as e:
-            from datetime import UTC, datetime
+            from datetime import datetime, timezone
 
             # Create error health check result
             results.append(

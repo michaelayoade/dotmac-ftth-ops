@@ -9,7 +9,7 @@ Verifies that:
 5. Integration with InvoiceService is correct
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -245,7 +245,7 @@ class TestInvoiceMapper:
         assert "issue_date" in model_data
         assert isinstance(model_data["issue_date"], datetime)
         # Should be very recent (within last minute)
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         time_diff = (now - model_data["issue_date"]).total_seconds()
         assert time_diff < 60
 

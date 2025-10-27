@@ -130,7 +130,7 @@ class FakeNotificationPlugin(NotificationProvider):
         return True
 
     async def health_check(self) -> PluginHealthCheck:
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
         return PluginHealthCheck(
             plugin_instance_id=str(uuid4()),  # Will be overridden by registry
@@ -142,11 +142,11 @@ class FakeNotificationPlugin(NotificationProvider):
                 "configured": self.configured,
                 "notifications_sent": len(self.notifications_sent),
             },
-            timestamp=datetime.now(UTC).isoformat(),  # Will be overridden by registry
+            timestamp=datetime.now(timezone.utc).isoformat(),  # Will be overridden by registry
         )
 
     async def test_connection(self, config: dict[str, Any]) -> PluginTestResult:
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
         has_required = bool(config.get("api_key") and config.get("endpoint"))
         return PluginTestResult(
@@ -156,7 +156,7 @@ class FakeNotificationPlugin(NotificationProvider):
                 "has_api_key": bool(config.get("api_key")),
                 "has_endpoint": bool(config.get("endpoint")),
             },
-            timestamp=datetime.now(UTC).isoformat(),  # Will be overridden by registry
+            timestamp=datetime.now(timezone.utc).isoformat(),  # Will be overridden by registry
         )
 
 
@@ -1069,7 +1069,7 @@ class TestPluginDiscovery:
         plugin_code = """
 from dotmac.platform.plugins.interfaces import NotificationProvider
 from dotmac.platform.plugins.schema import PluginConfig, PluginType, FieldSpec, FieldType, PluginHealthCheck, PluginTestResult
-from datetime import datetime, UTC
+from datetime import datetime, timezone
 from uuid import uuid4
 
 class TestDiscoveredPlugin(NotificationProvider):
@@ -1091,7 +1091,7 @@ class TestDiscoveredPlugin(NotificationProvider):
             status="healthy",
             message="OK",
             details={},
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
     async def test_connection(self, config: dict) -> PluginTestResult:

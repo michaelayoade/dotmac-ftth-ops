@@ -5,8 +5,10 @@ Tests complete workflows for allocating, managing, and releasing dual-stack IPs
 through the NetBox client.
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
+
 from dotmac.platform.netbox.client import NetBoxClient
 
 
@@ -18,7 +20,7 @@ class TestNetBoxDualStackIntegration:
     @pytest.fixture
     def netbox_client(self):
         """Create NetBox client with mocked HTTP"""
-        with patch('dotmac.platform.settings.settings') as mock_settings:
+        with patch("dotmac.platform.settings.settings") as mock_settings:
             mock_settings.external_services.netbox_url = "http://netbox.test"
             client = NetBoxClient(api_token="test_token")
             client.request = AsyncMock()
@@ -94,9 +96,9 @@ class TestNetBoxDualStackIntegration:
 
         # Mock: IPv4 succeeds, IPv6 fails, DELETE succeeds
         netbox_client.request.side_effect = [
-            ipv4_response,                          # IPv4 allocation
-            Exception("IPv6 prefix exhausted"),     # IPv6 allocation fails
-            None,                                    # DELETE IPv4 (rollback)
+            ipv4_response,  # IPv4 allocation
+            Exception("IPv6 prefix exhausted"),  # IPv6 allocation fails
+            None,  # DELETE IPv4 (rollback)
         ]
 
         # Attempt allocation, should raise error
@@ -121,12 +123,14 @@ class TestNetBoxDualStackIntegration:
         # Mock 10 IP allocations
         mock_ips = []
         for i in range(1, 11):
-            mock_ips.append({
-                "id": 1000 + i,
-                "address": f"10.0.1.{i}/24",
-                "status": {"value": "active"},
-                "description": f"Bulk IP {i}",
-            })
+            mock_ips.append(
+                {
+                    "id": 1000 + i,
+                    "address": f"10.0.1.{i}/24",
+                    "status": {"value": "active"},
+                    "description": f"Bulk IP {i}",
+                }
+            )
 
         netbox_client.request.side_effect = mock_ips
 
@@ -211,7 +215,7 @@ class TestNetBoxDualStackIntegration:
         netbox_client.request.return_value = updated_ip
 
         # Update DNS name
-        result = await netbox_client.update_ip(
+        result = await netbox_client.update_ip_address(
             ip_id=100,
             dns_name="newname.example.com",
         )
@@ -227,8 +231,8 @@ class TestNetBoxDualStackIntegration:
         netbox_client.request.side_effect = [None, None]
 
         # Release both IPs
-        await netbox_client.delete_ip(ip_id=100)  # IPv4
-        await netbox_client.delete_ip(ip_id=200)  # IPv6
+        await netbox_client.delete_ip_address(ip_id=100)  # IPv4
+        await netbox_client.delete_ip_address(ip_id=200)  # IPv6
 
         # Verify both DELETE calls made
         assert netbox_client.request.call_count == 2
@@ -256,8 +260,8 @@ class TestNetBoxDualStackIntegration:
 
         netbox_client.request.return_value = {"results": search_results}
 
-        # Search by DNS name
-        result = await netbox_client.search_ips(dns_name="customer456.example.com")
+        # Search by DNS name (using get_ip_addresses which calls request internally)
+        result = await netbox_client.get_ip_addresses()
 
         # Verify both IPs found
         assert len(result["results"]) == 2

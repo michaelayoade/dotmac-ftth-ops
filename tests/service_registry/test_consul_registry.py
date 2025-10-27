@@ -414,7 +414,9 @@ class TestConsulServiceRegistry:
         service = services[0]
         assert service.tags == []  # Should default to empty list
         assert service.meta == {}  # Should default to empty dict
-        assert service.address == "10.0.1.1"  # Falls back to node address when service address empty
+        assert (
+            service.address == "10.0.1.1"
+        )  # Falls back to node address when service address empty
 
 
 class TestGlobalFunctions:

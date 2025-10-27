@@ -4,17 +4,18 @@ Tests for Wireless Schemas with IPv6 Support
 Test dual-stack support in wireless device and client schemas.
 """
 
-import pytest
-from pydantic import ValidationError
 from uuid import uuid4
 
+import pytest
+from pydantic import ValidationError
+
+from dotmac.platform.wireless.models import DeviceStatus, DeviceType, Frequency
 from dotmac.platform.wireless.schemas import (
-    WirelessDeviceCreate,
-    WirelessDeviceUpdate,
-    WirelessDeviceResponse,
     WirelessClientResponse,
+    WirelessDeviceCreate,
+    WirelessDeviceResponse,
+    WirelessDeviceUpdate,
 )
-from dotmac.platform.wireless.models import DeviceType, DeviceStatus, Frequency
 
 
 class TestWirelessDeviceCreateIPv6:

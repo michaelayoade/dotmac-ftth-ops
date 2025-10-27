@@ -4,7 +4,7 @@ Refactored NetBox Client Tests
 Tests the NetBox API client with proper mocking and without circuit breaker interference.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import httpx
 import pytest

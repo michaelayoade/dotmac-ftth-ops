@@ -2,7 +2,7 @@
 Tests for plugin schema and configuration models.
 """
 
-from datetime import UTC
+from datetime import timezone
 
 import pytest
 from pydantic import ValidationError
@@ -277,7 +277,7 @@ class TestPluginHealthCheck:
                 "api_accessible": True,
                 "response_time": 150,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             response_time_ms=150,
         )
 
@@ -299,7 +299,7 @@ class TestPluginHealthCheck:
                 "error": "Connection timeout",
                 "last_successful": "2024-01-01T00:00:00Z",
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
         assert health_check.status == "unhealthy"
@@ -320,7 +320,7 @@ class TestPluginTestResult:
                 "endpoint": "https://api.example.com",
                 "latency_ms": 250,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             response_time_ms=250,
         )
 
@@ -339,7 +339,7 @@ class TestPluginTestResult:
                 "error": "Invalid API key",
                 "status_code": 401,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
         assert result.success is False

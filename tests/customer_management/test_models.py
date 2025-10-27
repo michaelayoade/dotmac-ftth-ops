@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.exc import IntegrityError, OperationalError
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.contacts.models import Contact
@@ -120,12 +120,12 @@ class TestCustomerModel:
         if async_db_session.bind.dialect.name.startswith("sqlite"):
             pytest.skip("Requires full database schema with unique indexes available")
 
-        base_customer_kwargs = dict(
-            tenant_id="test-tenant",
-            first_name="John",
-            last_name="Doe",
-            email="john.doe@example.com",
-        )
+        base_customer_kwargs = {
+            "tenant_id": "test-tenant",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@example.com",
+        }
 
         customer1 = Customer(customer_number="CUST001", **base_customer_kwargs)
         async_db_session.add(customer1)

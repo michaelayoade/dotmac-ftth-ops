@@ -45,7 +45,7 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    timezone="UTC",
+    timezone="timezone.utc",
     enable_utc=True,
     # Task result settings
     result_expires=3600,  # 1 hour

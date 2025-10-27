@@ -50,7 +50,9 @@ class Workflow(Base, TimestampMixin):
     tags = Column(JSON)
 
     # Relationships
-    executions = relationship("WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan")
+    executions = relationship(
+        "WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Workflow {self.name} v{self.version}>"
@@ -67,7 +69,9 @@ class WorkflowExecution(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True)
     workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=False, index=True)
-    status = Column(Enum(WorkflowStatus), default=WorkflowStatus.PENDING, nullable=False, index=True)
+    status = Column(
+        Enum(WorkflowStatus), default=WorkflowStatus.PENDING, nullable=False, index=True
+    )
     context = Column(JSON)  # Input data
     result = Column(JSON)  # Output data
     error_message = Column(Text)
@@ -99,7 +103,9 @@ class WorkflowStep(Base, TimestampMixin):
     id = Column(Integer, primary_key=True)
     execution_id = Column(Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True)
     step_name = Column(String(255), nullable=False)
-    step_type = Column(String(50), nullable=False)  # "service_call", "condition", "transform", "wait"
+    step_type = Column(
+        String(50), nullable=False
+    )  # "service_call", "condition", "transform", "wait"
     sequence_number = Column(Integer, nullable=False)
     status = Column(Enum(StepStatus), default=StepStatus.PENDING, nullable=False, index=True)
     input_data = Column(JSON)

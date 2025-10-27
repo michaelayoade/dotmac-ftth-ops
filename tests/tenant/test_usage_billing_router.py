@@ -11,10 +11,11 @@ Run separately with: pytest tests/tenant/test_usage_billing_router.py
 import asyncio
 import time
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from httpx import ASGITransport, AsyncClient
 
@@ -42,12 +43,13 @@ def setup_test_database():
     """
     from sqlalchemy import create_engine
 
+    from dotmac.platform.billing.subscriptions.models import Subscription  # noqa: F401
+    from dotmac.platform.contacts.models import Contact  # noqa: F401
     from dotmac.platform.db import Base
+
     # Import required models so metadata is populated
     from dotmac.platform.tenant.models import Tenant, TenantUsage  # noqa: F401
     from dotmac.platform.user_management.models import User  # noqa: F401
-    from dotmac.platform.billing.subscriptions.models import Subscription  # noqa: F401
-    from dotmac.platform.contacts.models import Contact  # noqa: F401
 
     # Create in-memory SQLite database
     engine = create_engine("sqlite:///:memory:", echo=False)
@@ -78,7 +80,7 @@ def mock_usage_billing_integration():
         return_value={
             "synced_metrics": ["api_calls", "storage_gb", "users"],
             "status": "success",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
     )
 
@@ -103,7 +105,7 @@ def mock_usage_billing_integration():
     return mock_integration
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_client_with_auth(
     test_app, async_db_session, mock_usage_billing_integration, setup_test_database
 ):
@@ -185,7 +187,7 @@ class TestUsageBillingRecordEndpoint:
         # Create a tenant
         tenant = await create_test_tenant(test_client_with_auth, "record-usage")
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
@@ -206,7 +208,7 @@ class TestUsageBillingRecordEndpoint:
         """Test recording usage with explicit subscription ID."""
         tenant = await create_test_tenant(test_client_with_auth, "record-sub-id")
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing?subscription_id=sub-123",
             json={
@@ -231,7 +233,7 @@ class TestUsageBillingRecordEndpoint:
             side_effect=Exception("Database connection failed")
         )
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
@@ -292,8 +294,8 @@ class TestUsageOveragesEndpoint:
         """Test getting overages endpoint with period parameters."""
         tenant = await create_test_tenant(test_client_with_auth, "overages-period")
 
-        period_start = datetime(2025, 10, 1, tzinfo=UTC)
-        period_end = datetime(2025, 10, 31, 23, 59, 59, tzinfo=UTC)
+        period_start = datetime(2025, 10, 1, tzinfo=timezone.utc)
+        period_end = datetime(2025, 10, 31, 23, 59, 59, tzinfo=timezone.utc)
 
         # URL encode the datetime parameters properly
         from urllib.parse import quote
@@ -504,7 +506,7 @@ class TestUsageBillingIntegration:
         tenant = await create_test_tenant(test_client_with_auth, "e2e-workflow")
 
         # Step 1: Try to record usage (may fail without billing setup, that's ok)
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         record_response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={

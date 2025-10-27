@@ -5,13 +5,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from fastapi import FastAPI
 
-from dotmac.platform.version import get_version
-
 from dotmac.platform.observability.manager import (
     ObservabilityManager,
     ObservabilityMetricsRegistry,
 )
-
+from dotmac.platform.version import get_version
 
 CURRENT_VERSION = get_version()
 

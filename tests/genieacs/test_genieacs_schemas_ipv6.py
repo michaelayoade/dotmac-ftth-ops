@@ -8,13 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.genieacs.schemas import (
-    LANConfig,
-    WANConfig,
     CPEConfigRequest,
+    LANConfig,
+    MassConfigFilter,
+    MassConfigRequest,
     MassLANConfig,
     MassWANConfig,
-    MassConfigRequest,
-    MassConfigFilter,
+    WANConfig,
 )
 
 

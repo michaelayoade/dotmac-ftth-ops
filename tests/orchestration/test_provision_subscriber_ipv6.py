@@ -4,15 +4,15 @@ Tests for Subscriber Provisioning Workflow with IPv6 Support
 Test dual-stack and IPv6-only provisioning scenarios.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
+
+import pytest
 
 from dotmac.platform.orchestration.workflows.provision_subscriber import (
     allocate_ip_handler,
-    release_ip_handler,
-    create_radius_account_handler,
     configure_cpe_handler,
+    create_radius_account_handler,
+    release_ip_handler,
 )
 
 
@@ -70,7 +70,9 @@ class TestIPAllocationHandlerDualStack:
         }
 
         # Mock NetBox service
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.allocate_dual_stack_ips = AsyncMock(
                 return_value=(
@@ -109,7 +111,9 @@ class TestIPAllocationHandlerDualStack:
             "ipv4_prefix_id": 10,
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.allocate_ip = AsyncMock(
                 return_value={"id": 100, "address": "192.168.1.50/24"}
@@ -130,7 +134,9 @@ class TestIPAllocationHandlerDualStack:
             "ipv6_prefix_id": 20,
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.allocate_ip = AsyncMock(
                 return_value={"id": 200, "address": "2001:db8::100/64"}
@@ -174,7 +180,9 @@ class TestIPAllocationHandlerDualStack:
         assert result["output_data"]["skipped"] is True
 
     @pytest.mark.asyncio
-    async def test_missing_prefix_ids_raises_error(self, base_input_data, base_context, mock_db_session):
+    async def test_missing_prefix_ids_raises_error(
+        self, base_input_data, base_context, mock_db_session
+    ):
         """Test that missing prefix IDs raises error."""
         input_data = {**base_input_data}  # No prefix IDs
 
@@ -197,7 +205,9 @@ class TestIPReleaseHandlerDualStack:
             "ipv6_address": "2001:db8::50/64",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.delete_ip_address = AsyncMock()
 
@@ -216,7 +226,9 @@ class TestIPReleaseHandlerDualStack:
             "ipv4_address": "192.168.1.50/24",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.delete_ip_address = AsyncMock()
 
@@ -233,7 +245,9 @@ class TestIPReleaseHandlerDualStack:
             "ipv6_address": "2001:db8::50/64",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.delete_ip_address = AsyncMock()
 
@@ -250,7 +264,9 @@ class TestIPReleaseHandlerDualStack:
             "ipv6_id": 200,
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.delete_ip_address = AsyncMock(side_effect=Exception("NetBox unavailable"))
 
@@ -265,7 +281,9 @@ class TestIPReleaseHandlerDualStack:
         """Test that skipped allocations are not released."""
         compensation_data = {"skipped": True}
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService") as mock_netbox:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.NetBoxService"
+        ) as mock_netbox:
             mock_service = mock_netbox.return_value
             mock_service.delete_ip_address = AsyncMock()
 
@@ -289,13 +307,15 @@ class TestRADIUSAccountHandlerDualStack:
             "ipv6_prefix": "2001:db8:1::/64",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService") as mock_radius:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService"
+        ) as mock_radius:
             mock_service = mock_radius.return_value
             mock_user = MagicMock()
             mock_user.id = "radius-user-123"
             mock_service.create_subscriber = AsyncMock(return_value=mock_user)
 
-            result = await create_radius_account_handler(base_input_data, context, mock_db_session)
+            await create_radius_account_handler(base_input_data, context, mock_db_session)
 
             # Verify RADIUS creation called with dual-stack IPs (CIDR stripped)
             call_args = mock_service.create_subscriber.call_args[0][0]
@@ -314,13 +334,15 @@ class TestRADIUSAccountHandlerDualStack:
             "ipv4_address": "192.168.1.50/24",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService") as mock_radius:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService"
+        ) as mock_radius:
             mock_service = mock_radius.return_value
             mock_user = MagicMock()
             mock_user.id = "radius-user-123"
             mock_service.create_subscriber = AsyncMock(return_value=mock_user)
 
-            result = await create_radius_account_handler(base_input_data, context, mock_db_session)
+            await create_radius_account_handler(base_input_data, context, mock_db_session)
 
             # Verify only IPv4 passed (CIDR stripped)
             call_args = mock_service.create_subscriber.call_args[0][0]
@@ -336,13 +358,15 @@ class TestRADIUSAccountHandlerDualStack:
             "ipv6_address": "2001:db8::100/64",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService") as mock_radius:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.RADIUSService"
+        ) as mock_radius:
             mock_service = mock_radius.return_value
             mock_user = MagicMock()
             mock_user.id = "radius-user-123"
             mock_service.create_subscriber = AsyncMock(return_value=mock_user)
 
-            result = await create_radius_account_handler(base_input_data, context, mock_db_session)
+            await create_radius_account_handler(base_input_data, context, mock_db_session)
 
             # Verify only IPv6 passed (CIDR stripped)
             call_args = mock_service.create_subscriber.call_args[0][0]
@@ -369,13 +393,15 @@ class TestCPEConfigurationHandlerDualStack:
             "ipv6_prefix": "2001:db8:1::/64",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.GenieACSService") as mock_genieacs:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.GenieACSService"
+        ) as mock_genieacs:
             mock_service = mock_genieacs.return_value
             mock_service.configure_device = AsyncMock(
                 return_value={"device_id": "cpe-12345", "status": "configured"}
             )
 
-            result = await configure_cpe_handler(input_data, context, mock_db_session)
+            await configure_cpe_handler(input_data, context, mock_db_session)
 
             # Verify CPE configured with dual-stack
             call_kwargs = mock_service.configure_device.call_args.kwargs
@@ -398,13 +424,15 @@ class TestCPEConfigurationHandlerDualStack:
             "ipv4_address": "192.168.1.50/24",
         }
 
-        with patch("dotmac.platform.orchestration.workflows.provision_subscriber.GenieACSService") as mock_genieacs:
+        with patch(
+            "dotmac.platform.orchestration.workflows.provision_subscriber.GenieACSService"
+        ) as mock_genieacs:
             mock_service = mock_genieacs.return_value
             mock_service.configure_device = AsyncMock(
                 return_value={"device_id": "cpe-12345", "status": "configured"}
             )
 
-            result = await configure_cpe_handler(input_data, context, mock_db_session)
+            await configure_cpe_handler(input_data, context, mock_db_session)
 
             # Verify only IPv4 passed
             call_kwargs = mock_service.configure_device.call_args.kwargs

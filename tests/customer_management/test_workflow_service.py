@@ -2,16 +2,18 @@
 Tests for the customer management workflow adapter service.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from unittest.mock import AsyncMock
 
-from dotmac.platform.customer_management.workflow_service import CustomerService as WorkflowCustomerService
 from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.schemas import CustomerCreate
+from dotmac.platform.customer_management.workflow_service import (
+    CustomerService as WorkflowCustomerService,
+)
 from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
 
@@ -65,7 +67,7 @@ async def test_create_from_lead_uses_core_service(monkeypatch):
         last_name="Smith",
         phone="+1234567890",
         company_name="Example Corp",
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
 
     workflow_service.customer_service.create_customer = AsyncMock(return_value=created_customer)

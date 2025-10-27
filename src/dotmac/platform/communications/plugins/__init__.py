@@ -6,7 +6,7 @@ Allows communications service to integrate with multiple delivery backends.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Dict, Protocol
+from typing import TYPE_CHECKING, Protocol
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..email_service import EmailMessage, EmailService
@@ -17,8 +17,8 @@ class EmailTransport(Protocol):
 
     async def send(
         self,
-        service: "EmailService",
-        message: "EmailMessage",
+        service: EmailService,
+        message: EmailMessage,
         message_id: str,
     ) -> None:
         """Perform the actual delivery for an email message."""
@@ -29,11 +29,11 @@ class EmailTransportPlugin(Protocol):
 
     plugin_id: str
 
-    def create_transport(self, service: "EmailService") -> EmailTransport:
+    def create_transport(self, service: EmailService) -> EmailTransport:
         """Create a transport instance bound to a given EmailService."""
 
 
-_registry: Dict[str, EmailTransportPlugin] = {}
+_registry: dict[str, EmailTransportPlugin] = {}
 _builtin_registered = False
 
 

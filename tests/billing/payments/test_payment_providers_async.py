@@ -5,7 +5,7 @@ This module tests that blocking Stripe SDK calls are properly wrapped
 in anyio.to_thread.run_sync to avoid blocking the event loop.
 """
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -35,7 +35,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync to verify it's called
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 # Setup mock to return the intent
                 mock_run_sync.return_value = mock_intent
 
@@ -70,7 +72,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = mock_refund
 
                 # Call the method
@@ -105,7 +109,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = mock_intent
 
                 # Call the method
@@ -139,7 +145,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = mock_pm
 
                 # Call the method
@@ -172,7 +180,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = mock_pm
 
                 # Call the method
@@ -200,7 +210,9 @@ class TestStripeProviderAsyncBehavior:
             provider = StripePaymentProvider(api_key="sk_test_123")
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = None
 
                 # Call the method
@@ -237,7 +249,9 @@ class TestStripeProviderAsyncBehavior:
             )
 
             # Mock anyio.to_thread.run_sync
-            with patch("dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync") as mock_run_sync:
+            with patch(
+                "dotmac.platform.billing.payments.providers.anyio.to_thread.run_sync"
+            ) as mock_run_sync:
                 mock_run_sync.return_value = mock_event
 
                 # Call the method

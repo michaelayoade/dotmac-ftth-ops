@@ -5,7 +5,10 @@ Provides API key usage statistics endpoints for monitoring
 key creation, usage patterns, and security metrics.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -13,7 +16,6 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.auth.core import UserInfo, api_key_service
-from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.core.cache_decorators import CacheTier, cached_result
 
@@ -221,8 +223,7 @@ async def _get_api_key_metrics_cached(
     # Only include keys that belong to the requesting tenant
     if tenant_id:
         tenant_keys_meta = [
-            key_data for key_data in all_keys_meta
-            if key_data.get("tenant_id") == tenant_id
+            key_data for key_data in all_keys_meta if key_data.get("tenant_id") == tenant_id
         ]
     else:
         # No tenant_id = no data (return empty metrics)

@@ -5,7 +5,7 @@ Integration tests for the ticketing router.
 from __future__ import annotations
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import patch
 
 import pytest
@@ -42,7 +42,7 @@ def ticketing_app(async_db_session):
     """
 
     app = FastAPI()
-    app.include_router(ticketing_router, prefix="/api/v1/ticketing")
+    app.include_router(ticketing_router, prefix="/api/v1")
 
     current_user_holder: dict[str, UserInfo | None] = {"value": None}
 
@@ -120,7 +120,7 @@ async def test_customer_creates_ticket_for_tenant(
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         response = await client.post(
-            "/api/v1/ticketing/",
+            "/api/v1/tickets/",
             json={
                 "subject": "Need assistance",
                 "message": "Our onboarding is blocked.",
@@ -186,7 +186,7 @@ async def test_tenant_escalates_ticket_to_partner(
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         response = await client.post(
-            "/api/v1/ticketing/",
+            "/api/v1/tickets/",
             json={
                 "subject": "Partner escalation",
                 "message": "We need partner assistance on deployment.",
@@ -277,7 +277,7 @@ async def test_partner_appends_message_with_status_transition(
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         create_resp = await client.post(
-            "/api/v1/ticketing/",
+            "/api/v1/tickets/",
             json={
                 "subject": "Partner help needed",
                 "message": "Please review our integration plan.",
@@ -300,7 +300,7 @@ async def test_partner_appends_message_with_status_transition(
         )
 
         message_resp = await client.post(
-            f"/api/v1/ticketing/{ticket_id}/messages",
+            f"/api/v1/tickets/{ticket_id}/messages",
             json={
                 "message": "Review complete, proceeding with implementation.",
                 "new_status": "in_progress",
@@ -323,4 +323,4 @@ async def test_partner_appends_message_with_status_transition(
     assert stored_ticket.status == "in_progress"
     assert stored_ticket.partner_id == partner_id
     assert stored_ticket.last_response_at is not None
-    assert stored_ticket.last_response_at <= datetime.now(UTC)
+    assert stored_ticket.last_response_at <= datetime.now(timezone.utc)

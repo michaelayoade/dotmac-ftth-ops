@@ -49,15 +49,21 @@ class TestCoreModuleExports:
 
     def test_all_length(self):
         """Test that __all__ contains exactly the expected number of exports."""
-        # 8 exceptions + 2 models + 38 domain events components = 48 total
-        # Domain events components include:
+        # 9 exceptions + 2 models + 10 infrastructure + 28 domain events components = 49 total
+        # Exceptions: DotMacError, ValidationError, AuthorizationError, ConfigurationError,
+        #             BusinessRuleError, RepositoryError, EntityNotFoundError, NotFoundError,
+        #             DuplicateEntityError
+        # Models: BaseModel, TenantContext
+        # Infrastructure: ensure_pydantic_v2, get_limiter, limiter, DistributedLock,
+        #                 redis_client, get_redis, CacheTier, cached_result, celery_app,
+        #                 idempotent_task
+        # Domain events components:
         # - DomainEvent, DomainEventMetadata, DomainEventDispatcher, DomainEventPublisher
         # - AggregateRoot, Entity, ValueObject
         # - Value objects: Money, EmailAddress, PhoneNumber
         # - 13 predefined domain events (Invoice, Subscription, Customer, Payment)
-        # - 8 factory/helper functions (including reset_domain_event_*)
-        # - 7 caching/Redis/celery components
-        assert len(core.__all__) == 48
+        # - 4 factory/helper functions (get/reset for dispatcher and publisher)
+        assert len(core.__all__) == 49
 
     def test_import_from_core(self):
         """Test that symbols can be imported from core."""

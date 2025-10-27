@@ -4,18 +4,21 @@ Fault Management Celery Tasks
 Background tasks for alarm correlation, SLA monitoring, and maintenance.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
 import structlog
 from celery import shared_task
 from sqlalchemy import and_, func, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.db import get_async_session
 from dotmac.platform import db as db_module
+from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.correlation import CorrelationEngine
 from dotmac.platform.fault_management.models import (
     Alarm,
@@ -25,7 +28,6 @@ from dotmac.platform.fault_management.models import (
     SLAInstance,
     SLAStatus,
 )
-from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 from dotmac.platform.notifications.models import (
     NotificationChannel,
@@ -206,11 +208,13 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
             and_(
                 user_permissions.c.granted == True,  # noqa: E712
                 Permission.is_active == True,  # noqa: E712
-                Permission.name.in_([
-                    "fault:alarm:view",
-                    "fault:alarm:manage",
-                    "fault:*",  # Wildcard for all fault management permissions
-                ]),
+                Permission.name.in_(
+                    [
+                        "fault:alarm:view",
+                        "fault:alarm:manage",
+                        "fault:*",  # Wildcard for all fault management permissions
+                    ]
+                ),
                 or_(
                     user_permissions.c.expires_at.is_(None),
                     user_permissions.c.expires_at > func.now(),
@@ -332,7 +336,6 @@ def correlate_pending_alarms() -> dict[str, Any]:
 
     Scheduled: Every 5 minutes
     """
-    import asyncio
 
     async def _correlate() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -377,7 +380,6 @@ def check_sla_compliance() -> dict[str, Any]:
 
     Scheduled: Every 15 minutes
     """
-    import asyncio
 
     async def _check() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -431,7 +433,6 @@ def check_unacknowledged_alarms() -> dict[str, Any]:
 
     Scheduled: Every 10 minutes
     """
-    import asyncio
 
     async def _check() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -485,7 +486,6 @@ def update_maintenance_windows() -> dict[str, Any]:
 
     Scheduled: Every 5 minutes
     """
-    import asyncio
 
     async def _update() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -550,7 +550,6 @@ def cleanup_old_cleared_alarms(days: int | None = None) -> dict[str, Any]:
     Returns:
         dict with archival statistics
     """
-    import asyncio
 
     from ..settings import settings
 
@@ -687,7 +686,6 @@ def process_alarm_correlation(alarm_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On alarm creation
     """
-    import asyncio
 
     async def _process() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -720,7 +718,6 @@ def calculate_sla_metrics(instance_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On downtime recording
     """
-    import asyncio
 
     async def _calculate() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -759,7 +756,6 @@ def send_alarm_notifications(alarm_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On critical/major alarm creation
     """
-    import asyncio
 
     async def _notify() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:

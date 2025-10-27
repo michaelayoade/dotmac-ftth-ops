@@ -1,6 +1,6 @@
 """Tests for the simplified auth email helpers."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,7 +20,7 @@ class InMemoryRedis:
         self.store = {}
 
     def setex(self, key, ttl, value):  # pragma: no cover - trivial setter
-        expires_at = datetime.now(UTC) + timedelta(seconds=ttl)
+        expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
         self.store[key] = (value, expires_at)
 
     def get(self, key):
@@ -28,7 +28,7 @@ class InMemoryRedis:
         if not record:
             return None
         value, expires_at = record
-        if expires_at < datetime.now(UTC):
+        if expires_at < datetime.now(timezone.utc):
             del self.store[key]
             return None
         return value

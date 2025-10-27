@@ -4,8 +4,10 @@ Tests for Workflow Engine - Unit Tests
 Unit tests for workflow engine helper methods and parameter resolution.
 """
 
+from unittest.mock import MagicMock
+
 import pytest
-from unittest.mock import AsyncMock, MagicMock
+
 from dotmac.platform.workflows.engine import WorkflowEngine, WorkflowEngineError
 
 
@@ -239,9 +241,7 @@ class TestWorkflowEngineTransformations:
         engine = WorkflowEngine(db_session=MagicMock())
         context = {"is_active": True}
 
-        step_def = {
-            "condition": {"operator": "eq", "left": "${is_active}", "right": True}
-        }
+        step_def = {"condition": {"operator": "eq", "left": "${is_active}", "right": True}}
 
         result = engine._execute_condition(step_def, context)
         assert result is True

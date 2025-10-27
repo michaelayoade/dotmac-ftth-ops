@@ -17,7 +17,10 @@ This workflow is used to activate a suspended or pending service.
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -177,9 +180,11 @@ async def activate_billing_service_handler(
         service = db.query(ServiceEntity).filter(ServiceEntity.service_id == service_id).first()
     else:
         # Find service by subscriber_id
-        service = db.query(ServiceEntity).filter(
-            ServiceEntity.subscriber_id == context["subscriber_id"]
-        ).first()
+        service = (
+            db.query(ServiceEntity)
+            .filter(ServiceEntity.subscriber_id == context["subscriber_id"])
+            .first()
+        )
 
     if service:
         service.status = "active"
@@ -239,9 +244,8 @@ async def enable_radius_handler(
     if not tenant_id:
         # Try to get tenant_id from subscriber
         from ...subscribers.models import Subscriber
-        subscriber = db.query(Subscriber).filter(
-            Subscriber.id == context["subscriber_id"]
-        ).first()
+
+        subscriber = db.query(Subscriber).filter(Subscriber.id == context["subscriber_id"]).first()
         if subscriber:
             tenant_id = subscriber.tenant_id
         else:
@@ -445,10 +449,14 @@ def register_handlers(saga: Any) -> None:
     saga.register_step_handler("update_subscriber_status_handler", update_subscriber_status_handler)
 
     # Compensation handlers
-    saga.register_compensation_handler("suspend_billing_service_handler", suspend_billing_service_handler)
+    saga.register_compensation_handler(
+        "suspend_billing_service_handler", suspend_billing_service_handler
+    )
     saga.register_compensation_handler("disable_radius_handler", disable_radius_handler)
     saga.register_compensation_handler("deactivate_onu_handler", deactivate_onu_handler)
     saga.register_compensation_handler("disable_cpe_handler", disable_cpe_handler)
-    saga.register_compensation_handler("revert_subscriber_status_handler", revert_subscriber_status_handler)
+    saga.register_compensation_handler(
+        "revert_subscriber_status_handler", revert_subscriber_status_handler
+    )
 
     logger.info("Registered all activate_service workflow handlers")

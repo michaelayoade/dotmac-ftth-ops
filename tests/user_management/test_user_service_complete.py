@@ -4,7 +4,7 @@ Complete comprehensive tests for User Management Service.
 Focuses on filling coverage gaps and testing edge cases not covered by existing tests.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
@@ -61,8 +61,8 @@ def sample_user():
     user.failed_login_attempts = 0
     user.locked_until = None
     user.metadata_ = {}
-    user.created_at = datetime.now(UTC)
-    user.updated_at = datetime.now(UTC)
+    user.created_at = datetime.now(timezone.utc)
+    user.updated_at = datetime.now(timezone.utc)
     user.tenant_id = "tenant_123"
     return user
 
@@ -520,7 +520,7 @@ class TestAuthenticationAdvancedScenarios:
     async def test_authenticate_account_lock_expires(self, user_service, mock_session, sample_user):
         """Test that expired lock allows authentication."""
         # Set lock that has expired
-        sample_user.locked_until = datetime.now(UTC) - timedelta(hours=1)
+        sample_user.locked_until = datetime.now(timezone.utc) - timedelta(hours=1)
         sample_user.failed_login_attempts = 5
 
         mock_result = MagicMock()
@@ -570,7 +570,7 @@ class TestAuthenticationAdvancedScenarios:
         assert user is None
         assert sample_user.failed_login_attempts == 5
         assert sample_user.locked_until is not None
-        assert sample_user.locked_until > datetime.now(UTC)
+        assert sample_user.locked_until > datetime.now(timezone.utc)
 
 
 # ============================================================================
@@ -703,7 +703,7 @@ class TestAdditionalCoverage:
     ):
         """Test authenticating account that is still locked."""
         # Set lock that is still active
-        sample_user.locked_until = datetime.now(UTC) + timedelta(hours=1)
+        sample_user.locked_until = datetime.now(timezone.utc) + timedelta(hours=1)
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = sample_user

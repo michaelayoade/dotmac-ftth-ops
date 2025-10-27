@@ -4,7 +4,7 @@ Comprehensive tests for webhooks router.
 Covers all webhook subscription and delivery endpoints.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -47,7 +47,7 @@ def mock_subscription_service():
     """Mock WebhookSubscriptionService."""
     service = MagicMock()
 
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
 
     # Create mock objects with attributes (not dicts)
     def make_subscription(**overrides):
@@ -89,7 +89,7 @@ def mock_subscription_service():
             "error_message": None,
             "attempt_number": 1,
             "duration_ms": 150,
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
             "next_retry_at": None,
         }
         defaults.update(overrides)
@@ -126,7 +126,7 @@ def mock_delivery_service():
             "event_type": "invoice.created",
             "status": "success",
             "response_status": 200,
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         }
         defaults.update(overrides)
         for key, value in defaults.items():

@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from dotmac.platform.core.ip_validation import (
     IPNetworkValidator,
-    detect_ip_version,
 )
 
 # ============================================================================
@@ -24,7 +23,9 @@ class IPAddressCreate(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    address: str = Field(..., description="IP address with prefix (e.g., 10.0.0.1/24 or 2001:db8::1/64)")
+    address: str = Field(
+        ..., description="IP address with prefix (e.g., 10.0.0.1/24 or 2001:db8::1/64)"
+    )
     status: str = Field(default="active", description="IP status (active, reserved, dhcp, slaac)")
     tenant: int | None = Field(None, description="Tenant ID")
     vrf: int | None = Field(None, description="VRF ID")
@@ -656,7 +657,9 @@ class DualStackAllocationResponse(BaseModel):
 
     ipv4: IPAddressResponse = Field(..., description="Allocated IPv4 address")
     ipv6: IPAddressResponse = Field(..., description="Allocated IPv6 address")
-    allocated_at: datetime = Field(default_factory=datetime.utcnow, description="Allocation timestamp")
+    allocated_at: datetime = Field(
+        default_factory=datetime.utcnow, description="Allocation timestamp"
+    )
 
 
 class BulkIPAllocationRequest(BaseModel):
@@ -666,7 +669,9 @@ class BulkIPAllocationRequest(BaseModel):
 
     prefix_id: int = Field(..., description="Prefix ID to allocate from")
     count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate (1-100)")
-    description_prefix: str | None = Field(None, max_length=150, description="Description prefix (will be numbered)")
+    description_prefix: str | None = Field(
+        None, max_length=150, description="Description prefix (will be numbered)"
+    )
     tenant: int | None = Field(None, description="Tenant ID")
 
 

@@ -1,7 +1,7 @@
 """Comprehensive tests for webhook delivery service."""
 
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -505,7 +505,7 @@ class TestProcessPendingRetries:
         mock_delivery.id = uuid.uuid4()
         mock_delivery.subscription_id = uuid.uuid4()
         mock_delivery.status = DeliveryStatus.RETRYING
-        mock_delivery.next_retry_at = datetime.now(UTC) - timedelta(minutes=5)
+        mock_delivery.next_retry_at = datetime.now(timezone.utc) - timedelta(minutes=5)
         mock_delivery.event_type = "invoice.created"
         mock_delivery.event_id = "evt_123"
         mock_delivery.event_data = {}

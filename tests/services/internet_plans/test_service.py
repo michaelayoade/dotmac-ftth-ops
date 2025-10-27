@@ -4,30 +4,31 @@ Unit tests for Internet Service Plan Service Layer
 Tests the business logic for managing internet service plans and subscriptions.
 """
 
-import pytest
 from datetime import datetime, time
 from decimal import Decimal
 from uuid import UUID, uuid4
 
+import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.services.internet_plans.models import (
-    InternetServicePlan,
-    PlanSubscription,
-    SpeedUnit,
-    DataUnit,
-    PlanType,
-    PlanStatus,
-    ThrottlePolicy,
     BillingCycle,
+    DataUnit,
+    InternetServicePlan,
+    PlanStatus,
+    PlanSubscription,
+    PlanType,
+    SpeedUnit,
+    ThrottlePolicy,
 )
 from dotmac.platform.services.internet_plans.schemas import (
     InternetServicePlanCreate,
     InternetServicePlanUpdate,
     PlanSubscriptionCreate,
-    UsageUpdateRequest,
     PlanValidationRequest,
+    UsageUpdateRequest,
 )
 from dotmac.platform.services.internet_plans.service import InternetPlanService
 
@@ -44,7 +45,7 @@ def customer_id():
     return uuid4()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def service(async_session: AsyncSession, tenant_id: UUID):
     """Create service instance for testing."""
     return InternetPlanService(session=async_session, tenant_id=tenant_id)
@@ -580,14 +581,12 @@ class TestInternetPlanServiceSubscriptions:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_by_plan(
-        self, service, plan_create_data, customer_id
-    ):
+    async def test_list_subscriptions_by_plan(self, service, plan_create_data, customer_id):
         """Test listing subscriptions by plan."""
         plan = await service.create_plan(plan_create_data)
 
         # Create 2 subscriptions for same plan
-        for i in range(2):
+        for _i in range(2):
             sub_data = PlanSubscriptionCreate(
                 plan_id=plan.id,
                 customer_id=uuid4(),
@@ -599,9 +598,7 @@ class TestInternetPlanServiceSubscriptions:
         assert len(result) == 2
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_by_customer(
-        self, service, plan_create_data, customer_id
-    ):
+    async def test_list_subscriptions_by_customer(self, service, plan_create_data, customer_id):
         """Test listing subscriptions by customer."""
         plan1 = await service.create_plan(plan_create_data)
 
@@ -622,9 +619,7 @@ class TestInternetPlanServiceSubscriptions:
         assert len(result) == 2
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_filter_active(
-        self, service, plan_create_data, async_session
-    ):
+    async def test_list_subscriptions_filter_active(self, service, plan_create_data, async_session):
         """Test filtering subscriptions by active status."""
         plan = await service.create_plan(plan_create_data)
 
@@ -748,9 +743,7 @@ class TestInternetPlanServiceStatistics:
     """Test plan statistics."""
 
     @pytest.mark.asyncio
-    async def test_get_plan_statistics_no_subscriptions(
-        self, service, plan_create_data
-    ):
+    async def test_get_plan_statistics_no_subscriptions(self, service, plan_create_data):
         """Test statistics for plan with no subscriptions."""
         plan = await service.create_plan(plan_create_data)
         result = await service.get_plan_statistics(plan.id)
@@ -760,14 +753,12 @@ class TestInternetPlanServiceStatistics:
         assert result["monthly_recurring_revenue"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_get_plan_statistics_with_subscriptions(
-        self, service, plan_create_data
-    ):
+    async def test_get_plan_statistics_with_subscriptions(self, service, plan_create_data):
         """Test statistics calculation with active subscriptions."""
         plan = await service.create_plan(plan_create_data)
 
         # Create 3 active subscriptions
-        for i in range(3):
+        for _i in range(3):
             sub_data = PlanSubscriptionCreate(
                 plan_id=plan.id,
                 customer_id=uuid4(),

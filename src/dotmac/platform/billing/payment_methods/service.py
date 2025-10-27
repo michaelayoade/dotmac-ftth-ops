@@ -5,7 +5,10 @@ Handles payment method management including adding, verifying,
 and removing payment methods with payment gateway integration.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -74,10 +77,7 @@ class PaymentMethodService:
         payment_methods = result.scalars().all()
 
         # Convert ORM models to response schemas
-        return [
-            self._orm_to_response(pm)
-            for pm in payment_methods
-        ]
+        return [self._orm_to_response(pm) for pm in payment_methods]
 
     async def get_payment_method(
         self, payment_method_id: str, tenant_id: str
@@ -290,9 +290,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         # Convert to UUID
         pm_uuid = UUID(payment_method_id)
@@ -310,11 +308,19 @@ class PaymentMethodService:
 
         # Update only billing details in the details JSON
         updated_details = pm_orm.details.copy() if pm_orm.details else {}
-        updated_details.update({
-            "billing_name": billing_details.get("billing_name", updated_details.get("billing_name")),
-            "billing_email": billing_details.get("billing_email", updated_details.get("billing_email")),
-            "billing_country": billing_details.get("billing_country", updated_details.get("billing_country")),
-        })
+        updated_details.update(
+            {
+                "billing_name": billing_details.get(
+                    "billing_name", updated_details.get("billing_name")
+                ),
+                "billing_email": billing_details.get(
+                    "billing_email", updated_details.get("billing_email")
+                ),
+                "billing_country": billing_details.get(
+                    "billing_country", updated_details.get("billing_country")
+                ),
+            }
+        )
 
         # Update metadata to track change
         metadata = pm_orm.metadata_ or {}
@@ -358,9 +364,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         if payment_method.status != PaymentMethodStatus.ACTIVE:
             raise ValueError("Cannot set inactive payment method as default")
@@ -411,23 +415,23 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         # Check if default and has active subscriptions
         if payment_method.is_default:
             # Check for active subscriptions
-            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
             from dotmac.platform.billing.models import BillingSubscriptionTable
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 
             active_subs_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                    SubscriptionStatus.PAST_DUE,
-                ]),
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                        SubscriptionStatus.PAST_DUE,
+                    ]
+                ),
             )
             result = await self.db.execute(active_subs_stmt)
             active_subscriptions = result.scalars().all()
@@ -483,9 +487,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         if payment_method.method_type != PaymentMethodType.BANK_ACCOUNT:
             raise ValueError("Only bank accounts require verification")
@@ -547,9 +549,7 @@ class PaymentMethodService:
         # Get current payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         pm_uuid = UUID(payment_method_id)
 
@@ -700,10 +700,7 @@ class PaymentMethodService:
             paystack_plugin = None
 
             # Look for active Paystack plugin instance
-            instances = plugin_registry.list_instances(
-                provider_type="payment",
-                is_active=True
-            )
+            instances = plugin_registry.list_instances(provider_type="payment", is_active=True)
 
             for instance in instances:
                 if instance.plugin_name == "paystack" and instance.status == "active":
@@ -723,6 +720,5 @@ class PaymentMethodService:
 
         except ImportError as e:
             raise PaymentMethodError(
-                f"Plugin system not available: {e}. "
-                "Ensure plugin system is properly initialized."
+                f"Plugin system not available: {e}. Ensure plugin system is properly initialized."
             ) from e

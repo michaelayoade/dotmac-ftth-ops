@@ -3,17 +3,14 @@ Unit tests for Activation Orchestrator
 """
 
 import pytest
-from datetime import datetime
-from unittest.mock import Mock
-
 from sqlalchemy.orm import Session
 
 from dotmac.platform.sales.models import (
     ActivationStatus,
     Order,
-    ServiceActivation,
 )
 from dotmac.platform.sales.service import ActivationOrchestrator
+
 from .conftest import create_order, create_service_activation
 
 
@@ -57,9 +54,7 @@ class TestActivationOrchestrator:
         sample_tenant,
     ):
         """Test that services are sequenced correctly"""
-        activations = orchestrator.activate_order_services(
-            sample_order, tenant_id=sample_tenant.id
-        )
+        activations = orchestrator.activate_order_services(sample_order, tenant_id=sample_tenant.id)
 
         # Verify sequence numbers
         for idx, activation in enumerate(activations):
@@ -73,9 +68,7 @@ class TestActivationOrchestrator:
         sample_tenant,
     ):
         """Test that service activations are executed"""
-        activations = orchestrator.activate_order_services(
-            sample_order, tenant_id=sample_tenant.id
-        )
+        activations = orchestrator.activate_order_services(sample_order, tenant_id=sample_tenant.id)
 
         # All should be completed (mocked activation always succeeds)
         for activation in activations:

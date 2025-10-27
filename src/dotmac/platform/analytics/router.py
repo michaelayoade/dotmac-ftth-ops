@@ -4,7 +4,10 @@ Analytics API router.
 Provides REST endpoints for analytics operations.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -61,7 +64,9 @@ def _isoformat(value: Any | None) -> str:
 
 
 # Create router
-analytics_router = APIRouter(prefix="/analytics", )
+analytics_router = APIRouter(
+    prefix="/analytics",
+)
 
 
 def _resolve_tenant_id(request: Request, current_user: CurrentUser) -> str:

@@ -192,9 +192,7 @@ class WorkflowEngine:
 
             # Check for conditional branching
             if step_def.get("condition"):
-                condition_met = self._evaluate_condition(
-                    step_def["condition"], workflow_context
-                )
+                condition_met = self._evaluate_condition(step_def["condition"], workflow_context)
                 if not condition_met:
                     logger.info(f"Step {step_name} condition not met, skipping remaining steps")
                     break
@@ -235,9 +233,7 @@ class WorkflowEngine:
                 step.status = StepStatus.COMPLETED
                 step.completed_at = datetime.utcnow()
                 step.output_data = result
-                step.duration_seconds = int(
-                    (step.completed_at - step.started_at).total_seconds()
-                )
+                step.duration_seconds = int((step.completed_at - step.started_at).total_seconds())
                 await self.db.flush()
 
                 logger.info(
@@ -331,9 +327,7 @@ class WorkflowEngine:
         service = await self._get_service(service_name)
 
         if not hasattr(service, method_name):
-            raise AttributeError(
-                f"Service {service_name} does not have method {method_name}"
-            )
+            raise AttributeError(f"Service {service_name} does not have method {method_name}")
 
         # Call the service method
         method = getattr(service, method_name)
@@ -520,9 +514,7 @@ class WorkflowEngine:
             ValueError: If service not found in registry
         """
         if self.service_registry is None:
-            raise ValueError(
-                f"Service registry not configured. Cannot get service: {service_name}"
-            )
+            raise ValueError(f"Service registry not configured. Cannot get service: {service_name}")
 
         try:
             return self.service_registry.get_service(service_name)

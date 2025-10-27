@@ -10,8 +10,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.dependencies import require_user
 from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import require_user
 from dotmac.platform.db import get_async_session
 from dotmac.platform.network_monitoring.schemas import (
     AcknowledgeAlertRequest,

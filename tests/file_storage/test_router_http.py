@@ -6,7 +6,7 @@ Targets router.py coverage (currently 24.35%).
 """
 
 import io
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -47,7 +47,7 @@ def mock_storage_service():
                 "file_size": 17,
                 "path": "uploads/test",
                 "tenant_id": "tenant-123",
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "uploaded_by": "user-123",
             },
         )
@@ -63,7 +63,7 @@ def mock_storage_service():
                 file_size=100,
                 path="uploads/test",
                 tenant_id="tenant-123",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 metadata={},
             )
         ]
@@ -85,7 +85,7 @@ def mock_storage_service():
             "file_size": 17,
             "path": "uploads/test",
             "tenant_id": "tenant-123",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": {},
         }
     )

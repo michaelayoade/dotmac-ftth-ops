@@ -45,28 +45,6 @@ class VolthaDriver(BaseOLTDriver):
         self.service = VOLTHAService(tenant_id=context.tenant_id if context else None)
         self.olt_device_id = config.olt_device_id or config.extra.get("olt_device_id")
 
-    async def discover_onus(self) -> list[DeviceDiscovery]:
-        devices = await self.service.list_devices()
-        discovery: list[DeviceDiscovery] = []
-        for device in devices.devices:
-            if device.root:
-                continue
-            if self.olt_device_id and device.parent_id != self.olt_device_id:
-                continue
-            discovery.append(
-                DeviceDiscovery(
-                    onu_id=device.id,
-                    serial_number=device.serial_number or "",
-                    state=device.oper_status or device.connect_status or "UNKNOWN",
-                    metadata={
-                        "olt_device_id": device.parent_id,
-                        "pon_port": device.parent_port_no,
-                        "adapter": device.adapter,
-                    },
-                )
-            )
-        return discovery
-
     async def get_capabilities(self) -> DriverCapabilities:
         return DriverCapabilities(
             supports_onu_provisioning=True,
@@ -77,7 +55,9 @@ class VolthaDriver(BaseOLTDriver):
         )
 
     async def discover_onus(self) -> list[DeviceDiscovery]:
-        response = await self.service.discover_onus(olt_device_id=self.olt_device_id, auto_provision=False)
+        response = await self.service.discover_onus(
+            olt_device_id=self.olt_device_id, auto_provision=False
+        )
         devices = []
         for onu in response.discovered:
             metadata = onu.metadata or {}
@@ -169,7 +149,9 @@ class VolthaDriver(BaseOLTDriver):
         for alarm in response.alarms:
             alarms.append(
                 OLTAlarm(
-                    alarm_id=getattr(alarm, "id", alarm.alarm_id if hasattr(alarm, "alarm_id") else ""),
+                    alarm_id=getattr(
+                        alarm, "id", alarm.alarm_id if hasattr(alarm, "alarm_id") else ""
+                    ),
                     severity=alarm.severity or "UNKNOWN",
                     message=alarm.description or alarm.resource,
                     raised_at=getattr(alarm, "raised_ts", 0.0),

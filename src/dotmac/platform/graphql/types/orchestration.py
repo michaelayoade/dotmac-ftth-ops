@@ -208,9 +208,7 @@ class ProvisionSubscriberResult:
         )
 
         workflow_model = (
-            db.query(WorkflowModel)
-            .filter(WorkflowModel.workflow_id == self.workflow_id)
-            .first()
+            db.query(WorkflowModel).filter(WorkflowModel.workflow_id == self.workflow_id).first()
         )
 
         return Workflow.from_model(workflow_model) if workflow_model else None

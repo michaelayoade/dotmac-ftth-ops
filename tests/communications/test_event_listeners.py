@@ -4,7 +4,7 @@ Tests for communications event listeners.
 Tests event handlers that react to domain events and send notifications.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from smtplib import SMTPException
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -71,7 +71,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_123",
                 "customer_id": "cust_456",
@@ -109,7 +109,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_789",
                 "customer_id": "cust_999",
@@ -141,7 +141,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_fail",
                 "customer_id": "cust_fail",
@@ -169,7 +169,7 @@ class TestInvoicePaidEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.paid",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_paid_123",
                 "customer_id": "cust_123",
@@ -204,7 +204,7 @@ class TestInvoicePaidEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.paid",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_error",
                 "customer_id": "cust_error",
@@ -232,7 +232,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_overdue_123",
                 "customer_id": "cust_overdue",
@@ -267,7 +267,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_overdue_456",
                 "customer_id": "cust_456",
@@ -299,7 +299,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_os_error",
                 "customer_id": "cust_os_error",
@@ -331,7 +331,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_failed_123",
                 "invoice_id": "inv_failed_123",
@@ -366,7 +366,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_failed_456",
                 "invoice_id": "inv_failed_456",
@@ -398,7 +398,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_value_error",
                 "invoice_id": "inv_value_error",
@@ -430,7 +430,7 @@ class TestSubscriptionWelcomeEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_123",
                 "customer_id": "cust_123",
@@ -464,7 +464,7 @@ class TestSubscriptionWelcomeEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_smtp_error",
                 "customer_id": "cust_smtp_error",
@@ -491,7 +491,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_cancelled_123",
                 "customer_id": "cust_cancelled",
@@ -525,7 +525,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_cancelled_456",
                 "customer_id": "cust_cancelled_456",
@@ -557,7 +557,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_runtime_error",
                 "customer_id": "cust_runtime_error",
@@ -583,7 +583,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_trial_123",
                 "customer_id": "cust_trial",
@@ -617,7 +617,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_trial_456",
                 "customer_id": "cust_trial_456",
@@ -648,7 +648,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_os_error",
                 "customer_id": "cust_os_error",

@@ -137,9 +137,7 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
 
     async def get_job_templates(self) -> list[dict[str, Any]]:
         """Get all job templates"""
-        response = await self._awx_request(
-            "GET", "job_templates/", timeout=self.TIMEOUTS["list"]
-        )
+        response = await self._awx_request("GET", "job_templates/", timeout=self.TIMEOUTS["list"])
         response_dict = cast(dict[str, Any], response) if isinstance(response, dict) else {}
         return cast(list[dict[str, Any]], response_dict.get("results", []))
 
@@ -211,9 +209,7 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
 
     async def get_inventories(self) -> list[dict[str, Any]]:
         """Get all inventories"""
-        response = await self._awx_request(
-            "GET", "inventories/", timeout=self.TIMEOUTS["list"]
-        )
+        response = await self._awx_request("GET", "inventories/", timeout=self.TIMEOUTS["list"])
         response_dict = cast(dict[str, Any], response) if isinstance(response, dict) else {}
         return cast(list[dict[str, Any]], response_dict.get("results", []))
 

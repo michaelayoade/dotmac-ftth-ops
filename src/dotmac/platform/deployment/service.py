@@ -112,7 +112,9 @@ class DeploymentService:
         Returns:
             Tuple of (instance, execution)
         """
-        logger.info(f"Provisioning deployment for tenant {tenant_id}, template {request.template_id}")
+        logger.info(
+            f"Provisioning deployment for tenant {tenant_id}, template {request.template_id}"
+        )
 
         # Get template
         template = self.registry.get_template(request.template_id)
@@ -125,7 +127,9 @@ class DeploymentService:
         # Check if instance already exists
         existing = self.registry.get_instance_by_tenant(tenant_id, request.environment)
         if existing:
-            raise ValueError(f"Deployment already exists for tenant {tenant_id} in {request.environment}")
+            raise ValueError(
+                f"Deployment already exists for tenant {tenant_id} in {request.environment}"
+            )
 
         # Create instance record
         instance = DeploymentInstance(
@@ -164,7 +168,11 @@ class DeploymentService:
 
             # Create execution context
             context = self._create_execution_context(
-                instance, "provision", execution_id=execution.id, secrets=secrets or {}, triggered_by=triggered_by
+                instance,
+                "provision",
+                execution_id=execution.id,
+                secrets=secrets or {},
+                triggered_by=triggered_by,
             )
 
             # Execute provision
@@ -320,11 +328,15 @@ class DeploymentService:
                     instance.id,
                     **updates,
                 )
-                logger.info(f"Successfully upgraded deployment {instance.id} to {request.to_version}")
+                logger.info(
+                    f"Successfully upgraded deployment {instance.id} to {request.to_version}"
+                )
             else:
                 # Handle rollback if enabled
                 if request.rollback_on_failure:
-                    logger.warning(f"Upgrade failed, initiating rollback for instance {instance.id}")
+                    logger.warning(
+                        f"Upgrade failed, initiating rollback for instance {instance.id}"
+                    )
                     await self.rollback_deployment(instance.id, execution.id, triggered_by)
                 else:
                     self.registry.update_instance_state(
@@ -349,7 +361,9 @@ class DeploymentService:
             if request.rollback_on_failure:
                 await self.rollback_deployment(instance.id, execution.id, triggered_by)
             else:
-                self.registry.update_instance_state(instance.id, DeploymentState.FAILED, reason=str(e))
+                self.registry.update_instance_state(
+                    instance.id, DeploymentState.FAILED, reason=str(e)
+                )
 
             raise
 
@@ -386,12 +400,16 @@ class DeploymentService:
             # Get adapter
             adapter = self._get_adapter(template.backend)
 
-            target_cpu = request.cpu_cores if request.cpu_cores is not None else instance.allocated_cpu
+            target_cpu = (
+                request.cpu_cores if request.cpu_cores is not None else instance.allocated_cpu
+            )
             target_memory = (
                 request.memory_gb if request.memory_gb is not None else instance.allocated_memory_gb
             )
             target_storage = (
-                request.storage_gb if request.storage_gb is not None else instance.allocated_storage_gb
+                request.storage_gb
+                if request.storage_gb is not None
+                else instance.allocated_storage_gb
             )
 
             # Create context
@@ -461,7 +479,9 @@ class DeploymentService:
         execution = self.registry.create_execution(execution)
 
         try:
-            context = self._create_execution_context(instance, "suspend", execution_id=execution.id, triggered_by=triggered_by)
+            context = self._create_execution_context(
+                instance, "suspend", execution_id=execution.id, triggered_by=triggered_by
+            )
             result = await adapter.suspend(context)
 
             self.registry.update_execution(
@@ -472,7 +492,9 @@ class DeploymentService:
             )
 
             if result.is_success():
-                self.registry.update_instance_state(instance.id, DeploymentState.SUSPENDED, reason=reason)
+                self.registry.update_instance_state(
+                    instance.id, DeploymentState.SUSPENDED, reason=reason
+                )
 
             return execution
 
@@ -512,7 +534,9 @@ class DeploymentService:
         execution = self.registry.create_execution(execution)
 
         try:
-            context = self._create_execution_context(instance, "resume", execution_id=execution.id, triggered_by=triggered_by)
+            context = self._create_execution_context(
+                instance, "resume", execution_id=execution.id, triggered_by=triggered_by
+            )
             result = await adapter.resume(context)
 
             self.registry.update_execution(
@@ -523,7 +547,9 @@ class DeploymentService:
             )
 
             if result.is_success():
-                self.registry.update_instance_state(instance.id, DeploymentState.ACTIVE, reason=reason)
+                self.registry.update_instance_state(
+                    instance.id, DeploymentState.ACTIVE, reason=reason
+                )
 
             return execution
 
@@ -535,7 +561,11 @@ class DeploymentService:
             raise
 
     async def destroy_deployment(
-        self, instance_id: int, reason: str, backup_data: bool = True, triggered_by: int | None = None
+        self,
+        instance_id: int,
+        reason: str,
+        backup_data: bool = True,
+        triggered_by: int | None = None,
     ) -> DeploymentExecution:
         """Destroy deployment"""
         logger.info(f"Destroying deployment {instance_id}")
@@ -562,7 +592,9 @@ class DeploymentService:
         self.registry.update_instance_state(instance.id, DeploymentState.DESTROYING)
 
         try:
-            context = self._create_execution_context(instance, "destroy", execution_id=execution.id, triggered_by=triggered_by)
+            context = self._create_execution_context(
+                instance, "destroy", execution_id=execution.id, triggered_by=triggered_by
+            )
             result = await adapter.destroy(context)
 
             self.registry.update_execution(
@@ -573,7 +605,9 @@ class DeploymentService:
             )
 
             if result.is_success():
-                self.registry.update_instance_state(instance.id, DeploymentState.DESTROYED, reason=reason)
+                self.registry.update_instance_state(
+                    instance.id, DeploymentState.DESTROYED, reason=reason
+                )
 
             return execution
 

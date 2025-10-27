@@ -10,7 +10,7 @@ Smoke tests are intentionally simple and fast, focusing on the "happy path"
 to ensure all features are wired up correctly.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -34,7 +34,7 @@ from dotmac.platform.billing.usage.models import (
     UsageType,
 )
 from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.ticketing.models import Ticket, TicketStatus, TicketType
+from dotmac.platform.ticketing.models import Ticket, TicketActorType, TicketPriority, TicketStatus, TicketType
 
 
 @pytest.mark.asyncio
@@ -50,25 +50,26 @@ class TestISPCustomerFieldsSmoke:
         # Create customer with ISP fields
         customer = Customer(
             tenant_id=tenant_id,
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
             email="isp.customer@example.com",
             first_name="John",
             last_name="Doe",
             phone="+1234567890",
             # ISP-specific fields
-            service_location="123 Main St, Springfield, IL 62701",
-            installation_scheduled_date=datetime.now(UTC) + timedelta(days=7),
+            service_address_line1="123 Main St, Springfield, IL 62701",
+            scheduled_installation_date=datetime.now(timezone.utc) + timedelta(days=7),
             installation_status="scheduled",
             installation_technician_id=user_id,
             installation_notes="Customer prefers morning installation",
             connection_type="fiber",
-            bandwidth_plan="100mbps",
+            service_plan_speed="100mbps",
             static_ip_assigned="192.168.1.100",
-            router_mac_address="AA:BB:CC:DD:EE:FF",
-            ont_serial_number="ONT-123456789",
-            signal_strength_dbm=-15.5,
-            last_speed_test_download_mbps=95.2,
-            last_speed_test_upload_mbps=48.7,
-            created_by_user_id=user_id,
+            # Device info stored in assigned_devices JSON field
+            assigned_devices={
+                "router_mac": "AA:BB:CC:DD:EE:FF",
+                "ont_serial": "ONT-123456789",
+            },
+            created_by=str(user_id),
         )
 
         async_session.add(customer)
@@ -77,13 +78,13 @@ class TestISPCustomerFieldsSmoke:
 
         # Verify customer created with all ISP fields
         assert customer.id is not None
-        assert customer.service_location == "123 Main St, Springfield, IL 62701"
+        assert customer.service_address_line1 == "123 Main St, Springfield, IL 62701"
         assert customer.installation_status == "scheduled"
         assert customer.connection_type == "fiber"
-        assert customer.bandwidth_plan == "100mbps"
+        assert customer.service_plan_speed == "100mbps"
         assert customer.static_ip_assigned == "192.168.1.100"
-        assert customer.router_mac_address == "AA:BB:CC:DD:EE:FF"
-        assert customer.signal_strength_dbm == -15.5
+        assert customer.assigned_devices["router_mac"] == "AA:BB:CC:DD:EE:FF"
+        assert customer.assigned_devices["ont_serial"] == "ONT-123456789"
 
     async def test_query_customers_by_service_location(self, async_session: AsyncSession):
         """Test querying customers by service location (index test)."""
@@ -92,13 +93,19 @@ class TestISPCustomerFieldsSmoke:
         # Create customers with different locations
         customer1 = Customer(
             tenant_id=tenant_id,
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
             email="customer1@example.com",
-            service_location="123 Main St, Springfield, IL",
+            first_name="Customer",
+            last_name="One",
+            service_address_line1="123 Main St, Springfield, IL",
         )
         customer2 = Customer(
             tenant_id=tenant_id,
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
             email="customer2@example.com",
-            service_location="456 Oak Ave, Springfield, IL",
+            first_name="Customer",
+            last_name="Two",
+            service_address_line1="456 Oak Ave, Springfield, IL",
         )
 
         async_session.add_all([customer1, customer2])
@@ -108,7 +115,7 @@ class TestISPCustomerFieldsSmoke:
         result = await async_session.execute(
             select(Customer).where(
                 Customer.tenant_id == tenant_id,
-                Customer.service_location.ilike("%Springfield%"),
+                Customer.service_address_line1.ilike("%Springfield%"),
             )
         )
         customers = result.scalars().all()
@@ -122,12 +129,18 @@ class TestISPCustomerFieldsSmoke:
         # Create customers with different installation statuses
         customer_scheduled = Customer(
             tenant_id=tenant_id,
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
             email="scheduled@example.com",
+            first_name="Scheduled",
+            last_name="Customer",
             installation_status="scheduled",
         )
         customer_completed = Customer(
             tenant_id=tenant_id,
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
             email="completed@example.com",
+            first_name="Completed",
+            last_name="Customer",
             installation_status="completed",
         )
 
@@ -161,22 +174,26 @@ class TestEnhancedTicketingSmoke:
         # Create ISP-specific ticket
         ticket = Ticket(
             tenant_id=tenant_id,
+            ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
             customer_id=customer_id,
             subject="Internet Connection Issue",
-            description="Customer reports intermittent connectivity",
             status=TicketStatus.OPEN,
-            priority="high",
+            priority=TicketPriority.HIGH,
+            origin_type=TicketActorType.CUSTOMER,
+            target_type=TicketActorType.TENANT,
             # ISP-specific fields
             ticket_type=TicketType.OUTAGE_REPORT,
             service_address="123 Main St, Springfield, IL",
             affected_services=["internet", "voip"],
             device_serial_numbers=["ONT-123456", "ROUTER-789012"],
             # SLA tracking
-            sla_due_date=datetime.now(UTC) + timedelta(hours=4),
+            sla_due_date=datetime.now(timezone.utc) + timedelta(hours=4),
             sla_breached=False,
             # Escalation
             escalation_level=0,
-            created_by_user_id=user_id,
+            # Store description in context JSON
+            context={"description": "Customer reports intermittent connectivity"},
+            created_by=str(user_id),
         )
 
         async_session.add(ticket)
@@ -199,11 +216,15 @@ class TestEnhancedTicketingSmoke:
         # Create ticket with past SLA due date
         ticket = Ticket(
             tenant_id=tenant_id,
+            ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
             customer_id=uuid4(),
             subject="SLA Test",
             status=TicketStatus.OPEN,
+            priority=TicketPriority.NORMAL,
+            origin_type=TicketActorType.CUSTOMER,
+            target_type=TicketActorType.TENANT,
             ticket_type=TicketType.TECHNICAL_SUPPORT,
-            sla_due_date=datetime.now(UTC) - timedelta(hours=1),  # Past due
+            sla_due_date=datetime.now(timezone.utc) - timedelta(hours=1),  # Past due
             sla_breached=True,
         )
 
@@ -230,12 +251,16 @@ class TestEnhancedTicketingSmoke:
         # Create escalated ticket
         ticket = Ticket(
             tenant_id=tenant_id,
+            ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
             customer_id=uuid4(),
             subject="Escalated Issue",
             status=TicketStatus.IN_PROGRESS,
+            priority=TicketPriority.URGENT,
+            origin_type=TicketActorType.CUSTOMER,
+            target_type=TicketActorType.TENANT,
             ticket_type=TicketType.TECHNICAL_SUPPORT,
             escalation_level=2,  # L2 support
-            escalated_at=datetime.now(UTC),
+            escalated_at=datetime.now(timezone.utc),
             escalated_to_user_id=escalated_to_user,
         )
 
@@ -396,13 +421,13 @@ class TestUsageBillingSmoke:
             unit_price=Decimal("10.00"),  # $0.10 per GB
             total_amount=155,  # $1.55 in cents
             currency="USD",
-            period_start=datetime.now(UTC) - timedelta(days=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=1),
+            period_end=datetime.now(timezone.utc),
             billed_status=BilledStatus.PENDING,
             source_system="radius",
             source_record_id="radius_12345",
             description="Internet data usage",
-            created_by_user_id=user_id,
+            created_by=str(user_id),  # AuditMixin provides created_by (string), not created_by_user_id
         )
 
         async_session.add(usage)
@@ -432,8 +457,8 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("10.00"),
             total_amount=100,
-            period_start=datetime.now(UTC) - timedelta(days=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=1),
+            period_end=datetime.now(timezone.utc),
             billed_status=BilledStatus.PENDING,
             source_system="api",
         )
@@ -446,8 +471,8 @@ class TestUsageBillingSmoke:
             unit="minutes",
             unit_price=Decimal("0.05"),
             total_amount=600,
-            period_start=datetime.now(UTC) - timedelta(days=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=1),
+            period_end=datetime.now(timezone.utc),
             billed_status=BilledStatus.PENDING,
             source_system="api",
         )
@@ -480,8 +505,8 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("20.00"),
             total_amount=100,
-            period_start=datetime.now(UTC) - timedelta(days=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=1),
+            period_end=datetime.now(timezone.utc),
             billed_status=BilledStatus.PENDING,
             source_system="radius",
         )
@@ -494,11 +519,11 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("10.00"),
             total_amount=100,
-            period_start=datetime.now(UTC) - timedelta(days=2),
-            period_end=datetime.now(UTC) - timedelta(days=1),
+            period_start=datetime.now(timezone.utc) - timedelta(days=2),
+            period_end=datetime.now(timezone.utc) - timedelta(days=1),
             billed_status=BilledStatus.BILLED,
             invoice_id="inv_123",
-            billed_at=datetime.now(UTC),
+            billed_at=datetime.now(timezone.utc),
             source_system="radius",
         )
 
@@ -528,8 +553,8 @@ class TestUsageBillingSmoke:
             subscription_id=subscription_id,
             customer_id=uuid4(),
             usage_type=UsageType.DATA_TRANSFER,
-            period_start=datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0),
-            period_end=datetime.now(UTC).replace(hour=23, minute=59, second=59, microsecond=999999),
+            period_start=datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
+            period_end=datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999),
             period_type="daily",
             total_quantity=Decimal("250.5"),  # Total GB for the day
             total_amount=2505,  # $25.05

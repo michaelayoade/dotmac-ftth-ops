@@ -2,7 +2,7 @@
 API tests for tenant provisioning endpoints.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -18,7 +18,7 @@ def _job_factory(
     status: TenantProvisioningStatus = TenantProvisioningStatus.QUEUED,
 ) -> SimpleNamespace:
     """Build a simple object with the attributes expected by response models."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     return SimpleNamespace(
         id=job_id,
         tenant_id=tenant_id,
@@ -113,9 +113,7 @@ async def test_get_provisioning_job(async_client: AsyncClient, mock_provisioning
     job = _job_factory(tenant_id, job_id="job-789")
     mock_provisioning_service.get_job.return_value = job
 
-    response = await async_client.get(
-        f"/api/v1/tenants/{tenant_id}/provisioning/jobs/{job.id}"
-    )
+    response = await async_client.get(f"/api/v1/tenants/{tenant_id}/provisioning/jobs/{job.id}")
     assert response.status_code == 200
     data = response.json()
     assert data["id"] == job.id

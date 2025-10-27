@@ -5,23 +5,24 @@ Tests HTTP endpoints, request validation, response formatting, and error handlin
 for the licensing API.
 """
 
-import pytest
 from datetime import datetime, timedelta
-from fastapi import status
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
-from dotmac.platform.version import get_version
+import pytest
+import pytest_asyncio
+from fastapi import FastAPI, status
+from httpx import ASGITransport, AsyncClient
 
+from dotmac.platform.version import get_version
 
 CURRENT_VERSION = get_version()
 
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
+
     def __init__(self, **kwargs: Any):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -53,7 +54,7 @@ def sample_license_dict() -> dict[str, Any]:
         "grace_period_days": 30,
         "created_at": datetime.utcnow().isoformat(),
         "updated_at": datetime.utcnow().isoformat(),
-        "metadata": {}
+        "metadata": {},
     }
 
 
@@ -82,7 +83,7 @@ def sample_activation_dict() -> dict[str, Any]:
         "deactivation_reason": None,
         "usage_metrics": None,
         "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
     }
 
 
@@ -101,17 +102,13 @@ def sample_template_dict() -> dict[str, Any]:
         "max_activations": 5,
         "features": [],
         "restrictions": [],
-        "pricing": {
-            "base_price": 100.0,
-            "currency": "USD",
-            "billing_cycle": "MONTHLY"
-        },
+        "pricing": {"base_price": 100.0, "currency": "USD", "billing_cycle": "MONTHLY"},
         "auto_renewal_enabled": True,
         "trial_allowed": False,
         "trial_duration_days": 30,
         "active": True,
         "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
     }
 
 
@@ -140,16 +137,16 @@ def sample_order_dict() -> dict[str, Any]:
         "generated_licenses": None,
         "fulfilled_at": None,
         "created_at": datetime.utcnow().isoformat(),
-        "updated_at": datetime.utcnow().isoformat()
+        "updated_at": datetime.utcnow().isoformat(),
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client(monkeypatch):
     """Async HTTP client with licensing router and mocked dependencies."""
-    from dotmac.platform.auth.core import get_current_user, UserInfo
-    from dotmac.platform.db import get_async_session
     import dotmac.platform.auth.rbac_dependencies
+    from dotmac.platform.auth.core import UserInfo, get_current_user
+    from dotmac.platform.db import get_async_session
 
     # Create mock user
     mock_user = UserInfo(
@@ -163,11 +160,12 @@ async def async_client(monkeypatch):
             "licensing.write",
             "licensing.admin",
         ],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
     # Mock RBAC service to prevent database access
     from dotmac.platform.auth.rbac_service import RBACService
+
     mock_rbac_service = MagicMock(spec=RBACService)
     mock_rbac_service.user_has_all_permissions = AsyncMock(return_value=True)
     mock_rbac_service.user_has_any_permission = AsyncMock(return_value=True)
@@ -176,9 +174,7 @@ async def async_client(monkeypatch):
 
     # Monkeypatch RBACService class
     monkeypatch.setattr(
-        dotmac.platform.auth.rbac_dependencies,
-        'RBACService',
-        lambda db: mock_rbac_service
+        dotmac.platform.auth.rbac_dependencies, "RBACService", lambda db: mock_rbac_service
     )
 
     # Mock async session
@@ -235,7 +231,8 @@ async def async_client(monkeypatch):
     mock_licensing_service.report_suspicious_activity = AsyncMock()
 
     # Import router after mocking
-    from dotmac.platform.licensing.router import router as licensing_router, get_licensing_service
+    from dotmac.platform.licensing.router import get_licensing_service
+    from dotmac.platform.licensing.router import router as licensing_router
 
     app = FastAPI()
 
@@ -260,14 +257,16 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_get_licenses_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test getting list of licenses."""
         # Arrange
         license1 = MockObject(**sample_license_dict)
-        license2_data = {**sample_license_dict, "id": str(uuid4()), "license_key": "LIC-2025-002-ABCD"}
+        license2_data = {
+            **sample_license_dict,
+            "id": str(uuid4()),
+            "license_key": "LIC-2025-002-ABCD",
+        }
         license2 = MockObject(**license2_data)
 
         # Mock the session execute to return licenses
@@ -290,9 +289,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_get_license_by_id_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test getting license by ID."""
         # Arrange
@@ -309,10 +306,7 @@ class TestLicenseManagement:
         assert data["data"]["license_key"] == "LIC-2025-001-ABCD"
 
     @pytest.mark.asyncio
-    async def test_get_license_not_found(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_get_license_not_found(self, async_client: AsyncClient):
         """Test getting non-existent license."""
         # Arrange
         async_client.mock_licensing_service.get_license.return_value = None  # type: ignore
@@ -325,9 +319,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_get_license_by_key_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test getting license by key."""
         # Arrange
@@ -335,7 +327,9 @@ class TestLicenseManagement:
         async_client.mock_licensing_service.get_license_by_key.return_value = license_obj  # type: ignore
 
         # Act
-        response = await async_client.get(f"/api/licensing/licenses/by-key/{sample_license_dict['license_key']}")
+        response = await async_client.get(
+            f"/api/licensing/licenses/by-key/{sample_license_dict['license_key']}"
+        )
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -345,9 +339,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_create_license_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test creating new license."""
         # Arrange
@@ -365,8 +357,8 @@ class TestLicenseManagement:
                 "license_type": "PERPETUAL",
                 "license_model": "PER_SEAT",
                 "issued_to": "Test Customer",
-                "max_activations": 10
-            }
+                "max_activations": 10,
+            },
         )
 
         # Assert
@@ -377,9 +369,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_update_license_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test updating license."""
         # Arrange
@@ -389,8 +379,7 @@ class TestLicenseManagement:
 
         # Act
         response = await async_client.put(
-            f"/api/licensing/licenses/{sample_license_dict['id']}",
-            json={"max_activations": 20}
+            f"/api/licensing/licenses/{sample_license_dict['id']}", json={"max_activations": 20}
         )
 
         # Assert
@@ -401,20 +390,21 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_renew_license_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test renewing license."""
         # Arrange
-        renewed_dict = {**sample_license_dict, "expiry_date": (datetime.utcnow() + timedelta(days=730)).isoformat()}
+        renewed_dict = {
+            **sample_license_dict,
+            "expiry_date": (datetime.utcnow() + timedelta(days=730)).isoformat(),
+        }
         license_obj = MockObject(**renewed_dict)
         async_client.mock_licensing_service.renew_license.return_value = license_obj  # type: ignore
 
         # Act
         response = await async_client.post(
             f"/api/licensing/licenses/{sample_license_dict['id']}/renew",
-            json={"duration_months": 12}
+            json={"duration_months": 12},
         )
 
         # Assert
@@ -424,9 +414,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_suspend_license_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test suspending license."""
         # Arrange
@@ -437,7 +425,7 @@ class TestLicenseManagement:
         # Act
         response = await async_client.post(
             f"/api/licensing/licenses/{sample_license_dict['id']}/suspend",
-            json={"reason": "Temporary suspension"}
+            json={"reason": "Temporary suspension"},
         )
 
         # Assert
@@ -448,9 +436,7 @@ class TestLicenseManagement:
 
     @pytest.mark.asyncio
     async def test_revoke_license_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test revoking license."""
         # Arrange
@@ -461,7 +447,7 @@ class TestLicenseManagement:
         # Act
         response = await async_client.post(
             f"/api/licensing/licenses/{sample_license_dict['id']}/revoke",
-            json={"reason": "License violation"}
+            json={"reason": "License violation"},
         )
 
         # Assert
@@ -476,9 +462,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_create_activation_success(
-        self,
-        async_client: AsyncClient,
-        sample_activation_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_activation_dict: dict[str, Any]
     ):
         """Test creating new activation."""
         # Arrange
@@ -492,8 +476,8 @@ class TestActivationManagement:
                 "license_key": "LIC-2025-001-ABCD",
                 "device_fingerprint": "fp-abc123",
                 "application_version": CURRENT_VERSION,
-                "activation_type": "ONLINE"
-            }
+                "activation_type": "ONLINE",
+            },
         )
 
         # Assert
@@ -503,9 +487,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_get_activations_success(
-        self,
-        async_client: AsyncClient,
-        sample_activation_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_activation_dict: dict[str, Any]
     ):
         """Test getting list of activations."""
         # Arrange
@@ -530,9 +512,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_get_activation_by_id_success(
-        self,
-        async_client: AsyncClient,
-        sample_activation_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_activation_dict: dict[str, Any]
     ):
         """Test getting activation by ID."""
         # Arrange
@@ -543,7 +523,9 @@ class TestActivationManagement:
         async_client.mock_licensing_service.session.execute = AsyncMock(return_value=mock_result)  # type: ignore
 
         # Act
-        response = await async_client.get(f"/api/licensing/activations/{sample_activation_dict['id']}")
+        response = await async_client.get(
+            f"/api/licensing/activations/{sample_activation_dict['id']}"
+        )
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -555,21 +537,22 @@ class TestActivationManagement:
         self,
         async_client: AsyncClient,
         sample_activation_dict: dict[str, Any],
-        sample_license_dict: dict[str, Any]
+        sample_license_dict: dict[str, Any],
     ):
         """Test validating activation."""
         # Arrange
         activation_obj = MockObject(**sample_activation_dict)
         license_obj = MockObject(**sample_license_dict)
         # Service returns tuple: (valid, activation, license)
-        async_client.mock_licensing_service.validate_activation.return_value = (True, activation_obj, license_obj)  # type: ignore
+        async_client.mock_licensing_service.validate_activation.return_value = (
+            True,
+            activation_obj,
+            license_obj,
+        )  # type: ignore
 
         # Act
         response = await async_client.post(
-            "/api/licensing/activations/validate",
-            json={
-                "activation_token": "ACT-2025-001-TOKEN"
-            }
+            "/api/licensing/activations/validate", json={"activation_token": "ACT-2025-001-TOKEN"}
         )
 
         # Assert
@@ -580,9 +563,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_deactivate_success(
-        self,
-        async_client: AsyncClient,
-        sample_activation_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_activation_dict: dict[str, Any]
     ):
         """Test deactivating activation."""
         # Arrange
@@ -593,7 +574,7 @@ class TestActivationManagement:
         # Act
         response = await async_client.post(
             f"/api/licensing/activations/{sample_activation_dict['id']}/deactivate",
-            json={"reason": "Testing deactivation"}
+            json={"reason": "Testing deactivation"},
         )
 
         # Assert
@@ -602,10 +583,7 @@ class TestActivationManagement:
         assert "data" in data
 
     @pytest.mark.asyncio
-    async def test_heartbeat_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_heartbeat_success(self, async_client: AsyncClient):
         """Test activation heartbeat."""
         # Arrange
         heartbeat_result = {"status": "ok", "next_check": "3600"}
@@ -613,10 +591,7 @@ class TestActivationManagement:
 
         # Act
         response = await async_client.post(
-            "/api/licensing/activations/heartbeat",
-            json={
-                "activation_token": "ACT-2025-001-TOKEN"
-            }
+            "/api/licensing/activations/heartbeat", json={"activation_token": "ACT-2025-001-TOKEN"}
         )
 
         # Assert
@@ -626,9 +601,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_offline_activation_request_success(
-        self,
-        async_client: AsyncClient,
-        sample_license_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_license_dict: dict[str, Any]
     ):
         """Test offline activation request."""
         # Arrange
@@ -637,17 +610,16 @@ class TestActivationManagement:
 
         offline_response = {
             "request_code": "REQUEST-123",
-            "instructions": "Contact support with this request code"
+            "instructions": "Contact support with this request code",
         }
-        async_client.mock_licensing_service.generate_offline_activation_request.return_value = offline_response  # type: ignore
+        async_client.mock_licensing_service.generate_offline_activation_request.return_value = (
+            offline_response  # type: ignore
+        )
 
         # Act
         response = await async_client.post(
             "/api/licensing/activations/offline-request",
-            json={
-                "license_key": "LIC-2025-001-ABCD",
-                "device_fingerprint": "fp-abc123"
-            }
+            json={"license_key": "LIC-2025-001-ABCD", "device_fingerprint": "fp-abc123"},
         )
 
         # Assert
@@ -657,9 +629,7 @@ class TestActivationManagement:
 
     @pytest.mark.asyncio
     async def test_offline_activation_process_success(
-        self,
-        async_client: AsyncClient,
-        sample_activation_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_activation_dict: dict[str, Any]
     ):
         """Test processing offline activation."""
         # Arrange
@@ -669,10 +639,7 @@ class TestActivationManagement:
         # Act
         response = await async_client.post(
             "/api/licensing/activations/offline-activate",
-            json={
-                "request_code": "REQUEST-123",
-                "response_code": "RESPONSE-456"
-            }
+            json={"request_code": "REQUEST-123", "response_code": "RESPONSE-456"},
         )
 
         # Assert
@@ -686,9 +653,7 @@ class TestTemplateManagement:
 
     @pytest.mark.asyncio
     async def test_get_templates_success(
-        self,
-        async_client: AsyncClient,
-        sample_template_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_template_dict: dict[str, Any]
     ):
         """Test getting list of templates."""
         # Arrange
@@ -713,9 +678,7 @@ class TestTemplateManagement:
 
     @pytest.mark.asyncio
     async def test_get_template_by_id_success(
-        self,
-        async_client: AsyncClient,
-        sample_template_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_template_dict: dict[str, Any]
     ):
         """Test getting template by ID."""
         # Arrange
@@ -736,13 +699,11 @@ class TestTemplateManagement:
 
     @pytest.mark.asyncio
     async def test_create_template_success(
-        self,
-        async_client: AsyncClient,
-        sample_template_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_template_dict: dict[str, Any]
     ):
         """Test creating new template."""
         # Arrange
-        template_obj = MockObject(**sample_template_dict)
+        MockObject(**sample_template_dict)
 
         # Act
         response = await async_client.post(
@@ -757,12 +718,8 @@ class TestTemplateManagement:
                 "max_activations": 5,
                 "features": [],
                 "restrictions": [],
-                "pricing": {
-                    "base_price": 100.0,
-                    "currency": "USD",
-                    "billing_cycle": "MONTHLY"
-                }
-            }
+                "pricing": {"base_price": 100.0, "currency": "USD", "billing_cycle": "MONTHLY"},
+            },
         )
 
         # Assert
@@ -772,9 +729,7 @@ class TestTemplateManagement:
 
     @pytest.mark.asyncio
     async def test_update_template_success(
-        self,
-        async_client: AsyncClient,
-        sample_template_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_template_dict: dict[str, Any]
     ):
         """Test updating template."""
         # Arrange
@@ -786,8 +741,7 @@ class TestTemplateManagement:
 
         # Act
         response = await async_client.put(
-            f"/api/licensing/templates/{sample_template_dict['id']}",
-            json={"default_seats": 10}
+            f"/api/licensing/templates/{sample_template_dict['id']}", json={"default_seats": 10}
         )
 
         # Assert
@@ -801,9 +755,7 @@ class TestOrderManagement:
 
     @pytest.mark.asyncio
     async def test_get_orders_success(
-        self,
-        async_client: AsyncClient,
-        sample_order_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_order_dict: dict[str, Any]
     ):
         """Test getting list of orders."""
         # Arrange
@@ -828,9 +780,7 @@ class TestOrderManagement:
 
     @pytest.mark.asyncio
     async def test_get_order_by_id_success(
-        self,
-        async_client: AsyncClient,
-        sample_order_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_order_dict: dict[str, Any]
     ):
         """Test getting order by ID."""
         # Arrange
@@ -853,11 +803,11 @@ class TestOrderManagement:
         self,
         async_client: AsyncClient,
         sample_order_dict: dict[str, Any],
-        sample_template_dict: dict[str, Any]
+        sample_template_dict: dict[str, Any],
     ):
         """Test creating new order."""
         # Arrange
-        order_obj = MockObject(**sample_order_dict)
+        MockObject(**sample_order_dict)
         template_obj = MockObject(**sample_template_dict)
 
         # Mock session.execute to return template when queried
@@ -869,10 +819,7 @@ class TestOrderManagement:
         # Act
         response = await async_client.post(
             "/api/licensing/orders",
-            json={
-                "template_id": sample_order_dict["template_id"],
-                "quantity": 10
-            }
+            json={"template_id": sample_order_dict["template_id"], "quantity": 10},
         )
 
         # Assert
@@ -882,9 +829,7 @@ class TestOrderManagement:
 
     @pytest.mark.asyncio
     async def test_approve_order_success(
-        self,
-        async_client: AsyncClient,
-        sample_order_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_order_dict: dict[str, Any]
     ):
         """Test approving order."""
         # Arrange
@@ -895,7 +840,7 @@ class TestOrderManagement:
         # Act
         response = await async_client.post(
             f"/api/licensing/orders/{sample_order_dict['id']}/approve",
-            json={"approved_by": "admin-user"}
+            json={"approved_by": "admin-user"},
         )
 
         # Assert
@@ -905,9 +850,7 @@ class TestOrderManagement:
 
     @pytest.mark.asyncio
     async def test_fulfill_order_success(
-        self,
-        async_client: AsyncClient,
-        sample_order_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_order_dict: dict[str, Any]
     ):
         """Test fulfilling order."""
         # Arrange
@@ -916,7 +859,9 @@ class TestOrderManagement:
         async_client.mock_licensing_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
-        response = await async_client.post(f"/api/licensing/orders/{sample_order_dict['id']}/fulfill")
+        response = await async_client.post(
+            f"/api/licensing/orders/{sample_order_dict['id']}/fulfill"
+        )
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -925,9 +870,7 @@ class TestOrderManagement:
 
     @pytest.mark.asyncio
     async def test_cancel_order_success(
-        self,
-        async_client: AsyncClient,
-        sample_order_dict: dict[str, Any]
+        self, async_client: AsyncClient, sample_order_dict: dict[str, Any]
     ):
         """Test cancelling order."""
         # Arrange
@@ -938,7 +881,7 @@ class TestOrderManagement:
         # Act
         response = await async_client.post(
             f"/api/licensing/orders/{sample_order_dict['id']}/cancel",
-            json={"reason": "Customer request"}
+            json={"reason": "Customer request"},
         )
 
         # Assert
@@ -951,10 +894,7 @@ class TestSecurityValidation:
     """Test security and validation endpoints."""
 
     @pytest.mark.asyncio
-    async def test_validate_license_key_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_validate_license_key_success(self, async_client: AsyncClient):
         """Test license key validation."""
         # Arrange
         validation_result = {"valid": True, "license_info": {"status": "ACTIVE"}}
@@ -962,8 +902,7 @@ class TestSecurityValidation:
 
         # Act
         response = await async_client.post(
-            "/api/licensing/validate",
-            json={"license_key": "LIC-2025-001-ABCD"}
+            "/api/licensing/validate", json={"license_key": "LIC-2025-001-ABCD"}
         )
 
         # Assert
@@ -972,10 +911,7 @@ class TestSecurityValidation:
         assert "data" in data
 
     @pytest.mark.asyncio
-    async def test_integrity_check_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_integrity_check_success(self, async_client: AsyncClient):
         """Test integrity check."""
         # Arrange
         check_result = {"valid": True, "checksum": "abc123"}
@@ -984,10 +920,7 @@ class TestSecurityValidation:
         # Act
         response = await async_client.post(
             "/api/licensing/integrity-check",
-            json={
-                "license_key": "LIC-2025-001-ABCD",
-                "checksum": "abc123"
-            }
+            json={"license_key": "LIC-2025-001-ABCD", "checksum": "abc123"},
         )
 
         # Assert
@@ -996,10 +929,7 @@ class TestSecurityValidation:
         assert "data" in data
 
     @pytest.mark.asyncio
-    async def test_emergency_code_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_emergency_code_success(self, async_client: AsyncClient):
         """Test emergency code generation."""
         # Arrange
         emergency_result = {"code": "EMERGENCY-123", "valid_until": datetime.utcnow().isoformat()}
@@ -1008,10 +938,7 @@ class TestSecurityValidation:
         # Act
         response = await async_client.post(
             "/api/licensing/emergency-code",
-            json={
-                "license_key": "LIC-2025-001-ABCD",
-                "reason": "System failure"
-            }
+            json={"license_key": "LIC-2025-001-ABCD", "reason": "System failure"},
         )
 
         # Assert
@@ -1020,10 +947,7 @@ class TestSecurityValidation:
         assert "data" in data
 
     @pytest.mark.asyncio
-    async def test_blacklist_device_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_blacklist_device_success(self, async_client: AsyncClient):
         """Test device blacklisting."""
         # Arrange
         blacklist_result = {"success": True}
@@ -1032,10 +956,7 @@ class TestSecurityValidation:
         # Act
         response = await async_client.post(
             "/api/licensing/security/blacklist-device",
-            json={
-                "device_fingerprint": "fp-device-123",
-                "reason": "Suspected fraud"
-            }
+            json={"device_fingerprint": "fp-device-123", "reason": "Suspected fraud"},
         )
 
         # Assert
@@ -1044,10 +965,7 @@ class TestSecurityValidation:
         assert "data" in data
 
     @pytest.mark.asyncio
-    async def test_report_suspicious_activity_success(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_report_suspicious_activity_success(self, async_client: AsyncClient):
         """Test reporting suspicious activity."""
         # Arrange
         # Note: endpoint doesn't use service method, it handles directly
@@ -1059,8 +977,8 @@ class TestSecurityValidation:
             json={
                 "license_key": "LIC-2025-001-ABCD",
                 "activity_type": "MULTIPLE_ACTIVATIONS",
-                "description": "Exceeded max activations"
-            }
+                "description": "Exceeded max activations",
+            },
         )
 
         # Assert

@@ -4,7 +4,10 @@ Monitoring and Metrics Router.
 Provides endpoints for system observability, error monitoring, and performance metrics.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import structlog
 from fastapi import APIRouter, Depends, Query

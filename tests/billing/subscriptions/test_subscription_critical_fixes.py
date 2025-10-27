@@ -8,9 +8,8 @@ This module tests the fixes for:
 4. change_tenant_subscription_plan calling non-existent method
 """
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
+from datetime import timezone, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -55,7 +54,7 @@ class TestCancelAtPeriodEnd:
         mock_sub.canceled_at = None
         mock_sub.plan_id = "plan_123"
         mock_sub.customer_id = "cust_1"
-        mock_sub.current_period_end = datetime.now(UTC) + timedelta(days=30)
+        mock_sub.current_period_end = datetime.now(timezone.utc) + timedelta(days=30)
 
         # Mock the query result
         mock_result = MagicMock()
@@ -77,7 +76,7 @@ class TestCancelAtPeriodEnd:
         service._create_event = AsyncMock()
 
         # Cancel subscription at period end (not immediate)
-        result = await service.cancel_subscription(
+        await service.cancel_subscription(
             subscription_id="sub_123",
             tenant_id="tenant_1",
             at_period_end=True,  # Cancel at period end (default)
@@ -223,7 +222,7 @@ class TestChangePlanEffectiveDate:
         service._create_event = AsyncMock()
 
         # Change plan with future effective_date
-        future_date = datetime.now(UTC) + timedelta(days=30)
+        future_date = datetime.now(timezone.utc) + timedelta(days=30)
         change_request = SubscriptionPlanChangeRequest(
             new_plan_id="plan_new",
             proration_behavior=ProrationBehavior.NONE,

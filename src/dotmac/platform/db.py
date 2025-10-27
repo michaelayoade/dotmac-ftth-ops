@@ -9,7 +9,8 @@ import os
 from collections.abc import AsyncIterator, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from datetime import UTC, datetime
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Callable
 from unittest.mock import AsyncMock
 from urllib.parse import quote_plus
 from uuid import uuid4
@@ -18,11 +19,7 @@ import structlog
 from sqlalchemy import Boolean, DateTime, String, create_engine
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine import make_url
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 from sqlalchemy.pool import StaticPool
 
@@ -257,24 +254,102 @@ def get_async_engine() -> Any:
 
 
 # Session factories
-SyncSessionLocal = sessionmaker(
+
+
+class _LazySessionmaker(sessionmaker[Any]):
+    """Sessionmaker that lazily binds to the engine on first use."""
+
+    def __init__(self, engine_getter: Callable[[], Any], *args: Any, **kwargs: Any) -> None:
+        self._engine_getter = engine_getter
+        super().__init__(*args, **kwargs)
+
+    def __call__(self, *args: Any, **kwargs: Any) -> Any:  # noqa: D401 - inherits docstring
+        engine = self._engine_getter()
+        if self.kw.get("bind") is not engine:
+            self.configure(bind=engine)
+        return super().__call__(*args, **kwargs)
+
+
+SyncSessionLocal: sessionmaker[Any] = _LazySessionmaker(
+    get_sync_engine,
     autocommit=False,
     autoflush=False,
-    bind=get_sync_engine(),
     class_=Session,
 )
 
-AsyncSessionLocal = async_sessionmaker(
+AsyncSessionLocal: sessionmaker[Any] = _LazySessionmaker(
+    get_async_engine,
     autocommit=False,
     autoflush=False,
-    bind=get_async_engine(),
     class_=AsyncSession,
     expire_on_commit=False,
 )
 
 # Global variable to hold the session maker (can be overridden for testing)
-_async_session_maker = AsyncSessionLocal
-async_session_maker = _async_session_maker
+_async_session_maker: sessionmaker[Any] = AsyncSessionLocal
+async_session_maker: sessionmaker[Any] = _async_session_maker
+
+
+@dataclass(frozen=True)
+class DatabaseState:
+    """Serializable snapshot of database wiring for temporary overrides."""
+
+    sync_engine: Any
+    async_engine: Any
+    sync_session_factory: sessionmaker[Any]
+    async_session_factory: sessionmaker[Any]
+    async_session_maker: sessionmaker[Any]
+
+
+def snapshot_database_state() -> DatabaseState:
+    """Capture the current database engines and session factories."""
+
+    return DatabaseState(
+        sync_engine=_sync_engine,
+        async_engine=_async_engine,
+        sync_session_factory=SyncSessionLocal,
+        async_session_factory=AsyncSessionLocal,
+        async_session_maker=_async_session_maker,
+    )
+
+
+def restore_database_state(state: DatabaseState) -> None:
+    """Restore database wiring to a previously captured snapshot."""
+
+    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+
+    _sync_engine = state.sync_engine
+    _async_engine = state.async_engine
+    SyncSessionLocal = state.sync_session_factory
+    AsyncSessionLocal = state.async_session_factory
+    _async_session_maker = state.async_session_maker
+    async_session_maker = _async_session_maker
+
+
+def configure_database_for_testing(
+    *,
+    sync_engine: Any | None = None,
+    async_engine: Any | None = None,
+    sync_session_factory: sessionmaker[Any] | None = None,
+    async_session_factory: sessionmaker[Any] | None = None,
+) -> None:
+    """Override engines or session factories for test scenarios."""
+
+    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+
+    if sync_engine is not None:
+        _sync_engine = sync_engine
+
+    if async_engine is not None:
+        _async_engine = async_engine
+
+    if sync_session_factory is not None:
+        SyncSessionLocal = sync_session_factory
+
+    if async_session_factory is not None:
+        AsyncSessionLocal = async_session_factory
+        _async_session_maker = async_session_factory
+        async_session_maker = _async_session_maker
 
 
 # ==========================================
@@ -525,6 +600,10 @@ __all__ = [
     "SyncSessionLocal",
     "AsyncSessionLocal",
     "async_session_maker",
+    "DatabaseState",
+    "snapshot_database_state",
+    "restore_database_state",
+    "configure_database_for_testing",
     # Database operations
     "create_all_tables",
     "create_all_tables_async",

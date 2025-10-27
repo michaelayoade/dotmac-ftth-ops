@@ -4,7 +4,10 @@ CRM (Customer Relationship Management) Models.
 Manages leads, quotes, and site surveys for the sales pipeline.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from enum import Enum
 from typing import Any

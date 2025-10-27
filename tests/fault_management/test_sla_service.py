@@ -2,7 +2,7 @@
 Tests for SLA Monitoring Service
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -109,7 +109,7 @@ class TestSLAInstanceManagement:
         customer_id = uuid4()
         service_id = uuid4()
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         instance_create = SLAInstanceCreate(
             sla_definition_id=sample_sla_definition.id,
             customer_id=customer_id,
@@ -249,7 +249,7 @@ class TestDowntimeTracking:
         """Test that downtime recording updates SLAInstance"""
         service = SLAMonitoringService(session, test_tenant)
 
-        datetime.now(UTC)
+        datetime.now(timezone.utc)
         await service.record_downtime(
             sample_sla_instance.id,
             downtime_minutes=45,
@@ -295,7 +295,7 @@ class TestAvailabilityCalculation:
         service = SLAMonitoringService(session, test_tenant)
 
         # Create instance that started 30 days ago
-        start_date = datetime.now(UTC) - timedelta(days=30)
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
         instance = SLAInstance(
             tenant_id=test_tenant,
             sla_definition_id=sample_sla_definition.id,
@@ -337,7 +337,7 @@ class TestAvailabilityCalculation:
         service = SLAMonitoringService(session, test_tenant)
 
         # Create instance that started 7 days ago
-        start_date = datetime.now(UTC) - timedelta(days=7)
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
         instance = SLAInstance(
             tenant_id=test_tenant,
             sla_definition_id=sample_sla_definition.id,
@@ -377,7 +377,7 @@ class TestBreachDetection:
         service = SLAMonitoringService(session, test_tenant)
 
         # Create instance with 99.9% target but only 99.0% availability
-        start_date = datetime.now(UTC) - timedelta(days=30)
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
         instance = SLAInstance(
             tenant_id=test_tenant,
             sla_definition_id=sample_sla_definition.id,
@@ -447,7 +447,7 @@ class TestBreachDetection:
         service = SLAMonitoringService(session, test_tenant)
 
         # Create instance with low availability
-        start_date = datetime.now(UTC) - timedelta(days=7)
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
         instance = SLAInstance(
             tenant_id=test_tenant,
             sla_definition_id=sample_sla_definition.id,
@@ -505,9 +505,9 @@ class TestAlarmImpact:
             resource_id=str(sample_sla_instance.service_id),
             customer_id=sample_sla_instance.customer_id,
             subscriber_count=1,
-            first_occurrence=datetime.now(UTC) - timedelta(minutes=30),
-            last_occurrence=datetime.now(UTC) - timedelta(minutes=30),
-            cleared_at=datetime.now(UTC),  # Cleared now (30 min downtime)
+            first_occurrence=datetime.now(timezone.utc) - timedelta(minutes=30),
+            last_occurrence=datetime.now(timezone.utc) - timedelta(minutes=30),
+            cleared_at=datetime.now(timezone.utc),  # Cleared now (30 min downtime)
             occurrence_count=1,
         )
         session.add(alarm)
@@ -543,9 +543,9 @@ class TestAlarmImpact:
             resource_id="other-service",
             customer_id=uuid4(),  # Different customer
             subscriber_count=1,
-            first_occurrence=datetime.now(UTC) - timedelta(hours=1),
-            last_occurrence=datetime.now(UTC) - timedelta(hours=1),
-            cleared_at=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc) - timedelta(hours=1),
+            last_occurrence=datetime.now(timezone.utc) - timedelta(hours=1),
+            cleared_at=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -616,7 +616,7 @@ class TestComplianceReporting:
             service_name="Test Service",
             status=SLAStatus.BREACHED,
             enabled=True,
-            start_date=datetime.now(UTC) - timedelta(days=30),
+            start_date=datetime.now(timezone.utc) - timedelta(days=30),
             current_availability=98.0,
             total_downtime=864,
             unplanned_downtime=864,
@@ -631,7 +631,7 @@ class TestComplianceReporting:
             tenant_id=test_tenant,
             sla_instance_id=instance.id,
             breach_type="availability",
-            detected_at=datetime.now(UTC),
+            detected_at=datetime.now(timezone.utc),
             target_value=99.9,
             actual_value=98.0,
             severity="high",

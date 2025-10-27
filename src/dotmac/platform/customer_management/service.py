@@ -10,17 +10,19 @@ import itertools
 import operator
 import secrets
 from collections.abc import Callable, Iterable, Iterator
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any, TypeVar
 from uuid import UUID
 
-import structlog
 import sqlalchemy as sa
-from sqlalchemy import JSON, Select, and_, func, or_, select, update
+import structlog
+from sqlalchemy import Select, and_, func, or_, select, update
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from dotmac.platform.customer_management.models import (
     ActivityType,
@@ -474,9 +476,7 @@ class CustomerService:
                 from sqlalchemy.dialects.postgresql import JSONB
 
                 tag_conditions = [
-                    func.cast(Customer.tags, JSONB).op('@>')(
-                        func.cast([tag], JSONB)
-                    )
+                    func.cast(Customer.tags, JSONB).op("@>")(func.cast([tag], JSONB))
                     for tag in params.tags
                 ]
                 filter_conditions.append(or_(*tag_conditions))
@@ -487,9 +487,7 @@ class CustomerService:
                 for tag in params.tags:
                     # Cast column to text and check if tag appears in JSON array
                     # Tags are stored as ["tag1", "tag2"], so we look for "tag"
-                    tag_conditions.append(
-                        func.cast(Customer.tags, sa.String).like(f'%"{tag}"%')
-                    )
+                    tag_conditions.append(func.cast(Customer.tags, sa.String).like(f'%"{tag}"%'))
                 filter_conditions.append(or_(*tag_conditions))
 
         # Date range filters
@@ -516,19 +514,25 @@ class CustomerService:
         if params.service_city:
             filter_conditions.append(Customer.service_city == params.service_city)
         if params.service_state_province:
-            filter_conditions.append(Customer.service_state_province == params.service_state_province)
+            filter_conditions.append(
+                Customer.service_state_province == params.service_state_province
+            )
         if params.service_country:
             filter_conditions.append(Customer.service_country == params.service_country)
 
         # Network parameter filters
         if params.static_ip_assigned:
             # Support both exact match and partial IP search (e.g., "192.168.1" finds all in subnet)
-            filter_conditions.append(Customer.static_ip_assigned.like(f"{params.static_ip_assigned}%"))
+            filter_conditions.append(
+                Customer.static_ip_assigned.like(f"{params.static_ip_assigned}%")
+            )
         if params.ipv6_prefix:
             # Support prefix search (e.g., "2001:db8" finds all matching prefixes)
             filter_conditions.append(Customer.ipv6_prefix.like(f"{params.ipv6_prefix}%"))
         if params.current_bandwidth_profile:
-            filter_conditions.append(Customer.current_bandwidth_profile == params.current_bandwidth_profile)
+            filter_conditions.append(
+                Customer.current_bandwidth_profile == params.current_bandwidth_profile
+            )
         if params.last_mile_technology:
             filter_conditions.append(Customer.last_mile_technology == params.last_mile_technology)
         if params.device_serial:
@@ -541,22 +545,26 @@ class CustomerService:
                 from sqlalchemy.dialects.postgresql import JSONB
 
                 filter_conditions.append(
-                    func.cast(Customer.assigned_devices, JSONB).op('@>')(
+                    func.cast(Customer.assigned_devices, JSONB).op("@>")(
                         func.cast({"onu_serial": params.device_serial}, JSONB)
                     )
-                    | func.cast(Customer.assigned_devices, JSONB).op('@>')(
+                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
                         func.cast({"router_id": params.device_serial}, JSONB)
                     )
-                    | func.cast(Customer.assigned_devices, JSONB).op('@>')(
+                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
                         func.cast({"cpe_mac": params.device_serial}, JSONB)
                     )
                     # Also do a text search for any serial number in the JSON
-                    | func.cast(Customer.assigned_devices, sa.Text).like(f"%{params.device_serial}%")
+                    | func.cast(Customer.assigned_devices, sa.Text).like(
+                        f"%{params.device_serial}%"
+                    )
                 )
             else:
                 # For SQLite, use LIKE on the JSON text representation
                 filter_conditions.append(
-                    func.cast(Customer.assigned_devices, sa.String).like(f"%{params.device_serial}%")
+                    func.cast(Customer.assigned_devices, sa.String).like(
+                        f"%{params.device_serial}%"
+                    )
                 )
 
         # Apply all filters at once
@@ -564,7 +572,7 @@ class CustomerService:
             query = query.where(and_(*filter_conditions))
 
         # Count total results before pagination
-        count_query = select(func.count(Customer.id)).select_from(query.subquery())
+        count_query = select(func.count()).select_from(query.subquery())
         count_result: Result[tuple[int]] = await self.session.execute(count_query)
         total = count_result.scalar_one()
 

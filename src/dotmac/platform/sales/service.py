@@ -10,15 +10,15 @@ import inspect
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
 from ..communications.email_service import EmailService
-from ..events.bus import EventBus
 from ..deployment.models import DeploymentTemplate
 from ..deployment.schemas import ProvisionRequest
 from ..deployment.service import DeploymentService
+from ..events.bus import EventBus
 from ..notifications.schemas import NotificationChannel, NotificationCreateRequest
 from ..notifications.service import NotificationService
 from ..tenant.service import TenantService
@@ -70,9 +70,7 @@ class TemplateMapper:
             }
             template_name = package_map.get(package_code)
             if template_name:
-                template = query.filter(
-                    DeploymentTemplate.name == template_name
-                ).first()
+                template = query.filter(DeploymentTemplate.name == template_name).first()
                 if template:
                     return template
 
@@ -207,9 +205,7 @@ class OrderProcessingService:
         if inspect.isawaitable(result):
             await result
 
-    def create_order(
-        self, request: OrderCreate, user_id: int | None = None
-    ) -> Order:
+    def create_order(self, request: OrderCreate, user_id: int | None = None) -> Order:
         """
         Create new order in draft state
 
@@ -226,17 +222,18 @@ class OrderProcessingService:
         # Map to deployment template
         template = None
         if request.deployment_template_id:
-            template = self.db.query(DeploymentTemplate).filter(
-                DeploymentTemplate.id == request.deployment_template_id
-            ).first()
+            template = (
+                self.db.query(DeploymentTemplate)
+                .filter(DeploymentTemplate.id == request.deployment_template_id)
+                .first()
+            )
         else:
             service_codes = [s.service_code for s in request.selected_services]
             package_code = None
             if request.service_configuration:
-                package_code = (
-                    request.service_configuration.get("package")
-                    or request.service_configuration.get("package_code")
-                )
+                package_code = request.service_configuration.get(
+                    "package"
+                ) or request.service_configuration.get("package_code")
             template = self.template_mapper.map_to_template(
                 region=request.deployment_region,
                 deployment_type=request.deployment_type,
@@ -255,7 +252,9 @@ class OrderProcessingService:
             company_name=request.company_name,
             organization_slug=request.organization_slug,
             organization_name=request.organization_name,
-            billing_address=request.billing_address.model_dump() if request.billing_address else None,
+            billing_address=request.billing_address.model_dump()
+            if request.billing_address
+            else None,
             tax_id=request.tax_id,
             deployment_template_id=template.id if template else None,
             deployment_region=request.deployment_region,
@@ -273,9 +272,9 @@ class OrderProcessingService:
             external_order_id=request.external_order_id,
         )
 
-        order.subtotal = Decimal('0.00')
-        order.tax_amount = Decimal('0.00')
-        order.total_amount = Decimal('0.00')
+        order.subtotal = Decimal("0.00")
+        order.tax_amount = Decimal("0.00")
+        order.total_amount = Decimal("0.00")
 
         self.db.add(order)
         self.db.flush()
@@ -685,10 +684,7 @@ class OrderProcessingService:
         from sqlalchemy import func
 
         # Orders by status
-        status_query = self.db.query(
-            Order.status,
-            func.count(Order.id).label("count")
-        )
+        status_query = self.db.query(Order.status, func.count(Order.id).label("count"))
         status_query = self._apply_tenant_scope(
             status_query,
             tenant_id,
@@ -740,9 +736,7 @@ class OrderProcessingService:
         success_rate = (successful / total_processed * 100) if total_processed > 0 else 0
 
         return {
-            "orders_by_status": {
-                status.value: count for status, count in status_counts
-            },
+            "orders_by_status": {status.value: count for status, count in status_counts},
             "revenue": {
                 "total": float(revenue.total or 0),
                 "average": float(revenue.average or 0),
@@ -761,9 +755,11 @@ class OrderProcessingService:
             raise ValueError("No services selected")
 
         # Check template is active
-        template = self.db.query(DeploymentTemplate).filter(
-            DeploymentTemplate.id == order.deployment_template_id
-        ).first()
+        template = (
+            self.db.query(DeploymentTemplate)
+            .filter(DeploymentTemplate.id == order.deployment_template_id)
+            .first()
+        )
         if not template or not template.is_active:
             raise ValueError("Deployment template not available")
 
@@ -788,9 +784,11 @@ class OrderProcessingService:
         self, order: Order, tenant_id: int, user_id: int | None
     ) -> Any:
         """Provision deployment for order"""
-        template = self.db.query(DeploymentTemplate).filter(
-            DeploymentTemplate.id == order.deployment_template_id
-        ).first()
+        template = (
+            self.db.query(DeploymentTemplate)
+            .filter(DeploymentTemplate.id == order.deployment_template_id)
+            .first()
+        )
 
         provision_request = ProvisionRequest(
             template_id=template.id,
@@ -832,15 +830,13 @@ class OrderProcessingService:
         items = self.db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
 
         subtotal = sum(Decimal(str(item.total_amount or 0)) for item in items)
-        tax_amount = subtotal * Decimal('0.00')  # Implement tax calculation
+        tax_amount = subtotal * Decimal("0.00")  # Implement tax calculation
 
         order.subtotal = subtotal
         order.tax_amount = tax_amount
         order.total_amount = subtotal + tax_amount
 
-    def _get_service_price(
-        self, service_code: str, billing_cycle: str | None
-    ) -> float:
+    def _get_service_price(self, service_code: str, billing_cycle: str | None) -> float:
         """Get service price from catalog (mock implementation)"""
         # In production, query from billing catalog
         pricing = {
@@ -861,6 +857,7 @@ class OrderProcessingService:
     def _generate_slug(self, name: str) -> str:
         """Generate slug from company name"""
         import re
+
         slug = name.lower()
         slug = re.sub(r"[^a-z0-9]+", "-", slug)
         slug = slug.strip("-")
@@ -1035,10 +1032,14 @@ class ActivationOrchestrator:
         if not order.deployment_template_id:
             return None
 
-        workflow = self.db.query(ActivationWorkflow).filter(
-            ActivationWorkflow.deployment_template_id == order.deployment_template_id,
-            ActivationWorkflow.is_active == True,  # noqa: E712
-        ).first()
+        workflow = (
+            self.db.query(ActivationWorkflow)
+            .filter(
+                ActivationWorkflow.deployment_template_id == order.deployment_template_id,
+                ActivationWorkflow.is_active == True,  # noqa: E712
+            )
+            .first()
+        )
 
         return workflow
 
@@ -1131,9 +1132,12 @@ class ActivationOrchestrator:
         Returns:
             List of service activation records
         """
-        return self.db.query(ServiceActivation).filter(
-            ServiceActivation.order_id == order_id
-        ).order_by(ServiceActivation.sequence_number).all()
+        return (
+            self.db.query(ServiceActivation)
+            .filter(ServiceActivation.order_id == order_id)
+            .order_by(ServiceActivation.sequence_number)
+            .all()
+        )
 
     def retry_failed_activations(self, order_id: int) -> dict[str, Any]:
         """
@@ -1231,14 +1235,16 @@ class ActivationOrchestrator:
 
     def get_activation_progress(self, order_id: int) -> dict[str, Any]:
         """Get activation progress for order"""
-        activations = self.db.query(ServiceActivation).filter(
-            ServiceActivation.order_id == order_id
-        ).all()
+        activations = (
+            self.db.query(ServiceActivation).filter(ServiceActivation.order_id == order_id).all()
+        )
 
         total = len(activations)
         completed = sum(1 for a in activations if a.activation_status == ActivationStatus.COMPLETED)
         failed = sum(1 for a in activations if a.activation_status == ActivationStatus.FAILED)
-        in_progress = sum(1 for a in activations if a.activation_status == ActivationStatus.IN_PROGRESS)
+        in_progress = sum(
+            1 for a in activations if a.activation_status == ActivationStatus.IN_PROGRESS
+        )
         pending = sum(1 for a in activations if a.activation_status == ActivationStatus.PENDING)
 
         progress_percent = int(completed / total * 100) if total > 0 else 0

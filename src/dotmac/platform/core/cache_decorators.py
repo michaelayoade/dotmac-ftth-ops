@@ -65,9 +65,7 @@ def cached_result(
                 },
                 sort_keys=True,
             )
-            args_hash = hashlib.md5(
-                args_str.encode(), usedforsecurity=False
-            ).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
+            args_hash = hashlib.md5(args_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - Hash used for cache key generation only, not security
             return f"{key_prefix}:{func_name}:{args_hash}"
 
         @wraps(func)

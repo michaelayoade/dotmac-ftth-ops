@@ -4,20 +4,21 @@ Integration tests for billing add-ons API endpoints.
 Tests full request/response cycle for add-on management endpoints.
 """
 
-import pytest
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
-from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from dotmac.platform.main import app
+import pytest
+from fastapi.testclient import TestClient
+
 from dotmac.platform.billing.addons.models import (
+    AddonBillingType,
     AddonResponse,
     AddonStatus,
     AddonType,
-    AddonBillingType,
     TenantAddonResponse,
 )
+from dotmac.platform.main import app
 
 
 @pytest.fixture
@@ -68,7 +69,7 @@ def sample_tenant_addon_response(sample_addon_response):
         subscription_id=None,
         status=AddonStatus.ACTIVE,
         quantity=1,
-        started_at=datetime.now(UTC),
+        started_at=datetime.now(timezone.utc),
         current_period_start=None,
         current_period_end=None,
         canceled_at=None,
@@ -81,9 +82,7 @@ def sample_tenant_addon_response(sample_addon_response):
 class TestGetAvailableAddons:
     """Test GET /api/v1/billing/addons endpoint."""
 
-    def test_get_available_addons_success(
-        self, client, mock_addon_service, sample_addon_response
-    ):
+    def test_get_available_addons_success(self, client, mock_addon_service, sample_addon_response):
         """Test successful retrieval of available add-ons."""
         # Mock service response
         mock_addon_service.get_available_addons.return_value = [sample_addon_response]
@@ -95,7 +94,7 @@ class TestGetAvailableAddons:
             # Mock authentication
             with patch("dotmac.platform.billing.addons.router.get_current_user"):
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.get(
+                    client.get(
                         "/api/v1/billing/addons",
                         headers={"Authorization": "Bearer test_token"},
                     )
@@ -118,9 +117,7 @@ class TestGetTenantAddons:
         self, client, mock_addon_service, sample_tenant_addon_response
     ):
         """Test successful retrieval of tenant's add-ons."""
-        mock_addon_service.get_active_addons.return_value = [
-            sample_tenant_addon_response
-        ]
+        mock_addon_service.get_active_addons.return_value = [sample_tenant_addon_response]
 
         with patch(
             "dotmac.platform.billing.addons.router.AddonService",
@@ -128,7 +125,7 @@ class TestGetTenantAddons:
         ):
             with patch("dotmac.platform.billing.addons.router.get_current_user"):
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.get(
+                    client.get(
                         "/api/v1/billing/addons/my-addons",
                         headers={"Authorization": "Bearer test_token"},
                     )
@@ -139,9 +136,7 @@ class TestGetTenantAddons:
 class TestPurchaseAddon:
     """Test POST /api/v1/billing/addons/purchase endpoint."""
 
-    def test_purchase_addon_success(
-        self, client, mock_addon_service, sample_tenant_addon_response
-    ):
+    def test_purchase_addon_success(self, client, mock_addon_service, sample_tenant_addon_response):
         """Test successful add-on purchase."""
         mock_addon_service.purchase_addon.return_value = sample_tenant_addon_response
 
@@ -158,7 +153,7 @@ class TestPurchaseAddon:
             with patch("dotmac.platform.billing.addons.router.get_current_user") as mock_user:
                 mock_user.return_value = MagicMock(id="user_123")
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.post(
+                    client.post(
                         "/api/v1/billing/addons/purchase",
                         json=purchase_data,
                         headers={"Authorization": "Bearer test_token"},
@@ -193,9 +188,7 @@ class TestUpdateAddonQuantity:
         self, client, mock_addon_service, sample_tenant_addon_response
     ):
         """Test successful quantity update."""
-        mock_addon_service.update_addon_quantity.return_value = (
-            sample_tenant_addon_response
-        )
+        mock_addon_service.update_addon_quantity.return_value = sample_tenant_addon_response
 
         update_data = {"quantity": 5}
 
@@ -206,7 +199,7 @@ class TestUpdateAddonQuantity:
             with patch("dotmac.platform.billing.addons.router.get_current_user") as mock_user:
                 mock_user.return_value = MagicMock(id="user_123")
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.put(
+                    client.put(
                         "/api/v1/billing/addons/taddon_123/quantity",
                         json=update_data,
                         headers={"Authorization": "Bearer test_token"},
@@ -218,9 +211,7 @@ class TestUpdateAddonQuantity:
 class TestCancelAddon:
     """Test POST /api/v1/billing/addons/{tenant_addon_id}/cancel endpoint."""
 
-    def test_cancel_addon_success(
-        self, client, mock_addon_service, sample_tenant_addon_response
-    ):
+    def test_cancel_addon_success(self, client, mock_addon_service, sample_tenant_addon_response):
         """Test successful add-on cancellation."""
         mock_addon_service.cancel_addon.return_value = sample_tenant_addon_response
 
@@ -233,7 +224,7 @@ class TestCancelAddon:
             with patch("dotmac.platform.billing.addons.router.get_current_user") as mock_user:
                 mock_user.return_value = MagicMock(id="user_123")
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.post(
+                    client.post(
                         "/api/v1/billing/addons/taddon_123/cancel",
                         json=cancel_data,
                         headers={"Authorization": "Bearer test_token"},
@@ -241,9 +232,7 @@ class TestCancelAddon:
 
         # Assertions would depend on actual implementation
 
-    def test_cancel_addon_immediate(
-        self, client, mock_addon_service, sample_tenant_addon_response
-    ):
+    def test_cancel_addon_immediate(self, client, mock_addon_service, sample_tenant_addon_response):
         """Test immediate add-on cancellation."""
         mock_addon_service.cancel_addon.return_value = sample_tenant_addon_response
 
@@ -256,7 +245,7 @@ class TestCancelAddon:
             with patch("dotmac.platform.billing.addons.router.get_current_user") as mock_user:
                 mock_user.return_value = MagicMock(id="user_123")
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.post(
+                    client.post(
                         "/api/v1/billing/addons/taddon_123/cancel",
                         json=cancel_data,
                         headers={"Authorization": "Bearer test_token"},
@@ -281,7 +270,7 @@ class TestReactivateAddon:
             with patch("dotmac.platform.billing.addons.router.get_current_user") as mock_user:
                 mock_user.return_value = MagicMock(id="user_123")
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.post(
+                    client.post(
                         "/api/v1/billing/addons/taddon_123/reactivate",
                         headers={"Authorization": "Bearer test_token"},
                     )
@@ -292,9 +281,7 @@ class TestReactivateAddon:
 class TestGetAddonById:
     """Test GET /api/v1/billing/addons/{addon_id} endpoint."""
 
-    def test_get_addon_success(
-        self, client, mock_addon_service, sample_addon_response
-    ):
+    def test_get_addon_success(self, client, mock_addon_service, sample_addon_response):
         """Test successful retrieval of specific add-on."""
         from dotmac.platform.billing.addons.models import Addon
 
@@ -320,8 +307,8 @@ class TestGetAddonById:
             metadata={},
             icon="test-icon",
             features=["Feature 1"],
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_addon_service.get_addon.return_value = addon
@@ -332,7 +319,7 @@ class TestGetAddonById:
         ):
             with patch("dotmac.platform.billing.addons.router.get_current_user"):
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
-                    response = client.get(
+                    client.get(
                         "/api/v1/billing/addons/addon_test_123",
                         headers={"Authorization": "Bearer test_token"},
                     )

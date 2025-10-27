@@ -7,10 +7,9 @@ Pydantic schemas for fiber API requests and responses.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from uuid import UUID
-
-from enum import Enum
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
@@ -60,7 +59,9 @@ class FiberCableCreate(BaseModel):
     start_site_id: str | None = Field(None, max_length=50)
     end_site_id: str | None = Field(None, max_length=50)
     length_km: float | None = Field(None, gt=0, description="Cable length in kilometers")
-    route_geojson: dict[str, Any] | None = Field(None, description="GeoJSON LineString of cable route")
+    route_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON LineString of cable route"
+    )
 
     # Hardware
     manufacturer: str | None = Field(None, max_length=100)
@@ -295,7 +296,9 @@ class ServiceAreaCreate(BaseModel):
 
     # Coverage
     is_serviceable: bool = False
-    coverage_geojson: dict[str, Any] | None = Field(None, description="GeoJSON Polygon of coverage area")
+    coverage_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON Polygon of coverage area"
+    )
     postal_codes: list[str] | None = None
 
     # Construction
@@ -405,7 +408,9 @@ class SplicePointCreate(BaseModel):
 
     # Type and location
     splice_type: str | None = Field(None, max_length=50)
-    location_geojson: dict[str, Any] | None = Field(None, description="GeoJSON Point of splice location")
+    location_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON Point of splice location"
+    )
     enclosure_type: str | None = Field(None, max_length=50)
 
     # Quality metrics
@@ -547,7 +552,9 @@ class OTDRTestCreate(BaseModel):
     total_loss_db: float | None = Field(None, ge=0)
     length_km: float | None = Field(None, ge=0)
     events_detected: int = Field(0, ge=0)
-    events: list[dict[str, Any]] | None = Field(None, description="Detected splice/connector events")
+    events: list[dict[str, Any]] | None = Field(
+        None, description="Detected splice/connector events"
+    )
 
     # Test quality
     pass_fail: bool | None = None

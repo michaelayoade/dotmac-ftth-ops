@@ -5,8 +5,8 @@ Business logic for NetBox IPAM and DCIM operations.
 """
 
 import re
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
 import structlog
 

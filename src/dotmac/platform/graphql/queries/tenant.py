@@ -5,7 +5,10 @@ Provides efficient tenant queries with conditional loading of settings,
 usage records, and invitations via DataLoaders.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 
 import strawberry
@@ -94,7 +97,9 @@ class TenantQueries:
 
         return tenant
 
-    @strawberry.field(description="Get list of tenants with optional filters and conditional loading")  # type: ignore[misc]
+    @strawberry.field(
+        description="Get list of tenants with optional filters and conditional loading"
+    )  # type: ignore[misc]
     async def tenants(
         self,
         info: strawberry.Info[Context],
@@ -238,9 +243,9 @@ class TenantQueries:
             func.count(func.case((TenantModel.plan_type == TenantPlanType.STARTER, 1))).label(
                 "starter"
             ),
-            func.count(
-                func.case((TenantModel.plan_type == TenantPlanType.PROFESSIONAL, 1))
-            ).label("professional"),
+            func.count(func.case((TenantModel.plan_type == TenantPlanType.PROFESSIONAL, 1))).label(
+                "professional"
+            ),
             func.count(func.case((TenantModel.plan_type == TenantPlanType.ENTERPRISE, 1))).label(
                 "enterprise"
             ),
@@ -269,9 +274,7 @@ class TenantQueries:
         month_ago = now - timedelta(days=30)
 
         growth_stmt = select(
-            func.count(
-                func.case((TenantModel.created_at >= month_ago, 1))
-            ).label("new_tenants"),
+            func.count(func.case((TenantModel.created_at >= month_ago, 1))).label("new_tenants"),
             func.count(
                 func.case(
                     (

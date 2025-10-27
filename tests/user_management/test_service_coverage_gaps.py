@@ -11,13 +11,14 @@ Targeting specific uncovered lines to push coverage from 88.27% to 90%+:
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_session():
     """Create an in-memory async SQLite session for testing."""
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
@@ -35,7 +36,7 @@ async def async_session():
 
 
 @pytest.fixture
-async def user_service(async_session):
+def user_service(async_session):
     """Create UserService instance."""
     return UserService(async_session)
 
@@ -71,7 +72,9 @@ class TestDuplicateValidation:
 
     @pytest.mark.asyncio
     async def test_create_user_duplicate_username_raises_error(self, user_service):
-        """Test that creating user with duplicate username raises ValueError - line 97."""
+        """Test that creating user with duplicate username raises IntegrityError - line 97."""
+        from sqlalchemy.exc import IntegrityError
+
         # Create first user
         user1 = await user_service.create_user(
             username="testuser",
@@ -81,8 +84,8 @@ class TestDuplicateValidation:
         assert user1 is not None
 
         # Try to create second user with same username
-        # Line 97: raise ValueError(f"Username {username} already exists")
-        with pytest.raises(ValueError, match="Username testuser already exists"):
+        # Line 97: raise IntegrityError wrapping ValueError
+        with pytest.raises(IntegrityError, match="Username testuser already exists"):
             await user_service.create_user(
                 username="testuser",  # Duplicate
                 email="test2@example.com",  # Different email
@@ -91,7 +94,9 @@ class TestDuplicateValidation:
 
     @pytest.mark.asyncio
     async def test_create_user_duplicate_email_raises_error(self, user_service):
-        """Test that creating user with duplicate email raises ValueError - line 101."""
+        """Test that creating user with duplicate email raises IntegrityError - line 101."""
+        from sqlalchemy.exc import IntegrityError
+
         # Create first user
         user1 = await user_service.create_user(
             username="user1",
@@ -101,8 +106,8 @@ class TestDuplicateValidation:
         assert user1 is not None
 
         # Try to create second user with same email
-        # Line 101: raise ValueError(f"Email {email} already exists")
-        with pytest.raises(ValueError, match="Email duplicate@example.com already exists"):
+        # Line 101: raise IntegrityError wrapping ValueError
+        with pytest.raises(IntegrityError, match="Email duplicate@example.com already exists"):
             await user_service.create_user(
                 username="user2",  # Different username
                 email="duplicate@example.com",  # Duplicate email

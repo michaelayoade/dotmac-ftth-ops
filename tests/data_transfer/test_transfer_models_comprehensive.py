@@ -8,7 +8,7 @@ Tests all Pydantic models and their validation logic including:
 - Custom validators and error cases
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
@@ -467,7 +467,7 @@ class TestTransferJobResponse:
     def test_transfer_job_response_creation(self):
         """Test TransferJobResponse creation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         metadata = {"source": "test", "user": "admin"}
 
         response = TransferJobResponse(
@@ -497,9 +497,9 @@ class TestTransferJobResponse:
     def test_transfer_job_response_completed(self):
         """Test TransferJobResponse for completed job."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         started_at = created_at
-        completed_at = datetime.now(UTC)
+        completed_at = datetime.now(timezone.utc)
 
         response = TransferJobResponse(
             job_id=job_id,
@@ -526,9 +526,9 @@ class TestTransferJobResponse:
     def test_transfer_job_response_duration_property(self):
         """Test duration property calculation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         started_at = created_at
-        completed_at = datetime.now(UTC)
+        completed_at = datetime.now(timezone.utc)
 
         # Job with both start and completion times
         response = TransferJobResponse(
@@ -583,7 +583,7 @@ class TestTransferJobResponse:
     def test_transfer_job_response_success_rate_property(self):
         """Test success_rate property calculation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
 
         # Job with some failures
         response_with_failures = TransferJobResponse(
@@ -642,7 +642,7 @@ class TestTransferJobListResponse:
             type=TransferType.IMPORT,
             status=TransferStatus.COMPLETED,
             progress=100.0,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             records_processed=500,
             records_failed=0,
             records_total=500,
@@ -654,7 +654,7 @@ class TestTransferJobListResponse:
             type=TransferType.EXPORT,
             status=TransferStatus.RUNNING,
             progress=45.5,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             records_processed=455,
             records_failed=5,
             records_total=1000,
@@ -743,7 +743,7 @@ class TestTransferErrorResponse:
     def test_transfer_error_response_creation(self):
         """Test TransferErrorResponse creation."""
         job_id = uuid4()
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         error = TransferErrorResponse(
             error="VALIDATION_FAILED",
             message="Data validation failed",
@@ -762,7 +762,7 @@ class TestTransferErrorResponse:
 
     def test_transfer_error_response_minimal(self):
         """Test TransferErrorResponse with minimal required fields."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         error = TransferErrorResponse(
             error="NETWORK_ERROR",
             message="Failed to connect to remote server",
@@ -934,7 +934,7 @@ class TestTransferProgressUpdate:
     def test_transfer_progress_update_full(self):
         """Test TransferProgressUpdate with all fields."""
         job_id = uuid4()
-        estimated_completion = datetime.now(UTC)
+        estimated_completion = datetime.now(timezone.utc)
 
         update = TransferProgressUpdate(
             job_id=job_id,
@@ -1046,7 +1046,7 @@ class TestModelSerialization:
     def test_transfer_job_response_serialization(self):
         """Test TransferJobResponse serialization."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
 
         original = TransferJobResponse(
             job_id=job_id,

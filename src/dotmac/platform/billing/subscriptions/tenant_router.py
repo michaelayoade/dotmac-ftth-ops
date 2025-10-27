@@ -5,7 +5,6 @@ Provides self-service endpoints for tenant admins to manage their subscriptions,
 upgrade/downgrade plans, and cancel subscriptions without operator intervention.
 """
 
-
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession

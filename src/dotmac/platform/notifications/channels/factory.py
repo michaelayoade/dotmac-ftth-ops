@@ -4,8 +4,6 @@ Notification Channel Provider Factory.
 Creates and manages notification channel provider instances based on configuration.
 """
 
-from typing import Any
-
 import structlog
 
 from ..models import NotificationChannel

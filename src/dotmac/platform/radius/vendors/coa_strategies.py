@@ -10,7 +10,7 @@ from typing import Any
 
 import structlog
 
-from dotmac.platform.radius.vendors.base import CoAStrategy, NASVendor
+from dotmac.platform.radius.vendors.base import NASVendor
 
 logger = structlog.get_logger(__name__)
 

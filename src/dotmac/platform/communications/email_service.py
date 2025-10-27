@@ -7,7 +7,10 @@ Supports Vault integration for secure credential management.
 
 import os
 import smtplib
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from uuid import uuid4
@@ -17,12 +20,12 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.settings import settings
 from dotmac.platform.communications.plugins import (
     EmailTransport,
     get_plugin,
     register_builtin_plugins,
 )
+from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 

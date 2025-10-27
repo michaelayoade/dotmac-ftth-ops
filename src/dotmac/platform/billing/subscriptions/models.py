@@ -4,7 +4,10 @@ Subscription models for billing system.
 Simple subscription plans and customer subscriptions with clear lifecycle management.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -381,7 +384,10 @@ class RenewalQuoteRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel r
     customer_id: str = Field(description="Customer ID")
     subscription_id: str = Field(description="Subscription ID to renew")
     discount_percentage: Decimal | None = Field(
-        None, description="Optional renewal discount percentage (e.g., 10 for 10% off)", ge=0, le=100
+        None,
+        description="Optional renewal discount percentage (e.g., 10 for 10% off)",
+        ge=0,
+        le=100,
     )
     valid_days: int = Field(default=30, description="Quote validity in days", ge=1, le=90)
     notes: str | None = Field(None, description="Additional notes")

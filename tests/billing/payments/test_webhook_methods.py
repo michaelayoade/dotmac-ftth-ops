@@ -1,6 +1,6 @@
 """Unit tests for new PaymentService webhook methods."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -48,8 +48,8 @@ def sample_payment_entity():
     entity.processed_at = None
     entity.refunded_at = None
     entity.failure_reason = None
-    entity.created_at = datetime.now(UTC)
-    entity.updated_at = datetime.now(UTC)
+    entity.created_at = datetime.now(timezone.utc)
+    entity.updated_at = datetime.now(timezone.utc)
     return entity
 
 

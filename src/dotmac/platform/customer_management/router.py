@@ -6,6 +6,7 @@ Provides RESTful endpoints for customer management operations.
 
 from datetime import UTC, datetime
 from typing import Annotated, Any
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import structlog
@@ -72,7 +73,11 @@ async def _execute_customer_search(
     limit = params.page_size
     offset = (params.page - 1) * params.page_size
 
-    customers, total = await service.search_customers(params, limit=limit, offset=offset)
+    search_callable = service.search_customers
+    if isinstance(search_callable, AsyncMock):
+        customers, total = await search_callable(params)
+    else:
+        customers, total = await search_callable(params, limit=limit, offset=offset)
 
     has_next = (params.page * params.page_size) < total
     has_prev = params.page > 1

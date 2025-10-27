@@ -1,6 +1,6 @@
 """Tests for the TODO fixes in billing module."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -52,8 +52,8 @@ class TestBillingIntegrationFix:
         invoice_request = BillingInvoiceRequest(
             customer_id="cust-123",
             subscription_id="sub-456",
-            billing_period_start=datetime.now(UTC),
-            billing_period_end=datetime.now(UTC),
+            billing_period_start=datetime.now(timezone.utc),
+            billing_period_end=datetime.now(timezone.utc),
             items=[
                 InvoiceItem(
                     product_id="prod-1",
@@ -96,8 +96,8 @@ class TestBillingIntegrationFix:
         invoice_request = BillingInvoiceRequest(
             customer_id="cust-123",
             subscription_id="sub-456",
-            billing_period_start=datetime.now(UTC),
-            billing_period_end=datetime.now(UTC),
+            billing_period_start=datetime.now(timezone.utc),
+            billing_period_end=datetime.now(timezone.utc),
             items=[],
             subtotal=Decimal("0"),
             total_discount=Decimal("0"),

@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform import tenant as tenant_ctx
 from dotmac.platform.auth import dependencies as auth_dependencies
 from dotmac.platform.auth.core import (
     HTTPAuthorizationCredentials,
@@ -23,7 +24,6 @@ from dotmac.platform.auth.core import (
 )
 from dotmac.platform.auth.rbac_dependencies import (
     require_permission,
-    require_permissions,
 )
 from dotmac.platform.billing.catalog.models import (
     ProductCategoryCreateRequest,
@@ -43,7 +43,6 @@ from dotmac.platform.billing.exceptions import (
     ProductNotFoundError,
 )
 from dotmac.platform.db import get_async_session
-from dotmac.platform import tenant as tenant_ctx
 
 logger = structlog.get_logger(__name__)
 
@@ -65,7 +64,7 @@ async def _get_current_user_dependency(
             value = await value
         return value
 
-    dependency = getattr(auth_dependencies, "get_current_user")
+    dependency = auth_dependencies.get_current_user
     return await dependency(
         request=request,
         token=token,

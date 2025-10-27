@@ -32,6 +32,14 @@ def build_mock_db_session() -> AsyncMock:
     session.scalar = AsyncMock()
     session.rollback = AsyncMock()
     session.close = AsyncMock()
+
+    # Mock bind and dialect for database-specific code
+    mock_dialect = Mock()
+    mock_dialect.name = "postgresql"
+    mock_bind = Mock()
+    mock_bind.dialect = mock_dialect
+    session.bind = mock_bind
+
     return session
 
 

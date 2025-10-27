@@ -26,7 +26,7 @@ class TestCeleryApp:
         assert celery_app.conf.task_serializer == "json"
         assert celery_app.conf.result_serializer == "json"
         assert "json" in celery_app.conf.accept_content
-        assert celery_app.conf.timezone == "UTC"
+        assert celery_app.conf.timezone == "timezone.utc"
         assert celery_app.conf.enable_utc is True
 
         # Test queue configuration

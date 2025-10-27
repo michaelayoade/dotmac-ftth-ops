@@ -324,7 +324,9 @@ class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     model_config = ConfigDict()
 
     # Connection type
-    connection_type: str = Field(..., description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)")
+    connection_type: str = Field(
+        ..., description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)"
+    )
 
     # PPPoE credentials (IPv4/IPv6)
     username: str | None = Field(None, description="PPPoE/PPPoEv6 username")
@@ -341,7 +343,9 @@ class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     # Static IPv6 configuration
     static_ipv6: str | None = Field(None, description="Static IPv6 address")
     static_ipv6_gateway: str | None = Field(None, description="Static IPv6 gateway")
-    static_ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="Static IPv6 prefix length")
+    static_ipv6_prefix_length: int | None = Field(
+        None, ge=1, le=128, description="Static IPv6 prefix length"
+    )
 
     # IPv6 prefix delegation
     ipv6_pd_enabled: bool = Field(default=True, description="Enable IPv6 prefix delegation")
@@ -565,7 +569,9 @@ class MassWANConfig(BaseModel):  # BaseModel resolves to Any in isolation
 
     model_config = ConfigDict()
 
-    connection_type: str | None = Field(None, description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)")
+    connection_type: str | None = Field(
+        None, description="Connection type (DHCP, PPPoE, Static, DHCPv6, PPPoEv6)"
+    )
     vlan_id: int | None = Field(None, ge=1, le=4094, description="VLAN ID")
 
     # Static IPv4 configuration
@@ -576,7 +582,9 @@ class MassWANConfig(BaseModel):  # BaseModel resolves to Any in isolation
     # Static IPv6 configuration
     static_ipv6: str | None = Field(None, description="Static IPv6 address")
     static_ipv6_gateway: str | None = Field(None, description="Static IPv6 gateway")
-    static_ipv6_prefix_length: int | None = Field(None, ge=1, le=128, description="Static IPv6 prefix length")
+    static_ipv6_prefix_length: int | None = Field(
+        None, ge=1, le=128, description="Static IPv6 prefix length"
+    )
 
     # IPv6 prefix delegation
     ipv6_pd_enabled: bool | None = Field(None, description="Enable/disable IPv6 prefix delegation")

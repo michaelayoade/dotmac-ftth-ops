@@ -12,9 +12,10 @@ Focus areas:
 - Edge cases
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, patch
 from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from dotmac.platform.radius.schemas import (
     BandwidthProfileCreate,
@@ -72,10 +73,7 @@ class TestRADIUSSessionManagement:
         await service.create_subscriber(subscriber_data)
 
         # Get sessions with limit
-        sessions = await service.get_subscriber_sessions(
-            username="history_user@isp",
-            limit=10
-        )
+        sessions = await service.get_subscriber_sessions(username="history_user@isp", limit=10)
 
         assert isinstance(sessions, list)
 
@@ -91,38 +89,66 @@ class TestRADIUSSessionManagement:
         )
         await service.create_subscriber(subscriber_data)
 
-        # Mock CoA client
-        with patch.object(service.coa_client, 'send_disconnect', new_callable=AsyncMock) as mock_disconnect:
-            mock_disconnect.return_value = True
+        # Mock CoA client - mock disconnect_session not send_disconnect
+        with patch.object(
+            service.coa_client, "disconnect_session", new_callable=AsyncMock
+        ) as mock_disconnect:
+            # Return a success response dict
+            mock_disconnect.return_value = {
+                "success": True,
+                "message": "Session disconnected successfully",
+                "username": "disconnect_user@isp"
+            }
 
             result = await service.disconnect_session(username="disconnect_user@isp")
 
-            assert result is True
+            # disconnect_session returns a dict with 'success' field
+            assert isinstance(result, dict)
+            assert result["success"] is True
             mock_disconnect.assert_called_once()
 
     async def test_disconnect_session_by_session_id(self, async_db_session, test_tenant):
         """Test session disconnection by session ID"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
-        # Mock CoA client
-        with patch.object(service.coa_client, 'send_disconnect', new_callable=AsyncMock) as mock_disconnect:
-            mock_disconnect.return_value = True
+        # Mock CoA client - mock disconnect_session not send_disconnect
+        with patch.object(
+            service.coa_client, "disconnect_session", new_callable=AsyncMock
+        ) as mock_disconnect:
+            # Return a success response dict
+            mock_disconnect.return_value = {
+                "success": True,
+                "message": "Session disconnected successfully",
+                "session_id": "test-session-123"
+            }
 
             result = await service.disconnect_session(session_id="test-session-123")
 
-            assert result is True
+            # disconnect_session returns a dict with 'success' field
+            assert isinstance(result, dict)
+            assert result["success"] is True
 
     async def test_disconnect_session_failure(self, async_db_session, test_tenant):
         """Test session disconnection failure"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
-        # Mock CoA client to fail
-        with patch.object(service.coa_client, 'send_disconnect', new_callable=AsyncMock) as mock_disconnect:
-            mock_disconnect.return_value = False
+        # Mock CoA client to fail - mock disconnect_session not send_disconnect
+        with patch.object(
+            service.coa_client, "disconnect_session", new_callable=AsyncMock
+        ) as mock_disconnect:
+            # Return a failure response dict
+            mock_disconnect.return_value = {
+                "success": False,
+                "message": "Failed to disconnect session",
+                "username": "nonexistent@isp",
+                "error": "Session not found"
+            }
 
             result = await service.disconnect_session(username="nonexistent@isp")
 
-            assert result is False
+            # disconnect_session returns a dict with 'success' field
+            assert isinstance(result, dict)
+            assert result["success"] is False
 
 
 @pytest.mark.asyncio
@@ -272,7 +298,7 @@ class TestRADIUSBandwidthProfiles:
             username="bandwidth_user@isp",
             password="SecurePass123!",
         )
-        subscriber = await service.create_subscriber(subscriber_data)
+        await service.create_subscriber(subscriber_data)
 
         # Create bandwidth profile
         profile_data = BandwidthProfileCreate(
@@ -284,8 +310,7 @@ class TestRADIUSBandwidthProfiles:
 
         # Apply profile to subscriber
         updated_subscriber = await service.apply_bandwidth_profile(
-            username="bandwidth_user@isp",
-            profile_id=profile.id
+            username="bandwidth_user@isp", profile_id=profile.id
         )
 
         assert updated_subscriber is not None
@@ -518,7 +543,9 @@ class TestRADIUSSubscriberAdvanced:
 class TestRADIUSErrorHandling:
     """Test error handling and edge cases"""
 
-    async def test_disconnect_session_without_username_or_session_id(self, async_db_session, test_tenant):
+    async def test_disconnect_session_without_username_or_session_id(
+        self, async_db_session, test_tenant
+    ):
         """Test disconnect requires either username or session_id"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
@@ -526,7 +553,9 @@ class TestRADIUSErrorHandling:
         with pytest.raises(ValueError):
             await service.disconnect_session()
 
-    async def test_create_subscriber_with_invalid_bandwidth_profile(self, async_db_session, test_tenant):
+    async def test_create_subscriber_with_invalid_bandwidth_profile(
+        self, async_db_session, test_tenant
+    ):
         """Test creating subscriber with non-existent bandwidth profile"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
@@ -555,8 +584,7 @@ class TestRADIUSErrorHandling:
 
         # Try to apply non-existent profile
         result = await service.apply_bandwidth_profile(
-            username="nonexist_profile_user@isp",
-            profile_id="nonexistent-id"
+            username="nonexist_profile_user@isp", profile_id="nonexistent-id"
         )
 
         # Should return None or raise error
@@ -576,8 +604,7 @@ class TestRADIUSErrorHandling:
 
         # Try to apply to non-existent user
         result = await service.apply_bandwidth_profile(
-            username="nonexistent_user@isp",
-            profile_id=profile.id
+            username="nonexistent_user@isp", profile_id=profile.id
         )
 
         assert result is None
@@ -600,20 +627,20 @@ class TestRADIUSServiceInitialization:
         """Test CoA client is properly initialized"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
-        assert hasattr(service, 'coa_client')
+        assert hasattr(service, "coa_client")
         assert service.radius_server is not None
         assert service.coa_port > 0
 
-    @patch.dict('os.environ', {
-        'RADIUS_COA_USE_HTTP': 'true',
-        'RADIUS_COA_HTTP_URL': 'http://radius-api.example.com/coa'
-    })
+    @patch.dict(
+        "os.environ",
+        {"RADIUS_COA_USE_HTTP": "true", "RADIUS_COA_HTTP_URL": "http://radius-api.example.com/coa"},
+    )
     async def test_service_http_coa_initialization(self, async_db_session, test_tenant):
         """Test HTTP CoA client initialization"""
         service = RADIUSService(async_db_session, test_tenant.id)
 
         assert service.use_http_coa is True
-        assert service.http_coa_url == 'http://radius-api.example.com/coa'
+        assert service.http_coa_url == "http://radius-api.example.com/coa"
 
 
 @pytest.mark.asyncio

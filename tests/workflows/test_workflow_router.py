@@ -6,11 +6,8 @@ for the workflow management API.
 """
 
 import pytest
-from datetime import datetime
 from fastapi import status
 from httpx import AsyncClient
-
-from dotmac.platform.workflows.models import WorkflowStatus
 
 
 class TestWorkflowCRUD:
@@ -22,7 +19,7 @@ class TestWorkflowCRUD:
         async_client: AsyncClient,
         mock_workflow_service,
         sample_workflow,
-        sample_workflow_definition
+        sample_workflow_definition,
     ):
         """Test successful workflow creation."""
         # Arrange
@@ -36,8 +33,8 @@ class TestWorkflowCRUD:
                 "description": "Test workflow for unit tests",
                 "definition": sample_workflow_definition,
                 "version": "1.0.0",
-                "tags": {"category": "test"}
-            }
+                "tags": {"category": "test"},
+            },
         )
 
         # Assert
@@ -52,19 +49,16 @@ class TestWorkflowCRUD:
         assert "created_at" in data
 
     @pytest.mark.asyncio
-    async def test_create_workflow_validation_error(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_create_workflow_validation_error(self, async_client: AsyncClient):
         """Test workflow creation with invalid data."""
         # Act - missing required field 'definition'
         response = await async_client.post(
             "/api/v1/workflows/",
             json={
                 "name": "test_workflow",
-                "description": "Test workflow"
+                "description": "Test workflow",
                 # Missing 'definition'
-            }
+            },
         )
 
         # Assert
@@ -74,10 +68,7 @@ class TestWorkflowCRUD:
 
     @pytest.mark.asyncio
     async def test_get_workflow_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
     ):
         """Test get workflow by ID."""
         # Arrange
@@ -94,11 +85,7 @@ class TestWorkflowCRUD:
         assert data["is_active"] is True
 
     @pytest.mark.asyncio
-    async def test_get_workflow_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service
-    ):
+    async def test_get_workflow_not_found(self, async_client: AsyncClient, mock_workflow_service):
         """Test get non-existent workflow."""
         # Arrange
         mock_workflow_service.get_workflow.return_value = None
@@ -113,10 +100,7 @@ class TestWorkflowCRUD:
 
     @pytest.mark.asyncio
     async def test_list_workflows_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
     ):
         """Test list all workflows."""
         # Arrange
@@ -124,7 +108,7 @@ class TestWorkflowCRUD:
             **sample_workflow,
             "id": 2,
             "name": "workflow_2",
-            "description": "Second workflow"
+            "description": "Second workflow",
         }
         mock_workflow_service.list_workflows.return_value = [sample_workflow, workflow2]
 
@@ -140,11 +124,7 @@ class TestWorkflowCRUD:
         assert data["workflows"][1]["id"] == 2
 
     @pytest.mark.asyncio
-    async def test_delete_workflow_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service
-    ):
+    async def test_delete_workflow_success(self, async_client: AsyncClient, mock_workflow_service):
         """Test successful workflow deletion."""
         # Arrange
         mock_workflow_service.delete_workflow.return_value = None
@@ -162,10 +142,7 @@ class TestWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_execute_workflow_by_name_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow_execution
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test successful workflow execution by name."""
         # Arrange
@@ -179,8 +156,8 @@ class TestWorkflowExecution:
                 "context": {"subscriber_id": "SUB-123", "username": "test@example.com"},
                 "trigger_type": "manual",
                 "trigger_source": "api",
-                "tenant_id": 1
-            }
+                "tenant_id": 1,
+            },
         )
 
         # Assert
@@ -194,10 +171,7 @@ class TestWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_get_execution_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow_execution
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test get workflow execution by ID."""
         # Arrange
@@ -214,10 +188,7 @@ class TestWorkflowExecution:
 
     @pytest.mark.asyncio
     async def test_list_executions_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow_execution
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test list workflow executions."""
         # Arrange - service returns list, router wraps in response
@@ -238,10 +209,7 @@ class TestWorkflowCRUDExtended:
 
     @pytest.mark.asyncio
     async def test_update_workflow_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service,
-        sample_workflow
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
     ):
         """Test successful workflow update."""
         # Arrange
@@ -250,11 +218,7 @@ class TestWorkflowCRUDExtended:
 
         # Act
         response = await async_client.patch(
-            "/api/v1/workflows/1",
-            json={
-                "description": "Updated description",
-                "is_active": True
-            }
+            "/api/v1/workflows/1", json={"description": "Updated description", "is_active": True}
         )
 
         # Assert
@@ -264,11 +228,7 @@ class TestWorkflowCRUDExtended:
         assert data["description"] == "Updated description"
 
     @pytest.mark.asyncio
-    async def test_delete_workflow_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service
-    ):
+    async def test_delete_workflow_success(self, async_client: AsyncClient, mock_workflow_service):
         """Test successful workflow deletion."""
         # Arrange
         mock_workflow_service.delete_workflow.return_value = None
@@ -281,11 +241,7 @@ class TestWorkflowCRUDExtended:
         mock_workflow_service.delete_workflow.assert_called_once_with(1)
 
     @pytest.mark.asyncio
-    async def test_cancel_execution_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service
-    ):
+    async def test_cancel_execution_success(self, async_client: AsyncClient, mock_workflow_service):
         """Test successful execution cancellation."""
         # Arrange
         mock_workflow_service.cancel_execution.return_value = None
@@ -303,20 +259,13 @@ class TestWorkflowStatistics:
 
     @pytest.mark.asyncio
     async def test_get_workflow_stats_success(
-        self,
-        async_client: AsyncClient,
-        mock_workflow_service
+        self, async_client: AsyncClient, mock_workflow_service
     ):
         """Test get workflow execution statistics."""
         # Arrange
         mock_workflow_service.get_execution_stats.return_value = {
             "total": 100,
-            "by_status": {
-                "completed": 80,
-                "failed": 15,
-                "running": 3,
-                "pending": 2
-            }
+            "by_status": {"completed": 80, "failed": 15, "running": 3, "pending": 2},
         }
 
         # Act

@@ -280,7 +280,9 @@ async def convert_lead_to_customer(
 
         # Check if already converted
         if lead.converted_to_customer_id:
-            raise ValidationError(f"Lead {lead_id} already converted to customer {lead.converted_to_customer_id}")
+            raise ValidationError(
+                f"Lead {lead_id} already converted to customer {lead.converted_to_customer_id}"
+            )
 
         # Build customer data using lead info as defaults, with overrides from request
         customer_data = {
@@ -303,15 +305,19 @@ async def convert_lead_to_customer(
             "postal_code": conversion_data.postal_code or lead.service_postal_code,
             "country": conversion_data.country or lead.service_country,
             # ISP service info
-            "service_address_line1": conversion_data.service_address_line1 or lead.service_address_line1,
-            "service_address_line2": conversion_data.service_address_line2 or lead.service_address_line2,
+            "service_address_line1": conversion_data.service_address_line1
+            or lead.service_address_line1,
+            "service_address_line2": conversion_data.service_address_line2
+            or lead.service_address_line2,
             "service_city": conversion_data.service_city or lead.service_city,
-            "service_state_province": conversion_data.service_state_province or lead.service_state_province,
+            "service_state_province": conversion_data.service_state_province
+            or lead.service_state_province,
             "service_postal_code": conversion_data.service_postal_code or lead.service_postal_code,
             "service_country": conversion_data.service_country or lead.service_country,
             "service_coordinates": conversion_data.service_coordinates or lead.service_coordinates,
             "installation_status": conversion_data.installation_status or "pending",
-            "scheduled_installation_date": conversion_data.scheduled_installation_date or lead.desired_installation_date,
+            "scheduled_installation_date": conversion_data.scheduled_installation_date
+            or lead.desired_installation_date,
             "installation_notes": conversion_data.installation_notes,
             "connection_type": conversion_data.connection_type,
             "service_plan_speed": conversion_data.service_plan_speed or lead.desired_bandwidth,
@@ -352,7 +358,7 @@ async def convert_lead_to_customer(
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to convert lead to customer: {str(e)}"
+            detail=f"Failed to convert lead to customer: {str(e)}",
         )
 
 

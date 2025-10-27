@@ -1,7 +1,10 @@
 """Payment processing service with tenant support and idempotency."""
 
 from collections.abc import Mapping
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -306,7 +309,10 @@ class PaymentService:
             raise PaymentNotFoundError(f"Payment {payment_id} not found")
 
         # Allow refunds on successful or partially refunded payments
-        if original_payment.status not in (PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED):
+        if original_payment.status not in (
+            PaymentStatus.SUCCEEDED,
+            PaymentStatus.PARTIALLY_REFUNDED,
+        ):
             raise PaymentError(
                 f"Can only refund successful or partially refunded payments. "
                 f"Current status: {original_payment.status}"
@@ -644,7 +650,11 @@ class PaymentService:
 
         # FIXED: Extract payment_method_id from payment_method_details for use in callbacks
         # PaymentEntity doesn't have a payment_method_id attribute directly
-        payment_method_id = payment.payment_method_details.get("payment_method_id") if payment.payment_method_details else None
+        payment_method_id = (
+            payment.payment_method_details.get("payment_method_id")
+            if payment.payment_method_details
+            else None
+        )
 
         # Attempt payment again
         try:

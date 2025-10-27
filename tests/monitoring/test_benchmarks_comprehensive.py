@@ -12,7 +12,7 @@ Tests cover:
 """
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
 
@@ -44,11 +44,11 @@ class TestBenchmarkMetric:
         assert metric.category == "general"
         assert metric.metadata == {}
         assert isinstance(metric.timestamp, datetime)
-        assert metric.timestamp.tzinfo == UTC
+        assert metric.timestamp.tzinfo == timezone.utc
 
     def test_benchmark_metric_creation_with_custom_values(self):
         """Test metric creation with custom values."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         metadata = {"source": "test", "version": "1.0"}
 
         metric = BenchmarkMetric(
@@ -69,9 +69,9 @@ class TestBenchmarkMetric:
 
     def test_benchmark_metric_post_init_timestamp(self):
         """Test that timestamp is auto-generated if not provided."""
-        before = datetime.now(UTC)
+        before = datetime.now(timezone.utc)
         metric = BenchmarkMetric(name="test", value=1, unit="unit")
-        after = datetime.now(UTC)
+        after = datetime.now(timezone.utc)
 
         assert before <= metric.timestamp <= after
 
@@ -81,7 +81,7 @@ class TestBenchmarkResult:
 
     def test_benchmark_result_creation(self):
         """Test benchmark result creation."""
-        start_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc)
         result = BenchmarkResult(
             id="test-123",
             name="Test Benchmark",
@@ -103,7 +103,7 @@ class TestBenchmarkResult:
 
     def test_benchmark_result_duration_calculation(self):
         """Test duration calculation in post_init."""
-        start_time = datetime.now(UTC)
+        start_time = datetime.now(timezone.utc)
         end_time = start_time + timedelta(seconds=30)
 
         result = BenchmarkResult(
@@ -125,7 +125,7 @@ class TestBenchmarkResult:
             name="Test Benchmark",
             benchmark_type=BenchmarkType.PERFORMANCE,
             status=BenchmarkStatus.PENDING,
-            start_time=datetime.now(UTC),
+            start_time=datetime.now(timezone.utc),
         )
 
         # Without end_time, duration_seconds should be 0
@@ -142,7 +142,7 @@ class TestBenchmarkResult:
             name="Test Benchmark",
             benchmark_type=BenchmarkType.PERFORMANCE,
             status=BenchmarkStatus.PENDING,
-            start_time=datetime.now(UTC),
+            start_time=datetime.now(timezone.utc),
         )
 
         result.add_metric("cpu_usage", 85.5, "percent", category="system")
@@ -161,7 +161,7 @@ class TestBenchmarkResult:
             name="Test Benchmark",
             benchmark_type=BenchmarkType.PERFORMANCE,
             status=BenchmarkStatus.PENDING,
-            start_time=datetime.now(UTC),
+            start_time=datetime.now(timezone.utc),
         )
 
         result.add_metric("latency", 150.0, "ms")
@@ -182,7 +182,7 @@ class TestBenchmarkResult:
             name="Test Benchmark",
             benchmark_type=BenchmarkType.PERFORMANCE,
             status=BenchmarkStatus.PENDING,
-            start_time=datetime.now(UTC),
+            start_time=datetime.now(timezone.utc),
         )
 
         result.add_metric("cpu_usage", 85, "percent", category="system")
@@ -521,16 +521,16 @@ class TestBenchmarkSuite:
                 name="Test 1",
                 benchmark_type=BenchmarkType.PERFORMANCE,
                 status=BenchmarkStatus.COMPLETED,
-                start_time=datetime.now(UTC),
-                end_time=datetime.now(UTC) + timedelta(seconds=1),
+                start_time=datetime.now(timezone.utc),
+                end_time=datetime.now(timezone.utc) + timedelta(seconds=1),
             ),
             BenchmarkResult(
                 id="2",
                 name="Test 2",
                 benchmark_type=BenchmarkType.PERFORMANCE,
                 status=BenchmarkStatus.FAILED,
-                start_time=datetime.now(UTC),
-                end_time=datetime.now(UTC) + timedelta(seconds=2),
+                start_time=datetime.now(timezone.utc),
+                end_time=datetime.now(timezone.utc) + timedelta(seconds=2),
             ),
         ]
 
@@ -657,21 +657,21 @@ class TestBenchmarkManager:
                 name="CPU Test",
                 benchmark_type=BenchmarkType.CPU,
                 status=BenchmarkStatus.COMPLETED,
-                start_time=datetime.now(UTC),
+                start_time=datetime.now(timezone.utc),
             ),
             BenchmarkResult(
                 id="2",
                 name="Memory Test",
                 benchmark_type=BenchmarkType.MEMORY,
                 status=BenchmarkStatus.FAILED,
-                start_time=datetime.now(UTC),
+                start_time=datetime.now(timezone.utc),
             ),
             BenchmarkResult(
                 id="3",
                 name="CPU Test 2",
                 benchmark_type=BenchmarkType.CPU,
                 status=BenchmarkStatus.COMPLETED,
-                start_time=datetime.now(UTC),
+                start_time=datetime.now(timezone.utc),
             ),
         ]
 
@@ -698,7 +698,7 @@ class TestBenchmarkManager:
                 name="Test",
                 benchmark_type=BenchmarkType.PERFORMANCE,
                 status=BenchmarkStatus.COMPLETED,
-                start_time=datetime.now(UTC),
+                start_time=datetime.now(timezone.utc),
             )
         ]
 

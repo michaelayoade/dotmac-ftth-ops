@@ -76,9 +76,7 @@ class SalesService:
             raise ValueError(f"Lead {quote.lead_id} not found for quote {quote_id}")
 
         # Check if order already exists for this quote
-        existing_order_stmt = select(Order).where(
-            Order.external_order_id == str(quote.id)
-        )
+        existing_order_stmt = select(Order).where(Order.external_order_id == str(quote.id))
         existing_result = await self.db.execute(existing_order_stmt)
         existing_order = existing_result.scalar_one_or_none()
 
@@ -93,7 +91,9 @@ class SalesService:
                 "customer_email": lead.email,
                 "total_amount": existing_order.total_amount,
                 "status": existing_order.status.value,
-                "created_at": existing_order.created_at.isoformat() if existing_order.created_at else None,
+                "created_at": existing_order.created_at.isoformat()
+                if existing_order.created_at
+                else None,
                 "order_number": existing_order.order_number,
             }
 

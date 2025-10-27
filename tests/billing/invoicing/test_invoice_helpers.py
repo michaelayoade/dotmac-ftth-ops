@@ -5,7 +5,7 @@ BEFORE: 171 lines with repetitive mock setup
 AFTER: ~120 lines using shared helpers (30% reduction)
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -34,7 +34,7 @@ class TestInvoiceServiceHelpers:
         invoice_number = await service._generate_invoice_number(sample_tenant_id)
 
         # Verify format
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
         assert invoice_number == f"INV-{year}-000001"
 
     async def test_generate_invoice_number_sequential(self, sample_tenant_id):
@@ -42,7 +42,7 @@ class TestInvoiceServiceHelpers:
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)
 
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
 
         # Mock existing invoice
         mock_invoice = MagicMock()

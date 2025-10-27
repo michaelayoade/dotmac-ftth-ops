@@ -9,14 +9,16 @@ Provides comprehensive tenant management with:
 - Tenant settings
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum as PyEnum
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-from importlib import import_module
 
 if TYPE_CHECKING:  # pragma: no cover
-    from dotmac.platform.radius.models import NAS, RadCheck
+    pass
 
 from sqlalchemy import (
     JSON,
@@ -29,9 +31,8 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
-    false,
 )
-from sqlalchemy.orm import Mapped, mapped_column, relationship, declared_attr
+from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
 from ..db import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
 
@@ -113,11 +114,14 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     # Status and subscription
     status: Mapped[TenantStatus] = mapped_column(
         Enum(TenantStatus, values_callable=lambda x: [e.value for e in x]),
-        default=TenantStatus.TRIAL, nullable=False, index=True
+        default=TenantStatus.TRIAL,
+        nullable=False,
+        index=True,
     )
     plan_type: Mapped[TenantPlanType] = mapped_column(
         Enum(TenantPlanType, values_callable=lambda x: [e.value for e in x]),
-        default=TenantPlanType.FREE, nullable=False
+        default=TenantPlanType.FREE,
+        nullable=False,
     )
 
     # Contact information
@@ -128,7 +132,8 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     billing_email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     billing_cycle: Mapped[BillingCycle] = mapped_column(
         Enum(BillingCycle, values_callable=lambda x: [e.value for e in x]),
-        default=BillingCycle.MONTHLY, nullable=False
+        default=BillingCycle.MONTHLY,
+        nullable=False,
     )
 
     # Subscription dates
@@ -178,6 +183,7 @@ class Tenant(Base, TimestampMixin, SoftDeleteMixin, AuditMixin):
     provisioning_jobs: Mapped[list["TenantProvisioningJob"]] = relationship(
         "TenantProvisioningJob", back_populates="tenant", cascade="all, delete-orphan"
     )
+
     # RADIUS relationships (configured lazily to avoid optional import cycles)
     @declared_attr.directive
     def radius_checks(cls) -> Any:  # pragma: no cover - optional radius integration
@@ -381,7 +387,9 @@ class TenantProvisioningJob(Base, TimestampMixin, AuditMixin):
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     extra_vars: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
     connection_profile: Mapped[dict[str, Any] | None] = mapped_column(JSON, nullable=True)
-    last_acknowledged_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_acknowledged_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
 
     tenant: Mapped["Tenant"] = relationship("Tenant", back_populates="provisioning_jobs")
 

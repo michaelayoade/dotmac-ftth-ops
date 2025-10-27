@@ -51,9 +51,7 @@ class OrchestrationService:
         customer_service: CustomerService | None = None,
         lead_service: LeadService | None = None,
         quote_service: QuoteService | None = None,
-        radius_service: RADIUSService
-        | Callable[[AsyncSession, str], RADIUSService]
-        | None = None,
+        radius_service: RADIUSService | Callable[[AsyncSession, str], RADIUSService] | None = None,
         netbox_service: NetBoxService | None = None,
         voltha_service: VOLTHAService | None = None,
         genieacs_service: GenieACSService | None = None,
@@ -64,7 +62,9 @@ class OrchestrationService:
         self.lead_service = lead_service or LeadService(db)
         self.quote_service = quote_service or QuoteService(db)
         if callable(radius_service):
-            self._radius_service_factory: Callable[[AsyncSession, str], RADIUSService] = radius_service
+            self._radius_service_factory: Callable[[AsyncSession, str], RADIUSService] = (
+                radius_service
+            )
         elif radius_service is not None:
             self._radius_service_factory = lambda _db, _tenant_id: radius_service
         else:
@@ -434,7 +434,9 @@ class OrchestrationService:
         # 2. Terminate active RADIUS sessions
         session_termination = None
         try:
-            session_termination = await radius_service.disconnect_session(username=subscriber.username)
+            session_termination = await radius_service.disconnect_session(
+                username=subscriber.username
+            )
             logger.info("RADIUS session terminated", username=subscriber.username)
         except Exception as e:
             logger.warning("RADIUS session termination failed", error=str(e))
@@ -479,8 +481,10 @@ class OrchestrationService:
         # 7. Mark subscriber as terminated
         subscriber.status = SubscriberStatus.TERMINATED
         subscriber.termination_date = datetime.utcnow()
-        subscriber.metadata["termination_reason"] = reason
-        subscriber.metadata["deprovisioned_by"] = str(user_id) if user_id else None
+        if subscriber.metadata_ is None:
+            subscriber.metadata_ = {}
+        subscriber.metadata_["termination_reason"] = reason
+        subscriber.metadata_["deprovisioned_by"] = str(user_id) if user_id else None
 
         await self.db.commit()
 
@@ -560,7 +564,9 @@ class OrchestrationService:
         # Mark as suspended
         subscriber.status = SubscriberStatus.SUSPENDED
         subscriber.suspension_date = datetime.utcnow()
-        subscriber.metadata["suspension_reason"] = reason
+        if subscriber.metadata_ is None:
+            subscriber.metadata_ = {}
+        subscriber.metadata_["suspension_reason"] = reason
 
         await self.db.commit()
 
@@ -628,9 +634,11 @@ class OrchestrationService:
         # Mark as active
         subscriber.status = SubscriberStatus.ACTIVE
         subscriber.suspension_date = None
-        if "suspension_reason" in subscriber.metadata:
-            del subscriber.metadata["suspension_reason"]
-        subscriber.metadata["reactivated_at"] = datetime.utcnow().isoformat()
+        if subscriber.metadata_ and "suspension_reason" in subscriber.metadata_:
+            del subscriber.metadata_["suspension_reason"]
+        if subscriber.metadata_ is None:
+            subscriber.metadata_ = {}
+        subscriber.metadata_["reactivated_at"] = datetime.utcnow().isoformat()
 
         await self.db.commit()
 

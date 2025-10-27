@@ -15,6 +15,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
@@ -29,30 +30,38 @@ from dotmac.platform.billing.subscriptions.service import SubscriptionService
 def mock_payment_gateway():
     """Mock payment gateway for testing."""
     gateway = MagicMock()
-    gateway.create_payment_intent = AsyncMock(return_value={
-        "id": "pi_test_123",
-        "status": "succeeded",
-        "amount": 2999,
-        "currency": "usd",
-    })
-    gateway.capture_payment = AsyncMock(return_value={
-        "id": "ch_test_123",
-        "status": "succeeded",
-        "amount": 2999,
-    })
-    gateway.create_refund = AsyncMock(return_value={
-        "id": "re_test_123",
-        "status": "succeeded",
-        "amount": 2999,
-    })
-    gateway.update_payment_method = AsyncMock(return_value={
-        "id": "pm_test_123",
-        "status": "updated",
-    })
+    gateway.create_payment_intent = AsyncMock(
+        return_value={
+            "id": "pi_test_123",
+            "status": "succeeded",
+            "amount": 2999,
+            "currency": "usd",
+        }
+    )
+    gateway.capture_payment = AsyncMock(
+        return_value={
+            "id": "ch_test_123",
+            "status": "succeeded",
+            "amount": 2999,
+        }
+    )
+    gateway.create_refund = AsyncMock(
+        return_value={
+            "id": "re_test_123",
+            "status": "succeeded",
+            "amount": 2999,
+        }
+    )
+    gateway.update_payment_method = AsyncMock(
+        return_value={
+            "id": "pm_test_123",
+            "status": "updated",
+        }
+    )
     return gateway
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_plan(async_db_session):
     """Create a test subscription plan."""
     service = SubscriptionService(db_session=async_db_session)
@@ -83,7 +92,7 @@ class TestSubscriptionPaymentCreation:
         plan, tenant_id = test_plan
         service = SubscriptionService(db_session=async_db_session)
 
-        with patch('dotmac.platform.billing.payments.service.PaymentService') as MockPaymentService:
+        with patch("dotmac.platform.billing.payments.service.PaymentService") as MockPaymentService:
             mock_payment_service = MockPaymentService.return_value
             mock_payment_service.create_payment_intent = mock_payment_gateway.create_payment_intent
 
@@ -93,8 +102,7 @@ class TestSubscriptionPaymentCreation:
             )
 
             subscription = await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
 
             # Verify subscription created
@@ -130,8 +138,7 @@ class TestSubscriptionPaymentCreation:
         )
 
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Should be in trial, not charged yet
@@ -156,8 +163,7 @@ class TestSubscriptionRenewalPayments:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Mock renewal payment
@@ -171,9 +177,7 @@ class TestSubscriptionRenewalPayments:
         assert payment_result["amount"] == 2999  # $29.99 in cents
 
     @pytest.mark.asyncio
-    async def test_failed_renewal_payment_marks_past_due(
-        self, async_db_session, test_plan
-    ):
+    async def test_failed_renewal_payment_marks_past_due(self, async_db_session, test_plan):
         """Test that failed renewal payments mark subscription as past due."""
         plan, tenant_id = test_plan
         service = SubscriptionService(db_session=async_db_session)
@@ -184,8 +188,7 @@ class TestSubscriptionRenewalPayments:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Simulate failed payment
@@ -224,7 +227,9 @@ class TestPaymentFailureRetry:
         max_retries = 5
 
         for attempt in range(1, max_retries + 1):
-            print(f"\n🔄 Retry attempt {attempt}/{max_retries} (delay: {retry_delays[attempt-1]}h)")
+            print(
+                f"\n🔄 Retry attempt {attempt}/{max_retries} (delay: {retry_delays[attempt - 1]}h)"
+            )
 
             try:
                 # Simulate payment attempt
@@ -260,8 +265,7 @@ class TestPaymentFailureRetry:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # In real implementation:
@@ -289,15 +293,12 @@ class TestRefundProcessing:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Cancel immediately (should trigger refund)
         canceled = await service.cancel_subscription(
-            subscription_id=subscription.subscription_id,
-            tenant_id=tenant_id,
-            immediately=True
+            subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=False  # Cancel immediately
         )
 
         assert canceled.status == SubscriptionStatus.CANCELED
@@ -313,7 +314,7 @@ class TestRefundProcessing:
         )
 
         assert refund_result["status"] == "succeeded"
-        print(f"\n💰 Refund processed: ${refund_amount/100:.2f}")
+        print(f"\n💰 Refund processed: ${refund_amount / 100:.2f}")
 
 
 class TestPaymentMethodUpdates:
@@ -333,8 +334,7 @@ class TestPaymentMethodUpdates:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Update payment method
@@ -377,10 +377,7 @@ class TestSetupFeeCharging:
             customer_id=str(uuid4()),
             plan_id=plan.plan_id,
         )
-        subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
-        )
+        await service.create_subscription(subscription_data=subscription_data, tenant_id=tenant_id)
 
         # Calculate total charge (first month + setup fee)
         total_charge = int((plan.price + plan.setup_fee) * 100)  # $128.99
@@ -392,7 +389,7 @@ class TestSetupFeeCharging:
         )
 
         assert payment_result["status"] == "succeeded"
-        print(f"\n💰 Initial charge (recurring + setup): ${total_charge/100:.2f}")
+        print(f"\n💰 Initial charge (recurring + setup): ${total_charge / 100:.2f}")
 
 
 @pytest.mark.asyncio
@@ -408,9 +405,9 @@ async def test_complete_payment_workflow(async_db_session, mock_payment_gateway)
     service = SubscriptionService(db_session=async_db_session)
     tenant_id = str(uuid4())
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("💳 COMPLETE PAYMENT INTEGRATION WORKFLOW")
-    print("="*70)
+    print("=" * 70)
 
     # Step 1: Create plan
     print("\n📋 Step 1: Creating subscription plan...")
@@ -433,8 +430,7 @@ async def test_complete_payment_workflow(async_db_session, mock_payment_gateway)
         plan_id=plan.plan_id,
     )
     subscription = await service.create_subscription(
-        subscription_data=subscription_data,
-        tenant_id=tenant_id
+        subscription_data=subscription_data, tenant_id=tenant_id
     )
 
     initial_payment = await mock_payment_gateway.create_payment_intent(
@@ -467,11 +463,13 @@ async def test_complete_payment_workflow(async_db_session, mock_payment_gateway)
 
     # Step 5: Retry with new payment method
     print("\n🔄 Step 5: Retrying with updated payment method...")
-    mock_payment_gateway.capture_payment = AsyncMock(return_value={
-        "id": "ch_retry_success",
-        "status": "succeeded",
-        "amount": 4999,
-    })
+    mock_payment_gateway.capture_payment = AsyncMock(
+        return_value={
+            "id": "ch_retry_success",
+            "status": "succeeded",
+            "amount": 4999,
+        }
+    )
     retry_payment = await mock_payment_gateway.capture_payment(
         amount=int(plan.price * 100),
         currency=plan.currency.lower(),
@@ -483,19 +481,17 @@ async def test_complete_payment_workflow(async_db_session, mock_payment_gateway)
     # Step 6: Cancel with refund
     print("\n🛑 Step 6: Canceling subscription with refund...")
     await service.cancel_subscription(
-        subscription_id=subscription.subscription_id,
-        tenant_id=tenant_id,
-        immediately=True
+        subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=False  # Cancel immediately
     )
 
     # Calculate prorated refund
-    refund_amount = int(plan.price * 0.5 * 100)  # 50% refund
-    refund = await mock_payment_gateway.create_refund(
+    refund_amount = int(plan.price * Decimal("0.5") * 100)  # 50% refund
+    await mock_payment_gateway.create_refund(
         payment_id=renewal_payment["id"],
         amount=refund_amount,
     )
-    print(f"✅ Refund processed: ${refund_amount/100:.2f}")
+    print(f"✅ Refund processed: ${refund_amount / 100:.2f}")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("✅ COMPLETE PAYMENT WORKFLOW SUCCESSFUL")
-    print("="*70)
+    print("=" * 70)

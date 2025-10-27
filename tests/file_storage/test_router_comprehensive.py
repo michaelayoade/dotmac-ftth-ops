@@ -12,7 +12,7 @@ Tests cover:
 - Authentication and authorization
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -382,14 +382,14 @@ class TestListFilesEndpoint:
                 file_name="test1.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             ),
             FileMetadata(
                 file_id="file-2",
                 file_name="test2.txt",
                 file_size=200,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             ),
         ]
         mock_storage_service.list_files = AsyncMock(return_value=mock_files)

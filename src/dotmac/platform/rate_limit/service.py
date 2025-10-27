@@ -6,7 +6,10 @@ Redis-backed rate limiting with sliding window algorithm.
 
 import hashlib
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 from uuid import UUID
 
@@ -96,9 +99,7 @@ class RateLimitService:
         """Generate Redis key for rate limit tracking."""
         # Use hash to keep key length reasonable
         # MD5 used for identifier hashing, not security
-        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[
-            :12
-        ]  # nosec B324
+        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[:12]  # nosec B324
         return f"ratelimit:{tenant_id}:{scope.value}:{id_hash}:{rule_id}"
 
     async def check_rate_limit(

@@ -5,7 +5,7 @@ BEFORE: 231 lines with repetitive mock setup
 AFTER: ~140 lines using shared helpers (39% reduction)
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -41,8 +41,8 @@ class TestInvoiceServiceCreation:
         # Mock refresh to populate entity with required fields
         def mock_refresh_entity(entity, attribute_names=None):
             entity.invoice_id = str(uuid4())
-            entity.created_at = datetime.now(UTC)
-            entity.updated_at = datetime.now(UTC)
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
             entity.total_credits_applied = 0
             entity.credit_applications = []
             for item in entity.line_items:
@@ -147,8 +147,8 @@ class TestInvoiceServiceCreation:
 
         def mock_refresh_entity(entity, attribute_names=None):
             entity.invoice_id = str(uuid4())
-            entity.created_at = datetime.now(UTC)
-            entity.updated_at = datetime.now(UTC)
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
             entity.total_credits_applied = 0
             entity.credit_applications = []
             for item in entity.line_items:
@@ -181,15 +181,15 @@ class TestInvoiceServiceCreation:
         """Test invoice creation with custom due date"""
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)
-        custom_due_date = datetime.now(UTC) + timedelta(days=45)
+        custom_due_date = datetime.now(timezone.utc) + timedelta(days=45)
 
         # Mock no existing invoice
         mock_db.execute = AsyncMock(return_value=build_not_found_result())
 
         def mock_refresh_entity(entity, attribute_names=None):
             entity.invoice_id = str(uuid4())
-            entity.created_at = datetime.now(UTC)
-            entity.updated_at = datetime.now(UTC)
+            entity.created_at = datetime.now(timezone.utc)
+            entity.updated_at = datetime.now(timezone.utc)
             entity.total_credits_applied = 0
             entity.credit_applications = []
             for item in entity.line_items:

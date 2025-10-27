@@ -360,6 +360,7 @@ class CoAClient:
             else:
                 # Fallback to Mikrotik if vendor-aware disabled or vendor not specified
                 from dotmac.platform.radius.vendors import MikrotikCoAStrategy
+
                 strategy = MikrotikCoAStrategy()
                 logger.debug(
                     "Using Mikrotik CoA strategy (default)",

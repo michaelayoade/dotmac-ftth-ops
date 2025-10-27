@@ -22,7 +22,7 @@ Verifies that:
 5. handle_record_offline_payment calls PaymentService.record_offline_payment
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -68,7 +68,7 @@ class TestUpdateInvoiceHandler:
         handler.invoice_service.update_invoice = AsyncMock(return_value=mock_result)
 
         # Create and execute command
-        due_date = datetime.now(UTC)
+        due_date = datetime.now(timezone.utc)
         command = UpdateInvoiceCommand(
             tenant_id="tenant-123",
             invoice_id="inv-123",
@@ -297,7 +297,7 @@ class TestRecordOfflinePaymentHandler:
         mock_result = MagicMock()
         handler.payment_service.record_offline_payment = AsyncMock(return_value=mock_result)
 
-        payment_date = datetime.now(UTC)
+        payment_date = datetime.now(timezone.utc)
         # amount must be int in minor units, invoice_id is required
         command = RecordOfflinePaymentCommand(
             tenant_id="tenant-123",

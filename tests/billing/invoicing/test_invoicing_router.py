@@ -5,11 +5,12 @@ Tests HTTP endpoints, request validation, response formatting, and error handlin
 for the invoice management API.
 """
 
-import pytest
 from datetime import datetime, timedelta
+from typing import Any
+
+import pytest
 from fastapi import status
 from httpx import AsyncClient
-from typing import Any
 
 
 class MockObject:
@@ -25,10 +26,7 @@ class TestInvoiceCRUD:
 
     @pytest.mark.asyncio
     async def test_create_invoice_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test successful invoice creation."""
         # Arrange
@@ -46,20 +44,20 @@ class TestInvoiceCRUD:
                     "city": "San Francisco",
                     "state": "CA",
                     "postal_code": "94105",
-                    "country": "US"
+                    "country": "US",
                 },
                 "line_items": [
                     {
                         "description": "Subscription - Pro Plan",
                         "quantity": 1,
                         "unit_price": 10000,
-                        "total_price": 10000
+                        "total_price": 10000,
                     }
                 ],
                 "currency": "USD",
-                "due_days": 30
+                "due_days": 30,
             },
-            headers={"X-Tenant-ID": "tenant-1"}
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -71,10 +69,7 @@ class TestInvoiceCRUD:
         assert data["total_amount"] == 10800
 
     @pytest.mark.asyncio
-    async def test_create_invoice_validation_error(
-        self,
-        async_client: AsyncClient
-    ):
+    async def test_create_invoice_validation_error(self, async_client: AsyncClient):
         """Test invoice creation with invalid data."""
         # Act - missing required field 'line_items'
         response = await async_client.post(
@@ -82,10 +77,10 @@ class TestInvoiceCRUD:
             json={
                 "customer_id": "cust-456",
                 "billing_email": "customer@example.com",
-                "billing_address": {}
+                "billing_address": {},
                 # Missing 'line_items'
             },
-            headers={"X-Tenant-ID": "tenant-1"}
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -93,10 +88,7 @@ class TestInvoiceCRUD:
 
     @pytest.mark.asyncio
     async def test_get_invoice_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test get invoice by ID."""
         # Arrange
@@ -105,8 +97,7 @@ class TestInvoiceCRUD:
 
         # Act
         response = await async_client.get(
-            "/api/v1/billing/invoices/inv-123",
-            headers={"X-Tenant-ID": "tenant-1"}
+            "/api/v1/billing/invoices/inv-123", headers={"X-Tenant-ID": "tenant-1"}
         )
 
         # Assert
@@ -116,19 +107,14 @@ class TestInvoiceCRUD:
         assert data["invoice_number"] == "INV-2025-001"
 
     @pytest.mark.asyncio
-    async def test_get_invoice_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service
-    ):
+    async def test_get_invoice_not_found(self, async_client: AsyncClient, mock_invoice_service):
         """Test get non-existent invoice."""
         # Arrange
         mock_invoice_service.get_invoice.return_value = None
 
         # Act
         response = await async_client.get(
-            "/api/v1/billing/invoices/inv-999",
-            headers={"X-Tenant-ID": "tenant-1"}
+            "/api/v1/billing/invoices/inv-999", headers={"X-Tenant-ID": "tenant-1"}
         )
 
         # Assert
@@ -138,22 +124,22 @@ class TestInvoiceCRUD:
 
     @pytest.mark.asyncio
     async def test_list_invoices_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test list all invoices."""
         # Arrange
         invoice1 = MockObject(**sample_invoice)
-        invoice2_data = {**sample_invoice, "invoice_id": "inv-456", "invoice_number": "INV-2025-002"}
+        invoice2_data = {
+            **sample_invoice,
+            "invoice_id": "inv-456",
+            "invoice_number": "INV-2025-002",
+        }
         invoice2 = MockObject(**invoice2_data)
         mock_invoice_service.list_invoices.return_value = [invoice1, invoice2]
 
         # Act
         response = await async_client.get(
-            "/api/v1/billing/invoices",
-            headers={"X-Tenant-ID": "tenant-1"}
+            "/api/v1/billing/invoices", headers={"X-Tenant-ID": "tenant-1"}
         )
 
         # Assert
@@ -165,10 +151,7 @@ class TestInvoiceCRUD:
 
     @pytest.mark.asyncio
     async def test_list_invoices_with_filters(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test list invoices with filtering."""
         # Arrange
@@ -178,13 +161,8 @@ class TestInvoiceCRUD:
         # Act
         response = await async_client.get(
             "/api/v1/billing/invoices",
-            params={
-                "customer_id": "cust-456",
-                "status": "draft",
-                "limit": 10,
-                "offset": 0
-            },
-            headers={"X-Tenant-ID": "tenant-1"}
+            params={"customer_id": "cust-456", "status": "draft", "limit": 10, "offset": 0},
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -199,10 +177,7 @@ class TestInvoiceLifecycle:
 
     @pytest.mark.asyncio
     async def test_finalize_invoice_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test successful invoice finalization."""
         # Arrange
@@ -214,7 +189,7 @@ class TestInvoiceLifecycle:
         response = await async_client.post(
             "/api/v1/billing/invoices/inv-123/finalize",
             json={"send_email": True},
-            headers={"X-Tenant-ID": "tenant-1"}
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -226,9 +201,7 @@ class TestInvoiceLifecycle:
     @pytest.mark.skip(reason="Custom exception handling - service layer dependency")
     @pytest.mark.asyncio
     async def test_finalize_invoice_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service
+        self, async_client: AsyncClient, mock_invoice_service
     ):
         """Test finalize non-existent invoice."""
         # Note: Skipped due to custom exception initialization in service
@@ -236,14 +209,15 @@ class TestInvoiceLifecycle:
 
     @pytest.mark.asyncio
     async def test_void_invoice_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test successful invoice voiding."""
         # Arrange
-        voided_invoice = {**sample_invoice, "status": "void", "voided_at": datetime.utcnow().isoformat()}
+        voided_invoice = {
+            **sample_invoice,
+            "status": "void",
+            "voided_at": datetime.utcnow().isoformat(),
+        }
         invoice_obj = MockObject(**voided_invoice)
         mock_invoice_service.void_invoice.return_value = invoice_obj
 
@@ -251,7 +225,7 @@ class TestInvoiceLifecycle:
         response = await async_client.post(
             "/api/v1/billing/invoices/inv-123/void",
             json={"reason": "Customer requested cancellation"},
-            headers={"X-Tenant-ID": "tenant-1"}
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -263,10 +237,7 @@ class TestInvoiceLifecycle:
 
     @pytest.mark.asyncio
     async def test_mark_invoice_paid_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test marking invoice as paid."""
         # Arrange
@@ -275,7 +246,7 @@ class TestInvoiceLifecycle:
             "status": "paid",
             "payment_status": "paid",
             "remaining_balance": 0,
-            "paid_at": datetime.utcnow().isoformat()
+            "paid_at": datetime.utcnow().isoformat(),
         }
         invoice_obj = MockObject(**paid_invoice)
         mock_invoice_service.mark_invoice_paid.return_value = invoice_obj
@@ -284,7 +255,7 @@ class TestInvoiceLifecycle:
         response = await async_client.post(
             "/api/v1/billing/invoices/inv-123/mark-paid",
             params={"payment_id": "pay-123"},
-            headers={"X-Tenant-ID": "tenant-1"}
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -301,17 +272,14 @@ class TestInvoiceCredits:
 
     @pytest.mark.asyncio
     async def test_apply_credit_to_invoice_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test applying credit to invoice."""
         # Arrange
         credited_invoice = {
             **sample_invoice,
             "total_credits_applied": 2000,
-            "remaining_balance": 8800
+            "remaining_balance": 8800,
         }
         invoice_obj = MockObject(**credited_invoice)
         mock_invoice_service.apply_credit_to_invoice.return_value = invoice_obj
@@ -319,11 +287,8 @@ class TestInvoiceCredits:
         # Act
         response = await async_client.post(
             "/api/v1/billing/invoices/inv-123/apply-credit",
-            json={
-                "credit_amount": 2000,
-                "credit_application_id": "cred-app-123"
-            },
-            headers={"X-Tenant-ID": "tenant-1"}
+            json={"credit_amount": 2000, "credit_application_id": "cred-app-123"},
+            headers={"X-Tenant-ID": "tenant-1"},
         )
 
         # Assert
@@ -336,9 +301,7 @@ class TestInvoiceCredits:
     @pytest.mark.skip(reason="Custom exception handling - service layer dependency")
     @pytest.mark.asyncio
     async def test_apply_credit_invoice_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service
+        self, async_client: AsyncClient, mock_invoice_service
     ):
         """Test applying credit to non-existent invoice."""
         # Note: Skipped due to custom exception initialization in service
@@ -350,10 +313,7 @@ class TestInvoiceUtilities:
 
     @pytest.mark.asyncio
     async def test_check_overdue_invoices_success(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service,
-        sample_invoice: dict[str, Any]
+        self, async_client: AsyncClient, mock_invoice_service, sample_invoice: dict[str, Any]
     ):
         """Test checking for overdue invoices."""
         # Arrange
@@ -361,15 +321,14 @@ class TestInvoiceUtilities:
             **sample_invoice,
             "invoice_id": "inv-overdue",
             "status": "overdue",
-            "due_date": (datetime.utcnow() - timedelta(days=5)).isoformat()
+            "due_date": (datetime.utcnow() - timedelta(days=5)).isoformat(),
         }
         invoice_obj = MockObject(**overdue_invoice)
         mock_invoice_service.check_overdue_invoices.return_value = [invoice_obj]
 
         # Act
         response = await async_client.post(
-            "/api/v1/billing/invoices/check-overdue",
-            headers={"X-Tenant-ID": "tenant-1"}
+            "/api/v1/billing/invoices/check-overdue", headers={"X-Tenant-ID": "tenant-1"}
         )
 
         # Assert
@@ -381,9 +340,7 @@ class TestInvoiceUtilities:
 
     @pytest.mark.asyncio
     async def test_check_overdue_invoices_none_overdue(
-        self,
-        async_client: AsyncClient,
-        mock_invoice_service
+        self, async_client: AsyncClient, mock_invoice_service
     ):
         """Test checking for overdue invoices when none are overdue."""
         # Arrange
@@ -391,8 +348,7 @@ class TestInvoiceUtilities:
 
         # Act
         response = await async_client.post(
-            "/api/v1/billing/invoices/check-overdue",
-            headers={"X-Tenant-ID": "tenant-1"}
+            "/api/v1/billing/invoices/check-overdue", headers={"X-Tenant-ID": "tenant-1"}
         )
 
         # Assert

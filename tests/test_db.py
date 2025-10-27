@@ -1,7 +1,7 @@
 """Tests for database module."""
 
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -71,7 +71,7 @@ class TestDatabaseModels:
         assert model.is_deleted is False
 
         # Test soft delete
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         model.deleted_at = now
         assert model.is_deleted is True
 
@@ -546,7 +546,10 @@ class TestDatabaseOperations:
 
         await create_all_tables_async()
 
-        mock_conn.run_sync.assert_called_once_with(mock_metadata.create_all)
+        mock_conn.run_sync.assert_called_once()
+        run_sync_callable = mock_conn.run_sync.call_args[0][0]
+        run_sync_callable(mock_conn)
+        mock_metadata.create_all.assert_called_once_with(bind=mock_conn, checkfirst=True)
 
     @patch("dotmac.platform.db.Base.metadata")
     @patch("dotmac.platform.db.get_sync_engine")

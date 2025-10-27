@@ -53,11 +53,11 @@ from dotmac.platform.billing.exceptions import (
 )
 from dotmac.platform.billing.models import (
     BillingBaseModel,
-    BillingSettingsTable,
     BillingPricingRuleTable,
     BillingProductCategoryTable,
     BillingProductTable,
     BillingRuleUsageTable,
+    BillingSettingsTable,
     BillingSQLModel,
     BillingSubscriptionEventTable,
     BillingSubscriptionPlanTable,

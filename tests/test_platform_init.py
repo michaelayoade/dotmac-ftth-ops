@@ -67,6 +67,20 @@ class TestPlatformRegistry:
 class TestPlatformConfig:
     """Test platform configuration."""
 
+    @patch.dict(
+        "os.environ",
+        {
+            "DOTMAC_JWT_SECRET_KEY": "",
+            "DOTMAC_JWT_ALGORITHM": "HS256",
+            "DOTMAC_JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15",
+            "DOTMAC_JWT_REFRESH_TOKEN_EXPIRE_DAYS": "30",
+            "DOTMAC_SESSION_BACKEND": "memory",
+            "DOTMAC_VAULT_MOUNT_POINT": "secret",
+            "DOTMAC_SERVICE_NAME": "dotmac-service",
+            "DOTMAC_LOG_LEVEL": "INFO",
+        },
+        clear=True,
+    )
     def test_config_initialization(self):
         """Test config initializes with environment defaults."""
         config = platform.PlatformConfig()
@@ -80,6 +94,13 @@ class TestPlatformConfig:
         assert config.get("observability.service_name") == "dotmac-service"
         assert config.get("observability.log_level") == "INFO"
 
+    @patch.dict(
+        "os.environ",
+        {
+            "DOTMAC_JWT_ALGORITHM": "HS256",
+        },
+        clear=True,
+    )
     def test_config_get_nested_value(self):
         """Test getting nested configuration values."""
         config = platform.PlatformConfig()
@@ -92,6 +113,7 @@ class TestPlatformConfig:
         nonexistent = config.get("nonexistent.key", "default")
         assert nonexistent == "default"
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_config_get_non_dict_value(self):
         """Test getting value when intermediate path is not a dict."""
         config = platform.PlatformConfig()
@@ -103,6 +125,7 @@ class TestPlatformConfig:
         result = config.get("string_key.subkey", "default")
         assert result == "default"
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_config_update(self):
         """Test updating configuration."""
         config = platform.PlatformConfig()
@@ -120,6 +143,13 @@ class TestPlatformConfig:
         assert config.get("auth.jwt_algorithm") == "RS256"
         assert config.get("auth.custom_key") == "custom_value"
 
+    @patch.dict(
+        "os.environ",
+        {
+            "DOTMAC_JWT_ACCESS_TOKEN_EXPIRE_MINUTES": "15",
+        },
+        clear=True,
+    )
     def test_config_merge(self):
         """Test recursive configuration merging."""
         config = platform.PlatformConfig()
@@ -187,6 +217,7 @@ class TestPlatformConfig:
 class TestPlatformInitialization:
     """Test platform initialization functions."""
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_initialize_platform_services_with_configs(self):
         """Test initializing platform with custom configurations."""
         # Clear initialized services
@@ -212,6 +243,7 @@ class TestPlatformInitialization:
         initialized = platform.get_initialized_services()
         assert isinstance(initialized, set)
 
+    @patch.dict("os.environ", {}, clear=True)
     def test_initialize_platform_services_without_auto_discover(self):
         """Test initialization without auto-discovery."""
         platform._initialized_services.clear()
@@ -314,16 +346,27 @@ class TestServiceFactories:
 
     def test_create_observability_manager_success(self):
         """Test creating observability manager."""
-        result = platform.create_observability_manager(auto_initialize=False)
-
-        assert result is not None
-        # Should be an ObservabilityManager instance
-        assert hasattr(result, "initialize")
+        try:
+            result = platform.create_observability_manager(auto_initialize=False)
+        except ImportError:
+            pytest.skip("Observability extras not installed")
+        else:
+            assert result is not None
+            # Should be an ObservabilityManager instance
+            assert hasattr(result, "initialize")
 
     def test_create_observability_manager_with_app(self):
         """Test creating observability manager with app."""
         mock_app = MagicMock()
 
-        result = platform.create_observability_manager(app=mock_app, auto_initialize=False)
-
-        assert result is not None
+        try:
+            result = platform.create_observability_manager(app=mock_app, auto_initialize=False)
+        except ImportError:
+            pytest.skip("Observability extras not installed")
+        else:
+            assert result is not None
+            # Should have initialize method
+            assert hasattr(result, "initialize")
+            # Should have the app reference if applicable
+            if hasattr(result, "app"):
+                assert result.app == mock_app

@@ -1,0 +1,152 @@
+# Test Quality CI/CD Pipeline
+#
+# This workflow runs comprehensive test quality checks including:
+# - Schema validation
+# - OpenAPI contract testing
+# - Performance regression detection
+# - Coverage reporting
+
+name: Test Quality
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+  schedule:
+    # Run nightly for performance tracking
+    - cron: '0 2 * * *'
+
+jobs:
+  test-quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[test]"
+
+      - name: Run tests with coverage
+        run: |
+          pytest tests/ --cov=src --cov-report=json --cov-report=html --cov-report=term -v
+
+      - name: Check schema validation
+        run: |
+          # Run contract testing validation
+          python scripts/validate_test_schemas.py
+
+      - name: Validate OpenAPI contracts
+        if: hashFiles('openapi.json') != ''
+        run: |
+          python scripts/validate_openapi_contracts.py
+
+      - name: Check performance regression
+        run: |
+          python scripts/check_performance_regression.py --threshold 20
+
+      - name: Generate coverage dashboard
+        run: |
+          python scripts/generate_coverage_dashboard.py
+
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.json
+          fail_ci_if_error: false
+
+      - name: Upload performance data
+        uses: actions/upload-artifact@v3
+        with:
+          name: performance-data
+          path: .test_performance.json
+
+      - name: Upload coverage dashboard
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-dashboard
+          path: coverage-dashboard.html
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read performance data
+            let perfData = {};
+            try {
+              perfData = JSON.parse(fs.readFileSync('.test_performance.json', 'utf8'));
+            } catch (e) {
+              console.log('No performance data found');
+            }
+
+            // Read coverage data
+            let covData = {};
+            try {
+              covData = JSON.parse(fs.readFileSync('coverage.json', 'utf8'));
+            } catch (e) {
+              console.log('No coverage data found');
+            }
+
+            const coverage = covData.totals?.percent_covered || 0;
+            const slowTests = Object.entries(perfData.tests || {})
+              .sort((a, b) => b[1].avg_ms - a[1].avg_ms)
+              .slice(0, 5);
+
+            let comment = `## Test Quality Report\n\n`;
+            comment += `### Coverage\n`;
+            comment += `**${coverage.toFixed(1)}%** test coverage\n\n`;
+
+            if (slowTests.length > 0) {
+              comment += `### Performance\n`;
+              comment += `Slowest 5 tests:\n`;
+              for (const [name, stats] of slowTests) {
+                comment += `- ${name}: ${stats.avg_ms.toFixed(0)}ms\n`;
+              }
+            }
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  performance-regression:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Download previous performance data
+        uses: dawidd6/action-download-artifact@v2
+        continue-on-error: true
+        with:
+          workflow: test-quality.yml
+          name: performance-data
+          path: ./previous
+
+      - name: Run performance comparison
+        run: |
+          if [ -f previous/.test_performance.json ]; then
+            python scripts/check_performance_regression.py \
+              --previous previous/.test_performance.json \
+              --current .test_performance.json \
+              --threshold 20 \
+              --report
+          fi

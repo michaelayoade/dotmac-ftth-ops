@@ -7,7 +7,7 @@ pay-as-you-go charges.
 """
 
 from datetime import datetime
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -17,8 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-from dotmac.platform.database import get_async_session
 from dotmac.platform.billing.settings.service import BillingSettingsService
+from dotmac.platform.database import get_async_session
 
 from .models import BilledStatus, UsageAggregate, UsageRecord, UsageType
 from .schemas import (

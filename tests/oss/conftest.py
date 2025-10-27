@@ -8,17 +8,19 @@ Provides test fixtures for OSS integration testing including:
 - Service lifecycle test data
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import pytest
-from dotmac.platform.db import Base
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
+from dotmac.platform.db import Base
 
-@pytest.fixture(scope="function")
+
+@pytest_asyncio.fixture(scope="function")
 async def async_session():
     """Create an async database session for testing."""
     # Import OSS-related models to ensure they're registered with Base.metadata
@@ -134,7 +136,7 @@ def sample_nas_server():
 @pytest.fixture
 def sample_radius_session():
     """Sample active RADIUS session data."""
-    now = datetime.now(UTC)
+    now = datetime.now(timezone.utc)
     return {
         "session_id": f"sess_{uuid4().hex[:16]}",
         "username": "testuser@isp.com",
@@ -230,7 +232,7 @@ def sample_cpe_device():
         "model": "EG8145V5",
         "software_version": "V5R019C10S115",
         "hardware_version": "V5.0",
-        "last_inform": datetime.now(UTC).isoformat(),
+        "last_inform": datetime.now(timezone.utc).isoformat(),
         "connection_request_url": "http://10.0.1.100:7547",
     }
 
@@ -273,7 +275,7 @@ def sample_firmware_upgrade():
         "download_url": "http://firmware.isp.com/ont/HG8145V5_V5R019C10S120.bin",
         "file_type": "3 Vendor Configuration File",
         "target_filename": "firmware.bin",
-        "schedule_time": (datetime.now(UTC) + timedelta(hours=2)).isoformat(),
+        "schedule_time": (datetime.now(timezone.utc) + timedelta(hours=2)).isoformat(),
     }
 
 
@@ -296,7 +298,7 @@ def sample_service_provisioning_request():
             "managed_wifi": True,
         },
         "installation_address": "123 Main St, City, State 12345",
-        "installation_scheduled_date": (datetime.now(UTC) + timedelta(days=7)).isoformat(),
+        "installation_scheduled_date": (datetime.now(timezone.utc) + timedelta(days=7)).isoformat(),
         "equipment_assigned": ["ONT-HG8145V5", "Router-AX3000"],
         "vlan_id": 100,
     }
@@ -375,14 +377,14 @@ class MockRADIUSServer:
         self.sessions[session_id] = {
             **session_data,
             "username": username,
-            "start_time": datetime.now(UTC),
+            "start_time": datetime.now(timezone.utc),
         }
         return session_id
 
     def record_accounting(self, session_id: str, acct_data: dict[str, Any]) -> None:
         """Record accounting data."""
         self.accounting_data.append(
-            {"session_id": session_id, "timestamp": datetime.now(UTC), "data": acct_data}
+            {"session_id": session_id, "timestamp": datetime.now(timezone.utc), "data": acct_data}
         )
 
 

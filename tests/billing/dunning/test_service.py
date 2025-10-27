@@ -1,6 +1,6 @@
 """Comprehensive tests for dunning service layer."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -272,7 +272,7 @@ class TestDunningExecutions:
         )
 
         # Set next_action_at to past
-        execution.next_action_at = datetime.now(UTC) - timedelta(hours=1)
+        execution.next_action_at = datetime.now(timezone.utc) - timedelta(hours=1)
         await async_session.commit()
 
         # Get pending actions

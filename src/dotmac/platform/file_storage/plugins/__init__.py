@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Dict, Protocol
+from typing import Protocol
 
 
 class StorageBackendPlugin(Protocol):
@@ -15,7 +15,7 @@ class StorageBackendPlugin(Protocol):
         """Return an instantiated storage backend."""
 
 
-_registry: Dict[str, StorageBackendPlugin] = {}
+_registry: dict[str, StorageBackendPlugin] = {}
 _builtin_registered = False
 
 

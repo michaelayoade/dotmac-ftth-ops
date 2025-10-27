@@ -8,7 +8,10 @@ import hashlib
 import json
 import zlib
 from dataclasses import asdict, is_dataclass
-from datetime import UTC, date, datetime
+from datetime import date, datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, TypedDict, cast
 
@@ -519,6 +522,7 @@ class CacheService:
             )
 
         self._local_stats[ns]["sets"] += count
+
     def _record_delete(self, namespace: CacheNamespace | str, count: int = 1) -> None:
         """Record cache delete operation."""
         ns = namespace.value if isinstance(namespace, CacheNamespace) else namespace
