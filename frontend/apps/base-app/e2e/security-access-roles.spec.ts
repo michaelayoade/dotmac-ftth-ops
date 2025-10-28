@@ -30,7 +30,7 @@ test.describe("Security Access · Role assignments", () => {
 
     const availableList = dialog.locator('[data-testid="available-users-list"]');
     if ((await availableList.locator('[data-testid="available-user-row"]').count()) === 0) {
-      await dialog.locator('[data-testid="assign-refresh"] button").click();
+      await dialog.locator('[data-testid="assign-refresh"] button').click();
       await page.waitForTimeout(500);
     }
 
