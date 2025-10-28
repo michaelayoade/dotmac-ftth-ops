@@ -1,3 +1,4 @@
+
 """
 Integration tests for the ticketing router.
 """
@@ -15,6 +16,8 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.dependencies import get_current_user_optional
 from dotmac.platform.customer_management.models import (
+
+
     CommunicationChannel,
     Customer,
     CustomerStatus,
@@ -22,6 +25,7 @@ from dotmac.platform.customer_management.models import (
     CustomerType,
 )
 from dotmac.platform.db import get_session_dependency
+
 from dotmac.platform.partner_management.models import (
     CommissionModel,
     Partner,
@@ -34,6 +38,10 @@ from dotmac.platform.ticketing.models import Ticket, TicketActorType
 from dotmac.platform.ticketing.router import router as ticketing_router
 from dotmac.platform.user_management.models import User
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def ticketing_app(async_db_session):

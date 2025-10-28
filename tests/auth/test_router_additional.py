@@ -1,3 +1,4 @@
+
 """
 Additional tests for auth router to reach 75% coverage target.
 
@@ -26,6 +27,13 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import BackupCode, User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):

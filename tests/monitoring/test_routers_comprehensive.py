@@ -48,6 +48,9 @@ from dotmac.platform.monitoring_metrics_router import (
 from dotmac.platform.monitoring_metrics_router import logs_router as logs_metrics_router
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Create mock user for authentication."""

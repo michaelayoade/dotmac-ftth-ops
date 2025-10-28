@@ -1,11 +1,16 @@
+
 """
 Tests for payment retry functionality.
 """
+
+from unittest.mock import patch
 
 import pytest
 
 from dotmac.platform.billing.core.enums import PaymentStatus
 from dotmac.platform.billing.core.exceptions import (
+
+
     PaymentError,
     PaymentNotFoundError,
 )
@@ -13,9 +18,13 @@ from dotmac.platform.billing.payments.providers import PaymentResult
 from tests.billing.payments.conftest import setup_mock_db_result
 from tests.fixtures.async_db import create_mock_async_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestRetryFailedPayments:
     """Test retry failed payment functionality"""
 
@@ -138,13 +147,18 @@ class TestRetryFailedPayments:
         payment_service.providers = {}
         sample_payment_entity.status = PaymentStatus.FAILED
         sample_payment_entity.retry_count = 0
+        sample_payment_entity.provider = "nonexistent"  # Provider that doesn't exist
         setup_mock_db_result(mock_payment_db_session, scalar_value=sample_payment_entity)
 
         # Execute
-        result = await payment_service.retry_failed_payment(
-            tenant_id="test-tenant",
-            payment_id="payment_123",
-        )
+        with patch("dotmac.platform.billing.payments.service.settings") as mock_settings:
+            mock_settings.billing.require_payment_plugin = False
+            mock_settings.billing.payment_retry_attempts = 3
+            mock_settings.billing.payment_retry_exponential_base_hours = 2
+            result = await payment_service.retry_failed_payment(
+                tenant_id="test-tenant",
+                payment_id="payment_123",
+            )
 
         # Verify
         assert result.status == PaymentStatus.SUCCEEDED

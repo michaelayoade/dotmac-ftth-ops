@@ -9,9 +9,14 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.search.interfaces import SearchBackend
 from dotmac.platform.search.router import SearchResponse, SearchResult, search_router
+
+
 
 
 @pytest.fixture

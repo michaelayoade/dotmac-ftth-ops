@@ -21,6 +21,7 @@ from dotmac.platform.billing.recovery import (
 )
 
 
+@pytest.mark.unit
 class TestRetryStrategies:
     """Test retry strategy implementations."""
 
@@ -51,6 +52,7 @@ class TestRetryStrategies:
         assert strategy.get_delay(5) == 3.5  # 1.0 + 5 * 0.5
 
 
+@pytest.mark.unit
 class TestBillingRetry:
     """Test BillingRetry class."""
 
@@ -126,6 +128,7 @@ class TestBillingRetry:
         assert isinstance(call_args[0][1], PaymentError)
 
 
+@pytest.mark.unit
 class TestWithRetryDecorator:
     """Test with_retry decorator."""
 
@@ -164,6 +167,7 @@ class TestWithRetryDecorator:
             await process_payment("fail", 100.0)
 
 
+@pytest.mark.unit
 class TestCircuitBreaker:
     """Test CircuitBreaker pattern."""
 
@@ -254,6 +258,7 @@ class TestCircuitBreaker:
         assert breaker.failure_count == 4
 
 
+@pytest.mark.unit
 class TestRecoveryContext:
     """Test RecoveryContext manager."""
 
@@ -325,6 +330,7 @@ class TestRecoveryContext:
         assert ctx.state["custom_data"] == "test"
 
 
+@pytest.mark.unit
 class TestIdempotencyManager:
     """Test IdempotencyManager for preventing duplicates."""
 
@@ -403,6 +409,7 @@ class TestIdempotencyManager:
         assert "recent_key" in manager._cache
 
 
+@pytest.mark.unit
 class TestIntegration:
     """Integration tests combining multiple recovery mechanisms."""
 

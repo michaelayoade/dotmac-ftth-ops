@@ -39,6 +39,7 @@ def invoice_config():
     }
 
 
+@pytest.mark.integration
 class TestSubscriptionInvoiceCreation:
     """Test invoice creation for subscriptions."""
 
@@ -144,6 +145,7 @@ class TestSubscriptionInvoiceCreation:
         assert subscription.subscription_id is not None
 
 
+@pytest.mark.integration
 class TestRenewalInvoices:
     """Test invoice generation for subscription renewals."""
 
@@ -277,6 +279,7 @@ class TestRenewalInvoices:
         print(f"   Total: ${total:.2f}")
 
 
+@pytest.mark.integration
 class TestProratedInvoices:
     """Test prorated invoice generation for plan changes."""
 
@@ -433,6 +436,7 @@ class TestProratedInvoices:
         assert downgraded.plan_id == basic_plan.plan_id
 
 
+@pytest.mark.integration
 class TestRefundInvoices:
     """Test invoice adjustments and refunds."""
 
@@ -486,9 +490,11 @@ class TestRefundInvoices:
         print(f"   Refund amount: ${refund_amount:.2f}")
         print(f"   Refund with tax: ${refund_with_tax:.2f}")
 
-        assert canceled.status == SubscriptionStatus.CANCELED
+        # Immediate cancellation sets status to ENDED
+        assert canceled.status == SubscriptionStatus.ENDED
 
 
+@pytest.mark.integration
 class TestInvoicePDFGeneration:
     """Test PDF generation for invoices."""
 

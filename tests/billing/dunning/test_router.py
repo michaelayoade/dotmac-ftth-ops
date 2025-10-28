@@ -8,9 +8,18 @@ from fastapi import status
 from httpx import AsyncClient
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Mock authenticated user."""
+
+
     return MagicMock(
         user_id=uuid4(),
         tenant_id="test-tenant-001",

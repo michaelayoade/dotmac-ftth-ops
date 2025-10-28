@@ -5,17 +5,27 @@ from unittest.mock import patch
 import pytest
 
 from dotmac.platform.admin.settings.models import (
+
+
     SettingsCategory,
     SettingsUpdateRequest,
 )
 from dotmac.platform.admin.settings.service import SettingsManagementService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
 
 @pytest.fixture(autouse=True)
 def restore_category_mapping():
     """Fixture to ensure CATEGORY_MAPPING is restored after each test."""
+
+
     # Save original mapping before test
     original_mapping = SettingsManagementService.CATEGORY_MAPPING.copy()
 

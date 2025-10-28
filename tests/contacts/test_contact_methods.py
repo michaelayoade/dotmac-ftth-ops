@@ -1,3 +1,4 @@
+
 """
 Contact methods tests - Migrated to use shared helpers.
 
@@ -14,14 +15,20 @@ from dotmac.platform.contacts.models import ContactMethodType
 from dotmac.platform.contacts.schemas import ContactMethodCreate, ContactMethodUpdate
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import (
+
+
     build_mock_db_session,
     build_not_found_result,
     build_success_result,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactMethods:
     """Test contact method management using shared helpers."""
 

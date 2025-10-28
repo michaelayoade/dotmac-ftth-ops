@@ -12,6 +12,7 @@ from dotmac.platform.api.app_boundary_middleware import (
 )
 
 
+@pytest.mark.unit
 class TestAppBoundaryMiddleware:
     """Test AppBoundaryMiddleware route boundary enforcement."""
 
@@ -352,6 +353,7 @@ class TestAppBoundaryMiddleware:
         assert not middleware._has_tenant_scope(user_no_scopes)
 
 
+@pytest.mark.unit
 class TestSingleTenantMiddleware:
     """Test SingleTenantMiddleware for single-tenant deployments."""
 
@@ -417,6 +419,7 @@ class TestSingleTenantMiddleware:
                 assert "single_tenant_mode_missing_tenant_id" in str(mock_logger.warning.call_args)
 
 
+@pytest.mark.unit
 class TestMiddlewareIntegration:
     """Test middleware integration scenarios."""
 

@@ -1,3 +1,4 @@
+
 """
 Test multi-tenant authentication isolation.
 
@@ -16,6 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestMultiTenantPasswordReset:

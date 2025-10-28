@@ -1,3 +1,4 @@
+
 """
 Unit tests for AWX Client
 
@@ -11,6 +12,13 @@ import pytest
 
 from dotmac.platform.ansible.client import AWXClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def reset_circuit_breaker():

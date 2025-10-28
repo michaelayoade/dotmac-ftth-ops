@@ -1,3 +1,4 @@
+
 """
 Test audit trail integration for admin settings service.
 """
@@ -9,8 +10,17 @@ import pytest
 from dotmac.platform.admin.settings.models import SettingsCategory, SettingsUpdateRequest
 from dotmac.platform.admin.settings.service import SettingsManagementService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
 
 @pytest.fixture
 def service() -> SettingsManagementService:

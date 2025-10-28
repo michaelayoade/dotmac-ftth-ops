@@ -11,6 +11,7 @@ from fastapi import HTTPException
 from dotmac.platform.auth.core import TokenType, jwt_service
 
 
+@pytest.mark.unit
 class TestTokenTypeValidation:
     """Test suite for token type validation."""
 

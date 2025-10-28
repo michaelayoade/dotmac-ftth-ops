@@ -9,6 +9,8 @@ from sqlalchemy import select
 
 # Customer is not needed - commission events just reference customer_id as UUID
 from dotmac.platform.partner_management.models import (
+
+
     CommissionModel,
     CommissionStatus,
     Partner,
@@ -21,9 +23,15 @@ from dotmac.platform.partner_management.models import (
 from dotmac.platform.partner_management.revenue_service import PartnerRevenueService
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 class TestPartnerRevenueMetrics:
     """Test partner revenue metrics calculation."""
+
 
     async def test_get_revenue_metrics_with_commissions(self, db_session, test_tenant_id):
         """Test revenue metrics with commission events."""

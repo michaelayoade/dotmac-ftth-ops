@@ -16,6 +16,9 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.secrets.metrics_router import SecretsMetricsResponse, router
 
 
+
+pytestmark = pytest.mark.integration
+
 def mock_current_user():
     """Mock current user for testing."""
     return UserInfo(

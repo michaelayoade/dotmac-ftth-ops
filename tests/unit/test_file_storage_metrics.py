@@ -7,6 +7,14 @@ from dotmac.platform.file_storage.metrics_router import _get_file_stats_cached
 from dotmac.platform.file_storage.service import FileMetadata
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class StubStorageService:
     """Stub storage service that returns batches of files based on offset."""
 

@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for communications metrics service.
 """
@@ -9,6 +10,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.communications.metrics_service import (
+
+
     CommunicationMetricsService,
     get_metrics_service,
 )
@@ -17,8 +20,11 @@ from dotmac.platform.communications.models import (
     CommunicationType,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -37,6 +43,7 @@ def metrics_service(mock_db_session):
     return CommunicationMetricsService(mock_db_session)
 
 
+@pytest.mark.integration
 class TestCommunicationMetricsService:
     """Test CommunicationMetricsService class."""
 
@@ -245,6 +252,7 @@ class TestCommunicationMetricsService:
         assert mock_db_session.add.called  # Should add stats entries
 
 
+@pytest.mark.integration
 class TestGetMetricsService:
     """Test the get_metrics_service factory function."""
 

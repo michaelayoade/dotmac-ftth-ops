@@ -1,3 +1,4 @@
+
 """
 Tests for Payment Methods Service - Add, Update, Remove operations.
 """
@@ -10,6 +11,8 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PaymentMethodError
 from dotmac.platform.billing.payment_methods.models import (
+
+
     CardBrand,
     PaymentMethodResponse,
     PaymentMethodStatus,
@@ -18,9 +21,13 @@ from dotmac.platform.billing.payment_methods.models import (
 from dotmac.platform.billing.payment_methods.service import PaymentMethodService
 from tests.billing.payment_methods.conftest import build_mock_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestAddPaymentMethod:
     """Test adding payment methods."""
 
@@ -181,6 +188,7 @@ class TestAddPaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestUpdatePaymentMethod:
     """Test updating payment methods."""
 
@@ -260,6 +268,7 @@ class TestUpdatePaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestSetDefaultPaymentMethod:
     """Test setting default payment method."""
 
@@ -307,6 +316,7 @@ class TestSetDefaultPaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestRemovePaymentMethod:
     """Test removing payment methods."""
 
@@ -387,6 +397,7 @@ class TestRemovePaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestPaymentMethodBrandParsing:
     """Ensure card brand parsing is resilient."""
 

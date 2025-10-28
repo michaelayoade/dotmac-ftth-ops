@@ -8,6 +8,8 @@ import pytest_asyncio
 # Import RADIUS models so they register with Base.metadata before table creation
 # Must import from .models directly, not from package __init__.py which doesn't export models
 from dotmac.platform.radius.models import (  # noqa: F401
+
+
     NAS,
     RadAcct,
     RadCheck,
@@ -17,6 +19,9 @@ from dotmac.platform.radius.models import (  # noqa: F401
 )
 from dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture(autouse=True)
 async def ensure_radius_tables_exist(async_db_engine):

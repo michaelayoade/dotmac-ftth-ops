@@ -1,3 +1,4 @@
+
 """
 Comprehensive integration tests for Billing Catalog Router.
 
@@ -14,6 +15,13 @@ from fastapi.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.main import app
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def test_client(db_session, mock_tenant_dependency):
@@ -72,6 +80,7 @@ def mock_tenant_dependency():
         yield tenant_id
 
 
+@pytest.mark.integration
 class TestProductCategoryEndpoints:
     """Test product category endpoints."""
 
@@ -124,6 +133,7 @@ class TestProductCategoryEndpoints:
         assert response.status_code in [200, 404, 401]
 
 
+@pytest.mark.integration
 class TestProductEndpoints:
     """Test product management endpoints."""
 
@@ -271,6 +281,7 @@ class TestProductEndpoints:
         assert response.status_code in [200, 404, 401]
 
 
+@pytest.mark.integration
 class TestCatalogRouterAuthorization:
     """Test authorization for catalog endpoints."""
 
@@ -299,6 +310,7 @@ class TestCatalogRouterAuthorization:
         assert response.status_code in [400, 401, 403, 422]
 
 
+@pytest.mark.integration
 class TestCatalogRouterErrorHandling:
     """Test error handling in catalog router."""
 
@@ -351,6 +363,7 @@ class TestCatalogRouterErrorHandling:
         assert response.status_code in [404, 401, 403, 500]
 
 
+@pytest.mark.integration
 class TestCatalogRouterTenantIsolation:
     """Test tenant isolation for catalog endpoints."""
 

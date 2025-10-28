@@ -1,3 +1,4 @@
+
 """
 Tests for the alert management router to ensure persistence and tenant scoping.
 """
@@ -20,6 +21,13 @@ from dotmac.platform.monitoring.alert_router import router as alert_router
 from dotmac.platform.monitoring.alert_webhook_router import cache_channels, get_alert_router
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 def _make_admin() -> UserInfo:
     return UserInfo(

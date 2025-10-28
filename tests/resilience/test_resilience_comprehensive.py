@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for the resilience module.
 
@@ -14,6 +15,8 @@ import pytest
 from tenacity import RetryError
 
 from dotmac.platform.resilience.circuit_breaker import (
+
+
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -36,6 +39,11 @@ from dotmac.platform.resilience.service_mesh import (
     setup_service_mesh_for_consolidated_services,
 )
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestCircuitBreakerPatterns:
     """Test circuit breaker functionality using tenacity."""

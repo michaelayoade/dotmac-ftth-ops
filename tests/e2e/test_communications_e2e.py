@@ -1,3 +1,4 @@
+
 """
 End-to-End Tests for Communications Module
 
@@ -18,8 +19,11 @@ from httpx import AsyncClient
 
 from dotmac.platform.communications.email_service import EmailResponse
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
+
+
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 class TestEmailSendingE2E:
     """End-to-end tests for email sending workflow."""

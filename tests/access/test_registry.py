@@ -3,6 +3,8 @@ from pathlib import Path
 import pytest
 
 from dotmac.platform.access.drivers.base import (
+
+
     BaseOLTDriver,
     DeviceDiscovery,
     DriverCapabilities,
@@ -14,6 +16,12 @@ from dotmac.platform.access.drivers.base import (
 )
 from dotmac.platform.access.registry import AccessDriverRegistry, DriverDescriptor
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class DummyDriver(BaseOLTDriver):
     async def discover_onus(self):

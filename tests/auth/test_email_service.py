@@ -13,8 +13,15 @@ from dotmac.platform.auth.email_service import (
 )
 
 
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class InMemoryRedis:
     """Very small in-memory stand-in for redis client."""
+
 
     def __init__(self):
         self.store = {}

@@ -71,6 +71,7 @@ def sample_paused_subscription():
     )
 
 
+@pytest.mark.unit
 class TestServiceSuspension:
     """Test service suspension lifecycle event handler."""
 
@@ -197,6 +198,7 @@ class TestServiceSuspension:
             assert suspension_metadata["original_status"] == SubscriptionStatus.TRIALING.value
 
 
+@pytest.mark.unit
 class TestServiceReactivation:
     """Test service reactivation lifecycle event handler."""
 
@@ -338,6 +340,7 @@ class TestServiceReactivation:
             assert "suspension" not in updated_metadata
 
 
+@pytest.mark.unit
 class TestChurnHandling:
     """Test churn handling lifecycle event handler."""
 
@@ -494,6 +497,7 @@ class TestChurnHandling:
         # Should not call cancel_subscription
 
 
+@pytest.mark.unit
 class TestEventPublishing:
     """Test event publishing for lifecycle changes."""
 

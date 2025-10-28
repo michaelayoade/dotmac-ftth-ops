@@ -500,7 +500,7 @@ function TicketDetailsPageContent() {
 
 export default function TicketDetailsPage() {
   return (
-    <RouteGuard requiredPermission="tickets:read">
+    <RouteGuard permission="tickets:read">
       <TicketDetailsPageContent />
     </RouteGuard>
   );

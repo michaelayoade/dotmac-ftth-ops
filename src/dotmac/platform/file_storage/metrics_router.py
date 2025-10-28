@@ -194,6 +194,12 @@ async def _get_file_stats_cached(
     }
 
 
+# Ensure tests can access the uncached function even if the cache decorator
+# is patched to a no-op (e.g., tests/file_storage/test_metrics_router_real.py).
+if not hasattr(_get_file_stats_cached, "__wrapped__"):
+    _get_file_stats_cached.__wrapped__ = _get_file_stats_cached  # type: ignore[attr-defined]
+
+
 # ============================================================================
 # File Storage Stats Endpoint
 # ============================================================================

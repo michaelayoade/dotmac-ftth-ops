@@ -12,6 +12,8 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.orchestration.models import (
+
+
     OrchestrationWorkflow,
     OrchestrationWorkflowStep,
     WorkflowStatus,
@@ -28,6 +30,9 @@ from dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 # They provide sensible defaults with the ability to override any field via kwargs.
 # This prevents test pollution from fixture mutations and makes test data explicit.
 
+
+
+pytestmark = pytest.mark.integration
 
 def create_provision_request(**kwargs: Any) -> dict[str, Any]:
     """Factory function to create a provision subscriber request with sensible defaults.

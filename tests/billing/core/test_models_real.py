@@ -41,6 +41,7 @@ from dotmac.platform.billing.core.models import (
 )
 
 
+@pytest.mark.unit
 class TestBillingBaseModel:
     """Test BillingBaseModel configuration."""
 
@@ -59,6 +60,7 @@ class TestBillingBaseModel:
             BillingBaseModel()  # Missing tenant_id
 
 
+@pytest.mark.unit
 class TestInvoiceLineItem:
     """Test InvoiceLineItem model."""
 
@@ -143,6 +145,7 @@ class TestInvoiceLineItem:
         assert item.extra_data["category"] == "services"
 
 
+@pytest.mark.unit
 class TestInvoice:
     """Test Invoice model."""
 
@@ -218,6 +221,7 @@ class TestInvoice:
             Invoice(tenant_id="tenant-123", total_amount=100, currency="USDD")  # Too long
 
 
+@pytest.mark.unit
 class TestPayment:
     """Test Payment model."""
 
@@ -277,6 +281,7 @@ class TestPayment:
         assert payment.retry_count == 3
 
 
+@pytest.mark.unit
 class TestPaymentMethod:
     """Test PaymentMethod model."""
 
@@ -347,6 +352,7 @@ class TestPaymentMethod:
             )
 
 
+@pytest.mark.unit
 class TestCreditNote:
     """Test CreditNote model."""
 
@@ -392,6 +398,7 @@ class TestCreditNote:
             )
 
 
+@pytest.mark.unit
 class TestTransaction:
     """Test Transaction model."""
 
@@ -411,6 +418,7 @@ class TestTransaction:
         assert tx.customer_id == "cust-456"
 
 
+@pytest.mark.unit
 class TestCustomer:
     """Test Customer model."""
 
@@ -430,6 +438,7 @@ class TestCustomer:
         assert customer.currency == "USD"
 
 
+@pytest.mark.unit
 class TestSubscription:
     """Test Subscription model."""
 
@@ -449,6 +458,7 @@ class TestSubscription:
         assert sub.billing_cycle == "monthly"
 
 
+@pytest.mark.unit
 class TestProductAndPrice:
     """Test Product and Price models."""
 
@@ -480,6 +490,7 @@ class TestProductAndPrice:
         assert price.unit_amount == 9999
 
 
+@pytest.mark.unit
 class TestCreditApplication:
     """Test CreditApplication model."""
 
@@ -511,6 +522,7 @@ class TestCreditApplication:
             )
 
 
+@pytest.mark.unit
 class TestCustomerCredit:
     """Test CustomerCredit model."""
 
@@ -530,6 +542,7 @@ class TestCustomerCredit:
         assert credit.auto_apply_to_new_invoices is True
 
 
+@pytest.mark.unit
 class TestInvoiceItem:
     """Test InvoiceItem model."""
 

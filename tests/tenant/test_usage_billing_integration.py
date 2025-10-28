@@ -17,6 +17,7 @@ from src.dotmac.platform.tenant.schemas import TenantCreate, TenantUsageCreate
 # Fixtures are in conftest.py
 
 
+@pytest.mark.integration
 class TestUsageBillingIntegration:
     """Test usage billing integration service."""
 
@@ -130,6 +131,7 @@ class TestUsageBillingIntegration:
         assert len(result["billing_records"]) == 0
 
 
+@pytest.mark.integration
 class TestUsageCounterSync:
     """Test syncing tenant counters to billing."""
 
@@ -169,6 +171,7 @@ class TestUsageCounterSync:
         assert "No active subscription" in result["reason"]
 
 
+@pytest.mark.integration
 class TestOverageCalculations:
     """Test overage charge calculations."""
 
@@ -279,6 +282,7 @@ class TestOverageCalculations:
         assert result["total_overage_charge"] == "0"
 
 
+@pytest.mark.integration
 class TestBillingPreview:
     """Test billing preview functionality."""
 
@@ -355,6 +359,7 @@ class TestBillingPreview:
         assert result["usage_summary"]["users"]["percentage"] == 50.0
 
 
+@pytest.mark.integration
 class TestPlanCosts:
     """Test plan cost calculations."""
 
@@ -395,6 +400,7 @@ class TestPlanCosts:
         assert result["base_subscription_cost"] == "499.00"
 
 
+@pytest.mark.integration
 class TestSubscriptionLookup:
     """Test subscription lookup functionality."""
 
@@ -443,6 +449,7 @@ class TestSubscriptionLookup:
         assert subscription_id == "sub-123"
 
 
+@pytest.mark.integration
 class TestUsageTypeMapping:
     """Test usage type mapping to billing."""
 
@@ -512,6 +519,7 @@ class TestUsageTypeMapping:
         assert usage_request.usage_type == UsageType.USERS.value
 
 
+@pytest.mark.integration
 class TestErrorHandling:
     """Test error handling in integration."""
 
@@ -547,6 +555,7 @@ class TestErrorHandling:
             await usage_billing_integration.get_billing_preview(tenant_id="nonexistent")
 
 
+@pytest.mark.integration
 class TestEdgeCases:
     """Test edge cases and boundary conditions."""
 

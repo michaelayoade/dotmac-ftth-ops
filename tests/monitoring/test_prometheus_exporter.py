@@ -8,6 +8,7 @@ from dotmac.platform.monitoring.dual_stack_metrics import DualStackMetrics
 from dotmac.platform.monitoring.prometheus_exporter import PrometheusExporter
 
 
+@pytest.mark.unit
 class TestPrometheusExporter:
     """Test PrometheusExporter class."""
 
@@ -247,6 +248,7 @@ class TestPrometheusExporter:
             )
 
 
+@pytest.mark.unit
 class TestPrometheusExporterIntegration:
     """Integration tests for PrometheusExporter."""
 

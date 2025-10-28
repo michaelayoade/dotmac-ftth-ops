@@ -46,6 +46,7 @@ from dotmac.platform.data_transfer.utils import (
 )
 
 
+@pytest.mark.unit
 class TestOperationIDGeneration:
     """Test operation ID generation utility."""
 
@@ -66,6 +67,7 @@ class TestOperationIDGeneration:
         assert id1 != id2
 
 
+@pytest.mark.unit
 class TestFileSizeFormatting:
     """Test file size formatting utility."""
 
@@ -98,6 +100,7 @@ class TestFileSizeFormatting:
         assert format_file_size(size) == "1.00 PB"
 
 
+@pytest.mark.unit
 class TestThroughputCalculation:
     """Test throughput calculation utility."""
 
@@ -122,6 +125,7 @@ class TestThroughputCalculation:
         assert throughput == 0.0
 
 
+@pytest.mark.unit
 class TestCompletionTimeEstimation:
     """Test completion time estimation utility."""
 
@@ -158,6 +162,7 @@ class TestCompletionTimeEstimation:
         assert result is None
 
 
+@pytest.mark.unit
 class TestBatchCreation:
     """Test batch creation utility."""
 
@@ -206,6 +211,7 @@ class TestBatchCreation:
         assert len(batches[0].records) == 3
 
 
+@pytest.mark.unit
 class TestTransferConfigCreation:
     """Test transfer configuration creation utility."""
 
@@ -254,6 +260,7 @@ class TestTransferConfigCreation:
         assert config.timeout == 30
 
 
+@pytest.mark.unit
 class TestImportOptionsCreation:
     """Test import options creation utility."""
 
@@ -313,6 +320,7 @@ class TestImportOptionsCreation:
         assert hasattr(options, "encoding")
 
 
+@pytest.mark.unit
 class TestExportOptionsCreation:
     """Test export options creation utility."""
 
@@ -375,6 +383,7 @@ class TestExportOptionsCreation:
         assert options.encoding == "utf-16"
 
 
+@pytest.mark.unit
 class TestDataPipeline:
     """Test DataPipeline class."""
 
@@ -452,6 +461,7 @@ class TestDataPipeline:
         assert pipeline.progress_tracker._progress.current_batch == 10
 
 
+@pytest.mark.unit
 class TestDataPipelineCreation:
     """Test data pipeline creation utility."""
 
@@ -524,6 +534,7 @@ class TestDataPipelineCreation:
         assert pipeline.export_options == export_options
 
 
+@pytest.mark.unit
 class TestFileConversion:
     """Test file conversion utility."""
 
@@ -570,6 +581,7 @@ class TestFileConversion:
         assert call_args.kwargs["progress_callback"] == progress_callback
 
 
+@pytest.mark.unit
 class TestFileValidationAndCleaning:
     """Test file validation and cleaning utility."""
 
@@ -625,6 +637,7 @@ class TestFileValidationAndCleaning:
         assert call_args.kwargs["config"].skip_invalid is False
 
 
+@pytest.mark.unit
 class TestDataPipelineExecute:
     """Test DataPipeline.execute() method for coverage."""
 

@@ -52,6 +52,7 @@ async def tenant_b_user(async_db_session):
     return user
 
 
+@pytest.mark.integration
 class TestUserServiceTenantRequirements:
     """Test that UserService enforces tenant requirements by default."""
 
@@ -172,6 +173,7 @@ class TestUserServiceTenantRequirements:
         assert mock_session.execute.call_count == 1
 
 
+@pytest.mark.integration
 class TestUserServiceCrossTenantPrevention:
     """Test that UserService prevents cross-tenant data access."""
 
@@ -305,6 +307,7 @@ class TestUserServiceCrossTenantPrevention:
         assert len([u for u in all_users_from_a if u.tenant_id == "tenant-b"]) == 0
 
 
+@pytest.mark.integration
 class TestUserServiceTenantContextIntegration:
     """Test tenant context integration with UserService."""
 

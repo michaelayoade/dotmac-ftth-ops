@@ -10,6 +10,7 @@ from fastapi import HTTPException
 from dotmac.platform.auth.core import TokenType, jwt_service
 
 
+@pytest.mark.unit
 class TestRefreshTokenValidation:
     """Test suite for refresh endpoint token type validation."""
 

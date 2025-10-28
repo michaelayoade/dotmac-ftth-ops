@@ -1,3 +1,4 @@
+
 """
 Core Webhook Handlers Tests - Phase 1 Coverage Improvement
 
@@ -22,13 +23,18 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.billing.config import BillingConfig, PayPalConfig, StripeConfig
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.billing.webhooks.handlers import (
+
+
     PayPalWebhookHandler,
     StripeWebhookHandler,
     WebhookHandler,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -78,12 +84,14 @@ def paypal_handler(mock_db_session, paypal_config):
     return PayPalWebhookHandler(mock_db_session, paypal_config)
 
 
+@pytest.mark.integration
 class TestBaseWebhookHandler:
     """Test base WebhookHandler functionality."""
 
     async def test_handle_webhook_success(self, mock_db_session, stripe_config):
         """Test successful webhook handling with signature verification."""
 
+        @pytest.mark.integration
         class TestHandler(WebhookHandler):
             async def verify_signature(self, payload, signature, headers=None):
                 return True
@@ -121,6 +129,7 @@ class TestBaseWebhookHandler:
     async def test_handle_webhook_invalid_signature(self, mock_db_session, stripe_config):
         """Test webhook handling with invalid signature."""
 
+        @pytest.mark.integration
         class TestHandler(WebhookHandler):
             async def verify_signature(self, payload, signature, headers=None):
                 return False
@@ -149,6 +158,7 @@ class TestBaseWebhookHandler:
     async def test_handle_webhook_invalid_json(self, mock_db_session, stripe_config):
         """Test webhook handling with invalid JSON payload."""
 
+        @pytest.mark.integration
         class TestHandler(WebhookHandler):
             async def verify_signature(self, payload, signature, headers=None):
                 return True
@@ -177,6 +187,7 @@ class TestBaseWebhookHandler:
     async def test_handle_webhook_processing_error(self, mock_db_session, stripe_config):
         """Test webhook handling with processing error."""
 
+        @pytest.mark.integration
         class TestHandler(WebhookHandler):
             async def verify_signature(self, payload, signature, headers=None):
                 return True
@@ -214,6 +225,7 @@ class TestBaseWebhookHandler:
             assert call_args[2] is False  # success parameter
 
 
+@pytest.mark.integration
 class TestStripeWebhookHandler:
     """Test Stripe-specific webhook handler."""
 
@@ -320,6 +332,7 @@ class TestStripeWebhookHandler:
         pass
 
 
+@pytest.mark.integration
 class TestPayPalWebhookHandler:
     """Test PayPal-specific webhook handler."""
 
@@ -513,6 +526,7 @@ class TestPayPalWebhookHandler:
         assert paypal_handler._get_provider_name() == "paypal"
 
 
+@pytest.mark.integration
 class TestStripePaymentEventHandlers:
     """Test Stripe payment event handlers (many have bugs calling non-existent methods)."""
 
@@ -609,6 +623,7 @@ class TestStripePaymentEventHandlers:
             assert mock_finalize.called
 
 
+@pytest.mark.integration
 class TestPayPalPaymentEventHandlers:
     """Test PayPal payment event handlers (many have bugs calling non-existent methods)."""
 
@@ -647,6 +662,7 @@ class TestPayPalPaymentEventHandlers:
         assert result["event_type"] == "UNKNOWN.EVENT.TYPE"
 
 
+@pytest.mark.integration
 class TestStripeEventProcessing:
     """Test Stripe event type processing."""
 

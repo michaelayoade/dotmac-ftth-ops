@@ -16,6 +16,7 @@ from dotmac.platform.billing.read_models.subscription_read_models import (
 )
 
 
+@pytest.mark.unit
 class TestSubscriptionQueryHandler:
     """Test SubscriptionQueryHandler with mocked database"""
 
@@ -132,6 +133,7 @@ class TestSubscriptionQueryHandler:
         assert len(result) == 0
 
 
+@pytest.mark.unit
 class TestSubscriptionQueryEdgeCases:
     """Test edge cases for subscription queries"""
 

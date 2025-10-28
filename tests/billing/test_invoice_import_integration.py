@@ -1,3 +1,4 @@
+
 """
 Tests for invoice import integration with data_transfer module.
 
@@ -18,6 +19,13 @@ import pytest
 from dotmac.platform.billing.invoicing.mappers import InvoiceImportSchema, InvoiceMapper
 from dotmac.platform.data_import.models import ImportJobType
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestInvoiceImportSchema:

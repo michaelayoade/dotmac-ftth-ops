@@ -20,6 +20,11 @@ from sqlalchemy.pool import StaticPool
 from dotmac.platform.db import Base
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest_asyncio.fixture(scope="function")
 async def async_session():
     """Create an async database session for testing."""

@@ -39,6 +39,7 @@ from dotmac.platform.notifications.models import (  # noqa: E402
 from dotmac.platform.user_management.models import User  # noqa: E402
 
 
+@pytest.mark.integration
 class TestDetermineAlarmChannels:
     """Test channel determination based on alarm severity and impact"""
 
@@ -187,6 +188,7 @@ class TestDetermineAlarmChannels:
         assert len(channels) == 1
 
 
+@pytest.mark.integration
 class TestGetUsersToNotify:
     """Test user lookup for notifications"""
 
@@ -315,6 +317,7 @@ class TestGetUsersToNotify:
         assert len(users) == 0
 
 
+@pytest.mark.integration
 class TestFormatAlarmMessage:
     """Test alarm message formatting"""
 
@@ -436,6 +439,7 @@ class TestFormatAlarmMessage:
         assert "Occurrences: 3" in message
 
 
+@pytest.mark.integration
 class TestMapAlarmSeverityToPriority:
     """Test severity to priority mapping"""
 
@@ -460,6 +464,7 @@ class TestMapAlarmSeverityToPriority:
         assert priority == NotificationPriority.LOW
 
 
+@pytest.mark.integration
 class TestSendAlarmNotificationsTask:
     """Test the send_alarm_notifications Celery task.
 
@@ -705,6 +710,7 @@ class TestSendAlarmNotificationsTask:
         assert len(result["channels"]) == 1
 
 
+@pytest.mark.integration
 class TestNotificationMetadata:
     """Test notification metadata and action URLs.
 

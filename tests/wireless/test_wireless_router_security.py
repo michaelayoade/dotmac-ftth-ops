@@ -8,6 +8,14 @@ from dotmac.platform.auth.rbac_dependencies import PermissionChecker
 from dotmac.platform.wireless.router import router
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 def _get_route(path: str, method: str):
     """Retrieve the router entry for a given path/method combination."""
     for route in router.routes:

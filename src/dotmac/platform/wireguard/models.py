@@ -9,9 +9,8 @@ from enum import Enum as PyEnum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, Uuid
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import (
@@ -52,7 +51,7 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     __tablename__ = "wireguard_servers"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid4,
         nullable=False,
@@ -219,6 +218,11 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
             return 0.0
         return (self.current_peers / self.max_peers) * 100
 
+    @property
+    def supports_ipv6(self) -> bool:
+        """Check if server supports IPv6."""
+        return self.server_ipv6 is not None
+
 
 class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
@@ -231,7 +235,7 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
     __tablename__ = "wireguard_peers"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        Uuid(as_uuid=True),
         primary_key=True,
         default=uuid4,
         nullable=False,
@@ -239,7 +243,7 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
 
     # Server relationship
     server_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("wireguard_servers.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -247,7 +251,7 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
 
     # Customer/Subscriber relationship
     customer_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        Uuid(as_uuid=True),
         ForeignKey("customers.id", ondelete="SET NULL"),
         nullable=True,
         index=True,

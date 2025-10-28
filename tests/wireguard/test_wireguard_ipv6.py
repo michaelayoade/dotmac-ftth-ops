@@ -1,3 +1,4 @@
+
 """
 Tests for WireGuard Service with IPv6 Support
 
@@ -12,6 +13,13 @@ import pytest
 from dotmac.platform.wireguard.models import WireGuardServerStatus
 from dotmac.platform.wireguard.service import WireGuardService
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_session():

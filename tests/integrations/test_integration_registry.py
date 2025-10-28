@@ -14,6 +14,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.unit
 class TestIntegrationRegistry:
     """Test IntegrationRegistry."""
 
@@ -85,6 +86,7 @@ class TestIntegrationRegistry:
         """Test successful integration registration."""
         registry = IntegrationRegistry()
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -138,6 +140,7 @@ class TestIntegrationRegistry:
         """Test getting integration by name."""
         registry = IntegrationRegistry()
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -161,6 +164,7 @@ class TestIntegrationRegistry:
         """Test health check for all integrations."""
         registry = IntegrationRegistry()
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass

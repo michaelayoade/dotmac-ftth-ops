@@ -63,16 +63,16 @@ export function AddressAutocomplete({
   apiKey,
 }: AddressAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
-  const [suggestions, setSuggestions] = useState<google.maps.places.AutocompletePrediction[]>([]);
+  const [suggestions, setSuggestions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [isApiLoaded, setIsApiLoaded] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
-  const autocompleteService = useRef<google.maps.places.AutocompleteService | null>(null);
-  const placesService = useRef<google.maps.places.PlacesService | null>(null);
-  const geocoder = useRef<google.maps.Geocoder | null>(null);
+  const autocompleteService = useRef<any>(null);
+  const placesService = useRef<any>(null);
+  const geocoder = useRef<any>(null);
 
   // Get API key from props or environment variable
   const googleApiKey = apiKey || process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -136,7 +136,7 @@ export function AddressAutocomplete({
       setIsLoading(true);
 
       try {
-        const response = await new Promise<google.maps.places.AutocompletePrediction[]>(
+        const response = await new Promise<any[]>(
           (resolve, reject) => {
             autocompleteService.current!.getPlacePredictions(
               {
@@ -144,7 +144,7 @@ export function AddressAutocomplete({
                 types: ["address"],
               },
               (predictions: any, status: any) => {
-                if (status === google.maps.places.PlacesServiceStatus.OK && predictions) {
+                if (status === (google as any).maps.places.PlacesServiceStatus.OK && predictions) {
                   resolve(predictions);
                 } else {
                   reject(status);
@@ -167,7 +167,7 @@ export function AddressAutocomplete({
 
   // Parse Google Places result into structured components
   const parseAddressComponents = (
-    placeResult: google.maps.places.PlaceResult,
+    placeResult: any,
   ): AddressComponents => {
     const components: AddressComponents = {
       formattedAddress: placeResult.formatted_address,
@@ -215,14 +215,14 @@ export function AddressAutocomplete({
     }
 
     try {
-      const result = await new Promise<google.maps.places.PlaceResult>((resolve, reject) => {
+      const result = await new Promise<any>((resolve, reject) => {
         placesService.current!.getDetails(
           {
             placeId,
             fields: ["address_components", "formatted_address", "geometry"],
           },
           (place: any, status: any) => {
-            if (status === google.maps.places.PlacesServiceStatus.OK && place) {
+            if (status === (google as any).maps.places.PlacesServiceStatus.OK && place) {
               resolve(place);
             } else {
               reject(status);

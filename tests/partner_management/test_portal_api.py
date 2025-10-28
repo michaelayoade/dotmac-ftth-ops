@@ -7,6 +7,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.partner_management.models import (
+
+
     CommissionModel,
     CommissionStatus,
     PartnerPayout,
@@ -21,12 +23,20 @@ from dotmac.platform.partner_management.schemas import (
     ReferralLeadCreate,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.asyncio,
+]
 
 @pytest.mark.asyncio
 class TestPortalDashboard:
     """Test partner portal dashboard endpoint."""
+
 
     async def test_get_dashboard_stats(self, async_db_session, test_tenant_id):
         """Test retrieving dashboard statistics."""

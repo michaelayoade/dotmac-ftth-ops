@@ -1,3 +1,4 @@
+
 """
 End-to-End tests for File Storage API.
 
@@ -23,11 +24,14 @@ from uuid import uuid4
 import pytest
 
 # Pytest marker for E2E tests
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 # Note: auth_headers fixture is provided by tests/e2e/conftest.py
 # It includes both Authorization and X-Tenant-ID headers
 
+
+
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 @pytest.fixture
 def mock_storage_service():

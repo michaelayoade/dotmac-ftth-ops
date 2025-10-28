@@ -1,3 +1,4 @@
+
 """
 Integration tests for complete subscription workflows.
 
@@ -11,6 +12,8 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from dotmac.platform.billing.models import (
+
+
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
@@ -25,8 +28,11 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db():
@@ -44,6 +50,7 @@ def subscription_service(mock_db):
     return SubscriptionService(mock_db)
 
 
+@pytest.mark.integration
 class TestCompleteSubscriptionLifecycle:
     """Test complete subscription lifecycle from creation to cancellation."""
 
@@ -184,6 +191,7 @@ class TestCompleteSubscriptionLifecycle:
         assert subscription.trial_end is not None
 
 
+@pytest.mark.integration
 class TestPlanUpgradeDowngradeWorkflows:
     """Test plan upgrade and downgrade workflows."""
 
@@ -347,6 +355,7 @@ class TestPlanUpgradeDowngradeWorkflows:
         assert proration.old_plan_unused_amount > proration.new_plan_prorated_amount
 
 
+@pytest.mark.integration
 class TestUsageBasedBillingWorkflows:
     """Test usage-based billing workflows."""
 
@@ -417,6 +426,7 @@ class TestUsageBasedBillingWorkflows:
         assert result3["storage_gb"] == 100
 
 
+@pytest.mark.integration
 class TestCancellationWorkflows:
     """Test various cancellation workflows."""
 
@@ -490,6 +500,7 @@ class TestCancellationWorkflows:
         assert mock_db_sub.canceled_at is None
 
 
+@pytest.mark.integration
 class TestMultiTenantWorkflows:
     """Test multi-tenant isolation in subscription workflows."""
 

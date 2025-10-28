@@ -16,6 +16,8 @@ from dotmac.platform.billing.core.enums import (
 from dotmac.platform.billing.core.exceptions import InsufficientCreditError
 from dotmac.platform.billing.credit_notes.service import CreditNoteService
 
+pytestmark = pytest.mark.integration
+
 
 class _DummyMetrics:
     def __init__(self) -> None:

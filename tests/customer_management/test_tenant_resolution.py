@@ -28,6 +28,7 @@ def customer_service(mock_session):
     return CustomerService(mock_session)
 
 
+@pytest.mark.unit
 class TestTenantResolution:
     """Test proper tenant resolution in customer service."""
 
@@ -185,6 +186,7 @@ class TestTenantResolution:
                 # The activity should use the resolved tenant_id
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation in queries."""
 

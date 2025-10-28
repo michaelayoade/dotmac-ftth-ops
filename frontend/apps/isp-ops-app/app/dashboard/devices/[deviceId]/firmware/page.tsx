@@ -81,7 +81,7 @@ function FirmwarePageContent() {
       if (!response.ok) return null;
       return response.json();
     },
-    refetchInterval: (data) => (data?.status && ["pending", "downloading", "installing"].includes(data.status) ? 5000 : false),
+    refetchInterval: 5000,
   });
 
   const upgradeMutation = useMutation({
@@ -269,7 +269,7 @@ function FirmwarePageContent() {
 
 export default function FirmwarePage() {
   return (
-    <RouteGuard requiredPermission="devices.firmware">
+    <RouteGuard permission="devices.firmware">
       <FirmwarePageContent />
     </RouteGuard>
   );

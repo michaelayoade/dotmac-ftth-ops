@@ -14,6 +14,7 @@ from dotmac.platform.api.gateway import (
 )
 
 
+@pytest.mark.unit
 class TestCircuitBreaker:
     """Test circuit breaker pattern implementation."""
 
@@ -100,6 +101,7 @@ class TestCircuitBreaker:
         assert circuit.failure_count == 0
 
 
+@pytest.mark.unit
 class TestAPIGateway:
     """Test API Gateway functionality."""
 
@@ -305,6 +307,7 @@ class TestAPIGateway:
         assert "timestamp" in response.metadata
 
 
+@pytest.mark.unit
 class TestGatewayResponse:
     """Test Gateway Response model."""
 

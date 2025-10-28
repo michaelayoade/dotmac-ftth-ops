@@ -9,6 +9,11 @@ import pytest_asyncio
 from dotmac.platform.tenant.models import Tenant
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest_asyncio.fixture
 async def test_tenant(async_session):
     """Create a test tenant for journey tests."""

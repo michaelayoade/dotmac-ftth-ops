@@ -19,7 +19,7 @@ class UsageRecordCreate(BaseModel):
     subscription_id: str = Field(min_length=1, max_length=50)
     customer_id: UUID
     usage_type: UsageType
-    quantity: Decimal = Field(gt=0, decimal_places=6)
+    quantity: Decimal = Field(decimal_places=6)
     unit: str = Field(min_length=1, max_length=20)
     unit_price: Decimal = Field(
         ge=0,
@@ -48,7 +48,7 @@ class UsageRecordUpdate(BaseModel):
 
     model_config = ConfigDict()
 
-    quantity: Decimal | None = Field(None, gt=0, decimal_places=6)
+    quantity: Decimal | None = Field(None, decimal_places=6)
     unit_price: Decimal | None = Field(None, ge=0, decimal_places=6)
     billed_status: BilledStatus | None = None
     invoice_id: str | None = None
@@ -132,6 +132,36 @@ class UsageStats(BaseModel):
     period_end: datetime
 
 
+class UsageReportRequest(BaseModel):
+    """Request schema for generating a usage report."""
+
+    model_config = ConfigDict()
+
+    subscription_id: str | None = Field(default=None, max_length=50)
+    customer_id: UUID | None = None
+    period_start: datetime
+    period_end: datetime
+    usage_types: list[UsageType] | None = Field(
+        default=None, description="Optional list of usage types to include. Defaults to all types."
+    )
+
+
+class UsageReport(BaseModel):
+    """Aggregated usage report response."""
+
+    model_config = ConfigDict()
+
+    tenant_id: str
+    subscription_id: str | None
+    customer_id: UUID | None
+    period_start: datetime
+    period_end: datetime
+    total_quantity: Decimal
+    total_amount: int  # in cents
+    currency: str = Field(..., min_length=3, max_length=3)
+    usage_by_type: dict[UsageType, UsageSummary]
+
+
 __all__ = [
     "UsageRecordCreate",
     "UsageRecordBulkCreate",
@@ -140,4 +170,6 @@ __all__ = [
     "UsageAggregateResponse",
     "UsageSummary",
     "UsageStats",
+    "UsageReportRequest",
+    "UsageReport",
 ]

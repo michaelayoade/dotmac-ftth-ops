@@ -3,12 +3,21 @@
 import pytest
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 def test_revenue_router_imports_successfully():
     """Test that revenue router can be imported without NameError.
 
     Regression test for: get_current_partner dependency was used but not imported,
     causing NameError at import time and preventing router registration.
     """
+
+
     try:
         from dotmac.platform.partner_management.revenue_router import router
 

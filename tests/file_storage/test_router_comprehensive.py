@@ -28,6 +28,9 @@ from dotmac.platform.file_storage.router import (
 from dotmac.platform.file_storage.service import FileMetadata
 
 
+
+pytestmark = pytest.mark.integration
+
 # Mock current user for authentication
 @pytest.fixture
 def mock_user():

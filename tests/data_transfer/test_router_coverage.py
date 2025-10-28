@@ -12,6 +12,9 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.data_transfer.router import data_transfer_router
 
 
+
+pytestmark = pytest.mark.integration
+
 def mock_current_user():
     """Mock current user for testing."""
     return UserInfo(

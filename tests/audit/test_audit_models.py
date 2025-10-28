@@ -28,6 +28,7 @@ from dotmac.platform.audit.models import (
 )
 
 
+@pytest.mark.unit
 class TestAuditModels:
     """Test audit model definitions and validation."""
 

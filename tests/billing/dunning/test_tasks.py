@@ -6,9 +6,17 @@ from uuid import uuid4
 import pytest
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 @pytest.mark.asyncio
 class TestProcessPendingActions:
     """Test process_pending_dunning_actions_task."""
+
 
     @patch("dotmac.platform.billing.dunning.tasks._process_pending_actions")
     def test_process_pending_actions_success(self, mock_process):
@@ -17,21 +25,21 @@ class TestProcessPendingActions:
             process_pending_dunning_actions_task,
         )
 
-        # Mock the async function
+        # Mock the async function - match actual return structure
         mock_process.return_value = {
             "processed": 5,
-            "successful": 4,
-            "failed": 1,
-            "duration_seconds": 2.5,
+            "errors": 1,
+            "total_executions": 6,
+            "timestamp": "2025-10-28T00:00:00Z",
+            "results": [],
         }
 
         # Execute task
         result = process_pending_dunning_actions_task()
 
         assert result["processed"] == 5
-        assert result["successful"] == 4
-        assert result["failed"] == 1
-        assert "duration_seconds" in result
+        assert result["errors"] == 1
+        assert result["total_executions"] == 6
         mock_process.assert_called_once()
 
     @patch("dotmac.platform.billing.dunning.tasks._process_pending_actions")
@@ -43,14 +51,16 @@ class TestProcessPendingActions:
 
         mock_process.return_value = {
             "processed": 0,
-            "successful": 0,
-            "failed": 0,
-            "duration_seconds": 0.1,
+            "errors": 0,
+            "total_executions": 0,
+            "timestamp": "2025-10-28T00:00:00Z",
+            "results": [],
         }
 
         result = process_pending_dunning_actions_task()
 
         assert result["processed"] == 0
+        assert result["errors"] == 0
         mock_process.assert_called_once()
 
     @patch("dotmac.platform.billing.dunning.tasks._process_pending_actions")
@@ -76,7 +86,13 @@ class TestProcessPendingActions:
         # Simulate transient error that should trigger retry
         mock_process.side_effect = [
             Exception("Temporary error"),
-            {"processed": 5, "successful": 5, "failed": 0},
+            {
+                "processed": 5,
+                "errors": 0,
+                "total_executions": 5,
+                "timestamp": "2025-10-28T00:00:00Z",
+                "results": [],
+            },
         ]
 
         # First call raises exception
@@ -85,9 +101,16 @@ class TestProcessPendingActions:
 
         # Second call succeeds (simulating retry)
         mock_process.side_effect = None
-        mock_process.return_value = {"processed": 5, "successful": 5, "failed": 0}
+        mock_process.return_value = {
+            "processed": 5,
+            "errors": 0,
+            "total_executions": 5,
+            "timestamp": "2025-10-28T00:00:00Z",
+            "results": [],
+        }
         result = process_pending_dunning_actions_task()
-        assert result["successful"] == 5
+        assert result["processed"] == 5
+        assert result["errors"] == 0
 
 
 @pytest.mark.asyncio
@@ -107,16 +130,18 @@ class TestExecuteDunningAction:
         }
 
         mock_execute.return_value = {
-            "success": True,
+            "status": "success",
             "action_type": "email",
-            "message": "Email sent successfully",
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {"message": "Email sent successfully"},
         }
 
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=1
         )
 
-        assert result["success"] is True
+        assert result["status"] == "success"
         assert result["action_type"] == "email"
         mock_execute.assert_called_once()
 
@@ -133,16 +158,18 @@ class TestExecuteDunningAction:
         }
 
         mock_execute.return_value = {
-            "success": True,
+            "status": "success",
             "action_type": "sms",
-            "message": "SMS sent successfully",
+            "step_number": 2,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {"message": "SMS sent successfully"},
         }
 
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=2
         )
 
-        assert result["success"] is True
+        assert result["status"] == "success"
         assert result["action_type"] == "sms"
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
@@ -154,16 +181,18 @@ class TestExecuteDunningAction:
         action_config = {"type": "suspend_service", "delay_days": 7}
 
         mock_execute.return_value = {
-            "success": True,
+            "status": "success",
             "action_type": "suspend_service",
-            "message": "Service suspended",
+            "step_number": 3,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {"message": "Service suspended"},
         }
 
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=3
         )
 
-        assert result["success"] is True
+        assert result["status"] == "success"
         assert result["action_type"] == "suspend_service"
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
@@ -175,16 +204,18 @@ class TestExecuteDunningAction:
         action_config = {"type": "terminate_service", "delay_days": 14}
 
         mock_execute.return_value = {
-            "success": True,
+            "status": "success",
             "action_type": "terminate_service",
-            "message": "Service terminated",
+            "step_number": 4,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {"message": "Service terminated"},
         }
 
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=4
         )
 
-        assert result["success"] is True
+        assert result["status"] == "success"
         assert result["action_type"] == "terminate_service"
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
@@ -201,18 +232,19 @@ class TestExecuteDunningAction:
         }
 
         mock_execute.return_value = {
-            "success": True,
+            "status": "success",
             "action_type": "webhook",
-            "message": "Webhook called successfully",
-            "response_status": 200,
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {"message": "Webhook called successfully", "response_status": 200},
         }
 
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=1
         )
 
-        assert result["success"] is True
-        assert result["response_status"] == 200
+        assert result["status"] == "success"
+        assert result["details"]["response_status"] == 200
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
     def test_execute_action_failure(self, mock_execute):
@@ -223,8 +255,11 @@ class TestExecuteDunningAction:
         action_config = {"type": "email", "delay_days": 0, "template": "reminder"}
 
         mock_execute.return_value = {
-            "success": False,
+            "status": "failed",
             "action_type": "email",
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {},
             "error": "Email service unavailable",
         }
 
@@ -232,7 +267,7 @@ class TestExecuteDunningAction:
             execution_id=execution_id, action_config=action_config, step_number=1
         )
 
-        assert result["success"] is False
+        assert result["status"] == "failed"
         assert "error" in result
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
@@ -260,7 +295,13 @@ class TestExecuteDunningAction:
         # First call fails, second succeeds
         mock_execute.side_effect = [
             Exception("Transient network error"),
-            {"success": True, "action_type": "email"},
+            {
+                "status": "success",
+                "action_type": "email",
+                "step_number": 1,
+                "executed_at": "2025-10-28T00:00:00Z",
+                "details": {},
+            },
         ]
 
         # First attempt raises exception
@@ -271,25 +312,35 @@ class TestExecuteDunningAction:
 
         # Retry succeeds
         mock_execute.side_effect = None
-        mock_execute.return_value = {"success": True, "action_type": "email"}
+        mock_execute.return_value = {
+            "status": "success",
+            "action_type": "email",
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {},
+        }
         result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=1
         )
-        assert result["success"] is True
+        assert result["status"] == "success"
 
 
 @pytest.mark.asyncio
 class TestActionExecutionLogic:
     """Test _execute_action internal logic."""
 
-    @patch("dotmac.platform.billing.dunning.tasks.get_async_session")
+    @patch("dotmac.platform.billing.dunning.tasks.async_session_maker")
     @patch("dotmac.platform.billing.dunning.tasks.DunningService")
-    async def test_execute_action_logs_created(self, mock_service, mock_session):
+    async def test_execute_action_logs_created(self, mock_service, mock_session_maker):
         """Test action execution creates action logs."""
         from dotmac.platform.billing.dunning.tasks import _execute_action
 
         execution_id = uuid4()
         action_config = {"type": "email", "delay_days": 0, "template": "reminder"}
+
+        # Mock async context manager
+        mock_session = AsyncMock()
+        mock_session_maker.return_value.__aenter__.return_value = mock_session
 
         mock_service_instance = AsyncMock()
         mock_service.return_value = mock_service_instance
@@ -299,6 +350,8 @@ class TestActionExecutionLogic:
         mock_execution.id = execution_id
         mock_execution.tenant_id = "test-tenant"
         mock_execution.subscription_id = "sub_123"
+        mock_execution.current_step = 0
+        mock_execution.execution_log = []
         mock_service_instance.get_execution.return_value = mock_execution
 
         await _execute_action(execution_id, action_config, 1)
@@ -306,13 +359,17 @@ class TestActionExecutionLogic:
         # Verify service methods were called
         mock_service_instance.get_execution.assert_called_once()
 
-    @patch("dotmac.platform.billing.dunning.tasks.get_async_session")
-    async def test_execute_action_execution_not_found(self, mock_session):
+    @patch("dotmac.platform.billing.dunning.tasks.async_session_maker")
+    async def test_execute_action_execution_not_found(self, mock_session_maker):
         """Test action execution handles execution not found."""
         from dotmac.platform.billing.dunning.tasks import _execute_action
 
         execution_id = uuid4()
         action_config = {"type": "email", "delay_days": 0}
+
+        # Mock async context manager
+        mock_session = AsyncMock()
+        mock_session_maker.return_value.__aenter__.return_value = mock_session
 
         # Mock session to return None for get_execution
         with patch("dotmac.platform.billing.dunning.tasks.DunningService") as mock_service:
@@ -322,7 +379,7 @@ class TestActionExecutionLogic:
 
             result = await _execute_action(execution_id, action_config, 1)
 
-            assert result["success"] is False
+            assert result["status"] == "failed"
             assert "not found" in result.get("error", "").lower()
 
 
@@ -390,8 +447,10 @@ class TestIntegrationScenarios:
         # Step 1: Process pending actions identifies executions
         mock_process.return_value = {
             "processed": 2,
-            "successful": 2,
-            "failed": 0,
+            "errors": 0,
+            "total_executions": 2,
+            "timestamp": "2025-10-28T00:00:00Z",
+            "results": [],
         }
 
         result = process_pending_dunning_actions_task()
@@ -401,13 +460,19 @@ class TestIntegrationScenarios:
         execution_id = str(uuid4())
         action_config = {"type": "email", "delay_days": 0}
 
-        mock_execute.return_value = {"success": True, "action_type": "email"}
+        mock_execute.return_value = {
+            "status": "success",
+            "action_type": "email",
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {},
+        }
 
         action_result = execute_dunning_action_task(
             execution_id=execution_id, action_config=action_config, step_number=1
         )
 
-        assert action_result["success"] is True
+        assert action_result["status"] == "success"
 
     @patch("dotmac.platform.billing.dunning.tasks._execute_action")
     def test_multi_step_execution_sequence(self, mock_execute):
@@ -417,13 +482,19 @@ class TestIntegrationScenarios:
         execution_id = str(uuid4())
 
         # Step 1: Send first email
-        mock_execute.return_value = {"success": True, "action_type": "email"}
+        mock_execute.return_value = {
+            "status": "success",
+            "action_type": "email",
+            "step_number": 1,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {},
+        }
         result1 = execute_dunning_action_task(
             execution_id=execution_id,
             action_config={"type": "email", "delay_days": 0},
             step_number=1,
         )
-        assert result1["success"] is True
+        assert result1["status"] == "success"
 
         # Step 2: Send second email
         result2 = execute_dunning_action_task(
@@ -431,16 +502,22 @@ class TestIntegrationScenarios:
             action_config={"type": "email", "delay_days": 3},
             step_number=2,
         )
-        assert result2["success"] is True
+        assert result2["status"] == "success"
 
         # Step 3: Suspend service
-        mock_execute.return_value = {"success": True, "action_type": "suspend_service"}
+        mock_execute.return_value = {
+            "status": "success",
+            "action_type": "suspend_service",
+            "step_number": 3,
+            "executed_at": "2025-10-28T00:00:00Z",
+            "details": {},
+        }
         result3 = execute_dunning_action_task(
             execution_id=execution_id,
             action_config={"type": "suspend_service", "delay_days": 7},
             step_number=3,
         )
-        assert result3["success"] is True
+        assert result3["status"] == "success"
 
         # Verify all steps executed
         assert mock_execute.call_count == 3

@@ -1,3 +1,4 @@
+
 """
 Invoice status tests - Migrated to use shared helpers.
 
@@ -15,9 +16,14 @@ from dotmac.platform.billing.core.exceptions import InvalidInvoiceStatusError, I
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestInvoiceServiceStatusManagement:
     """Test invoice status management functionality"""
 

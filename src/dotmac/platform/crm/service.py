@@ -109,7 +109,7 @@ class LeadService:
         lead = result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
+            raise EntityNotFoundError(entity="Lead", entity_id=str(lead_id))
 
         return lead
 
@@ -311,7 +311,7 @@ class QuoteService:
         lead = lead_result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
+            raise EntityNotFoundError(entity="Lead", entity_id=str(lead_id))
 
         # Generate quote number
         quote_number = await self._generate_quote_number(tenant_id)
@@ -676,7 +676,7 @@ class SiteSurveyService:
         lead = lead_result.scalar_one_or_none()
 
         if not lead:
-            raise EntityNotFoundError(entity_type="Lead", entity_id=str(lead_id))
+            raise EntityNotFoundError(entity="Lead", entity_id=str(lead_id))
 
         # Generate survey number
         survey_number = await self._generate_survey_number(tenant_id)

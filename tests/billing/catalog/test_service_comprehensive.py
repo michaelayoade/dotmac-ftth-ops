@@ -32,6 +32,7 @@ from dotmac.platform.billing.exceptions import (
 )
 
 
+@pytest.mark.integration
 class TestProductServiceProductCreation:
     """Test product creation operations."""
 
@@ -176,6 +177,7 @@ class TestProductServiceProductCreation:
         assert "unit name is required" in str(exc_info.value).lower()
 
 
+@pytest.mark.integration
 class TestProductServiceProductRetrieval:
     """Test product retrieval operations."""
 
@@ -283,6 +285,7 @@ class TestProductServiceProductRetrieval:
         assert product is None
 
 
+@pytest.mark.integration
 class TestProductServiceProductListing:
     """Test product listing and filtering operations."""
 
@@ -553,6 +556,7 @@ class TestProductServiceProductListing:
         assert page1_ids != page2_ids
 
 
+@pytest.mark.integration
 class TestProductServiceProductUpdates:
     """Test product update operations."""
 
@@ -694,6 +698,7 @@ class TestProductServiceProductUpdates:
         assert retrieved.is_active is False
 
 
+@pytest.mark.integration
 class TestProductServiceCategories:
     """Test category management operations."""
 
@@ -821,6 +826,7 @@ class TestProductServiceCategories:
         assert b_index < a_index  # B (sort_order=1) should come before A (sort_order=2)
 
 
+@pytest.mark.integration
 class TestProductServiceUsageProducts:
     """Test usage product specific operations."""
 
@@ -935,6 +941,7 @@ class TestProductServiceUsageProducts:
         assert all(p.is_active is True for p in api_products)
 
 
+@pytest.mark.integration
 class TestProductServiceHelpers:
     """Test helper functions."""
 

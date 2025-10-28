@@ -8,6 +8,7 @@ import pytest
 from dotmac.platform.analytics.service import AnalyticsService, get_analytics_service
 
 
+@pytest.mark.unit
 class TestAnalyticsService:
     """Test AnalyticsService class."""
 
@@ -120,6 +121,7 @@ class TestAnalyticsService:
         assert call_kwargs["value"] == 50
 
 
+@pytest.mark.unit
 class TestAnalyticsServiceEdgeCases:
     """Test edge cases and additional functionality."""
 
@@ -231,6 +233,7 @@ class TestAnalyticsServiceEdgeCases:
         assert call_kwargs["attributes"] == attributes
 
 
+@pytest.mark.unit
 class TestGetAnalyticsService:
     """Test get_analytics_service factory function."""
 

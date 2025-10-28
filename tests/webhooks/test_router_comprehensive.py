@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for webhooks router.
 
@@ -14,8 +15,15 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.webhooks.router import router
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
+pytestmark = pytest.mark.asyncio
 
 def _override_webhook_permissions(app: FastAPI, mock_user):
     permission_dependency = require_permission("webhooks:manage")

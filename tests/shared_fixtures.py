@@ -13,6 +13,11 @@ from uuid import uuid4
 import pytest
 
 # Import models and services based on availability
+
+
+
+pytestmark = pytest.mark.integration
+
 try:
     from dotmac.platform.auth.core import UserInfo
 

@@ -19,6 +19,9 @@ from dotmac.platform.user_management.router import (
 from dotmac.platform.user_management.service import UserService
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user_service():
     """Mock UserService."""

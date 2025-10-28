@@ -11,7 +11,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.communications.models import (
+
+
     CommunicationStatus,
     CommunicationType,
 )

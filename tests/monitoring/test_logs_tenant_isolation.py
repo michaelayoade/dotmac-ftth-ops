@@ -121,6 +121,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
     }
 
 
+@pytest.mark.integration
 class TestLogsTenantIsolation:
     """Test tenant isolation for logs endpoint."""
 
@@ -257,6 +258,7 @@ class TestLogsTenantIsolation:
         assert len(data["logs"]) == 0
 
 
+@pytest.mark.integration
 class TestLogStatsTenantIsolation:
     """Test tenant isolation for log stats endpoint."""
 
@@ -364,6 +366,7 @@ class TestLogStatsTenantIsolation:
         assert data["by_service"] == {}
 
 
+@pytest.mark.integration
 class TestAvailableServicesTenantIsolation:
     """Test tenant isolation for available services endpoint."""
 
@@ -493,6 +496,7 @@ class TestAvailableServicesTenantIsolation:
         assert services == []
 
 
+@pytest.mark.integration
 class TestTenantIsolationWithFilters:
     """Test that tenant isolation works correctly with various filters."""
 

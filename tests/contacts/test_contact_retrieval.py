@@ -1,3 +1,4 @@
+
 """
 Contact retrieval tests - Migrated to use shared helpers.
 
@@ -13,9 +14,14 @@ import pytest
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactRetrieval:
     """Test contact retrieval."""
 

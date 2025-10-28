@@ -1,3 +1,4 @@
+
 """
 Tests for service registry data models.
 """
@@ -8,11 +9,18 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.service_registry.models import (
+
+
+
     ServiceHealth,
     ServiceInfo,
     ServiceStatus,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestServiceStatus:
     """Test ServiceStatus enum."""

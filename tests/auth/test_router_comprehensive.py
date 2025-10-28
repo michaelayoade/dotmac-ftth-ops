@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for auth router to improve coverage.
 
@@ -24,6 +25,13 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):

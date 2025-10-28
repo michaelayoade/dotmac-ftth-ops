@@ -1,3 +1,4 @@
+
 """
 Simple tests for Platform Admin Router to improve coverage.
 """
@@ -13,6 +14,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.platform_admin_router import router as platform_admin_router
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def platform_admin_app():

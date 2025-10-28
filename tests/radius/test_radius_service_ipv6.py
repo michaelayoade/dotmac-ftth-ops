@@ -35,6 +35,7 @@ def radius_service(mock_session):
         return service
 
 
+@pytest.mark.integration
 class TestRADIUSServiceCreateSubscriberIPv6:
     """Test creating RADIUS subscribers with IPv6 support."""
 
@@ -209,6 +210,7 @@ class TestRADIUSServiceCreateSubscriberIPv6:
         assert result.delegated_ipv6_prefix == "2001:db8:abcd::/48"
 
 
+@pytest.mark.integration
 class TestRADIUSServiceGetSubscriberIPv6:
     """Test retrieving RADIUS subscribers with IPv6 support."""
 
@@ -246,6 +248,7 @@ class TestRADIUSServiceGetSubscriberIPv6:
         assert result.session_timeout == 3600
 
 
+@pytest.mark.integration
 class TestRADIUSServiceUpdateSubscriberIPv6:
     """Test updating RADIUS subscribers with IPv6 support."""
 

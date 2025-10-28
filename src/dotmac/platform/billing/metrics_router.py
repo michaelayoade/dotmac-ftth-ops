@@ -33,9 +33,11 @@ logger = structlog.get_logger(__name__)
 
 router = APIRouter(
     prefix="",
+    tags=["Billing Metrics"],
 )
 customer_metrics_router = APIRouter(
     prefix="",
+    tags=["Customer Metrics"],
 )
 
 

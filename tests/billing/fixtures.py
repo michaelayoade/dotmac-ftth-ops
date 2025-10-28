@@ -16,6 +16,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
+
+
     InvoiceEntity,
     PaymentEntity,
     PaymentMethodEntity,
@@ -32,6 +34,9 @@ from dotmac.platform.billing.models import Invoice, Payment, PaymentMethod
 # Payment Provider Mocks
 # =============================================================================
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_stripe_provider():

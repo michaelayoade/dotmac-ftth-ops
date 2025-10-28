@@ -69,6 +69,7 @@ async def sample_permissions(async_db_session: AsyncSession):
     return perms
 
 
+@pytest.mark.integration
 class TestPermissionWildcards:
     """Test permission wildcard matching."""
 
@@ -160,6 +161,7 @@ class TestPermissionWildcards:
         )
 
 
+@pytest.mark.integration
 class TestRoleExpiration:
     """Test role expiration handling."""
 
@@ -228,6 +230,7 @@ class TestRoleExpiration:
         assert roles[0].name == "expired_role"
 
 
+@pytest.mark.integration
 class TestPermissionRevocation:
     """Test permission revocation and overrides."""
 
@@ -290,6 +293,7 @@ class TestPermissionRevocation:
         assert "ticket.read" not in perms
 
 
+@pytest.mark.integration
 class TestRoleCRUDErrors:
     """Test role CRUD error conditions."""
 
@@ -391,6 +395,7 @@ class TestRoleCRUDErrors:
             )
 
 
+@pytest.mark.integration
 class TestRoleAssignmentErrors:
     """Test role assignment error conditions."""
 
@@ -525,6 +530,7 @@ class TestRoleAssignmentErrors:
         assert await rbac_service.user_has_permission(user_id, "ticket.read")
 
 
+@pytest.mark.integration
 class TestCachingBehavior:
     """Test permission caching behavior."""
 
@@ -604,6 +610,7 @@ class TestCachingBehavior:
         assert "ticket.read" not in perms2
 
 
+@pytest.mark.integration
 class TestServiceEdgeCases:
     """Test service edge cases for missing coverage."""
 

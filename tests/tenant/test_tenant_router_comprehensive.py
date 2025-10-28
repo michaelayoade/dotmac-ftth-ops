@@ -15,6 +15,8 @@ from src.dotmac.platform.tenant.models import (
     TenantPlanType,
 )
 
+pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def auth_headers(async_client):

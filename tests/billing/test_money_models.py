@@ -14,6 +14,7 @@ from dotmac.platform.billing.money_models import (
 from dotmac.platform.billing.money_utils import create_money
 
 
+@pytest.mark.unit
 class TestMoneyField:
     """Test MoneyField Pydantic model."""
 
@@ -67,6 +68,7 @@ class TestMoneyField:
             assert field.currency == currency
 
 
+@pytest.mark.unit
 class TestMoneyInvoiceLineItem:
     """Test MoneyInvoiceLineItem model."""
 
@@ -212,6 +214,7 @@ class TestMoneyInvoiceLineItem:
         assert item.extra_data["another"] == 123
 
 
+@pytest.mark.unit
 class TestMoneyInvoice:
     """Test MoneyInvoice model."""
 

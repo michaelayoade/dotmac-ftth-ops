@@ -1,3 +1,4 @@
+
 """
 Integration tests for complete customer onboarding journey.
 
@@ -12,6 +13,9 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from dotmac.platform.billing.models import (
+
+
+
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
@@ -25,6 +29,10 @@ from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.user_management.models import User
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestCustomerOnboardingJourney:

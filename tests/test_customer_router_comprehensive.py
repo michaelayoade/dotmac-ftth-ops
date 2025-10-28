@@ -12,6 +12,8 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi import HTTPException, status
 
+pytestmark = pytest.mark.integration
+
 # Import the router module to ensure it's loaded for coverage
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.customer_management.router import (
@@ -33,6 +35,8 @@ from dotmac.platform.customer_management.router import (
     update_customer,
 )
 from dotmac.platform.customer_management.schemas import (
+
+
     CustomerActivityCreate,
     CustomerActivityResponse,
     CustomerCreate,

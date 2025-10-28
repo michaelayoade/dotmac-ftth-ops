@@ -47,6 +47,7 @@ def user_id():
     return uuid4()
 
 
+@pytest.mark.integration
 class TestConvertLeadToCustomer:
     """Test lead to customer conversion workflow."""
 
@@ -270,6 +271,7 @@ class TestConvertLeadToCustomer:
             )
 
 
+@pytest.mark.integration
 class TestProvisionSubscriber:
     """Test subscriber provisioning workflow."""
 
@@ -557,6 +559,7 @@ class TestProvisionSubscriber:
         assert result["genieacs_status"]["device_id"] == "device_123"  # Succeeded
 
 
+@pytest.mark.integration
 class TestDeprovisionSubscriber:
     """Test subscriber deprovisioning workflow."""
 
@@ -651,6 +654,7 @@ class TestDeprovisionSubscriber:
             )
 
 
+@pytest.mark.integration
 class TestSuspendAndReactivate:
     """Test subscriber suspension and reactivation workflows."""
 

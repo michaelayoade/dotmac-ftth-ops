@@ -41,6 +41,7 @@ def user_service(async_session):
     return UserService(async_session)
 
 
+@pytest.mark.integration
 class TestInvalidUUIDHandling:
     """Test invalid UUID string handling - covers lines 44-45."""
 
@@ -67,6 +68,7 @@ class TestInvalidUUIDHandling:
             assert result is None, f"Expected None for invalid UUID: {invalid_uuid}"
 
 
+@pytest.mark.integration
 class TestDuplicateValidation:
     """Test duplicate username and email validation - covers lines 97, 101."""
 
@@ -115,6 +117,7 @@ class TestDuplicateValidation:
             )
 
 
+@pytest.mark.integration
 class TestUserDeletion:
     """Test user deletion - covers lines 218-225."""
 
@@ -166,6 +169,7 @@ class TestUserDeletion:
         assert deleted is None
 
 
+@pytest.mark.integration
 class TestListUsersEdgeCases:
     """Test list_users edge cases - covers lines 287, 301-311."""
 
@@ -199,6 +203,7 @@ class TestListUsersEdgeCases:
         assert total == 0
 
 
+@pytest.mark.integration
 class TestUpdateUserEdgeCases:
     """Test update_user edge cases - covers lines 338-342."""
 
@@ -213,6 +218,7 @@ class TestUpdateUserEdgeCases:
         assert result is None
 
 
+@pytest.mark.integration
 class TestVerifyPasswordEdgeCases:
     """Test verify_password edge cases - covers lines 408, 421."""
 
@@ -262,6 +268,7 @@ class TestVerifyPasswordEdgeCases:
         assert result is True
 
 
+@pytest.mark.integration
 class TestGetUserByIdEdgeCases:
     """Additional edge cases for get_user_by_id - line 191."""
 

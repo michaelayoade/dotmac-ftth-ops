@@ -18,6 +18,7 @@ from dotmac.platform.monitoring.error_tracking import (
 )
 
 
+@pytest.mark.unit
 class TestTrackHTTPError:
     """Test track_http_error function."""
 
@@ -73,6 +74,7 @@ class TestTrackHTTPError:
             mock_time_obj.observe.assert_called_with(0.5)
 
 
+@pytest.mark.unit
 class TestTrackException:
     """Test track_exception function."""
 
@@ -113,6 +115,7 @@ class TestTrackException:
             mock_endpoint.labels.assert_called_once()
 
 
+@pytest.mark.unit
 class TestTrackDatabaseError:
     """Test track_database_error function."""
 
@@ -175,6 +178,7 @@ class TestTrackDatabaseError:
             mock_timeout.labels.assert_called_once()
 
 
+@pytest.mark.unit
 class TestTrackAuthFailure:
     """Test track_auth_failure function."""
 
@@ -209,6 +213,7 @@ class TestTrackAuthFailure:
             mock_token.labels.assert_called_once()
 
 
+@pytest.mark.unit
 class TestTrackRateLimitViolation:
     """Test track_rate_limit_violation function."""
 
@@ -227,6 +232,7 @@ class TestTrackRateLimitViolation:
             assert call_kwargs["tenant_id"] == "tenant-1"
 
 
+@pytest.mark.unit
 class TestTrackExternalAPIError:
     """Test track_external_api_error function."""
 
@@ -246,6 +252,7 @@ class TestTrackExternalAPIError:
             assert call_kwargs["error_type"] == "Exception"
 
 
+@pytest.mark.unit
 class TestTrackRedisError:
     """Test track_redis_error function."""
 
@@ -263,6 +270,7 @@ class TestTrackRedisError:
             assert call_kwargs["tenant_id"] == "tenant-1"
 
 
+@pytest.mark.unit
 class TestTrackMinioError:
     """Test track_minio_error function."""
 
@@ -280,6 +288,7 @@ class TestTrackMinioError:
             assert call_kwargs["tenant_id"] == "tenant-1"
 
 
+@pytest.mark.unit
 class TestTrackErrorsDecorator:
     """Test track_errors decorator."""
 

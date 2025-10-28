@@ -40,6 +40,7 @@ from dotmac.platform.data_transfer.exporters import (
 # from dotmac.platform.data_transfer.factory import DataTransferRegistry  # Not used
 
 
+@pytest.mark.unit
 class TestCSVExporter:
     """Test CSVExporter functionality."""
 
@@ -145,6 +146,7 @@ class TestCSVExporter:
             assert any(call.status == TransferStatus.COMPLETED for call in progress_calls)
 
 
+@pytest.mark.unit
 class TestJSONExporter:
     """Test JSONExporter functionality."""
 
@@ -218,6 +220,7 @@ class TestJSONExporter:
             assert data[0]["items"] == [1, 2, 3]
 
 
+@pytest.mark.unit
 class TestXMLExporter:
     """Test XMLExporter functionality."""
 
@@ -272,6 +275,7 @@ class TestXMLExporter:
             assert tree.getroot().tag == "users"
 
 
+@pytest.mark.unit
 class TestYAMLExporter:
     """Test YAMLExporter functionality."""
 
@@ -324,6 +328,7 @@ class TestYAMLExporter:
             assert "café" in content
 
 
+@pytest.mark.unit
 class TestExcelExporter:
     """Test ExcelExporter functionality."""
 
@@ -378,6 +383,7 @@ class TestExcelExporter:
             assert "CustomSheet" in xl_file.sheet_names
 
 
+@pytest.mark.unit
 class TestCompressionUtility:
     """Test compression functionality."""
 
@@ -444,6 +450,7 @@ class TestCompressionUtility:
                 compress_file(original_file, "invalid")
 
 
+@pytest.mark.unit
 class TestExporterFactory:
     """Test exporter factory functions."""
 
@@ -518,6 +525,7 @@ class TestExporterFactory:
             assert format == DataFormat.EXCEL
 
 
+@pytest.mark.unit
 class TestExportDataFunction:
     """Test high-level export_data function."""
 
@@ -596,6 +604,7 @@ class TestExportDataFunction:
             assert len(progress_updates) > 0
 
 
+@pytest.mark.unit
 class TestExporterErrorHandling:
     """Test error handling in exporters."""
 
@@ -659,6 +668,7 @@ class TestExporterErrorHandling:
             assert result.status == TransferStatus.COMPLETED
 
 
+@pytest.mark.unit
 class TestExporterProgressTracking:
     """Test progress tracking in exporters."""
 

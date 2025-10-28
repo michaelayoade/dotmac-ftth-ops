@@ -1,3 +1,4 @@
+
 """
 NetBox Integration Tests
 
@@ -21,9 +22,13 @@ import pytest_asyncio
 from dotmac.platform.core.http_client import RobustHTTPClient
 from dotmac.platform.netbox.client import NetBoxClient
 
-# Mark all tests in this file as integration tests
-pytestmark = pytest.mark.integration
 
+# Mark all tests in this file as integration tests
+
+
+
+
+pytestmark = pytest.mark.integration
 
 def _netbox_available(url: str) -> bool:
     parsed = urlparse(url)

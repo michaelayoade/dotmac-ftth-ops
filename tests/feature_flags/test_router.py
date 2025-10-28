@@ -1,3 +1,4 @@
+
 """
 Tests for feature flags API router.
 
@@ -13,12 +14,19 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.feature_flags.router import (
+
+
     BulkFlagUpdateRequest,
     FeatureFlagCheckRequest,
     FeatureFlagRequest,
     feature_flags_router,
 )
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def client():

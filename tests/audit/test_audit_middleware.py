@@ -1,3 +1,4 @@
+
 """
 Tests for audit context middleware.
 """
@@ -8,12 +9,17 @@ import pytest
 from fastapi import Request
 
 from dotmac.platform.audit.middleware import (
+
+
     AuditContextMiddleware,
     create_audit_aware_dependency,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_request():
@@ -32,6 +38,7 @@ def middleware():
     return AuditContextMiddleware(app=None)
 
 
+@pytest.mark.integration
 class TestAuditContextMiddleware:
     """Test AuditContextMiddleware functionality."""
 
@@ -200,6 +207,7 @@ class TestAuditContextMiddleware:
                 call_next.assert_called_once_with(mock_request)
 
 
+@pytest.mark.integration
 class TestAuditAwareDependency:
     """Test create_audit_aware_dependency function."""
 

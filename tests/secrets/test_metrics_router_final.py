@@ -20,6 +20,8 @@ from dotmac.platform.secrets.metrics_router import (
     router,
 )
 
+pytestmark = pytest.mark.integration
+
 
 def mock_current_user():
     """Mock current user for testing."""

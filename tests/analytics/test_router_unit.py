@@ -3,6 +3,7 @@ Unit tests for analytics router helper functions and utilities.
 
 Tests helper functions, datetime handling, and router configuration.
 """
+import pytest
 
 from datetime import timezone, datetime
 from unittest.mock import MagicMock, patch
@@ -15,6 +16,7 @@ from dotmac.platform.analytics.router import (
 )
 
 
+@pytest.mark.unit
 class TestHelperFunctions:
     """Test analytics router helper functions."""
 
@@ -87,6 +89,7 @@ class TestHelperFunctions:
         assert result.endswith("Z")
 
 
+@pytest.mark.unit
 class TestAnalyticsServiceDependency:
     """Test analytics service dependency injection."""
 
@@ -133,6 +136,7 @@ class TestAnalyticsServiceDependency:
             assert service1 == mock_service
 
 
+@pytest.mark.unit
 class TestRouterConfiguration:
     """Test router configuration."""
 

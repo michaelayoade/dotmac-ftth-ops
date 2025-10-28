@@ -18,6 +18,9 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 import pytest_asyncio
 
+
+
+
 os.environ.setdefault("TENANT_MODE", "single")
 
 if "minio" not in sys.modules:
@@ -868,6 +871,30 @@ if HAS_FASTAPI:
         except ImportError:
             pass
 
+        # Override Redis client to provide a mock for testing
+        # This prevents Redis connection errors in router tests
+        try:
+            from unittest.mock import MagicMock
+            from dotmac.platform.redis_client import get_redis_client
+
+            def override_get_redis_client():
+                """Mock Redis client for testing."""
+                mock_redis = MagicMock()
+                mock_redis.get = AsyncMock(return_value=None)
+                mock_redis.set = AsyncMock(return_value=True)
+                mock_redis.delete = AsyncMock(return_value=True)
+                mock_redis.exists = AsyncMock(return_value=False)
+                mock_redis.expire = AsyncMock(return_value=True)
+                mock_redis.ttl = AsyncMock(return_value=-1)
+                mock_redis.keys = AsyncMock(return_value=[])
+                mock_redis.scan = AsyncMock(return_value=(0, []))
+                mock_redis.ping = AsyncMock(return_value=True)
+                return mock_redis
+
+            app.dependency_overrides[get_redis_client] = override_get_redis_client
+        except ImportError:
+            pass
+
         # ============================================================================
         # Register ALL module routers for testing
         # ============================================================================
@@ -1269,8 +1296,20 @@ if HAS_FASTAPI:
         try:
             from dotmac.platform.billing.dunning.router import router as dunning_router
 
+            # Dunning router already has prefix="/billing/dunning"
             app.include_router(
-                dunning_router, prefix="/api/v1/billing/dunning", tags=["Billing - Dunning"]
+                dunning_router, prefix="/api/v1"
+            )
+        except ImportError:
+            pass
+
+        # Services - Orchestration
+        try:
+            from dotmac.platform.services.router import router as orchestration_router
+
+            # Orchestration router already has prefix="/orchestration"
+            app.include_router(
+                orchestration_router, prefix="/api/v1"
             )
         except ImportError:
             pass
@@ -2283,3 +2322,22 @@ def authenticated_client_with_tenant(test_app: "FastAPI", test_user: "UserInfo")
 
     # Cleanup
     test_app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def reset_platform_config():
+    """Reset platform config after each test to prevent pollution."""
+    import dotmac.platform as platform_module
+    
+    # Store original config
+    original_config = platform_module.config
+    
+    yield
+    
+    # Restore original config after test
+    platform_module.config = original_config
+    
+    # If config was replaced with a module or other non-PlatformConfig object, recreate it
+    if not hasattr(platform_module.config, 'get'):
+        from dotmac.platform import PlatformConfig
+        platform_module.config = PlatformConfig()

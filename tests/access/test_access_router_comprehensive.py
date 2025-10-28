@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for Access Network Router.
 
@@ -13,6 +14,8 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from dotmac.platform.access.drivers import (
+
+
     DeviceDiscovery,
     OLTAlarm,
     OltMetrics,
@@ -20,6 +23,7 @@ from dotmac.platform.access.drivers import (
     ONUProvisionResult,
 )
 from dotmac.platform.access.router import configure_access_service, get_access_service
+
 from dotmac.platform.access.service import AccessNetworkService, OLTOverview
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.voltha.schemas import (
@@ -32,6 +36,10 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAHealthResponse,
 )
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_access_service():

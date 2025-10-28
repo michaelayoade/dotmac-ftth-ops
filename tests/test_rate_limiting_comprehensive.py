@@ -9,6 +9,7 @@ Tests cover:
 - Proxy functionality
 - Rate limit decorator
 """
+import pytest
 
 from unittest.mock import Mock, patch
 
@@ -27,6 +28,7 @@ from dotmac.platform.core.rate_limiting import (
 )
 
 
+@pytest.mark.integration
 class TestCreateLimiter:
     """Test limiter creation with different storage backends."""
 
@@ -89,6 +91,7 @@ class TestCreateLimiter:
         assert isinstance(result, Limiter)
 
 
+@pytest.mark.integration
 class TestGetLimiter:
     """Test limiter singleton getter."""
 
@@ -130,6 +133,7 @@ class TestGetLimiter:
         assert isinstance(limiter2, Limiter)
 
 
+@pytest.mark.integration
 class TestResetLimiter:
     """Test limiter reset functionality."""
 
@@ -159,6 +163,7 @@ class TestResetLimiter:
         assert isinstance(new_limiter, Limiter)
 
 
+@pytest.mark.integration
 class TestLimiterProxy:
     """Test limiter proxy functionality."""
 
@@ -195,6 +200,7 @@ class TestLimiterProxy:
         assert callable(getattr(limiter, "__getattr__", None))
 
 
+@pytest.mark.integration
 class TestRateLimitDecorator:
     """Test rate_limit decorator functionality."""
 
@@ -233,6 +239,7 @@ class TestRateLimitDecorator:
             assert callable(decorator)
 
 
+@pytest.mark.integration
 class TestExportedComponents:
     """Test that all components are properly exported."""
 
@@ -264,6 +271,7 @@ class TestExportedComponents:
         assert callable(_rate_limit_exceeded_handler)
 
 
+@pytest.mark.integration
 class TestLimiterIntegration:
     """Test limiter integration scenarios."""
 
@@ -308,6 +316,7 @@ class TestLimiterIntegration:
         assert isinstance(limiter2, Limiter)
 
 
+@pytest.mark.integration
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 

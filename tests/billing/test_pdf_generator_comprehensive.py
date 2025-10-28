@@ -138,6 +138,7 @@ def customer_info():
     }
 
 
+@pytest.mark.unit
 class TestGeneratorInitialization:
     """Test generator initialization and configuration."""
 
@@ -180,6 +181,7 @@ class TestGeneratorInitialization:
         assert "BoldText" in generator.styles
 
 
+@pytest.mark.unit
 class TestPDFGeneration:
     """Test PDF generation functionality."""
 
@@ -278,6 +280,7 @@ class TestPDFGeneration:
         assert len(pdf_bytes) > 0
 
 
+@pytest.mark.unit
 class TestSaveToFile:
     """Test saving PDF to file."""
 
@@ -315,6 +318,7 @@ class TestSaveToFile:
         mock_file().write.assert_called_once()
 
 
+@pytest.mark.unit
 class TestHeaderCreation:
     """Test invoice header creation."""
 
@@ -344,6 +348,7 @@ class TestHeaderCreation:
         assert len(header) > 0
 
 
+@pytest.mark.unit
 class TestBillingSection:
     """Test billing details section."""
 
@@ -372,6 +377,7 @@ class TestBillingSection:
         assert len(section) > 0
 
 
+@pytest.mark.unit
 class TestLineItemsTable:
     """Test line items table creation."""
 
@@ -428,6 +434,7 @@ class TestLineItemsTable:
         assert len(table) > 0
 
 
+@pytest.mark.unit
 class TestTotalsSection:
     """Test totals section creation."""
 
@@ -489,6 +496,7 @@ class TestTotalsSection:
         assert len(section) > 0
 
 
+@pytest.mark.unit
 class TestStatusColor:
     """Test invoice status color mapping."""
 
@@ -533,6 +541,7 @@ class TestStatusColor:
         assert color is not None
 
 
+@pytest.mark.unit
 class TestBatchGeneration:
     """Test batch invoice generation."""
 
@@ -607,6 +616,7 @@ class TestBatchGeneration:
         assert len(output_paths) == 1
 
 
+@pytest.mark.unit
 class TestConvenienceFunction:
     """Test convenience function."""
 

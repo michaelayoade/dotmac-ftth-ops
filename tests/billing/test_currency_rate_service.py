@@ -10,6 +10,14 @@ from dotmac.platform.integrations import IntegrationStatus
 from dotmac.platform.settings import settings
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 class DummyCurrencyIntegration:
     def __init__(self, rates: dict[str, float]) -> None:
         self._rates = rates

@@ -23,6 +23,7 @@ from dotmac.platform.analytics.base import (
 from dotmac.platform.analytics.service import AnalyticsService
 
 
+@pytest.mark.unit
 class TestAnalyticsBaseClasses:
     """Test base analytics classes and models."""
 
@@ -174,6 +175,7 @@ class TestAnalyticsBaseClasses:
             BaseAnalyticsCollector("tenant", "service")
 
 
+@pytest.mark.unit
 class TestMetricRegistry:
     """Test MetricRegistry functionality."""
 
@@ -257,6 +259,7 @@ class TestMetricRegistry:
         assert registry.validate(metric) is True
 
 
+@pytest.mark.unit
 class TestAnalyticsService:
     """Test AnalyticsService functionality."""
 
@@ -386,6 +389,7 @@ class TestAnalyticsService:
         assert len(analytics_service._events_store) == 2
 
 
+@pytest.mark.unit
 class TestAnalyticsServiceUtilities:
     """Test analytics service utility functions."""
 
@@ -402,6 +406,7 @@ class TestAnalyticsServiceUtilities:
         assert service1 is not service2
 
 
+@pytest.mark.unit
 class TestAnalyticsErrorHandling:
     """Test error handling in analytics components."""
 
@@ -492,6 +497,7 @@ class TestAnalyticsErrorHandling:
         # Since BaseAnalyticsCollector is abstract, test the enrichment logic concept
 
         # Create a minimal concrete implementation for testing
+        @pytest.mark.unit
         class TestCollector(BaseAnalyticsCollector):
             async def collect(self, metric):
                 pass

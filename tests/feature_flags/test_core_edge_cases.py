@@ -1,3 +1,4 @@
+
 """
 Additional tests for feature flags core module edge cases and missing coverage.
 
@@ -11,6 +12,8 @@ import pytest
 import redis.asyncio as redis
 
 from dotmac.platform.feature_flags.core import (
+
+
     _flag_cache,
     feature_flag,
     get_flag_status,
@@ -18,6 +21,11 @@ from dotmac.platform.feature_flags.core import (
     sync_from_redis,
 )
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def clean_cache():

@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for Customer Portal Router.
 
@@ -17,6 +18,13 @@ from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def test_user():

@@ -1,3 +1,4 @@
+
 """
 Core Subscription Service Tests - Phase 1 Coverage Improvement
 
@@ -22,6 +23,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.exceptions import (
+
+
     PlanNotFoundError,
     SubscriptionNotFoundError,
 )
@@ -38,8 +41,11 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def tenant_id() -> str:
@@ -77,6 +83,7 @@ async def subscription_service(async_session: AsyncSession):
     return SubscriptionService(db_session=async_session)
 
 
+@pytest.mark.integration
 class TestSubscriptionPlanCRUD:
     """Test subscription plan CRUD operations."""
 
@@ -187,6 +194,7 @@ class TestSubscriptionPlanCRUD:
         assert all(p.tenant_id == tenant_id for p in plans)
 
 
+@pytest.mark.integration
 class TestSubscriptionLifecycle:
     """Test subscription lifecycle operations."""
 
@@ -437,6 +445,7 @@ class TestSubscriptionLifecycle:
         assert reactivated_sub.status in [SubscriptionStatus.ACTIVE, SubscriptionStatus.TRIALING]
 
 
+@pytest.mark.integration
 class TestSubscriptionUpdates:
     """Test subscription update operations."""
 
@@ -490,6 +499,7 @@ class TestSubscriptionUpdates:
             )
 
 
+@pytest.mark.integration
 class TestPlanChanges:
     """Test subscription plan change operations."""
 
@@ -542,6 +552,7 @@ class TestPlanChanges:
         assert updated_sub.plan_id == plan2.plan_id
 
 
+@pytest.mark.integration
 class TestUsageTracking:
     """Test usage tracking and billing."""
 
@@ -635,6 +646,7 @@ class TestUsageTracking:
         assert usage["api_calls"] >= 750
 
 
+@pytest.mark.integration
 class TestSubscriptionRenewal:
     """Test subscription renewal operations."""
 
@@ -682,6 +694,7 @@ class TestSubscriptionRenewal:
         assert isinstance(due_subscriptions, list)
 
 
+@pytest.mark.integration
 class TestTenantIsolation:
     """Test tenant isolation in subscription service."""
 
@@ -749,6 +762,7 @@ class TestTenantIsolation:
             )
 
 
+@pytest.mark.integration
 class TestBillingCycles:
     """Test different billing cycle calculations."""
 
@@ -813,6 +827,7 @@ class TestBillingCycles:
         assert 360 <= period_days <= 370  # Approximately 1 year
 
 
+@pytest.mark.integration
 class TestProrationCalculation:
     """Test proration calculation for plan changes."""
 
@@ -912,6 +927,7 @@ class TestProrationCalculation:
         assert proration_result.proration_amount is not None
 
 
+@pytest.mark.integration
 class TestPlanFilters:
     """Test plan listing with filters."""
 
@@ -1003,6 +1019,7 @@ class TestPlanFilters:
         assert len(all_plans) >= 1
 
 
+@pytest.mark.integration
 class TestHelperMethods:
     """Test helper and utility methods."""
 
@@ -1084,6 +1101,7 @@ class TestHelperMethods:
         # No exception = success
 
 
+@pytest.mark.integration
 class TestErrorHandling:
     """Test error handling in subscription service."""
 
@@ -1137,6 +1155,7 @@ class TestErrorHandling:
             )
 
 
+@pytest.mark.integration
 class TestPrivateHelperMethods:
     """Test private helper methods for edge cases."""
 
@@ -1256,6 +1275,7 @@ class TestPrivateHelperMethods:
         assert result is False
 
 
+@pytest.mark.integration
 class TestSubscriptionStatusTransitions:
     """Test subscription status transitions and edge cases."""
 

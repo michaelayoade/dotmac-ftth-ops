@@ -333,7 +333,7 @@ function TemplatesPageContent() {
 
 export default function TemplatesPage() {
   return (
-    <RouteGuard requiredPermission="deployment.template.read">
+    <RouteGuard permission="deployment.template.read">
       <TemplatesPageContent />
     </RouteGuard>
   );

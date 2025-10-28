@@ -1,3 +1,4 @@
+
 """
 Enhanced tests for partner management service to reach 90% coverage.
 
@@ -13,6 +14,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.partner_management.models import (
+
+
     Partner,
     PartnerCommissionEvent,
     PartnerUser,
@@ -28,8 +31,11 @@ from dotmac.platform.partner_management.schemas import (
 )
 from dotmac.platform.partner_management.service import PartnerService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -48,6 +54,7 @@ def service(mock_db_session):
     return PartnerService(mock_db_session)
 
 
+@pytest.mark.integration
 class TestPartnerUsers:
     """Test partner user operations."""
 
@@ -118,6 +125,7 @@ class TestPartnerUsers:
             assert isinstance(users, list)
 
 
+@pytest.mark.integration
 class TestPartnerAccounts:
     """Test partner account operations."""
 
@@ -208,6 +216,7 @@ class TestPartnerAccounts:
             assert isinstance(accounts, list)
 
 
+@pytest.mark.integration
 class TestCommissionEvents:
     """Test commission event operations."""
 
@@ -324,6 +333,7 @@ class TestCommissionEvents:
             assert isinstance(events, list)
 
 
+@pytest.mark.integration
 class TestReferralLeads:
     """Test referral lead operations."""
 

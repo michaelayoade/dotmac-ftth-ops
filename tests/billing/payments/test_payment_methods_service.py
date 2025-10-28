@@ -1,3 +1,4 @@
+
 """
 Tests for payment method management functionality.
 """
@@ -9,6 +10,8 @@ import pytest
 
 from dotmac.platform.billing.core.entities import PaymentMethodEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodStatus,
     PaymentMethodType,
 )
@@ -22,9 +25,13 @@ from tests.billing.payments.conftest import (
     setup_mock_refresh,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPaymentMethodManagement:
     """Test payment method management functionality"""
 

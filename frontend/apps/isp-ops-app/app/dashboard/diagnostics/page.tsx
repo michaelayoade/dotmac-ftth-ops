@@ -416,7 +416,7 @@ function DiagnosticsHistoryPageContent() {
 
 export default function DiagnosticsHistoryPage() {
   return (
-    <RouteGuard requiredPermission="diagnostics.read">
+    <RouteGuard permission="diagnostics.read">
       <DiagnosticsHistoryPageContent />
     </RouteGuard>
   );

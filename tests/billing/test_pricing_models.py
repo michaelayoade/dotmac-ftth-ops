@@ -21,6 +21,7 @@ from dotmac.platform.billing.pricing.models import (
 )
 
 
+@pytest.mark.unit
 class TestDiscountType:
     """Test discount type enum."""
 

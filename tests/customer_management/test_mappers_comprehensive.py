@@ -25,6 +25,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
+@pytest.mark.unit
 class TestCustomerImportSchema:
     """Test customer import schema validation."""
 
@@ -172,6 +173,7 @@ class TestCustomerImportSchema:
             CustomerImportSchema(**data)
 
 
+@pytest.mark.unit
 class TestCustomerExportSchema:
     """Test customer export schema."""
 
@@ -197,6 +199,7 @@ class TestCustomerExportSchema:
         assert export_data.lifetime_value == 1000.50
 
 
+@pytest.mark.unit
 class TestCustomerMapper:
     """Test customer mapper transformations."""
 

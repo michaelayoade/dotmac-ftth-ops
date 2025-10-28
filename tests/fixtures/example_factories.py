@@ -24,6 +24,11 @@ from tests.helpers.fixture_factories import FixtureFactory, ModelFactory
 # =============================================================================
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def invoice_dict_factory():
     """Factory for creating invoice test dictionaries.

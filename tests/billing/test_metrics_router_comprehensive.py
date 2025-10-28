@@ -21,6 +21,9 @@ from dotmac.platform.billing.metrics_router import (
 from dotmac.platform.customer_management.models import CustomerStatus
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_session():
     """Create mock database session."""

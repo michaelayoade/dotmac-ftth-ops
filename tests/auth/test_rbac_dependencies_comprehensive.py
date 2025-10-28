@@ -329,6 +329,7 @@ class TestResourcePermissionChecker:
             assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestConvenienceFunctions:
     """Test convenience dependency functions."""
 
@@ -376,6 +377,7 @@ class TestConvenienceFunctions:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestDecoratorFunctions:
     """Test decorator functions for non-FastAPI use."""
 

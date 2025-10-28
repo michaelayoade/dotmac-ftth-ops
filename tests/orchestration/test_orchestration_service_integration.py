@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Orchestration Service
 
@@ -10,6 +11,9 @@ import pytest
 from sqlalchemy import select
 
 from dotmac.platform.orchestration.models import (
+
+
+
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
@@ -22,6 +26,10 @@ from dotmac.platform.orchestration.schemas import (
 )
 from dotmac.platform.orchestration.service import OrchestrationService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestProvisionSubscriberIntegration:

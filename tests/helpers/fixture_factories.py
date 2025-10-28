@@ -3,12 +3,13 @@ Fixture Factory Utilities
 
 Provides helper functions and base classes for creating fixture factories.
 """
-
 from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any, TypeVar
+
+import pytest
 
 logger = logging.getLogger(__name__)
 

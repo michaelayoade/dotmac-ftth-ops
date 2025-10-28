@@ -17,8 +17,15 @@ from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.tenant.oss_router import router
 
 # Get the actual NETBOX_URL and API_TOKEN from environment for assertions
+
+
+
+
+pytestmark = pytest.mark.integration
+
 EXPECTED_NETBOX_URL = os.getenv("NETBOX_URL", "http://localhost:8080")
 EXPECTED_NETBOX_API_TOKEN = os.getenv("NETBOX_API_TOKEN", None)
+
 
 
 @pytest_asyncio.fixture

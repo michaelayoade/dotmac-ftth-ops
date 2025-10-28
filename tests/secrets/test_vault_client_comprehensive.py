@@ -26,6 +26,7 @@ from dotmac.platform.secrets.vault_client import (
 )
 
 
+@pytest.mark.integration
 class TestVaultExceptions:
     """Test Vault exception classes."""
 
@@ -43,6 +44,7 @@ class TestVaultExceptions:
         assert str(error) == "Auth failed"
 
 
+@pytest.mark.integration
 class TestVaultClientInit:
     """Test VaultClient initialization."""
 
@@ -92,6 +94,7 @@ class TestVaultClientInit:
         assert client.url == "http://localhost:8200"
 
 
+@pytest.mark.integration
 class TestVaultClientSecretPath:
     """Test secret path building."""
 
@@ -120,6 +123,7 @@ class TestVaultClientSecretPath:
         assert path == "/v1/custom-kv/data/app/config"
 
 
+@pytest.mark.integration
 class TestVaultClientGetSecret:
     """Test VaultClient get_secret method."""
 
@@ -205,6 +209,7 @@ class TestVaultClientGetSecret:
             client.get_secret("database/creds")
 
 
+@pytest.mark.integration
 class TestVaultClientGetSecrets:
     """Test VaultClient get_secrets method."""
 
@@ -259,6 +264,7 @@ class TestVaultClientGetSecrets:
         assert result["forbidden/path"] == {}
 
 
+@pytest.mark.integration
 class TestVaultClientSetSecret:
     """Test VaultClient set_secret method."""
 
@@ -316,6 +322,7 @@ class TestVaultClientSetSecret:
             client.set_secret("forbidden/path", {"key": "value"})
 
 
+@pytest.mark.integration
 class TestVaultClientListSecrets:
     """Test VaultClient list_secrets method."""
 
@@ -354,6 +361,7 @@ class TestVaultClientListSecrets:
         assert result == []
 
 
+@pytest.mark.integration
 class TestVaultClientDeleteSecret:
     """Test VaultClient delete_secret method."""
 
@@ -389,6 +397,7 @@ class TestVaultClientDeleteSecret:
             client.delete_secret("forbidden/path")
 
 
+@pytest.mark.integration
 class TestVaultClientHealthCheck:
     """Test VaultClient health_check method."""
 
@@ -439,6 +448,7 @@ class TestVaultClientHealthCheck:
         assert result is False
 
 
+@pytest.mark.integration
 class TestVaultClientContextManager:
     """Test VaultClient as context manager."""
 
@@ -456,6 +466,7 @@ class TestVaultClientContextManager:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClient:
     """Test AsyncVaultClient async operations."""
 

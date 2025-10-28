@@ -53,6 +53,7 @@ def sample_payment_entity():
     return entity
 
 
+@pytest.mark.unit
 class TestGetPayment:
     """Test get_payment method."""
 
@@ -88,6 +89,7 @@ class TestGetPayment:
         assert result is None
 
 
+@pytest.mark.unit
 class TestUpdatePaymentStatus:
     """Test update_payment_status method."""
 
@@ -177,6 +179,7 @@ class TestUpdatePaymentStatus:
         assert sample_payment_entity.provider_payment_data["new_key"] == "new_value"
 
 
+@pytest.mark.unit
 class TestProcessRefundNotification:
     """Test process_refund_notification method."""
 
@@ -309,6 +312,7 @@ class TestProcessRefundNotification:
             )
 
 
+@pytest.mark.unit
 class TestWebhookIntegration:
     """Integration-style tests for webhook scenarios."""
 

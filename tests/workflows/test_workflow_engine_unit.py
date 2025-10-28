@@ -1,3 +1,4 @@
+
 """
 Tests for Workflow Engine - Unit Tests
 
@@ -10,6 +11,13 @@ import pytest
 
 from dotmac.platform.workflows.engine import WorkflowEngine, WorkflowEngineError
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestWorkflowEngineParameterResolution:
     """Test parameter resolution and template syntax"""

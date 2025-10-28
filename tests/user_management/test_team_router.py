@@ -20,6 +20,9 @@ from dotmac.platform.user_management.schemas import (
 from dotmac.platform.user_management.team_service import TeamService
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_team_service():
     """Mock TeamService."""

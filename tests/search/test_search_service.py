@@ -1,3 +1,4 @@
+
 """
 Tests for search service implementation.
 """
@@ -8,6 +9,8 @@ import pytest
 import pytest_asyncio
 
 from dotmac.platform.search.interfaces import (
+
+
     SearchFilter,
     SearchQuery,
     SearchResponse,
@@ -20,9 +23,13 @@ from dotmac.platform.search.service import (
     SearchService,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestInMemorySearchBackend:
     """Test InMemorySearchBackend class."""
 
@@ -286,6 +293,7 @@ class TestInMemorySearchBackend:
             assert result.data["score"] >= 9
 
 
+@pytest.mark.integration
 class TestMeilisearchBackend:
     """Test MeilisearchBackend class."""
 
@@ -444,6 +452,7 @@ class TestMeilisearchBackend:
             assert expression is None
 
 
+@pytest.mark.integration
 class TestSearchService:
     """Test SearchService class."""
 
@@ -561,6 +570,7 @@ class TestSearchService:
         assert service.backend == mock_backend
 
 
+@pytest.mark.integration
 class TestSearchServiceIntegration:
     """Integration tests for search service with real backend."""
 
@@ -630,6 +640,7 @@ class TestSearchServiceIntegration:
         assert len(response.results) == 2
 
 
+@pytest.mark.integration
 class TestInMemorySearchBackendAdditional:
     """Additional tests for InMemorySearchBackend to reach 90% coverage."""
 
@@ -716,6 +727,7 @@ class TestInMemorySearchBackendAdditional:
             assert "li" in result.data["name"]
 
 
+@pytest.mark.integration
 class TestMeilisearchBackendAdditional:
     """Additional tests for MeilisearchBackend to reach 90% coverage."""
 

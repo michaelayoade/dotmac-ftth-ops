@@ -22,6 +22,7 @@ from dotmac.platform.auth.platform_admin import (
 )
 
 
+@pytest.mark.integration
 class TestPlatformAdminChecks:
     """Test platform admin permission checks."""
 
@@ -127,6 +128,7 @@ class TestPlatformAdminChecks:
         assert has_platform_permission(user, "platform:tenants:read") is False
 
 
+@pytest.mark.integration
 class TestTargetTenantResolution:
     """Test target tenant ID resolution for cross-tenant operations."""
 
@@ -181,6 +183,7 @@ class TestTargetTenantResolution:
         assert result is None  # Cross-tenant mode
 
 
+@pytest.mark.integration
 class TestFastAPIDependencies:
     """Test FastAPI dependency functions."""
 
@@ -284,6 +287,7 @@ class TestFastAPIDependencies:
         assert result == "tenant-target"
 
 
+@pytest.mark.integration
 class TestPlatformAdminAudit:
     """Test platform admin audit logging."""
 
@@ -343,6 +347,7 @@ class TestPlatformAdminAudit:
             assert call_args[1]["target_tenant"] is None
 
 
+@pytest.mark.integration
 class TestPermissionPatterns:
     """Test complex permission patterns."""
 
@@ -383,6 +388,7 @@ class TestPermissionPatterns:
         assert result == expected
 
 
+@pytest.mark.integration
 class TestPlatformAdminToken:
     """Test platform admin token creation."""
 
@@ -439,6 +445,7 @@ class TestPlatformAdminToken:
             assert "write" in permissions
 
 
+@pytest.mark.integration
 class TestCrossTenantOperations:
     """Test cross-tenant operation patterns."""
 

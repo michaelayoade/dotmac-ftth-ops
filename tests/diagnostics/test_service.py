@@ -1,3 +1,4 @@
+
 """
 Unit tests for Diagnostics Service
 
@@ -12,12 +13,19 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.diagnostics.models import (
+
+
     DiagnosticRun,
     DiagnosticType,
 )
 from dotmac.platform.diagnostics.service import DiagnosticsService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def tenant_id():

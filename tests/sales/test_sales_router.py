@@ -1,3 +1,4 @@
+
 """
 Tests for Sales Router
 
@@ -15,6 +16,13 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class MockObject:
     """Helper to convert dict to object with attributes."""

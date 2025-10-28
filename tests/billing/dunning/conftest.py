@@ -10,6 +10,11 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 # Set test environment
+
+
+
+pytestmark = pytest.mark.integration
+
 os.environ["TESTING"] = "1"
 
 from dotmac.platform.billing.dunning.models import (

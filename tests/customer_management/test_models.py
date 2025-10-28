@@ -28,6 +28,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
+@pytest.mark.integration
 class TestCustomerModel:
     """Test Customer model functionality."""
 
@@ -162,6 +163,7 @@ class TestCustomerModel:
         await async_db_session.rollback()
 
 
+@pytest.mark.integration
 class TestCustomerActivity:
     """Test CustomerActivity model."""
 
@@ -208,6 +210,7 @@ class TestCustomerActivity:
             assert activity.activity_type == activity_type
 
 
+@pytest.mark.integration
 class TestCustomerNote:
     """Test CustomerNote model."""
 
@@ -255,6 +258,7 @@ class TestCustomerNote:
         assert external_note.is_internal is False
 
 
+@pytest.mark.integration
 class TestCustomerSegment:
     """Test CustomerSegment model."""
 
@@ -294,6 +298,7 @@ class TestCustomerSegment:
         assert dynamic_segment.is_dynamic is True
 
 
+@pytest.mark.integration
 class TestCustomerTag:
     """Test CustomerTag model."""
 
@@ -341,6 +346,7 @@ class TestCustomerTag:
 
 
 @pytest.mark.skip(reason="Integration test - requires full database schema with relationships")
+@pytest.mark.integration
 class TestModelRelationships:
     """Test relationships between models."""
 

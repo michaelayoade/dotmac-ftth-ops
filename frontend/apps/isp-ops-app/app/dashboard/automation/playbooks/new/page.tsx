@@ -146,7 +146,7 @@ function CreatePlaybookPageContent() {
 
 export default function CreatePlaybookPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.execute">
+    <RouteGuard permission="isp.automation.execute">
       <CreatePlaybookPageContent />
     </RouteGuard>
   );

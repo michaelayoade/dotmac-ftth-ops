@@ -5,6 +5,14 @@ import pytest
 from dotmac.platform.cache.decorators import cache_aside, cached
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class StubCacheService:
     def __init__(self) -> None:
         self.data: dict[str, object] = {}

@@ -21,6 +21,7 @@ from dotmac.platform.monitoring.health_checks import (
 )
 
 
+@pytest.mark.integration
 class TestServiceStatus:
     """Test ServiceStatus enum."""
 
@@ -31,6 +32,7 @@ class TestServiceStatus:
         assert ServiceStatus.UNHEALTHY == "unhealthy"
 
 
+@pytest.mark.integration
 class TestServiceHealth:
     """Test ServiceHealth class."""
 
@@ -76,6 +78,7 @@ class TestServiceHealth:
         assert result == expected
 
 
+@pytest.mark.integration
 class TestHealthChecker:
     """Test HealthChecker class."""
 
@@ -508,6 +511,7 @@ class TestHealthChecker:
         assert result.required is False
 
 
+@pytest.mark.integration
 class TestHealthCheckerIntegration:
     """Test HealthChecker integration methods."""
 
@@ -632,6 +636,7 @@ class TestHealthCheckerIntegration:
             assert summary == expected
 
 
+@pytest.mark.integration
 class TestStartupDependencies:
     """Test startup dependency checking functions."""
 

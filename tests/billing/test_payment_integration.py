@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Payment Service (with Real Database).
 
@@ -12,6 +13,8 @@ from sqlalchemy import select
 
 from dotmac.platform.billing.core.entities import PaymentEntity, PaymentMethodEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
@@ -22,6 +25,11 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.payments.service import PaymentService
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestPaymentCreation:
@@ -468,7 +476,7 @@ class TestPaymentRefunds:
             )
 
             # Try to refund again - should fail
-            with pytest.raises(PaymentError, match="Can only refund successful payments"):
+            with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
                 await payment_service.refund_payment(
                     tenant_id=test_payment_method.tenant_id,
                     payment_id=payment.payment_id,

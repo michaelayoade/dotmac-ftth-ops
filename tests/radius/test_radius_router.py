@@ -1,3 +1,4 @@
+
 """
 Tests for RADIUS API Router
 
@@ -12,9 +13,18 @@ The underlying service and repository layers are fully tested and working.
 import pytest
 from fastapi import status
 
-# Skip all router tests - complex database engine isolation issue requiring deeper investigation
-pytestmark = pytest.mark.skip(reason="Router tests have database engine isolation issue - service layer is fully tested")
 
+# Skip all router tests - complex database engine isolation issue requiring deeper investigation
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.skip(reason="Router tests have database engine isolation issue - service layer is fully tested"),
+]
 
 @pytest.mark.asyncio
 class TestRADIUSRouter:

@@ -21,6 +21,9 @@ from dotmac.platform.orchestration.models import WorkflowStatus, WorkflowType
 from dotmac.platform.tenant import set_current_tenant_id
 
 
+
+pytestmark = pytest.mark.integration
+
 class TestSubscriberProvisioning:
     """Test subscriber provisioning endpoints."""
 

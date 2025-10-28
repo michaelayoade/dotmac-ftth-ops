@@ -73,6 +73,7 @@ async def sample_user(async_db_session: AsyncSession, tenant_id: str):
     return user
 
 
+@pytest.mark.integration
 class TestTeamCreation:
     """Test team creation functionality."""
 
@@ -141,6 +142,7 @@ class TestTeamCreation:
         assert team.tenant_id != sample_team.tenant_id
 
 
+@pytest.mark.integration
 class TestTeamRetrieval:
     """Test team retrieval functionality."""
 
@@ -268,6 +270,7 @@ class TestTeamRetrieval:
         assert team2.id not in [t.id for t in result.items]
 
 
+@pytest.mark.integration
 class TestTeamUpdate:
     """Test team update functionality."""
 
@@ -308,6 +311,7 @@ class TestTeamUpdate:
             await team_service.update_team(sample_team.id, update_data, wrong_tenant)
 
 
+@pytest.mark.integration
 class TestTeamDeletion:
     """Test team deletion functionality."""
 
@@ -338,6 +342,7 @@ class TestTeamDeletion:
         assert result is False
 
 
+@pytest.mark.integration
 class TestTeamMembers:
     """Test team member functionality."""
 
@@ -523,6 +528,7 @@ class TestTeamMembers:
         assert team2.id in team_ids
 
 
+@pytest.mark.integration
 class TestTenantIsolation:
     """Test tenant isolation for teams."""
 

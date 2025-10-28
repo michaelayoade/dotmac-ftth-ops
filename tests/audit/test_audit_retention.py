@@ -89,6 +89,7 @@ def old_activities(async_db_session):
     return _create_activities()
 
 
+@pytest.mark.integration
 class TestAuditRetentionPolicy:
     """Test retention policy configuration."""
 
@@ -122,6 +123,7 @@ class TestAuditRetentionPolicy:
         assert policy.severity_retention == custom_retention
 
 
+@pytest.mark.integration
 class TestAuditRetentionService:
     """Test audit retention service functionality."""
 
@@ -452,6 +454,7 @@ class TestAuditRetentionService:
         assert "errors" in results
 
 
+@pytest.mark.integration
 class TestCleanupTask:
     """Test scheduled cleanup task."""
 

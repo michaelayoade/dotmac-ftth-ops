@@ -46,6 +46,7 @@ def mock_event_bus():
     return bus
 
 
+@pytest.mark.unit
 class TestAggregateInvoiceCommandHandler:
     """Test suite for aggregate-based invoice command handler."""
 
@@ -324,6 +325,7 @@ class TestAggregateInvoiceCommandHandler:
                     assert result.paid_at is not None
 
 
+@pytest.mark.unit
 class TestAggregatePaymentCommandHandler:
     """Test suite for aggregate-based payment command handler."""
 
@@ -437,6 +439,7 @@ class TestAggregatePaymentCommandHandler:
                     await handler.handle_refund_payment(command)
 
 
+@pytest.mark.unit
 class TestDomainEventPublication:
     """Test that domain events are properly published through repositories."""
 

@@ -1,3 +1,4 @@
+
 """
 Tests for payment refund functionality.
 """
@@ -10,6 +11,8 @@ import pytest
 
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodType,
     PaymentStatus,
 )
@@ -25,9 +28,13 @@ from tests.billing.payments.conftest import (
 )
 from tests.fixtures.async_db import create_mock_async_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPaymentRefunds:
     """Test payment refund functionality"""
 
@@ -102,7 +109,7 @@ class TestPaymentRefunds:
         setup_mock_db_result(mock_payment_db_session, scalar_value=sample_payment_entity)
 
         # Execute & Verify
-        with pytest.raises(PaymentError, match="Can only refund successful payments"):
+        with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
             await payment_service.refund_payment(
                 tenant_id="test-tenant",
                 payment_id="payment_123",
@@ -117,7 +124,7 @@ class TestPaymentRefunds:
 
         # Execute & Verify
         with pytest.raises(
-            PaymentError, match="Refund amount cannot exceed original payment amount"
+            PaymentError, match="Refund amount .* exceeds remaining refundable amount"
         ):
             await payment_service.refund_payment(
                 tenant_id="test-tenant",
@@ -208,10 +215,12 @@ class TestPaymentRefunds:
 
         # Execute
         with patch("dotmac.platform.billing.payments.service.logger") as mock_logger:
-            result = await payment_service.refund_payment(
-                tenant_id="test-tenant",
-                payment_id="payment_123",
-            )
+            with patch("dotmac.platform.billing.payments.service.settings") as mock_settings:
+                mock_settings.billing.require_payment_plugin = False
+                result = await payment_service.refund_payment(
+                    tenant_id="test-tenant",
+                    payment_id="payment_123",
+                )
 
         # Verify
         assert result.status == PaymentStatus.REFUNDED

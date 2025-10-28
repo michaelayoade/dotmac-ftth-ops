@@ -1,3 +1,4 @@
+
 """
 Notification Service Tests.
 
@@ -11,6 +12,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.notifications.models import (
+
+
     Notification,
     NotificationChannel,
     NotificationPreference,
@@ -20,6 +23,11 @@ from dotmac.platform.notifications.models import (
 )
 from dotmac.platform.notifications.service import NotificationService
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def tenant_id():

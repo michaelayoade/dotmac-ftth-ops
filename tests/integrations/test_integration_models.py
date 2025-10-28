@@ -1,4 +1,5 @@
 """Tests for integration models and dataclasses."""
+import pytest
 
 from dotmac.platform.integrations import (
     IntegrationConfig,
@@ -8,6 +9,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.unit
 class TestIntegrationConfig:
     """Test IntegrationConfig dataclass."""
 
@@ -63,6 +65,7 @@ class TestIntegrationConfig:
         assert config.health_check_interval == 300  # 5 minutes default
 
 
+@pytest.mark.unit
 class TestIntegrationHealth:
     """Test IntegrationHealth dataclass."""
 

@@ -13,11 +13,17 @@ from dotmac.platform.billing.integration import (
     InvoiceItem,
 )
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestBillingIntegrationFix:
     """Test that billing integration properly creates invoices."""
+
 
     @pytest.fixture
     def mock_db(self):

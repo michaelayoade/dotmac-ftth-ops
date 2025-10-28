@@ -1,6 +1,11 @@
+import pytest
+
 from dotmac.platform.config.router import PRIVATE_FEATURE_FLAGS, PUBLIC_FEATURE_FLAGS
 from dotmac.platform.settings import Settings
 
+
+
+pytestmark = pytest.mark.unit
 
 def test_public_feature_flags_allowlist_matches_feature_schema() -> None:
     """Ensure any new feature flags are explicitly reviewed before exposure."""

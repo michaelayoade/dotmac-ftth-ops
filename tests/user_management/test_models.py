@@ -3,9 +3,12 @@
 import uuid
 from datetime import timezone, datetime
 
+import pytest
+
 from dotmac.platform.user_management.models import User
 
 
+@pytest.mark.unit
 class TestUserModel:
     """Test User model functionality."""
 

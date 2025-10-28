@@ -1,3 +1,4 @@
+
 """
 Additional service tests to reach 90% coverage for webhooks service.
 
@@ -10,15 +11,21 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from dotmac.platform.webhooks.models import (
+
+
     DeliveryStatus,
     WebhookSubscription,
     WebhookSubscriptionUpdate,
 )
 from dotmac.platform.webhooks.service import WebhookSubscriptionService
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestListSubscriptionsFiltering:
     """Test list_subscriptions filtering logic."""
 
@@ -55,6 +62,7 @@ class TestListSubscriptionsFiltering:
         mock_db.execute.assert_called_once()
 
 
+@pytest.mark.integration
 class TestUpdateSubscription:
     """Test update_subscription edge cases."""
 
@@ -99,6 +107,7 @@ class TestUpdateSubscription:
         assert mock_sub.url == "https://new.example.com/webhook"
 
 
+@pytest.mark.integration
 class TestDeleteSubscription:
     """Test delete_subscription edge cases."""
 
@@ -117,6 +126,7 @@ class TestDeleteSubscription:
         assert result is False
 
 
+@pytest.mark.integration
 class TestUpdateStatistics:
     """Test update_statistics method."""
 
@@ -195,6 +205,7 @@ class TestUpdateStatistics:
         )
 
 
+@pytest.mark.integration
 class TestDisableSubscription:
     """Test disable_subscription method."""
 
@@ -236,6 +247,7 @@ class TestDisableSubscription:
         )
 
 
+@pytest.mark.integration
 class TestGetSubscriptionSecret:
     """Test get_subscription_secret method."""
 
@@ -270,6 +282,7 @@ class TestGetSubscriptionSecret:
         assert secret is None
 
 
+@pytest.mark.integration
 class TestRotateSecret:
     """Test rotate_secret method."""
 
@@ -285,6 +298,7 @@ class TestRotateSecret:
         assert result is None
 
 
+@pytest.mark.integration
 class TestDeliveryMethods:
     """Test delivery-related methods."""
 

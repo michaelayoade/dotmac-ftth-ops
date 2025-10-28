@@ -1,3 +1,4 @@
+
 """
 Invoice Integration Tests - Real Database End-to-End Testing.
 
@@ -15,10 +16,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.core.exceptions import (
+
+
     InvalidInvoiceStatusError,
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestInvoiceCreation:

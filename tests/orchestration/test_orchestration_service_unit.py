@@ -16,6 +16,7 @@ from dotmac.platform.orchestration.models import (
 from dotmac.platform.orchestration.service import OrchestrationService
 
 
+@pytest.mark.unit
 class TestOrchestrationServiceInitialization:
     """Test service initialization"""
 
@@ -41,6 +42,7 @@ class TestOrchestrationServiceInitialization:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowManagement:
     """Test workflow listing and retrieval"""
 
@@ -142,6 +144,7 @@ class TestWorkflowManagement:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowStatistics:
     """Test workflow statistics"""
 
@@ -206,6 +209,7 @@ class TestWorkflowStatistics:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowTypeMapping:
     """Test workflow type to definition mapping"""
 

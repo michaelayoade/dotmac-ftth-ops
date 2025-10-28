@@ -147,6 +147,7 @@ def mock_tenant_dependency():
     return "test-tenant-123"
 
 
+@pytest.mark.integration
 class TestCustomerCRUDEndpoints:
     """Test customer CRUD endpoints."""
 
@@ -364,6 +365,7 @@ class TestCustomerCRUDEndpoints:
         assert response.status_code == 204
 
 
+@pytest.mark.integration
 class TestCustomerSearchEndpoint:
     """Test customer search endpoint."""
 
@@ -484,6 +486,7 @@ class TestCustomerSearchEndpoint:
         assert data["page_size"] == 5
 
 
+@pytest.mark.integration
 class TestCustomerActivitiesEndpoints:
     """Test customer activities endpoints."""
 
@@ -563,6 +566,7 @@ class TestCustomerActivitiesEndpoints:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestCustomerNotesEndpoints:
     """Test customer notes endpoints."""
 
@@ -636,6 +640,7 @@ class TestCustomerNotesEndpoints:
         assert response.status_code in [200, 404]
 
 
+@pytest.mark.integration
 class TestCustomerMetricsEndpoints:
     """Test customer metrics endpoints."""
 
@@ -669,6 +674,7 @@ class TestCustomerMetricsEndpoints:
         assert data["active_customers"] == 80
 
 
+@pytest.mark.integration
 class TestCustomerSegmentsEndpoints:
     """Test customer segments endpoints."""
 
@@ -726,6 +732,7 @@ class TestCustomerSegmentsEndpoints:
         assert response.json()["segment_id"] == segment_id
 
 
+@pytest.mark.integration
 class TestCustomerRouterAuthorization:
     """Test authorization for customer endpoints."""
 
@@ -783,6 +790,7 @@ class TestCustomerRouterAuthorization:
         assert response.status_code == 401
 
 
+@pytest.mark.integration
 class TestCustomerRouterErrorHandling:
     """Test error handling in customer router."""
 
@@ -838,6 +846,7 @@ class TestCustomerRouterErrorHandling:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestCustomerManagementPermissions:
     """Test that customer management endpoints properly enforce RBAC permissions."""
 

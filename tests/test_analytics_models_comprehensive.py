@@ -40,6 +40,7 @@ from dotmac.platform.analytics.models import (  # Enums; Request models; Respons
 )
 
 
+@pytest.mark.integration
 class TestEnums:
     """Test enum classes and their values."""
 
@@ -120,6 +121,7 @@ class TestEnums:
         assert len(all_values) == 5
 
 
+@pytest.mark.integration
 class TestEventTrackRequest:
     """Test EventTrackRequest model and validation."""
 
@@ -254,6 +256,7 @@ class TestEventTrackRequest:
             EventTrackRequest(event_name="test_event", session_id=long_session_id)
 
 
+@pytest.mark.integration
 class TestMetricRecordRequest:
     """Test MetricRecordRequest model and validation."""
 
@@ -363,6 +366,7 @@ class TestMetricRecordRequest:
             MetricRecordRequest(metric_name="test_metric", value=1.0, tags={"key": "a" * 101})
 
 
+@pytest.mark.integration
 class TestAnalyticsQueryRequest:
     """Test AnalyticsQueryRequest model and validation."""
 
@@ -465,6 +469,7 @@ class TestAnalyticsQueryRequest:
             AnalyticsQueryRequest(query_type="events", offset=-1)
 
 
+@pytest.mark.integration
 class TestResponseModels:
     """Test response models."""
 
@@ -746,6 +751,7 @@ class TestResponseModels:
         assert error.timestamp == timestamp
 
 
+@pytest.mark.integration
 class TestModelSerialization:
     """Test model serialization and deserialization."""
 
@@ -806,6 +812,7 @@ class TestModelSerialization:
         assert reconstructed.tags == original.tags
 
 
+@pytest.mark.integration
 class TestModelValidationEdgeCases:
     """Test edge cases and validation scenarios."""
 

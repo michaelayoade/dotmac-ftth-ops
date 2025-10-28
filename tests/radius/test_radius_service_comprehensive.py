@@ -1,3 +1,4 @@
+
 """
 Comprehensive RADIUS Service Tests
 
@@ -18,6 +19,9 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dotmac.platform.radius.schemas import (
+
+
+
     BandwidthProfileCreate,
     NASCreate,
     NASUpdate,
@@ -27,6 +31,10 @@ from dotmac.platform.radius.schemas import (
 )
 from dotmac.platform.radius.service import RADIUSService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestRADIUSSessionManagement:

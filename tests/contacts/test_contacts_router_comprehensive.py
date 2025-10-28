@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for contacts router endpoints.
 
@@ -11,7 +12,13 @@ from uuid import uuid4
 import pytest
 from fastapi import HTTPException
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.contacts.schemas import (
+
+
+
+
     ContactActivityCreate,
     ContactActivityResponse,
     ContactBulkDelete,
@@ -29,10 +36,14 @@ from dotmac.platform.contacts.schemas import (
     ContactUpdate,
 )
 
-pytestmark = pytest.mark.asyncio
 
 
 # Test data fixtures
+
+
+
+pytestmark = pytest.mark.asyncio
+
 @pytest.fixture
 def sample_contact_id():
     return uuid4()

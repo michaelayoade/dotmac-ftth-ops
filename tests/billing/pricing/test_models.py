@@ -23,6 +23,7 @@ from dotmac.platform.billing.pricing.models import (
 )
 
 
+@pytest.mark.unit
 class TestDiscountType:
     """Test DiscountType enum."""
 
@@ -39,6 +40,7 @@ class TestDiscountType:
         assert actual_types == expected_types
 
 
+@pytest.mark.unit
 class TestPricingRule:
     """Test PricingRule model."""
 
@@ -199,6 +201,7 @@ class TestPricingRule:
         assert rule.metadata == {}
 
 
+@pytest.mark.unit
 class TestPriceCalculationContext:
     """Test PriceCalculationContext model."""
 
@@ -244,6 +247,7 @@ class TestPriceCalculationContext:
         assert context.metadata == {}
 
 
+@pytest.mark.unit
 class TestPriceAdjustment:
     """Test PriceAdjustment model."""
 
@@ -266,6 +270,7 @@ class TestPriceAdjustment:
         assert adjustment.adjusted_price == Decimal("90.00")
 
 
+@pytest.mark.unit
 class TestPriceCalculationResult:
     """Test PriceCalculationResult model."""
 
@@ -345,6 +350,7 @@ class TestPriceCalculationResult:
         assert isinstance(result.calculation_timestamp, datetime)
 
 
+@pytest.mark.unit
 class TestPricingRuleCreateRequest:
     """Test PricingRuleCreateRequest model."""
 
@@ -419,6 +425,7 @@ class TestPricingRuleCreateRequest:
         assert request.metadata == {}
 
 
+@pytest.mark.unit
 class TestPricingRuleUpdateRequest:
     """Test PricingRuleUpdateRequest model."""
 
@@ -474,6 +481,7 @@ class TestPricingRuleUpdateRequest:
         assert request.metadata is None
 
 
+@pytest.mark.unit
 class TestPriceCalculationRequest:
     """Test PriceCalculationRequest model."""
 
@@ -508,6 +516,7 @@ class TestPriceCalculationRequest:
         assert request.metadata == {}
 
 
+@pytest.mark.unit
 class TestPricingRuleResponse:
     """Test PricingRuleResponse model."""
 

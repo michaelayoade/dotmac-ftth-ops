@@ -33,6 +33,7 @@ def mock_billing_config(mock_currency_config):
     return billing_config
 
 
+@pytest.mark.unit
 class TestCurrencyFormatter:
     """Test CurrencyFormatter class."""
 

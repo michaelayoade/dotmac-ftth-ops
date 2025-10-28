@@ -1,3 +1,4 @@
+
 """
 Tests for Consul-based service registry.
 """
@@ -7,6 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.service_registry.consul_registry import (
+
+
+
     ConsulServiceInfo,
     ConsulServiceRegistry,
     deregister_service,
@@ -16,6 +20,10 @@ from dotmac.platform.service_registry.consul_registry import (
     register_service,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestConsulServiceInfo:
     """Test ConsulServiceInfo dataclass."""

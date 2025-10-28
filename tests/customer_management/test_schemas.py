@@ -35,6 +35,7 @@ from dotmac.platform.customer_management.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestCustomerBaseSchema:
     """Test base customer schema."""
 
@@ -135,6 +136,7 @@ class TestCustomerBaseSchema:
         )
 
 
+@pytest.mark.unit
 class TestCustomerCreateSchema:
     """Test customer creation schema."""
 
@@ -251,6 +253,7 @@ class TestCustomerCreateSchema:
         assert any(error["loc"] == ("country",) for error in errors)
 
 
+@pytest.mark.unit
 class TestCustomerUpdateSchema:
     """Test customer update schema."""
 
@@ -279,6 +282,7 @@ class TestCustomerUpdateSchema:
         assert schema.email is None
 
 
+@pytest.mark.unit
 class TestCustomerResponseSchema:
     """Test customer response schema."""
 
@@ -324,6 +328,7 @@ class TestCustomerResponseSchema:
         assert schema.tags == ["customer", "active"]
 
 
+@pytest.mark.unit
 class TestCustomerSearchParamsSchema:
     """Test customer search parameters schema."""
 
@@ -377,6 +382,7 @@ class TestCustomerSearchParamsSchema:
         assert any(error["loc"] == ("page_size",) for error in errors)
 
 
+@pytest.mark.unit
 class TestCustomerActivitySchemas:
     """Test customer activity schemas."""
 
@@ -432,6 +438,7 @@ class TestCustomerActivitySchemas:
         assert schema.metadata["amount"] == 100.50
 
 
+@pytest.mark.unit
 class TestCustomerNoteSchemas:
     """Test customer note schemas."""
 
@@ -481,6 +488,7 @@ class TestCustomerNoteSchemas:
         assert schema.is_internal is False
 
 
+@pytest.mark.unit
 class TestCustomerSegmentSchemas:
     """Test customer segment schemas."""
 
@@ -535,6 +543,7 @@ class TestCustomerSegmentSchemas:
         assert schema.member_count == 25
 
 
+@pytest.mark.unit
 class TestCustomerListResponseSchema:
     """Test customer list response schema."""
 
@@ -589,6 +598,7 @@ class TestCustomerListResponseSchema:
         assert schema.has_prev is False
 
 
+@pytest.mark.unit
 class TestCustomerMetricsSchema:
     """Test customer metrics schema."""
 
@@ -633,6 +643,7 @@ class TestCustomerMetricsSchema:
         assert len(schema.top_segments) == 2
 
 
+@pytest.mark.unit
 class TestSchemaEdgeCases:
     """Test edge cases and error conditions."""
 

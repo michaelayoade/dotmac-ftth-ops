@@ -1,3 +1,4 @@
+
 """
 Tests for integrations REST API router.
 
@@ -11,6 +12,9 @@ from fastapi import status
 from starlette.testclient import TestClient
 
 from dotmac.platform.integrations import (
+
+
+
     IntegrationConfig,
     IntegrationRegistry,
     IntegrationStatus,
@@ -19,6 +23,10 @@ from dotmac.platform.integrations import (
     TwilioIntegration,
 )
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def integration_registry():

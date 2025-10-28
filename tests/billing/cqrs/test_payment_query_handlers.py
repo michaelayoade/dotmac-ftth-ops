@@ -17,6 +17,7 @@ from dotmac.platform.billing.read_models.payment_read_models import (
 )
 
 
+@pytest.mark.unit
 class TestPaymentQueryHandler:
     """Test PaymentQueryHandler with mocked database"""
 
@@ -134,6 +135,7 @@ class TestPaymentQueryHandler:
         assert result.success_rate == 0
 
 
+@pytest.mark.unit
 class TestPaymentStatisticsCalculations:
     """Test payment statistics calculations"""
 

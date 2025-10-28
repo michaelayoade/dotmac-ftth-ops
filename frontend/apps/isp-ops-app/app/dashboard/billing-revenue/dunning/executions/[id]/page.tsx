@@ -217,10 +217,7 @@ function ExecutionDetailsContent() {
       return response.json();
     },
     // Refetch every 10 seconds if status is pending or in_progress
-    refetchInterval: (data) => {
-      if (!data) return false;
-      return data.status === "pending" || data.status === "in_progress" ? 10000 : false;
-    },
+    refetchInterval: 5000,
   });
 
   // Fetch campaign details
@@ -256,12 +253,7 @@ function ExecutionDetailsContent() {
       }
       return response.json();
     },
-    refetchInterval: (data) => {
-      if (!execution) return false;
-      return execution.status === "pending" || execution.status === "in_progress"
-        ? 10000
-        : false;
-    },
+    refetchInterval: 5000,
   });
 
   // Cancel execution mutation
@@ -948,7 +940,7 @@ function ExecutionDetailsContent() {
 
 export default function ExecutionDetailsPage() {
   return (
-    <RouteGuard requiredPermission="billing:write">
+    <RouteGuard permission="billing:write">
       <ExecutionDetailsContent />
     </RouteGuard>
   );

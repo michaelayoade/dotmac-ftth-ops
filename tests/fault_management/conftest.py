@@ -10,6 +10,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fault_management.models import (
+
+
     Alarm,
     AlarmRule,
     AlarmSeverity,
@@ -20,6 +22,9 @@ from dotmac.platform.fault_management.models import (
     SLAStatus,
 )
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def session(async_db_session):

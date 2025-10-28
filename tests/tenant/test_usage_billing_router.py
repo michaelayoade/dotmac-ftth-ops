@@ -22,6 +22,9 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture(scope="session")
 def event_loop():
     """

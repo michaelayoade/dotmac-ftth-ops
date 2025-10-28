@@ -1,3 +1,4 @@
+
 """
 CRM Router Integration Tests
 
@@ -14,6 +15,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.crm.models import Lead, LeadStatus, Quote, SiteSurvey
 from dotmac.platform.tenant.models import Tenant
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestLeadEndpoints:

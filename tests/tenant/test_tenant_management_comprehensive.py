@@ -46,6 +46,7 @@ async def sample_tenant(tenant_service):
     return await tenant_service.create_tenant(tenant_data, created_by="test-user")
 
 
+@pytest.mark.integration
 class TestTenantCRUD:
     """Test tenant CRUD operations."""
 
@@ -245,6 +246,7 @@ class TestTenantCRUD:
             await tenant_service.get_tenant(tenant_id, include_deleted=True)
 
 
+@pytest.mark.integration
 class TestTenantSettings:
     """Test tenant settings management."""
 
@@ -333,6 +335,7 @@ class TestTenantSettings:
         assert setting is None
 
 
+@pytest.mark.integration
 class TestTenantUsage:
     """Test tenant usage tracking."""
 
@@ -420,6 +423,7 @@ class TestTenantUsage:
         assert updated.current_users == 15
 
 
+@pytest.mark.integration
 class TestTenantInvitations:
     """Test tenant invitation system."""
 
@@ -529,6 +533,7 @@ class TestTenantInvitations:
         assert all(inv.status == TenantInvitationStatus.PENDING for inv in pending)
 
 
+@pytest.mark.integration
 class TestTenantFeatures:
     """Test tenant feature management."""
 
@@ -563,6 +568,7 @@ class TestTenantFeatures:
         assert updated.custom_metadata["referral_source"] == "partner"
 
 
+@pytest.mark.integration
 class TestTenantStatistics:
     """Test tenant statistics."""
 
@@ -587,6 +593,7 @@ class TestTenantStatistics:
         assert 0 <= stats.storage_usage_percent <= 100
 
 
+@pytest.mark.integration
 class TestTenantBulkOperations:
     """Test bulk tenant operations."""
 
@@ -639,6 +646,7 @@ class TestTenantBulkOperations:
                 await tenant_service.get_tenant(tenant_id)
 
 
+@pytest.mark.integration
 class TestTenantProperties:
     """Test tenant model properties."""
 

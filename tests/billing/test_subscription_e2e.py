@@ -90,6 +90,7 @@ async def premium_plan(subscription_service, test_tenant_id, test_product_id):
     return plan
 
 
+@pytest.mark.e2e
 class TestSubscriptionPlanManagement:
     """Test subscription plan CRUD operations."""
 
@@ -152,6 +153,7 @@ class TestSubscriptionPlanManagement:
         assert plan.name == "Basic Monthly Plan"
 
 
+@pytest.mark.e2e
 class TestSubscriptionLifecycle:
     """Test complete subscription lifecycle."""
 
@@ -311,6 +313,7 @@ class TestSubscriptionLifecycle:
         assert reactivated.status == SubscriptionStatus.ACTIVE
 
 
+@pytest.mark.e2e
 class TestPlanChanges:
     """Test subscription plan changes with proration."""
 
@@ -383,6 +386,7 @@ class TestPlanChanges:
         assert downgraded.plan_id == basic_plan.plan_id
 
 
+@pytest.mark.e2e
 class TestUsageTracking:
     """Test usage-based billing features."""
 
@@ -465,6 +469,7 @@ class TestUsageTracking:
         # as demonstrated by the returned values from record_usage()
 
 
+@pytest.mark.e2e
 class TestSubscriptionEvents:
     """Test subscription event logging."""
 

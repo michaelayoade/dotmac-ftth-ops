@@ -11,6 +11,7 @@ from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 
+@pytest.mark.unit
 class TestUserServiceTenantSafety:
     """Test user service tenant isolation safety features."""
 
@@ -200,6 +201,7 @@ class TestUserServiceTenantSafety:
         assert "tenant_id is required when require_tenant=True" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestUserServiceSecurityImprovement:
     """Test the security improvement from the changes."""
 
@@ -301,6 +303,7 @@ class TestUserServiceSecurityImprovement:
             await service.list_users(**case)
 
 
+@pytest.mark.unit
 class TestUserServiceTenantFilteringLogic:
     """Test the specific tenant filtering logic."""
 

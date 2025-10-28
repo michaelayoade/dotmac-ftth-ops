@@ -4,7 +4,15 @@ import pytest
 
 from dotmac.platform.auth import dependencies as auth_dependencies
 
+
 # Some environments still expect require_user alias; provide compatibility before router import.
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 if not hasattr(auth_dependencies, "require_user"):
     auth_dependencies.require_user = auth_dependencies.require_auth  # type: ignore[attr-defined]
 

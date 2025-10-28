@@ -24,6 +24,7 @@ from dotmac.platform.billing.read_models.subscription_read_models import (
 )
 
 
+@pytest.mark.unit
 class TestInvoiceReadModels:
     """Test Invoice Read Models Pydantic validation"""
 
@@ -193,6 +194,7 @@ class TestInvoiceReadModels:
         assert len(summary.top_customers) == 2
 
 
+@pytest.mark.unit
 class TestPaymentReadModels:
     """Test Payment Read Models Pydantic validation"""
 
@@ -268,6 +270,7 @@ class TestPaymentReadModels:
         assert stats.refunded_amount == 50000
 
 
+@pytest.mark.unit
 class TestSubscriptionReadModels:
     """Test Subscription Read Models Pydantic validation"""
 
@@ -349,6 +352,7 @@ class TestSubscriptionReadModels:
         assert stats.growth_rate == 0.10
 
 
+@pytest.mark.unit
 class TestReadModelDefaults:
     """Test read model default values"""
 
@@ -403,6 +407,7 @@ class TestReadModelDefaults:
         assert stats.currency == "USD"
 
 
+@pytest.mark.unit
 class TestReadModelValidation:
     """Test Pydantic validation on read models"""
 

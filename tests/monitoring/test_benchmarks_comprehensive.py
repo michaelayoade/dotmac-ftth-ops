@@ -31,6 +31,7 @@ from dotmac.platform.monitoring.benchmarks import (
 )
 
 
+@pytest.mark.integration
 class TestBenchmarkMetric:
     """Test BenchmarkMetric data structure."""
 
@@ -76,6 +77,7 @@ class TestBenchmarkMetric:
         assert before <= metric.timestamp <= after
 
 
+@pytest.mark.integration
 class TestBenchmarkResult:
     """Test BenchmarkResult data structure and methods."""
 
@@ -227,6 +229,7 @@ class MockBenchmark(PerformanceBenchmark):
         await asyncio.sleep(0.01)  # Simulate async work
 
 
+@pytest.mark.integration
 class TestPerformanceBenchmark:
     """Test PerformanceBenchmark abstract base class."""
 
@@ -325,6 +328,7 @@ class TestPerformanceBenchmark:
         assert benchmark.teardown_called
 
 
+@pytest.mark.integration
 class TestCPUBenchmark:
     """Test CPU benchmark implementation."""
 
@@ -359,6 +363,7 @@ class TestCPUBenchmark:
         assert threads_metric.value == 2
 
 
+@pytest.mark.integration
 class TestMemoryBenchmark:
     """Test Memory benchmark implementation."""
 
@@ -392,6 +397,7 @@ class TestMemoryBenchmark:
         assert allocated_chunks.value == 50
 
 
+@pytest.mark.integration
 class TestNetworkBenchmark:
     """Test Network benchmark implementation."""
 
@@ -425,6 +431,7 @@ class TestNetworkBenchmark:
         assert success_rate.value <= 1.0  # Success rate should be low or 0
 
 
+@pytest.mark.integration
 class TestBenchmarkSuite:
     """Test BenchmarkSuite functionality."""
 
@@ -546,6 +553,7 @@ class TestBenchmarkSuite:
         assert stats["max_duration_seconds"] > 0
 
 
+@pytest.mark.integration
 class TestBenchmarkManager:
     """Test BenchmarkManager functionality."""
 

@@ -29,6 +29,9 @@ from dotmac.platform.auth.api_keys_router import (
 from dotmac.platform.auth.core import UserInfo
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Create mock user."""

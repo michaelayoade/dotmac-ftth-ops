@@ -1,3 +1,4 @@
+
 """
 Tests for payment creation functionality.
 """
@@ -8,6 +9,8 @@ import pytest
 
 from dotmac.platform.billing.core.entities import PaymentInvoiceEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodStatus,
     PaymentStatus,
 )
@@ -23,9 +26,13 @@ from tests.billing.payments.conftest import (
 )
 from tests.fixtures.async_db import create_mock_async_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPaymentCreation:
     """Test payment creation functionality"""
 
@@ -215,14 +222,16 @@ class TestPaymentCreation:
 
         # Execute
         with patch("dotmac.platform.billing.payments.service.logger") as mock_logger:
-            result = await payment_service.create_payment(
-                tenant_id="test-tenant",
-                amount=1000,
-                currency="USD",
-                customer_id="customer_456",
-                payment_method_id="pm_789",
-                provider="nonexistent",
-            )
+            with patch("dotmac.platform.billing.payments.service.settings") as mock_settings:
+                mock_settings.billing.require_payment_plugin = False
+                result = await payment_service.create_payment(
+                    tenant_id="test-tenant",
+                    amount=1000,
+                    currency="USD",
+                    customer_id="customer_456",
+                    payment_method_id="pm_789",
+                    provider="nonexistent",
+                )
 
         # Verify
         assert result.status == PaymentStatus.SUCCEEDED

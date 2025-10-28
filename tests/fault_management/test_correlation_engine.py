@@ -17,6 +17,7 @@ from dotmac.platform.fault_management.models import (
 )
 
 
+@pytest.mark.integration
 class TestTopologyCorrelation:
     """Test topology-based alarm correlation"""
 
@@ -187,6 +188,7 @@ class TestTopologyCorrelation:
         assert child_alarm.correlation_id == parent_alarm.correlation_id
 
 
+@pytest.mark.integration
 class TestTimeBasedCorrelation:
     """Test time-based alarm correlation"""
 
@@ -343,6 +345,7 @@ class TestTimeBasedCorrelation:
         assert child_alarm.parent_alarm_id is None
 
 
+@pytest.mark.integration
 class TestPatternBasedCorrelation:
     """Test pattern-based alarm correlation"""
 
@@ -424,6 +427,7 @@ class TestPatternBasedCorrelation:
         assert child_alarm.parent_alarm_id == parent_alarm.id
 
 
+@pytest.mark.integration
 class TestDuplicateDetection:
     """Test duplicate alarm detection"""
 
@@ -543,6 +547,7 @@ class TestDuplicateDetection:
         assert alarm2.correlation_id == alarm1.correlation_id
 
 
+@pytest.mark.integration
 class TestFlappingDetection:
     """Test flapping alarm detection"""
 
@@ -583,6 +588,7 @@ class TestFlappingDetection:
         assert alarm.status in [AlarmStatus.SUPPRESSED, AlarmStatus.ACTIVE]
 
 
+@pytest.mark.integration
 class TestSuppressionRules:
     """Test alarm suppression rules"""
 
@@ -641,6 +647,7 @@ class TestSuppressionRules:
         assert alarm.status == AlarmStatus.SUPPRESSED
 
 
+@pytest.mark.integration
 class TestRecorrelation:
     """Test recorrelating existing alarms"""
 

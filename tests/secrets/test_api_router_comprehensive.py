@@ -23,6 +23,9 @@ from dotmac.platform.secrets.api import router
 from dotmac.platform.secrets.vault_client import VaultError
 
 
+
+pytestmark = pytest.mark.integration
+
 def mock_current_user():
     """Mock current user for testing."""
     from dotmac.platform.auth.core import UserInfo

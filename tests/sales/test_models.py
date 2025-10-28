@@ -1,3 +1,4 @@
+
 """
 Unit tests for Sales order models
 """
@@ -6,9 +7,14 @@ from datetime import datetime
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+
 from sqlalchemy.orm import Session
 
 from dotmac.platform.sales.models import (
+
+
+
     ActivationStatus,
     ActivationWorkflow,
     Order,
@@ -24,6 +30,10 @@ from .conftest import (
     create_service_activation,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestOrderModel:
     """Tests for Order model"""

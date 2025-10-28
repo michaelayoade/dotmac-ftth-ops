@@ -12,6 +12,7 @@ import pytest
 from dotmac.platform.billing.payments.providers import StripePaymentProvider
 
 
+@pytest.mark.unit
 class TestStripeProviderAsyncBehavior:
     """Tests for async behavior of Stripe provider"""
 

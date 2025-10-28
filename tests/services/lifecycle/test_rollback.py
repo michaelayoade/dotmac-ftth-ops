@@ -1,3 +1,4 @@
+
 """
 Tests for provisioning workflow rollback mechanisms.
 
@@ -11,6 +12,9 @@ import pytest
 import pytest_asyncio
 
 from dotmac.platform.services.lifecycle.models import (
+
+
+
     ProvisioningStatus,
     ProvisioningWorkflow,
     ServiceInstance,
@@ -19,6 +23,10 @@ from dotmac.platform.services.lifecycle.models import (
 )
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def failed_service_with_workflow(

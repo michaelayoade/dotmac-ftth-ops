@@ -19,6 +19,7 @@ def make_service_with_client() -> tuple[VOLTHAService, MagicMock]:
     return VOLTHAService(client=mock_client), mock_client
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceStatistics:
     """Tests covering statistics aggregation."""
 
@@ -51,6 +52,7 @@ class TestVOLTHAServiceStatistics:
         client.get_logical_device_flows.assert_awaited()
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceDiscovery:
     """Tests for ONU discovery logic."""
 
@@ -109,6 +111,7 @@ class TestVOLTHAServiceDiscovery:
         assert discovered.onu_id == 10
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceAlarms:
     """Tests for alarm aggregation and filtering."""
 
@@ -179,6 +182,7 @@ class TestVOLTHAServiceAlarms:
         assert result.alarms[0].category == "OLT"
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceEvents:
     """Tests for event stream handling."""
 
@@ -240,6 +244,7 @@ class TestVOLTHAServiceEvents:
         assert result.events[0].event_type == "onu_activated"
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceCoreOperations:
     """Tests for core VOLTHA service operations."""
 
@@ -431,6 +436,7 @@ class TestVOLTHAServiceCoreOperations:
         assert response.device_id is None
 
 
+@pytest.mark.integration
 class TestVOLTHAServiceAlarmOperations:
     """Tests for alarm acknowledge/clear operations."""
 

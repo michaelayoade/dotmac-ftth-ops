@@ -9,12 +9,22 @@ import pytest
 from dotmac.platform.audit.models import ActivitySeverity, ActivityType
 from dotmac.platform.auth.rbac_audit import RBACAuditLogger, rbac_audit_logger
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
 
 @pytest.mark.asyncio
 class TestRBACAuditLogger:
     """Test RBAC audit logger functionality."""
+
 
     @pytest.fixture
     def mock_audit_service(self):

@@ -399,7 +399,7 @@ export default function PaymentMethodsPage() {
                       <div className="flex items-center gap-2">
                         {getStatusBadge(method.status, method.is_verified)}
                         {method.method_type === "bank_account" && method.is_verified && (
-                          <Shield className="h-4 w-4 text-green-500" title="Verified" />
+                          <Shield className="h-4 w-4 text-green-500" />
                         )}
                       </div>
                     </TableCell>

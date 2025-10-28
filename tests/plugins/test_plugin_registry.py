@@ -91,6 +91,7 @@ class MockPlugin(NotificationProvider):
         )
 
 
+@pytest.mark.unit
 class TestPluginRegistry:
     """Test PluginRegistry class."""
 
@@ -420,6 +421,7 @@ class TestPluginRegistry:
         assert registry1 is registry2  # Should be singleton
 
 
+@pytest.mark.unit
 class TestPluginValidation:
     """Test plugin validation."""
 

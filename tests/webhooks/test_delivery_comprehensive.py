@@ -15,9 +15,17 @@ from dotmac.platform.webhooks.models import (
 )
 
 
+
+
+
+
+pytestmark = pytest.mark.unit
+
 @pytest.fixture
 def mock_db():
     """Create mock database session."""
+
+
     db = AsyncMock()
     db.commit = AsyncMock()
     db.refresh = AsyncMock()

@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Subscription Service (with Real Database).
 
@@ -10,6 +11,9 @@ from decimal import Decimal
 import pytest
 
 from dotmac.platform.billing.subscriptions.models import (
+
+
+
     BillingCycle,
     SubscriptionCreateRequest,
     SubscriptionPlanCreateRequest,
@@ -18,6 +22,10 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestSubscriptionPlanManagement:
@@ -191,9 +199,8 @@ class TestSubscriptionCancellation:
         )
 
         assert canceled.cancel_at_period_end is True
-        assert (
-            canceled.status == SubscriptionStatus.CANCELED
-        )  # Service sets to CANCELED even for period end
+        # When canceled at period end, status remains ACTIVE until period ends
+        assert canceled.status == SubscriptionStatus.ACTIVE
 
     async def test_cancel_subscription_immediately(self, async_session, test_subscription_plan):
         """Test immediate subscription cancellation."""

@@ -5,6 +5,8 @@ import asyncio
 import pytest
 
 from dotmac.platform.events import (
+
+
     Event,
     EventBus,
     EventPriority,
@@ -15,10 +17,17 @@ from dotmac.platform.events import (
 from dotmac.platform.events.storage import EventStorage
 
 
+
+
+
+pytestmark = pytest.mark.unit
+
 async def wait_for_event_status(
     event_bus: EventBus, event_id: str, expected_status: EventStatus, timeout: float = 5.0
 ) -> Event:
     """
+
+
     Wait for an event to reach a specific status.
 
     This replaces non-deterministic asyncio.sleep() with a polling approach

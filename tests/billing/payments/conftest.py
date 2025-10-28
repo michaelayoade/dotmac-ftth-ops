@@ -11,6 +11,8 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.billing.core.entities import (
+
+
     PaymentEntity,
     PaymentMethodEntity,
 )
@@ -30,6 +32,10 @@ from tests.fixtures.async_db import create_mock_async_result, create_mock_async_
 
 
 # Helper functions
+
+
+pytestmark = pytest.mark.integration
+
 def setup_mock_db_result(mock_db_session, scalar_value=None, scalars_values=None):
     """Helper to setup mock database result using proper async patterns"""
     if scalars_values is not None:

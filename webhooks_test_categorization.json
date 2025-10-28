@@ -1,0 +1,208 @@
+{
+  "results": [
+    {
+      "file": "tests/webhooks/test_delivery_comprehensive.py",
+      "suggested_marker": "integration",
+      "confidence": "high",
+      "reasoning": [
+        "Webhook delivery/retry requires external HTTP calls"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 6
+    },
+    {
+      "file": "tests/webhooks/test_delivery_retry_coverage.py",
+      "suggested_marker": "integration",
+      "confidence": "high",
+      "reasoning": [
+        "Webhook delivery/retry requires external HTTP calls"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 2
+    },
+    {
+      "file": "tests/webhooks/test_events_comprehensive.py",
+      "suggested_marker": "unit",
+      "confidence": "high",
+      "reasoning": [
+        "Event validation without DB is unit test"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 7
+    },
+    {
+      "file": "tests/webhooks/test_models_comprehensive.py",
+      "suggested_marker": "unit",
+      "confidence": "high",
+      "reasoning": [
+        "Model/schema tests without DB are unit tests"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": true,
+        "routers": false,
+        "services": false,
+        "has_mock": false
+      },
+      "test_classes": 8
+    },
+    {
+      "file": "tests/webhooks/test_router_comprehensive.py",
+      "suggested_marker": "e2e",
+      "confidence": "medium",
+      "reasoning": [
+        "Filename pattern 'test_router_comprehensive.py' suggests E2E test"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": true,
+        "models": false,
+        "schemas": false,
+        "routers": true,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 12
+    },
+    {
+      "file": "tests/webhooks/test_service_additional.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": true,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 8
+    },
+    {
+      "file": "tests/webhooks/test_service_comprehensive.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 2
+    },
+    {
+      "file": "tests/webhooks/test_service_real_db.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": true,
+        "routers": false,
+        "services": true,
+        "has_mock": false
+      },
+      "test_classes": 10
+    },
+    {
+      "file": "tests/webhooks/test_service_unit_complete.py",
+      "suggested_marker": "unit",
+      "confidence": "high",
+      "reasoning": [
+        "Filename explicitly indicates unit test"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "httpx": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 10
+    },
+    {
+      "file": "tests/webhooks/test_webhooks_router.py",
+      "suggested_marker": "e2e",
+      "confidence": "medium",
+      "reasoning": [
+        "Uses async_session, no HTTP client",
+        "Filename pattern 'test_webhooks_router.py' suggests E2E test"
+      ],
+      "dependencies": {
+        "async_session": true,
+        "test_client": false,
+        "httpx": true,
+        "models": true,
+        "schemas": false,
+        "routers": true,
+        "services": false,
+        "has_mock": false
+      },
+      "test_classes": 0
+    }
+  ],
+  "summary": {
+    "unit": [
+      "test_events_comprehensive.py",
+      "test_models_comprehensive.py",
+      "test_service_unit_complete.py"
+    ],
+    "integration": [
+      "test_delivery_comprehensive.py",
+      "test_delivery_retry_coverage.py",
+      "test_service_additional.py",
+      "test_service_comprehensive.py",
+      "test_service_real_db.py"
+    ],
+    "e2e": [
+      "test_router_comprehensive.py",
+      "test_webhooks_router.py"
+    ],
+    "unknown": []
+  }
+}

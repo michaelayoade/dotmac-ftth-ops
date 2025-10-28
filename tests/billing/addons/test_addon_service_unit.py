@@ -80,6 +80,7 @@ def sample_addon(sample_addon_data):
     return Addon(**sample_addon_data)
 
 
+@pytest.mark.unit
 class TestGetAvailableAddons:
     """Test suite for get_available_addons method."""
 
@@ -148,6 +149,7 @@ class TestGetAvailableAddons:
         assert len(addons) == 0
 
 
+@pytest.mark.unit
 class TestGetAddon:
     """Test suite for get_addon method."""
 
@@ -206,6 +208,7 @@ class TestGetAddon:
         assert addon is None
 
 
+@pytest.mark.unit
 class TestPurchaseAddon:
     """Test suite for purchase_addon method."""
 
@@ -325,6 +328,7 @@ class TestPurchaseAddon:
                 )
 
 
+@pytest.mark.unit
 class TestUpdateAddonQuantity:
     """Test suite for update_addon_quantity method."""
 
@@ -390,6 +394,7 @@ class TestUpdateAddonQuantity:
                 mock_db_session.commit.assert_called()
 
 
+@pytest.mark.unit
 class TestCancelAddon:
     """Test suite for cancel_addon method."""
 
@@ -504,6 +509,7 @@ class TestCancelAddon:
                 )
 
 
+@pytest.mark.unit
 class TestReactivateAddon:
     """Test suite for reactivate_addon method."""
 

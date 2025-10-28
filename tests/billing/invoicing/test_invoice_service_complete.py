@@ -77,6 +77,7 @@ def sample_invoice_entity():
     )
 
 
+@pytest.mark.unit
 class TestInvoiceNumberGeneration:
     """Test invoice number generation logic."""
 
@@ -126,6 +127,7 @@ class TestInvoiceNumberGeneration:
         assert invoice_number == f"INV-{current_year}-000001"
 
 
+@pytest.mark.unit
 class TestPaymentStatusUpdate:
     """Test invoice payment status updates."""
 
@@ -174,6 +176,7 @@ class TestPaymentStatusUpdate:
                 )
 
 
+@pytest.mark.unit
 class TestOverdueInvoiceCheck:
     """Test overdue invoice checking and status updates."""
 
@@ -222,6 +225,7 @@ class TestOverdueInvoiceCheck:
         assert len(invoices) == 0
 
 
+@pytest.mark.unit
 class TestInvoiceNotification:
     """Test invoice notification sending."""
 
@@ -388,6 +392,7 @@ class TestInvoiceNotification:
                 await invoice_service._send_invoice_notification(sample_invoice_entity)
 
 
+@pytest.mark.unit
 class TestTransactionCreation:
     """Test transaction record creation."""
 
@@ -417,6 +422,7 @@ class TestTransactionCreation:
         assert transaction.transaction_type.value == "adjustment"
 
 
+@pytest.mark.unit
 class TestGetInvoiceMethods:
     """Test invoice retrieval methods."""
 
@@ -472,6 +478,7 @@ class TestGetInvoiceMethods:
         assert invoice.idempotency_key == "idem_123"
 
 
+@pytest.mark.unit
 class TestListInvoicesFiltering:
     """Test invoice listing with various filters."""
 
@@ -508,6 +515,7 @@ class TestListInvoicesFiltering:
         assert isinstance(invoices, list)
 
 
+@pytest.mark.unit
 class TestWebhookPublishing:
     """Test webhook event publishing for invoice operations."""
 
@@ -572,6 +580,7 @@ class TestWebhookPublishing:
                     assert invoice.status == InvoiceStatus.VOID
 
 
+@pytest.mark.unit
 class TestCreditApplicationComplete:
     """Complete tests for credit application."""
 

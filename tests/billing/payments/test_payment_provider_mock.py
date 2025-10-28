@@ -1,3 +1,4 @@
+
 """
 Tests for MockPaymentProvider functionality.
 """
@@ -6,9 +7,14 @@ import pytest
 
 from dotmac.platform.billing.payments.providers import MockPaymentProvider
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestMockPaymentProvider:
     """Test MockPaymentProvider functionality"""
 

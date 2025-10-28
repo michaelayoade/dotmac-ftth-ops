@@ -26,6 +26,7 @@ from dotmac.platform.billing.exceptions import (
 )
 
 
+@pytest.mark.unit
 class TestBillingError:
     """Test base BillingError class."""
 
@@ -85,6 +86,7 @@ class TestBillingError:
         assert error_dict["recovery_hint"] == "Try again"
 
 
+@pytest.mark.unit
 class TestProductErrors:
     """Test product-related exception classes."""
 
@@ -162,6 +164,7 @@ class TestProductErrors:
         assert "unique" in error.recovery_hint.lower()
 
 
+@pytest.mark.unit
 class TestSubscriptionErrors:
     """Test subscription-related exception classes."""
 
@@ -219,6 +222,7 @@ class TestSubscriptionErrors:
         assert error.context == {}
 
 
+@pytest.mark.unit
 class TestPricingErrors:
     """Test pricing-related exception classes."""
 
@@ -269,6 +273,7 @@ class TestPricingErrors:
         assert error.context == {}
 
 
+@pytest.mark.unit
 class TestUsageTrackingErrors:
     """Test usage tracking exception classes."""
 
@@ -292,6 +297,7 @@ class TestUsageTrackingErrors:
         assert "upgrade" in error.recovery_hint.lower()
 
 
+@pytest.mark.unit
 class TestConfigurationErrors:
     """Test billing configuration exception classes."""
 
@@ -322,6 +328,7 @@ class TestConfigurationErrors:
         assert "configuration" in error.recovery_hint.lower()
 
 
+@pytest.mark.unit
 class TestPaymentErrors:
     """Test payment-related exception classes."""
 
@@ -347,6 +354,7 @@ class TestPaymentErrors:
         assert error.context == {}
 
 
+@pytest.mark.unit
 class TestInvoiceErrors:
     """Test invoice-related exception classes."""
 
@@ -372,6 +380,7 @@ class TestInvoiceErrors:
         assert error.context == {}
 
 
+@pytest.mark.unit
 class TestWebhookErrors:
     """Test webhook-related exception classes."""
 
@@ -403,6 +412,7 @@ class TestWebhookErrors:
         assert "webhook" in error.recovery_hint.lower()
 
 
+@pytest.mark.unit
 class TestExceptionInheritance:
     """Test exception inheritance hierarchy."""
 
@@ -479,6 +489,7 @@ class TestExceptionInheritance:
         assert isinstance(error, BillingError)
 
 
+@pytest.mark.unit
 class TestExceptionRaising:
     """Test exceptions can be raised and caught properly."""
 

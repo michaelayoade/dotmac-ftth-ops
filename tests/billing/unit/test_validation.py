@@ -22,6 +22,7 @@ from dotmac.platform.billing.validation import (
 )
 
 
+@pytest.mark.unit
 class TestCurrencyValidator:
     """Test currency validation."""
 
@@ -111,6 +112,7 @@ class TestCurrencyValidator:
         assert "Invalid amount format" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestSKUValidator:
     """Test SKU validation."""
 
@@ -160,6 +162,7 @@ class TestSKUValidator:
             assert "Invalid SKU format" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestDateRangeValidator:
     """Test date range validation."""
 
@@ -225,6 +228,7 @@ class TestDateRangeValidator:
         assert "Trial period exceeds maximum" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPricingRuleValidator:
     """Test pricing rule validation."""
 
@@ -307,6 +311,7 @@ class TestPricingRuleValidator:
         assert "Minimum quantity cannot exceed maximum" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestBusinessRulesValidator:
     """Test business rules validation."""
 
@@ -394,6 +399,7 @@ class TestBusinessRulesValidator:
         )
 
 
+@pytest.mark.unit
 class TestValidationContext:
     """Test validation context manager."""
 

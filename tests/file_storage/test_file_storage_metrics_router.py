@@ -12,6 +12,9 @@ import pytest
 from httpx import AsyncClient
 
 
+
+pytestmark = pytest.mark.integration
+
 class TestFileStorageStatsEndpoint:
     """Test file storage statistics endpoint."""
 

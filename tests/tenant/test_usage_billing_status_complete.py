@@ -1,3 +1,4 @@
+
 """
 Complete tests for usage billing status endpoint to achieve 90%+ router coverage.
 
@@ -17,8 +18,12 @@ from dotmac.platform.auth.core import UserInfo
 from src.dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 from src.dotmac.platform.tenant.service import TenantService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @asynccontextmanager
 async def create_test_client_with_mock_tenant_service(
@@ -93,6 +98,7 @@ async def create_tenant_with_usage(
     return tenant
 
 
+@pytest.mark.integration
 class TestBillingStatusRecommendations:
     """Test recommendation generation in billing status endpoint."""
 
@@ -363,6 +369,7 @@ class TestBillingStatusRecommendations:
             assert "not found" in response.json()["detail"].lower()
 
 
+@pytest.mark.integration
 class TestBillingStatusResponseStructure:
     """Test the response structure of billing status endpoint."""
 

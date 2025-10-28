@@ -16,6 +16,9 @@ from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
 
+
+pytestmark = pytest.mark.integration
+
 # Patch cached_result BEFORE importing the router
 def mock_cached_result(*args, **kwargs):
     """Pass-through decorator that doesn't cache."""

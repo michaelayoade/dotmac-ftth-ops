@@ -32,6 +32,7 @@ from dotmac.platform.billing.subscriptions.models import (
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
+@pytest.mark.unit
 class TestSubscriptionPlanManagement:
     """Test subscription plan CRUD operations."""
 
@@ -135,6 +136,7 @@ def _make_db_subscription_stub(subscription: Subscription) -> SimpleNamespace:
             assert isinstance(plans, list)
 
 
+@pytest.mark.unit
 class TestSubscriptionLifecycle:
     """Test subscription creation and lifecycle."""
 
@@ -237,6 +239,7 @@ class TestSubscriptionLifecycle:
                 await service.get_subscription("sub_invalid", "tenant-1")
 
 
+@pytest.mark.unit
 class TestSubscriptionPlanChange:
     """Test subscription plan change with proration."""
 
@@ -399,6 +402,7 @@ class TestSubscriptionPlanChange:
                 assert "inactive" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestSubscriptionCancellation:
     """Test subscription cancellation logic."""
 
@@ -454,7 +458,8 @@ class TestSubscriptionCancellation:
 
                 # Should be marked for cancellation at period end
                 assert db_subscription_row.cancel_at_period_end is True
-                assert db_subscription_row.status == SubscriptionStatus.CANCELED.value
+                # Status should remain ACTIVE when canceling at period end (not CANCELED)
+                assert db_subscription_row.status == SubscriptionStatus.ACTIVE.value
                 assert db_subscription_row.canceled_at is not None
                 assert db_subscription_row.ended_at is None  # Not ended yet
 
@@ -496,9 +501,11 @@ class TestSubscriptionCancellation:
                     tenant_id="tenant-1",
                 )
 
-            assert "not active" in str(exc.value).lower()
+            # Error message says which status it's in and which statuses are allowed
+            assert "ended status" in str(exc.value).lower() or "only active" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestSubscriptionReactivation:
     """Test subscription reactivation logic."""
 
@@ -561,8 +568,9 @@ class TestSubscriptionReactivation:
         """Test error when reactivating non-canceled subscription."""
         service, _ = subscription_service
 
-        # Make subscription active (not canceled)
+        # Make subscription active (not canceled) and not pending cancellation
         canceled_subscription.status = SubscriptionStatus.ACTIVE
+        canceled_subscription.cancel_at_period_end = False  # Not pending cancellation
 
         with patch.object(service, "get_subscription", return_value=canceled_subscription):
             with pytest.raises(SubscriptionError) as exc:
@@ -570,7 +578,8 @@ class TestSubscriptionReactivation:
                     subscription_id="sub_123", tenant_id="tenant-1"
                 )
 
-            assert "only canceled subscriptions" in str(exc.value).lower()
+            # Error message should indicate only canceled or pending cancellation can be reactivated
+            assert "pending cancellation" in str(exc.value).lower() or "already canceled" in str(exc.value).lower()
 
     async def test_reactivate_after_period_end_error(
         self, subscription_service, canceled_subscription
@@ -590,6 +599,7 @@ class TestSubscriptionReactivation:
             assert "after period end" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestProrationCalculation:
     """Test proration calculation logic."""
 

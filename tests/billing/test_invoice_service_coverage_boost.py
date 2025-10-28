@@ -52,6 +52,7 @@ def sample_line_items():
     ]
 
 
+@pytest.mark.integration
 class TestInvoiceCreation:
     """Test invoice creation with various scenarios."""
 
@@ -146,6 +147,7 @@ class TestInvoiceCreation:
         assert result.due_date.date() == expected_due_date.date()
 
 
+@pytest.mark.integration
 class TestInvoicePaymentStatus:
     """Test invoice payment status updates."""
 
@@ -300,6 +302,7 @@ class TestInvoicePaymentStatus:
         assert result.payment_status == PaymentStatus.PENDING
 
 
+@pytest.mark.integration
 class TestCreditApplication:
     """Test credit application to invoices."""
 
@@ -456,6 +459,7 @@ class TestCreditApplication:
         assert transaction.customer_id == "cust-123"
 
 
+@pytest.mark.integration
 class TestOverdueInvoices:
     """Test overdue invoice detection and status updates."""
 
@@ -559,6 +563,7 @@ class TestOverdueInvoices:
         assert len(overdue_list) == 0
 
 
+@pytest.mark.integration
 class TestPrivateHelperMethods:
     """Test private helper methods."""
 

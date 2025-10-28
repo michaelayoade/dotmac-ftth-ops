@@ -67,6 +67,7 @@ async def sample_tenant(tenant_service: TenantService) -> Tenant:
     return await tenant_service.create_tenant(tenant_data, created_by="test-user")
 
 
+@pytest.mark.unit
 class TestTenantCRUDCoverage:
     """Tests for CRUD operations - targeting uncovered lines."""
 
@@ -220,6 +221,7 @@ class TestTenantCRUDCoverage:
         assert restored.deleted_at is None
 
 
+@pytest.mark.unit
 class TestListTenantsCoverage:
     """Tests for list_tenants - targeting uncovered lines."""
 
@@ -310,6 +312,7 @@ class TestListTenantsCoverage:
         assert total == 0
 
 
+@pytest.mark.unit
 class TestSettingsManagement:
     """Tests for tenant settings - targeting uncovered lines."""
 
@@ -365,6 +368,7 @@ class TestSettingsManagement:
         assert result is None
 
 
+@pytest.mark.unit
 class TestUsageTracking:
     """Tests for usage tracking - targeting uncovered lines."""
 
@@ -413,6 +417,7 @@ class TestUsageTracking:
         assert updated.current_users == 5
 
 
+@pytest.mark.unit
 class TestInvitationManagement:
     """Tests for tenant invitations - targeting uncovered lines."""
 
@@ -569,6 +574,7 @@ class TestInvitationManagement:
         assert revoked[0].email == "inv2@example.com"
 
 
+@pytest.mark.unit
 class TestFeatureManagement:
     """Tests for feature and metadata management - targeting uncovered lines."""
 
@@ -623,6 +629,7 @@ class TestFeatureManagement:
         assert updated.custom_metadata is not None
 
 
+@pytest.mark.unit
 class TestStatistics:
     """Tests for tenant statistics - targeting uncovered lines."""
 
@@ -652,6 +659,7 @@ class TestStatistics:
         assert stats.api_usage_percent > 0
 
 
+@pytest.mark.unit
 class TestBulkOperations:
     """Tests for bulk operations - targeting uncovered lines."""
 
@@ -743,6 +751,7 @@ class TestBulkOperations:
                 await tenant_service.get_tenant(tenant_id, include_deleted=True)
 
 
+@pytest.mark.unit
 class TestEdgeCaseCoverage:
     """Additional tests for edge cases to reach 90%."""
 

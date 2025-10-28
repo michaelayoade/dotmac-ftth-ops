@@ -21,6 +21,9 @@ from dotmac.platform.billing.addons.models import (
 from dotmac.platform.main import app
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def client():
     """Create test client."""

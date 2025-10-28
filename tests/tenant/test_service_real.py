@@ -134,6 +134,7 @@ def create_tenant_data(
     )
 
 
+@pytest.mark.integration
 class TestTenantServiceInit:
     """Test TenantService initialization."""
 
@@ -144,6 +145,7 @@ class TestTenantServiceInit:
         assert service.db is fake_db
 
 
+@pytest.mark.integration
 class TestCreateTenant:
     """Test tenant creation."""
 
@@ -271,6 +273,7 @@ class TestCreateTenant:
         assert "domain" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestGetTenant:
     """Test getting tenants."""
 
@@ -314,6 +317,7 @@ class TestGetTenant:
         assert "nonexistent" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestGetTenantBySlug:
     """Test getting tenant by slug."""
 
@@ -354,6 +358,7 @@ class TestGetTenantBySlug:
             await tenant_service.get_tenant_by_slug("nonexistent-slug")
 
 
+@pytest.mark.integration
 class TestUpdateTenant:
     """Test tenant updates."""
 
@@ -404,6 +409,7 @@ class TestUpdateTenant:
             await tenant_service.update_tenant("nonexistent", update_data)
 
 
+@pytest.mark.integration
 class TestDeleteTenant:
     """Test tenant deletion (soft delete)."""
 
@@ -439,6 +445,7 @@ class TestDeleteTenant:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestGetDefaultFeatures:
     """Test _get_default_features method."""
 
@@ -471,6 +478,7 @@ class TestGetDefaultFeatures:
         assert features.get("webhooks") is True
 
 
+@pytest.mark.integration
 class TestTenantSettings:
     """Test tenant settings management."""
 
@@ -510,6 +518,7 @@ class TestTenantSettings:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestTenantUsageTracking:
     """Test usage tracking."""
 
@@ -547,6 +556,7 @@ class TestTenantUsageTracking:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestTenantInvitations:
     """Test tenant invitation system."""
 

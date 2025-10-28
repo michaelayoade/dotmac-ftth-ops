@@ -24,6 +24,7 @@ from tests.billing.payments.conftest_service import (
 from tests.fixtures.async_db import create_mock_async_session
 
 
+@pytest.mark.unit
 class TestMissingPaymentProviderHandling:
     """Tests for missing payment provider bug fixes"""
 
@@ -218,6 +219,7 @@ class TestMissingPaymentProviderHandling:
             assert refund_entity.processed_at is not None
 
 
+@pytest.mark.unit
 class TestPartialRefundValidation:
     """Tests for partial refund validation and tracking"""
 

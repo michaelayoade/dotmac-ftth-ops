@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Wireless GraphQL Query Resolvers
 
@@ -19,6 +20,9 @@ from dotmac.platform.graphql.schema import schema
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.user_management.models import User
 from dotmac.platform.wireless.models import (
+
+
+
     CoverageType,
     DeviceStatus,
     DeviceType,
@@ -38,6 +42,10 @@ from dotmac.platform.wireless.models import (
 # Test Fixtures
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def graphql_client():

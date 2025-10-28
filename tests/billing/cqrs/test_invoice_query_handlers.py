@@ -20,6 +20,7 @@ from dotmac.platform.billing.read_models.invoice_read_models import (
 )
 
 
+@pytest.mark.unit
 class TestInvoiceQueryHandler:
     """Test InvoiceQueryHandler with mocked database"""
 
@@ -293,6 +294,7 @@ class TestInvoiceQueryHandler:
         assert result.average_invoice_amount == 0
 
 
+@pytest.mark.unit
 class TestInvoiceListItemMapping:
     """Test InvoiceListItem mapping from entity"""
 
@@ -340,6 +342,7 @@ class TestInvoiceListItemMapping:
         assert 14 <= result.days_until_due <= 15  # Allow for timing variation
 
 
+@pytest.mark.unit
 class TestInvoiceDetailMapping:
     """Test InvoiceDetail mapping from entity"""
 

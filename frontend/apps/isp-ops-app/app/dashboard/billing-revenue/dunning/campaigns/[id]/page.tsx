@@ -1107,7 +1107,7 @@ function CampaignDetailsContent() {
 
 export default function CampaignDetailsPage() {
   return (
-    <RouteGuard requiredPermission="billing:write">
+    <RouteGuard permission="billing:write">
       <CampaignDetailsContent />
     </RouteGuard>
   );

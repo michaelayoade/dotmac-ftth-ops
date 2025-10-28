@@ -9,12 +9,17 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.metrics_router import (
     AuthMetricsResponse,
     get_auth_metrics,
 )
 from dotmac.platform.billing.metrics_router import (
+
+
     ExpiringSubscriptionsResponse,
     get_expiring_subscriptions,
 )

@@ -1,3 +1,4 @@
+
 """
 Additional tests to boost admin settings router coverage.
 
@@ -14,6 +15,13 @@ from fastapi.testclient import TestClient
 from dotmac.platform.admin.settings.models import SettingsCategory
 from dotmac.platform.auth.core import UserInfo
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_admin_user():

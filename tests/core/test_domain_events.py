@@ -13,6 +13,7 @@ from dotmac.platform.core import (
 )
 
 
+@pytest.mark.unit
 class TestDomainEvent:
     """Test domain event base class."""
 
@@ -130,12 +131,14 @@ class TestDomainEvent:
         assert event2.sequence == 2
 
 
+@pytest.mark.unit
 class TestAggregateRoot:
     """Test aggregate root functionality."""
 
     def test_aggregate_root_raises_events(self):
         """Test that aggregate root can raise domain events."""
 
+        @pytest.mark.unit
         class TestInvoice(AggregateRoot):
             """Test invoice aggregate."""
 
@@ -179,6 +182,7 @@ class TestAggregateRoot:
     def test_aggregate_root_clear_events(self):
         """Test clearing domain events from aggregate."""
 
+        @pytest.mark.unit
         class TestInvoice(AggregateRoot):
             invoice_number: str
 
@@ -209,6 +213,7 @@ class TestAggregateRoot:
     def test_aggregate_root_version_increment(self):
         """Test aggregate version increments."""
 
+        @pytest.mark.unit
         class TestAggregate(AggregateRoot):
             pass
 
@@ -223,6 +228,7 @@ class TestAggregateRoot:
         assert aggregate.version == 3
 
 
+@pytest.mark.unit
 class TestValueObjects:
     """Test value objects."""
 
@@ -292,12 +298,14 @@ class TestValueObjects:
             email.value = "other@example.com"
 
 
+@pytest.mark.unit
 class TestDomainEventSequencing:
     """Test domain event sequencing and ordering."""
 
     def test_multiple_events_sequence(self):
         """Test that multiple events get proper sequence numbers."""
 
+        @pytest.mark.unit
         class TestAggregate(AggregateRoot):
             def action1(self):
                 self.raise_event(
@@ -337,6 +345,7 @@ class TestDomainEventSequencing:
         assert events[1].event_type == "InvoicePaymentReceivedEvent"
 
 
+@pytest.mark.unit
 class TestDomainEventTypes:
     """Test all domain event types."""
 

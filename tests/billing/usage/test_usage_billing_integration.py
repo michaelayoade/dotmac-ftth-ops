@@ -4,49 +4,82 @@ Integration tests for usage billing workflows.
 Tests complete lifecycle: RADIUS accounting → usage aggregation → invoice generation
 """
 
-import pytest
-
-# Skip entire module - UsageBillingService not yet implemented
-pytest.skip("UsageBillingService module not yet implemented", allow_module_level=True)
-
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Module not yet implemented - all imports commented out
-# from dotmac.platform.billing.usage.models import (
-#     BilledStatus,
-#     UsageType,
-# )
-# from dotmac.platform.billing.usage.schemas import (
-#     UsageRecordCreate,
-#     UsageReportRequest,
-# )
-# from dotmac.platform.billing.usage.service import UsageBillingService
+from dotmac.platform.billing.usage.models import BilledStatus, UsageType
+from dotmac.platform.billing.usage.schemas import UsageRecordCreate, UsageReportRequest
+from dotmac.platform.billing.usage.service import UsageBillingService
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
-from dotmac.platform.customer_management.models import Customer
-
-# Disabled fixtures - module not implemented
-# @pytest.fixture
-# async def usage_service(db_session: AsyncSession):
-#     """Create UsageBillingService instance."""
-#     pass
-
-
-# @pytest.fixture
-# async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
-#     """Create test customer for usage billing tests."""
-#     pass
+from dotmac.platform.customer_management.models import (
+    Customer,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 
 
-# @pytest.fixture
-# def test_usage_record_data(test_customer: Customer):
-#     """Create test usage record data."""
-#     pass
+@pytest.fixture
+def test_tenant_id() -> str:
+    """Generate a unique tenant identifier for the test."""
+    return f"tenant-{uuid4().hex[:8]}"
 
 
+@pytest_asyncio.fixture
+async def db_session(async_db_session: AsyncSession):
+    """Provide a writable async session for the usage billing tests."""
+    yield async_db_session
+
+
+@pytest_asyncio.fixture
+async def usage_service(db_session: AsyncSession) -> UsageBillingService:
+    """Create UsageBillingService instance backed by the shared session."""
+    return UsageBillingService(db_session)
+
+
+@pytest_asyncio.fixture
+async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
+    """Create test customer for usage billing tests."""
+    customer = Customer(
+        tenant_id=test_tenant_id,
+        customer_number=f"CUST-{uuid4().hex[:8]}",
+        first_name="Test",
+        last_name="Customer",
+        email=f"test.customer.{uuid4().hex[:6]}@example.com",
+        status=CustomerStatus.ACTIVE,
+        customer_type=CustomerType.INDIVIDUAL,
+        tier=CustomerTier.BASIC,
+    )
+    db_session.add(customer)
+    await db_session.commit()
+    await db_session.refresh(customer)
+    return customer
+
+
+@pytest.fixture
+def test_usage_record_data(test_customer: Customer):
+    """Create reusable usage record payload for tests."""
+    now = datetime.now(timezone.utc)
+    return UsageRecordCreate(
+        subscription_id="sub_test_usage_001",
+        customer_id=test_customer.id,
+        usage_type=UsageType.DATA_TRANSFER,
+        quantity=Decimal("15.5"),
+        unit="GB",
+        unit_price=Decimal("0.10"),
+        period_start=now - timedelta(hours=1),
+        period_end=now,
+        source_system="radius",
+        description="Test usage record",
+    )
+
+
+@pytest.mark.integration
 class TestUsageRecordManagement:
     """Test usage record CRUD operations."""
 
@@ -188,6 +221,7 @@ class TestUsageRecordManagement:
         assert all(r.subscription_id == subscription_id for r in records)
 
 
+@pytest.mark.integration
 class TestUsageBillingWorkflow:
     """Test complete usage billing workflow."""
 
@@ -367,6 +401,7 @@ class TestUsageBillingWorkflow:
         assert all(r.billed_status == BilledStatus.PENDING for r in pending)
 
 
+@pytest.mark.integration
 class TestUsageAggregation:
     """Test usage aggregation for reporting."""
 
@@ -473,6 +508,7 @@ class TestUsageAggregation:
         assert aggregate.record_count == 5
 
 
+@pytest.mark.integration
 class TestUsageReporting:
     """Test usage reporting and analytics."""
 
@@ -573,6 +609,7 @@ class TestUsageReporting:
         assert summary.pending_amount > 0  # Should have pending records
 
 
+@pytest.mark.integration
 class TestOverageCharges:
     """Test overage charge calculations."""
 
@@ -636,6 +673,7 @@ class TestOverageCharges:
         assert overage_record.total_amount == 375  # 25 * 0.15 * 100 = 375 cents ($3.75)
 
 
+@pytest.mark.integration
 class TestUsageEdgeCases:
     """Test edge cases and error handling."""
 

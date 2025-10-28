@@ -13,6 +13,7 @@ from dotmac.platform.monitoring.error_middleware import (
 )
 
 
+@pytest.mark.unit
 class TestErrorTrackingMiddleware:
     """Test ErrorTrackingMiddleware class."""
 

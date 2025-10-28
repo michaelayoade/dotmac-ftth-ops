@@ -13,6 +13,7 @@ from dotmac.platform.core.tasks import (
 )
 
 
+@pytest.mark.integration
 class TestEnhancedCeleryInstrumentation:
     """Test enhanced Celery instrumentation functionality."""
 
@@ -103,6 +104,7 @@ class TestEnhancedCeleryInstrumentation:
             init_celery_instrumentation()
 
 
+@pytest.mark.integration
 class TestCeleryTasks:
     """Test Celery tasks functionality."""
 
@@ -268,6 +270,7 @@ class TestCeleryTasks:
         assert result == {"test": "value"}
 
 
+@pytest.mark.integration
 class TestCeleryInstrumentation:
     """Test Celery instrumentation functionality."""
 

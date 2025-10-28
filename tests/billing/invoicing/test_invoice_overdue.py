@@ -1,3 +1,4 @@
+
 """
 Invoice overdue tests - Migrated to use shared helpers.
 
@@ -15,9 +16,14 @@ from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestInvoiceServiceOverdueManagement:
     """Test invoice overdue management functionality"""
 

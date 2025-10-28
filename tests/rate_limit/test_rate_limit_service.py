@@ -8,6 +8,14 @@ from dotmac.platform.rate_limit.models import RateLimitAction, RateLimitScope, R
 from dotmac.platform.rate_limit.service import RateLimitService
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 def _make_rule(
     scope: RateLimitScope = RateLimitScope.PER_TENANT,
     *,

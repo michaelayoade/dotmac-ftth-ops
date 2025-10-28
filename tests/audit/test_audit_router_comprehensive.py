@@ -24,6 +24,9 @@ from dotmac.platform.auth.core import UserInfo, get_current_user, get_current_us
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
+
+pytestmark = pytest.mark.integration
+
 SampleActivities = tuple[list[AuditActivity], str]
 
 

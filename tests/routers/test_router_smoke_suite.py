@@ -1,3 +1,4 @@
+
 """
 Router smoke suite - parametrized tests for all registered routers.
 
@@ -21,7 +22,14 @@ from dotmac.platform.routers import ROUTER_CONFIGS, RouterConfig
 from tests.helpers.router_testkit import RouterTestKit
 
 
+
 # Define routers that require special handling or are excluded from smoke tests
+
+
+
+
+pytestmark = pytest.mark.integration
+
 EXCLUDED_ROUTERS = {
     "dotmac.platform.config.router:health_router",  # Public health endpoint, tested separately
     "dotmac.platform.config.router:router",  # Public config endpoint

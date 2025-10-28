@@ -1,3 +1,4 @@
+
 """
 Demo test showing new fixture factory patterns.
 
@@ -13,6 +14,11 @@ from decimal import Decimal
 
 import pytest
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestFixtureFactoryDemo:
     """Demo tests using new fixture factory patterns."""
@@ -260,4 +266,3 @@ class TestRealWorldScenario:
 
 
 # Mark this entire file as a unit test (fast, no DB required)
-pytestmark = pytest.mark.unit

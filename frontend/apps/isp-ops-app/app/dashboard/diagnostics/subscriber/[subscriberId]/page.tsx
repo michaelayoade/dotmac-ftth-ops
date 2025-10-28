@@ -166,13 +166,7 @@ function SubscriberDiagnosticsContent() {
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
       return response.json();
     },
-    refetchInterval: (data) => {
-      // Auto-refresh every 5 seconds if any diagnostic is running
-      const hasRunning = data?.items?.some(
-        (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
-      );
-      return hasRunning ? 5000 : false;
-    },
+    refetchInterval: 5000,
   });
 
   // Fetch the latest diagnostic run details
@@ -187,17 +181,12 @@ function SubscriberDiagnosticsContent() {
       return response.json();
     },
     enabled: !!latestRunId,
-    refetchInterval: (data) => {
-      // Auto-refresh every 5 seconds if diagnostic is running or pending
-      return data && (data.status === DiagnosticStatus.RUNNING || data.status === DiagnosticStatus.PENDING)
-        ? 5000
-        : false;
-    },
+    refetchInterval: 5000,
   });
 
   // Update latestRunId when runs data changes
   useEffect(() => {
-    if (runsData?.items && runsData.items.length > 0) {
+    if (runsData?.items && runsData.items.length > 0 && runsData.items[0]) {
       setLatestRunId(runsData.items[0].id);
     }
   }, [runsData]);
@@ -658,7 +647,7 @@ function SubscriberDiagnosticsContent() {
 
 export default function SubscriberDiagnosticsPage() {
   return (
-    <RouteGuard requiredPermission="isp.diagnostics.read">
+    <RouteGuard permission="isp.diagnostics.read">
       <SubscriberDiagnosticsContent />
     </RouteGuard>
   );

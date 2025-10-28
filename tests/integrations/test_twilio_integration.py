@@ -13,6 +13,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.integration
 class TestTwilioIntegration:
     """Test TwilioIntegration."""
 

@@ -13,6 +13,9 @@ import pytest
 import pytest_asyncio
 
 # Set test environment
+
+
+
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
@@ -795,6 +798,9 @@ from unittest.mock import MagicMock  # noqa: E402
 from uuid import uuid4  # noqa: E402
 
 import pytest  # noqa: E402
+
+pytestmark = pytest.mark.integration
+
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 from dotmac.platform.billing.core.entities import (  # noqa: E402

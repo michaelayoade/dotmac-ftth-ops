@@ -56,6 +56,7 @@ def create_test_app(config: TenantConfiguration) -> TestClient:
     return TestClient(app)
 
 
+@pytest.mark.integration
 class TestSingleTenantMode:
     """Test middleware in single-tenant mode."""
 
@@ -87,6 +88,7 @@ class TestSingleTenantMode:
         assert response.json()["tenant_id"] == "single-tenant-org"
 
 
+@pytest.mark.integration
 class TestMultiTenantMode:
     """Test middleware in multi-tenant mode."""
 
@@ -133,6 +135,7 @@ class TestMultiTenantMode:
         assert response.json()["tenant_id"] is None
 
 
+@pytest.mark.integration
 class TestMultiTenantOptionalMode:
     """Test middleware in multi-tenant mode with optional header."""
 
@@ -153,6 +156,7 @@ class TestMultiTenantOptionalMode:
         assert response.json()["tenant_id"] == "custom-org"
 
 
+@pytest.mark.integration
 class TestCustomConfiguration:
     """Test custom configuration options."""
 

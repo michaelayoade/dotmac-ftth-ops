@@ -80,6 +80,7 @@ async def test_manual_payment(
     return payment
 
 
+@pytest.mark.integration
 class TestReconciliationServiceIntegration:
     """Integration tests for ReconciliationService with real database."""
 
@@ -140,6 +141,7 @@ class TestReconciliationServiceIntegration:
         assert summary["approved_sessions"] == 0
 
 
+@pytest.mark.integration
 class TestReconciliationCircuitBreaker:
     """Integration tests for circuit breaker functionality."""
 
@@ -183,6 +185,7 @@ class TestReconciliationCircuitBreaker:
         assert initial_state in ["closed", "open", "half_open"]
 
 
+@pytest.mark.integration
 class TestManualPaymentIntegration:
     """Integration tests for manual payment operations."""
 
@@ -278,6 +281,7 @@ class TestManualPaymentIntegration:
         assert all(not p.reconciled for p in unreconciled)
 
 
+@pytest.mark.integration
 class TestReconciliationApproval:
     """Integration tests for reconciliation approval workflow."""
 
@@ -352,6 +356,7 @@ class TestReconciliationApproval:
         assert rec.status == "approved"
 
 
+@pytest.mark.integration
 class TestReconciliationTenantIsolation:
     """Integration tests for tenant isolation in reconciliation."""
 

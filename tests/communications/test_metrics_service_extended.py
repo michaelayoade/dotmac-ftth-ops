@@ -1,3 +1,4 @@
+
 """
 Extended tests for communication metrics service to improve coverage.
 """
@@ -10,6 +11,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.communications.metrics_service import (
+
+
     CommunicationMetricsService,
     get_metrics_service,
 )
@@ -20,13 +23,16 @@ from dotmac.platform.communications.models import (
     CommunicationType,
 )
 
-pytestmark = pytest.mark.asyncio
 
 
 # ============================================================================
 # Fixtures
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -67,6 +73,7 @@ def sample_log_entry():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestUpdateCommunicationStatusDelivered:
     """Test updating communication status to delivered."""
 
@@ -169,6 +176,7 @@ class TestUpdateCommunicationStatusDelivered:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogCommunication:
     """Test logging communication."""
 
@@ -232,6 +240,7 @@ class TestLogCommunication:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetRecentActivity:
     """Test getting recent communication activity."""
 
@@ -284,6 +293,7 @@ class TestGetRecentActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestAggregateDailyStats:
     """Test aggregating daily statistics."""
 
@@ -480,6 +490,7 @@ class TestAggregateDailyStats:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetMetricsServiceFactory:
     """Test the get_metrics_service factory function."""
 

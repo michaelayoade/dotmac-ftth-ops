@@ -21,7 +21,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -314,7 +314,7 @@ export default function ReconciliationPage() {
   };
 
   return (
-    <RouteGuard permissions={['billing:write']}>
+    <RouteGuard permission="billing:write">
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

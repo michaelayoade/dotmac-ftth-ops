@@ -15,6 +15,8 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from tests.helpers.contract_testing import (
+
+
     ContractTestCase,
     MockDataFactory,
     SchemaValidator,
@@ -27,6 +29,10 @@ from tests.helpers.router_base import (
 
 
 # Example schemas (would normally be in app code)
+
+
+pytestmark = pytest.mark.integration
+
 class Product(BaseModel):
     id: str
     name: str

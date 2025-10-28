@@ -74,6 +74,7 @@ def sample_subscription(tenant_id):
     )
 
 
+@pytest.mark.unit
 class TestCreateSubscription:
     """Test subscription creation."""
 
@@ -141,6 +142,7 @@ class TestCreateSubscription:
         assert subscription.is_active is True
 
 
+@pytest.mark.unit
 class TestGetSubscription:
     """Test subscription retrieval."""
 
@@ -173,6 +175,7 @@ class TestGetSubscription:
         assert subscription is None
 
 
+@pytest.mark.unit
 class TestListSubscriptions:
     """Test subscription listing."""
 
@@ -223,6 +226,7 @@ class TestListSubscriptions:
         assert len(subscriptions) == 0
 
 
+@pytest.mark.unit
 class TestUpdateSubscription:
     """Test subscription updates."""
 
@@ -283,6 +287,7 @@ class TestUpdateSubscription:
         mock_db_session.commit.assert_not_called()
 
 
+@pytest.mark.unit
 class TestDeleteSubscription:
     """Test subscription deletion."""
 
@@ -316,6 +321,7 @@ class TestDeleteSubscription:
         mock_db_session.delete.assert_not_called()
 
 
+@pytest.mark.unit
 class TestGetSubscriptionsForEvent:
     """Test getting subscriptions for specific event."""
 
@@ -379,6 +385,7 @@ class TestGetSubscriptionsForEvent:
         assert len(subscriptions) == 0
 
 
+@pytest.mark.unit
 class TestUpdateStatistics:
     """Test subscription statistics updates."""
 
@@ -448,6 +455,7 @@ class TestUpdateStatistics:
         mock_db_session.commit.assert_not_called()
 
 
+@pytest.mark.unit
 class TestDisableSubscription:
     """Test subscription disabling."""
 
@@ -483,6 +491,7 @@ class TestDisableSubscription:
         mock_db_session.commit.assert_not_called()
 
 
+@pytest.mark.unit
 class TestSecretManagement:
     """Test webhook secret management."""
 
@@ -546,6 +555,7 @@ class TestSecretManagement:
         mock_db_session.commit.assert_not_called()
 
 
+@pytest.mark.unit
 class TestDeliveryLogs:
     """Test webhook delivery log methods."""
 

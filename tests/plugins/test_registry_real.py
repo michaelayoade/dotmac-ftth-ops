@@ -191,6 +191,7 @@ def temp_plugin_dir(tmp_path, monkeypatch):
     return tmp_path
 
 
+@pytest.mark.unit
 class TestPluginRegistryInitialization:
     """Test plugin registry initialization and discovery."""
 
@@ -235,6 +236,7 @@ class TestPluginRegistryInitialization:
             await registry._register_plugin_provider(bad, "bad_module")  # type: ignore
 
 
+@pytest.mark.unit
 class TestPluginListing:
     """Test listing and retrieving plugin information."""
 
@@ -299,6 +301,7 @@ class TestPluginListing:
         assert instances == []
 
 
+@pytest.mark.unit
 class TestPluginInstanceCreation:
     """Test creating and managing plugin instances."""
 
@@ -390,6 +393,7 @@ class TestPluginInstanceCreation:
         assert instance2.id in instance_ids
 
 
+@pytest.mark.unit
 class TestSecretManagement:
     """Test secret storage and retrieval in plugin configurations."""
 
@@ -476,6 +480,7 @@ class TestSecretManagement:
         assert full_config["endpoint"] == "https://api.example.com"
 
 
+@pytest.mark.unit
 class TestConfigurationUpdates:
     """Test updating plugin configurations."""
 
@@ -524,6 +529,7 @@ class TestConfigurationUpdates:
         assert f"Plugin instance {fake_id} not found" in str(exc.value)
 
 
+@pytest.mark.unit
 class TestHealthChecks:
     """Test plugin health checking functionality."""
 
@@ -590,6 +596,7 @@ class TestHealthChecks:
         assert updated_instance.last_error is None
 
 
+@pytest.mark.unit
 class TestConnectionTesting:
     """Test plugin connection testing functionality."""
 
@@ -663,6 +670,7 @@ class TestConnectionTesting:
         assert f"Plugin instance {fake_id} not found" in str(exc.value)
 
 
+@pytest.mark.unit
 class TestInstanceRetrieval:
     """Test retrieving plugin instances and providers."""
 
@@ -701,6 +709,7 @@ class TestInstanceRetrieval:
         assert instance is None
 
 
+@pytest.mark.unit
 class TestInstanceDeletion:
     """Test deleting plugin instances."""
 
@@ -739,6 +748,7 @@ class TestInstanceDeletion:
         assert f"Plugin instance {fake_id} not found" in str(exc.value)
 
 
+@pytest.mark.unit
 class TestConfigurationPersistence:
     """Test saving and loading plugin configurations."""
 
@@ -833,6 +843,7 @@ class TestConfigurationPersistence:
         assert loaded_instance.instance_name == "Round Trip Test"
 
 
+@pytest.mark.unit
 class TestGlobalRegistry:
     """Test global registry singleton."""
 
@@ -882,6 +893,7 @@ class TestPluginSchemaValidation:
         registry._validate_plugin_schema(schema)
 
 
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling scenarios."""
 
@@ -974,6 +986,7 @@ class TestErrorHandling:
         assert full_config.get("api_key") is None  # Should be None instead of raising
 
 
+@pytest.mark.unit
 class TestSecretHandlingEdgeCases:
     """Test edge cases in secret handling."""
 
@@ -1051,6 +1064,7 @@ class TestSecretHandlingEdgeCases:
         assert "unknown_field" not in config
 
 
+@pytest.mark.unit
 class TestPluginDiscovery:
     """Test plugin discovery from filesystem."""
 
@@ -1071,6 +1085,7 @@ from dotmac.platform.plugins.interfaces import NotificationProvider
 from dotmac.platform.plugins.schema import PluginConfig, PluginType, FieldSpec, FieldType, PluginHealthCheck, PluginTestResult
 from datetime import datetime, timezone
 from uuid import uuid4
+from typing import Any
 
 class TestDiscoveredPlugin(NotificationProvider):
     def get_config_schema(self) -> PluginConfig:
@@ -1101,8 +1116,14 @@ class TestDiscoveredPlugin(NotificationProvider):
             details={},
         )
 
-    async def send_notification(self, recipient: str, message: str, options: dict | None = None) -> dict:
-        return {"status": "sent"}
+    async def send_notification(
+        self,
+        recipient: str,
+        message: str,
+        subject: str | None = None,
+        metadata: dict[str, Any] | None = None,
+    ) -> bool:
+        return True
 
 def register():
     return TestDiscoveredPlugin()

@@ -27,6 +27,7 @@ from dotmac.platform.fault_management.schemas import (
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 
 
+@pytest.mark.integration
 class TestSLADefinitionManagement:
     """Test SLA definition CRUD operations"""
 
@@ -93,6 +94,7 @@ class TestSLADefinitionManagement:
         assert definition.response_time_target == 30
 
 
+@pytest.mark.integration
 class TestSLAInstanceManagement:
     """Test SLA instance CRUD operations"""
 
@@ -186,6 +188,7 @@ class TestSLAInstanceManagement:
         assert all(i.status == SLAStatus.COMPLIANT for i in instances)
 
 
+@pytest.mark.integration
 class TestDowntimeTracking:
     """Test downtime recording and tracking"""
 
@@ -267,6 +270,7 @@ class TestDowntimeTracking:
         assert updated_instance.total_downtime >= 45
 
 
+@pytest.mark.integration
 class TestAvailabilityCalculation:
     """Test SLA availability calculation"""
 
@@ -363,6 +367,7 @@ class TestAvailabilityCalculation:
         assert instance.current_availability == 100.0
 
 
+@pytest.mark.integration
 class TestBreachDetection:
     """Test SLA breach detection"""
 
@@ -479,6 +484,7 @@ class TestBreachDetection:
         assert len(breaches) == 1
 
 
+@pytest.mark.integration
 class TestAlarmImpact:
     """Test checking alarm impact on SLA"""
 
@@ -561,6 +567,7 @@ class TestAlarmImpact:
         assert sample_sla_instance.total_downtime == initial_downtime
 
 
+@pytest.mark.integration
 class TestComplianceReporting:
     """Test SLA compliance reporting"""
 

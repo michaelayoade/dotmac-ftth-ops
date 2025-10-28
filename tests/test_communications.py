@@ -35,6 +35,7 @@ def reset_singletons(monkeypatch):
     monkeypatch.setattr(task_module, "_task_service", None, raising=False)
 
 
+@pytest.mark.integration
 class TestEmailMessage:
     """EmailMessage validation and defaults."""
 
@@ -66,6 +67,7 @@ class TestEmailMessage:
         assert message.bcc == ["bcc@example.com"]
 
 
+@pytest.mark.integration
 class TestEmailService:
     """Behaviour of the EmailService class."""
 
@@ -116,6 +118,7 @@ class TestEmailService:
         assert responses[1].status == "failed"
 
 
+@pytest.mark.integration
 class TestEmailConvenienceHelpers:
     """Global helper functions for email delivery."""
 
@@ -147,6 +150,7 @@ class TestEmailConvenienceHelpers:
         assert response.status == "sent"
 
 
+@pytest.mark.integration
 class TestTemplateService:
     """Template creation and rendering."""
 
@@ -200,6 +204,7 @@ class TestTemplateService:
         assert rendered.text_body == "Order total: $50"
 
 
+@pytest.mark.integration
 class TestTaskHelpers:
     """queue_email and queue_bulk_emails forwarding to the task service."""
 

@@ -1,3 +1,4 @@
+
 """
 Unit tests for the network workflow service.
 """
@@ -12,6 +13,13 @@ import pytest
 from dotmac.platform.network.workflow_service import NetworkService
 from tests.test_utils import create_async_session_mock
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 async def test_allocate_resources_filters_by_tenant():

@@ -10,6 +10,7 @@ import pytest
 from dotmac.platform.auth.core import SessionManager
 
 
+@pytest.mark.integration
 class TestSessionFallbackBehavior:
     """Test suite for session fallback functionality."""
 

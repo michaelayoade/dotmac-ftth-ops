@@ -6,6 +6,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.partner_management.models import (
+
+
     CommissionModel,
     CommissionStatus,
     PartnerStatus,
@@ -21,12 +23,20 @@ from dotmac.platform.partner_management.schemas import (
 )
 from dotmac.platform.partner_management.service import PartnerService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
 
 @pytest.mark.asyncio
 class TestPartnerServiceCRUD:
     """Test basic CRUD operations."""
+
 
     async def test_create_partner_success(self, async_db_session, test_tenant_id):
         """Test creating a new partner."""

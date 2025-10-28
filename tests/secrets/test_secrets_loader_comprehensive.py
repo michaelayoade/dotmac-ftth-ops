@@ -28,12 +28,14 @@ from dotmac.platform.secrets.secrets_loader import (
 from dotmac.platform.secrets.vault_client import VaultError
 
 
+@pytest.mark.unit
 class TestNestedAttributeHelpers:
     """Test nested attribute getter/setter functions."""
 
     def test_set_nested_attr_single_level(self):
         """Test setting a single-level attribute."""
 
+        @pytest.mark.unit
         class TestObj:
             value = "old"
 
@@ -73,6 +75,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_single_level(self):
         """Test getting a single-level attribute."""
 
+        @pytest.mark.unit
         class TestObj:
             value = "test_value"
 
@@ -96,6 +99,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_with_default(self):
         """Test getting non-existent attribute returns default."""
 
+        @pytest.mark.unit
         class TestObj:
             pass
 
@@ -106,6 +110,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_missing_no_default(self):
         """Test getting non-existent attribute returns None by default."""
 
+        @pytest.mark.unit
         class TestObj:
             pass
 
@@ -114,6 +119,7 @@ class TestNestedAttributeHelpers:
         assert result is None
 
 
+@pytest.mark.unit
 class TestSecretsMapping:
     """Test secrets mapping constants."""
 
@@ -146,6 +152,7 @@ class TestSecretsMapping:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestLoadSecretsFromVault:
     """Test async load_secrets_from_vault function."""
 
@@ -288,6 +295,7 @@ class TestLoadSecretsFromVault:
         mock_client.close.assert_called_once()
 
 
+@pytest.mark.unit
 class TestLoadSecretsFromVaultSync:
     """Test synchronous load_secrets_from_vault_sync function."""
 
@@ -337,6 +345,7 @@ class TestLoadSecretsFromVaultSync:
         mock_client.get_secrets.assert_called_once()
 
 
+@pytest.mark.unit
 class TestValidateProductionSecrets:
     """Test production secrets validation."""
 
@@ -406,6 +415,7 @@ class TestValidateProductionSecrets:
         assert "Database password" in error_message
 
 
+@pytest.mark.unit
 class TestGetVaultSecret:
     """Test convenience function get_vault_secret."""
 
@@ -462,6 +472,7 @@ class TestGetVaultSecret:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestGetVaultSecretAsync:
     """Test async convenience function get_vault_secret_async."""
 
@@ -517,6 +528,7 @@ class TestGetVaultSecretAsync:
         assert result is None
 
 
+@pytest.mark.unit
 class TestEdgeCasesCoverage:
     """Tests to cover edge cases and missing lines for 90% coverage."""
 

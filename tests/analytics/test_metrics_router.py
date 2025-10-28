@@ -4,12 +4,16 @@ Tests for Analytics Activity Metrics Router.
 Tests caching, rate limiting, tenant isolation, and error handling
 for the analytics activity statistics endpoint.
 """
+import pytest
 
 from datetime import timezone, datetime, timedelta
 from unittest.mock import patch
 
 from httpx import AsyncClient
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestAnalyticsActivityStatsEndpoint:
     """Test analytics activity statistics endpoint."""

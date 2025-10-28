@@ -1,3 +1,4 @@
+
 """
 Tests for Wireless Schemas with IPv6 Support
 
@@ -11,12 +12,19 @@ from pydantic import ValidationError
 
 from dotmac.platform.wireless.models import DeviceStatus, DeviceType, Frequency
 from dotmac.platform.wireless.schemas import (
+
+
+
     WirelessClientResponse,
     WirelessDeviceCreate,
     WirelessDeviceResponse,
     WirelessDeviceUpdate,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestWirelessDeviceCreateIPv6:
     """Test wireless device creation with dual-stack IP support."""

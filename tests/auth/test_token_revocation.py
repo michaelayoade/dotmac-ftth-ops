@@ -11,6 +11,9 @@ from fastapi.security import HTTPAuthorizationCredentials
 from dotmac.platform.auth.core import JWTService, SessionManager, get_current_user
 
 
+
+pytestmark = pytest.mark.integration
+
 class TestJWTRevocation:
     """Test JWT token revocation functionality."""
 

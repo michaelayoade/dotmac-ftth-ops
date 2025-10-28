@@ -20,6 +20,7 @@ from dotmac.platform.billing.core.exceptions import (
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
 
+@pytest.mark.unit
 class TestInvoiceCreation:
     """Test invoice creation with idempotency."""
 
@@ -179,6 +180,7 @@ class TestInvoiceCreation:
                         assert created_invoice.total_amount == 10500  # $105.00
 
 
+@pytest.mark.unit
 class TestInvoiceFinalization:
     """Test invoice finalization (draft -> open)."""
 
@@ -240,6 +242,7 @@ class TestInvoiceFinalization:
                 )
 
 
+@pytest.mark.unit
 class TestInvoiceVoiding:
     """Test invoice voiding logic."""
 
@@ -317,6 +320,7 @@ class TestInvoiceVoiding:
             assert invoice.status == InvoiceStatus.VOID
 
 
+@pytest.mark.unit
 class TestInvoicePayment:
     """Test invoice payment marking."""
 
@@ -387,6 +391,7 @@ class TestInvoicePayment:
                 assert call_args["event_data"]["payment_id"] == "pay_123"
 
 
+@pytest.mark.unit
 class TestCreditApplication:
     """Test credit application to invoices."""
 
@@ -473,6 +478,7 @@ class TestCreditApplication:
             assert transaction.transaction_type.value == "credit"
 
 
+@pytest.mark.unit
 class TestInvoiceListing:
     """Test invoice listing and filtering."""
 

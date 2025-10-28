@@ -72,6 +72,7 @@ def sample_user():
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestUpdateLastLogin:
     """Test update_last_login method."""
 
@@ -136,6 +137,7 @@ class TestUpdateLastLogin:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestMFAOperations:
     """Test MFA enable/disable operations."""
 
@@ -202,6 +204,7 @@ class TestMFAOperations:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestRoleManagementEdgeCases:
     """Test role addition and removal edge cases."""
 
@@ -276,6 +279,7 @@ class TestRoleManagementEdgeCases:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestCreateUserErrorHandling:
     """Test create user error scenarios."""
 
@@ -340,6 +344,7 @@ class TestCreateUserErrorHandling:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestUpdateUserErrorHandling:
     """Test update user error scenarios."""
 
@@ -404,6 +409,7 @@ class TestUpdateUserErrorHandling:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestListUsersAdvancedFiltering:
     """Test list_users with various filter combinations."""
 
@@ -513,6 +519,7 @@ class TestListUsersAdvancedFiltering:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestAuthenticationAdvancedScenarios:
     """Test authentication edge cases."""
 
@@ -578,6 +585,7 @@ class TestAuthenticationAdvancedScenarios:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestPasswordHashing:
     """Test password hashing functionality."""
 
@@ -611,6 +619,7 @@ class TestPasswordHashing:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestAdditionalCoverage:
     """Additional tests to reach 90% coverage."""
 

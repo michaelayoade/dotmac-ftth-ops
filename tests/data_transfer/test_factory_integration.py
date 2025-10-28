@@ -32,6 +32,7 @@ from dotmac.platform.data_transfer.factory import (
 )
 
 
+@pytest.mark.integration
 class TestFactoryIntegration:
     """Integration tests that actually exercise factory code."""
 

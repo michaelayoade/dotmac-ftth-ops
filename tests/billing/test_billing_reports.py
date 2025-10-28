@@ -39,6 +39,7 @@ def billing_report_service(mock_db):
     return service
 
 
+@pytest.mark.integration
 class TestBillingReportService:
     """Test billing report service functionality"""
 
@@ -347,6 +348,7 @@ class TestBillingReportService:
         assert pct == 0.0
 
 
+@pytest.mark.integration
 class TestRevenueReportGenerator:
     """Test revenue report generator"""
 
@@ -420,6 +422,7 @@ class TestRevenueReportGenerator:
         assert result[1]["total_amount"] == 30000
 
 
+@pytest.mark.integration
 class TestCustomerReportGenerator:
     """Test customer report generator"""
 
@@ -450,6 +453,7 @@ class TestCustomerReportGenerator:
         assert result["new_customers"] == 150  # Placeholder in current implementation
 
 
+@pytest.mark.integration
 class TestAgingReportGenerator:
     """Test aging report generator"""
 

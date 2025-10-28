@@ -115,6 +115,7 @@ def test_service_provision_request(test_customer: Customer) -> ServiceProvisionR
     )
 
 
+@pytest.mark.integration
 class TestServiceProvisioning:
     """Test service provisioning workflows."""
 
@@ -204,6 +205,7 @@ class TestServiceProvisioning:
         assert service.subscription_id == "sub_test123"
 
 
+@pytest.mark.integration
 class TestServiceActivation:
     """Test service activation workflows."""
 
@@ -274,6 +276,7 @@ class TestServiceActivation:
             )
 
 
+@pytest.mark.integration
 class TestServiceSuspension:
     """Test service suspension workflows."""
 
@@ -376,6 +379,7 @@ class TestServiceSuspension:
             )
 
 
+@pytest.mark.integration
 class TestServiceResumption:
     """Test service resumption workflows."""
 
@@ -452,6 +456,7 @@ class TestServiceResumption:
             )
 
 
+@pytest.mark.integration
 class TestServiceTermination:
     """Test service termination workflows."""
 
@@ -560,6 +565,7 @@ class TestServiceTermination:
             )
 
 
+@pytest.mark.integration
 class TestServiceModification:
     """Test service modification workflows."""
 
@@ -621,6 +627,7 @@ class TestServiceModification:
         assert changes.get("bandwidth_down_mbps", {}).get("new") == 200
 
 
+@pytest.mark.integration
 class TestServiceHealthChecks:
     """Test service health check workflows."""
 
@@ -662,6 +669,7 @@ class TestServiceHealthChecks:
         assert event is not None
 
 
+@pytest.mark.integration
 class TestBulkOperations:
     """Test bulk service operations."""
 
@@ -750,6 +758,7 @@ class TestBulkOperations:
         assert all(r.status == ServiceStatus.ACTIVE for r in results)
 
 
+@pytest.mark.integration
 class TestLifecycleEvents:
     """Test lifecycle event tracking."""
 

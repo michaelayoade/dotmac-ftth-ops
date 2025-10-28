@@ -1,3 +1,4 @@
+
 """
 Tests for Fiber Infrastructure Models and Schemas
 
@@ -12,6 +13,8 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.fiber.models import (
+
+
     CableInstallationType,
     DistributionPointType,
     FiberCableStatus,
@@ -31,10 +34,15 @@ from dotmac.platform.fiber.schemas import (
     SplicePointCreate,
 )
 
+
 # ============================================================================
 # Fiber Cable Schema Tests
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestFiberCableSchemas:
     """Test fiber cable schema validation and serialization."""

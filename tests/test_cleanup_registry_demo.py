@@ -1,3 +1,4 @@
+
 """
 Demo test showing cleanup registry in action.
 
@@ -12,6 +13,11 @@ The cleanup_registry fixture is automatically available in ALL tests!
 
 import pytest
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestCleanupRegistryDemo:
     """Demo tests showing cleanup registry features."""
@@ -343,4 +349,3 @@ class TestRealWorldCleanupScenario:
 
 
 # Mark as unit tests (fast, no external dependencies)
-pytestmark = pytest.mark.unit

@@ -1,3 +1,4 @@
+
 """
 Core Payment Service Tests - Phase 1 Coverage Improvement
 
@@ -22,6 +23,8 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
+
+
     PaymentEntity,
     PaymentInvoiceEntity,
     PaymentMethodEntity,
@@ -43,8 +46,11 @@ from dotmac.platform.billing.payments.providers import (
 )
 from dotmac.platform.billing.payments.service import PaymentService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def tenant_id() -> str:
@@ -114,6 +120,7 @@ async def test_payment_method(async_session: AsyncSession, tenant_id: str, custo
     return payment_method
 
 
+@pytest.mark.integration
 class TestPaymentCreation:
     """Test payment creation workflows."""
 
@@ -285,14 +292,19 @@ class TestPaymentCreation:
         assert payment.status == PaymentStatus.FAILED
         assert "Network error" in payment.failure_reason
 
+    @patch("dotmac.platform.billing.payments.service.settings")
     async def test_create_payment_without_provider(
         self,
+        mock_settings: Mock,
         async_session: AsyncSession,
         tenant_id: str,
         customer_id: str,
         test_payment_method: PaymentMethodEntity,
     ):
         """Test payment creation with no provider configured (mock mode)."""
+        # Mock settings to allow mock mode
+        mock_settings.billing.require_payment_plugin = False
+
         # Create service without providers
         service = PaymentService(db_session=async_session, payment_providers={})
 
@@ -375,6 +387,7 @@ class TestPaymentCreation:
         assert call_args.kwargs["event_data"]["failure_reason"] == "Card declined"
 
 
+@pytest.mark.integration
 class TestPaymentRefunds:
     """Test payment refund workflows."""
 
@@ -518,7 +531,7 @@ class TestPaymentRefunds:
         )
 
         # Try to refund failed payment
-        with pytest.raises(PaymentError, match="Can only refund successful payments"):
+        with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
             await payment_service.refund_payment(
                 tenant_id=tenant_id,
                 payment_id=payment.payment_id,
@@ -540,7 +553,7 @@ class TestPaymentRefunds:
             payment_method_id=test_payment_method.payment_method_id,
         )
 
-        with pytest.raises(PaymentError, match="cannot exceed original payment amount"):
+        with pytest.raises(PaymentError, match="Refund amount .* exceeds remaining refundable amount"):
             await payment_service.refund_payment(
                 tenant_id=tenant_id,
                 payment_id=payment.payment_id,
@@ -589,6 +602,7 @@ class TestPaymentRefunds:
         assert call_args.kwargs["event_data"]["refund_type"] == "partial"
 
 
+@pytest.mark.integration
 class TestPaymentMethodManagement:
     """Test payment method management."""
 
@@ -833,6 +847,7 @@ class TestPaymentMethodManagement:
         assert deleted_pm.status == PaymentMethodStatus.INACTIVE
 
 
+@pytest.mark.integration
 class TestPaymentRetry:
     """Test payment retry logic."""
 
@@ -915,6 +930,7 @@ class TestPaymentRetry:
             )
 
 
+@pytest.mark.integration
 class TestTenantIsolation:
     """Test tenant isolation in payment service."""
 
@@ -985,6 +1001,7 @@ class TestTenantIsolation:
             )
 
 
+@pytest.mark.integration
 class TestInvoiceLinking:
     """Tests for payment-to-invoice allocation."""
 

@@ -21,6 +21,7 @@ from dotmac.platform.billing.subscriptions.models import (
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
+@pytest.mark.unit
 class TestSubscriptionsRouterPrefix:
     """Tests for subscriptions router prefix fix"""
 
@@ -34,6 +35,7 @@ class TestSubscriptionsRouterPrefix:
         assert router.prefix != "/billing/subscriptions"
 
 
+@pytest.mark.unit
 class TestCancelAtPeriodEnd:
     """Tests for cancel_at_period_end keeping subscription active"""
 
@@ -103,14 +105,25 @@ class TestCancelAtPeriodEnd:
         mock_sub = MagicMock()
         mock_sub.subscription_id = "sub_123"
         mock_sub.tenant_id = "tenant_1"
-        mock_sub.status = SubscriptionStatus.ACTIVE.value
+        mock_sub.status = SubscriptionStatus.ACTIVE
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none = MagicMock(return_value=mock_sub)
         mock_db.execute.return_value = mock_result
 
         service = SubscriptionService(mock_db)
-        service._db_to_pydantic_subscription = MagicMock()
+
+        # Mock get_subscription to return a proper subscription with ACTIVE status
+        mock_subscription = MagicMock()
+        mock_subscription.status = SubscriptionStatus.ACTIVE
+        mock_subscription.subscription_id = "sub_123"
+        service.get_subscription = AsyncMock(return_value=mock_subscription)
+
+        # Mock _db_to_pydantic_subscription to avoid Pydantic validation errors
+        mock_result_subscription = MagicMock()
+        mock_result_subscription.status = SubscriptionStatus.ENDED
+        service._db_to_pydantic_subscription = MagicMock(return_value=mock_result_subscription)
+
         service._create_event = AsyncMock()
 
         # Cancel subscription immediately
@@ -121,10 +134,11 @@ class TestCancelAtPeriodEnd:
         )
 
         # Verify status was set to ENDED
-        assert mock_sub.status == SubscriptionStatus.ENDED.value
+        assert mock_sub.status == SubscriptionStatus.ENDED
         assert mock_sub.ended_at is not None
 
 
+@pytest.mark.unit
 class TestChangePlanEffectiveDate:
     """Tests for change_plan honoring effective_date"""
 
@@ -246,6 +260,7 @@ class TestChangePlanEffectiveDate:
         # If schema doesn't support scheduled changes, it will log warning and apply immediately
 
 
+@pytest.mark.unit
 class TestChangeTenantSubscriptionPlan:
     """Tests for change_tenant_subscription_plan method name fix"""
 

@@ -14,6 +14,9 @@ from httpx import AsyncClient
 from dotmac.platform.main import app
 
 
+
+pytestmark = pytest.mark.integration
+
 class TestUserManagementEndpoints:
     """Test user management endpoints used by admin UI."""
 

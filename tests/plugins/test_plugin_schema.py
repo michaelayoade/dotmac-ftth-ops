@@ -21,6 +21,7 @@ from dotmac.platform.plugins.schema import (
 )
 
 
+@pytest.mark.unit
 class TestFieldSpec:
     """Test FieldSpec validation and functionality."""
 
@@ -128,6 +129,7 @@ class TestFieldSpec:
         assert field.order == 5
 
 
+@pytest.mark.unit
 class TestPluginConfig:
     """Test PluginConfig validation and functionality."""
 
@@ -218,6 +220,7 @@ class TestPluginConfig:
             )
 
 
+@pytest.mark.unit
 class TestPluginInstance:
     """Test PluginInstance model."""
 
@@ -261,6 +264,7 @@ class TestPluginInstance:
             assert status in PluginStatus.__members__.values()
 
 
+@pytest.mark.unit
 class TestPluginHealthCheck:
     """Test PluginHealthCheck model."""
 
@@ -306,6 +310,7 @@ class TestPluginHealthCheck:
         assert "Connection timeout" in health_check.details["error"]
 
 
+@pytest.mark.unit
 class TestPluginTestResult:
     """Test PluginTestResult model."""
 
@@ -347,6 +352,7 @@ class TestPluginTestResult:
         assert result.details["status_code"] == 401
 
 
+@pytest.mark.unit
 class TestFieldTypes:
     """Test all field types."""
 
@@ -378,6 +384,7 @@ class TestFieldTypes:
             assert field.type == field_type
 
 
+@pytest.mark.unit
 class TestPluginTypes:
     """Test all plugin types."""
 

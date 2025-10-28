@@ -1,3 +1,4 @@
+
 """
 Simple Unit Tests for Workflow Service
 
@@ -9,6 +10,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestWorkflowServiceInitialization:

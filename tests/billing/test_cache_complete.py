@@ -30,6 +30,7 @@ from dotmac.platform.billing.cache import (
 from dotmac.platform.core.caching import cache_clear
 
 
+@pytest.mark.unit
 class TestCacheEnums:
     """Test cache enum types."""
 
@@ -48,6 +49,7 @@ class TestCacheEnums:
         assert CacheTier.L3_DATABASE == "l3_database"
 
 
+@pytest.mark.unit
 class TestBillingCacheConfig:
     """Test billing cache configuration."""
 
@@ -76,6 +78,7 @@ class TestBillingCacheConfig:
         assert config.ENABLE_CACHE_WARMING is True
 
 
+@pytest.mark.unit
 class TestCacheKey:
     """Test cache key generation."""
 
@@ -154,6 +157,7 @@ class TestCacheKey:
         assert hash1 == hash4
 
 
+@pytest.mark.unit
 class TestBillingCacheMetrics:
     """Test cache metrics tracking."""
 
@@ -248,6 +252,7 @@ class TestBillingCacheMetrics:
         assert metrics.errors == 0
 
 
+@pytest.mark.unit
 class TestBillingCache:
     """Test BillingCache multi-tier caching system."""
 
@@ -527,6 +532,7 @@ class TestBillingCache:
         assert metrics["l2_memory_used"] == "10MB"
 
 
+@pytest.mark.unit
 class TestGlobalCacheInstance:
     """Test global cache instance."""
 
@@ -540,6 +546,7 @@ class TestGlobalCacheInstance:
         assert isinstance(cache1, BillingCache)
 
 
+@pytest.mark.unit
 class TestCachedResultDecorator:
     """Test cached_result decorator."""
 
@@ -595,6 +602,7 @@ class TestCachedResultDecorator:
         assert result == 10
 
 
+@pytest.mark.unit
 class TestInvalidateOnChangeDecorator:
     """Test invalidate_on_change decorator."""
 

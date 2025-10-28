@@ -1,3 +1,3 @@
 "use client";
 
-export { default } from "../../../../../base-app/app/dashboard/billing-revenue/payment-methods/types/page";
+export { default } from "../../../../../../base-app/app/dashboard/billing-revenue/payment-methods/types/page";

@@ -1,3 +1,4 @@
+
 """
 Unit tests for Order Processing Service
 """
@@ -11,12 +12,19 @@ from dotmac.platform.deployment.models import DeploymentType
 from dotmac.platform.sales.models import Order, OrderStatus
 from dotmac.platform.sales.schemas import OrderCreate, OrderSubmit
 from dotmac.platform.sales.service import (
+
+
+
     OrderProcessingService,
     TemplateMapper,
 )
 
 from .conftest import create_order
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestTemplateMapper:
     """Tests for TemplateMapper"""

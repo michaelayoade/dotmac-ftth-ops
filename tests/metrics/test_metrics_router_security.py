@@ -5,11 +5,19 @@ from fastapi import HTTPException
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.metrics.router import (
+
+
     _require_metrics_permission,
     require_metrics_manage,
     require_metrics_read,
 )
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 async def test_require_metrics_permission_accepts_alias(monkeypatch):

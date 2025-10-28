@@ -1,3 +1,4 @@
+
 """
 Tests for audit service functionality.
 """
@@ -9,6 +10,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.audit.models import (
+
+
     ActivitySeverity,
     ActivityType,
     AuditActivity,
@@ -21,8 +24,11 @@ from dotmac.platform.audit.service import (
     log_user_activity,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def audit_service():
@@ -45,6 +51,7 @@ def mock_request():
     return request
 
 
+@pytest.mark.integration
 class TestAuditService:
     """Test AuditService core functionality."""
 
@@ -373,6 +380,7 @@ class TestAuditService:
         assert not any(a.tenant_id == "tenant2" for a in result.activities)
 
 
+@pytest.mark.integration
 class TestAuditHelperFunctions:
     """Test audit helper functions."""
 

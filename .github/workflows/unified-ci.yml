@@ -68,10 +68,79 @@ jobs:
       - name: Validate Pydantic models
         run: poetry run python -c "from dotmac.platform.core import ensure_pydantic_v2; ensure_pydantic_v2()"
 
-  backend-test:
-    name: Backend Tests (Python ${{ matrix.python-version }})
+  backend-unit-tests:
+    name: Backend Unit Tests (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 5
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Run unit tests with coverage
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          COVERAGE_CORE: sysmon
+        run: |
+          echo "🚀 Running fast unit tests (no DB required)..."
+          poetry run pytest tests/ \
+            -m unit \
+            --cov=src/dotmac/platform \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-unit.xml \
+            --tb=short \
+            -n auto \
+            -v
+
+      - name: Prepare coverage artifacts
+        if: always()
+        run: |
+          if [ -f ".coverage" ]; then
+            mv .coverage ".coverage.unit.${{ matrix.python-version }}"
+          fi
+
+      - name: Upload unit test coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-unit-${{ matrix.python-version }}
+          path: |
+            coverage-unit.xml
+            .coverage.unit.${{ matrix.python-version }}
+          retention-days: 30
+
+  backend-integration-tests:
+    name: Backend Integration Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: backend-unit-tests
 
     strategy:
       fail-fast: false
@@ -156,36 +225,204 @@ jobs:
             exit 1
           }
 
-      - name: Run tests with coverage
+      - name: Run integration tests with coverage
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:change-me-in-production@localhost:5432/${{ env.DB_NAME }}
           DOTMAC_REDIS_URL: redis://localhost:6379/0
-          COVERAGE_CORE: sysmon  # Use sysmon tracing for better performance
+          COVERAGE_CORE: sysmon
         run: |
+          echo "🔗 Running integration tests (DB + services)..."
           poetry run pytest tests/ \
+            -m integration \
             --cov=src/dotmac/platform \
             --cov-branch \
             --cov-report=term-missing \
-            --cov-report=xml \
-            --cov-report=html \
-            --cov-fail-under=${{ env.COV_BASE_THRESHOLD }} \
+            --cov-report=xml:coverage-integration.xml \
             --tb=short \
             -n auto \
             -q
 
+      - name: Prepare coverage artifacts
+        if: always()
+        run: |
+          if [ -f ".coverage" ]; then
+            mv .coverage ".coverage.integration.${{ matrix.python-version }}"
+          fi
+
+      - name: Upload integration test coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-integration-${{ matrix.python-version }}
+          path: |
+            coverage-integration.xml
+            .coverage.integration.${{ matrix.python-version }}
+          retention-days: 30
+
+  backend-e2e-tests:
+    name: Backend E2E Tests (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: backend-integration-tests
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.12', '3.13']
+
+    services:
+      postgres:
+        image: postgres:14-alpine
+        env:
+          POSTGRES_USER: dotmac_user
+          POSTGRES_PASSWORD: change-me-in-production
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: 'pip'
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Cache virtualenv
+        uses: actions/cache@v3
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('poetry.lock') }}
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Wait for PostgreSQL
+        run: |
+          timeout 30 bash -c 'until pg_isready -h localhost -p 5432 -U dotmac_user; do sleep 1; done'
+
+      - name: Create unique test database
+        run: |
+          export DB_NAME="dotmac_test_py$(echo ${{ matrix.python-version }} | tr -d '.')"
+          echo "DB_NAME=$DB_NAME" >> $GITHUB_ENV
+          PGPASSWORD=change-me-in-production psql -h localhost -U dotmac_user -d postgres -c "DROP DATABASE IF EXISTS $DB_NAME;"
+          PGPASSWORD=change-me-in-production psql -h localhost -U dotmac_user -d postgres -c "CREATE DATABASE $DB_NAME;"
+
+      - name: Run database migrations
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:change-me-in-production@localhost:5432/${{ env.DB_NAME }}
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+        run: poetry run alembic upgrade head
+
+      - name: Run E2E tests with coverage
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:change-me-in-production@localhost:5432/${{ env.DB_NAME }}
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+          COVERAGE_CORE: sysmon
+        run: |
+          echo "🌐 Running E2E tests (full API workflows)..."
+          poetry run pytest tests/ \
+            -m e2e \
+            --cov=src/dotmac/platform \
+            --cov-branch \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage-e2e.xml \
+            --tb=short \
+            -q
+
+      - name: Prepare coverage artifacts
+        if: always()
+        run: |
+          if [ -f ".coverage" ]; then
+            mv .coverage ".coverage.e2e.${{ matrix.python-version }}"
+          fi
+
+      - name: Upload E2E test coverage artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-e2e-${{ matrix.python-version }}
+          path: |
+            coverage-e2e.xml
+            .coverage.e2e.${{ matrix.python-version }}
+          retention-days: 30
+
+  backend-coverage-report:
+    name: Backend Coverage Report
+    runs-on: ubuntu-latest
+    needs: [backend-unit-tests, backend-integration-tests, backend-e2e-tests]
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Poetry
+        run: |
+          curl -sSL https://install.python-poetry.org | python3 -
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+      - name: Install dependencies
+        run: poetry install --with dev
+
+      - name: Download all coverage reports
+        uses: actions/download-artifact@v4
+        with:
+          pattern: coverage-*
+          path: coverage-artifacts/
+
+      - name: Combine coverage reports
+        run: |
+          set -euo pipefail
+          shopt -s nullglob globstar
+          echo "📊 Combining coverage from all test layers..."
+          COVERAGE_FILES=(coverage-artifacts/**/.coverage*)
+          if [ ${#COVERAGE_FILES[@]} -eq 0 ]; then
+            echo "❌ No coverage data files found to combine."
+            exit 1
+          fi
+          poetry run coverage combine "${COVERAGE_FILES[@]}"
+          poetry run coverage xml -o coverage.xml
+          poetry run coverage html -d htmlcov
+          poetry run coverage report --fail-under=${{ env.COV_BASE_THRESHOLD }}
+
       - name: Check module-specific coverage thresholds
-        if: success()
         run: |
           echo "📊 Checking module-specific coverage thresholds..."
-          poetry run python scripts/check_coverage.py coverage.xml || {
-            echo "⚠️  Some modules are below their coverage targets"
-            echo "See .coveragerc for target thresholds per module"
-            exit 1
-          }
+          poetry run python scripts/check_coverage.py coverage.xml
 
       - name: Check diff coverage (PRs only)
-        if: success() && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         run: |
           echo "📊 Checking diff coverage for PR..."
           poetry run diff-cover coverage.xml \
@@ -193,11 +430,11 @@ jobs:
             --fail-under=${{ env.DIFF_COV_THRESHOLD }} \
             --html-report=diff-cover.html
 
-      - name: Upload coverage reports
+      - name: Upload combined coverage
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-${{ matrix.python-version }}
+          name: coverage-combined
           path: |
             htmlcov/
             coverage.xml
@@ -592,7 +829,7 @@ jobs:
   deploy:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: [backend-quality, backend-test, frontend-quality, frontend-test, security]
+    needs: [backend-quality, backend-unit-tests, backend-integration-tests, backend-e2e-tests, frontend-quality, frontend-test, security]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
 
     steps:

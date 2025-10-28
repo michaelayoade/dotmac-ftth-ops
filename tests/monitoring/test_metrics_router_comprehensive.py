@@ -4,12 +4,16 @@ Tests for Monitoring Metrics Router.
 Tests caching, rate limiting, tenant isolation, and error handling
 for both monitoring metrics and log statistics endpoints.
 """
+import pytest
 
 from datetime import timezone, datetime
 from unittest.mock import patch
 
 from httpx import AsyncClient
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestMonitoringMetricsEndpoint:
     """Test monitoring metrics endpoint."""

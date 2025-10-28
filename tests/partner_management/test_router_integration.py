@@ -1,3 +1,4 @@
+
 """
 Integration tests for partner management router with database.
 
@@ -10,6 +11,9 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.partner_management.schemas import (
+
+
+
     PartnerAccountCreate,
     PartnerCommissionEventCreate,
     PartnerCreate,
@@ -17,8 +21,14 @@ from dotmac.platform.partner_management.schemas import (
 )
 from dotmac.platform.partner_management.service import PartnerService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
 
 @pytest.mark.asyncio
 class TestPartnerRouterIntegration:

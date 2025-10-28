@@ -22,6 +22,7 @@ from dotmac.platform.billing.models import BillingSubscriptionTable
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
@@ -58,6 +59,7 @@ async def load_test_plans(async_db_session):
     return plans, tenant_id
 
 
+@pytest.mark.integration
 class TestSubscriptionLoadPerformance:
     """Test subscription performance under load."""
 
@@ -163,7 +165,7 @@ class TestSubscriptionLoadPerformance:
             start_time = time.time()
 
             subscriptions = await service.list_subscriptions(
-                tenant_id=tenant_id, limit=page_size, offset=(page - 1) * page_size
+                tenant_id=tenant_id, limit=page_size, page=page
             )
 
             query_time = (time.time() - start_time) * 1000  # ms
@@ -325,8 +327,9 @@ class TestSubscriptionLoadPerformance:
 
         upgraded_count = 0
         for sub_id in subscription_ids:
+            change_request = SubscriptionPlanChangeRequest(new_plan_id=pro_plan.plan_id)
             await service.change_plan(
-                subscription_id=sub_id, tenant_id=tenant_id, new_plan_id=pro_plan.plan_id
+                subscription_id=sub_id, change_request=change_request, tenant_id=tenant_id
             )
             upgraded_count += 1
 
@@ -437,10 +440,11 @@ async def test_complete_load_test_scenario(async_db_session):
 
     for i in range(100):
         sub_id = subscription_ids[i]
+        change_request = SubscriptionPlanChangeRequest(new_plan_id=plans[1].plan_id)
         await service.change_plan(
             subscription_id=sub_id,
+            change_request=change_request,
             tenant_id=tenant_id,
-            new_plan_id=plans[1].plan_id,  # Upgrade to Pro
         )
 
     await async_db_session.commit()

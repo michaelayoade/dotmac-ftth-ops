@@ -1,3 +1,4 @@
+
 """
 Comprehensive router tests for customer management to achieve 90% coverage.
 """
@@ -10,6 +11,8 @@ import pytest
 from fastapi import HTTPException
 
 from dotmac.platform.customer_management.models import (
+
+
     ActivityType,
     CustomerActivity,
     CustomerNote,
@@ -49,10 +52,16 @@ from dotmac.platform.customer_management.schemas import (
 )
 from dotmac.platform.customer_management.service import CustomerService
 
-pytestmark = pytest.mark.asyncio
+
+
+pytestmark = pytest.mark.integration
 
 # Fixtures are now in conftest.py
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 class TestRouterDependencies:
     """Test router dependencies."""

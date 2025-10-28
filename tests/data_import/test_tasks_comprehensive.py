@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for data_import/tasks.py to improve coverage from 64.21%.
 
@@ -19,6 +20,9 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.data_import.models import (
+
+
+
     ImportJobType,
 )
 from dotmac.platform.data_import.tasks import (
@@ -36,6 +40,10 @@ from dotmac.platform.data_import.tasks import (
     process_import_job,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestGetAsyncSession:
     """Test async session creation."""

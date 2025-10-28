@@ -24,6 +24,7 @@ from aiohttp import ClientError, ClientTimeout
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
@@ -56,6 +57,7 @@ def mock_http_client():
     return client
 
 
+@pytest.mark.integration
 class TestWebhookEventEmission:
     """Test webhook event emission on subscription lifecycle changes."""
 
@@ -160,10 +162,11 @@ class TestWebhookEventEmission:
         )
 
         # Change plan
-        upgraded = await service.change_plan(
+        change_request = SubscriptionPlanChangeRequest(new_plan_id=premium_plan.plan_id)
+        upgraded, _ = await service.change_plan(
             subscription_id=subscription.subscription_id,
+            change_request=change_request,
             tenant_id=tenant_id,
-            new_plan_id=premium_plan.plan_id,
         )
 
         # Expected webhook payload
@@ -235,6 +238,7 @@ class TestWebhookEventEmission:
         assert canceled.cancel_at_period_end is True
 
 
+@pytest.mark.integration
 class TestWebhookDelivery:
     """Test webhook delivery mechanism."""
 
@@ -348,6 +352,7 @@ class TestWebhookDelivery:
             assert "timeout" in str(e).lower()
 
 
+@pytest.mark.integration
 class TestWebhookSignatureVerification:
     """Test webhook signature generation and verification."""
 
@@ -448,6 +453,7 @@ class TestWebhookSignatureVerification:
         assert is_valid is False
 
 
+@pytest.mark.integration
 class TestWebhookEndpointHealth:
     """Test webhook endpoint health checks."""
 
@@ -489,6 +495,7 @@ class TestWebhookEndpointHealth:
             assert "refused" in str(e).lower()
 
 
+@pytest.mark.integration
 class TestConcurrentWebhookDelivery:
     """Test concurrent webhook deliveries."""
 

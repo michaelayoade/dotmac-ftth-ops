@@ -1,3 +1,4 @@
+
 """
 Contact field service tests - Migrated to use shared helpers.
 
@@ -14,9 +15,14 @@ from dotmac.platform.contacts.schemas import ContactFieldDefinitionCreate
 from dotmac.platform.contacts.service import ContactFieldService
 from tests.helpers import build_mock_db_session
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactFieldService:
     """Test contact field service using shared helpers."""
 

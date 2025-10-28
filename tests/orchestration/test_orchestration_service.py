@@ -22,6 +22,7 @@ from dotmac.platform.orchestration.schemas import (
 from dotmac.platform.orchestration.service import OrchestrationService
 
 
+@pytest.mark.integration
 class TestOrchestrationServiceInitialization:
     """Test service initialization"""
 
@@ -47,6 +48,7 @@ class TestOrchestrationServiceInitialization:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestProvisionSubscriberWorkflow:
     """Test subscriber provisioning workflow"""
 
@@ -151,6 +153,7 @@ class TestProvisionSubscriberWorkflow:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestDeprovisionSubscriberWorkflow:
     """Test subscriber deprovisioning workflow"""
 
@@ -186,6 +189,7 @@ class TestDeprovisionSubscriberWorkflow:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestActivateServiceWorkflow:
     """Test service activation workflow"""
 
@@ -216,6 +220,7 @@ class TestActivateServiceWorkflow:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestSuspendServiceWorkflow:
     """Test service suspension workflow"""
 
@@ -246,6 +251,7 @@ class TestSuspendServiceWorkflow:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestWorkflowManagement:
     """Test workflow listing and retrieval"""
 
@@ -341,6 +347,7 @@ class TestWorkflowManagement:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestWorkflowStatistics:
     """Test workflow statistics"""
 
@@ -366,6 +373,7 @@ class TestWorkflowStatistics:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestWorkflowRetry:
     """Test workflow retry functionality"""
 
@@ -433,6 +441,7 @@ class TestWorkflowRetry:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestWorkflowCancellation:
     """Test workflow cancellation"""
 

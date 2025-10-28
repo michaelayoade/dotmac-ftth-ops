@@ -36,6 +36,7 @@ async def mock_admin_user():
     )
 
 
+@pytest.mark.integration
 class TestPermissionEndpointsDirect:
     """Direct tests for permission endpoints."""
 
@@ -82,6 +83,7 @@ class TestPermissionEndpointsDirect:
         assert exc_info.value.status_code == 404
 
 
+@pytest.mark.integration
 class TestRoleEndpointsDirect:
     """Direct tests for role endpoints."""
 
@@ -153,6 +155,7 @@ class TestRoleEndpointsDirect:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestUserPermissionEndpointsDirect:
     """Direct tests for user permission management endpoints."""
 
@@ -265,6 +268,7 @@ class TestUserPermissionEndpointsDirect:
         assert len(roles) == 0
 
 
+@pytest.mark.integration
 class TestRoleCRUDEndpointsDirect:
     """Direct tests for role CRUD endpoints."""
 

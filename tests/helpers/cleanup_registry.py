@@ -4,13 +4,14 @@ Test Cleanup Registry
 Provides a centralized registry for managing test cleanup handlers.
 This ensures proper cleanup order and prevents resource leaks.
 """
-
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable
 from enum import IntEnum
 from typing import Any
+
+import pytest
 
 logger = logging.getLogger(__name__)
 

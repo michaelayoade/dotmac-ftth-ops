@@ -1,3 +1,4 @@
+
 """
 Tests for subscription plan CRUD operations.
 """
@@ -8,14 +9,20 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PlanNotFoundError
 from dotmac.platform.billing.subscriptions.models import (
+
+
     BillingCycle,
     SubscriptionPlanCreateRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestSubscriptionPlanCRUD:
     """Test subscription plan CRUD operations."""
 

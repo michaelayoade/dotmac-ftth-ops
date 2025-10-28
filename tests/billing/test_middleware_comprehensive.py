@@ -50,6 +50,7 @@ def app():
     return app
 
 
+@pytest.mark.integration
 class TestBillingErrorMiddleware:
     """Test billing error middleware."""
 
@@ -168,6 +169,7 @@ class TestBillingErrorMiddleware:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestBillingValidationMiddleware:
     """Test billing validation middleware."""
 
@@ -236,6 +238,7 @@ class TestBillingValidationMiddleware:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestBillingAuditMiddleware:
     """Test billing audit middleware."""
 
@@ -352,6 +355,7 @@ class TestBillingAuditMiddleware:
         assert op_type == "billing_operation"
 
 
+@pytest.mark.integration
 class TestSetupBillingMiddleware:
     """Test middleware setup function."""
 

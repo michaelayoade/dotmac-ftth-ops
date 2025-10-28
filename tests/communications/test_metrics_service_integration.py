@@ -1,3 +1,4 @@
+
 """
 Integration tests for metrics service with real DB.
 """
@@ -7,6 +8,8 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.communications.metrics_service import (
+
+
     CommunicationMetricsService,
     get_metrics_service,
 )
@@ -15,9 +18,13 @@ from dotmac.platform.communications.models import (
     CommunicationType,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestMetricsServiceIntegration:
     """Integration tests with real async DB session."""
 
@@ -201,6 +208,7 @@ class TestMetricsServiceIntegration:
         assert log_entry.tenant_id == "tenant_123"
 
 
+@pytest.mark.integration
 class TestMetricsServiceFactory:
     """Test the factory function."""
 

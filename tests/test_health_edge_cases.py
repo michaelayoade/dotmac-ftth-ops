@@ -25,6 +25,7 @@ from dotmac.platform.monitoring.health_checks import (
 )
 
 
+@pytest.mark.integration
 class TestHealthCheckerEdgeCases:
     """Test edge cases and complex scenarios in HealthChecker."""
 
@@ -363,6 +364,7 @@ class TestHealthCheckerEdgeCases:
             mock_obs.assert_called_once_with()
 
 
+@pytest.mark.integration
 class TestStartupDependenciesEdgeCases:
     """Test edge cases in startup dependency checking."""
 
@@ -479,6 +481,7 @@ class TestStartupDependenciesEdgeCases:
         assert "=" * 60 in captured.out  # Header/footer separators
 
 
+@pytest.mark.integration
 class TestServiceHealthComplexScenarios:
     """Test complex scenarios with ServiceHealth objects."""
 

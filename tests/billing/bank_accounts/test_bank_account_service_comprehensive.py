@@ -33,6 +33,7 @@ from dotmac.platform.billing.core.exceptions import BillingError, PaymentError
 # This provides a real SQLite database session
 
 
+@pytest.mark.integration
 class TestBankAccountServiceCreate:
     """Test bank account creation with real database."""
 

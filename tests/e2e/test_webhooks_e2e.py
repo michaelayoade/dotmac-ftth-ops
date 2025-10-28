@@ -1,3 +1,4 @@
+
 """
 End-to-End Webhooks Tests.
 
@@ -24,6 +25,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 # Set test environment
+
+
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-e2e-tests"
@@ -39,7 +45,6 @@ from dotmac.platform.webhooks.models import (
     WebhookSubscription,
 )
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 
 # ==================== Fixtures ====================

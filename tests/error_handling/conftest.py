@@ -8,6 +8,9 @@ import os
 
 # Disable rate limiting BEFORE importing any modules that use it
 # This must be done before any rate_limit decorators are applied
+
+
+
 os.environ["RATE_LIMIT__ENABLED"] = "false"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
 os.environ["TESTING"] = "1"
@@ -15,6 +18,9 @@ os.environ["TESTING"] = "1"
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine

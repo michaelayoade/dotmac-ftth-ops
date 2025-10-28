@@ -5,9 +5,14 @@ from datetime import timezone
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 from dotmac.platform.wireless.schemas import SignalMeasurementCreate
 from dotmac.platform.wireless.service import WirelessService
 
+
+
+pytestmark = pytest.mark.integration
 
 class DummySession:
     """Minimal synchronous session stub to capture interactions."""

@@ -24,6 +24,7 @@ from dotmac.platform.customer_management.schemas import (
 from dotmac.platform.customer_management.service import CustomerService
 
 
+@pytest.mark.unit
 class TestCustomerCreation:
     """Test customer creation logic."""
 
@@ -116,6 +117,7 @@ class TestCustomerCreation:
                 assert activity_created
 
 
+@pytest.mark.unit
 class TestCustomerRetrieval:
     """Test customer retrieval methods."""
 
@@ -214,6 +216,7 @@ class TestCustomerRetrieval:
                 assert customer.customer_number == "CUST-001"
 
 
+@pytest.mark.unit
 class TestCustomerUpdate:
     """Test customer update logic."""
 
@@ -313,6 +316,7 @@ class TestCustomerUpdate:
                     assert activity_created
 
 
+@pytest.mark.unit
 class TestCustomerDeletion:
     """Test customer deletion (soft and hard delete)."""
 
@@ -398,6 +402,7 @@ class TestCustomerDeletion:
                 assert result is False
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation in customer operations."""
 
@@ -443,6 +448,7 @@ class TestTenantIsolation:
             assert tenant_id == "default-tenant"
 
 
+@pytest.mark.unit
 class TestValidation:
     """Test input validation."""
 
@@ -473,6 +479,7 @@ class TestValidation:
             assert tenant_id == "tenant-1"
 
 
+@pytest.mark.unit
 class TestBatchOperations:
     """Test batch processing methods."""
 
@@ -501,6 +508,7 @@ class TestBatchOperations:
             await customer_service.batch_process_customers(customer_ids, "activate")
 
 
+@pytest.mark.unit
 class TestHelperMethods:
     """Test internal helper methods."""
 
@@ -525,6 +533,7 @@ class TestHelperMethods:
             assert len(number) > 0
 
 
+@pytest.mark.unit
 class TestUtilityMethods:
     """Test utility methods."""
 

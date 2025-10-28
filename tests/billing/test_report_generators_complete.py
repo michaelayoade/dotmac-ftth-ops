@@ -42,6 +42,7 @@ def date_range():
     return {"start": start, "end": end}
 
 
+@pytest.mark.unit
 class TestRevenueReportGenerator:
     """Test RevenueReportGenerator."""
 
@@ -410,6 +411,7 @@ class TestRevenueReportGenerator:
         assert rate == 0.0
 
 
+@pytest.mark.unit
 class TestCustomerReportGenerator:
     """Test CustomerReportGenerator."""
 
@@ -530,6 +532,7 @@ class TestCustomerReportGenerator:
         assert report["top_customers"][0]["outstanding"] == 0
 
 
+@pytest.mark.unit
 class TestAgingReportGenerator:
     """Test AgingReportGenerator."""
 

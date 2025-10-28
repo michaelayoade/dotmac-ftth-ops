@@ -12,6 +12,14 @@ from dotmac.platform.webhooks.models import DeliveryStatus, WebhookDelivery
 from dotmac.platform.webhooks.router import router
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def webhooks_app(async_db_session, monkeypatch):
     """Create a FastAPI app with the webhooks router and test overrides."""

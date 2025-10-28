@@ -1,3 +1,4 @@
+
 """
 Integration tests for module interface compatibility.
 
@@ -10,9 +11,18 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
 
 
+
+
+
+pytestmark = [
+    pytest.mark.asyncio,
+    pytest.mark.integration,
+    pytest.mark.slow,  # These tests may be slower due to module loading
+]
+
+@pytest.mark.integration
 class TestAuthModuleInterface:
     """Test Auth module interface compatibility."""
 
@@ -64,6 +74,7 @@ class TestAuthModuleInterface:
             pytest.skip("JWT service not available")
 
 
+@pytest.mark.integration
 class TestDataTransferModuleInterface:
     """Test Data Transfer module interface compatibility."""
 
@@ -108,6 +119,7 @@ class TestDataTransferModuleInterface:
             pytest.skip("BaseImporter not available")
 
 
+@pytest.mark.integration
 class TestTenantModuleInterface:
     """Test Tenant module interface compatibility."""
 
@@ -127,6 +139,7 @@ class TestTenantModuleInterface:
             pytest.skip("Tenant context not available")
 
 
+@pytest.mark.integration
 class TestSecretsModuleInterface:
     """Test Secrets module interface compatibility."""
 
@@ -151,6 +164,7 @@ class TestSecretsModuleInterface:
             pytest.skip("SecretsManager not available")
 
 
+@pytest.mark.integration
 class TestAnalyticsModuleInterface:
     """Test Analytics module interface compatibility."""
 
@@ -172,6 +186,7 @@ class TestAnalyticsModuleInterface:
             pytest.skip("Analytics collector not available")
 
 
+@pytest.mark.integration
 class TestModuleInterfaceCompatibility:
     """Test compatibility between module interfaces."""
 
@@ -239,6 +254,7 @@ class TestModuleInterfaceCompatibility:
             assert isinstance(expected_params, list)
 
 
+@pytest.mark.integration
 class TestServiceDependencyCompatibility:
     """Test that services can depend on each other properly."""
 
@@ -306,6 +322,7 @@ class TestServiceDependencyCompatibility:
         assert event["event"] == "user_login"
 
 
+@pytest.mark.integration
 class TestModuleConfigurationCompatibility:
     """Test module configuration compatibility."""
 
@@ -351,6 +368,7 @@ class TestModuleConfigurationCompatibility:
             assert flag_name.count("_") >= 1  # Should have module prefix
 
 
+@pytest.mark.integration
 class TestCrossModuleDataFlow:
     """Test data flow between modules."""
 
@@ -419,7 +437,3 @@ class TestCrossModuleDataFlow:
 
 
 # Integration test markers and configuration
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.slow,  # These tests may be slower due to module loading
-]

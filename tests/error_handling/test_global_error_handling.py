@@ -1,3 +1,4 @@
+
 """
 Global error handling tests across all modules.
 
@@ -9,13 +10,17 @@ from datetime import timezone
 
 import pytest
 
+
 # Mark all tests as integration - they test real error scenarios with full app
-pytestmark = pytest.mark.integration
 
 # ============================================================================
 # Error Handling Pattern Tests
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.integration
 
 class TestGlobalErrorHandling:
     """Test error handling patterns across all endpoints."""

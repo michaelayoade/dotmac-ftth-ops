@@ -112,6 +112,7 @@ def app_with_router(async_db_session: AsyncSession, admin_user_id: UUID):
     return app
 
 
+@pytest.mark.integration
 class TestPermissionEndpoints:
     """Test permission management endpoints."""
 
@@ -200,6 +201,7 @@ class TestPermissionEndpoints:
         assert response.status_code == 404
 
 
+@pytest.mark.integration
 class TestRoleEndpoints:
     """Test role management endpoints."""
 
@@ -368,6 +370,7 @@ class TestRoleEndpoints:
         assert response.status_code == 403
 
 
+@pytest.mark.integration
 class TestUserPermissionManagement:
     """Test user permission management endpoints."""
 
@@ -468,6 +471,7 @@ class TestUserPermissionManagement:
         assert response.status_code in [204, 400, 500]
 
 
+@pytest.mark.integration
 class TestRoleUpdateEdgeCases:
     """Test role update edge cases for router coverage."""
 
@@ -515,6 +519,7 @@ class TestRoleUpdateEdgeCases:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestAdditionalRouterCoverage:
     """Additional tests to improve router coverage."""
 

@@ -84,6 +84,7 @@ async def sample_audit_activities(async_db_session: AsyncSession):
 # ==================== LogsService Tests ====================
 
 
+@pytest.mark.integration
 class TestLogsServiceInitialization:
     """Test LogsService initialization."""
 
@@ -98,6 +99,7 @@ class TestLogsServiceInitialization:
         assert hasattr(service, "get_available_services")
 
 
+@pytest.mark.integration
 class TestGetLogsMethod:
     """Test the get_logs method."""
 
@@ -177,6 +179,7 @@ class TestGetLogsMethod:
         assert len(response.logs) == 0
 
 
+@pytest.mark.integration
 class TestGetLogStatsMethod:
     """Test the get_log_stats method."""
 
@@ -222,6 +225,7 @@ class TestGetLogStatsMethod:
         assert stats is not None
 
 
+@pytest.mark.integration
 class TestGetAvailableServicesMethod:
     """Test the get_available_services method."""
 
@@ -258,6 +262,7 @@ class TestGetAvailableServicesMethod:
 # ==================== Error Handling Tests ====================
 
 
+@pytest.mark.integration
 class TestLogsServiceErrorHandling:
     """Test error handling in LogsService."""
 
@@ -296,6 +301,7 @@ class TestLogsServiceErrorHandling:
 # ==================== Combined Filter Tests ====================
 
 
+@pytest.mark.integration
 class TestCombinedFilters:
     """Test using multiple filters together."""
 

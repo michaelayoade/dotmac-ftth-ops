@@ -10,8 +10,16 @@ from dotmac.platform.events.models import Event, EventStatus
 from dotmac.platform.events.storage import EventStorage
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class FakeRedis:
     """Minimal Redis client shim for testing indexing logic."""
+
 
     def __init__(self) -> None:
         self.store: dict[str, str] = {}

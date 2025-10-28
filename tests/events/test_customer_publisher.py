@@ -11,8 +11,16 @@ import pytest
 from dotmac.platform.events.customer_publisher import CustomerEventPublisher
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class TestCustomerEventPublisher:
     """Test CustomerEventPublisher class."""
+
 
     @pytest.fixture
     def mock_redis(self):

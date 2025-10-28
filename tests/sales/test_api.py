@@ -1,8 +1,11 @@
+
 """
 Integration tests for Sales Order API
 """
 
 from decimal import Decimal
+
+import pytest
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
@@ -11,6 +14,9 @@ from dotmac.platform.sales.models import Order, OrderStatus, ServiceActivation
 
 from .conftest import create_order, create_service_activation
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestPublicOrderAPI:
     """Tests for public order API endpoints"""

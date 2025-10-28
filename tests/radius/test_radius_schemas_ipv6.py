@@ -15,6 +15,7 @@ from dotmac.platform.radius.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestRADIUSSubscriberCreateIPv6:
     """Test RADIUS subscriber creation with IPv6 support."""
 
@@ -131,6 +132,7 @@ class TestRADIUSSubscriberCreateIPv6:
         assert subscriber.username == "testuser"
 
 
+@pytest.mark.unit
 class TestRADIUSSubscriberUpdateIPv6:
     """Test RADIUS subscriber update with IPv6 support."""
 
@@ -166,6 +168,7 @@ class TestRADIUSSubscriberUpdateIPv6:
         assert update.framed_ipv4_address == "10.3.3.3"
 
 
+@pytest.mark.unit
 class TestRADIUSSubscriberResponseIPv6:
     """Test RADIUS subscriber response with IPv6."""
 
@@ -205,6 +208,7 @@ class TestRADIUSSubscriberResponseIPv6:
         assert response.framed_ip_address == "192.168.1.50"
 
 
+@pytest.mark.unit
 class TestRADIUSSessionResponseIPv6:
     """Test RADIUS session response with IPv6."""
 
@@ -264,6 +268,7 @@ class TestRADIUSSessionResponseIPv6:
         assert session.framedipv6address == "2001:db8::100"
 
 
+@pytest.mark.unit
 class TestRADIUSEdgeCases:
     """Test edge cases and special scenarios."""
 

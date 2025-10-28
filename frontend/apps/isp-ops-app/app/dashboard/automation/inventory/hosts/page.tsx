@@ -273,7 +273,7 @@ vlan_range: 100-200`}
 
 export default function InventoryHostsPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <InventoryHostsPageContent />
     </RouteGuard>
   );

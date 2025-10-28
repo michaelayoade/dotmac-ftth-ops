@@ -65,6 +65,7 @@ def no_scope_user():
     )
 
 
+@pytest.mark.integration
 class TestRequireAuth:
     """Test require_auth dependency."""
 
@@ -88,6 +89,7 @@ class TestRequireAuth:
         assert callable(require_auth)
 
 
+@pytest.mark.integration
 class TestRequireAdmin:
     """Test require_admin dependency."""
 
@@ -134,6 +136,7 @@ class TestRequireAdmin:
         assert "admin" in result.roles
 
 
+@pytest.mark.integration
 class TestRequireScopes:
     """Test require_scopes dependency factory."""
 
@@ -215,6 +218,7 @@ class TestRequireScopes:
         assert callable(check_func)
 
 
+@pytest.mark.integration
 class TestRequireRoles:
     """Test require_roles dependency factory."""
 
@@ -304,6 +308,7 @@ class TestRequireRoles:
         assert callable(check_func)
 
 
+@pytest.mark.integration
 class TestSecurityScheme:
     """Test security scheme configuration."""
 
@@ -321,6 +326,7 @@ class TestSecurityScheme:
         assert hasattr(security, "auto_error")
 
 
+@pytest.mark.integration
 class TestDependencyIntegration:
     """Test dependency integration scenarios."""
 
@@ -372,6 +378,7 @@ class TestDependencyIntegration:
             check_scope(user_with_empty)
 
 
+@pytest.mark.integration
 class TestErrorMessages:
     """Test error messages are appropriate."""
 
@@ -404,6 +411,7 @@ class TestErrorMessages:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestDependencyFactoryPattern:
     """Test the factory pattern used in require_scopes and require_roles."""
 
@@ -460,6 +468,7 @@ class TestDependencyFactoryPattern:
         assert result == regular_user
 
 
+@pytest.mark.integration
 class TestUserInfoEdgeCases:
     """Test edge cases with UserInfo objects."""
 

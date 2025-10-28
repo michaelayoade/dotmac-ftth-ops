@@ -18,6 +18,7 @@ from dotmac.platform.core import (  # Exceptions; Models
 )
 
 
+@pytest.mark.unit
 class TestCoreExceptions:
     """Test core exception classes."""
 
@@ -93,12 +94,14 @@ class TestCoreExceptions:
             assert str(e.__cause__) == "Original error"
 
 
+@pytest.mark.unit
 class TestBaseModel:
     """Test BaseModel class."""
 
     def test_base_model_creation(self):
         """Test creating a BaseModel instance."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             name: str
             value: int
@@ -110,6 +113,7 @@ class TestBaseModel:
     def test_base_model_from_attributes(self):
         """Test BaseModel with from_attributes config."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             name: str
             value: int
@@ -127,6 +131,7 @@ class TestBaseModel:
     def test_base_model_validate_assignment(self):
         """Test BaseModel with validate_assignment config."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             name: str
             value: int
@@ -140,6 +145,7 @@ class TestBaseModel:
     def test_base_model_dict_export(self):
         """Test exporting BaseModel to dict."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             name: str
             value: int
@@ -151,6 +157,7 @@ class TestBaseModel:
     def test_base_model_json_export(self):
         """Test exporting BaseModel to JSON."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             name: str
             value: int
@@ -161,6 +168,7 @@ class TestBaseModel:
         assert '"value":42' in json_str
 
 
+@pytest.mark.unit
 class TestTenantContext:
     """Test TenantContext model."""
 
@@ -286,6 +294,7 @@ class TestTenantContext:
             TenantContext(tenant_id="test", metadata="not a dict")
 
 
+@pytest.mark.unit
 class TestCoreIntegration:
     """Test integration between core components."""
 

@@ -70,6 +70,7 @@ def mock_redis_unavailable():
         yield
 
 
+@pytest.mark.integration
 class TestSessionManagerProductionMode:
     """Test SessionManager behavior in production mode."""
 
@@ -150,6 +151,7 @@ class TestSessionManagerProductionMode:
             assert exc_info.value.status_code == 503
 
 
+@pytest.mark.integration
 class TestSessionRevocationCrosssWorker:
     """
     Test session revocation works across workers in production.
@@ -223,6 +225,7 @@ class TestSessionRevocationCrosssWorker:
         assert session_on_worker1 is not None  # Still there!
 
 
+@pytest.mark.integration
 class TestSessionManagerFallbackBehavior:
     """Test fallback behavior in different configurations."""
 
@@ -279,6 +282,7 @@ class TestSessionManagerFallbackBehavior:
         assert session_id in session_manager._fallback_store
 
 
+@pytest.mark.integration
 class TestSessionManagerHealthCheck:
     """Test SessionManager health awareness."""
 
@@ -313,6 +317,7 @@ class TestSessionManagerHealthCheck:
             assert client is None
 
 
+@pytest.mark.integration
 class TestGlobalSessionManagerConfiguration:
     """Test that global session_manager respects production settings."""
 

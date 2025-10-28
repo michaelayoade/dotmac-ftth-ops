@@ -1,4 +1,5 @@
 """Tests for the celery_app module."""
+import pytest
 
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from dotmac.platform.celery_app import (
 )
 
 
+@pytest.mark.integration
 class TestCeleryApp:
     """Test the Celery application configuration."""
 
@@ -52,6 +54,7 @@ class TestCeleryApp:
         assert "dotmac.platform.tasks" in celery_app.conf.include
 
 
+@pytest.mark.integration
 class TestCeleryInstrumentationHooks:
     """Test Celery instrumentation setup hooks."""
 
@@ -100,6 +103,7 @@ class TestCeleryInstrumentationHooks:
         assert "queues" in info_call[1]
 
 
+@pytest.mark.integration
 class TestCeleryAppIntegration:
     """Integration tests for Celery app."""
 

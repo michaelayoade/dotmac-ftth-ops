@@ -58,6 +58,7 @@ def checkpoint_data(progress_info):
     )
 
 
+@pytest.mark.unit
 class TestCheckpointData:
     """Test CheckpointData functionality."""
 
@@ -80,6 +81,7 @@ class TestCheckpointData:
         assert checkpoint.timestamp == timestamp
 
 
+@pytest.mark.unit
 class TestProgressStore:
     """Test ProgressStore base class."""
 
@@ -101,6 +103,7 @@ class TestProgressStore:
             await store.list_operations()
 
 
+@pytest.mark.unit
 class TestFileProgressStore:
     """Test FileProgressStore functionality."""
 
@@ -219,6 +222,7 @@ class TestFileProgressStore:
             await store.load("invalid-op")
 
 
+@pytest.mark.unit
 class TestCheckpointStore:
     """Test CheckpointStore functionality."""
 
@@ -308,6 +312,7 @@ class TestCheckpointStore:
             await store.load_checkpoint("invalid-op")
 
 
+@pytest.mark.unit
 class TestProgressTracker:
     """Test ProgressTracker functionality."""
 
@@ -599,6 +604,7 @@ class TestProgressTracker:
         assert task.cancelled()
 
 
+@pytest.mark.unit
 class TestResumableOperation:
     """Test ResumableOperation context manager."""
 
@@ -694,6 +700,7 @@ class TestResumableOperation:
         tracker.complete.assert_called_once()
 
 
+@pytest.mark.unit
 class TestUtilityFunctions:
     """Test utility functions."""
 
@@ -756,6 +763,7 @@ class TestUtilityFunctions:
         assert count == 0
 
 
+@pytest.mark.unit
 class TestIntegration:
     """Integration tests for progress tracking."""
 

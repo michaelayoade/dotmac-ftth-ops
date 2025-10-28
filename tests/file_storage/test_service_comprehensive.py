@@ -24,6 +24,7 @@ from dotmac.platform.file_storage.service import (
 # Mark all async tests in this module
 
 
+@pytest.mark.unit
 class TestFileMetadata:
     """Test FileMetadata model."""
 
@@ -84,6 +85,7 @@ class TestFileMetadata:
         assert metadata.metadata == {}
 
 
+@pytest.mark.unit
 class TestMemoryFileStorage:
     """Test in-memory storage backend."""
 
@@ -228,6 +230,7 @@ class TestMemoryFileStorage:
         assert len(metadata["checksum"]) == 64  # SHA256 hex length
 
 
+@pytest.mark.unit
 class TestLocalFileStorage:
     """Test local filesystem storage backend."""
 
@@ -332,6 +335,7 @@ class TestLocalFileStorage:
         assert metadata["metadata"]["persistent"] is True
 
 
+@pytest.mark.unit
 class TestFileStorageService:
     """Test unified FileStorageService."""
 
@@ -438,6 +442,7 @@ class TestFileStorageService:
         assert success is False
 
 
+@pytest.mark.unit
 class TestStorageBackends:
     """Test storage backend selection."""
 
@@ -461,6 +466,7 @@ class TestStorageBackends:
         assert data is None
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation across backends."""
 
@@ -503,6 +509,7 @@ class TestTenantIsolation:
             shutil.rmtree(temp_dir, ignore_errors=True)
 
 
+@pytest.mark.unit
 class TestFileOperations:
     """Test various file operations."""
 
@@ -551,6 +558,7 @@ class TestFileOperations:
             assert metadata["content_type"] == content_type
 
 
+@pytest.mark.unit
 class TestLocalFileStorageEdgeCases:
     """Test edge cases in LocalFileStorage."""
 
@@ -645,6 +653,7 @@ class TestLocalFileStorageEdgeCases:
         assert len(files) == 0
 
 
+@pytest.mark.unit
 class TestMinIOFileStorageEdgeCases:
     """Test edge cases in MinIOFileStorage."""
 
@@ -934,6 +943,7 @@ class TestMinIOFileStorageEdgeCases:
         assert mock_client.delete_file.call_count == 2
 
 
+@pytest.mark.unit
 class TestFileStorageServiceMinio:
     """Test FileStorageService with MinIO backend."""
 
@@ -959,6 +969,7 @@ class TestFileStorageServiceMinio:
             assert service.backend_type == StorageBackend.MINIO
 
 
+@pytest.mark.unit
 class TestFileStorageServiceMetadataUpdate:
     """Test metadata update functionality."""
 
@@ -1017,6 +1028,7 @@ class TestFileStorageServiceMetadataUpdate:
             assert success is True
 
 
+@pytest.mark.unit
 class TestGetStorageService:
     """Test global storage service getter."""
 

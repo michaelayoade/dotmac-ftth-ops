@@ -1,3 +1,4 @@
+
 """
 Tests for avatar upload endpoint.
 """
@@ -14,6 +15,13 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def app():

@@ -1,6 +1,7 @@
 """
 Test tenant configuration for single and multi-tenant modes.
 """
+import pytest
 
 import os
 from unittest.mock import patch
@@ -13,6 +14,7 @@ from dotmac.platform.tenant import (
 )
 
 
+@pytest.mark.unit
 class TestTenantConfiguration:
     """Test tenant configuration behavior."""
 

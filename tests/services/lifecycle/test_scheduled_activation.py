@@ -1,3 +1,4 @@
+
 """
 Tests for scheduled service activation workflows.
 
@@ -12,12 +13,19 @@ import pytest
 import pytest_asyncio
 
 from dotmac.platform.services.lifecycle.models import (
+
+
+
     ServiceInstance,
     ServiceStatus,
     ServiceType,
 )
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest_asyncio.fixture
 async def provisioned_service(async_session) -> ServiceInstance:

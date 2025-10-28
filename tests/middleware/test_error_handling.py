@@ -1,3 +1,4 @@
+
 """
 Middleware and Error Handling Testing - Phase 2
 Comprehensive testing of middleware components, error handling, and request/response processing.
@@ -13,8 +14,17 @@ from unittest.mock import Mock
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
 
 class ErrorType(Enum):
     """Error type enumeration"""

@@ -27,6 +27,7 @@ from dotmac.platform.billing.cache import (
 )
 
 
+@pytest.mark.unit
 class TestCacheKeyGeneration:
     """Test cache key generation methods."""
 
@@ -111,6 +112,7 @@ class TestCacheKeyGeneration:
         assert hash1 != hash2
 
 
+@pytest.mark.unit
 class TestBillingCacheMetrics:
     """Test cache metrics tracking."""
 
@@ -208,6 +210,7 @@ class TestBillingCacheMetrics:
         assert metrics.last_reset > old_reset_time
 
 
+@pytest.mark.unit
 class TestBillingCacheConfig:
     """Test cache configuration."""
 
@@ -223,6 +226,7 @@ class TestBillingCacheConfig:
         assert config.ENABLE_L2_CACHE is True
 
 
+@pytest.mark.unit
 class TestBillingCacheL1Operations:
     """Test L1 in-memory cache operations."""
 
@@ -294,6 +298,7 @@ class TestBillingCacheL1Operations:
             assert isinstance(cache.subscription_cache, dict)
 
 
+@pytest.mark.unit
 class TestBillingCacheMultiTierOperations:
     """Test multi-tier cache operations."""
 
@@ -433,6 +438,7 @@ class TestBillingCacheMultiTierOperations:
             assert cache.metrics.deletes == 1
 
 
+@pytest.mark.unit
 class TestBillingCacheInvalidation:
     """Test cache invalidation strategies."""
 
@@ -517,6 +523,7 @@ class TestBillingCacheInvalidation:
         assert cache._match_pattern("billing:product:1", "billing:product:?") is True
 
 
+@pytest.mark.unit
 class TestBillingCacheErrorHandling:
     """Test cache error handling."""
 
@@ -577,6 +584,7 @@ class TestBillingCacheErrorHandling:
             assert cache.metrics.errors == 1
 
 
+@pytest.mark.unit
 class TestCacheDecorators:
     """Test cache decorator functions."""
 
@@ -684,6 +692,7 @@ class TestCacheDecorators:
             assert result == {"name": "Updated Product"}
 
 
+@pytest.mark.unit
 class TestCacheMetricsAndMonitoring:
     """Test cache metrics and monitoring."""
 
@@ -762,6 +771,7 @@ class TestGlobalCacheInstance:
         assert isinstance(cache, BillingCache)
 
 
+@pytest.mark.unit
 class TestCacheEnumTypes:
     """Test cache enum types."""
 

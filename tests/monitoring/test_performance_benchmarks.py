@@ -1,3 +1,4 @@
+
 """
 Performance and integration tests for monitoring benchmarks.
 
@@ -17,6 +18,8 @@ import psutil
 import pytest
 
 from dotmac.platform.monitoring.benchmarks import (
+
+
     BenchmarkManager,
     BenchmarkStatus,
     BenchmarkSuite,
@@ -28,9 +31,13 @@ from dotmac.platform.monitoring.benchmarks import (
 )
 from dotmac.platform.monitoring.integrations import PrometheusIntegration
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestPerformanceBenchmarkRealism:
     """Test that benchmarks produce realistic and consistent results."""
 
@@ -150,6 +157,7 @@ class TestPerformanceBenchmarkRealism:
             assert avg_latency < 1000  # Should be less than 1 second
 
 
+@pytest.mark.integration
 class TestBenchmarkIntegrationWithMonitoring:
     """Test integration between benchmarks and monitoring systems."""
 
@@ -221,6 +229,7 @@ class TestBenchmarkIntegrationWithMonitoring:
         assert total_benchmarks_metric.value == 2
 
 
+@pytest.mark.integration
 class TestBenchmarkManagerWorkflows:
     """Test complete benchmark manager workflows."""
 
@@ -336,6 +345,7 @@ class TestBenchmarkManagerWorkflows:
         assert all(r.status == BenchmarkStatus.COMPLETED for r in results)
 
 
+@pytest.mark.integration
 class TestBenchmarkResourceMonitoring:
     """Test monitoring of system resources during benchmark execution."""
 
@@ -405,6 +415,7 @@ class TestBenchmarkResourceMonitoring:
         assert abs(result.duration_seconds - actual_time) < 0.5
 
 
+@pytest.mark.integration
 @pytest.mark.integration
 class TestEndToEndBenchmarkingWorkflow:
     """End-to-end integration tests for complete benchmarking workflows."""

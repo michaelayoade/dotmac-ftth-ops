@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for billing report service integration.
 
@@ -11,12 +12,17 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dotmac.platform.billing.reports.service import (
+
+
     BillingReportService,
     ReportPeriod,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db():
@@ -39,6 +45,7 @@ def report_service(mock_db):
     return service
 
 
+@pytest.mark.integration
 class TestExecutiveSummaryReport:
     """Test executive summary report generation."""
 
@@ -199,6 +206,7 @@ class TestExecutiveSummaryReport:
         assert report["key_metrics"]["customers"]["growth_rate"] == 50.0
 
 
+@pytest.mark.integration
 class TestSpecializedReports:
     """Test specialized report generation methods."""
 
@@ -340,6 +348,7 @@ class TestSpecializedReports:
         )
 
 
+@pytest.mark.integration
 class TestCustomReports:
     """Test custom report generation."""
 
@@ -431,6 +440,7 @@ class TestCustomReports:
         assert report["configuration"] == report_config
 
 
+@pytest.mark.integration
 class TestReportPeriodScenarios:
     """Test various report period scenarios."""
 
@@ -503,6 +513,7 @@ class TestReportPeriodScenarios:
         assert start.month in [1, 4, 7, 10]
 
 
+@pytest.mark.integration
 class TestEdgeCases:
     """Test edge cases and error scenarios."""
 

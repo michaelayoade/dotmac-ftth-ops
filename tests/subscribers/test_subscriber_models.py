@@ -8,6 +8,14 @@ from dotmac.platform.services.lifecycle.models import ServiceType
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 async def test_subscriber_defaults(async_db_session):
     """Persisting a subscriber should populate default status and service type."""

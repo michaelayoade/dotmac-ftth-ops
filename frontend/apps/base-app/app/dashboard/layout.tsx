@@ -48,7 +48,9 @@ import {
   FileCode,
   ArrowLeftRight,
   ShoppingCart,
+  Briefcase,
   Ticket,
+  Plug,
   GitBranch,
   Puzzle,
 } from "lucide-react";

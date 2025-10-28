@@ -28,6 +28,7 @@ from tests.billing.payments.conftest_service import (
 from tests.fixtures.async_db import create_mock_async_session
 
 
+@pytest.mark.unit
 class TestRetryFailedPaymentHandlers:
     """Tests for retry_failed_payment calling success/failure handlers"""
 
@@ -105,9 +106,10 @@ class TestRetryFailedPaymentHandlers:
         assert service._handle_payment_success.called
         assert service._handle_payment_failure.call_count == 0
 
-        # Verify invoice_ids were passed
+        # Verify the payment entity was passed to the handler
         call_args = service._handle_payment_success.call_args
-        assert call_args[1]["invoice_ids"] == ["inv_1"]
+        # The handler is called with the payment entity as the first argument
+        assert call_args[0][0].payment_id == "pay_123"
 
     @pytest.mark.asyncio
     async def test_retry_failure_calls_handle_payment_failure(self):
@@ -177,6 +179,7 @@ class TestRetryFailedPaymentHandlers:
         assert service._handle_payment_success.call_count == 0
 
 
+@pytest.mark.unit
 class TestRetryMissingProviderHandling:
     """Tests for retry path respecting require_payment_plugin setting"""
 
@@ -262,6 +265,7 @@ class TestRetryMissingProviderHandling:
             assert service._handle_payment_success.called
 
 
+@pytest.mark.unit
 class TestRefundDefaultAmount:
     """Tests for refund_payment default amount using remaining balance"""
 
@@ -366,6 +370,7 @@ class TestRefundDefaultAmount:
             assert provider_call[0][1] == 5000
 
 
+@pytest.mark.unit
 class TestBankAccountsRouter:
     """Tests for bank_accounts router fixes"""
 

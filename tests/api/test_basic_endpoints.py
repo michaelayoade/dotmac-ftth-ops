@@ -1,3 +1,4 @@
+
 """
 Basic API Endpoint Testing
 Simple tests for API functionality to build coverage quickly.
@@ -10,8 +11,17 @@ from unittest.mock import patch
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
 
 class SimpleAPIKeyService:
     """

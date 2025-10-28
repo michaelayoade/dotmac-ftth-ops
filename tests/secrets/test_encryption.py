@@ -14,6 +14,7 @@ from dotmac.platform.secrets.encryption import (
 )
 
 
+@pytest.mark.unit
 class TestDataClassification:
     """Test DataClassification enum."""
 
@@ -37,6 +38,7 @@ class TestDataClassification:
         assert classification == "confidential"
 
 
+@pytest.mark.unit
 class TestEncryptedField:
     """Test EncryptedField dataclass."""
 
@@ -89,6 +91,7 @@ class TestEncryptedField:
         assert field.created_at == custom_time
 
 
+@pytest.mark.unit
 class TestSymmetricEncryptionService:
     """Test SymmetricEncryptionService."""
 
@@ -359,6 +362,7 @@ class TestSymmetricEncryptionService:
             assert result.metadata["classification"] == classification.value
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
@@ -416,6 +420,7 @@ class TestEdgeCases:
         assert service.decrypt(encrypted2) == "test2"
 
 
+@pytest.mark.unit
 class TestModuleExports:
     """Test module exports."""
 

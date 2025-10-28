@@ -1,3 +1,4 @@
+
 """
 Tests for tenant foreign key constraints in contacts module.
 
@@ -17,14 +18,10 @@ import pytest
 from sqlalchemy import inspect
 from sqlalchemy.exc import IntegrityError
 
+
 # Mark all tests in this module as integration tests requiring PostgreSQL
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.skipif(
-        os.getenv("DATABASE_URL", "sqlite://").startswith("sqlite"),
-        reason="Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE",
-    ),
-]
+
+
 
 from dotmac.platform.contacts.models import (  # noqa: E402
     Contact,
@@ -36,6 +33,16 @@ from dotmac.platform.contacts.models import (  # noqa: E402
 )
 from dotmac.platform.tenant.models import Tenant  # noqa: E402
 
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        os.getenv("DATABASE_URL", "sqlite://").startswith("sqlite"),
+        reason="Requires PostgreSQL - SQLite doesn't fully support FK constraints and CASCADE",
+    ),
+]
 
 @pytest.mark.asyncio
 class TestContactTenantForeignKeys:

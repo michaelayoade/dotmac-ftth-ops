@@ -11,6 +11,7 @@ from dotmac.platform.billing.mappers import (
 )
 
 
+@pytest.mark.unit
 class TestInvoiceImportSchema:
     """Test InvoiceImportSchema validation."""
 
@@ -137,6 +138,7 @@ class TestInvoiceImportSchema:
             InvoiceImportSchema(customer_id="cust_123", amount=100.0, discount_rate=101)
 
 
+@pytest.mark.unit
 class TestSubscriptionImportSchema:
     """Test SubscriptionImportSchema validation."""
 

@@ -10,12 +10,17 @@ from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.models import Permission, Role
 from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.mark.asyncio
 class TestUserPermissions:
     """Test user permission retrieval and checking."""
+
 
     @pytest.fixture
     def mock_session(self):
@@ -586,6 +591,7 @@ class TestHelperMethods:
         rbac_service.db.add.assert_called_once()
 
 
+@pytest.mark.integration
 class TestGetRBACService:
     """Test dependency function."""
 

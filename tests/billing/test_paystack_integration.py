@@ -17,6 +17,7 @@ import pytest
 from dotmac.platform.plugins.builtin.paystack_plugin import PaystackPaymentPlugin
 
 
+@pytest.mark.integration
 class TestPaystackPluginConfiguration:
     """Test plugin configuration and initialization"""
 
@@ -112,6 +113,7 @@ class TestPaystackPluginConfiguration:
             )
 
 
+@pytest.mark.integration
 class TestPaystackPaymentInitialization:
     """Test payment initialization and transaction creation"""
 
@@ -263,6 +265,7 @@ class TestPaystackPaymentInitialization:
                 )
 
 
+@pytest.mark.integration
 class TestPaystackTransactionVerification:
     """Test transaction verification"""
 
@@ -361,6 +364,7 @@ class TestPaystackTransactionVerification:
                 await plugin.verify_payment("invalid_ref")
 
 
+@pytest.mark.integration
 class TestPaystackWebhookValidation:
     """Test webhook signature validation"""
 
@@ -435,6 +439,7 @@ class TestPaystackWebhookValidation:
         assert result["amount"] == 100.00  # Converted from kobo
 
 
+@pytest.mark.integration
 class TestPaystackRefunds:
     """Test refund processing"""
 
@@ -538,6 +543,7 @@ class TestPaystackRefunds:
                 )
 
 
+@pytest.mark.integration
 class TestPaystackEdgeCases:
     """Test edge cases and error handling"""
 

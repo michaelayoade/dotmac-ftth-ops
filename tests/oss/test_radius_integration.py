@@ -1,3 +1,4 @@
+
 """
 Comprehensive RADIUS Service Integration Tests.
 
@@ -15,6 +16,13 @@ from uuid import uuid4
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestRADIUSSubscriberLifecycle:

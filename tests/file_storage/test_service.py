@@ -19,6 +19,7 @@ from dotmac.platform.file_storage.service import (
 )
 
 
+@pytest.mark.unit
 class TestMemoryFileStorage:
     """Test in-memory file storage."""
 
@@ -173,6 +174,7 @@ class TestMemoryFileStorage:
         assert metadata is None
 
 
+@pytest.mark.unit
 class TestLocalFileStorage:
     """Test local filesystem storage."""
 
@@ -401,6 +403,7 @@ class InMemoryMinioClient:
         self._store[(tenant, destination_path)] = data
 
 
+@pytest.mark.unit
 class TestMinIOFileStorage:
     """Test MinIO storage backend."""
 
@@ -518,6 +521,7 @@ class TestMinIOFileStorage:
         assert metadata_key not in in_memory_minio_client._store
 
 
+@pytest.mark.unit
 class TestFileStorageService:
     """Test unified file storage service."""
 
@@ -641,6 +645,7 @@ class TestFileStorageService:
         assert success is False
 
 
+@pytest.mark.unit
 class TestEndToEndFileOperations:
     """End-to-end tests for file operations."""
 

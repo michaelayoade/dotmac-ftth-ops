@@ -12,6 +12,7 @@ from dotmac.platform.analytics.base import CounterMetric, GaugeMetric, Histogram
 from dotmac.platform.analytics.otel_collector import OpenTelemetryCollector, OTelConfig
 
 
+@pytest.mark.unit
 class TestOpenTelemetryCollectorWithMeter:
     """Test OpenTelemetryCollector methods that require a working meter."""
 

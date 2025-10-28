@@ -1,3 +1,4 @@
+
 """
 Tests for GraphQL analytics queries.
 
@@ -13,6 +14,13 @@ import pytest_asyncio
 from dotmac.platform.graphql.schema import schema
 from dotmac.platform.version import get_version
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest_asyncio.fixture
 async def graphql_client():

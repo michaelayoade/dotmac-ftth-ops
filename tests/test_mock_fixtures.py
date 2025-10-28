@@ -1,3 +1,4 @@
+
 """
 Comprehensive mock fixtures for external dependencies.
 These fixtures avoid needing real Docker services for unit tests.
@@ -9,6 +10,13 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_openbao_client():

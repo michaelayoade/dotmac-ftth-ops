@@ -20,6 +20,9 @@ from dotmac.platform.auth.metrics_router import router as metrics_router
 from dotmac.platform.user_management.models import User
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def app_with_metrics():
     """Create FastAPI app with metrics router."""

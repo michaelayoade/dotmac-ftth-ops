@@ -66,6 +66,7 @@ def basic_plan():
     )
 
 
+@pytest.mark.unit
 class TestPlanValidatorSpeedValidation:
     """Test speed configuration validation."""
 
@@ -168,6 +169,7 @@ class TestPlanValidatorSpeedValidation:
         )
 
 
+@pytest.mark.unit
 class TestPlanValidatorDataCapValidation:
     """Test data cap and throttle policy validation."""
 
@@ -311,6 +313,7 @@ class TestPlanValidatorDataCapValidation:
         assert any(r.check_name == "fup_below_cap" and not r.passed for r in result.results)
 
 
+@pytest.mark.unit
 class TestPlanValidatorPricingValidation:
     """Test pricing validation."""
 
@@ -376,6 +379,7 @@ class TestPlanValidatorPricingValidation:
         )
 
 
+@pytest.mark.unit
 class TestPlanValidatorTimeRestrictionsValidation:
     """Test time-based restrictions validation."""
 
@@ -420,6 +424,7 @@ class TestPlanValidatorTimeRestrictionsValidation:
         assert any(r.check_name == "time_range_configured" and r.passed for r in result.results)
 
 
+@pytest.mark.unit
 class TestPlanValidatorQoSValidation:
     """Test QoS settings validation."""
 
@@ -481,6 +486,7 @@ class TestPlanValidatorQoSValidation:
         assert "low" in qos_result.message.lower()
 
 
+@pytest.mark.unit
 class TestPlanValidatorUsageSimulation:
     """Test usage simulation calculations."""
 
@@ -579,6 +585,7 @@ class TestPlanValidatorUsageSimulation:
         assert result.peak_upload_speed_mbps == Decimal("100")
 
 
+@pytest.mark.unit
 class TestPlanValidatorComprehensive:
     """Test comprehensive validation with all checks enabled."""
 

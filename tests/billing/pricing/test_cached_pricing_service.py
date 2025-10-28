@@ -68,6 +68,7 @@ def cached_pricing_engine(mock_cache):
         return engine
 
 
+@pytest.mark.unit
 class TestGetPricingRule:
     """Test cached pricing rule retrieval."""
 
@@ -116,6 +117,7 @@ class TestGetPricingRule:
             assert "pricing_rule:rule-123" in cache_call[1]["tags"]
 
 
+@pytest.mark.unit
 class TestListPricingRules:
     """Test cached pricing rules listing."""
 
@@ -161,6 +163,7 @@ class TestListPricingRules:
             assert "active" in cache_key
 
 
+@pytest.mark.unit
 class TestCreatePricingRule:
     """Test pricing rule creation with cache invalidation."""
 
@@ -196,6 +199,7 @@ class TestCreatePricingRule:
             assert any("pric" in pattern.lower() for pattern in all_calls)
 
 
+@pytest.mark.unit
 class TestUpdatePricingRule:
     """Test pricing rule updates with cache invalidation."""
 
@@ -223,6 +227,7 @@ class TestUpdatePricingRule:
             assert mock_cache.invalidate_pattern.called
 
 
+@pytest.mark.unit
 class TestCalculatePrice:
     """Test price calculation with caching."""
 
@@ -290,6 +295,7 @@ class TestCalculatePrice:
             mock_cache.set.assert_called_once()
 
 
+@pytest.mark.unit
 class TestDeletePricingRule:
     """Test pricing rule deletion with cache cleanup."""
 
@@ -325,6 +331,7 @@ class TestDeletePricingRule:
             )
 
 
+@pytest.mark.unit
 class TestCacheKeyGeneration:
     """Test cache key generation for different operations."""
 
@@ -339,6 +346,7 @@ class TestCacheKeyGeneration:
         assert "rule-123" in key
 
 
+@pytest.mark.unit
 class TestCacheTTL:
     """Test cache TTL configuration."""
 
@@ -363,6 +371,7 @@ class TestCacheTTL:
             assert ttl_arg > 0
 
 
+@pytest.mark.unit
 class TestBatchOperations:
     """Test batch pricing operations with cache optimization."""
 
@@ -431,6 +440,7 @@ class TestBatchOperations:
             assert mock_calc.call_count == 1
 
 
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling in cached operations."""
 

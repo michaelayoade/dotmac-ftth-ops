@@ -595,7 +595,7 @@ function PresetsPageContent() {
 
 export default function PresetsPage() {
   return (
-    <RouteGuard requiredPermission="devices.write">
+    <RouteGuard permission="devices.write">
       <PresetsPageContent />
     </RouteGuard>
   );

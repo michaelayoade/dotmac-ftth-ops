@@ -22,6 +22,7 @@ def netbox_client():
         return client
 
 
+@pytest.mark.unit
 class TestNetBoxDualStackAllocation:
     """Test dual-stack IP allocation."""
 
@@ -132,6 +133,7 @@ class TestNetBoxDualStackAllocation:
         assert ipv6["id"] == 200
 
 
+@pytest.mark.unit
 class TestNetBoxBulkAllocation:
     """Test bulk IP allocation."""
 
@@ -208,6 +210,7 @@ class TestNetBoxBulkAllocation:
         assert result[2]["id"] == 3
 
 
+@pytest.mark.unit
 class TestNetBoxAllocationScenarios:
     """Test real-world allocation scenarios."""
 
@@ -298,6 +301,7 @@ class TestNetBoxAllocationScenarios:
         assert "2001:db8:cafe::1" in result["address"]
 
 
+@pytest.mark.unit
 class TestNetBoxAllocationEdgeCases:
     """Test edge cases in IP allocation."""
 

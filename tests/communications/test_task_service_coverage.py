@@ -18,6 +18,7 @@ from dotmac.platform.communications.task_service import (
 )
 
 
+@pytest.mark.integration
 class TestSendEmailAsync:
     """Tests for _send_email_async helper."""
 
@@ -55,6 +56,7 @@ class TestSendEmailAsync:
         assert result.status == "failed"  # Normalized from "queued"
 
 
+@pytest.mark.integration
 class TestProcessBulkEmailJob:
     """Tests for _process_bulk_email_job."""
 
@@ -109,6 +111,7 @@ class TestProcessBulkEmailJob:
         assert result.status == "failed"  # No successes, status is "failed"
 
 
+@pytest.mark.integration
 class TestSendEmailSync:
     """Tests for _send_email_sync wrapper."""
 
@@ -129,6 +132,7 @@ class TestSendEmailSync:
             mock_run_async.assert_called_once()  # Coverage for line 158
 
 
+@pytest.mark.integration
 class TestTaskServiceMethods:
     """Tests for TaskService class methods."""
 
@@ -165,6 +169,7 @@ class TestTaskServiceMethods:
             )  # Coverage for lines 305-308
 
 
+@pytest.mark.integration
 class TestRunAsync:
     """Test _run_async helper function."""
 
@@ -195,6 +200,7 @@ class TestRunAsync:
                 assert result == "result"
 
 
+@pytest.mark.integration
 class TestSendEmailAsyncExtended:
     """Extended tests for _send_email_async."""
 
@@ -215,6 +221,7 @@ class TestSendEmailAsyncExtended:
         assert result.status == "sent"
 
 
+@pytest.mark.integration
 class TestProcessBulkEmailJobExtended:
     """Extended tests for _process_bulk_email_job."""
 
@@ -283,6 +290,7 @@ class TestProcessBulkEmailJobExtended:
 # are already tested above
 
 
+@pytest.mark.integration
 class TestGetTaskService:
     """Test task service factory."""
 

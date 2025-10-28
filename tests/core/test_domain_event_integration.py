@@ -15,6 +15,7 @@ from dotmac.platform.core import (
 from dotmac.platform.events import EventBus, EventPriority
 
 
+@pytest.mark.unit
 class TestDomainEventPublisher:
     """Test domain event publisher."""
 
@@ -29,6 +30,7 @@ class TestDomainEventPublisher:
     async def test_publish_from_aggregate(self):
         """Test publishing events from aggregate."""
 
+        @pytest.mark.unit
         class TestInvoice(AggregateRoot):
             invoice_number: str
             amount: float
@@ -84,6 +86,7 @@ class TestDomainEventPublisher:
             publish_to_integration_bus=False,  # Disabled
         )
 
+        @pytest.mark.unit
         class TestAggregate(AggregateRoot):
             def action(self):
                 self.raise_event(

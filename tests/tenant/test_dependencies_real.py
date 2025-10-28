@@ -93,6 +93,7 @@ def create_fake_user(
     return user
 
 
+@pytest.mark.integration
 class TestGetCurrentTenantId:
     """Test get_current_tenant_id function."""
 
@@ -136,6 +137,7 @@ class TestGetCurrentTenantId:
                 assert result is None
 
 
+@pytest.mark.integration
 class TestGetTenantService:
     """Test get_tenant_service dependency."""
 
@@ -149,6 +151,7 @@ class TestGetTenantService:
         assert isinstance(service, TenantService)
 
 
+@pytest.mark.integration
 class TestGetCurrentTenant:
     """Test get_current_tenant dependency."""
 
@@ -187,6 +190,7 @@ class TestGetCurrentTenant:
         assert "not found" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestRequireActiveTenant:
     """Test require_active_tenant dependency."""
 
@@ -221,6 +225,7 @@ class TestRequireActiveTenant:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestRequireTrialOrActiveTenant:
     """Test require_trial_or_active_tenant dependency."""
 
@@ -266,6 +271,7 @@ class TestRequireTrialOrActiveTenant:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestCheckTenantFeature:
     """Test check_tenant_feature dependency."""
 
@@ -300,6 +306,7 @@ class TestCheckTenantFeature:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestCheckUserLimit:
     """Test check_user_limit dependency."""
 
@@ -334,6 +341,7 @@ class TestCheckUserLimit:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestCheckAPILimit:
     """Test check_api_limit dependency."""
 
@@ -358,6 +366,7 @@ class TestCheckAPILimit:
         assert "exceeded monthly API limit" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestCheckStorageLimit:
     """Test check_storage_limit dependency."""
 
@@ -382,6 +391,7 @@ class TestCheckStorageLimit:
         assert "exceeded storage limit" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestRequireTenantAdmin:
     """Test require_tenant_admin dependency."""
 
@@ -435,6 +445,7 @@ class TestRequireTenantAdmin:
         assert "does not have access" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestRequireTenantOwner:
     """Test require_tenant_owner dependency."""
 
@@ -462,6 +473,7 @@ class TestRequireTenantOwner:
         assert "Only the tenant owner" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestRequireFeature:
     """Test require_feature dependency factory."""
 
@@ -489,6 +501,7 @@ class TestRequireFeature:
         assert "advanced_analytics" in exc_info.value.detail
 
 
+@pytest.mark.integration
 class TestRequirePlan:
     """Test require_plan dependency factory."""
 
@@ -539,6 +552,7 @@ class TestRequirePlan:
         assert exc_info.value.status_code == 403
 
 
+@pytest.mark.integration
 class TestAnnotatedDependencies:
     """Test that typed annotations are defined correctly."""
 

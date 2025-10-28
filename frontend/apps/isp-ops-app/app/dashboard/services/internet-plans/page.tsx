@@ -435,7 +435,7 @@ function InternetPlansPageContent() {
 
 export default function InternetPlansPage() {
   return (
-    <RouteGuard requiredPermission="isp.plans.read">
+    <RouteGuard permission="isp.plans.read">
       <InternetPlansPageContent />
     </RouteGuard>
   );

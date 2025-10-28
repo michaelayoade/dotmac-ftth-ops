@@ -1,3 +1,4 @@
+
 """
 Unit tests for Activation Orchestrator
 """
@@ -6,6 +7,9 @@ import pytest
 from sqlalchemy.orm import Session
 
 from dotmac.platform.sales.models import (
+
+
+
     ActivationStatus,
     Order,
 )
@@ -13,6 +17,10 @@ from dotmac.platform.sales.service import ActivationOrchestrator
 
 from .conftest import create_order, create_service_activation
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestActivationOrchestrator:
     """Tests for ActivationOrchestrator"""

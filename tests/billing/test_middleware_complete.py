@@ -43,6 +43,7 @@ def mock_app():
     return app
 
 
+@pytest.mark.integration
 class TestBillingErrorMiddleware:
     """Test BillingErrorMiddleware error handling."""
 
@@ -157,6 +158,7 @@ class TestBillingErrorMiddleware:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestBillingValidationMiddleware:
     """Test BillingValidationMiddleware request validation."""
 
@@ -260,6 +262,7 @@ class TestBillingValidationMiddleware:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestBillingAuditMiddleware:
     """Test BillingAuditMiddleware audit logging."""
 
@@ -405,6 +408,7 @@ class TestBillingAuditMiddleware:
         assert op_type == "billing_operation"
 
 
+@pytest.mark.integration
 class TestSetupBillingMiddleware:
     """Test setup_billing_middleware configuration function."""
 
@@ -457,6 +461,7 @@ class TestSetupBillingMiddleware:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestMiddlewareIntegration:
     """Test middleware integration scenarios."""
 

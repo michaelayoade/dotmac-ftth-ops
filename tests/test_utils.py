@@ -312,6 +312,7 @@ def create_test_jwt(
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestDataFactory:
     """
     Factory for creating consistent test data.

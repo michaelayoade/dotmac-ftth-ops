@@ -15,6 +15,9 @@ from dotmac.platform.auth.rbac_read_router import router
 from dotmac.platform.db import get_session_dependency
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def app():
     """Create FastAPI app."""

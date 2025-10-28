@@ -8,11 +8,17 @@ from fastapi import HTTPException
 from dotmac.platform.secrets.api import SecretListResponse, list_secrets
 from dotmac.platform.secrets.vault_client import AsyncVaultClient, VaultError
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestVaultClientInventory:
     """Test AsyncVaultClient inventory methods."""
+
 
     @pytest.fixture
     def vault_client(self):
@@ -142,6 +148,7 @@ class TestVaultClientInventory:
                 assert secrets[0]["path"] == "root-secret"
 
 
+@pytest.mark.unit
 class TestSecretsInventoryAPI:
     """Test the secrets inventory API endpoint."""
 

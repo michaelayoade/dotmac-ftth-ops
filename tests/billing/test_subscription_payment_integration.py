@@ -81,6 +81,7 @@ async def test_plan(async_db_session):
     return plan, tenant_id
 
 
+@pytest.mark.integration
 class TestSubscriptionPaymentCreation:
     """Test payment processing during subscription creation."""
 
@@ -146,6 +147,7 @@ class TestSubscriptionPaymentCreation:
         # Payment would be deferred until trial end
 
 
+@pytest.mark.integration
 class TestSubscriptionRenewalPayments:
     """Test payment processing for subscription renewals."""
 
@@ -212,6 +214,7 @@ class TestSubscriptionRenewalPayments:
         # - Customer would be notified
 
 
+@pytest.mark.integration
 class TestPaymentFailureRetry:
     """Test retry logic for failed payments."""
 
@@ -276,6 +279,7 @@ class TestPaymentFailureRetry:
         assert subscription.status == SubscriptionStatus.ACTIVE
 
 
+@pytest.mark.integration
 class TestRefundProcessing:
     """Test refund processing for cancellations."""
 
@@ -301,11 +305,12 @@ class TestRefundProcessing:
             subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=False  # Cancel immediately
         )
 
-        assert canceled.status == SubscriptionStatus.CANCELED
+        # Immediate cancellation sets status to ENDED
+        assert canceled.status == SubscriptionStatus.ENDED
 
         # Calculate prorated refund (50% of cycle remaining)
-        days_remaining = 15  # Assume 15 days left in 30-day cycle
-        refund_amount = int((plan.price * (days_remaining / 30)) * 100)
+        days_remaining = Decimal("15")  # Assume 15 days left in 30-day cycle
+        refund_amount = int((plan.price * (days_remaining / Decimal("30"))) * 100)
 
         # Process refund
         refund_result = await mock_payment_gateway.create_refund(
@@ -317,6 +322,7 @@ class TestRefundProcessing:
         print(f"\n💰 Refund processed: ${refund_amount / 100:.2f}")
 
 
+@pytest.mark.integration
 class TestPaymentMethodUpdates:
     """Test updating payment methods for subscriptions."""
 
@@ -348,6 +354,7 @@ class TestPaymentMethodUpdates:
         print(f"\n💳 Payment method updated: {new_payment_method_id}")
 
 
+@pytest.mark.integration
 class TestSetupFeeCharging:
     """Test setup fee charging for new subscriptions."""
 

@@ -1,6 +1,7 @@
 """
 Unit tests for vendor-specific CoA strategies.
 """
+import pytest
 
 from dotmac.platform.radius.vendors import (
     CiscoCoAStrategy,
@@ -12,6 +13,7 @@ from dotmac.platform.radius.vendors import (
 )
 
 
+@pytest.mark.unit
 class TestMikrotikCoAStrategy:
     """Test Mikrotik CoA strategy."""
 
@@ -79,6 +81,7 @@ class TestMikrotikCoAStrategy:
         assert strategy.validate_response({"code": 99}) is False
 
 
+@pytest.mark.unit
 class TestCiscoCoAStrategy:
     """Test Cisco CoA strategy."""
 
@@ -111,6 +114,7 @@ class TestCiscoCoAStrategy:
         assert packet["Acct-Terminate-Cause"] == "Admin-Reset"
 
 
+@pytest.mark.unit
 class TestHuaweiCoAStrategy:
     """Test Huawei CoA strategy."""
 
@@ -144,6 +148,7 @@ class TestHuaweiCoAStrategy:
         assert packet["Huawei-Input-Peak-Rate"] == "7500"
 
 
+@pytest.mark.unit
 class TestJuniperCoAStrategy:
     """Test Juniper CoA strategy."""
 
@@ -163,6 +168,7 @@ class TestJuniperCoAStrategy:
         assert packet["Juniper-Rate-Limit-Out"] == "10000000"
 
 
+@pytest.mark.unit
 class TestCoAStrategyRegistry:
     """Test CoA strategy registry and factory."""
 

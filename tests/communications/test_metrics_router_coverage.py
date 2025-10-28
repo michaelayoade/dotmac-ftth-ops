@@ -12,6 +12,8 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.communications.metrics_router import (
     CommunicationStatsResponse,
@@ -19,6 +21,8 @@ from dotmac.platform.communications.metrics_router import (
     get_communication_stats,
 )
 from dotmac.platform.communications.models import (
+
+
     CommunicationLog,
     CommunicationStatus,
     CommunicationType,

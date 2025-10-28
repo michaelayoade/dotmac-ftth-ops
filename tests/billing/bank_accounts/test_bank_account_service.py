@@ -99,6 +99,7 @@ def bank_account_create():
     )
 
 
+@pytest.mark.unit
 class TestCreateBankAccount:
     """Test bank account creation."""
 
@@ -185,6 +186,7 @@ class TestCreateBankAccount:
             assert added_account.account_number_last_four == "6789"
 
 
+@pytest.mark.unit
 class TestGetBankAccounts:
     """Test bank account retrieval."""
 
@@ -237,6 +239,7 @@ class TestGetBankAccounts:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestUpdateBankAccount:
     """Test bank account updates."""
 
@@ -281,6 +284,7 @@ class TestUpdateBankAccount:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestDeleteBankAccount:
     """Test bank account deletion."""
 
@@ -320,6 +324,7 @@ class TestDeleteBankAccount:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestRecordManualPayment:
     """Test manual payment recording."""
 
@@ -365,6 +370,7 @@ class TestRecordManualPayment:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestPaymentSearch:
     """Test payment search and filtering."""
 
@@ -406,6 +412,7 @@ class TestPaymentSearch:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestBankAccountSummary:
     """Test bank account summary generation."""
 
@@ -459,6 +466,7 @@ class TestBankAccountSummary:
         assert result is not None
 
 
+@pytest.mark.unit
 class TestHelperMethods:
     """Test service helper methods."""
 
@@ -506,6 +514,7 @@ class TestHelperMethods:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling in bank account operations."""
 
@@ -536,6 +545,7 @@ class TestErrorHandling:
             pass  # Expected behavior
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation in bank account operations."""
 

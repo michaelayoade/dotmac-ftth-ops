@@ -11,6 +11,7 @@ from dotmac.platform.plugins.builtin.whatsapp_plugin import WhatsAppProvider, re
 from dotmac.platform.plugins.schema import FieldType, PluginType
 
 
+@pytest.mark.unit
 class TestWhatsAppProvider:
     """Test WhatsApp provider plugin."""
 

@@ -248,6 +248,7 @@ def vault_client_with_fake(fake_vault):
     return client
 
 
+@pytest.mark.integration
 class TestVaultClientInitialization:
     """Test VaultClient initialization and configuration."""
 
@@ -287,6 +288,7 @@ class TestVaultClientInitialization:
         assert client.url == "http://vault:8200"
 
 
+@pytest.mark.integration
 class TestVaultClientSecretPaths:
     """Test secret path building for KV v1 and v2."""
 
@@ -312,6 +314,7 @@ class TestVaultClientSecretPaths:
         assert path == "/v1/secret/data/database/credentials"
 
 
+@pytest.mark.integration
 class TestVaultClientGetSecret:
     """Test secret retrieval operations."""
 
@@ -358,6 +361,7 @@ class TestVaultClientGetSecret:
             client.get_secret("database/credentials")
 
 
+@pytest.mark.integration
 class TestVaultClientSetSecret:
     """Test secret writing operations."""
 
@@ -383,6 +387,7 @@ class TestVaultClientSetSecret:
         assert fake_vault.secrets["api/keys"] == new_data
 
 
+@pytest.mark.integration
 class TestVaultClientDeleteSecret:
     """Test secret deletion operations."""
 
@@ -403,6 +408,7 @@ class TestVaultClientDeleteSecret:
         vault_client_with_fake.delete_secret("nonexistent/secret")
 
 
+@pytest.mark.integration
 class TestVaultClientGetSecrets:
     """Test batch secret retrieval."""
 
@@ -436,6 +442,7 @@ class TestVaultClientGetSecrets:
         assert secrets["missing/secret"] == {}  # Empty dict for missing
 
 
+@pytest.mark.integration
 class TestVaultClientListSecrets:
     """Test secret listing operations."""
 
@@ -471,6 +478,7 @@ class TestVaultClientListSecrets:
         assert keys == []
 
 
+@pytest.mark.integration
 class TestVaultClientKVv1:
     """Test KV v1 specific functionality."""
 
@@ -498,6 +506,7 @@ class TestVaultClientKVv1:
         assert secret == {"user": "admin"}
 
 
+@pytest.mark.integration
 class TestVaultClientErrorHandling:
     """Test error handling and edge cases."""
 
@@ -533,6 +542,7 @@ class TestVaultClientErrorHandling:
                 vault_client_with_fake.get_secret("test/path")
 
 
+@pytest.mark.integration
 class TestVaultClientNamespace:
     """Test Vault namespace support (enterprise feature)."""
 
@@ -550,6 +560,7 @@ class TestVaultClientNamespace:
         assert client.client.headers["X-Vault-Namespace"] == "engineering/team-a"
 
 
+@pytest.mark.integration
 class TestVaultClientHealthCheck:
     """Test Vault health check functionality."""
 
@@ -576,6 +587,7 @@ class TestVaultClientHealthCheck:
             assert result is False
 
 
+@pytest.mark.integration
 class TestVaultClientContextManager:
     """Test context manager functionality."""
 
@@ -598,6 +610,7 @@ class TestVaultClientContextManager:
         client.close()
 
 
+@pytest.mark.integration
 class TestVaultClientAdditionalCoverage:
     """Additional tests to maximize coverage."""
 
@@ -739,6 +752,7 @@ async def async_vault_client_with_fake(fake_async_vault):
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientInitialization:
     """Test AsyncVaultClient initialization."""
 
@@ -767,6 +781,7 @@ class TestAsyncVaultClientInitialization:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientGetSecret:
     """Test AsyncVaultClient.get_secret method."""
 
@@ -812,6 +827,7 @@ class TestAsyncVaultClientGetSecret:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientGetSecrets:
     """Test AsyncVaultClient.get_secrets batch method."""
 
@@ -840,6 +856,7 @@ class TestAsyncVaultClientGetSecrets:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientSetSecret:
     """Test AsyncVaultClient.set_secret method."""
 
@@ -861,6 +878,7 @@ class TestAsyncVaultClientSetSecret:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientDeleteSecret:
     """Test AsyncVaultClient.delete_secret method."""
 
@@ -906,6 +924,7 @@ class TestAsyncVaultClientListSecrets:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientMetadata:
     """Test AsyncVaultClient metadata methods (KV v2 only)."""
 
@@ -944,6 +963,7 @@ class TestAsyncVaultClientMetadata:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientHealthCheck:
     """Test AsyncVaultClient.health_check method."""
 
@@ -975,6 +995,7 @@ class TestAsyncVaultClientHealthCheck:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientContextManager:
     """Test AsyncVaultClient async context manager."""
 
@@ -1002,6 +1023,7 @@ class TestAsyncVaultClientContextManager:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestAsyncVaultClientErrorHandling:
     """Test AsyncVaultClient error handling paths."""
 
@@ -1116,6 +1138,7 @@ class TestAsyncVaultClientErrorHandling:
             await async_vault_client_with_fake.get_secret_metadata("test/path")
 
 
+@pytest.mark.integration
 class TestVaultClientEdgeCases:
     """Test edge cases and additional error paths for sync VaultClient."""
 

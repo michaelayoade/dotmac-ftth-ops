@@ -31,6 +31,7 @@ from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 
 
+@pytest.mark.e2e
 class TestDeviceFailureWorkflow:
     """Test complete device failure detection and resolution workflow"""
 
@@ -222,6 +223,7 @@ class TestDeviceFailureWorkflow:
             assert db_sla_instance.total_downtime >= downtime_minutes
 
 
+@pytest.mark.e2e
 class TestSLABreachWorkflow:
     """Test SLA breach detection and reporting workflow"""
 
@@ -341,6 +343,7 @@ class TestSLABreachWorkflow:
         assert reported_instance.status == SLAStatus.BREACHED
 
 
+@pytest.mark.e2e
 class TestMaintenanceWindowWorkflow:
     """Test maintenance window alarm suppression workflow"""
 
@@ -439,6 +442,7 @@ class TestMaintenanceWindowWorkflow:
         assert alarm_after_maintenance.status == AlarmStatus.ACTIVE
 
 
+@pytest.mark.e2e
 class TestAlarmEscalationWorkflow:
     """Test alarm escalation for unacknowledged critical alarms"""
 
@@ -517,6 +521,7 @@ class TestAlarmEscalationWorkflow:
         assert resolved.cleared_at is not None
 
 
+@pytest.mark.e2e
 class TestCompleteNetworkOutageScenario:
     """Test complex scenario with multiple correlated alarms and SLA impact"""
 

@@ -1,3 +1,4 @@
+
 """
 Tests for GenieACS NBI Client
 
@@ -10,6 +11,13 @@ import pytest
 
 from dotmac.platform.genieacs.client import GenieACSClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def reset_circuit_breaker():

@@ -1,3 +1,4 @@
+
 """
 Tests for tenant provisioning service logic.
 """
@@ -8,6 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
 from dotmac.platform.tenant.models import (
+
+
+
     Base,
     TenantDeploymentMode,
     TenantPlanType,
@@ -21,6 +25,10 @@ from dotmac.platform.tenant.provisioning_service import (
 from dotmac.platform.tenant.schemas import TenantCreate, TenantProvisioningJobCreate
 from dotmac.platform.tenant.service import TenantService
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest_asyncio.fixture
 async def async_db():

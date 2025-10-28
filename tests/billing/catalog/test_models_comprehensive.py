@@ -25,6 +25,7 @@ from dotmac.platform.billing.catalog.models import (
 )
 
 
+@pytest.mark.unit
 class TestProductTypeEnum:
     """Test ProductType enum validation."""
 
@@ -42,6 +43,7 @@ class TestProductTypeEnum:
         assert actual_types == expected_types
 
 
+@pytest.mark.unit
 class TestUsageTypeEnum:
     """Test UsageType enum validation."""
 
@@ -70,6 +72,7 @@ class TestUsageTypeEnum:
         assert actual_types == expected_types
 
 
+@pytest.mark.unit
 class TestTaxClassEnum:
     """Test TaxClass enum validation."""
 
@@ -88,6 +91,7 @@ class TestTaxClassEnum:
         assert actual_classes == expected_classes
 
 
+@pytest.mark.unit
 class TestProductCategoryModel:
     """Test ProductCategory model validation and business logic."""
 
@@ -141,6 +145,7 @@ class TestProductCategoryModel:
         assert isinstance(category_dict["created_at"], datetime)
 
 
+@pytest.mark.unit
 class TestProductModel:
     """Test Product model validation and business logic."""
 
@@ -452,6 +457,7 @@ class TestProductModel:
         assert isinstance(product_dict["created_at"], datetime)
 
 
+@pytest.mark.unit
 class TestProductCreateRequest:
     """Test ProductCreateRequest validation."""
 
@@ -521,6 +527,7 @@ class TestProductCreateRequest:
         assert request.metadata == {}
 
 
+@pytest.mark.unit
 class TestProductUpdateRequest:
     """Test ProductUpdateRequest validation."""
 
@@ -564,6 +571,7 @@ class TestProductUpdateRequest:
         assert request.base_price is None
 
 
+@pytest.mark.unit
 class TestProductCategoryCreateRequest:
     """Test ProductCategoryCreateRequest validation."""
 
@@ -606,6 +614,7 @@ class TestProductCategoryCreateRequest:
         assert request.sort_order == 0
 
 
+@pytest.mark.unit
 class TestProductFilters:
     """Test ProductFilters model."""
 
@@ -636,6 +645,7 @@ class TestProductFilters:
         assert filters.search is None
 
 
+@pytest.mark.unit
 class TestProductResponse:
     """Test ProductResponse model."""
 
@@ -693,6 +703,7 @@ class TestProductResponse:
         assert response.metadata == {"tier": "pro"}
 
 
+@pytest.mark.unit
 class TestProductCategoryResponse:
     """Test ProductCategoryResponse model."""
 

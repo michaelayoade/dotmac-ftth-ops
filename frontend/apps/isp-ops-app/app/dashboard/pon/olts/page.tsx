@@ -335,7 +335,7 @@ function OLTListPageContent() {
 
 export default function OLTListPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.read">
+    <RouteGuard permission="isp.network.pon.read">
       <OLTListPageContent />
     </RouteGuard>
   );

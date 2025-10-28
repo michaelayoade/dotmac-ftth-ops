@@ -1,3 +1,4 @@
+
 """
 End-to-End GraphQL Cookie Authentication Test.
 
@@ -13,6 +14,14 @@ import httpx
 import pytest
 
 # Check if server is available
+
+
+
+pytestmark = [
+pytest.mark.integration,
+pytest.mark.asyncio,
+]
+
 async def is_server_available(base_url: str = "http://localhost:8000") -> bool:
     """Check if the test server is running."""
     try:
@@ -24,10 +33,6 @@ async def is_server_available(base_url: str = "http://localhost:8000") -> bool:
 
 
 # Mark all tests in this module as integration tests
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.asyncio,
-]
 
 
 async def test_graphql_cookie_auth():

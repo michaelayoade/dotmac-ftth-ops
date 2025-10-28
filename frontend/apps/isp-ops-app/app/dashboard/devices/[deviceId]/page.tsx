@@ -600,7 +600,7 @@ function DeviceDetailsPageContent() {
 
 export default function DeviceDetailsPage() {
   return (
-    <RouteGuard requiredPermission="devices.read">
+    <RouteGuard permission="devices.read">
       <DeviceDetailsPageContent />
     </RouteGuard>
   );

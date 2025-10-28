@@ -1,3 +1,4 @@
+
 """
 Tests for billing command handlers that were recently implemented.
 
@@ -29,6 +30,9 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from dotmac.platform.billing.commands.handlers import (
+
+
+
     InvoiceCommandHandler,
     PaymentCommandHandler,
 )
@@ -43,6 +47,10 @@ from dotmac.platform.billing.commands.payment_commands import (
 )
 from dotmac.platform.billing.core.enums import PaymentStatus
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_db_session():

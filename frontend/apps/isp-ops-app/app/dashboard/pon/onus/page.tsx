@@ -122,7 +122,7 @@ function ONUListPageContent() {
     return matchesSearch && matchesStatus && matchesAdminState;
   });
 
-  const getOperStatusBadge = (status: string) => {
+  const getOperStatusBadge = (status?: string) => {
     const badges = {
       ACTIVE: { icon: CheckCircle, color: "bg-green-100 text-green-800", label: "Active" },
       DISCOVERED: { icon: AlertTriangle, color: "bg-amber-100 text-amber-800", label: "Discovered" },
@@ -130,7 +130,7 @@ function ONUListPageContent() {
       UNKNOWN: { icon: XCircle, color: "bg-gray-100 text-gray-800", label: "Unknown" },
       FAILED: { icon: XCircle, color: "bg-red-100 text-red-800", label: "Failed" },
     };
-    const config = badges[status as keyof typeof badges] || badges.UNKNOWN;
+    const config = badges[(status || "UNKNOWN") as keyof typeof badges] || badges.UNKNOWN;
     const Icon = config.icon;
     return (
       <Badge className={config.color}>
@@ -140,7 +140,7 @@ function ONUListPageContent() {
     );
   };
 
-  const getAdminStateBadge = (state: string) => {
+  const getAdminStateBadge = (state?: string) => {
     return state === "ENABLED" ? (
       <Badge className="bg-green-100 text-green-800">
         <Power className="h-3 w-3 mr-1" />
@@ -412,7 +412,7 @@ function ONUListPageContent() {
 
 export default function ONUListPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.read">
+    <RouteGuard permission="isp.network.pon.read">
       <ONUListPageContent />
     </RouteGuard>
   );

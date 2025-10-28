@@ -1,3 +1,4 @@
+
 """
 Contact caching service tests - Migrated to use shared helpers.
 
@@ -13,14 +14,19 @@ from dotmac.platform.contacts.schemas import ContactUpdate
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import build_mock_db_session
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactCaching:
     """Test contact caching behavior."""
 
     @pytest.mark.skip(
-        reason="Caching disabled due to JSON serialization issues - see service.py line 179"
+        reason="Caching disabled - cache_set uses JSON serialization which doesn't support SQLAlchemy models"
     )
     @pytest.mark.asyncio
     async def test_cache_set_on_get(self, tenant_id, sample_contact):

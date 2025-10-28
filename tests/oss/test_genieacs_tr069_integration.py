@@ -1,3 +1,4 @@
+
 """
 Comprehensive GenieACS TR-069 Flow Tests.
 
@@ -14,6 +15,13 @@ from datetime import timezone, datetime, timedelta
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestGenieACSDeviceManagement:

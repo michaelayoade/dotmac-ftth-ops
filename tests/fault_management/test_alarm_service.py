@@ -30,6 +30,7 @@ from dotmac.platform.fault_management.schemas import (
 from dotmac.platform.fault_management.service import AlarmService
 
 
+@pytest.mark.integration
 class TestAlarmServiceCreation:
     """Test alarm creation functionality"""
 
@@ -139,6 +140,7 @@ class TestAlarmServiceCreation:
         assert alarm_response.status == AlarmStatus.SUPPRESSED
 
 
+@pytest.mark.integration
 class TestAlarmServiceQueries:
     """Test alarm query functionality"""
 
@@ -273,6 +275,7 @@ class TestAlarmServiceQueries:
         assert page1[0].id != page2[0].id
 
 
+@pytest.mark.integration
 class TestAlarmServiceUpdates:
     """Test alarm update functionality"""
 
@@ -436,6 +439,7 @@ class TestAlarmServiceUpdates:
         assert notes[0].created_by == user_id
 
 
+@pytest.mark.integration
 class TestAlarmServiceStatistics:
     """Test alarm statistics functionality"""
 
@@ -488,6 +492,7 @@ class TestAlarmServiceStatistics:
         assert stats.total_alarms <= 2
 
 
+@pytest.mark.integration
 class TestAlarmRuleManagement:
     """Test alarm rule CRUD operations"""
 
@@ -583,6 +588,7 @@ class TestAlarmRuleManagement:
         assert result.scalar_one_or_none() is None
 
 
+@pytest.mark.integration
 class TestMaintenanceWindowManagement:
     """Test maintenance window CRUD operations"""
 

@@ -35,6 +35,7 @@ from dotmac.platform.communications.template_service import (
 )
 
 
+@pytest.mark.integration
 class TestEmailService:
     """Test the email service."""
 
@@ -143,6 +144,7 @@ class TestEmailService:
             mock_service.send_email.assert_called_once()
 
 
+@pytest.mark.integration
 class TestTemplateService:
     """Test the template service."""
 
@@ -328,6 +330,7 @@ class TestTemplateService:
         assert result["text_body"] == "This is test"
 
 
+@pytest.mark.integration
 class TestTaskService:
     """Test the task service."""
 
@@ -433,6 +436,7 @@ class TestTaskService:
         mock_task.delay.assert_called_once()
 
 
+@pytest.mark.integration
 class TestIntegration:
     """Test integration between services."""
 
@@ -506,6 +510,7 @@ class TestIntegration:
             )
 
 
+@pytest.mark.integration
 class TestServiceAvailability:
     """Test service availability."""
 

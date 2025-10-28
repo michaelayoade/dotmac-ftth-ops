@@ -12,6 +12,8 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo, create_access_token
 from dotmac.platform.data_import.models import (
+
+
     ImportFailure,
     ImportJob,
     ImportJobStatus,
@@ -21,9 +23,16 @@ from dotmac.platform.data_import.service import ImportResult
 from dotmac.platform.main import app
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Mock authenticated user."""
+
+
     return UserInfo(
         user_id="test-user-123",
         username="testuser",

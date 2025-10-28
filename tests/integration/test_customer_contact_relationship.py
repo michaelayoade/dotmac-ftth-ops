@@ -1,3 +1,4 @@
+
 """
 Regression test for CustomerContactLink ORM relationship.
 
@@ -14,11 +15,21 @@ from uuid import uuid4
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
+
+
+
 
 # These tests require full database schema with all foreign key relationships properly set up.
 # SQLite in-memory tests fail due to schema validation issues between Contact and Customer models.
 # This test is now in the integration test suite for proper database testing.
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
+
 pytest.skip("Integration test - requires full database schema", allow_module_level=True)
 
 from sqlalchemy import select  # noqa: E402

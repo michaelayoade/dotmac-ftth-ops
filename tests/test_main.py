@@ -11,7 +11,11 @@ from dotmac.platform.main import (
     create_application,
     lifespan,
 )
+
+pytestmark = pytest.mark.integration
 from dotmac.platform.version import get_version
+
+
 
 
 class TestCreateApplication:

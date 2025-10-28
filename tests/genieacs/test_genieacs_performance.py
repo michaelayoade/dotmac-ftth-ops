@@ -1,3 +1,4 @@
+
 """
 Performance and load tests for GenieACS Client
 
@@ -14,6 +15,13 @@ from aiohttp import web
 
 from dotmac.platform.genieacs.client import GenieACSClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest_asyncio.fixture
 async def performance_genieacs_server(aiohttp_server):

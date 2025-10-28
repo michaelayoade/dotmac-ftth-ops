@@ -11,9 +11,18 @@ from dotmac.platform.data_import.models import ImportJob, ImportJobStatus, Impor
 from dotmac.platform.data_import.service import DataImportService, ImportResult
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 @pytest.fixture
 def mock_session():
     """Mock database session."""
+
+
     session = AsyncMock()
     session.add = MagicMock()
     session.commit = AsyncMock()

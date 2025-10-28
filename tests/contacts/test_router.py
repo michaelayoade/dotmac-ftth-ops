@@ -8,8 +8,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
+
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.contacts.schemas import (
+
+
     ContactStage,
     ContactStatus,
 )

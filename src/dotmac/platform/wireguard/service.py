@@ -166,7 +166,7 @@ class WireGuardService:
 
             # Create server record
             server = WireGuardServer(
-                tenant_id=self.tenant_id,
+                tenant_id=str(self.tenant_id),
                 name=name,
                 description=description,
                 public_endpoint=public_endpoint,
@@ -429,9 +429,9 @@ class WireGuardService:
 
             # Create peer record
             peer = WireGuardPeer(
-                tenant_id=self.tenant_id,
+                tenant_id=str(self.tenant_id),
                 server_id=server_id,
-                customer_id=customer_id,
+                customer_id=str(customer_id) if customer_id else None,
                 subscriber_id=subscriber_id,
                 name=name,
                 description=description,

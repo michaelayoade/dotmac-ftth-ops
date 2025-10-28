@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 
+@pytest.mark.unit
 class TestGlobalHelpers:
     """Test global helper functions."""
 

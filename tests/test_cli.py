@@ -11,10 +11,14 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
 from click.testing import CliRunner
 
 # Import the entire module to ensure coverage tracking
 from dotmac.platform.cli import (
+
+
     check_services,
     cleanup_sessions,
     cli,

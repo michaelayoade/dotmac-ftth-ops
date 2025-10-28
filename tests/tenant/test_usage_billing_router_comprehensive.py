@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for Tenant Usage Billing Router.
 
@@ -10,8 +11,15 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from fastapi import status as http_status
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
+pytestmark = pytest.mark.asyncio
 
 class TestRecordUsageWithBilling:
     """Test POST /tenants/{tenant_id}/usage/record-with-billing endpoint."""

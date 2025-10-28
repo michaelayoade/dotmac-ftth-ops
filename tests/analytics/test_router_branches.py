@@ -1,3 +1,4 @@
+
 """
 Tests for analytics router branch coverage.
 
@@ -13,13 +14,18 @@ from starlette.requests import Request
 
 from dotmac.platform.analytics.models import AnalyticsQueryRequest
 from dotmac.platform.analytics.router import (
+
+
     custom_query,
     get_metrics,
 )
 from dotmac.platform.auth.core import UserInfo
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_user():
@@ -40,6 +46,7 @@ def mock_request():
     return Request(scope={"type": "http", "method": "GET", "path": "/"})
 
 
+@pytest.mark.unit
 class TestGetMetricsDateDefaults:
     """Test get_metrics endpoint with default date handling."""
 
@@ -140,6 +147,7 @@ class TestGetMetricsDateDefaults:
             assert "Failed to query metrics" in str(exc_info.value.detail)
 
 
+@pytest.mark.unit
 class TestCustomQueryBranches:
     """Test custom_query endpoint branches."""
 

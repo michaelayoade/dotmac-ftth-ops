@@ -36,6 +36,7 @@ from dotmac.platform.core.ip_validation import (
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestIPv4Validation:
     """Test IPv4 address validation."""
 
@@ -71,6 +72,7 @@ class TestIPv4Validation:
             assert not is_valid_ipv4(addr), f"Should reject invalid IPv4: {addr}"
 
 
+@pytest.mark.unit
 class TestIPv6Validation:
     """Test IPv6 address validation."""
 
@@ -124,6 +126,7 @@ class TestIPv6Validation:
         assert normalize_ipv6("192.168.1.1") is None
 
 
+@pytest.mark.unit
 class TestIPv4NetworkValidation:
     """Test IPv4 CIDR network validation."""
 
@@ -164,6 +167,7 @@ class TestIPv4NetworkValidation:
         assert is_valid_ipv4_network("10.1.2.3/16", strict=False)
 
 
+@pytest.mark.unit
 class TestIPv6NetworkValidation:
     """Test IPv6 CIDR network validation."""
 
@@ -199,6 +203,7 @@ class TestIPv6NetworkValidation:
         assert is_valid_ipv6_network("fe80::1/10", strict=False)
 
 
+@pytest.mark.unit
 class TestGenericIPValidation:
     """Test generic IP validation (IPv4 or IPv6)."""
 
@@ -220,6 +225,7 @@ class TestGenericIPValidation:
         assert not is_valid_ip_network("not-a-network")
 
 
+@pytest.mark.unit
 class TestIPVersionDetection:
     """Test IP version detection."""
 
@@ -242,6 +248,7 @@ class TestIPVersionDetection:
         assert detect_ip_version("192.168.1.0/24") is None
 
 
+@pytest.mark.unit
 class TestIPAddressProperties:
     """Test IP address property checks."""
 
@@ -288,12 +295,14 @@ class TestIPAddressProperties:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestPydanticIPv4Validator:
     """Test Pydantic IPv4 address validator."""
 
     def test_valid_ipv4_pydantic(self):
         """Test Pydantic model with valid IPv4."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -315,6 +324,7 @@ class TestPydanticIPv4Validator:
     def test_invalid_ipv4_pydantic(self):
         """Test Pydantic model with invalid IPv4."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -332,12 +342,14 @@ class TestPydanticIPv4Validator:
         assert "Invalid IPv4 address" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticIPv6Validator:
     """Test Pydantic IPv6 address validator."""
 
     def test_valid_ipv6_pydantic(self):
         """Test Pydantic model with valid IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -359,6 +371,7 @@ class TestPydanticIPv6Validator:
     def test_invalid_ipv6_pydantic(self):
         """Test Pydantic model with invalid IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -376,12 +389,14 @@ class TestPydanticIPv6Validator:
         assert "Invalid IPv6 address" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticIPv4NetworkValidator:
     """Test Pydantic IPv4 network validator."""
 
     def test_valid_ipv4_network_pydantic(self):
         """Test Pydantic model with valid IPv4 network."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             network: str | None = None
 
@@ -396,6 +411,7 @@ class TestPydanticIPv4NetworkValidator:
     def test_invalid_ipv4_network_pydantic(self):
         """Test Pydantic model with invalid IPv4 network."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             network: str | None = None
 
@@ -409,12 +425,14 @@ class TestPydanticIPv4NetworkValidator:
         assert "Invalid IPv4 CIDR" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticGenericIPValidator:
     """Test Pydantic generic IP validator (IPv4 or IPv6)."""
 
     def test_valid_dual_stack_pydantic(self):
         """Test Pydantic model accepting both IPv4 and IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -437,6 +455,7 @@ class TestPydanticGenericIPValidator:
     def test_invalid_dual_stack_pydantic(self):
         """Test Pydantic model rejecting invalid IPs."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -455,6 +474,7 @@ class TestPydanticGenericIPValidator:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test convenience wrapper functions."""
 
@@ -481,6 +501,7 @@ class TestConvenienceFunctions:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
@@ -509,6 +530,7 @@ class TestEdgeCases:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestRealWorldUseCases:
     """Test real-world scenarios."""
 

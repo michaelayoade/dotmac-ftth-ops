@@ -104,6 +104,7 @@ def mock_settings():
 # ==================== Access Token Creation Tests ====================
 
 
+@pytest.mark.unit
 class TestAccessTokenCreation:
     """Test access token creation with RBAC."""
 
@@ -218,6 +219,7 @@ class TestAccessTokenCreation:
 # ==================== Refresh Token Creation Tests ====================
 
 
+@pytest.mark.unit
 class TestRefreshTokenCreation:
     """Test refresh token creation."""
 
@@ -278,6 +280,7 @@ class TestRefreshTokenCreation:
 # ==================== Token Verification Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenVerification:
     """Test token verification with permission checks."""
 
@@ -440,6 +443,7 @@ class TestTokenVerification:
 # ==================== Token Refresh Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenRefresh:
     """Test token refresh functionality."""
 
@@ -542,6 +546,7 @@ class TestTokenRefresh:
 # ==================== Token Revocation Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenRevocation:
     """Test token revocation and blacklisting."""
 
@@ -618,6 +623,7 @@ class TestTokenRevocation:
 # ==================== Get User From Token Tests ====================
 
 
+@pytest.mark.unit
 class TestGetUserFromToken:
     """Test getting user from token."""
 
@@ -664,6 +670,7 @@ class TestGetUserFromToken:
 # ==================== Factory Function Test ====================
 
 
+@pytest.mark.unit
 class TestFactoryFunction:
     """Test factory function."""
 

@@ -1,3 +1,4 @@
+
 """
 Tests for customer management bug fixes.
 
@@ -17,6 +18,8 @@ import pytest
 from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import (
+
+
     ActivityType,
     Customer,
     CustomerStatus,
@@ -32,6 +35,11 @@ from dotmac.platform.customer_management.schemas import (
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.tenant import set_current_tenant_id
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture(autouse=True)
 def set_tenant_context():

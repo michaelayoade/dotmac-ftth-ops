@@ -1,3 +1,4 @@
+
 """
 Tests for the frontend logs ingestion endpoint.
 
@@ -14,6 +15,13 @@ from httpx import AsyncClient
 from dotmac.platform.audit.models import ActivitySeverity, ActivityType
 from dotmac.platform.auth.core import UserInfo
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_user_info() -> UserInfo:

@@ -1,6 +1,7 @@
 """
 Unit tests for vendor-specific bandwidth attribute builders.
 """
+import pytest
 
 from dotmac.platform.radius.vendors import (
     CiscoBandwidthBuilder,
@@ -12,6 +13,7 @@ from dotmac.platform.radius.vendors import (
 )
 
 
+@pytest.mark.unit
 class TestMikrotikBandwidthBuilder:
     """Test Mikrotik bandwidth builder."""
 
@@ -69,6 +71,7 @@ class TestMikrotikBandwidthBuilder:
         assert coa_attrs["Mikrotik-Rate-Limit"] == "20000k/10000k"
 
 
+@pytest.mark.unit
 class TestCiscoBandwidthBuilder:
     """Test Cisco bandwidth builder."""
 
@@ -123,6 +126,7 @@ class TestCiscoBandwidthBuilder:
         assert "20000000" in coa_attrs["Cisco-AVPair"]  # download
 
 
+@pytest.mark.unit
 class TestHuaweiBandwidthBuilder:
     """Test Huawei bandwidth builder."""
 
@@ -176,6 +180,7 @@ class TestHuaweiBandwidthBuilder:
         assert attr_map["Huawei-Qos-Profile-Name"] == "gold-plan"
 
 
+@pytest.mark.unit
 class TestJuniperBandwidthBuilder:
     """Test Juniper bandwidth builder."""
 
@@ -214,6 +219,7 @@ class TestJuniperBandwidthBuilder:
         assert attr_map["Juniper-Rate-Limit-Out"] == "10000000"  # download
 
 
+@pytest.mark.unit
 class TestBandwidthBuilderRegistry:
     """Test bandwidth builder registry and factory."""
 

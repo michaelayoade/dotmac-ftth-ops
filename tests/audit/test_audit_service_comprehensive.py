@@ -90,6 +90,7 @@ def mock_request():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogActivity:
     """Test log_activity method."""
 
@@ -152,6 +153,7 @@ class TestLogActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogRequestActivity:
     """Test log_request_activity method."""
 
@@ -240,6 +242,7 @@ class TestLogRequestActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetActivities:
     """Test get_activities method."""
 
@@ -454,6 +457,7 @@ class TestGetActivities:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetRecentActivities:
     """Test get_recent_activities method."""
 
@@ -540,6 +544,7 @@ class TestGetRecentActivities:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetActivitySummary:
     """Test get_activity_summary method."""
 
@@ -621,6 +626,7 @@ class TestGetActivitySummary:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestHelperFunctions:
     """Test helper functions."""
 
@@ -682,6 +688,7 @@ class TestHelperFunctions:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestSessionManagement:
     """Test _get_session method."""
 
@@ -710,6 +717,7 @@ class TestSessionManagement:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestAdditionalCoverage:
     """Additional tests to reach 90% coverage."""
 

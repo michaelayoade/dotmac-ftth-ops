@@ -4,6 +4,9 @@ from typing import Any
 import pytest
 
 from dotmac.platform.search.elasticsearch_backend import (
+
+
+
     ElasticsearchBackend,
     NotFoundError,
     SearchQuery,
@@ -11,6 +14,11 @@ from dotmac.platform.search.elasticsearch_backend import (
 )
 from dotmac.platform.search.interfaces import SearchFilter
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class StubIndices:
     def __init__(self) -> None:

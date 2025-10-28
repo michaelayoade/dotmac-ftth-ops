@@ -1,3 +1,4 @@
+
 """
 Integration tests for authentication services.
 
@@ -7,12 +8,19 @@ Tests the core authentication functionality including JWT, RBAC, and session man
 import pytest
 
 from dotmac.platform.auth import (
+
+
+
     JWTService,
     create_access_token,
     hash_password,
     verify_password,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 def test_jwt_service_creation() -> None:
     """Test JWT service can be created and issue tokens."""

@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Billing Routers (API Endpoints).
 
@@ -15,12 +16,20 @@ from httpx import AsyncClient
 
 from dotmac.platform.billing.core.enums import PaymentStatus
 from dotmac.platform.billing.subscriptions.models import (
+
+
     BillingCycle,
     SubscriptionStatus,
 )
 
 
+
 # Reset rate limiter before each test to prevent state leakage
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
     """Reset rate limiter singleton before each test to ensure test isolation.

@@ -4,6 +4,7 @@ Mock-based tests for tenant router to achieve 90%+ coverage.
 Following Dev B's successful approach with dependency overrides and mocks.
 Targets uncovered error handlers and edge cases.
 """
+import pytest
 
 from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
@@ -22,6 +23,7 @@ from dotmac.platform.tenant.service import (
 )
 
 
+@pytest.mark.unit
 class TestTenantRouterPropertyAssignments:
     """Test routes that assign response properties (lines 67-77, 108-121, etc)."""
 
@@ -129,6 +131,7 @@ class TestTenantRouterPropertyAssignments:
             app.dependency_overrides.clear()
 
 
+@pytest.mark.unit
 class TestTenantRouterErrorHandlers:
     """Test error handling paths (lines 77, 154, 283, etc)."""
 

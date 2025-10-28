@@ -18,9 +18,18 @@ from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def usage_test_client(async_db_session: AsyncSession):
     """Create a test client with dependency overrides."""
+
+
     tenant_id = f"usage-test-tenant-{uuid4().hex[:8]}"
     app = FastAPI()
 

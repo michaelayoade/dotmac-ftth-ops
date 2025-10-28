@@ -4,6 +4,8 @@ Reusable base classes for FastAPI router testing.
 This module provides standardized patterns for testing routers that emerged
 from fixing 31 test failures across router smoke suite and access router tests.
 
+
+
 Key patterns:
 1. Automatic authentication and tenant header injection
 2. Proper dependency override management
@@ -35,6 +37,9 @@ from starlette.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.database import get_async_session
 
+
+
+pytestmark = pytest.mark.unit
 
 class RouterTestBase:
     """

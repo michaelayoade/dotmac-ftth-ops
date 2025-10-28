@@ -1,3 +1,4 @@
+
 """
 Improved integration tests for service lifecycle journey.
 
@@ -21,6 +22,9 @@ import pytest
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from dotmac.platform.billing.subscriptions.models import (
+
+
+
     BillingCycle,
     SubscriptionStatus,
 )
@@ -28,6 +32,10 @@ from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.tenant.models import Tenant
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestServiceLifecycleJourneyImproved:

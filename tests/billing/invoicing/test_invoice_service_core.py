@@ -1,3 +1,4 @@
+
 """
 Core Invoice Service Tests - Phase 1 Coverage Improvement
 
@@ -23,6 +24,8 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import (
+
+
     InvoiceStatus,
 )
 from dotmac.platform.billing.core.exceptions import (
@@ -31,8 +34,11 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def tenant_id() -> str:
@@ -76,6 +82,7 @@ async def invoice_service(async_session: AsyncSession):
     return InvoiceService(db_session=async_session)
 
 
+@pytest.mark.integration
 class TestInvoiceCreation:
     """Test invoice creation workflows."""
 
@@ -221,6 +228,7 @@ class TestInvoiceCreation:
         assert invoice.subscription_id == subscription_id
 
 
+@pytest.mark.integration
 class TestInvoiceRetrieval:
     """Test invoice retrieval operations."""
 
@@ -366,6 +374,7 @@ class TestInvoiceRetrieval:
         assert draft_invoices[0].status == InvoiceStatus.DRAFT
 
 
+@pytest.mark.integration
 class TestInvoiceLifecycle:
     """Test invoice lifecycle operations."""
 
@@ -529,6 +538,7 @@ class TestInvoiceLifecycle:
             )
 
 
+@pytest.mark.integration
 class TestInvoicePayment:
     """Test invoice payment tracking."""
 
@@ -604,6 +614,7 @@ class TestInvoicePayment:
         assert invoice_check.remaining_balance == 200000  # Full amount still owed
 
 
+@pytest.mark.integration
 class TestInvoiceCredits:
     """Test credit application to invoices."""
 
@@ -642,6 +653,7 @@ class TestInvoiceCredits:
         assert credited.status == InvoiceStatus.PARTIALLY_PAID
 
 
+@pytest.mark.integration
 class TestOverdueInvoices:
     """Test overdue invoice detection."""
 
@@ -680,6 +692,7 @@ class TestOverdueInvoices:
         assert overdue[0].invoice_id == invoice.invoice_id
 
 
+@pytest.mark.integration
 class TestTenantIsolation:
     """Test tenant isolation in invoice service."""
 

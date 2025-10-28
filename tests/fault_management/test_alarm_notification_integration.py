@@ -30,6 +30,7 @@ from dotmac.platform.notifications.models import (
 from dotmac.platform.user_management.models import User
 
 
+@pytest.mark.integration
 class TestAlarmNotificationIntegration:
     """Integration tests for complete alarm notification workflow.
 
@@ -518,6 +519,7 @@ class TestAlarmNotificationIntegration:
         assert "Occurrences: 3" in message
 
 
+@pytest.mark.integration
 class TestAlarmNotificationWorkflow:
     """Test complete workflow from alarm creation to notification delivery.
 

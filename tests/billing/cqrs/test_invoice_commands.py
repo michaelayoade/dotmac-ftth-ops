@@ -15,6 +15,7 @@ from dotmac.platform.billing.commands.invoice_commands import (
 )
 
 
+@pytest.mark.unit
 class TestCreateInvoiceCommand:
     """Test CreateInvoiceCommand"""
 
@@ -98,6 +99,7 @@ class TestCreateInvoiceCommand:
             )
 
 
+@pytest.mark.unit
 class TestInvoiceCommandHandler:
     """Test InvoiceCommandHandler"""
 
@@ -171,6 +173,7 @@ class TestInvoiceCommandHandler:
                 assert invoice.invoice_id == "inv-123"
 
 
+@pytest.mark.unit
 class TestVoidInvoiceCommand:
     """Test VoidInvoiceCommand"""
 
@@ -196,6 +199,7 @@ class TestVoidInvoiceCommand:
         assert len(command.void_reason) >= 10
 
 
+@pytest.mark.unit
 class TestFinalizeInvoiceCommand:
     """Test FinalizeInvoiceCommand"""
 
@@ -219,6 +223,7 @@ class TestFinalizeInvoiceCommand:
         assert command.send_email is False
 
 
+@pytest.mark.unit
 class TestApplyPaymentToInvoiceCommand:
     """Test ApplyPaymentToInvoiceCommand"""
 
@@ -245,6 +250,7 @@ class TestApplyPaymentToInvoiceCommand:
         assert command.payment_id == "pay-456"
 
 
+@pytest.mark.unit
 class TestMarkInvoiceAsPaidCommand:
     """Test MarkInvoiceAsPaidCommand"""
 

@@ -15,6 +15,7 @@ from dotmac.platform.billing.payments.router import get_failed_payments
 from tests.fixtures.async_db import create_mock_async_session
 
 
+@pytest.mark.unit
 class TestFailedPaymentsTenantIsolation:
     """Tests for tenant isolation in failed-payments endpoint"""
 
@@ -66,7 +67,7 @@ class TestFailedPaymentsTenantIsolation:
 
         # Verify result is returned
         assert result.count == 5
-        assert result.total_amount == 5000.0
+        assert result.total_amount == 50.0  # API returns dollars, not cents
 
     @pytest.mark.asyncio
     async def test_failed_payments_returns_empty_when_no_tenant_id(self):
@@ -137,7 +138,7 @@ class TestFailedPaymentsTenantIsolation:
         )
 
         assert result1.count == 3
-        assert result1.total_amount == 3000.0
+        assert result1.total_amount == 30.0  # API returns dollars, not cents
 
         # Test Tenant 2
         mock_result2 = MagicMock()
@@ -157,7 +158,7 @@ class TestFailedPaymentsTenantIsolation:
         )
 
         assert result2.count == 7
-        assert result2.total_amount == 9500.0
+        assert result2.total_amount == 95.0  # API returns dollars, not cents
 
         # Results should be different (proving isolation)
         assert result1.count != result2.count

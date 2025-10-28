@@ -44,6 +44,7 @@ from dotmac.platform.contacts.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestContactMethodSchemas:
     """Test ContactMethod schemas."""
 
@@ -113,6 +114,7 @@ class TestContactMethodSchemas:
         assert response.contact_id == contact_id
 
 
+@pytest.mark.unit
 class TestContactSchemas:
     """Test Contact schemas."""
 
@@ -240,6 +242,7 @@ class TestContactSchemas:
         assert list_response.has_next is True
 
 
+@pytest.mark.unit
 class TestContactLabelSchemas:
     """Test ContactLabel schemas."""
 
@@ -289,6 +292,7 @@ class TestContactLabelSchemas:
         assert response.name == "VIP"
 
 
+@pytest.mark.unit
 class TestContactFieldSchemas:
     """Test ContactField schemas."""
 
@@ -356,6 +360,7 @@ class TestContactFieldSchemas:
         assert response.field_type == ContactFieldType.TEXT
 
 
+@pytest.mark.unit
 class TestContactActivitySchemas:
     """Test ContactActivity schemas."""
 
@@ -414,6 +419,7 @@ class TestContactActivitySchemas:
         assert response.performed_by == user_id
 
 
+@pytest.mark.unit
 class TestContactSearchSchemas:
     """Test ContactSearch schemas."""
 
@@ -474,6 +480,7 @@ class TestContactSearchSchemas:
             ContactSearchRequest(page_size=1000)
 
 
+@pytest.mark.unit
 class TestContactBulkOperationSchemas:
     """Test bulk operation schemas."""
 
@@ -512,6 +519,7 @@ class TestContactBulkOperationSchemas:
         assert bulk_delete2.hard_delete is False
 
 
+@pytest.mark.unit
 class TestSchemaConfigurations:
     """Test Pydantic model configurations."""
 

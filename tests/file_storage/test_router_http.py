@@ -1,3 +1,4 @@
+
 """
 HTTP-based integration tests for file storage router.
 
@@ -16,6 +17,13 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo, create_access_token
 from dotmac.platform.file_storage.router import file_storage_router
 from dotmac.platform.file_storage.service import FileMetadata
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 BASE_STORAGE_PATH = "/files/storage"
 

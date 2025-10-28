@@ -1,4 +1,5 @@
 """Tests for caching module."""
+import pytest
 
 import json
 from unittest.mock import MagicMock, Mock, patch
@@ -17,6 +18,7 @@ from dotmac.platform.core.caching import (
 )
 
 
+@pytest.mark.integration
 class TestCaching:
     """Test caching functionality."""
 

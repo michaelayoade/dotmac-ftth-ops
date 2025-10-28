@@ -24,8 +24,15 @@ from dotmac.platform.resilience.service_mesh import (
 )
 
 
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class TestCircuitBreakerStateProperties:
     """Test CircuitBreakerState is_open property."""
+
 
     def test_is_open_when_state_open(self):
         """Test is_open property returns True when state is OPEN."""

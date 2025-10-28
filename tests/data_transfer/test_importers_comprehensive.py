@@ -100,6 +100,7 @@ def sample_yaml_data():
     ]
 
 
+@pytest.mark.unit
 class TestCSVImporter:
     """Test CSV importer functionality."""
 
@@ -245,6 +246,7 @@ class TestCSVImporter:
         assert importer._progress.status == TransferStatus.FAILED
 
 
+@pytest.mark.unit
 class TestJSONImporter:
     """Test JSON importer functionality."""
 
@@ -343,6 +345,7 @@ class TestJSONImporter:
             file_path.unlink(missing_ok=True)
 
 
+@pytest.mark.unit
 class TestExcelImporter:
     """Test Excel importer functionality."""
 
@@ -442,6 +445,7 @@ class TestExcelImporter:
         assert importer._progress.status == TransferStatus.FAILED
 
 
+@pytest.mark.unit
 class TestXMLImporter:
     """Test XML importer functionality."""
 
@@ -575,6 +579,7 @@ class TestXMLImporter:
             file_path.unlink(missing_ok=True)
 
 
+@pytest.mark.unit
 class TestYAMLImporter:
     """Test YAML importer functionality."""
 
@@ -695,6 +700,7 @@ class TestYAMLImporter:
             file_path.unlink(missing_ok=True)
 
 
+@pytest.mark.unit
 class TestFactoryFunctions:
     """Test factory and utility functions."""
 
@@ -790,6 +796,7 @@ class TestFactoryFunctions:
             detect_format(Path("test.txt"))
 
 
+@pytest.mark.unit
 class TestImportFileFunction:
     """Test the high-level import_file function."""
 

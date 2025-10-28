@@ -13,6 +13,7 @@ Tests cover:
 - Span context creation
 - Test environment detection
 """
+import pytest
 
 import os
 from unittest.mock import Mock, patch
@@ -36,6 +37,7 @@ from dotmac.platform.version import get_version
 CURRENT_VERSION = get_version()
 
 
+@pytest.mark.integration
 class TestCreateResource:
     """Test OpenTelemetry resource creation."""
 
@@ -74,6 +76,7 @@ class TestCreateResource:
         assert attrs["team"] == "platform"
 
 
+@pytest.mark.integration
 class TestConfigureStructlog:
     """Test structlog configuration."""
 
@@ -114,6 +117,7 @@ class TestConfigureStructlog:
         mock_configure.assert_called_once()
 
 
+@pytest.mark.integration
 class TestSetupTelemetry:
     """Test main telemetry setup function."""
 
@@ -182,6 +186,7 @@ class TestSetupTelemetry:
         mock_instrument.assert_called_once_with(app)
 
 
+@pytest.mark.integration
 class TestSetupTracing:
     """Test tracing setup."""
 
@@ -244,6 +249,7 @@ class TestSetupTracing:
         setup_tracing(Mock())
 
 
+@pytest.mark.integration
 class TestSetupMetrics:
     """Test metrics setup."""
 
@@ -303,6 +309,7 @@ class TestSetupMetrics:
         setup_metrics(Mock())
 
 
+@pytest.mark.integration
 class TestInstrumentLibraries:
     """Test library instrumentation."""
 
@@ -365,6 +372,7 @@ class TestInstrumentLibraries:
         instrument_libraries(None)
 
 
+@pytest.mark.integration
 class TestGetTracerAndMeter:
     """Test tracer and meter getter functions."""
 
@@ -413,6 +421,7 @@ class TestGetTracerAndMeter:
         assert meter == mock_meter
 
 
+@pytest.mark.integration
 class TestRecordError:
     """Test error recording in spans."""
 
@@ -433,6 +442,7 @@ class TestRecordError:
         mock_span.set_status.assert_called_once()
 
 
+@pytest.mark.integration
 class TestCreateSpanContext:
     """Test span context creation."""
 

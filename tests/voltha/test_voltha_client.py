@@ -22,6 +22,7 @@ def reset_circuit_breaker():
     RobustHTTPClient._circuit_breakers.clear()
 
 
+@pytest.mark.integration
 class TestVOLTHAClientInitialization:
     """Test client initialization"""
 
@@ -70,6 +71,7 @@ class TestVOLTHAClientInitialization:
                 assert client.base_url == "http://localhost:8881/"
 
 
+@pytest.mark.integration
 class TestVOLTHALogicalDeviceOperations:
     """Test logical device (OLT) operations"""
 
@@ -162,6 +164,7 @@ class TestVOLTHALogicalDeviceOperations:
             assert len(result) == 2
 
 
+@pytest.mark.integration
 class TestVOLTHADeviceOperations:
     """Test physical device operations"""
 
@@ -269,6 +272,7 @@ class TestVOLTHADeviceOperations:
             assert result[0]["label"] == "PON 0"
 
 
+@pytest.mark.integration
 class TestVOLTHAAdapterOperations:
     """Test adapter and device type operations"""
 
@@ -308,6 +312,7 @@ class TestVOLTHAAdapterOperations:
             assert len(result) == 2
 
 
+@pytest.mark.integration
 class TestVOLTHAHealthChecks:
     """Test health check operations"""
 
@@ -348,6 +353,7 @@ class TestVOLTHAHealthChecks:
             assert result is False
 
 
+@pytest.mark.integration
 class TestVOLTHAFlowOperations:
     """Test flow management operations"""
 
@@ -390,6 +396,7 @@ class TestVOLTHAFlowOperations:
             assert result["priority"] == 2000
 
 
+@pytest.mark.integration
 class TestVOLTHATechnologyProfiles:
     """Test technology profile operations"""
 
@@ -435,6 +442,7 @@ class TestVOLTHATechnologyProfiles:
             assert result is True
 
 
+@pytest.mark.integration
 class TestVOLTHAMeterOperations:
     """Test meter management operations"""
 
@@ -495,6 +503,7 @@ class TestVOLTHAMeterOperations:
             assert result is True
 
 
+@pytest.mark.integration
 class TestVOLTHAAlarmEventOperations:
     """Test alarm and event helper methods"""
 
@@ -583,6 +592,7 @@ class TestVOLTHAAlarmEventOperations:
             )
 
 
+@pytest.mark.integration
 class TestVOLTHAErrorHandling:
     """Test error handling"""
 

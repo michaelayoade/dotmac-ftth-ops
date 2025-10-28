@@ -90,8 +90,7 @@ function ProvisionPageContent() {
       if (!response.ok) return [];
       return response.json();
     },
-    refetchInterval: (data) =>
-      data?.some((job) => job.status === "pending" || job.status === "processing") ? 5000 : false,
+    refetchInterval: 5000,
   });
 
   // Single device provision
@@ -397,7 +396,7 @@ function ProvisionPageContent() {
                 </p>
               </div>
 
-              {csvPreview.length > 0 && (
+              {csvPreview.length > 0 && csvPreview[0] && (
                 <div className="space-y-2">
                   <Label>File Preview (First 5 rows)</Label>
                   <div className="border rounded-md overflow-x-auto">
@@ -560,7 +559,7 @@ function ProvisionPageContent() {
 
 export default function ProvisionPage() {
   return (
-    <RouteGuard requiredPermission="devices.write">
+    <RouteGuard permission="devices.write">
       <ProvisionPageContent />
     </RouteGuard>
   );

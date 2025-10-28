@@ -1,4 +1,5 @@
 """Integration tests for router registration system."""
+import pytest
 
 from importlib import import_module
 from unittest.mock import Mock, patch
@@ -7,6 +8,9 @@ from fastapi import APIRouter, FastAPI
 
 from dotmac.platform.routers import ROUTER_CONFIGS, register_routers
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestRouterRegistration:
     """Test router registration functionality."""

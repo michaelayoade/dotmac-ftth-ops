@@ -39,6 +39,7 @@ def delivery_service(mock_db):
     return WebhookDeliveryService(mock_db)
 
 
+@pytest.mark.integration
 class TestRetryDeliveryMethod:
     """Test retry_delivery() method - covers lines 307-349."""
 
@@ -207,6 +208,7 @@ class TestRetryDeliveryMethod:
             assert result is False
 
 
+@pytest.mark.integration
 class TestProcessPendingRetriesMethod:
     """Test process_pending_retries() method - covers lines 393-420."""
 

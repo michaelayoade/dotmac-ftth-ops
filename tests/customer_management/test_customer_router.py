@@ -16,6 +16,9 @@ from fastapi import FastAPI, status
 from httpx import ASGITransport, AsyncClient
 
 
+
+pytestmark = pytest.mark.integration
+
 class MockObject:
     """Helper to convert dict to object with attributes."""
 

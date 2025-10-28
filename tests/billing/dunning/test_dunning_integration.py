@@ -39,6 +39,7 @@ async def test_customer(async_session: AsyncSession, test_tenant_id: str) -> Cus
     customer = Customer(
         id=uuid4(),
         tenant_id=test_tenant_id,
+        customer_number="CUST-DUNNING-001",
         email="dunning.test@example.com",
         name="Dunning Test Customer",
         phone="+1234567890",
@@ -82,6 +83,7 @@ def test_campaign_data() -> DunningCampaignCreate:
     )
 
 
+@pytest.mark.integration
 class TestDunningCampaignManagement:
     """Test dunning campaign CRUD operations."""
 
@@ -127,16 +129,13 @@ class TestDunningCampaignManagement:
         test_tenant_id: str,
     ):
         """Test campaign creation fails without actions."""
-        invalid_data = DunningCampaignCreate(
-            name="Invalid Campaign",
-            trigger_after_days=7,
-            actions=[],  # Empty actions should fail
-        )
+        from pydantic import ValidationError as PydanticValidationError
 
-        with pytest.raises(ValidationError, match="must have at least one action"):
-            await dunning_service.create_campaign(
-                tenant_id=test_tenant_id,
-                data=invalid_data,
+        with pytest.raises(PydanticValidationError):
+            invalid_data = DunningCampaignCreate(
+                name="Invalid Campaign",
+                trigger_after_days=7,
+                actions=[],  # Empty actions should fail
             )
 
     @pytest.mark.asyncio
@@ -277,11 +276,12 @@ class TestDunningCampaignManagement:
         assert len([c for c in active_campaigns if c.is_active]) >= 2
 
 
+@pytest.mark.integration
 class TestDunningExecution:
     """Test dunning execution workflows."""
 
     @pytest.mark.asyncio
-    async def test_create_execution_success(
+    async def test_start_execution_success(
         self,
         dunning_service: DunningService,
         test_tenant_id: str,
@@ -298,7 +298,7 @@ class TestDunningExecution:
         await async_session.commit()
 
         # Create execution
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_test123",
@@ -338,7 +338,7 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_test123",
@@ -390,7 +390,7 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_full_test",
@@ -441,7 +441,7 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_cancel_test",
@@ -489,7 +489,7 @@ class TestDunningExecution:
             tenant_id=test_tenant_id,
             data=test_campaign_data,
         )
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_recovery_test",
@@ -518,6 +518,7 @@ class TestDunningExecution:
         assert campaign.total_recovered_amount == 10000
 
 
+@pytest.mark.integration
 class TestDunningStatistics:
     """Test dunning statistics and reporting."""
 
@@ -539,7 +540,7 @@ class TestDunningStatistics:
 
         # Create multiple executions
         for i in range(3):
-            execution = await dunning_service.create_execution(
+            execution = await dunning_service.start_execution(
                 campaign_id=campaign.id,
                 tenant_id=test_tenant_id,
                 subscription_id=f"sub_stats_{i}",
@@ -588,7 +589,7 @@ class TestDunningStatistics:
             )
 
             # Create executions
-            execution = await dunning_service.create_execution(
+            execution = await dunning_service.start_execution(
                 campaign_id=campaign.id,
                 tenant_id=test_tenant_id,
                 subscription_id=f"sub_overall_{i}",
@@ -612,6 +613,7 @@ class TestDunningStatistics:
         assert stats.total_recovered_amount >= 20000
 
 
+@pytest.mark.integration
 class TestDunningEdgeCases:
     """Test edge cases and error handling."""
 
@@ -633,7 +635,7 @@ class TestDunningEdgeCases:
             data=data,
         )
 
-        execution = await dunning_service.create_execution(
+        execution = await dunning_service.start_execution(
             campaign_id=campaign.id,
             tenant_id=test_tenant_id,
             subscription_id="sub_retry_test",

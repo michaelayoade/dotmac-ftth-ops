@@ -7,6 +7,7 @@ import pytest
 import dotmac.platform as platform
 
 
+@pytest.mark.unit
 class TestPlatformRegistry:
     """Test service registry functions."""
 
@@ -64,6 +65,7 @@ class TestPlatformRegistry:
         assert len(services) == 2
 
 
+@pytest.mark.unit
 class TestPlatformConfig:
     """Test platform configuration."""
 
@@ -214,6 +216,7 @@ class TestPlatformConfig:
         assert config.get("observability.metrics_enabled") is False
 
 
+@pytest.mark.unit
 class TestPlatformInitialization:
     """Test platform initialization functions."""
 
@@ -267,6 +270,7 @@ class TestPlatformInitialization:
         assert "secrets" in services
 
 
+@pytest.mark.unit
 class TestPlatformModule:
     """Test module-level attributes."""
 
@@ -298,6 +302,7 @@ class TestPlatformModule:
         assert platform.config.get("auth.jwt_algorithm") in ["HS256", "RS256"]
 
 
+@pytest.mark.unit
 class TestServiceFactories:
     """Test service factory functions."""
 

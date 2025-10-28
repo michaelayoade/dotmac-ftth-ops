@@ -1,3 +1,4 @@
+
 """
 Load testing for billing scenarios using locust.
 Tests high-volume billing operations under load.
@@ -12,12 +13,22 @@ from datetime import datetime, timedelta
 
 import pytest
 
+
 # Conditionally import locust - skip if not installed
+
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.performance,
+    pytest.mark.skip(reason="Performance tests - run manually"),
+]
+
 locust = pytest.importorskip("locust", reason="Locust not installed - skip load tests")
 from locust import HttpUser, between, task
 
 # Mark all tests in this module as performance tests (excluded from default suite)
-pytestmark = [pytest.mark.performance, pytest.mark.skip(reason="Performance tests - run manually")]
 
 
 # Install: pip install locust

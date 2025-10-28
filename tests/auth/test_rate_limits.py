@@ -1,10 +1,12 @@
 """Tests for auth rate limits configuration."""
 
+import pytest
 from unittest.mock import MagicMock
 
 from dotmac.platform.auth.rate_limits import AUTH_RATE_LIMITS, apply_auth_rate_limits
 
 
+@pytest.mark.integration
 class TestAuthRateLimits:
     """Test authentication rate limits configuration."""
 

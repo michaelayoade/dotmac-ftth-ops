@@ -18,6 +18,7 @@ from dotmac.platform.billing.pdf_generator_reportlab import (
 )
 
 
+@pytest.mark.unit
 class TestGeneratorInitialization:
     """Test generator initialization and configuration."""
 
@@ -57,6 +58,7 @@ class TestGeneratorInitialization:
         assert isinstance(generator.styles, dict)
 
 
+@pytest.mark.unit
 class TestDefaultGenerator:
     """Test the default generator instance."""
 

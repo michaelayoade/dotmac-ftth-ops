@@ -18,6 +18,7 @@ from dotmac.platform.netbox.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestIPAddressCreateIPv6:
     """Test IP address creation with IPv4/IPv6 validation."""
 
@@ -86,6 +87,7 @@ class TestIPAddressCreateIPv6:
         assert ip.status == "slaac"
 
 
+@pytest.mark.unit
 class TestDualStackAllocation:
     """Test dual-stack IP allocation schemas."""
 
@@ -149,6 +151,7 @@ class TestDualStackAllocation:
         assert response.allocated_at is not None
 
 
+@pytest.mark.unit
 class TestBulkIPAllocation:
     """Test bulk IP allocation schemas."""
 
@@ -214,6 +217,7 @@ class TestBulkIPAllocation:
         assert response.allocated[9].address == "192.168.1.10/24"
 
 
+@pytest.mark.unit
 class TestIPUtilization:
     """Test IP utilization response schema."""
 
@@ -268,6 +272,7 @@ class TestIPUtilization:
         assert util.available_ips == 0
 
 
+@pytest.mark.unit
 class TestNetBoxEdgeCases:
     """Test edge cases and special scenarios."""
 

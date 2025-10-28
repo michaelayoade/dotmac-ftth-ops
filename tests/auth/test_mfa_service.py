@@ -2,11 +2,13 @@
 Tests for MFA Service.
 """
 
+import pytest
 import re
 
 from dotmac.platform.auth.mfa_service import MFAService, mfa_service
 
 
+@pytest.mark.integration
 class TestMFAService:
     """Tests for MFA service functionality."""
 

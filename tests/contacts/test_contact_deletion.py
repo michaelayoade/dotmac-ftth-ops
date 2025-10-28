@@ -1,3 +1,4 @@
+
 """
 Contact deletion tests - Migrated to use shared helpers.
 
@@ -12,14 +13,20 @@ import pytest
 
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import (
+
+
     assert_entity_deleted,
     build_mock_db_session,
     build_success_result,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactDeletion:
     """Test contact deletion using shared helpers."""
 

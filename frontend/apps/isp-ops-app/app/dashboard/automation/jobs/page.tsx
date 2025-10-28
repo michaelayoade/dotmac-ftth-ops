@@ -67,13 +67,8 @@ function JobsPageContent() {
       }
       return response.json();
     },
-    refetchInterval: (data) => {
-      // Auto-refresh every 10 seconds if any jobs are running
-      const hasRunningJobs = data?.some(
-        (job) => job.status === "running" || job.status === "pending"
-      );
-      return hasRunningJobs ? 10000 : false;
-    },
+    // Auto-refresh every 10 seconds for real-time job status updates
+    refetchInterval: 10000,
   });
 
   const cancelJobMutation = useMutation({
@@ -389,7 +384,7 @@ function JobsPageContent() {
 
 export default function JobsPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <JobsPageContent />
     </RouteGuard>
   );

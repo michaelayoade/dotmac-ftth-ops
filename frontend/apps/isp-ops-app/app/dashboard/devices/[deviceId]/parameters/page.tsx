@@ -479,7 +479,7 @@ function ParametersPageContent() {
 
 export default function ParametersPage() {
   return (
-    <RouteGuard requiredPermission="devices.write">
+    <RouteGuard permission="devices.write">
       <ParametersPageContent />
     </RouteGuard>
   );

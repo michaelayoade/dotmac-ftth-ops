@@ -1,3 +1,4 @@
+
 """
 Integration tests for admin settings management router.
 
@@ -14,6 +15,13 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_admin_user():

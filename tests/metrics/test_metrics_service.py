@@ -8,6 +8,8 @@ import pytest
 from dotmac.platform.billing.core.entities import InvoiceEntity
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.metrics.schemas import (
+
+
     DashboardMetrics,
     NetworkMetrics,
     RevenueMetrics,
@@ -15,6 +17,7 @@ from dotmac.platform.metrics.schemas import (
     SupportMetrics,
 )
 from dotmac.platform.metrics.service import MetricsService
+
 from dotmac.platform.radius.models import NAS, RadAcct, RadiusBandwidthProfile
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.tenant.models import Tenant
@@ -25,6 +28,11 @@ from dotmac.platform.ticketing.models import (
     TicketStatus,
 )
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class DummyRedis:
     def __init__(self):

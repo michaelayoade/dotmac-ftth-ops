@@ -12,6 +12,7 @@ from dotmac.platform.analytics.aggregators import (
 from dotmac.platform.analytics.base import Metric
 
 
+@pytest.mark.unit
 class TestMetricAggregator:
     """Test MetricAggregator class."""
 
@@ -316,6 +317,7 @@ class TestMetricAggregator:
         assert len(aggregator.metrics_buffer[key]) == 1
 
 
+@pytest.mark.unit
 class TestTimeWindowAggregator:
     """Test TimeWindowAggregator class."""
 
@@ -462,6 +464,7 @@ class TestTimeWindowAggregator:
         assert final_count <= initial_count
 
 
+@pytest.mark.unit
 class TestStatisticalAggregator:
     """Test StatisticalAggregator class."""
 

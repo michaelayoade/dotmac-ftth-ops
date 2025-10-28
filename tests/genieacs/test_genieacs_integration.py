@@ -13,6 +13,8 @@ from aiohttp import web
 
 from dotmac.platform.genieacs.client import GenieACSClient
 
+pytestmark = pytest.mark.unit
+
 
 @pytest_asyncio.fixture
 async def mock_genieacs_server(aiohttp_server):

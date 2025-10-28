@@ -20,6 +20,7 @@ from dotmac.platform.integrations import (
 from dotmac.platform.secrets import VaultError
 
 
+@pytest.mark.integration
 class TestBaseIntegrationSecrets:
     """Test BaseIntegration secrets loading."""
 
@@ -35,6 +36,7 @@ class TestBaseIntegrationSecrets:
             secrets_path=None,  # No secrets path
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -59,6 +61,7 @@ class TestBaseIntegrationSecrets:
             secrets_path="test/integration",
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -93,6 +96,7 @@ class TestBaseIntegrationSecrets:
             secrets_path="test/integration",
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -127,6 +131,7 @@ class TestBaseIntegrationSecrets:
             secrets_path="test/integration",
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -163,6 +168,7 @@ class TestBaseIntegrationSecrets:
             secrets_path="test/integration",
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -209,6 +215,7 @@ class TestBaseIntegrationSecrets:
             secrets_path="test/integration",
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -238,6 +245,7 @@ class TestBaseIntegrationSecrets:
             settings={},
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -266,6 +274,7 @@ class TestBaseIntegrationSecrets:
             settings={},
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -286,6 +295,7 @@ class TestBaseIntegrationSecrets:
             settings={},
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -309,6 +319,7 @@ class TestBaseIntegrationSecrets:
             settings={},
         )
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -326,6 +337,7 @@ class TestBaseIntegrationSecrets:
         assert integration.status == IntegrationStatus.READY
 
 
+@pytest.mark.integration
 class TestSendGridIntegration:
     """Test SendGrid email integration."""
 
@@ -526,6 +538,7 @@ class TestSendGridIntegration:
         assert "SendGrid API error" in result["error"]
 
 
+@pytest.mark.integration
 class TestTwilioIntegration:
     """Test Twilio SMS integration."""
 
@@ -718,6 +731,7 @@ class TestTwilioIntegration:
 # Add more test classes to continue...
 
 
+@pytest.mark.integration
 class TestIntegrationRegistry:
     """Test IntegrationRegistry class."""
 
@@ -739,6 +753,7 @@ class TestIntegrationRegistry:
         registry = IntegrationRegistry()
 
         # Register a custom provider first
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -767,6 +782,7 @@ class TestIntegrationRegistry:
         registry = IntegrationRegistry()
 
         # Register a custom provider first
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -800,6 +816,7 @@ class TestIntegrationRegistry:
         registry = IntegrationRegistry()
 
         # Register custom providers
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -832,6 +849,7 @@ class TestIntegrationRegistry:
         registry = IntegrationRegistry()
 
         # Register custom provider
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -860,6 +878,7 @@ class TestIntegrationRegistry:
         registry = IntegrationRegistry()
 
         # Register custom providers
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -990,6 +1009,7 @@ class TestIntegrationRegistry:
         # Track cleanup calls
         cleanup_called = []
 
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -1022,6 +1042,7 @@ class TestIntegrationRegistry:
         assert "test2" in cleanup_called
 
 
+@pytest.mark.integration
 class TestModuleLevelFunctions:
     """Test module-level helper functions."""
 
@@ -1041,6 +1062,7 @@ class TestModuleLevelFunctions:
         registry = IntegrationRegistry()
 
         # Register custom provider
+        @pytest.mark.integration
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY

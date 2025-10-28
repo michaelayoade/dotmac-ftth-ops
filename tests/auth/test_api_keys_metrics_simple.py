@@ -1,3 +1,4 @@
+
 """
 Simple tests for API Keys Metrics Router to improve coverage.
 """
@@ -13,6 +14,13 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.api_keys_metrics_router import router as api_keys_metrics_router
 from dotmac.platform.auth.core import UserInfo
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def metrics_app():

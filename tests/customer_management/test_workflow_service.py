@@ -1,3 +1,4 @@
+
 """
 Tests for the customer management workflow adapter service.
 """
@@ -12,10 +13,17 @@ import pytest
 from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.schemas import CustomerCreate
 from dotmac.platform.customer_management.workflow_service import (
+
+
     CustomerService as WorkflowCustomerService,
 )
 from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class _ScalarResult:
     """Helper to mimic SQLAlchemy AsyncResult.scalar_one_or_none()."""

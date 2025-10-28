@@ -1,3 +1,4 @@
+
 """
 API tests for tenant provisioning endpoints.
 """
@@ -11,6 +12,13 @@ from httpx import AsyncClient
 from dotmac.platform.tenant.models import TenantDeploymentMode, TenantProvisioningStatus
 from dotmac.platform.tenant.provisioning_service import TenantProvisioningConflictError
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 def _job_factory(
     tenant_id: str,

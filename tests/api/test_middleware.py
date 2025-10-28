@@ -15,6 +15,7 @@ from dotmac.platform.api.middleware import (
 )
 
 
+@pytest.mark.unit
 class TestGatewayMiddleware:
     """Test GatewayMiddleware functionality."""
 
@@ -159,6 +160,7 @@ class TestGatewayMiddleware:
             )
 
 
+@pytest.mark.unit
 class TestRequestTransformMiddleware:
     """Test RequestTransformMiddleware functionality."""
 
@@ -232,6 +234,7 @@ class TestRequestTransformMiddleware:
         assert "X-Correlation-ID" in response.headers
 
 
+@pytest.mark.unit
 class TestCircuitBreakerMiddleware:
     """Test CircuitBreakerMiddleware functionality."""
 
@@ -370,6 +373,7 @@ class TestCircuitBreakerMiddleware:
         assert middleware.gateway is gateway
 
 
+@pytest.mark.unit
 class TestMiddlewareIntegration:
     """Test middleware working together."""
 

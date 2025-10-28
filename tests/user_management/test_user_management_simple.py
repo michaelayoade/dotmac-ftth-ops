@@ -13,6 +13,7 @@ from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 
+@pytest.mark.unit
 class TestUserModel:
     """Test User model functionality."""
 
@@ -56,6 +57,7 @@ class TestUserModel:
         assert "mfa_secret" not in user_dict
 
 
+@pytest.mark.unit
 class TestUserService:
     """Test UserService functionality."""
 

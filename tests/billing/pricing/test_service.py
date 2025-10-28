@@ -1,3 +1,4 @@
+
 """
 Tests for billing pricing service.
 
@@ -12,6 +13,8 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PricingError
 from dotmac.platform.billing.pricing.models import (
+
+
     DiscountType,
     PriceCalculationContext,
     PricingRule,
@@ -19,9 +22,13 @@ from dotmac.platform.billing.pricing.models import (
 )
 from dotmac.platform.billing.pricing.service import PricingEngine
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestPricingEngineRules:
     """Test pricing rule management in service."""
 
@@ -200,6 +207,7 @@ class TestPricingEngineRules:
         service.db.commit.assert_called_once()
 
 
+@pytest.mark.integration
 class TestPricingEngineCalculations:
     """Test price calculation functionality."""
 
@@ -478,6 +486,7 @@ class TestPricingEngineCalculations:
         assert applies is False
 
 
+@pytest.mark.integration
 class TestPricingEngineHelpers:
     """Test helper methods in pricing service."""
 
@@ -537,6 +546,7 @@ class TestPricingEngineHelpers:
             service.db.commit.assert_called_once()
 
 
+@pytest.mark.integration
 class TestPricingEngineAdvanced:
     """Test advanced pricing service features."""
 
@@ -688,6 +698,7 @@ class TestPricingEngineAdvanced:
             assert mock_deactivate.call_count == 2
 
 
+@pytest.mark.integration
 class TestPricingEngineErrorHandling:
     """Test error handling in pricing service."""
 

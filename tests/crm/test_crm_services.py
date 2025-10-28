@@ -1,3 +1,4 @@
+
 """
 Comprehensive CRM Service Layer Tests.
 
@@ -18,6 +19,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.core.exceptions import EntityNotFoundError
 from dotmac.platform.crm.models import (
+
+
+
     Lead,
     LeadSource,
     LeadStatus,
@@ -30,6 +34,10 @@ from dotmac.platform.crm.models import (
 from dotmac.platform.crm.service import LeadService, QuoteService, SiteSurveyService
 from dotmac.platform.customer_management.models import Customer
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_session():

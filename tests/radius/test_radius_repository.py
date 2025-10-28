@@ -1,3 +1,4 @@
+
 """
 Tests for RADIUS Repository Layer
 
@@ -8,6 +9,13 @@ import pytest
 
 from dotmac.platform.radius.repository import RADIUSRepository
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestRADIUSRepository:

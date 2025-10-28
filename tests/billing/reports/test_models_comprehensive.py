@@ -15,6 +15,7 @@ from dotmac.platform.billing.reports.service import (
 )
 
 
+@pytest.mark.unit
 class TestReportTypeEnum:
     """Test ReportType enum."""
 
@@ -52,6 +53,7 @@ class TestReportTypeEnum:
         assert ReportType.CUSTOMER in report_types
 
 
+@pytest.mark.unit
 class TestReportPeriodEnum:
     """Test ReportPeriod enum."""
 
@@ -95,6 +97,7 @@ class TestReportPeriodEnum:
         assert ReportPeriod.CUSTOM in periods
 
 
+@pytest.mark.unit
 class TestDateRangeCalculation:
     """Test date range calculation utility methods."""
 
@@ -269,6 +272,7 @@ class TestDateRangeCalculation:
             service._calculate_date_range(ReportPeriod.CUSTOM, custom_start=datetime.now(timezone.utc))
 
 
+@pytest.mark.unit
 class TestPreviousPeriodCalculation:
     """Test previous period calculation for comparisons."""
 
@@ -324,6 +328,7 @@ class TestPreviousPeriodCalculation:
         assert prev_start == datetime(2024, 3, 4, tzinfo=timezone.utc)
 
 
+@pytest.mark.unit
 class TestGrowthRateCalculation:
     """Test growth rate calculation utility."""
 
@@ -378,6 +383,7 @@ class TestGrowthRateCalculation:
         assert growth == 100.0
 
 
+@pytest.mark.unit
 class TestPercentageCalculation:
     """Test percentage calculation utility."""
 

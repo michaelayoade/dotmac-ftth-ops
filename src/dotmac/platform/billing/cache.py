@@ -565,6 +565,8 @@ def cached_result(
 
             return result
 
+        # Explicitly set __wrapped__ for test access
+        wrapper.__wrapped__ = func  # type: ignore[attr-defined]
         return wrapper
 
     return decorator

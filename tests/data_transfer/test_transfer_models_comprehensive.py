@@ -38,6 +38,7 @@ from dotmac.platform.data_transfer.models import (  # Enums; Request models; Res
 )
 
 
+@pytest.mark.unit
 class TestEnums:
     """Test enum classes and their values."""
 
@@ -89,6 +90,7 @@ class TestEnums:
         assert len(all_values) == 3
 
 
+@pytest.mark.unit
 class TestImportRequest:
     """Test ImportRequest model and validation."""
 
@@ -346,6 +348,7 @@ class TestImportRequest:
         assert request.encoding == "utf-8"
 
 
+@pytest.mark.unit
 class TestExportRequest:
     """Test ExportRequest model and validation."""
 
@@ -461,6 +464,7 @@ class TestExportRequest:
         assert request.fields is None
 
 
+@pytest.mark.unit
 class TestTransferJobResponse:
     """Test TransferJobResponse model."""
 
@@ -631,6 +635,7 @@ class TestTransferJobResponse:
         assert response_no_records.success_rate == 100.0
 
 
+@pytest.mark.unit
 class TestTransferJobListResponse:
     """Test TransferJobListResponse model."""
 
@@ -673,6 +678,7 @@ class TestTransferJobListResponse:
         assert response.has_more is False
 
 
+@pytest.mark.unit
 class TestDataFormatInfo:
     """Test DataFormatInfo model."""
 
@@ -703,6 +709,7 @@ class TestDataFormatInfo:
         assert info.options == options
 
 
+@pytest.mark.unit
 class TestFormatsResponse:
     """Test FormatsResponse model."""
 
@@ -737,6 +744,7 @@ class TestFormatsResponse:
         assert response.compression_types == ["none", "gzip", "zip"]
 
 
+@pytest.mark.unit
 class TestTransferErrorResponse:
     """Test TransferErrorResponse model."""
 
@@ -777,6 +785,7 @@ class TestTransferErrorResponse:
         assert error.timestamp == timestamp
 
 
+@pytest.mark.unit
 class TestTransferValidationResult:
     """Test TransferValidationResult model."""
 
@@ -821,6 +830,7 @@ class TestTransferValidationResult:
         assert result.json_schema is None
 
 
+@pytest.mark.unit
 class TestTransferJobRequest:
     """Test TransferJobRequest model."""
 
@@ -905,6 +915,7 @@ class TestTransferJobRequest:
             TransferJobRequest(name="Test Job", description=long_desc)
 
 
+@pytest.mark.unit
 class TestTransferProgressUpdate:
     """Test TransferProgressUpdate model."""
 
@@ -983,6 +994,7 @@ class TestTransferProgressUpdate:
         assert update.message == "Job completed successfully"
 
 
+@pytest.mark.unit
 class TestTransferStatistics:
     """Test TransferStatistics model."""
 
@@ -1013,6 +1025,7 @@ class TestTransferStatistics:
         assert stats.most_used_format == "csv"
 
 
+@pytest.mark.unit
 class TestModelSerialization:
     """Test model serialization and deserialization."""
 
@@ -1078,6 +1091,7 @@ class TestModelSerialization:
         assert reconstructed.progress == original.progress
 
 
+@pytest.mark.unit
 class TestModelEdgeCases:
     """Test edge cases and error conditions."""
 

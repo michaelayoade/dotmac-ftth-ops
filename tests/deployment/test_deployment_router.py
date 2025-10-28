@@ -1,3 +1,4 @@
+
 """
 Tests for Deployment Router
 
@@ -11,6 +12,13 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class TestDeploymentTemplates:
     """Test deployment template CRUD endpoints."""

@@ -20,6 +20,7 @@ from dotmac.platform.monitoring.integrations import (
 )
 
 
+@pytest.mark.integration
 class TestMetricData:
     """Test MetricData data structure."""
 
@@ -77,6 +78,7 @@ class TestMetricData:
         assert float_metric.value == 95.5
 
 
+@pytest.mark.integration
 class TestPrometheusIntegration:
     """Test PrometheusIntegration functionality."""
 

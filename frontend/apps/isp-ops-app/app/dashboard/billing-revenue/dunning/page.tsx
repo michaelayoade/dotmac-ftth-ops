@@ -652,7 +652,7 @@ function DunningManagementContent() {
 
 export default function DunningManagementPage() {
   return (
-    <RouteGuard requiredPermission="billing:write">
+    <RouteGuard permission="billing:write">
       <DunningManagementContent />
     </RouteGuard>
   );

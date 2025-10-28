@@ -1,3 +1,4 @@
+
 """
 Tests for communications event listeners.
 
@@ -13,6 +14,8 @@ import pytest
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.event_listeners import (
+
+
     _email_html_message,
     init_communications_event_listeners,
     send_invoice_created_email,
@@ -25,7 +28,6 @@ from dotmac.platform.communications.event_listeners import (
 )
 from dotmac.platform.events.models import Event
 
-pytestmark = pytest.mark.asyncio
 
 
 # ============================================================================
@@ -33,6 +35,11 @@ pytestmark = pytest.mark.asyncio
 # ============================================================================
 
 
+
+
+pytestmark = pytest.mark.asyncio
+
+@pytest.mark.integration
 class TestEmailHtmlMessage:
     """Test the _email_html_message helper function."""
 
@@ -63,6 +70,7 @@ class TestEmailHtmlMessage:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestInvoiceCreatedEmailHandler:
     """Test send_invoice_created_email handler."""
 
@@ -161,6 +169,7 @@ class TestInvoiceCreatedEmailHandler:
                 await send_invoice_created_email(event)
 
 
+@pytest.mark.integration
 class TestInvoicePaidEmailHandler:
     """Test send_invoice_paid_email handler."""
 
@@ -224,6 +233,7 @@ class TestInvoicePaidEmailHandler:
                 await send_invoice_paid_email(event)
 
 
+@pytest.mark.integration
 class TestInvoiceOverdueReminderHandler:
     """Test send_invoice_overdue_reminder handler."""
 
@@ -323,6 +333,7 @@ class TestInvoiceOverdueReminderHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestPaymentFailedNotificationHandler:
     """Test send_payment_failed_notification handler."""
 
@@ -422,6 +433,7 @@ class TestPaymentFailedNotificationHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestSubscriptionWelcomeEmailHandler:
     """Test send_subscription_welcome_email handler."""
 
@@ -483,6 +495,7 @@ class TestSubscriptionWelcomeEmailHandler:
                 await send_subscription_welcome_email(event)
 
 
+@pytest.mark.integration
 class TestSubscriptionCancelledEmailHandler:
     """Test send_subscription_cancelled_email handler."""
 
@@ -575,6 +588,7 @@ class TestSubscriptionCancelledEmailHandler:
                 await send_subscription_cancelled_email(event)
 
 
+@pytest.mark.integration
 class TestTrialEndingReminderHandler:
     """Test send_trial_ending_reminder handler."""
 
@@ -671,6 +685,7 @@ class TestTrialEndingReminderHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestInitCommunicationsEventListeners:
     """Test init_communications_event_listeners function."""
 

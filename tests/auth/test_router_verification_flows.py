@@ -1,3 +1,4 @@
+
 """
 Tests for email verification and password reset flows in auth router.
 
@@ -21,6 +22,13 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import EmailVerificationToken, User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def verification_app():

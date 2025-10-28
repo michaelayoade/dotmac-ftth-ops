@@ -20,7 +20,7 @@ import {
   Info,
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/toast';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -202,10 +202,7 @@ export default function ReconciliationDetailPage() {
   } = useQuery({
     queryKey: ['reconciliation', id],
     queryFn: () => fetchReconciliation(id),
-    refetchInterval: (data) => {
-      // Refetch every 15 seconds if in_progress
-      return data?.status === 'in_progress' ? 15000 : false;
-    },
+    refetchInterval: 5000,
   });
 
   // Mutations
@@ -279,7 +276,7 @@ export default function ReconciliationDetailPage() {
 
   if (isLoading) {
     return (
-      <RouteGuard permissions={['billing:write']}>
+      <RouteGuard permission="billing:write">
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -289,7 +286,7 @@ export default function ReconciliationDetailPage() {
 
   if (!reconciliation) {
     return (
-      <RouteGuard permissions={['billing:write']}>
+      <RouteGuard permission="billing:write">
         <div className="container mx-auto p-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -313,7 +310,7 @@ export default function ReconciliationDetailPage() {
   );
 
   return (
-    <RouteGuard permissions={['billing:write']}>
+    <RouteGuard permission="billing:write">
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">

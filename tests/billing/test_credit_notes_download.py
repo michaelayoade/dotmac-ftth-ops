@@ -12,9 +12,18 @@ from dotmac.platform.billing.core.models import CreditNote, CreditNoteLineItem
 from dotmac.platform.billing.credit_notes.router import router
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def app():
     """Create FastAPI app with dependency overrides."""
+
+
     app = FastAPI()
     app.include_router(router, prefix="/billing")
 

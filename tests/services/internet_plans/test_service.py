@@ -91,6 +91,7 @@ def plan_create_data():
     )
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceCreate:
     """Test plan creation."""
 
@@ -153,6 +154,7 @@ class TestInternetPlanServiceCreate:
         assert result.unrestricted_data_unlimited
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceRetrieve:
     """Test plan retrieval."""
 
@@ -197,6 +199,7 @@ class TestInternetPlanServiceRetrieve:
         assert result is None
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceList:
     """Test plan listing and filtering."""
 
@@ -320,6 +323,7 @@ class TestInternetPlanServiceList:
         assert len(result) == 2
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceUpdate:
     """Test plan updates."""
 
@@ -361,6 +365,7 @@ class TestInternetPlanServiceUpdate:
         assert result.name == created.name  # Unchanged
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceDelete:
     """Test plan deletion (archival)."""
 
@@ -407,6 +412,7 @@ class TestInternetPlanServiceDelete:
         assert plan_check.status != PlanStatus.ARCHIVED
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceValidation:
     """Test plan validation."""
 
@@ -457,6 +463,7 @@ class TestInternetPlanServiceValidation:
         assert result is None
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceComparison:
     """Test plan comparison."""
 
@@ -516,6 +523,7 @@ class TestInternetPlanServiceComparison:
         assert any("Best value" in r for r in result.recommendations)
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceSubscriptions:
     """Test subscription management."""
 
@@ -652,6 +660,7 @@ class TestInternetPlanServiceSubscriptions:
         assert result[0].id == sub1.id
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceUsageTracking:
     """Test usage tracking."""
 
@@ -739,6 +748,7 @@ class TestInternetPlanServiceUsageTracking:
         assert result is None
 
 
+@pytest.mark.integration
 class TestInternetPlanServiceStatistics:
     """Test plan statistics."""
 

@@ -64,10 +64,8 @@ function JobDetailsPageContent() {
       return response.json();
     },
     enabled: !!jobId,
-    // Auto-refresh every 5 seconds if job is running or pending
-    refetchInterval: (data) => {
-      return data?.status === "running" || data?.status === "pending" ? 5000 : false;
-    },
+    // Auto-refresh every 5 seconds for real-time updates
+    refetchInterval: 5000,
   });
 
   const cancelJobMutation = useMutation({
@@ -430,7 +428,7 @@ function JobDetailsPageContent() {
 
 export default function JobDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <JobDetailsPageContent />
     </RouteGuard>
   );

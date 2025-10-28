@@ -57,6 +57,7 @@ def reset_event_bus_state():
     reset_event_bus()
 
 
+@pytest.mark.integration
 class TestServiceSuspensionEndpoint:
     """Test service suspension via customer status change webhook."""
 
@@ -149,6 +150,7 @@ class TestServiceSuspensionEndpoint:
         # Verify call count for updates
 
 
+@pytest.mark.integration
 class TestServiceReactivationEndpoint:
     """Test service reactivation via customer status change webhook."""
 
@@ -231,6 +233,7 @@ class TestServiceReactivationEndpoint:
         # Should restore to TRIALING, not ACTIVE
 
 
+@pytest.mark.integration
 class TestChurnHandlingEndpoint:
     """Test churn handling via customer status change webhook."""
 
@@ -353,6 +356,7 @@ class TestChurnHandlingEndpoint:
 
 
 @pytest.mark.asyncio
+@pytest.mark.integration
 class TestEndToEndLifecycleWorkflow:
     """End-to-end test of complete customer lifecycle."""
 
@@ -395,6 +399,7 @@ class TestEndToEndLifecycleWorkflow:
         pass
 
 
+@pytest.mark.integration
 class TestEventDrivenWorkflow:
     """Test event-driven aspects of lifecycle management."""
 
@@ -447,6 +452,7 @@ class TestEventDrivenWorkflow:
         assert call_args.kwargs["data"]["subscriptions_affected"] == 2
 
 
+@pytest.mark.integration
 class TestErrorHandling:
     """Test error handling in lifecycle workflows."""
 

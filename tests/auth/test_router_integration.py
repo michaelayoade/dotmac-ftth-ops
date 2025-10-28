@@ -108,6 +108,7 @@ def tenant_headers():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLoginEndpoint:
     """Test POST /auth/login endpoint."""
 
@@ -242,6 +243,7 @@ class TestLoginEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestTokenEndpoint:
     """Test POST /auth/token endpoint (OAuth2 password flow)."""
 
@@ -287,6 +289,7 @@ class TestTokenEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestRegisterEndpoint:
     """Test POST /auth/register endpoint."""
 
@@ -404,6 +407,7 @@ class TestRegisterEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogoutEndpoint:
     """Test POST /auth/logout endpoint."""
 
@@ -445,6 +449,7 @@ class TestLogoutEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestRefreshEndpoint:
     """Test POST /auth/refresh endpoint."""
 
@@ -496,6 +501,7 @@ class TestRefreshEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestPasswordResetEndpoint:
     """Test password reset endpoints."""
 
@@ -541,6 +547,7 @@ class TestPasswordResetEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestVerifyEndpoint:
     """Test POST /auth/verify endpoint."""
 
@@ -590,6 +597,7 @@ class TestVerifyEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestMeEndpoint:
     """Test GET /auth/me endpoint."""
 

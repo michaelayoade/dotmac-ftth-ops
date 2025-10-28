@@ -24,6 +24,7 @@ from dotmac.platform.billing.core.exceptions import (
 from dotmac.platform.billing.payments.service import PaymentService
 
 
+@pytest.mark.unit
 class TestPaymentServiceHappyPath:
     """Test successful payment processing."""
 
@@ -55,7 +56,15 @@ class TestPaymentServiceHappyPath:
     def mock_payment_provider(self):
         """Mock payment provider."""
         provider = AsyncMock()
-        provider.charge_payment_method = AsyncMock()
+        # Default to successful charge
+        provider.charge_payment_method = AsyncMock(
+            return_value=MagicMock(
+                success=True,
+                provider_payment_id="mock_pi_123",
+                provider_fee=30,
+                error_message=None,
+            )
+        )
         return provider
 
     @pytest.fixture
@@ -63,7 +72,7 @@ class TestPaymentServiceHappyPath:
         """Create payment service with mocked dependencies."""
         return PaymentService(
             db_session=mock_db,
-            payment_providers={"stripe": mock_payment_provider},
+            payment_providers={"stripe": mock_payment_provider, "mock": mock_payment_provider},
         )
 
     @pytest.fixture
@@ -173,6 +182,7 @@ class TestPaymentServiceHappyPath:
                             mock_link.assert_called_once()
 
 
+@pytest.mark.unit
 class TestPaymentServiceValidation:
     """Test payment validation rules."""
 
@@ -228,6 +238,7 @@ class TestPaymentServiceValidation:
             assert "not active" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestPaymentServiceIdempotency:
     """Test idempotency key handling."""
 
@@ -272,6 +283,7 @@ class TestPaymentServiceIdempotency:
             assert payment.status == PaymentStatus.SUCCEEDED
 
 
+@pytest.mark.unit
 class TestPaymentServiceProviderFailure:
     """Test payment provider failure handling."""
 
@@ -386,6 +398,7 @@ class TestPaymentServiceProviderFailure:
                 assert service.db.add.called
 
 
+@pytest.mark.unit
 class TestPaymentServiceBusinessRules:
     """Test specific business rules."""
 
@@ -481,17 +494,24 @@ class TestPaymentServiceBusinessRules:
                     with patch(
                         "dotmac.platform.billing.payments.service.get_event_bus"
                     ) as mock_event_bus:
-                        mock_event_bus.return_value.publish = AsyncMock()
+                        with patch(
+                            "dotmac.platform.billing.payments.service.settings"
+                        ) as mock_settings:
+                            mock_event_bus.return_value.publish = AsyncMock()
+                            mock_settings.billing.require_payment_plugin = False
 
-                        # Success case
-                        await payment_service.create_payment(
-                            tenant_id="tenant-1",
-                            amount=10000,
-                            currency="usd",
-                            customer_id="cust_123",
-                            payment_method_id="pm_123",
-                            provider="mock",
-                        )
+                            # Success case
+                            result = await payment_service.create_payment(
+                                tenant_id="tenant-1",
+                                amount=10000,
+                                currency="usd",
+                                customer_id="cust_123",
+                                payment_method_id="pm_123",
+                                provider="mock",
+                            )
 
-                        # Transaction should be created
-                        assert mock_transaction.called
+                            # Verify payment succeeded
+                            assert result.status == PaymentStatus.SUCCEEDED, f"Payment status was {result.status}"
+
+                            # Transaction should be created
+                            assert mock_transaction.called, "Transaction was not created for successful payment"

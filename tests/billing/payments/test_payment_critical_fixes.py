@@ -29,6 +29,7 @@ from tests.billing.payments.conftest_service import (
 from tests.fixtures.async_db import create_mock_async_session
 
 
+@pytest.mark.unit
 class TestCustomerIdValidation:
     """Tests for customer_id validation in create_payment"""
 
@@ -121,6 +122,7 @@ class TestCustomerIdValidation:
                 assert payment.customer_id == "customer_A"
 
 
+@pytest.mark.unit
 class TestRefundUnitMismatch:
     """Tests for refund unit mismatch fix"""
 
@@ -214,6 +216,7 @@ class TestRefundUnitMismatch:
             assert payment.refunded_at is not None
 
 
+@pytest.mark.unit
 class TestTransactionLoggingForRefunds:
     """Tests for correct transaction logging in webhook refunds"""
 
@@ -332,6 +335,7 @@ class TestTransactionLoggingForRefunds:
             assert created_transactions[1].amount == 3000  # Second refund amount
 
 
+@pytest.mark.unit
 class TestOfflinePaymentFractionalCurrency:
     """Tests for fractional currency handling in offline payments"""
 

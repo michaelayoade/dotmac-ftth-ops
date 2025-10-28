@@ -1,3 +1,4 @@
+
 """
 Tests for RADIUS Service Layer
 
@@ -7,6 +8,9 @@ Tests business logic for RADIUS operations.
 import pytest
 
 from dotmac.platform.radius.schemas import (
+
+
+
     BandwidthProfileCreate,
     NASCreate,
     RADIUSSubscriberCreate,
@@ -14,6 +18,10 @@ from dotmac.platform.radius.schemas import (
 )
 from dotmac.platform.radius.service import RADIUSService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestRADIUSService:

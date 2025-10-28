@@ -1,3 +1,4 @@
+
 """
 Basic tests for main auth router endpoints to improve coverage.
 """
@@ -15,6 +16,13 @@ from dotmac.platform.auth.core import create_access_token
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def auth_test_app():

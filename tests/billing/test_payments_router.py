@@ -84,6 +84,7 @@ async def sample_successful_payments(async_db_session: AsyncSession):
     return payment
 
 
+@pytest.mark.integration
 class TestGetFailedPayments:
     """Test the GET /failed endpoint."""
 

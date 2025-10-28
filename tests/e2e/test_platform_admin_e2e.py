@@ -1,3 +1,4 @@
+
 """
 E2E tests for Platform Admin features.
 
@@ -17,8 +18,11 @@ from dotmac.platform.db import get_async_session, get_session_dependency
 from dotmac.platform.main import app
 from dotmac.platform.tenant import get_current_tenant_id
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
+
+
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
 @pytest.fixture
 def platform_admin_id():

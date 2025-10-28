@@ -1,3 +1,4 @@
+
 """
 FastAPI Integration Testing - Phase 2
 Comprehensive testing of FastAPI endpoints with authentication, validation, and error handling.
@@ -12,10 +13,20 @@ import pytest
 
 from dotmac.platform.version import get_version
 
-pytestmark = pytest.mark.asyncio
+
+
+
 
 
 # Mock FastAPI components for testing
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
+
 class MockRequest:
     """Mock FastAPI Request object"""
 

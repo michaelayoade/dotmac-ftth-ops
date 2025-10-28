@@ -6,6 +6,8 @@ Tracks test performance metrics and identifies slow tests.
 Usage:
     from tests.helpers.performance_benchmarks import BenchmarkingTestBase
 
+
+
     class TestMyRouter(BenchmarkingTestBase, RouterTestBase):
         performance_threshold_ms = 100  # Warn if test takes >100ms
 
@@ -28,6 +30,9 @@ from typing import Any
 
 import pytest
 
+
+
+pytestmark = pytest.mark.unit
 
 class PerformanceTracker:
     """Tracks test performance metrics."""

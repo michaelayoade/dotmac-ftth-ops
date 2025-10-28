@@ -13,9 +13,16 @@ from dotmac.platform.billing.dunning.schemas import (
 from dotmac.platform.billing.dunning.service import DunningService
 
 
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 class TestDunningCampaignCRUD:
     """Test campaign CRUD operations."""
+
 
     async def test_create_campaign_success(
         self, async_session, test_tenant_id, test_user_id, sample_campaign_data

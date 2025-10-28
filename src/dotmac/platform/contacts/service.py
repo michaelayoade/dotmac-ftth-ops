@@ -179,7 +179,7 @@ class ContactService:
 
         # Cache if not including relationships
         # Note: Cannot cache SQLAlchemy models directly (not JSON-serializable)
-        # Caching disabled for now - would need to convert to dict/Pydantic model first
+        # cache_set uses JSON serialization - would need to convert to dict/Pydantic model first
         # if contact and not include_methods and not include_labels:
         #     cache_set(cache_key, contact, ttl=300)
 

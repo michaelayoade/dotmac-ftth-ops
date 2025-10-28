@@ -3,6 +3,14 @@ import pytest
 from dotmac.platform.workflows.service_registry import ServiceRegistry
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 class DummyService:
     def __init__(self, db):
         self.db = db

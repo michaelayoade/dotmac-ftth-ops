@@ -18,6 +18,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 
 
+
+
+
+pytestmark = pytest.mark.unit
+
 class RouterTestKit:
     """
     Test kit for FastAPI router testing with common patterns.

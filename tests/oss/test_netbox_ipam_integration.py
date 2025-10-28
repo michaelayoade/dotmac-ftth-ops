@@ -1,3 +1,4 @@
+
 """
 Comprehensive NetBox IPAM Operations Tests.
 
@@ -12,6 +13,13 @@ Tests complete IPAM workflows including:
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestNetBoxIPAddressManagement:

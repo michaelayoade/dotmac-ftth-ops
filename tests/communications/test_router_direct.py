@@ -1,3 +1,4 @@
+
 """
 Direct router function tests for better coverage.
 """
@@ -10,6 +11,8 @@ from fastapi import HTTPException
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.router import (
+
+
     BulkEmailRequest,
     EmailRequest,
     QuickRenderRequest,
@@ -33,8 +36,14 @@ from dotmac.platform.communications.router import (
 )
 from dotmac.platform.communications.template_service import RenderedTemplate, TemplateData
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = pytest.mark.integration
+
+pytestmark = pytest.mark.asyncio
 
 class TestEmailEndpointsDirect:
     """Direct tests of email endpoints."""

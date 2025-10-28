@@ -15,6 +15,9 @@ from dotmac.platform.db import get_session_dependency
 from dotmac.platform.monitoring.logs_router import logs_router
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def app():
     """Create FastAPI app with logs router."""

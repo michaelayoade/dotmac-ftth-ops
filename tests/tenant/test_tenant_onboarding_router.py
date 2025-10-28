@@ -14,6 +14,9 @@ from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.tenant.service import TenantAlreadyExistsError
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest_asyncio.fixture
 async def auth_headers(async_client: AsyncClient) -> dict[str, str]:
     """Provide authentication headers for onboarding API calls."""

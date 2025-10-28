@@ -82,6 +82,7 @@ def sample_alarm(tenant_id):
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestArchivedAlarmData:
     """Test ArchivedAlarmData schema."""
 
@@ -112,6 +113,7 @@ class TestArchivedAlarmData:
         assert "LINK_DOWN" in json_str
 
 
+@pytest.mark.integration
 class TestAlarmArchivalService:
     """Test AlarmArchivalService."""
 
@@ -313,6 +315,7 @@ class TestAlarmArchivalService:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestCleanupOldClearedAlarms:
     """Test cleanup_old_cleared_alarms Celery task."""
 
@@ -447,6 +450,7 @@ class TestCleanupOldClearedAlarms:
 # =============================================================================
 
 
+@pytest.mark.integration
 class TestAlarmArchivalIntegration:
     """Integration tests for alarm archival."""
 

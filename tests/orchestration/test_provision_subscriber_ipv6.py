@@ -56,6 +56,7 @@ def base_context():
     }
 
 
+@pytest.mark.integration
 class TestIPAllocationHandlerDualStack:
     """Test IP allocation handler with dual-stack support."""
 
@@ -192,6 +193,7 @@ class TestIPAllocationHandlerDualStack:
         assert "No IP allocation strategy specified" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestIPReleaseHandlerDualStack:
     """Test IP release compensation handler with dual-stack support."""
 
@@ -293,6 +295,7 @@ class TestIPReleaseHandlerDualStack:
             mock_service.delete_ip_address.assert_not_called()
 
 
+@pytest.mark.integration
 class TestRADIUSAccountHandlerDualStack:
     """Test RADIUS account creation with dual-stack support."""
 
@@ -374,6 +377,7 @@ class TestRADIUSAccountHandlerDualStack:
             assert call_args.framed_ipv6_address == "2001:db8::100"
 
 
+@pytest.mark.integration
 class TestCPEConfigurationHandlerDualStack:
     """Test CPE configuration with dual-stack support."""
 

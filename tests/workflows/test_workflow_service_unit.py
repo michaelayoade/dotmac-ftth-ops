@@ -1,3 +1,4 @@
+
 """
 Unit Tests for Workflow Service
 
@@ -10,12 +11,19 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.workflows.models import (
+
+
+
     Workflow,
     WorkflowExecution,
     WorkflowStatus,
 )
 from dotmac.platform.workflows.service import WorkflowService
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestWorkflowServiceInitialization:

@@ -1,3 +1,4 @@
+
 """
 Tests for NetBox Service Layer
 
@@ -9,6 +10,9 @@ from unittest.mock import AsyncMock
 import pytest
 
 from dotmac.platform.netbox.schemas import (
+
+
+
     IPAddressCreate,
     PrefixCreate,
     SiteCreate,
@@ -16,6 +20,10 @@ from dotmac.platform.netbox.schemas import (
 )
 from dotmac.platform.netbox.service import NetBoxService
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestNetBoxService:

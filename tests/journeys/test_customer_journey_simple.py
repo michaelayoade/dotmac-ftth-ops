@@ -1,3 +1,4 @@
+
 """
 Customer Journey - Documentation and Verification.
 
@@ -28,6 +29,13 @@ These tests exercise real service layer code and validate business logic.
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestJourneyDocumentation:
