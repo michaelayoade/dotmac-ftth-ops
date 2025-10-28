@@ -22,11 +22,11 @@ import pytest
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from dotmac.platform.billing.subscriptions.models import (
-
-
-
     BillingCycle,
     SubscriptionStatus,
+    SubscriptionPlanCreateRequest,
+    SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.customer_management.models import Customer
@@ -80,14 +80,17 @@ class TestServiceLifecycleJourneyImproved:
         await async_session.flush()
 
         # Setup: Create plan using service layer
-        plan = await subscription_service.create_plan(
-            tenant_id=test_tenant.id,
+        plan_data = SubscriptionPlanCreateRequest(
+            product_id="test-product-001",
             name="Monthly Service",
-            plan_code="MONTHLY-SVC",
             billing_cycle=BillingCycle.MONTHLY,
             price=Decimal("39.99"),
             currency="USD",
             description="Test monthly service plan",
+        )
+        plan = await subscription_service.create_plan(
+            plan_data=plan_data,
+            tenant_id=test_tenant.id,
         )
 
         # ===================================================================
@@ -95,15 +98,18 @@ class TestServiceLifecycleJourneyImproved:
         # ===================================================================
         # CRITICAL: Use service layer, not direct DB insert
         # This ensures activation workflows, event creation, and provisioning happen
-        subscription = await subscription_service.create_subscription(
-            tenant_id=test_tenant.id,
-            customer_id=customer.id,
+        subscription_data = SubscriptionCreateRequest(
+            customer_id=str(customer.id),
             plan_id=plan.plan_id,
             start_date=datetime.now(timezone.utc),
         )
+        subscription = await subscription_service.create_subscription(
+            subscription_data=subscription_data,
+            tenant_id=test_tenant.id,
+        )
 
         assert subscription.status == SubscriptionStatus.ACTIVE
-        assert subscription.activated_at is not None
+        assert subscription.created_at is not None
         print(f"✅ Step 1: Service activated via SubscriptionService - {subscription.status.value}")
 
         # ===================================================================
@@ -317,30 +323,39 @@ class TestServiceLifecycleJourneyImproved:
         await async_session.flush()
 
         # Create plans using service layer
-        basic_plan = await subscription_service.create_plan(
-            tenant_id=test_tenant.id,
+        basic_plan_data = SubscriptionPlanCreateRequest(
+            product_id="test-product-basic",
             name="Basic Plan",
-            plan_code="BASIC",
             billing_cycle=BillingCycle.MONTHLY,
             price=Decimal("19.99"),
             currency="USD",
         )
-
-        premium_plan = await subscription_service.create_plan(
+        basic_plan = await subscription_service.create_plan(
+            plan_data=basic_plan_data,
             tenant_id=test_tenant.id,
+        )
+
+        premium_plan_data = SubscriptionPlanCreateRequest(
+            product_id="test-product-premium",
             name="Premium Plan",
-            plan_code="PREMIUM",
             billing_cycle=BillingCycle.MONTHLY,
             price=Decimal("49.99"),
             currency="USD",
         )
+        premium_plan = await subscription_service.create_plan(
+            plan_data=premium_plan_data,
+            tenant_id=test_tenant.id,
+        )
 
         # Create subscription using service layer
-        subscription = await subscription_service.create_subscription(
-            tenant_id=test_tenant.id,
-            customer_id=customer.id,
+        subscription_data = SubscriptionCreateRequest(
+            customer_id=str(customer.id),
             plan_id=basic_plan.plan_id,
             start_date=datetime.now(timezone.utc),
+        )
+        subscription = await subscription_service.create_subscription(
+            subscription_data=subscription_data,
+            tenant_id=test_tenant.id,
         )
 
         print(f"✅ Initial: {basic_plan.name} - ${basic_plan.price}/month")
@@ -349,13 +364,15 @@ class TestServiceLifecycleJourneyImproved:
         # CRITICAL: Use change_plan service method
         # ===================================================================
         # This ensures proration calculation, invoicing, and plan change logic work
-        upgraded_subscription = await subscription_service.change_plan(
-            subscription_id=subscription.subscription_id,
-            tenant_id=test_tenant.id,
+        change_request = SubscriptionPlanChangeRequest(
             new_plan_id=premium_plan.plan_id,
-            change_date=datetime.now(timezone.utc),
-            proration_behavior="create_prorations",  # Calculate proration
-            changed_by=str(uuid4()),
+            effective_date=datetime.now(timezone.utc),
+        )
+        upgraded_subscription, _ = await subscription_service.change_plan(
+            subscription_id=subscription.subscription_id,
+            change_request=change_request,
+            tenant_id=test_tenant.id,
+            user_id=str(uuid4()),
         )
 
         assert upgraded_subscription.plan_id == premium_plan.plan_id
@@ -421,26 +438,32 @@ class TestServiceLifecycleBestPractices:
         await async_session.flush()
 
         # ✅ CORRECT: Use service layer
-        plan = await subscription_service.create_plan(
-            tenant_id=test_tenant.id,
+        plan_data = SubscriptionPlanCreateRequest(
+            product_id="test-product-002",
             name="Test Plan",
-            plan_code="TEST",
             billing_cycle=BillingCycle.MONTHLY,
             price=Decimal("29.99"),
             currency="USD",
         )
+        plan = await subscription_service.create_plan(
+            plan_data=plan_data,
+            tenant_id=test_tenant.id,
+        )
 
         # ✅ CORRECT: Use service layer for subscription creation
-        subscription = await subscription_service.create_subscription(
-            tenant_id=test_tenant.id,
-            customer_id=customer.id,
+        subscription_data = SubscriptionCreateRequest(
+            customer_id=str(customer.id),
             plan_id=plan.plan_id,
             start_date=datetime.now(timezone.utc),
+        )
+        subscription = await subscription_service.create_subscription(
+            subscription_data=subscription_data,
+            tenant_id=test_tenant.id,
         )
 
         # ✅ CORRECT: Assert on service response
         assert subscription.status == SubscriptionStatus.ACTIVE
-        assert subscription.activated_at is not None
+        assert subscription.created_at is not None
 
         # ✅ CORRECT: Use service layer for cancellation
         cancelled = await subscription_service.cancel_subscription(

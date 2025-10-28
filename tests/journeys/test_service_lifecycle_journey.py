@@ -91,22 +91,19 @@ class TestServiceLifecycleJourney:
         # Step 1: Activate service
         now = datetime.now(timezone.utc)
         subscription = BillingSubscriptionTable(
-            id=uuid4(),
+            subscription_id=str(uuid4()),
             tenant_id=test_tenant.id,
-            customer_id=customer.id,
-            plan_id=plan.id,
-            status=SubscriptionStatus.ACTIVE,
-            start_date=now,
+            customer_id=str(customer.id),
+            plan_id=str(plan.id),
+            status=SubscriptionStatus.ACTIVE.value,
             current_period_start=now,
             current_period_end=now + timedelta(days=30),
-            activated_at=now,
-            created_at=now,
         )
         async_session.add(subscription)
         await async_session.flush()
 
-        assert subscription.status == SubscriptionStatus.ACTIVE
-        print(f"✅ Step 1: Service activated - {subscription.status.value}")
+        assert subscription.status == SubscriptionStatus.ACTIVE.value
+        print(f"✅ Step 1: Service activated - {subscription.status}")
 
         # Step 2: Generate first invoice
         invoice1 = Invoice(
@@ -188,7 +185,7 @@ class TestServiceLifecycleJourney:
         subscription.resumed_at = payment_date
         await async_session.flush()
 
-        assert subscription.status == SubscriptionStatus.ACTIVE
+        assert subscription.status == SubscriptionStatus.ACTIVE.value
         assert invoice2.status == InvoiceStatus.PAID
         print("✅ Step 6: Service resumed - payment received")
 
