@@ -10,10 +10,8 @@ Skip with: pytest tests/netbox/ -v -m "not integration"
 """
 
 import os
-import socket
 from urllib import request as urllib_request
 from urllib.error import URLError
-from urllib.parse import urlparse
 from uuid import uuid4
 
 import pytest
@@ -24,54 +22,27 @@ from dotmac.platform.netbox.client import NetBoxClient
 
 
 # Mark all tests in this file as integration tests
-
-
-
-
 pytestmark = pytest.mark.integration
 
-def _netbox_available(url: str) -> bool:
-    parsed = urlparse(url)
-    host = parsed.hostname or "localhost"
-    port = parsed.port or (443 if parsed.scheme == "https" else 80)
-
-    try:
-        with socket.create_connection((host, port), timeout=1):
-            pass
-    except OSError:
-        return False
-
-    status_url = f"{url.rstrip('/')}/api/status/"
-    try:
-        with urllib_request.urlopen(status_url, timeout=2) as resp:
-            return resp.status < 400
-    except URLError:
-        return False
-
-
+# NetBox connection configuration
 NETBOX_URL_ENV = os.getenv("NETBOX_URL", "http://localhost:8080")
 NETBOX_TOKEN_ENV = os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
-_bool_map = {"1", "true", "yes", "on"}
-RUN_NETBOX_INTEGRATION = os.getenv("RUN_NETBOX_INTEGRATION", "0").lower() in _bool_map
-
-if not RUN_NETBOX_INTEGRATION:
-    pytest.skip(
-        "NetBox integration tests disabled. Set RUN_NETBOX_INTEGRATION=1 to enable.",
-        allow_module_level=True,
-    )
-
+# Health check - fail fast if NetBox is not available
+# Integration tests should run against real services
 status_url = f"{NETBOX_URL_ENV.rstrip('/')}/api/status/"
 try:
     with urllib_request.urlopen(status_url, timeout=2) as resp:
         if resp.status >= 400:
             pytest.skip(
-                f"NetBox health check returned {resp.status} at {status_url}.",
+                f"NetBox health check failed with status {resp.status} at {status_url}. "
+                f"Integration tests require a running NetBox instance.",
                 allow_module_level=True,
             )
-except URLError:
+except URLError as e:
     pytest.skip(
-        f"NetBox service not reachable at {NETBOX_URL_ENV}, skipping integration tests.",
+        f"NetBox service not reachable at {NETBOX_URL_ENV}. "
+        f"Integration tests require a running NetBox instance. Error: {e}",
         allow_module_level=True,
     )
 

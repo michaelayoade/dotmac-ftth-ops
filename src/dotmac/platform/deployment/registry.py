@@ -8,7 +8,7 @@ Provides fast lookups and state management.
 import logging
 from datetime import datetime
 
-from sqlalchemy import and_, desc, func, or_, select
+from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
@@ -464,71 +464,30 @@ class DeploymentRegistry:
 
 # Async version for async contexts
 class AsyncDeploymentRegistry:
-    """Async version of DeploymentRegistry"""
+    """Async wrapper around the synchronous DeploymentRegistry."""
 
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def get_instance(self, instance_id: int) -> DeploymentInstance | None:
-        """Get deployment instance by ID"""
-        result = await self.db.execute(
-            select(DeploymentInstance).where(DeploymentInstance.id == instance_id)
-        )
-        return result.scalar_one_or_none()
+    async def _run(self, method_name: str, *args, **kwargs):
+        """Execute DeploymentRegistry method within sync session context."""
 
-    async def get_instance_by_tenant(
-        self, tenant_id: int, environment: str
-    ) -> DeploymentInstance | None:
-        """Get deployment instance for tenant and environment"""
-        result = await self.db.execute(
-            select(DeploymentInstance).where(
-                and_(
-                    DeploymentInstance.tenant_id == tenant_id,
-                    DeploymentInstance.environment == environment,
-                )
-            )
-        )
-        return result.scalar_one_or_none()
+        def sync_call(sync_session: Session):
+            registry = DeploymentRegistry(sync_session)
+            method = getattr(registry, method_name)
+            return method(*args, **kwargs)
 
-    async def create_instance(self, instance: DeploymentInstance) -> DeploymentInstance:
-        """Create new deployment instance"""
-        self.db.add(instance)
-        await self.db.commit()
-        await self.db.refresh(instance)
-        logger.info(f"Created deployment instance {instance.id} for tenant {instance.tenant_id}")
-        return instance
+        return await self.db.run_sync(sync_call)
 
-    async def update_instance_state(
-        self, instance_id: int, state: DeploymentState, reason: str | None = None
-    ) -> DeploymentInstance | None:
-        """Update instance state"""
-        instance = await self.get_instance(instance_id)
-        if not instance:
-            return None
+    def __getattr__(self, name: str):
+        attr = getattr(DeploymentRegistry, name, None)
+        if attr is None or not callable(attr):
+            raise AttributeError(name)
 
-        instance.state = state
-        instance.state_reason = reason
-        instance.last_state_change = datetime.utcnow()
+        async def async_wrapper(*args, **kwargs):
+            return await self._run(name, *args, **kwargs)
 
-        await self.db.commit()
-        await self.db.refresh(instance)
-        logger.info(f"Instance {instance_id} state changed to {state.value}")
-        return instance
-
-    async def create_execution(self, execution: DeploymentExecution) -> DeploymentExecution:
-        """Create deployment execution record"""
-        self.db.add(execution)
-        await self.db.commit()
-        await self.db.refresh(execution)
-        logger.info(f"Created execution {execution.id} for instance {execution.instance_id}")
-        return execution
-
-    async def record_health(self, health: DeploymentHealth) -> DeploymentHealth:
-        """Record health check result"""
-        self.db.add(health)
-        await self.db.commit()
-        await self.db.refresh(health)
-        return health
+        return async_wrapper
 
 
 from datetime import timedelta  # noqa: E402 - import at end to avoid circular import issues

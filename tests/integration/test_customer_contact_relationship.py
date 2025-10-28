@@ -8,41 +8,44 @@ works correctly with proper foreign keys and relationship mappings.
 This would have caught the NoForeignKeysError that occurred when contact_id
 was missing a ForeignKey constraint.
 
-NOTE: Integration test - requires full database schema with seeded test database.
+NOTE: Some tests require PostgreSQL for full foreign key constraint validation.
+SQLite limitations:
+- Foreign key constraints are not enforced by default
+- CASCADE behavior differs from PostgreSQL
+
+Tests marked with @requires_postgres will skip on SQLite.
+Run all tests with: DOTMAC_DATABASE_URL_ASYNC=postgresql://... pytest
 """
 
+import os
 from uuid import uuid4
 
 import pytest
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
-
-
-
-
-# These tests require full database schema with all foreign key relationships properly set up.
-# SQLite in-memory tests fail due to schema validation issues between Contact and Customer models.
-# This test is now in the integration test suite for proper database testing.
-
-
-
-pytestmark = [
-    pytest.mark.integration,
-    pytest.mark.asyncio,
-]
-
-pytest.skip("Integration test - requires full database schema", allow_module_level=True)
-
-from sqlalchemy import select  # noqa: E402
-from sqlalchemy.exc import IntegrityError  # noqa: E402
-
-from dotmac.platform.contacts.models import Contact  # noqa: E402
-from dotmac.platform.customer_management.models import (  # noqa: E402
+from dotmac.platform.contacts.models import Contact
+from dotmac.platform.customer_management.models import (
     ContactRole,
     Customer,
     CustomerContactLink,
     CustomerStatus,
     CustomerTier,
     CustomerType,
+)
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
+
+# Check if using PostgreSQL
+DB_URL = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "")
+IS_POSTGRES = "postgresql" in DB_URL
+
+requires_postgres = pytest.mark.skipif(
+    not IS_POSTGRES,
+    reason="Requires PostgreSQL - SQLite doesn't enforce FK constraints or CASCADE behavior"
 )
 
 
@@ -66,12 +69,12 @@ class TestCustomerContactRelationship:
         async_db_session.add(customer)
         await async_db_session.flush()
 
-        # Create contact
+        # Create contact (Contact model doesn't have email field - emails are in ContactMethod table)
         contact = Contact(
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.smith.{uuid4()}@example.com",
+            display_name="Jane Smith",  # Required field
         )
         async_db_session.add(contact)
         await async_db_session.flush()
@@ -95,8 +98,12 @@ class TestCustomerContactRelationship:
         assert loaded_link.contact_id == contact.id
         assert loaded_link.role == ContactRole.PRIMARY
 
+    @requires_postgres
     async def test_foreign_key_constraint_enforced(self, async_db_session):
-        """Test that foreign key constraints are enforced."""
+        """Test that foreign key constraints are enforced.
+
+        Requires PostgreSQL - SQLite doesn't enforce FK constraints by default.
+        """
         # Create customer
         customer = Customer(
             customer_number="TEST002",
@@ -125,8 +132,12 @@ class TestCustomerContactRelationship:
         with pytest.raises(IntegrityError):
             await async_db_session.flush()
 
+    @requires_postgres
     async def test_cascade_delete_behavior(self, async_db_session):
-        """Test CASCADE delete when customer is deleted."""
+        """Test CASCADE delete when customer is deleted.
+
+        Requires PostgreSQL - SQLite CASCADE behavior differs from PostgreSQL.
+        """
         # Create customer and contact
         customer = Customer(
             customer_number="TEST003",
@@ -142,7 +153,7 @@ class TestCustomerContactRelationship:
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.{uuid4()}@example.com",
+            display_name="Jane Smith",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
@@ -186,7 +197,7 @@ class TestCustomerContactRelationship:
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.{uuid4()}@example.com",
+            display_name="Jane Smith",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
