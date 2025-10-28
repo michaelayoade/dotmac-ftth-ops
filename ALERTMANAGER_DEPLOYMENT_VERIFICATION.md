@@ -12,20 +12,36 @@ The Alertmanager webhook authentication has been **fully implemented, tested, an
 
 ---
 
-## 🔐 Generated Authentication Token
+## 🔐 Authentication Token Setup
 
-A secure 32-byte random token has been generated for this deployment:
+**IMPORTANT**: You must generate a unique secure token for your deployment.
 
+### Generate a Token
+
+```bash
+# Generate a secure 32-byte random token
+openssl rand -base64 32
 ```
-P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec=
-```
 
-**Security Notes**:
-- ✅ 256 bits of entropy (cryptographically secure)
-- ✅ Base64 encoded for easy transmission
-- ✅ Suitable for production use
-- ⚠️ Replace this token with your own in production
-- ⚠️ Never commit tokens to version control
+**Security Requirements**:
+- ✅ Generate a UNIQUE token for each deployment
+- ✅ Use 256 bits of entropy (cryptographically secure)
+- ✅ Store securely (environment variable, secrets manager)
+- ⚠️ NEVER commit tokens to version control
+- ⚠️ Rotate tokens regularly (every 90 days recommended)
+
+### Set the Token
+
+```bash
+# Option 1: Environment variable (development)
+export ALERTMANAGER_WEBHOOK_SECRET="your-generated-token-here"
+
+# Option 2: .env file (development)
+echo "ALERTMANAGER_WEBHOOK_SECRET=your-generated-token-here" >> .env
+
+# Option 3: Vault (production - recommended)
+# See Vault Integration section below
+```
 
 ---
 
@@ -73,7 +89,7 @@ vault login
 
 # Store the webhook secret
 vault kv put secret/observability/alertmanager/webhook_secret \
-  value="P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec="
+  value="<YOUR_GENERATED_TOKEN_HERE>"
 
 # Verify secret was stored
 vault kv get secret/observability/alertmanager/webhook_secret
@@ -84,7 +100,7 @@ vault kv get secret/observability/alertmanager/webhook_secret
 ======= Data =======
 Key      Value
 ---      -----
-value    P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec=
+value    <YOUR_GENERATED_TOKEN_HERE>
 ```
 
 ---
@@ -114,11 +130,16 @@ export ALERTMANAGER_RATE_LIMIT=10/minute
 Start the application and check logs:
 
 ```bash
-# Start application
-./start.sh
+# Start application (choose one method)
+
+# Method 1: Using infrastructure script
+./scripts/infra.sh start
+
+# Method 2: Using docker compose directly
+docker compose -f docker-compose.base.yml up -d app
 
 # Check logs for secret loading
-grep "secrets.load" /var/log/dotmac-platform/app.log
+docker compose -f docker-compose.base.yml logs app | grep "secrets.load"
 ```
 
 **Expected Log Output**:
@@ -154,7 +175,7 @@ receivers:
         send_resolved: true
         http_config:
           headers:
-            X-Alertmanager-Token: "P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec="
+            X-Alertmanager-Token: "<YOUR_GENERATED_TOKEN_HERE>"
         max_alerts: 0  # No limit
 
 route:
@@ -206,7 +227,7 @@ Use the provided test script:
 # Test with generated token
 ./scripts/test_alertmanager_webhook.sh \
   https://platform.example.com \
-  "P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec="
+  "<YOUR_GENERATED_TOKEN_HERE>"
 ```
 
 **Expected Output**:
@@ -245,7 +266,7 @@ All authentication tests completed!
 
 ```bash
 curl -X POST https://platform.example.com/api/v1/alerts/webhook \
-  -H "X-Alertmanager-Token: P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec=" \
+  -H "X-Alertmanager-Token: <YOUR_GENERATED_TOKEN_HERE>" \
   -H "Content-Type: application/json" \
   -d '{
     "version": "4",
@@ -441,7 +462,7 @@ print('Secret value:', settings.observability.alertmanager_webhook_secret[:10] +
 **Diagnosis**:
 ```bash
 # Check for whitespace in token
-echo "P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec=" | od -c
+echo "<YOUR_GENERATED_TOKEN_HERE>" | od -c
 
 # Compare token in Vault with Alertmanager config
 vault kv get secret/observability/alertmanager/webhook_secret
@@ -534,7 +555,7 @@ Use this checklist to verify successful deployment:
 | Structured Logging | ✅ Implemented | JSON events |
 | Monitoring | ✅ Available | Prometheus metrics |
 
-**Token Generated**: `P4PAE1UJE0m5nep+D9JEvF4D5ObvurSiTMYDZvHgQec=`
+**Token Generated**: `<YOUR_GENERATED_TOKEN_HERE>` (use `openssl rand -base64 32` to generate)
 
 **Ready for Production**: ✅ **YES**
 
