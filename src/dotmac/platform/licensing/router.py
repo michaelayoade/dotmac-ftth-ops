@@ -774,7 +774,7 @@ async def generate_emergency_code(
     from datetime import datetime, timedelta, timezone
 
     emergency_code = secrets.token_hex(8).upper()
-    valid_until = datetime.now(UTC) + timedelta(hours=24)
+    valid_until = datetime.now(timezone.utc) + timedelta(hours=24)
 
     return {
         "data": EmergencyCodeResponse(

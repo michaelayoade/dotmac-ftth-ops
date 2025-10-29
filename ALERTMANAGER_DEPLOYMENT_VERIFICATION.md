@@ -130,12 +130,10 @@ export ALERTMANAGER_RATE_LIMIT=10/minute
 Start the application and check logs:
 
 ```bash
-# Start application (choose one method)
+# Start platform dependencies
+./scripts/infra.sh platform start
 
-# Method 1: Using infrastructure script
-./scripts/infra.sh start
-
-# Method 2: Using docker compose directly
+# Launch the API container (in Docker)
 docker compose -f docker-compose.base.yml up -d app
 
 # Check logs for secret loading

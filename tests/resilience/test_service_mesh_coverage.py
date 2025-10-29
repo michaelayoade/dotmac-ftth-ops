@@ -489,7 +489,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Open circuit breaker
@@ -539,7 +544,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Mock _make_http_call
@@ -573,7 +583,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="dest-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="dest-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Add traffic rule
@@ -612,7 +627,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Mock _make_http_call to fail
@@ -665,6 +685,7 @@ class TestServiceMeshHttpCall:
             headers={"X-Custom": "value"},
             body=None,
             timeout=30,
+            ssl_context=None,
         )
 
         assert result["status_code"] == 200
@@ -693,6 +714,7 @@ class TestServiceMeshHttpCall:
                 headers=None,
                 body=b"test",
                 timeout=10,
+                ssl_context=None,
             )
 
 
@@ -803,7 +825,12 @@ class TestServiceMeshHelperMethods:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
 
         mesh.register_service_endpoint(endpoint)
 
@@ -904,7 +931,12 @@ class TestServiceMeshRetryLogic:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.register_service_endpoint(endpoint)
 
         # Add traffic rule with NONE retry policy
@@ -947,7 +979,12 @@ class TestServiceMeshRetryLogic:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.register_service_endpoint(endpoint)
 
         # Add traffic rule with retry policy enabled

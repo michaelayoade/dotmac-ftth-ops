@@ -33,6 +33,7 @@ from dotmac.platform.customer_management.models import (
     CustomerTier,
     CustomerType,
 )
+from dotmac.platform.tenant.models import Tenant, TenantStatus
 
 pytestmark = [
     pytest.mark.integration,
@@ -49,11 +50,25 @@ requires_postgres = pytest.mark.skipif(
 )
 
 
+@pytest.fixture
+async def test_tenant(async_db_session):
+    """Create a test tenant for integration tests."""
+    tenant = Tenant(
+        id="test-tenant",
+        name="Test Tenant",
+        slug="test-tenant",
+        status=TenantStatus.ACTIVE,
+    )
+    async_db_session.add(tenant)
+    await async_db_session.flush()
+    return tenant
+
+
 @pytest.mark.asyncio
 class TestCustomerContactRelationship:
     """Test CustomerContactLink ORM relationship integrity."""
 
-    async def test_customer_contact_link_creation(self, async_db_session):
+    async def test_customer_contact_link_creation(self, async_db_session, test_tenant):
         """Test basic creation of customer-contact link."""
         # Create customer
         customer = Customer(
@@ -99,7 +114,7 @@ class TestCustomerContactRelationship:
         assert loaded_link.role == ContactRole.PRIMARY
 
     @requires_postgres
-    async def test_foreign_key_constraint_enforced(self, async_db_session):
+    async def test_foreign_key_constraint_enforced(self, async_db_session, test_tenant):
         """Test that foreign key constraints are enforced.
 
         Requires PostgreSQL - SQLite doesn't enforce FK constraints by default.
@@ -133,7 +148,7 @@ class TestCustomerContactRelationship:
             await async_db_session.flush()
 
     @requires_postgres
-    async def test_cascade_delete_behavior(self, async_db_session):
+    async def test_cascade_delete_behavior(self, async_db_session, test_tenant):
         """Test CASCADE delete when customer is deleted.
 
         Requires PostgreSQL - SQLite CASCADE behavior differs from PostgreSQL.
@@ -180,7 +195,7 @@ class TestCustomerContactRelationship:
         )
         assert result.scalar_one_or_none() is None
 
-    async def test_multiple_roles_for_single_contact(self, async_db_session):
+    async def test_multiple_roles_for_single_contact(self, async_db_session, test_tenant):
         """Test that a contact can have multiple roles with same customer."""
         # Create customer and contact
         customer = Customer(

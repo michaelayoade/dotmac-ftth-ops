@@ -1,6 +1,6 @@
 """Tests for main module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -16,6 +16,31 @@ pytestmark = pytest.mark.integration
 from dotmac.platform.version import get_version
 
 
+@pytest.fixture(autouse=True)
+def patch_lifespan_dependencies():
+    """Patch asynchronous startup dependencies introduced in main.lifespan."""
+    with (
+        patch("dotmac.platform.main.ensure_isp_rbac", new_callable=AsyncMock) as mock_isp_rbac,
+        patch("dotmac.platform.main.ensure_billing_rbac", new_callable=AsyncMock) as mock_billing_rbac,
+        patch(
+            "dotmac.platform.main.ensure_default_admin_user", new_callable=AsyncMock
+        ) as mock_default_admin,
+        patch("dotmac.platform.main.init_redis", new_callable=AsyncMock) as mock_init_redis,
+        patch("dotmac.platform.main.shutdown_redis", new_callable=AsyncMock) as mock_shutdown_redis,
+        patch("dotmac.platform.main.AsyncSessionLocal") as mock_session_factory,
+    ):
+        session_cm = MagicMock()
+        session_cm.__aenter__ = AsyncMock(return_value=MagicMock())
+        session_cm.__aexit__ = AsyncMock(return_value=None)
+        mock_session_factory.return_value = session_cm
+        yield {
+            "isp_rbac": mock_isp_rbac,
+            "billing_rbac": mock_billing_rbac,
+            "default_admin": mock_default_admin,
+            "init_redis": mock_init_redis,
+            "shutdown_redis": mock_shutdown_redis,
+            "session_factory": mock_session_factory,
+        }
 
 
 class TestCreateApplication:
@@ -67,6 +92,7 @@ class TestLifespan:
     ):
         """Test lifespan startup sequence."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         # Mock HealthChecker
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
@@ -96,6 +122,8 @@ class TestLifespan:
     ):
         """Test lifespan when dependencies fail in production."""
         mock_settings.environment = "production"
+        mock_settings.is_production = True
+        mock_settings.is_production = True
         # Mock HealthChecker with failed checks
         mock_checker_instance = MagicMock()
         mock_check = MagicMock()
@@ -130,6 +158,7 @@ class TestLifespan:
     ):
         """Test lifespan continues when secrets loading fails in dev."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
         mock_health_checker.return_value = mock_checker_instance
@@ -153,6 +182,7 @@ class TestLifespan:
     ):
         """Test lifespan raises when secrets loading fails in production."""
         mock_settings.environment = "production"
+        mock_settings.is_production = True
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
         mock_health_checker.return_value = mock_checker_instance
@@ -323,6 +353,7 @@ class TestMissingCoverage:
     ):
         """Test lifespan with optional services failed in dev (line 86)."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
 
         # Mock health checker with optional services failed
         mock_checker_instance = MagicMock()
@@ -363,6 +394,7 @@ class TestMissingCoverage:
     ):
         """Test lifespan when database init fails (lines 109-111)."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
 
         # Mock health checker success
         mock_checker_instance = MagicMock()
@@ -392,6 +424,7 @@ class TestMissingCoverage:
         # Enable CORS in settings
         mock_settings.app_version = get_version()
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_settings.cors.enabled = True
         mock_settings.cors.origins = ["*"]
         mock_settings.cors.credentials = True
@@ -417,6 +450,7 @@ class TestMissingCoverage:
         """Test application creation with metrics enabled (lines 210->216)."""
         mock_settings.app_version = get_version()
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_settings.cors.enabled = False
         mock_settings.observability.enable_metrics = True
 

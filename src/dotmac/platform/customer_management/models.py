@@ -362,7 +362,12 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
     customer_tags = relationship("CustomerTag", back_populates="customer", lazy="dynamic")
     segment = relationship("CustomerSegment", back_populates="customers")
     # Contact relationships via join table
-    contact_links = relationship("CustomerContactLink", back_populates="customer", lazy="dynamic")
+    contact_links = relationship(
+        "CustomerContactLink",
+        back_populates="customer",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
 
     # Indexes and constraints
     __table_args__ = (

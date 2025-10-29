@@ -15,6 +15,8 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
+import ssl
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -468,6 +470,126 @@ class ServiceMesh:
         # Health monitoring
         self.health_check_task: asyncio.Task[None] | None = None
 
+    @staticmethod
+    def _metadata_bool(metadata: dict[str, Any], key: str, default: bool) -> bool:
+        """Convert metadata value to boolean with sensible defaults."""
+        if key not in metadata or metadata[key] is None:
+            return default
+
+        value = metadata[key]
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(value)
+
+    def _get_ssl_context(
+        self,
+        endpoint: ServiceEndpoint,
+        traffic_rule: TrafficRule,
+    ) -> ssl.SSLContext | None:
+        """Build or validate SSL context based on encryption policy."""
+        metadata = endpoint.metadata or {}
+        protocol = (endpoint.protocol or "http").lower()
+        encryption = traffic_rule.encryption_level
+
+        if encryption in {EncryptionLevel.TLS, EncryptionLevel.MTLS}:
+            if protocol != "https":
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"Service '{endpoint.service_name}' requires HTTPS for encryption "
+                        f"policy '{encryption.value}', but endpoint protocol is '{endpoint.protocol}'."
+                    ),
+                )
+            return self._create_ssl_context(
+                endpoint=endpoint,
+                metadata=metadata,
+                require_client_cert=encryption == EncryptionLevel.MTLS,
+            )
+
+        # No encryption required, but allow TLS metadata if endpoint already uses HTTPS
+        if protocol == "https":
+            return self._create_ssl_context(
+                endpoint=endpoint,
+                metadata=metadata,
+                require_client_cert=False,
+            )
+
+        return None
+
+    def _create_ssl_context(
+        self,
+        *,
+        endpoint: ServiceEndpoint,
+        metadata: dict[str, Any],
+        require_client_cert: bool,
+    ) -> ssl.SSLContext | None:
+        """Create an SSL context using endpoint metadata."""
+        verify_tls = self._metadata_bool(metadata, "verify_tls", True)
+        ca_cert_path = metadata.get("ca_cert_path") or metadata.get("ca_bundle_path")
+        client_cert_path = metadata.get("client_cert_path") or metadata.get("mtls_client_cert")
+        client_key_path = metadata.get("client_key_path") or metadata.get("mtls_client_key")
+        client_key_password = metadata.get("client_key_password") or metadata.get(
+            "mtls_client_key_password"
+        )
+
+        needs_context = (
+            require_client_cert
+            or ca_cert_path is not None
+            or not verify_tls
+            or client_cert_path is not None
+            or client_key_path is not None
+        )
+
+        if not needs_context:
+            # Default aiohttp SSL handling is sufficient
+            return None
+
+        context = ssl.create_default_context()
+
+        if ca_cert_path:
+            if not os.path.exists(ca_cert_path):
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"CA certificate '{ca_cert_path}' configured for service "
+                        f"'{endpoint.service_name}' was not found on disk."
+                    ),
+                )
+            context.load_verify_locations(cafile=ca_cert_path)
+
+        if not verify_tls:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+        if require_client_cert or client_cert_path or client_key_path:
+            if not client_cert_path or not client_key_path:
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"mTLS configuration for service '{endpoint.service_name}' requires "
+                        "'client_cert_path' and 'client_key_path'."
+                    ),
+                )
+
+            if not os.path.exists(client_cert_path) or not os.path.exists(client_key_path):
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"Client certificate '{client_cert_path}' or key '{client_key_path}' "
+                        f"for service '{endpoint.service_name}' was not found."
+                    ),
+                )
+
+            context.load_cert_chain(
+                certfile=client_cert_path,
+                keyfile=client_key_path,
+                password=client_key_password,
+            )
+
+        return context
+
     async def initialize(self) -> None:
         """Initialize the service mesh."""
         self.http_session = aiohttp.ClientSession(
@@ -580,6 +702,8 @@ class ServiceMesh:
         if traffic_rule.retry_policy != RetryPolicy.NONE:
             attempts += max(0, traffic_rule.max_retries)
 
+        ssl_context = self._get_ssl_context(endpoint, traffic_rule)
+
         for attempt in range(1, attempts + 1):
             endpoint_key = f"{endpoint.host}:{endpoint.port}"
             self.registry.connection_counts[endpoint_key] = (
@@ -595,6 +719,7 @@ class ServiceMesh:
                     headers,
                     body,
                     timeout or traffic_rule.timeout_seconds,
+                    ssl_context,
                 )
 
                 circuit_breaker.record_success()
@@ -641,6 +766,7 @@ class ServiceMesh:
         headers: dict[str, str] | None,
         body: bytes | None,
         timeout: int,
+        ssl_context: ssl.SSLContext | None,
     ) -> dict[str, Any]:
         """Make the actual HTTP call to the service."""
         url = f"{endpoint.url.rstrip('/')}/{path.lstrip('/')}"
@@ -671,6 +797,7 @@ class ServiceMesh:
             headers=call_headers,
             data=body,
             timeout=client_timeout,
+            ssl=ssl_context,
         ) as response:
             response_body = await response.read()
 

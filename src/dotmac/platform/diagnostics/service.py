@@ -5,7 +5,8 @@ Network troubleshooting and diagnostic operations for ISP services.
 """
 
 from collections.abc import Awaitable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+from decimal import Decimal
 
 # Python 3.9/3.10 compatibility: UTC was added in 3.11
 UTC = timezone.utc
@@ -22,6 +23,16 @@ from dotmac.platform.diagnostics.models import (
     DiagnosticStatus,
     DiagnosticType,
 )
+from dotmac.platform.settings import settings
+
+# Optional TimescaleDB imports
+try:
+    from dotmac.platform.timeseries import TimeSeriesSessionLocal
+    from dotmac.platform.timeseries.repository import RadiusTimeSeriesRepository
+
+    TIMESCALEDB_AVAILABLE = True
+except ImportError:
+    TIMESCALEDB_AVAILABLE = False
 
 if TYPE_CHECKING:
     from dotmac.platform.genieacs.service import GenieACSService
@@ -287,6 +298,40 @@ class DiagnosticsService:
                     }
                 )
 
+            # Get usage statistics from TimescaleDB
+            usage_stats = await self._get_usage_statistics(tenant_id, subscriber.id, lookback_days=7)
+            results["usage_statistics"] = usage_stats
+
+            # Add usage-based recommendations
+            if usage_stats.get("available"):
+                trend = usage_stats.get("trend")
+                if trend == "increasing_rapidly":
+                    recommendations.append(
+                        {
+                            "severity": "info",
+                            "message": f"Bandwidth usage increased significantly (avg: {usage_stats.get('avg_daily_bandwidth_gb', 0):.1f} GB/day)",
+                            "action": "Monitor for data cap issues or consider plan upgrade",
+                        }
+                    )
+                elif trend == "decreasing" and usage_stats.get("total_bandwidth_gb", 0) > 0:
+                    recommendations.append(
+                        {
+                            "severity": "info",
+                            "message": "Bandwidth usage has decreased significantly",
+                            "action": "May indicate connectivity issues or reduced service usage",
+                        }
+                    )
+
+                # Check for very high usage
+                if usage_stats.get("avg_daily_bandwidth_gb", 0) > 50:
+                    recommendations.append(
+                        {
+                            "severity": "info",
+                            "message": f"High bandwidth usage detected ({usage_stats.get('avg_daily_bandwidth_gb', 0):.1f} GB/day avg)",
+                            "action": "Subscriber may benefit from higher speed tier or unlimited plan",
+                        }
+                    )
+
             success = all(results["checks"].values())
 
             await self._update_diagnostic_run(
@@ -357,6 +402,22 @@ class DiagnosticsService:
                 severity = DiagnosticSeverity.ERROR
             else:
                 severity = DiagnosticSeverity.INFO
+
+            # Get usage statistics from TimescaleDB
+            usage_stats = await self._get_usage_statistics(tenant_id, subscriber.id, lookback_days=7)
+            results["usage_statistics"] = usage_stats
+
+            # Correlate session issues with usage patterns
+            if usage_stats.get("available"):
+                # If no sessions but recent usage data, may indicate new issue
+                if len(sessions) == 0 and usage_stats.get("total_bandwidth_gb", 0) > 0:
+                    recommendations.append(
+                        {
+                            "severity": "warning",
+                            "message": f"Recent usage detected ({usage_stats.get('total_bandwidth_gb', 0):.1f} GB in last 7 days) but no current session",
+                            "action": "Possible authentication failure or recent service disruption",
+                        }
+                    )
 
             await self._update_diagnostic_run(
                 diagnostic,
@@ -834,6 +895,111 @@ class DiagnosticsService:
     async def _create_skipped_check(self, reason: str) -> dict[str, Any]:
         """Create a skipped check result."""
         return {"skipped": True, "reason": reason}
+
+    async def _get_usage_statistics(
+        self, tenant_id: str, subscriber_id: str, lookback_days: int = 7
+    ) -> dict[str, Any]:
+        """
+        Get bandwidth usage statistics from TimescaleDB for troubleshooting.
+
+        Args:
+            tenant_id: Tenant ID
+            subscriber_id: RADIUS subscriber ID (from subscribers table)
+            lookback_days: Number of days to look back (default: 7)
+
+        Returns:
+            Dictionary with usage statistics and trends
+        """
+        if not TIMESCALEDB_AVAILABLE or not settings.timescaledb.is_configured:
+            logger.debug("TimescaleDB not available, skipping usage statistics")
+            return {"available": False, "reason": "timescaledb_not_configured"}
+
+        try:
+            end_date = datetime.now(UTC)
+            start_date = end_date - timedelta(days=lookback_days)
+
+            async with TimeSeriesSessionLocal() as ts_session:
+                repo = RadiusTimeSeriesRepository()
+
+                # Get overall usage
+                usage_data = await repo.get_subscriber_usage(
+                    ts_session, tenant_id, subscriber_id, start_date, end_date
+                )
+
+                # Get daily breakdown
+                daily_data = await repo.get_daily_bandwidth(
+                    ts_session, tenant_id, subscriber_id, start_date, end_date
+                )
+
+                # Calculate statistics
+                total_bytes = usage_data["total_bandwidth"]
+                total_gb = Decimal(total_bytes) / Decimal(1024**3)
+                avg_daily_gb = total_gb / Decimal(lookback_days) if lookback_days > 0 else Decimal(0)
+
+                # Detect trends
+                if len(daily_data) >= 2:
+                    recent_days = daily_data[-3:] if len(daily_data) >= 3 else daily_data
+                    older_days = daily_data[:-3] if len(daily_data) >= 6 else daily_data[:-len(recent_days)]
+
+                    if older_days:
+                        recent_avg = sum(d["total_bandwidth"] for d in recent_days) / len(recent_days)
+                        older_avg = sum(d["total_bandwidth"] for d in older_days) / len(older_days)
+
+                        if older_avg > 0:
+                            trend_pct = ((recent_avg - older_avg) / older_avg) * 100
+                            if trend_pct > 50:
+                                trend = "increasing_rapidly"
+                            elif trend_pct > 20:
+                                trend = "increasing"
+                            elif trend_pct < -20:
+                                trend = "decreasing"
+                            else:
+                                trend = "stable"
+                        else:
+                            trend = "stable"
+                    else:
+                        trend = "insufficient_data"
+                else:
+                    trend = "insufficient_data"
+
+                # Find peak usage day
+                peak_day = None
+                peak_usage_gb = Decimal(0)
+                if daily_data:
+                    for day_data in daily_data:
+                        day_gb = Decimal(day_data["total_bandwidth"]) / Decimal(1024**3)
+                        if day_gb > peak_usage_gb:
+                            peak_usage_gb = day_gb
+                            peak_day = day_data["day"]
+
+                # Convert daily data for output
+                daily_breakdown = [
+                    {
+                        "date": day["day"].date().isoformat() if hasattr(day["day"], "date") else str(day["day"]),
+                        "bandwidth_gb": float(Decimal(day["total_bandwidth"]) / Decimal(1024**3)),
+                        "session_count": day["session_count"],
+                    }
+                    for day in daily_data
+                ]
+
+                return {
+                    "available": True,
+                    "period_days": lookback_days,
+                    "start_date": start_date.isoformat(),
+                    "end_date": end_date.isoformat(),
+                    "total_bandwidth_gb": float(total_gb),
+                    "avg_daily_bandwidth_gb": float(avg_daily_gb),
+                    "total_sessions": usage_data["session_count"],
+                    "total_duration_hours": float(usage_data["total_duration"] / 3600),
+                    "trend": trend,
+                    "peak_day": peak_day.date().isoformat() if peak_day and hasattr(peak_day, "date") else str(peak_day) if peak_day else None,
+                    "peak_usage_gb": float(peak_usage_gb),
+                    "daily_breakdown": daily_breakdown,
+                }
+
+        except Exception as e:
+            logger.error("Failed to query usage statistics", error=str(e), tenant_id=tenant_id, username=username)
+            return {"available": False, "reason": "query_failed", "error": str(e)}
 
     async def get_diagnostic_run(self, tenant_id: str, diagnostic_id: UUID) -> DiagnosticRun | None:
         """Get diagnostic run by ID."""

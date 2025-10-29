@@ -213,7 +213,7 @@ class DunningExecution(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: 
 
     # Execution details
     status: Mapped[DunningExecutionStatus] = mapped_column(
-        SQLEnum(DunningExecutionStatus),
+        SQLEnum(DunningExecutionStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=DunningExecutionStatus.PENDING,
         index=True,

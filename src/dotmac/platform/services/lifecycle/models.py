@@ -79,6 +79,7 @@ class ServiceStatus(str, Enum):
     # Active States
     ACTIVE = "active"  # Service is active and running
     SUSPENDED = "suspended"  # Temporarily suspended (non-payment, customer request)
+    SUSPENDED_NON_PAYMENT = "suspended_non_payment"  # Suspended due to billing issues
     SUSPENDED_FRAUD = "suspended_fraud"  # Suspended due to fraud
 
     # Degraded States
@@ -417,6 +418,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
 
     # Flexible metadata (renamed from 'metadata' to avoid SQLAlchemy reserved name conflict)
     service_metadata: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",  # Database column name
         JSON,
         default=dict,
         nullable=False,

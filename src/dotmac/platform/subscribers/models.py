@@ -231,13 +231,13 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
 
     # Service Status
     status: Mapped[SubscriberStatus] = mapped_column(
-        SQLEnum(SubscriberStatus),
+        SQLEnum(SubscriberStatus, values_callable=lambda x: [e.value for e in x]),
         default=SubscriberStatus.PENDING,
         nullable=False,
         index=True,
     )
     service_type: Mapped[ServiceType] = mapped_column(
-        SQLEnum(ServiceType),
+        SQLEnum(ServiceType, values_callable=lambda x: [e.value for e in x]),
         default=ServiceType.FIBER_INTERNET,
         nullable=False,
         index=True,

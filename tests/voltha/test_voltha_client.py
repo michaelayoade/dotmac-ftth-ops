@@ -4,6 +4,7 @@ Unit tests for VOLTHA Client
 Tests VOLTHA client functionality with proper mocking for RobustHTTPClient architecture.
 """
 
+import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
@@ -270,6 +271,36 @@ class TestVOLTHADeviceOperations:
 
             assert len(result) == 2
             assert result[0]["label"] == "PON 0"
+
+    @pytest.mark.asyncio
+    async def test_backup_device_configuration(self):
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"content": "Q29uZmln"}
+
+            result = await client.backup_device_configuration("device-1")
+
+            assert result["content"] == "Q29uZmln"
+            mock_req.assert_awaited_once_with(
+                "GET",
+                "devices/device-1/config",
+                timeout=client.TIMEOUTS["backup"],
+            )
+
+    @pytest.mark.asyncio
+    async def test_restore_device_configuration_encodes_payload(self):
+        client = VOLTHAClient(base_url="http://voltha:8881")
+
+        with patch.object(client, "_voltha_request", new_callable=AsyncMock) as mock_req:
+            await client.restore_device_configuration("device-1", b"config-data")
+
+            mock_req.assert_awaited_once()
+            _, _, kwargs = mock_req.mock_calls[0]
+            assert kwargs["timeout"] == client.TIMEOUTS["restore"]
+            payload = kwargs["json"]
+            assert payload["encoding"] == "base64"
+            assert payload["content"] == base64.b64encode(b"config-data").decode("ascii")
 
 
 @pytest.mark.integration

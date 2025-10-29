@@ -5,8 +5,9 @@ unified network health and performance monitoring.
 """
 
 import asyncio
+import math
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -31,9 +32,22 @@ from dotmac.platform.network_monitoring.schemas import (
     ONUMetrics,
     TrafficStatsResponse,
 )
-from dotmac.platform.voltha.client import VOLTHAClient
+from dotmac.platform.monitoring.prometheus_client import PrometheusClient, PrometheusQueryError
+from dotmac.platform.tenant.oss_config import OSSService, ServiceConfig, get_service_config
 
 logger = structlog.get_logger(__name__)
+
+if TYPE_CHECKING:
+    from dotmac.platform.voltha.client import VOLTHAClient
+
+DEFAULT_PROMETHEUS_TRAFFIC_QUERIES = {
+    "rx_rate": 'sum(rate(node_network_receive_bytes_total{instance="<<device_id>>"}[5m]))',
+    "tx_rate": 'sum(rate(node_network_transmit_bytes_total{instance="<<device_id>>"}[5m]))',
+    "rx_bytes": 'sum(increase(node_network_receive_bytes_total{instance="<<device_id>>"}[1h]))',
+    "tx_bytes": 'sum(increase(node_network_transmit_bytes_total{instance="<<device_id>>"}[1h]))',
+    "rx_packets": 'sum(increase(node_network_receive_packets_total{instance="<<device_id>>"}[1h]))',
+    "tx_packets": 'sum(increase(node_network_transmit_packets_total{instance="<<device_id>>"}[1h]))',
+}
 
 
 class NetworkMonitoringService:
@@ -52,7 +66,7 @@ class NetworkMonitoringService:
         tenant_id: str,
         session: AsyncSession | None = None,
         netbox_client: NetBoxClient | None = None,
-        voltha_client: VOLTHAClient | None = None,
+        voltha_client: "VOLTHAClient | None" = None,
         genieacs_client: GenieACSClient | None = None,
     ):
         if not tenant_id:
@@ -61,10 +75,12 @@ class NetworkMonitoringService:
         self.tenant_id = tenant_id
         self.session = session
         self.netbox = netbox_client or NetBoxClient(tenant_id=tenant_id)
-        self.voltha = voltha_client or VOLTHAClient(tenant_id=tenant_id)
+        self.voltha = voltha_client or self._create_voltha_client()
         self.genieacs = genieacs_client or GenieACSClient(tenant_id=tenant_id)
         self._inventory_status: dict[str, str] = {}
         self._alert_status: dict[str, str] = {}
+        self._prometheus_client: PrometheusClient | None = None
+        self._prometheus_config: ServiceConfig | None = None
 
     # --------------------------------------------------------------------
     # Tenant helpers
@@ -86,6 +102,131 @@ class NetworkMonitoringService:
                 service_tenant=self.tenant_id,
             )
         return self.tenant_id
+
+    # --------------------------------------------------------------------
+    # Prometheus helpers
+    # --------------------------------------------------------------------
+
+    def _create_voltha_client(self) -> "VOLTHAClient | None":
+        """Lazily import and construct VOLTHA client to avoid circular imports."""
+
+        try:
+            from dotmac.platform.voltha.client import VOLTHAClient as _VOLTHAClient
+        except ImportError as exc:  # pragma: no cover - defensive guard
+            logger.warning(
+                "network_monitoring.voltha.import_failed",
+                tenant_id=self.tenant_id,
+                error=str(exc),
+            )
+            return None
+
+        return _VOLTHAClient(tenant_id=self.tenant_id)
+
+    async def _get_prometheus_client(self) -> PrometheusClient | None:
+        """Initialise Prometheus client using tenant-specific configuration."""
+
+        if self._prometheus_client is not None:
+            return self._prometheus_client
+
+        if self.session is None:
+            logger.warning(
+                "network_monitoring.prometheus.no_session",
+                tenant_id=self.tenant_id,
+            )
+            return None
+
+        try:
+            config = await get_service_config(
+                self.session,
+                self.tenant_id,
+                OSSService.PROMETHEUS,
+            )
+        except ValueError as exc:
+            logger.warning(
+                "network_monitoring.prometheus.config_missing",
+                tenant_id=self.tenant_id,
+                error=str(exc),
+            )
+            return None
+
+        self._prometheus_config = config
+        self._prometheus_client = PrometheusClient(
+            base_url=config.url,
+            tenant_id=self.tenant_id,
+            api_token=config.api_token,
+            username=config.username,
+            password=config.password,
+            verify_ssl=config.verify_ssl,
+            timeout_seconds=config.timeout_seconds,
+            max_retries=config.max_retries,
+        )
+        return self._prometheus_client
+
+    def _render_prometheus_query(
+        self, template: str, device_id: str, extras: dict[str, Any]
+    ) -> str:
+        """Substitute placeholders in Prometheus query templates."""
+
+        if not template:
+            return ""
+
+        placeholder = str(extras.get("device_placeholder", "<<device_id>>"))
+        query = template.replace(placeholder, device_id)
+        # Backwards compatibility placeholders
+        query = query.replace("<<device>>", device_id)
+        return query
+
+    async def _execute_prometheus_query(
+        self, client: PrometheusClient, query: str
+    ) -> float:
+        if not query:
+            return 0.0
+
+        try:
+            payload = await client.query(query)
+        except PrometheusQueryError as exc:
+            logger.warning(
+                "network_monitoring.prometheus.query_error",
+                tenant_id=self.tenant_id,
+                query=query,
+                error=str(exc),
+            )
+            return 0.0
+        except Exception as exc:  # pragma: no cover - defensive guard
+            logger.warning(
+                "network_monitoring.prometheus.query_failed",
+                tenant_id=self.tenant_id,
+                query=query,
+                error=str(exc),
+            )
+            return 0.0
+
+        return self._extract_prometheus_value(payload)
+
+    @staticmethod
+    def _extract_prometheus_value(payload: Any) -> float:
+        """Extract numeric value from Prometheus query payload."""
+
+        try:
+            data = payload.get("data", {})
+            result = data.get("result") or []
+            if not result:
+                return 0.0
+
+            sample = result[0]
+            if "value" in sample:
+                _, raw_value = sample["value"]
+            elif "values" in sample and sample["values"]:
+                _, raw_value = sample["values"][-1]
+            else:
+                return 0.0
+
+            value = float(raw_value)
+            if math.isnan(value) or math.isinf(value):
+                return 0.0
+            return value
+        except (TypeError, ValueError, KeyError):
+            return 0.0
 
     # --------------------------------------------------------------------
     # Data normalization helpers
@@ -525,10 +666,52 @@ class NetworkMonitoringService:
         )
 
     async def _get_network_device_traffic(self, device_id: str) -> TrafficStatsResponse:
-        """Get network device traffic from NetBox/SNMP"""
-        # This would typically query SNMP or other monitoring system
-        # For now, return placeholder
-        return TrafficStatsResponse(device_id=device_id, device_name=f"Device {device_id}")
+        """Get network device traffic from Prometheus metrics."""
+        client = await self._get_prometheus_client()
+        if client is None:
+            return TrafficStatsResponse(device_id=device_id, device_name=f"Device {device_id}")
+
+        extras = {}
+        if isinstance(self._prometheus_config, ServiceConfig):
+            extras = dict(self._prometheus_config.extras or {})
+
+        query_overrides = extras.get("traffic_queries") if isinstance(extras, dict) else None
+        queries = dict(DEFAULT_PROMETHEUS_TRAFFIC_QUERIES)
+        if isinstance(query_overrides, dict):
+            for key, template in query_overrides.items():
+                if template:
+                    queries[key] = template
+
+        rendered_queries = {
+            key: self._render_prometheus_query(template, device_id, extras)
+            for key, template in queries.items()
+            if template
+        }
+
+        results: dict[str, float] = {}
+        if rendered_queries:
+            query_items = list(rendered_queries.items())
+            values = await asyncio.gather(
+                *[self._execute_prometheus_query(client, query) for _, query in query_items]
+            )
+            results = {name: value for (name, _), value in zip(query_items, values)}
+
+        def _metric(name: str) -> float:
+            value = results.get(name, 0.0)
+            if math.isnan(value) or math.isinf(value):
+                return 0.0
+            return value
+
+        return TrafficStatsResponse(
+            device_id=device_id,
+            device_name=f"Device {device_id}",
+            total_bytes_in=max(int(_metric("rx_bytes")), 0),
+            total_bytes_out=max(int(_metric("tx_bytes")), 0),
+            total_packets_in=max(int(_metric("rx_packets")), 0),
+            total_packets_out=max(int(_metric("tx_packets")), 0),
+            current_rate_in_bps=max(_metric("rx_rate"), 0.0),
+            current_rate_out_bps=max(_metric("tx_rate"), 0.0),
+        )
 
     # ========================================================================
     # Comprehensive Device Metrics

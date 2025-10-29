@@ -19,7 +19,8 @@ import pytest
 import pytest_asyncio
 
 
-
+# Check if we're running integration tests (before any database configuration)
+_is_integration_test = any("integration" in arg for arg in sys.argv)
 
 os.environ.setdefault("TENANT_MODE", "single")
 
@@ -85,22 +86,50 @@ if "minio" not in sys.modules:
     minio_module.error = error_module
     minio_module.commonconfig = commonconfig_module
 
-# Configure SQLite for all tests by default (unless explicitly overridden)
-# This prevents database authentication errors when PostgreSQL is not running
-# Override with: DOTMAC_DATABASE_URL_ASYNC=postgresql://... pytest
-#
-# IMPORTANT: We unset DATABASE_URL to prevent the Settings class from using
-# the PostgreSQL connection from .env file. The test fixtures will use
-# DOTMAC_DATABASE_URL_ASYNC which defaults to SQLite in async_db_engine fixture.
-if "DATABASE_URL" in os.environ and "DOTMAC_DATABASE_URL_ASYNC" not in os.environ:
-    # User has DATABASE_URL set but not test override - remove it for tests
-    del os.environ["DATABASE_URL"]
-# Use in-memory SQLite databases to avoid file locking issues
-# Each test gets a fresh database via function-scoped fixtures
-if "DOTMAC_DATABASE_URL_ASYNC" not in os.environ:
-    os.environ["DOTMAC_DATABASE_URL_ASYNC"] = "sqlite+aiosqlite:///:memory:"
-if "DOTMAC_DATABASE_URL" not in os.environ:
-    os.environ["DOTMAC_DATABASE_URL"] = "sqlite:///:memory:"
+
+# Configure database based on test type (at module import time)
+_original_db_url = os.environ.get("DATABASE_URL")
+
+if _is_integration_test and _original_db_url:
+    # Use psycopg (async PostgreSQL driver) for integration tests
+    # psycopg v3 is async and handles event loops properly
+    if _original_db_url.startswith("postgresql://"):
+        _async_db_url = _original_db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+        _sync_db_url = _original_db_url
+    elif _original_db_url.startswith("postgresql+asyncpg://"):
+        _async_db_url = _original_db_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+        _sync_db_url = _original_db_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+    else:
+        _async_db_url = _original_db_url
+        _sync_db_url = _original_db_url
+
+    os.environ["DOTMAC_DATABASE_URL_ASYNC"] = _async_db_url
+    os.environ["DOTMAC_DATABASE_URL"] = _sync_db_url
+    print(f"\n✓ Using psycopg (async PostgreSQL) for integration tests: {_async_db_url}")
+else:
+    # Use SQLite for unit tests (default behavior)
+    if "DOTMAC_DATABASE_URL_ASYNC" not in os.environ:
+        os.environ["DOTMAC_DATABASE_URL_ASYNC"] = "sqlite+aiosqlite:///:memory:"
+    if "DOTMAC_DATABASE_URL" not in os.environ:
+        os.environ["DOTMAC_DATABASE_URL"] = "sqlite:///:memory:"
+    # Remove DATABASE_URL to prevent Settings from using PostgreSQL
+    if "DATABASE_URL" in os.environ:
+        del os.environ["DATABASE_URL"]
+
+
+# Session-scoped fixture to configure database before any test runs
+@pytest.fixture(scope="session", autouse=True)
+def configure_test_database():
+    """Configure database URLs for integration vs unit tests."""
+    # Re-apply database configuration in case it was reset
+    if _is_integration_test and _original_db_url:
+        os.environ["DOTMAC_DATABASE_URL_ASYNC"] = _async_db_url
+        os.environ["DOTMAC_DATABASE_URL"] = _original_db_url
+        print(f"\n✓ Session fixture: Set DOTMAC_DATABASE_URL_ASYNC={os.environ['DOTMAC_DATABASE_URL_ASYNC']}")
+    yield
+    # Cleanup if needed
+
+
 # Use in-memory rate limiting and disable Redis requirements during tests
 os.environ.setdefault("RATE_LIMIT__STORAGE_URL", "memory://")
 os.environ.setdefault("REQUIRE_REDIS_SESSIONS", "false")
@@ -246,6 +275,11 @@ def _import_base_and_models():
     # This is required for Base.metadata.create_all() to work properly
     try:
         from dotmac.platform.contacts import models as contact_models  # noqa: F401
+    except ImportError:
+        pass
+
+    try:
+        from dotmac.platform.genieacs import models as genieacs_models  # noqa: F401
     except ImportError:
         pass
 
@@ -483,7 +517,11 @@ if HAS_SQLALCHEMY:
 
             Each pytest-xdist worker gets its own isolated database to prevent conflicts.
             """
-            db_url = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+            # Use pytest config value if available, otherwise fall back to environment
+            db_url = getattr(request.config, 'db_url_async', None)
+            if not db_url:
+                db_url = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+            print(f"\n[async_db_engine] Creating engine with URL: {db_url}")
 
             # For pytest-xdist: use worker ID to create separate databases per worker
             worker_id = getattr(request.config, "workerinput", {}).get("workerid", "master")
@@ -530,16 +568,19 @@ if HAS_SQLALCHEMY:
                 # Import Base and models inside fixture to avoid hanging during collection
                 Base = _import_base_and_models()
                 async with engine.begin() as conn:
-                    # For SQLite with StaticPool, indexes may persist across tests
-                    # Use checkfirst for tables, wrap in try/except for index conflicts
-                    try:
+                    # Only drop/create tables for SQLite
+                    # For PostgreSQL, tables are managed by migrations
+                    if is_sqlite:
+                        # For SQLite with StaticPool, indexes may persist across tests
+                        # Use checkfirst for tables, wrap in try/except for index conflicts
                         try:
-                            await conn.run_sync(Base.metadata.drop_all)
-                        except OperationalError as exc:
-                            if "does not exist" not in str(exc).lower():
-                                raise
-                    except OperationalError:
-                        pass
+                            try:
+                                await conn.run_sync(Base.metadata.drop_all)
+                            except OperationalError as exc:
+                                if "does not exist" not in str(exc).lower():
+                                    raise
+                        except OperationalError:
+                            pass
                     try:
                         await conn.run_sync(Base.metadata.create_all)
                     except OperationalError as exc:
@@ -565,7 +606,9 @@ if HAS_SQLALCHEMY:
             try:
                 yield engine
             finally:
-                if HAS_DATABASE_BASE:
+                # For PostgreSQL integration tests, don't drop tables (keep schema, clean data in tests)
+                # For SQLite unit tests, drop all tables to ensure clean slate
+                if HAS_DATABASE_BASE and is_sqlite:
                     from dotmac.platform.db import Base
 
                     async with engine.begin() as conn:
@@ -587,7 +630,11 @@ if HAS_SQLALCHEMY:
 
             Each pytest-xdist worker gets its own isolated database to prevent conflicts.
             """
-            db_url = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+            # Use pytest config value if available, otherwise fall back to environment
+            db_url = getattr(request.config, 'db_url_async', None)
+            if not db_url:
+                db_url = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+            print(f"\n[async_db_engine] Creating engine with URL: {db_url}")
 
             # For pytest-xdist: use worker ID to create separate databases per worker
             worker_id = getattr(request.config, "workerinput", {}).get("workerid", "master")
@@ -634,10 +681,13 @@ if HAS_SQLALCHEMY:
                 # Import Base and models inside fixture to avoid hanging during collection
                 Base = _import_base_and_models()
                 async with engine.begin() as conn:
-                    try:
-                        await conn.run_sync(Base.metadata.drop_all)
-                    except OperationalError:
-                        pass
+                    # Only drop/create tables for SQLite
+                    # For PostgreSQL, tables are managed by migrations
+                    if is_sqlite:
+                        try:
+                            await conn.run_sync(Base.metadata.drop_all)
+                        except OperationalError:
+                            pass
                     try:
                         await conn.run_sync(Base.metadata.create_all)
                     except OperationalError as exc:
@@ -647,11 +697,17 @@ if HAS_SQLALCHEMY:
             try:
                 yield engine
             finally:
-                if HAS_DATABASE_BASE:
+                # For PostgreSQL integration tests, don't drop tables (keep schema, clean data in tests)
+                # For SQLite unit tests, drop all tables to ensure clean slate
+                if HAS_DATABASE_BASE and is_sqlite:
                     from dotmac.platform.db import Base
 
                     async with engine.begin() as conn:
-                        await conn.run_sync(Base.metadata.drop_all)
+                        try:
+                            await conn.run_sync(Base.metadata.drop_all)
+                        except OperationalError as exc:
+                            if "does not exist" not in str(exc).lower():
+                                raise
                 # Force close all connections to prevent event loop issues across tests
                 await engine.dispose(close=True)
                 # Give asyncio a chance to clean up pending tasks
@@ -659,23 +715,88 @@ if HAS_SQLALCHEMY:
 
     try:
         import pytest_asyncio
+        from sqlalchemy import event
 
         @pytest_asyncio.fixture
         async def async_db_session(async_db_engine):
-            """Async database session."""
-            SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
-            async with SessionMaker() as session:
-                try:
-                    yield session
-                finally:
+            """Async database session with transaction isolation.
+
+            Uses nested transactions (SAVEPOINT) for PostgreSQL to ensure complete
+            test isolation. Each test runs in its own transaction that gets rolled
+            back after completion, preventing state pollution between tests.
+
+            For SQLite (unit tests), uses simple rollback approach.
+            """
+            # Check if we're using PostgreSQL (integration tests need nested transactions)
+            db_url = str(async_db_engine.url)
+            is_postgresql = "postgresql" in db_url
+
+            if is_postgresql:
+                # PostgreSQL: Use nested transactions (SAVEPOINT) for proper isolation
+                async with async_db_engine.connect() as connection:
+                    # Start an outer transaction
+                    trans = await connection.begin()
+
+                    # Create session bound to the connection
+                    SessionMaker = async_sessionmaker(
+                        bind=connection,
+                        expire_on_commit=False,
+                        autoflush=False,
+                        autocommit=False,
+                    )
+
+                    async with SessionMaker() as session:
+                        # Start a nested transaction (SAVEPOINT)
+                        nested = await connection.begin_nested()
+
+                        # Event listener to recreate savepoint after commits within test
+                        @event.listens_for(session.sync_session, "after_transaction_end")
+                        def restart_savepoint(sess, transaction):
+                            """Restart savepoint after each commit within the test."""
+                            if transaction.nested and not transaction._parent.nested:
+                                # Automatically start a new savepoint
+                                connection.sync_connection.begin_nested()
+
+                        try:
+                            yield session
+                        finally:
+                            # Remove event listener
+                            event.remove(session.sync_session, "after_transaction_end", restart_savepoint)
+
+                            # Rollback the nested transaction (SAVEPOINT)
+                            try:
+                                if nested.is_active:
+                                    await nested.rollback()
+                            except Exception:
+                                pass
+
+                            # Rollback the outer transaction
+                            try:
+                                if trans.is_active:
+                                    await trans.rollback()
+                            except Exception:
+                                pass
+
+                            # Close session
+                            await session.close()
+
+                            # Give asyncio a chance to clean up
+                            await asyncio.sleep(0)
+            else:
+                # SQLite: Use simple rollback approach (nested transactions limited in SQLite)
+                SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
+                async with SessionMaker() as session:
                     try:
-                        await session.rollback()
-                    except Exception:
-                        pass
-                    # Ensure session is properly closed
-                    await session.close()
-                    # Give asyncio a chance to clean up
-                    await asyncio.sleep(0)
+                        yield session
+                    finally:
+                        try:
+                            await session.rollback()
+                        except Exception:
+                            pass
+                        # Ensure session is properly closed
+                        await session.close()
+                        # Give asyncio a chance to clean up
+                        await asyncio.sleep(0)
 
     except ImportError:
         # Fallback to regular pytest fixture
@@ -695,6 +816,89 @@ if HAS_SQLALCHEMY:
                     await session.close()
                     # Give asyncio a chance to clean up
                     await asyncio.sleep(0)
+
+    # ====================================================================
+    # Integration Test Isolation Fixtures
+    # ====================================================================
+
+    try:
+        @pytest_asyncio.fixture
+        async def clean_tenant_context():
+            """Reset tenant context before and after each test.
+
+            Ensures tests don't pollute each other with tenant context state.
+            Auto-applied to integration tests via autouse fixture below.
+            """
+            try:
+                from dotmac.platform.tenant.context import tenant_context
+
+                # Clear any existing tenant context before test
+                tenant_context.reset()
+
+                yield
+
+                # Clean up after test
+                tenant_context.reset()
+            except ImportError:
+                # Tenant module not available, skip cleanup
+                yield
+
+        @pytest_asyncio.fixture
+        async def clean_redis_cache():
+            """Flush Redis cache before and after each integration test.
+
+            Prevents cache pollution between tests. Only runs when Redis is available.
+            Auto-applied to integration tests via autouse fixture below.
+            """
+            redis_client = None
+            try:
+                # Try to get Redis client
+                try:
+                    from dotmac.platform.cache import get_redis_client
+
+                    redis_client = await get_redis_client()
+                    if redis_client:
+                        await redis_client.flushdb()
+                except Exception:
+                    pass  # Redis not available, skip cleanup
+
+                yield
+
+                # Cleanup after test
+                if redis_client:
+                    try:
+                        await redis_client.flushdb()
+                    except Exception:
+                        pass
+            except ImportError:
+                # Cache module not available, skip cleanup
+                yield
+
+        @pytest.fixture(scope="function", autouse=True)
+        def auto_cleanup_integration_tests(request):
+            """Automatically apply cleanup fixtures to integration tests.
+
+            This fixture runs automatically for all tests marked with @pytest.mark.integration.
+            It ensures tenant context and Redis cache are cleaned between tests.
+            """
+            # Check if this is an integration test
+            if "integration" in request.keywords:
+                # Request cleanup fixtures (they'll run automatically)
+                try:
+                    request.getfixturevalue("clean_tenant_context")
+                except Exception:
+                    pass  # Fixture not available, skip
+
+                try:
+                    request.getfixturevalue("clean_redis_cache")
+                except Exception:
+                    pass  # Fixture not available, skip
+
+            yield
+
+    except ImportError:
+        # pytest_asyncio not available, skip cleanup fixtures
+        pass
 
 else:
 
@@ -1738,6 +1942,24 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "integration: Integration test")
     config.addinivalue_line("markers", "asyncio: Async test")
     config.addinivalue_line("markers", "slow: Slow test")
+
+    # Configure database URLs based on test type
+    if _is_integration_test and _original_db_url:
+        # Use psycopg (async PostgreSQL) for integration tests
+        db_url_sync = _sync_db_url
+        db_url_async = _async_db_url
+        # Force set environment variables
+        os.environ["DOTMAC_DATABASE_URL_ASYNC"] = db_url_async
+        os.environ["DOTMAC_DATABASE_URL"] = db_url_sync
+        print(f"\n✓ pytest_configure: Using psycopg (async PostgreSQL) - {db_url_async}")
+    else:
+        db_url_async = "sqlite+aiosqlite:///:memory:"
+        db_url_sync = "sqlite:///:memory:"
+        print(f"\n✓ pytest_configure: Using SQLite")
+
+    # Store in pytest config for fixtures to use
+    config.db_url_async = db_url_async
+    config.db_url_sync = db_url_sync
 
 
 # Communications config fixture for notification tests

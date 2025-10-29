@@ -106,13 +106,33 @@ class SetParameterRequest(BaseModel):
     parameters: dict[str, Any] = Field(..., description="Parameter path and values")
 
 
-class GetParameterRequest(BaseModel):  # BaseModel resolves to Any in isolation
+# Backward compatibility alias for older imports
+SetParametersRequest = SetParameterRequest
+
+
+class DeviceOperationRequest(BaseModel):
+    """Generic device operation request (legacy compatibility)."""
+
+    model_config = ConfigDict()
+
+    device_id: str = Field(..., description="Device ID")
+    operation: str = Field(..., description="Operation identifier (e.g., factory_reset, reboot)")
+    parameters: dict[str, Any] | None = Field(
+        default=None, description="Optional operation parameters"
+    )
+
+
+class GetParametersRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Get parameter values from device"""
 
     model_config = ConfigDict()
 
     device_id: str = Field(..., description="Device ID")
     parameter_names: list[str] = Field(..., description="List of parameter paths")
+
+
+# Backward-compatible alias (singular naming)
+GetParameterRequest = GetParametersRequest
 
 
 class RebootRequest(BaseModel):  # BaseModel resolves to Any in isolation
@@ -153,7 +173,71 @@ class TaskResponse(BaseModel):  # BaseModel resolves to Any in isolation
     success: bool
     message: str
     task_id: str | None = None
-    details: dict[str, Any] | None = None
+    details: Any | None = None
+
+
+class FirmwareUpgradeRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to upgrade firmware on a device."""
+
+    model_config = ConfigDict()
+
+    device_id: str = Field(..., description="Device ID")
+    firmware_version: str = Field(..., description="Firmware version to install")
+    download_url: str = Field(..., description="URL to firmware image")
+    file_type: str | None = Field(
+        None, description="TR-069 file type (defaults to firmware upgrade image)"
+    )
+    target_filename: str | None = Field(
+        None, description="Optional target filename for download"
+    )
+    schedule_time: str | None = Field(
+        None,
+        description="ISO timestamp to schedule upgrade (immediate if omitted)",
+    )
+
+
+class BulkFirmwareUpgradeRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Bulk firmware upgrade request for multiple devices."""
+
+    model_config = ConfigDict()
+
+    device_ids: list[str] = Field(..., min_length=1, description="List of device IDs")
+    firmware_version: str = Field(..., description="Firmware version to install")
+    download_url: str = Field(..., description="URL to firmware image")
+    file_type: str | None = Field(None, description="TR-069 file type")
+    schedule_time: str | None = Field(None, description="Scheduled execution time (ISO)")
+
+
+class DiagnosticRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Diagnostic request (ping, traceroute, speed test)."""
+
+    model_config = ConfigDict()
+
+    device_id: str = Field(..., description="Device ID")
+    diagnostic_type: str = Field(..., description="Diagnostic type (ping, traceroute, speed_test)")
+    target: str | None = Field(None, description="Ping/traceroute target hostname or IP")
+    count: int | None = Field(None, description="Number of probes (ping)")
+    max_hop_count: int | None = Field(None, description="Maximum hop count (traceroute)")
+    test_server: str | None = Field(None, description="Speed test server URL/identifier")
+
+
+class BulkSetParametersRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Bulk parameter update request."""
+
+    model_config = ConfigDict()
+
+    device_ids: list[str] = Field(..., min_length=1, description="List of device IDs")
+    parameters: dict[str, Any] = Field(..., description="Parameters to apply to devices")
+
+
+class BulkOperationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Generic bulk operation request (reboot, factory_reset, etc.)."""
+
+    model_config = ConfigDict()
+
+    device_ids: list[str] = Field(..., min_length=1, description="List of device IDs")
+    operation: str = Field(..., description="Operation to perform on each device")
+    parameters: dict[str, Any] | None = Field(None, description="Optional operation parameters")
 
 
 # ============================================================================
@@ -437,7 +521,8 @@ class FirmwareUpgradeSchedule(BaseModel):  # BaseModel resolves to Any in isolat
     timezone: str = Field(default="UTC", description="Timezone for scheduled_at")
     max_concurrent: int = Field(default=10, ge=1, le=100, description="Maximum concurrent upgrades")
     status: str = Field(
-        default="pending", description="Status: pending, running, completed, failed, cancelled"
+        default="pending",
+        description="Status: pending, queued, running, completed, failed, cancelled",
     )
     created_at: datetime | None = Field(None, description="Creation timestamp")
     started_at: datetime | None = Field(None, description="Execution start time")
@@ -646,7 +731,7 @@ class MassConfigJob(BaseModel):  # BaseModel resolves to Any in isolation
     completed_devices: int = 0
     failed_devices: int = 0
     pending_devices: int = 0
-    status: str = "pending"  # pending, running, completed, failed, cancelled
+    status: str = "pending"  # pending, queued, running, completed, failed, cancelled
     dry_run: bool = False
     created_at: datetime
     started_at: datetime | None = None

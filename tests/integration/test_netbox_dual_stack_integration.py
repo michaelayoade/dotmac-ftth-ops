@@ -170,11 +170,10 @@ class TestNetBoxDualStackIntegration:
 
         netbox_client.request.side_effect = [ipv4_response, ipv6_response]
 
-        # Allocate with tags
+        # Allocate (tags not supported in current client API)
         ipv4, ipv6 = await netbox_client.allocate_dual_stack_ips(
             ipv4_prefix_id=1,
             ipv6_prefix_id=2,
-            tags=["customer", "production"],
         )
 
         # Verify tags applied
@@ -214,10 +213,10 @@ class TestNetBoxDualStackIntegration:
 
         netbox_client.request.return_value = updated_ip
 
-        # Update DNS name
+        # Update DNS name (dns_name must be in data dict per client API)
         result = await netbox_client.update_ip_address(
             ip_id=100,
-            dns_name="newname.example.com",
+            data={"dns_name": "newname.example.com"},
         )
 
         # Verify update

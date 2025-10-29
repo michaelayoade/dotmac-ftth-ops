@@ -68,6 +68,11 @@ class IPAddressUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     custom_fields: dict[str, Any] | None = None
 
 
+class IPUpdateRequest(IPAddressUpdate):
+    """Alias for backwards compatibility with simplified naming."""
+
+
+
 class IPAddressResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """IP address response from NetBox"""
 
@@ -350,14 +355,19 @@ class NetBoxQuery(BaseModel):  # BaseModel resolves to Any in isolation
 
 
 class IPAllocationRequest(BaseModel):  # BaseModel resolves to Any in isolation
-    """Request to allocate IP from prefix"""
+    """Request to allocate IP from prefix or for specific address"""
 
     model_config = ConfigDict()
 
-    prefix_id: int = Field(..., description="Prefix ID to allocate from")
+    prefix_id: int | None = Field(None, description="Prefix ID to allocate from")
+    address: str | None = Field(None, description="Specific IP address with prefix")
+    tenant: str | int | None = Field(None, description="Tenant identifier")
+    status: str | None = Field(None, description="IP status")
+    role: str | None = Field(None, description="IP role")
     description: str | None = Field(None, max_length=200, description="Description")
     dns_name: str | None = Field(None, max_length=255, description="DNS name")
-    tenant: int | None = Field(None, description="Tenant ID")
+    tags: list[str] | None = Field(default_factory=list, description="Tags")
+    interface_id: int | None = Field(None, description="Assigned interface ID")
 
 
 class NetBoxHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
@@ -368,6 +378,31 @@ class NetBoxHealthResponse(BaseModel):  # BaseModel resolves to Any in isolation
     healthy: bool
     version: str | None = None
     message: str
+
+
+class BulkIPAllocationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Bulk allocate IP addresses from a prefix"""
+
+    model_config = ConfigDict()
+
+    prefix_id: int = Field(..., description="Prefix ID to allocate from")
+    count: int = Field(..., ge=1, le=1024, description="Number of IPs to allocate")
+    tenant: str | int | None = Field(None, description="Tenant identifier")
+    role: str | None = Field(None, description="IP role")
+    description: str | None = Field(None, max_length=200, description="Description")
+    tags: list[str] | None = Field(default_factory=list, description="Tags")
+
+
+class PrefixAllocationRequest(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request to allocate child prefix"""
+
+    model_config = ConfigDict()
+
+    parent_prefix_id: int = Field(..., description="Parent prefix ID")
+    prefix_length: int = Field(..., ge=0, le=128, description="Child prefix length")
+    tenant: str | int | None = Field(None, description="Tenant identifier")
+    description: str | None = Field(None, max_length=200, description="Description")
+    tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
 # ============================================================================
@@ -668,11 +703,12 @@ class BulkIPAllocationRequest(BaseModel):
     model_config = ConfigDict()
 
     prefix_id: int = Field(..., description="Prefix ID to allocate from")
-    count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate (1-100)")
-    description_prefix: str | None = Field(
-        None, max_length=150, description="Description prefix (will be numbered)"
-    )
-    tenant: int | None = Field(None, description="Tenant ID")
+    count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate")
+    tenant: str | int | None = Field(None, description="Tenant identifier")
+    role: str | None = Field(None, description="IP role")
+    description: str | None = Field(None, max_length=200, description="Description")
+    description_prefix: str | None = Field(None, max_length=100, description="Prefix to prepend to each IP description")
+    tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
 class BulkIPAllocationResponse(BaseModel):

@@ -642,6 +642,14 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.radius.analytics_router",
+        router_name="router",
+        prefix="/api/v1/radius",  # Mount under /radius - module has /analytics prefix
+        tags=["RADIUS Analytics"],
+        description="RADIUS analytics and bandwidth usage queries (TimescaleDB)",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.netbox.router",
         router_name="router",
         prefix="/api/v1",  # Module has /netbox prefix

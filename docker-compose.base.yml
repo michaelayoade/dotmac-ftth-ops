@@ -178,6 +178,12 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:5555/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   control-workers:
     build:
@@ -203,6 +209,7 @@ services:
     ports:
       - "${OTEL_GRPC_PORT:-4317}:4317"
       - "${OTEL_HTTP_PORT:-4318}:4318"
+      - "${OTEL_METRICS_PORT:-8888}:8888"  # Prometheus metrics endpoint
       - "${OTEL_HEALTH_PORT:-13133}:13133"
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:13133/"]

@@ -391,14 +391,10 @@ class LogsService:
     ) -> LogStats:
         session = cast(AsyncSession, self.session)
         try:
-            # Build base query
-            query = select(AuditActivity)
+            filters = []
 
-            # SECURITY: Apply tenant isolation - only show stats for current user's tenant
-            # unless user is a platform admin
             if not current_user.is_platform_admin:
                 if not current_user.tenant_id:
-                    # Non-admin users must have a tenant_id
                     self.logger.warning(
                         "User without tenant_id attempted to access log stats",
                         user_id=current_user.user_id,
@@ -413,80 +409,73 @@ class LogsService:
                             "end": (end_time or now).isoformat(),
                         },
                     )
-                query = query.where(AuditActivity.tenant_id == current_user.tenant_id)
+                filters.append(AuditActivity.tenant_id == current_user.tenant_id)
 
             if start_time:
-                query = query.where(AuditActivity.created_at >= start_time)
+                filters.append(AuditActivity.created_at >= start_time)
             if end_time:
-                query = query.where(AuditActivity.created_at <= end_time)
+                filters.append(AuditActivity.created_at <= end_time)
 
-            # Get total count
-            count_query = select(func.count()).select_from(query.subquery())
-            result = await session.execute(count_query)
-            total = result.scalar() or 0
-
-            # Count by severity (map to log levels)
-            severity_query = select(AuditActivity.severity, func.count(AuditActivity.id)).group_by(
-                AuditActivity.severity
+            stmt = select(
+                AuditActivity.severity,
+                AuditActivity.activity_type,
+                AuditActivity.created_at,
             )
+            for cond in filters:
+                stmt = stmt.where(cond)
 
-            # Apply tenant isolation to severity query
-            if not current_user.is_platform_admin and current_user.tenant_id:
-                severity_query = severity_query.where(
-                    AuditActivity.tenant_id == current_user.tenant_id
-                )
+            result = await session.execute(stmt)
+            rows = result.all()
 
-            if start_time:
-                severity_query = severity_query.where(AuditActivity.created_at >= start_time)
-            if end_time:
-                severity_query = severity_query.where(AuditActivity.created_at <= end_time)
-
-            result = await session.execute(severity_query)
-            severity_counts: dict[str, int] = {row[0]: row[1] for row in result.all()}
-
-            # Map severities to log levels
+            total = len(rows)
             by_level: dict[str, int] = {
-                "INFO": severity_counts.get(ActivitySeverity.LOW.value, 0),
-                "WARNING": severity_counts.get(ActivitySeverity.MEDIUM.value, 0),
-                "ERROR": severity_counts.get(ActivitySeverity.HIGH.value, 0),
-                "CRITICAL": severity_counts.get(ActivitySeverity.CRITICAL.value, 0),
+                "DEBUG": 0,
+                "INFO": 0,
+                "WARNING": 0,
+                "ERROR": 0,
+                "CRITICAL": 0,
             }
-
-            # Count by service (extract from activity_type)
-            activities_result = await session.execute(
-                select(AuditActivity.activity_type).select_from(query.subquery())
-            )
-            activities = activities_result.scalars().all()
-
             by_service: dict[str, int] = {}
-            for activity_type in activities:
-                # Handle None values before validation
-                if not activity_type:
-                    continue
-                service = activity_type.split(".")[0] if "." in activity_type else "platform"
-                by_service[service] = by_service.get(service, 0) + 1
 
-            # Determine time range
-            if not start_time or not end_time:
-                time_query = select(
-                    func.min(AuditActivity.created_at), func.max(AuditActivity.created_at)
+            for severity, activity_type, created_at in rows:
+                level = {
+                    ActivitySeverity.LOW.value: "INFO",
+                    ActivitySeverity.MEDIUM.value: "WARNING",
+                    ActivitySeverity.HIGH.value: "ERROR",
+                    ActivitySeverity.CRITICAL.value: "CRITICAL",
+                }.get(severity, "DEBUG")
+                by_level[level] = by_level.get(level, 0) + 1
+
+                service_name = (
+                    activity_type.split(".")[0]
+                    if activity_type and "." in activity_type
+                    else (activity_type or "platform")
                 )
-                result = await session.execute(time_query)
-                min_time, max_time = result.one()
-                start_time = start_time or min_time or datetime.now(UTC)
-                end_time = end_time or max_time or datetime.now(UTC)
+                by_service[service_name] = by_service.get(service_name, 0) + 1
+
+            if rows:
+                timestamps = [row[2] for row in rows if row[2] is not None]
+                start_bound = min(timestamps) if timestamps else datetime.now(UTC)
+                end_bound = max(timestamps) if timestamps else datetime.now(UTC)
+            else:
+                now = datetime.now(UTC)
+                start_bound = start_time or now
+                end_bound = end_time or now
+
+            # Trim zero entries for cleaner response
+            by_level = {key: value for key, value in by_level.items() if value > 0}
 
             return LogStats(
                 total=total,
                 by_level=by_level,
                 by_service=by_service,
                 time_range={
-                    "start": start_time.isoformat(),
-                    "end": end_time.isoformat(),
+                    "start": start_bound.isoformat(),
+                    "end": end_bound.isoformat(),
                 },
             )
         except Exception as e:
-            self.logger.error("Failed to fetch log stats", error=str(e))
+            self.logger.exception("Failed to fetch log stats", error=str(e))
             # Return empty stats on error
             now = datetime.now(UTC)
             return LogStats(

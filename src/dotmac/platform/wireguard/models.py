@@ -107,7 +107,7 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
 
     # Server status
     status: Mapped[WireGuardServerStatus] = mapped_column(
-        SQLEnum(WireGuardServerStatus),
+        SQLEnum(WireGuardServerStatus, values_callable=lambda x: [e.value for e in x]),
         default=WireGuardServerStatus.ACTIVE,
         nullable=False,
         index=True,
@@ -310,7 +310,7 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
 
     # Peer status
     status: Mapped[WireGuardPeerStatus] = mapped_column(
-        SQLEnum(WireGuardPeerStatus),
+        SQLEnum(WireGuardPeerStatus, values_callable=lambda x: [e.value for e in x]),
         default=WireGuardPeerStatus.ACTIVE,
         nullable=False,
         index=True,

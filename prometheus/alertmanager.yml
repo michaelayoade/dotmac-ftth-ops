@@ -46,11 +46,12 @@ receivers:
   # Routes to our FastAPI endpoint which handles dynamic channel routing
   - name: 'dotmac-webhook'
     webhook_configs:
-      - url: 'http://host.docker.internal:8000/api/v1/monitoring/alerts/webhook'
+      - url: 'http://app:8000/api/v1/monitoring/alerts/webhook'
         send_resolved: true
         http_config:
-          # No authentication required - network-level security
-          # Can add basic auth or bearer token if needed
+          headers:
+            Authorization: "Bearer ${ALERTMANAGER_WEBHOOK_SECRET}"
+            X-Alertmanager-Token: '${ALERTMANAGER_WEBHOOK_SECRET}'
         max_alerts: 0  # Send all alerts (no truncation)
 
 # Inhibition rules (prevent redundant alerts)

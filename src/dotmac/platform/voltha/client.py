@@ -5,6 +5,7 @@ Provides interface to VOLTHA REST API for PON network management.
 Note: VOLTHA primarily uses gRPC, but also provides REST API for common operations.
 """
 
+import base64
 import os
 from typing import Any, cast
 from urllib.parse import urljoin
@@ -37,6 +38,8 @@ class VOLTHAClient(RobustHTTPClient):  # type: ignore[misc]
         "provision": 60.0,
         "alarms": 10.0,
         "events": 10.0,
+        "backup": 45.0,
+        "restore": 60.0,
     }
 
     def __init__(
@@ -228,6 +231,25 @@ class VOLTHAClient(RobustHTTPClient):  # type: ignore[misc]
         )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
+
+    async def backup_device_configuration(self, device_id: str) -> Any:
+        """Download device configuration snapshot."""
+        return await self._voltha_request(
+            "GET",
+            f"devices/{device_id}/config",
+            timeout=self.TIMEOUTS["backup"],
+        )
+
+    async def restore_device_configuration(self, device_id: str, payload: bytes) -> Any:
+        """Restore device configuration from snapshot bytes."""
+        encoded = base64.b64encode(payload).decode("ascii")
+        body = {"content": encoded, "encoding": "base64"}
+        return await self._voltha_request(
+            "POST",
+            f"devices/{device_id}/config",
+            json=body,
+            timeout=self.TIMEOUTS["restore"],
+        )
 
     # =========================================================================
     # Alarm and Event Operations

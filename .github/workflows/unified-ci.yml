@@ -241,6 +241,7 @@ jobs:
             --cov-report=xml:coverage-integration.xml \
             --tb=short \
             -n auto \
+            --dist loadgroup \
             -q
 
       - name: Prepare coverage artifacts
@@ -339,11 +340,28 @@ jobs:
           DOTMAC_REDIS_URL: redis://localhost:6379/0
         run: poetry run alembic upgrade head
 
+      - name: Start FastAPI server for E2E tests
+        env:
+          PYTHONPATH: "${{ github.workspace }}/src"
+          DATABASE_URL: postgresql://dotmac_user:change-me-in-production@localhost:5432/${{ env.DB_NAME }}
+          DOTMAC_REDIS_URL: redis://localhost:6379/0
+          E2E_BASE_URL: http://localhost:8000
+        run: |
+          echo "🚀 Starting FastAPI server..."
+          poetry run uvicorn dotmac.platform.main:app --host 0.0.0.0 --port 8000 &
+          SERVER_PID=$!
+          echo "SERVER_PID=$SERVER_PID" >> $GITHUB_ENV
+
+          echo "⏳ Waiting for server to become available..."
+          timeout 30 bash -c 'until curl -sf http://localhost:8000/health > /dev/null 2>&1 || curl -sf http://localhost:8000/docs > /dev/null 2>&1 || curl -sf http://localhost:8000/ > /dev/null 2>&1; do sleep 1; done'
+          echo "✅ Server is ready!"
+
       - name: Run E2E tests with coverage
         env:
           PYTHONPATH: "${{ github.workspace }}/src"
           DATABASE_URL: postgresql://dotmac_user:change-me-in-production@localhost:5432/${{ env.DB_NAME }}
           DOTMAC_REDIS_URL: redis://localhost:6379/0
+          E2E_BASE_URL: http://localhost:8000
           COVERAGE_CORE: sysmon
         run: |
           echo "🌐 Running E2E tests (full API workflows)..."
@@ -355,6 +373,14 @@ jobs:
             --cov-report=xml:coverage-e2e.xml \
             --tb=short \
             -q
+
+      - name: Stop FastAPI server
+        if: always()
+        run: |
+          if [ -n "$SERVER_PID" ]; then
+            echo "🛑 Stopping FastAPI server (PID: $SERVER_PID)..."
+            kill $SERVER_PID || true
+          fi
 
       - name: Prepare coverage artifacts
         if: always()

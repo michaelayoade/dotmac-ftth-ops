@@ -37,6 +37,7 @@ from dotmac.platform.monitoring.error_middleware import (
     RequestMetricsMiddleware,
 )
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
+from dotmac.platform.infrastructure_health import run_startup_health_checks
 from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
@@ -45,6 +46,7 @@ from dotmac.platform.settings import settings
 from dotmac.platform.telemetry import setup_telemetry
 from dotmac.platform.tenant import TenantMiddleware
 from dotmac.platform.tenant_app import tenant_app
+from dotmac.platform.timeseries import init_timescaledb, shutdown_timescaledb
 
 
 def rate_limit_handler(request: Request, exc: Exception) -> Response:
@@ -167,6 +169,23 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             )
             print("Running in degraded mode")
 
+    # Run comprehensive infrastructure health checks (Docker containers)
+    try:
+        # Check ISP services if ISP mode is enabled (optional)
+        include_isp_services = os.getenv("CHECK_ISP_SERVICES", "false").lower() == "true"
+
+        await run_startup_health_checks(
+            fail_on_unhealthy=False,  # Don't fail startup, just report
+            include_isp_services=include_isp_services,
+        )
+    except Exception as e:
+        logger.warning(
+            "infrastructure.health_check.failed",
+            error=str(e),
+            emoji="⚠️",
+        )
+        print(f"Infrastructure health check failed: {e}")
+
     # Load secrets from Vault/OpenBao if configured
     try:
         load_secrets_from_vault_sync()
@@ -200,6 +219,19 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.error("redis.init.failed", error=str(e), emoji="❌")
         print(f"Redis initialization failed: {e}")
         raise
+
+    # Initialize TimescaleDB (optional time-series database)
+    if settings.timescaledb.is_configured:
+        try:
+            init_timescaledb()
+            logger.info("timescaledb.init.success", emoji="✅")
+            print("TimescaleDB initialized")
+        except Exception as e:
+            logger.error("timescaledb.init.failed", error=str(e), emoji="❌")
+            # Continue in development, fail in production
+            if settings.is_production:
+                raise
+            print(f"TimescaleDB initialization failed: {e}")
 
     # Seed RBAC permissions/roles after database init
     try:
@@ -235,6 +267,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.info("redis.shutdown.success", emoji="✅")
     except Exception as e:
         logger.error("redis.shutdown.failed", error=str(e), emoji="❌")
+
+    # Cleanup TimescaleDB connections
+    if settings.timescaledb.is_configured:
+        try:
+            await shutdown_timescaledb()
+            logger.info("timescaledb.shutdown.success", emoji="✅")
+        except Exception as e:
+            logger.error("timescaledb.shutdown.failed", error=str(e), emoji="❌")
 
     logger.info("service.shutdown.complete", emoji="✅")
 

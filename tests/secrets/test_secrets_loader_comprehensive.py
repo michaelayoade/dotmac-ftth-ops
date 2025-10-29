@@ -193,6 +193,8 @@ class TestLoadSecretsFromVault:
         mock_settings.database.password = "old_password"
         mock_settings.jwt = Mock()
         mock_settings.jwt.secret_key = "old_key"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "old_webhook_secret"
 
         mock_client = AsyncMock()
         mock_client.health_check = AsyncMock(return_value=True)
@@ -201,6 +203,7 @@ class TestLoadSecretsFromVault:
                 "database/password": {"value": "new_db_password"},
                 "auth/jwt_secret": {"value": "new_jwt_secret"},
                 "app/secret_key": {"value": "new_app_secret"},
+                "observability/alertmanager/webhook_secret": {"value": "vault-webhook"},
             }
         )
         mock_client.close = AsyncMock()
@@ -213,6 +216,9 @@ class TestLoadSecretsFromVault:
         # Verify settings were updated
         assert mock_settings.database.password == "new_db_password"
         assert mock_settings.jwt.secret_key == "new_jwt_secret"
+        assert (
+            mock_settings.observability.alertmanager_webhook_secret == "vault-webhook"
+        )
 
     async def test_load_secrets_with_dict_without_value_key(self):
         """Test loading secrets when dict doesn't have 'value' key."""
@@ -355,6 +361,8 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "very-secure-secret-key-123"
         mock_settings.jwt.secret_key = "secure-jwt-key-456"
         mock_settings.database.password = "very-secure-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         # Should not raise
         validate_production_secrets(mock_settings)
@@ -365,6 +373,8 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "change-me-in-production"
         mock_settings.jwt.secret_key = "valid-key"
         mock_settings.database.password = "valid-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         with pytest.raises(ValueError, match="secret_key must be changed"):
             validate_production_secrets(mock_settings)
@@ -375,8 +385,22 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "valid-key"
         mock_settings.jwt.secret_key = "change-me"
         mock_settings.database.password = "valid-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         with pytest.raises(ValueError, match="JWT secret_key must be changed"):
+            validate_production_secrets(mock_settings)
+
+    def test_validate_production_missing_alertmanager_secret(self):
+        """Test validation fails when Alertmanager webhook secret is missing."""
+        mock_settings = Mock()
+        mock_settings.secret_key = "secure-app-key"
+        mock_settings.jwt.secret_key = "secure-jwt-key"
+        mock_settings.database.password = "secure-db-password"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = ""
+
+        with pytest.raises(ValueError, match="Alertmanager webhook secret must be set"):
             validate_production_secrets(mock_settings)
 
     def test_validate_production_no_database_password(self):

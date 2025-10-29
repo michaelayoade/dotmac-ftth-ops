@@ -264,20 +264,20 @@ class HealthChecker:
         """Check Celery broker (Redis/RabbitMQ) connectivity."""
         broker_url = settings.celery.broker_url
 
-        if "redis://" in broker_url:
+        normalized_url = broker_url.lower()
+
+        if normalized_url.startswith(("redis://", "rediss://")):
             # Redis broker
             is_healthy, message = self._check_redis_url(broker_url, "Celery broker")
             status = ServiceStatus.HEALTHY if is_healthy else ServiceStatus.DEGRADED
-        elif "amqp://" in broker_url or "pyamqp://" in broker_url:
-            # RabbitMQ broker - would need amqp client to check properly
-            status = ServiceStatus.HEALTHY
-            message = "RabbitMQ broker check not implemented"
-            logger.debug("RabbitMQ health check not implemented")
         else:
-            # Unknown broker type
-            status = ServiceStatus.HEALTHY
-            message = "Unknown broker type, assuming healthy"
-            logger.warning(f"Unknown Celery broker type: {broker_url.split('://')[0]}")
+            # Non-Redis brokers are not supported in this deployment
+            status = ServiceStatus.UNHEALTHY
+            message = (
+                "Unsupported Celery broker configuration detected. "
+                "This deployment only supports Redis as the Celery broker."
+            )
+            logger.error(f"Unsupported Celery broker detected: {broker_url}")
 
         return ServiceHealth(
             name="celery_broker",
@@ -309,20 +309,73 @@ class HealthChecker:
                 required=False,
             )
 
-        if provider == "minio":
-            # MinIO health check would require the minio client; skip to avoid hard dependency
-            return ServiceHealth(
-                name="storage",
-                status=ServiceStatus.HEALTHY,
-                message="MinIO health check skipped (minio client not bundled)",
-                required=False,
+        if provider in {"minio", "s3"}:
+            try:
+                from minio import Minio  # type: ignore[import]
+                from minio.error import S3Error  # type: ignore[import]
+            except Exception:
+                return ServiceHealth(
+                    name="storage",
+                    status=ServiceStatus.DEGRADED,
+                    message="MinIO client not installed; cannot verify object storage",
+                    required=False,
+                )
+
+            endpoint = settings.storage.endpoint
+            use_ssl = getattr(settings.storage, "use_ssl", False)
+
+            if endpoint.startswith("http://") or endpoint.startswith("https://"):
+                parsed = httpx.URL(endpoint)
+                endpoint_host = parsed.netloc.decode("utf-8")
+                use_ssl = parsed.scheme == "https"
+            else:
+                endpoint_host = endpoint
+
+            client = Minio(
+                endpoint_host,
+                access_key=settings.storage.access_key or None,
+                secret_key=settings.storage.secret_key or None,
+                secure=use_ssl,
+                region=settings.storage.region or None,
             )
 
-        # S3 or other providers
+            bucket_name = settings.storage.bucket
+
+            try:
+                if client.bucket_exists(bucket_name):
+                    return ServiceHealth(
+                        name="storage",
+                        status=ServiceStatus.HEALTHY,
+                        message=f"Object storage bucket '{bucket_name}' reachable",
+                        required=False,
+                    )
+                return ServiceHealth(
+                    name="storage",
+                    status=ServiceStatus.DEGRADED,
+                    message=f"Bucket '{bucket_name}' not found",
+                    required=False,
+                )
+            except S3Error as exc:
+                logger.warning("Storage health check failed: %s", exc)
+                return ServiceHealth(
+                    name="storage",
+                    status=ServiceStatus.DEGRADED,
+                    message=f"Storage error: {exc.code}",
+                    required=False,
+                )
+            except Exception as exc:  # pragma: no cover - defensive
+                logger.warning("Storage health check failed: %s", exc)
+                return ServiceHealth(
+                    name="storage",
+                    status=ServiceStatus.DEGRADED,
+                    message=f"Storage connection failed: {exc}",
+                    required=False,
+                )
+
         return ServiceHealth(
             name="storage",
-            status=ServiceStatus.HEALTHY,
-            message=f"Storage provider '{provider}' assumed healthy",
+            status=ServiceStatus.DEGRADED,
+            message=f"Unsupported storage provider '{provider}'",
             required=False,
         )
 
@@ -345,24 +398,44 @@ class HealthChecker:
             )
 
         try:
-            # Simple HTTP check to OTLP endpoint
-            with httpx.Client(timeout=5.0) as client:
-                response = client.get(settings.observability.otel_endpoint)
+            payload = {
+                "resource": {
+                    "resource": {
+                        "attributes": [
+                            {"key": "service.name", "type": "string", "value": {"stringValue": "dotmac-health"}},
+                            {"key": "deployment.environment", "type": "string", "value": {"stringValue": settings.environment}},
+                        ]
+                    }
+                },
+                "scope": [],
+            }
 
-                if response.status_code < 500:
-                    return ServiceHealth(
-                        name="observability",
-                        status=ServiceStatus.HEALTHY,
-                        message="OTLP endpoint reachable",
-                        required=False,
-                    )
-                else:
-                    return ServiceHealth(
-                        name="observability",
-                        status=ServiceStatus.DEGRADED,
-                        message=f"OTLP endpoint returned {response.status_code}",
-                        required=False,
-                    )
+            headers = {
+                "content-type": "application/json",
+                "user-agent": "dotmac-health-check/1",
+            }
+
+            with httpx.Client(timeout=5.0) as client:
+                response = client.post(
+                    settings.observability.otel_endpoint.rstrip("/") + "/v1/traces",
+                    json=payload,
+                    headers=headers,
+                )
+
+            if 200 <= response.status_code < 300:
+                return ServiceHealth(
+                    name="observability",
+                    status=ServiceStatus.HEALTHY,
+                    message="OTLP endpoint accepted test span",
+                    required=False,
+                )
+
+            return ServiceHealth(
+                name="observability",
+                status=ServiceStatus.DEGRADED,
+                message=f"OTLP endpoint returned {response.status_code}",
+                required=False,
+            )
         except Exception as e:
             logger.warning(f"Observability health check failed: {e}")
             return ServiceHealth(

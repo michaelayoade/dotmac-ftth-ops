@@ -369,7 +369,7 @@ class QuoteService:
         quote = result.scalar_one_or_none()
 
         if not quote:
-            raise EntityNotFoundError(entity_type="Quote", entity_id=str(quote_id))
+            raise EntityNotFoundError(entity="Quote", entity_id=str(quote_id))
 
         return quote
 
@@ -721,7 +721,7 @@ class SiteSurveyService:
         survey = result.scalar_one_or_none()
 
         if not survey:
-            raise EntityNotFoundError(entity_type="SiteSurvey", entity_id=str(survey_id))
+            raise EntityNotFoundError(entity="SiteSurvey", entity_id=str(survey_id))
 
         return survey
 

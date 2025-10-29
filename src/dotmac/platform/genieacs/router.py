@@ -28,7 +28,7 @@ from dotmac.platform.genieacs.schemas import (
     FirmwareUpgradeScheduleList,
     FirmwareUpgradeScheduleResponse,
     GenieACSHealthResponse,
-    GetParameterRequest,
+    GetParametersRequest,
     MassConfigJobList,
     MassConfigRequest,
     MassConfigResponse,
@@ -115,7 +115,8 @@ async def list_devices(
 ) -> DeviceListResponse:
     """List CPE devices"""
     query = DeviceQuery(skip=skip, limit=limit)
-    return await service.list_devices(query)
+    result = await service.list_devices(query, return_response=True)
+    return cast(DeviceListResponse, result)
 
 
 @router.get(
@@ -130,7 +131,7 @@ async def get_device(
     _: UserInfo = Depends(require_permission("isp.cpe.read")),
 ) -> DeviceResponse:
     """Get CPE device by ID"""
-    device = await service.get_device(device_id)
+    device = await service.get_device(device_id, return_response=True)
     if not device:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -227,7 +228,7 @@ async def set_parameters(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Set device parameters"""
-    return await service.set_parameters(request)
+    return await service.set_parameters(request, return_task_response=True)
 
 
 @router.post(
@@ -237,12 +238,12 @@ async def set_parameters(
     description="Get TR-069 parameter values from device",
 )
 async def get_parameters(
-    request: GetParameterRequest,
+    request: GetParametersRequest,
     service: GenieACSServiceDB = Depends(get_genieacs_service),
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Get device parameters"""
-    return await service.get_parameters(request)
+    return await service.get_parameters(request, return_task_response=True)
 
 
 @router.post(
@@ -257,7 +258,7 @@ async def reboot_device(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Reboot device"""
-    return await service.reboot_device(request)
+    return await service.reboot_device(request, return_task_response=True)
 
 
 @router.post(
@@ -272,7 +273,7 @@ async def factory_reset(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Factory reset device"""
-    return await service.factory_reset(request)
+    return await service.factory_reset(request, return_task_response=True)
 
 
 @router.post(

@@ -9,6 +9,7 @@ FROM --platform=linux/amd64 freeradius/freeradius-server:latest
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
         freeradius-postgresql \
+        freeradius-utils \
         libpq5 \
         postgresql-client \
     && rm -rf /var/lib/apt/lists/*
@@ -16,6 +17,10 @@ RUN apt-get update && \
 # Verify PostgreSQL driver is installed
 RUN ls -la /usr/lib/freeradius/ | grep postgresql || \
     (echo "ERROR: PostgreSQL driver not found" && exit 1)
+
+# Ensure radtest is available for health checks
+RUN command -v radtest >/dev/null || \
+    (echo "ERROR: radtest not found; freeradius-utils missing" && exit 1)
 
 # Default command (inherited from base image)
 # Starts FreeRADIUS in foreground mode

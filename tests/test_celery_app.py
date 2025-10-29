@@ -87,8 +87,9 @@ class TestCeleryInstrumentationHooks:
         assert "celery.instrumentation.failed" in warning_call[0]
         assert warning_call[1]["error"] == "Instrumentation failed"
 
+    @patch("dotmac.platform.genieacs.tasks.replay_pending_operations")
     @patch("structlog.get_logger")
-    def test_setup_periodic_tasks(self, mock_get_logger):
+    def test_setup_periodic_tasks(self, mock_get_logger, mock_replay_operations):
         """Test periodic tasks setup logging."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
@@ -101,6 +102,9 @@ class TestCeleryInstrumentationHooks:
         info_call = mock_logger.info.call_args
         assert "celery.worker.configured" in info_call[0]
         assert "queues" in info_call[1]
+
+        # Verify replay_pending_operations was triggered on startup
+        mock_replay_operations.apply_async.assert_called_once_with(countdown=5)
 
 
 @pytest.mark.integration

@@ -37,6 +37,10 @@ class ServiceEndpointSettings(BaseModel):  # BaseModel resolves to Any in isolat
     verify_ssl: bool = Field(True, description="Verify SSL certificates")
     timeout_seconds: float = Field(30.0, ge=1.0, description="HTTP timeout in seconds")
     max_retries: int = Field(2, ge=0, description="Number of automatic retries for requests")
+    extras: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional integration-specific configuration values",
+    )
 
 
 class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolation
@@ -90,6 +94,14 @@ class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolatio
     # Prometheus metrics endpoint
     prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
     prometheus_port: int = Field(8001, description="Prometheus metrics port")
+    alertmanager_webhook_secret: str | None = Field(
+        default=None,
+        description="Shared secret/token required for Alertmanager webhook requests",
+    )
+    alertmanager_rate_limit: str = Field(
+        default="120/minute",
+        description="Rate limit applied to the Alertmanager webhook endpoint",
+    )
 
 
 def _default_observability_settings() -> ObservabilitySettings:
@@ -148,6 +160,50 @@ class OSSSettings(BaseModel):  # BaseModel resolves to Any in isolation
             max_retries=int(os.getenv("AWX_MAX_RETRIES", "2")),
         ),
         description="Ansible AWX automation configuration",
+    )
+    prometheus: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("PROMETHEUS_URL", "http://localhost:9090"),
+            api_token=os.getenv("PROMETHEUS_API_TOKEN"),
+            username=os.getenv("PROMETHEUS_USERNAME"),
+            password=os.getenv("PROMETHEUS_PASSWORD"),
+            verify_ssl=os.getenv("PROMETHEUS_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("PROMETHEUS_TIMEOUT_SECONDS", "15")),
+            max_retries=int(os.getenv("PROMETHEUS_MAX_RETRIES", "2")),
+            extras={
+                "traffic_queries": {
+                    "rx_rate": os.getenv(
+                        "PROMETHEUS_RX_RATE_QUERY",
+                        'sum(rate(node_network_receive_bytes_total{instance="<<device_id>>"}[5m]))',
+                    ),
+                    "tx_rate": os.getenv(
+                        "PROMETHEUS_TX_RATE_QUERY",
+                        'sum(rate(node_network_transmit_bytes_total{instance="<<device_id>>"}[5m]))',
+                    ),
+                    "rx_bytes": os.getenv(
+                        "PROMETHEUS_RX_BYTES_QUERY",
+                        'sum(increase(node_network_receive_bytes_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "tx_bytes": os.getenv(
+                        "PROMETHEUS_TX_BYTES_QUERY",
+                        'sum(increase(node_network_transmit_bytes_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "rx_packets": os.getenv(
+                        "PROMETHEUS_RX_PACKETS_QUERY",
+                        'sum(increase(node_network_receive_packets_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "tx_packets": os.getenv(
+                        "PROMETHEUS_TX_PACKETS_QUERY",
+                        'sum(increase(node_network_transmit_packets_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                },
+                "device_placeholder": os.getenv(
+                    "PROMETHEUS_DEVICE_PLACEHOLDER",
+                    "<<device_id>>",
+                ),
+            },
+        ),
+        description="Prometheus metrics API configuration",
     )
 
 
@@ -603,6 +659,46 @@ class Settings(BaseSettings):
             return f"redis://{self.host}:{self.port}/{self.session_db}"
 
     redis: RedisSettings = RedisSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # TimescaleDB Configuration (Time-Series Metrics)
+    # ============================================================
+
+    class TimescaleDBSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """TimescaleDB configuration for time-series data."""
+
+        model_config = ConfigDict()
+
+        enabled: bool = Field(False, description="Enable TimescaleDB integration")
+        host: str = Field("timescaledb", description="TimescaleDB host")
+        port: int = Field(5432, description="TimescaleDB port")
+        database: str = Field("metrics", description="TimescaleDB database name")
+        username: str = Field("timescale_user", description="TimescaleDB username")
+        password: str = Field("", description="TimescaleDB password")
+
+        # Connection pool
+        pool_size: int = Field(5, description="Connection pool size")
+        max_overflow: int = Field(10, description="Max overflow connections")
+        pool_timeout: int = Field(30, description="Pool timeout in seconds")
+        pool_recycle: int = Field(3600, description="Recycle connections after seconds")
+        pool_pre_ping: bool = Field(True, description="Test connections before use")
+
+        # Time-series specific settings
+        chunk_time_interval: str = Field("1 day", description="Hypertable chunk interval")
+        retention_days: int = Field(730, description="Data retention period (days)")
+        compression_after_days: int = Field(90, description="Compress data older than N days")
+
+        @property
+        def sqlalchemy_url(self) -> str:
+            """Build SQLAlchemy database URL for TimescaleDB."""
+            return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+        @property
+        def is_configured(self) -> bool:
+            """Check if TimescaleDB is properly configured."""
+            return self.enabled and bool(self.password)
+
+    timescaledb: TimescaleDBSettings = TimescaleDBSettings()  # type: ignore[call-arg]
 
     # ============================================================
     # JWT & Authentication

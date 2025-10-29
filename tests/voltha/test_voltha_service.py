@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import base64
 import pytest
 
 from dotmac.platform.voltha.client import VOLTHAClient
@@ -195,9 +196,9 @@ class TestVOLTHAServiceEvents:
                 "items": [
                     {
                         "id": "evt-1",
-                        "event_type": "onu_discovered",
-                        "category": "ONU",
-                        "resource_id": "onu-1",
+                    "event_type": "onu_discovered",
+                    "category": "ONU",
+                    "resource_id": "onu-1",
                         "timestamp": "2024-01-01T00:00:00Z",
                     },
                     {
@@ -242,6 +243,31 @@ class TestVOLTHAServiceEvents:
 
         assert result.total == 1
         assert result.events[0].event_type == "onu_activated"
+
+
+@pytest.mark.integration
+class TestVOLTHAServiceConfiguration:
+    """Tests for configuration backup and restore helpers."""
+
+    @pytest.mark.asyncio
+    async def test_backup_device_configuration_decodes_base64(self):
+        service, client = make_service_with_client()
+        payload = base64.b64encode(b"config-bytes").decode("ascii")
+        client.backup_device_configuration = AsyncMock(return_value={"content": payload})
+
+        result = await service.backup_device_configuration("device-1")
+
+        assert result == b"config-bytes"
+        client.backup_device_configuration.assert_awaited_once_with("device-1")
+
+    @pytest.mark.asyncio
+    async def test_restore_device_configuration_passes_bytes(self):
+        service, client = make_service_with_client()
+        client.restore_device_configuration = AsyncMock()
+
+        await service.restore_device_configuration("device-1", "config-text")
+
+        client.restore_device_configuration.assert_awaited_once_with("device-1", b"config-text")
 
 
 @pytest.mark.integration

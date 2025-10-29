@@ -26,6 +26,11 @@ from dotmac.platform.access.drivers.base import (
     ONUProvisionRequest,
     ONUProvisionResult,
 )
+from dotmac.platform.access.snmp import (
+    DEFAULT_HUAWEI_SNMP_OIDS,
+    SNMPCollectionError,
+    collect_snmp_metrics,
+)
 
 CLI_PROMPT = r"<(?P<hostname>.+)>"
 
@@ -245,18 +250,19 @@ class HuaweiCLIDriver(BaseOLTDriver):
     # ------------------------------------------------------------------ #
 
     async def collect_metrics(self) -> OltMetrics:
-        # For now fetch simple metrics using CLI summary and fallback to zeros.
-        discovery = await self.discover_onus()
-        online = sum(1 for onu in discovery if onu.state.upper() == "ONLINE")
+        snmp_error: str | None = None
+        if self.config.snmp:
+            try:
+                return await self._collect_snmp_metrics()
+            except Exception as exc:  # pragma: no cover - covered via fallback tests
+                snmp_error = str(exc)
 
-        return OltMetrics(
-            olt_id=self.config.olt_id,
-            pon_ports_up=0,
-            pon_ports_total=0,
-            onu_online=online,
-            onu_total=len(discovery),
-            raw={"note": "Detailed SNMP metrics not yet implemented"},
-        )
+        metrics = await self._collect_cli_metrics()
+        if snmp_error:
+            metrics.raw.setdefault("warnings", []).append(
+                f"snmp_collection_failed: {snmp_error}"
+            )
+        return metrics
 
     async def fetch_alarms(self) -> list[OLTAlarm]:
         output = await self._run_exec_command("display alarm active")
@@ -282,8 +288,11 @@ class HuaweiCLIDriver(BaseOLTDriver):
         return output.encode("utf-8")
 
     async def restore_configuration(self, payload: bytes) -> None:
-        # Restoration requires uploading the configuration file; this is a stub.
-        raise NotImplementedError("Huawei configuration restore is not implemented yet")
+        config_text = payload.decode("utf-8", errors="ignore")
+        commands = self._prepare_restore_commands(config_text)
+        if not commands:
+            return
+        await self._run_config_commands(commands)
 
     async def operate_device(self, device_id: str, operation: str) -> bool:
         # Huawei CLI driver does not currently support device-level operations via API.
@@ -364,3 +373,109 @@ class HuaweiCLIDriver(BaseOLTDriver):
             return
 
         await apply_coro(request.serial_number, self.config.tr069_profile)
+
+    async def _collect_cli_metrics(self) -> OltMetrics:
+        discovery = await self.discover_onus()
+        online = sum(1 for onu in discovery if onu.state.upper() == "ONLINE")
+
+        return OltMetrics(
+            olt_id=self.config.olt_id,
+            pon_ports_up=0,
+            pon_ports_total=0,
+            onu_online=online,
+            onu_total=len(discovery),
+            raw={"source": "cli", "dataset": [onu.model_dump() for onu in discovery]},
+        )
+
+    async def _collect_snmp_metrics(self) -> OltMetrics:
+        snmp_cfg = self.config.snmp or {}
+        host = snmp_cfg.get("host") or self.config.host
+        if not host:
+            raise SNMPCollectionError("SNMP metrics require 'host' to be configured.")
+
+        oids = snmp_cfg.get("metric_oids", DEFAULT_HUAWEI_SNMP_OIDS)
+        result = await collect_snmp_metrics(
+            host=host,
+            community=snmp_cfg.get("community", "public"),
+            port=snmp_cfg.get("port", 161),
+            timeout=snmp_cfg.get("timeout"),
+            oids=oids,
+            hooks=self.context.hooks or {},
+        )
+
+        values = result.values
+        pon_ports_total = int(values.get("pon_ports_total", 0) or 0)
+        pon_ports_up = int(values.get("pon_ports_up", 0) or 0)
+        onu_total = int(values.get("onu_total", 0) or 0)
+        onu_online = int(values.get("onu_online", 0) or 0)
+
+        upstream = _coerce_rate(values, "upstream_rate_mbps")
+        downstream = _coerce_rate(values, "downstream_rate_mbps")
+
+        return OltMetrics(
+            olt_id=self.config.olt_id,
+            pon_ports_up=pon_ports_up,
+            pon_ports_total=pon_ports_total,
+            onu_online=onu_online,
+            onu_total=onu_total,
+            upstream_rate_mbps=upstream,
+            downstream_rate_mbps=downstream,
+            raw={
+                "source": "snmp",
+                "oids": result.oids,
+                "values": values,
+            },
+        )
+
+    def _prepare_restore_commands(self, config_text: str) -> list[str]:
+        lines = []
+        for line in config_text.splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#") or stripped.startswith("!"):
+                continue
+            if stripped.lower() in {"return", "exit"}:
+                continue
+            lines.append(stripped)
+
+        if not lines:
+            return []
+
+        commands = list(lines)
+        if commands[0].lower() != "system-view":
+            commands.insert(0, "system-view")
+        if commands[-1].lower() != "quit":
+            commands.append("quit")
+        return commands
+
+
+def _coerce_rate(values: dict[str, object], preferred_key: str) -> float | None:
+    lookup_order = [
+        preferred_key,
+        preferred_key.replace("_mbps", "_kbps"),
+        preferred_key.replace("_mbps", "_bps"),
+    ]
+    for key in lookup_order:
+        value = values.get(key)
+        if value is None:
+            continue
+
+        numeric = _to_float(value)
+        if numeric is None:
+            continue
+        if key.endswith("_kbps"):
+            return numeric / 1000.0
+        if key.endswith("_bps"):
+            return numeric / 1_000_000.0
+        return numeric
+    return None
+
+
+def _to_float(value: object) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None

@@ -35,3 +35,6 @@ class OSSServiceConfigUpdate(BaseModel):  # BaseModel resolves to Any in isolati
     max_retries: int | None = Field(
         None, ge=0, description="Override automatic retry count (null to clear)"
     )
+    extras: dict[str, Any] | None = Field(
+        None, description="Override integration-specific extra settings (null to clear)"
+    )

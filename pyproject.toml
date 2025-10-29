@@ -119,6 +119,7 @@ croniter = "^6.0.0"
 elasticsearch = "^9.1.1"
 pybreaker = "^1.4.1"
 pyrad = "^2.4"
+psycopg = {extras = ["binary"], version = "^3.2.12"}
 
 [tool.poetry.extras]
 # Media processing (for video/audio file handling - currently unused)

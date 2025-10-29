@@ -70,6 +70,13 @@ ISP_SERVICES=(
     "librenms:8000:Network Monitoring"
     "wireguard:51820:VPN Gateway"
     "timescaledb:5433:Time-Series Database"
+    "alertmanager:9093:Alert Routing (monitoring profile)"
+    "prometheus:9090:Metrics (monitoring profile)"
+    "grafana:3400:Dashboards (monitoring profile)"
+    "node-exporter:9100:Host Metrics (monitoring profile)"
+    "cadvisor:8082:Container Metrics (monitoring profile)"
+    "postgres-exporter:9187:PostgreSQL Metrics (monitoring profile)"
+    "redis-exporter:9121:Redis Metrics (monitoring profile)"
 )
 
 # Print functions
@@ -180,6 +187,8 @@ start_platform() {
 
 # Start ISP services
 start_isp() {
+    local with_obs=${1:-false}
+
     echo -e "${CYAN}Starting ISP Services...${NC}"
     echo ""
 
@@ -203,6 +212,12 @@ start_isp() {
 
     docker compose -f "$COMPOSE_ISP" up -d
 
+    if [[ "$with_obs" == "true" ]]; then
+        echo ""
+        echo -e "${CYAN}Starting ISP monitoring profile...${NC}"
+        docker compose -f "$COMPOSE_ISP" --profile monitoring up -d
+    fi
+
     echo ""
     sleep 5
     status_isp
@@ -210,10 +225,15 @@ start_isp() {
 
 # Start all services
 start_all() {
-    local with_obs=${1:-true}
-    start_platform "$with_obs"
+    local with_obs=${1:-false}
+
+    if [[ "$with_obs" == "true" ]]; then
+        echo -e "${YELLOW}→ Using ISP monitoring stack; skipping platform observability to avoid port conflicts${NC}"
+    fi
+
+    start_platform "false"
     echo ""
-    start_isp
+    start_isp "$with_obs"
 }
 
 # Stop platform services
@@ -433,9 +453,9 @@ main() {
             ;;
         isp)
             case "$command" in
-                start) start_isp ;;
+                start) start_isp "$with_obs" ;;
                 stop) stop_isp ;;
-                restart) stop_isp && start_isp ;;
+                restart) stop_isp && start_isp "$with_obs" ;;
                 status) status_isp ;;
                 logs) show_logs isp "$@" ;;
                 clean) clean_isp ;;

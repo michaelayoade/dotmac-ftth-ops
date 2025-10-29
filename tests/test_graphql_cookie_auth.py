@@ -9,6 +9,7 @@ They will be skipped if the server is not available.
 """
 
 import asyncio
+import os
 
 import httpx
 import pytest
@@ -20,16 +21,34 @@ import pytest
 pytestmark = [
 pytest.mark.integration,
 pytest.mark.asyncio,
+pytest.mark.e2e,
 ]
 
-async def is_server_available(base_url: str = "http://localhost:8000") -> bool:
-    """Check if the test server is running."""
-    try:
-        async with httpx.AsyncClient(base_url=base_url, timeout=2.0) as client:
-            response = await client.get("/health")
-            return response.status_code == 200
-    except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.TimeoutException):
-        return False
+async def is_server_available(base_url: str = "http://localhost:8000") -> tuple[bool, str]:
+    """Check if the test server is running by trying multiple endpoints.
+
+    Returns:
+        tuple[bool, str]: (is_available, reason)
+    """
+    # Try multiple endpoints to detect server
+    endpoints_to_check = [
+        ("/health", "Health check endpoint"),
+        ("/docs", "API documentation"),
+        ("/", "Root endpoint"),
+        ("/api/v1/platform/config", "Platform config"),
+    ]
+
+    async with httpx.AsyncClient(base_url=base_url, timeout=5.0) as client:
+        for endpoint, description in endpoints_to_check:
+            try:
+                response = await client.get(endpoint)
+                if response.status_code in (200, 404, 307):  # 404/307 means server is running
+                    return True, f"Server detected via {description}"
+            except (httpx.ConnectError, httpx.RemoteProtocolError, httpx.TimeoutException) as e:
+                continue  # Try next endpoint
+
+        # If all endpoints failed
+        return False, f"No response from {base_url} on any endpoint"
 
 
 # Mark all tests in this module as integration tests
@@ -42,11 +61,14 @@ async def test_graphql_cookie_auth():
     The test will be skipped if the server is not available.
     """
 
-    base_url = "http://localhost:8000"
+    base_url = os.getenv("E2E_BASE_URL", "http://localhost:8000")
 
     # Check if server is available first
-    if not await is_server_available(base_url):
-        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+    is_available, reason = await is_server_available(base_url)
+    if not is_available:
+        pytest.skip(f"Test server not available: {reason}. Start with: poetry run uvicorn dotmac.platform.main:app")
+
+    print(f"✅ {reason}")
 
     async with httpx.AsyncClient(base_url=base_url) as client:
         # Step 1: Login and get cookie
@@ -152,11 +174,14 @@ async def test_platform_config_endpoint():
     The test will be skipped if the server is not available.
     """
 
-    base_url = "http://localhost:8000"
+    base_url = os.getenv("E2E_BASE_URL", "http://localhost:8000")
 
     # Check if server is available first
-    if not await is_server_available(base_url):
-        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+    is_available, reason = await is_server_available(base_url)
+    if not is_available:
+        pytest.skip(f"Test server not available: {reason}. Start with: poetry run uvicorn dotmac.platform.main:app")
+
+    print(f"✅ {reason}")
 
     async with httpx.AsyncClient(base_url=base_url) as client:
         try:
@@ -205,11 +230,14 @@ async def test_real_time_cookie_auth():
     The test will be skipped if the server is not available.
     """
 
-    base_url = "http://localhost:8000"
+    base_url = os.getenv("E2E_BASE_URL", "http://localhost:8000")
 
     # Check if server is available first
-    if not await is_server_available(base_url):
-        pytest.skip("Test server not running at localhost:8000. Start with: poetry run uvicorn dotmac.platform.main:app")
+    is_available, reason = await is_server_available(base_url)
+    if not is_available:
+        pytest.skip(f"Test server not available: {reason}. Start with: poetry run uvicorn dotmac.platform.main:app")
+
+    print(f"✅ {reason}")
 
     async with httpx.AsyncClient(base_url=base_url) as client:
         # Login first

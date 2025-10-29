@@ -15,7 +15,7 @@ from uuid import UUID
 import structlog
 from passlib.context import CryptContext
 from sqlalchemy import Text, and_, func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..settings import settings
@@ -52,8 +52,12 @@ class UserService:
         query = select(User).where(User.id == user_id)
         if tenant_id is not None:
             query = query.where(User.tenant_id == tenant_id)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        try:
+            result = await self.session.execute(query)
+            return result.scalar_one_or_none()
+        except MultipleResultsFound:
+            result = await self.session.execute(query.limit(1))
+            return result.scalars().first()
 
     async def get_user_by_username(
         self, username: str, tenant_id: str | None = None
@@ -68,8 +72,12 @@ class UserService:
         query = select(User).where(User.username == username)
         if tenant_id is not None:
             query = query.where(User.tenant_id == tenant_id)
-        result = await self.session.execute(query)
-        return result.scalar_one_or_none()
+        try:
+            result = await self.session.execute(query)
+            return result.scalar_one_or_none()
+        except MultipleResultsFound:
+            result = await self.session.execute(query.limit(1))
+            return result.scalars().first()
 
     async def get_user_by_email(self, email: str, tenant_id: str | None = None) -> User | None:
         """Get user by email.

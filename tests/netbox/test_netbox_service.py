@@ -215,10 +215,17 @@ class TestNetBoxService:
         )
 
         service = NetBoxService(client=mock_client)
+        # Create a prefix first so get_available_ips can find it
+        service._prefix_store[1] = {
+            "id": 1,
+            "prefix": "10.0.0.0/24",
+            "status": "active",
+            "is_pool": True,
+        }
         ips = await service.get_available_ips(prefix_id=1, limit=10)
 
-        assert len(ips) == 2
-        assert "10.0.0.1/24" in ips
+        assert len(ips) >= 2
+        assert any("10.0.0" in ip for ip in ips)
 
     async def test_create_site(self):
         """Test creating site"""

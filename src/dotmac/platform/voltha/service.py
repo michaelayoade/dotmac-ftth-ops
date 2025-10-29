@@ -4,6 +4,7 @@ VOLTHA Service Layer
 Business logic for PON network management via VOLTHA.
 """
 
+import base64
 from datetime import datetime, timezone
 
 # Python 3.9/3.10 compatibility: UTC was added in 3.11
@@ -40,6 +41,20 @@ from dotmac.platform.voltha.schemas import (
 )
 
 logger = structlog.get_logger(__name__)
+
+
+def _decode_maybe_base64(payload: bytes | str) -> bytes:
+    if isinstance(payload, bytes):
+        return payload
+
+    data = payload.strip()
+    try:
+        padding = len(data) % 4
+        if padding:
+            data += "=" * (4 - padding)
+        return base64.b64decode(data, validate=True)
+    except Exception:
+        return data.encode("utf-8", errors="ignore")
 
 
 class VOLTHAService:
@@ -247,6 +262,47 @@ class VOLTHAService:
         """Get all device types"""
         types_raw = await self.client.get_device_types()
         return [DeviceType(**dt) for dt in types_raw]
+
+    # =========================================================================
+    # Configuration backups
+    # =========================================================================
+
+    async def backup_device_configuration(self, device_id: str) -> bytes:
+        """Download device configuration snapshot."""
+        try:
+            response = await self.client.backup_device_configuration(device_id)
+        except Exception as exc:  # pragma: no cover - logging path
+            logger.error(
+                "voltha.backup_configuration.failed",
+                device_id=device_id,
+                error=str(exc),
+            )
+            raise
+
+        if isinstance(response, bytes):
+            return response
+        if isinstance(response, str):
+            return _decode_maybe_base64(response)
+        if isinstance(response, dict):
+            for key in ("content", "config", "data", "payload"):
+                payload = response.get(key)
+                if isinstance(payload, (bytes, str)):
+                    return _decode_maybe_base64(payload)
+        # Last resort: convert the repr to bytes for diagnostics.
+        return repr(response).encode("utf-8", errors="ignore")
+
+    async def restore_device_configuration(self, device_id: str, payload: bytes | str) -> None:
+        """Restore configuration from snapshot payload."""
+        data = payload.encode("utf-8") if isinstance(payload, str) else payload
+        try:
+            await self.client.restore_device_configuration(device_id, data)
+        except Exception as exc:  # pragma: no cover - logging path
+            logger.error(
+                "voltha.restore_configuration.failed",
+                device_id=device_id,
+                error=str(exc),
+            )
+            raise
 
     # =========================================================================
     # ONU Auto-Discovery

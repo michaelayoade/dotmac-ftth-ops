@@ -21,6 +21,10 @@ from dotmac.platform.access.drivers.base import (
     ONUProvisionRequest,
     ONUProvisionResult,
 )
+from dotmac.platform.access.snmp import (
+    DEFAULT_VOLTHA_SNMP_OIDS,
+    collect_snmp_metrics,
+)
 from dotmac.platform.voltha.schemas import (
     ONUProvisionRequest as VolthaProvisionRequest,
 )
@@ -31,6 +35,7 @@ class VolthaDriverConfig(DriverConfig):
     """Configuration for VOLTHA driver."""
 
     olt_device_id: str | None = None  # Optional; filters discovery to a single OLT
+    snmp: dict[str, Any] | None = None
 
 
 class VolthaDriver(BaseOLTDriver):
@@ -49,7 +54,7 @@ class VolthaDriver(BaseOLTDriver):
         return DriverCapabilities(
             supports_onu_provisioning=True,
             supports_vlan_change=True,
-            supports_backup_restore=False,
+            supports_backup_restore=True,
             supports_realtime_alarms=True,
             supported_operations=["enable", "disable", "reboot", "delete"],
         )
@@ -134,14 +139,43 @@ class VolthaDriver(BaseOLTDriver):
 
     async def collect_metrics(self) -> OltMetrics:
         stats = await self.service.get_pon_statistics()
-        return OltMetrics(
+        metrics = OltMetrics(
             olt_id=self.config.olt_id,
             pon_ports_up=0,
             pon_ports_total=0,
             onu_online=stats.online_onus,
             onu_total=stats.total_onus,
-            raw=stats.model_dump(),
+            raw={"voltha": stats.model_dump()},
         )
+
+        if self.config.snmp:
+            snmp_cfg = self.config.snmp or {}
+            host = snmp_cfg.get("host") or self.config.host
+            if host:
+                try:
+                    oids = snmp_cfg.get("metric_oids", DEFAULT_VOLTHA_SNMP_OIDS)
+                    result = await collect_snmp_metrics(
+                        host=host,
+                        community=snmp_cfg.get("community", "public"),
+                        port=snmp_cfg.get("port", 161),
+                        timeout=snmp_cfg.get("timeout"),
+                        oids=oids,
+                        hooks=self.context.hooks or {},
+                    )
+                    values = result.values
+                    metrics.pon_ports_total = int(values.get("pon_ports_total", metrics.pon_ports_total) or 0)
+                    metrics.pon_ports_up = int(values.get("pon_ports_up", metrics.pon_ports_up) or 0)
+                    metrics.onu_total = int(values.get("onu_total", metrics.onu_total) or 0)
+                    metrics.onu_online = int(values.get("onu_online", metrics.onu_online) or 0)
+                    metrics.upstream_rate_mbps = _voltha_rate(values, "upstream_rate_mbps")
+                    metrics.downstream_rate_mbps = _voltha_rate(values, "downstream_rate_mbps")
+                    metrics.raw["snmp"] = {"oids": result.oids, "values": values}
+                except Exception as exc:  # pragma: no cover - fallback path
+                    metrics.raw.setdefault("warnings", []).append(
+                        f"snmp_collection_failed: {exc}"
+                    )
+
+        return metrics
 
     async def fetch_alarms(self) -> list[OLTAlarm]:
         response = await self.service.get_alarms(device_id=self.olt_device_id)
@@ -161,10 +195,12 @@ class VolthaDriver(BaseOLTDriver):
         return alarms
 
     async def backup_configuration(self) -> bytes:
-        raise NotImplementedError("VOLTHA driver does not support configuration backup")
+        device_id = self._resolve_device_id()
+        return await self.service.backup_device_configuration(device_id)
 
     async def restore_configuration(self, payload: bytes) -> None:
-        raise NotImplementedError("VOLTHA driver does not support configuration restore")
+        device_id = self._resolve_device_id()
+        await self.service.restore_device_configuration(device_id, payload)
 
     async def list_logical_devices(self) -> list[dict[str, Any]]:
         response = await self.service.list_logical_devices()
@@ -207,3 +243,45 @@ class VolthaDriver(BaseOLTDriver):
     async def get_health(self) -> dict[str, Any]:
         response = await self.service.health_check()
         return response.model_dump()
+
+    def _resolve_device_id(self) -> str:
+        if self.olt_device_id:
+            return self.olt_device_id
+        extra_device = self.config.extra.get("olt_device_id")
+        if extra_device:
+            return str(extra_device)
+        if self.config.olt_id:
+            return self.config.olt_id
+        raise ValueError("VOLTHA driver requires an olt_device_id for backup/restore operations")
+
+
+def _voltha_rate(values: dict[str, object], preferred_key: str) -> float | None:
+    lookup_order = [
+        preferred_key,
+        preferred_key.replace("_mbps", "_kbps"),
+        preferred_key.replace("_mbps", "_bps"),
+    ]
+    for key in lookup_order:
+        value = values.get(key)
+        if value is None:
+            continue
+        numeric = _to_float(value)
+        if numeric is None:
+            continue
+        if key.endswith("_kbps"):
+            return numeric / 1000.0
+        if key.endswith("_bps"):
+            return numeric / 1_000_000.0
+        return numeric
+    return None
+
+
+def _to_float(value: object) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None

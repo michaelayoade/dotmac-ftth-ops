@@ -300,7 +300,10 @@ class TestEndToEndIntegration:
 
         # 3. Service authorization (checking permissions)
         required_permission = "read"
-        has_permission = required_permission in mock_user_info.permissions
+        has_permission = (
+            required_permission in mock_user_info.permissions or
+            "*" in mock_user_info.permissions  # Wildcard permission
+        )
         assert has_permission is True
 
         # 4. Resource access (with tenant isolation)

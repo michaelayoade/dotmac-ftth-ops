@@ -95,6 +95,8 @@ SECRETS_MAPPING = {
     # Webhook Security (CONFIDENTIAL)
     # ============================================================
     "webhooks.signing_secret": "webhooks/signing_secret",
+    # Alertmanager webhook shared secret
+    "observability.alertmanager_webhook_secret": "observability/alertmanager/webhook_secret",
     # ============================================================
     # Search/Indexing (CONFIDENTIAL)
     # ============================================================
@@ -404,6 +406,10 @@ def validate_production_secrets(settings_obj: Settings) -> None:
             errors.append(
                 "Paystack public key has invalid format (should start with pk_live_ or pk_test_)"
             )
+
+    webhook_secret = getattr(settings_obj.observability, "alertmanager_webhook_secret", None)
+    if not webhook_secret:
+        errors.append("Alertmanager webhook secret must be set")
 
     if errors:
         error_msg = "Production secrets validation failed:\n" + "\n".join(

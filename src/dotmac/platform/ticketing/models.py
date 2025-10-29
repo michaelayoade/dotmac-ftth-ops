@@ -90,24 +90,24 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[mis
     )
     subject: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[TicketStatus] = mapped_column(
-        SQLEnum(TicketStatus),
+        SQLEnum(TicketStatus, values_callable=lambda x: [e.value for e in x]),
         default=TicketStatus.OPEN,
         nullable=False,
         index=True,
     )
     priority: Mapped[TicketPriority] = mapped_column(
-        SQLEnum(TicketPriority),
+        SQLEnum(TicketPriority, values_callable=lambda x: [e.value for e in x]),
         default=TicketPriority.NORMAL,
         nullable=False,
         index=True,
     )
     origin_type: Mapped[TicketActorType] = mapped_column(
-        SQLEnum(TicketActorType),
+        SQLEnum(TicketActorType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
     )
     target_type: Mapped[TicketActorType] = mapped_column(
-        SQLEnum(TicketActorType),
+        SQLEnum(TicketActorType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
     )
@@ -145,7 +145,7 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[mis
 
     # ISP-Specific Fields
     ticket_type: Mapped[TicketType | None] = mapped_column(
-        SQLEnum(TicketType),
+        SQLEnum(TicketType, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
         index=True,
         comment="ISP-specific ticket categorization",
@@ -250,7 +250,7 @@ class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ign
         index=True,
     )
     sender_type: Mapped[TicketActorType] = mapped_column(
-        SQLEnum(TicketActorType),
+        SQLEnum(TicketActorType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
     )

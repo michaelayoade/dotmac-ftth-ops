@@ -1,15 +1,15 @@
 
-"""
-Tests for the alert management router to ensure persistence and tenant scoping.
-"""
+"""Tests for the alert management router to ensure persistence and tenant scoping."""
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+import os
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
-from fastapi import FastAPI
+from fastapi import FastAPI, status
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,9 +17,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_async_session
+os.environ.setdefault("DOTMAC_MONITORING_SKIP_IMPORTS", "1")
+
 from dotmac.platform.monitoring.alert_router import router as alert_router
 from dotmac.platform.monitoring.alert_webhook_router import cache_channels, get_alert_router
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
+from dotmac.platform.settings import settings
 
 
 
@@ -62,6 +65,38 @@ async def _reset_alert_state(async_db_session: AsyncSession):
     get_alert_router().replace_channels([])
 
 
+def _webhook_payload() -> dict[str, object]:
+    timestamp = datetime(2024, 1, 1, tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+    return {
+        "version": "4",
+        "groupKey": "{}:{severity=\"critical\"}",
+        "status": "firing",
+        "receiver": "default",
+        "groupLabels": {"severity": "critical"},
+        "commonLabels": {"alertname": "TestAlert", "severity": "critical"},
+        "commonAnnotations": {"summary": "Test alert"},
+        "externalURL": "http://alertmanager.local",
+        "truncatedAlerts": 0,
+        "alerts": [
+            {
+                "status": "firing",
+                "labels": {
+                    "alertname": "TestAlert",
+                    "severity": "critical",
+                },
+                "annotations": {
+                    "summary": "Critical issue",
+                    "description": "Something broke",
+                },
+                "startsAt": timestamp,
+                "endsAt": None,
+                "generatorURL": "http://prometheus.example.com/graph",
+                "fingerprint": "1234567890",
+            }
+        ],
+    }
+
+
 @pytest.fixture
 def app(async_db_session: AsyncSession) -> FastAPI:
     """FastAPI application with alert router and dependency overrides."""
@@ -73,7 +108,16 @@ def app(async_db_session: AsyncSession) -> FastAPI:
     application.include_router(alert_router, prefix="/api/v1")
     application.dependency_overrides[get_async_session] = override_session
 
-    return application
+    previous_secret = settings.observability.alertmanager_webhook_secret
+    previous_limit = settings.observability.alertmanager_rate_limit
+    settings.observability.alertmanager_webhook_secret = "test-secret"
+    settings.observability.alertmanager_rate_limit = "100/second"
+
+    try:
+        yield application
+    finally:
+        settings.observability.alertmanager_webhook_secret = previous_secret
+        settings.observability.alertmanager_rate_limit = previous_limit
 
 
 async def _request(
@@ -182,6 +226,35 @@ async def test_list_alert_channels_respects_tenant_boundaries(
     data_beta = response_beta.json()
     assert len(data_beta) == 1
     assert data_beta[0]["id"] == "chan-beta"
+
+
+@pytest.mark.asyncio
+async def test_alertmanager_webhook_requires_shared_secret(app: FastAPI):
+    admin = _make_admin()
+
+    response = await _request(
+        app,
+        admin,
+        "POST",
+        "/api/v1/alerts/webhook",
+        json=_webhook_payload(),
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+@pytest.mark.asyncio
+async def test_alertmanager_webhook_accepts_valid_secret(app: FastAPI):
+    admin = _make_admin()
+
+    response = await _request(
+        app,
+        admin,
+        "POST",
+        "/api/v1/alerts/webhook",
+        json=_webhook_payload(),
+        headers={"X-Alertmanager-Token": "test-secret"},
+    )
+    assert response.status_code == status.HTTP_202_ACCEPTED, response.text
 
 
 @pytest.mark.asyncio

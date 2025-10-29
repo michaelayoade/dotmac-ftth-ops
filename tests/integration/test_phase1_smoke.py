@@ -42,16 +42,19 @@ from dotmac.platform.ticketing.models import Ticket, TicketActorType, TicketPrio
 class TestISPCustomerFieldsSmoke:
     """Smoke tests for ISP customer fields."""
 
-    async def test_create_customer_with_isp_fields(self, async_session: AsyncSession):
+    async def test_create_customer_with_isp_fields(
+        self, async_session: AsyncSession, smoke_test_tenant, smoke_test_technician
+    ):
         """Test creating customer with ISP-specific fields."""
         tenant_id = "smoke-test-tenant"
-        user_id = uuid4()
+        user_id = smoke_test_technician.id
+        unique_id = str(uuid4())[:8]
 
         # Create customer with ISP fields
         customer = Customer(
             tenant_id=tenant_id,
-            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
-            email="isp.customer@example.com",
+            customer_number=f"CUST-{unique_id.upper()}",
+            email=f"isp.customer.{unique_id}@example.com",
             first_name="John",
             last_name="Doe",
             phone="+1234567890",
@@ -86,23 +89,26 @@ class TestISPCustomerFieldsSmoke:
         assert customer.assigned_devices["router_mac"] == "AA:BB:CC:DD:EE:FF"
         assert customer.assigned_devices["ont_serial"] == "ONT-123456789"
 
-    async def test_query_customers_by_service_location(self, async_session: AsyncSession):
+    async def test_query_customers_by_service_location(
+        self, async_session: AsyncSession, smoke_test_tenant
+    ):
         """Test querying customers by service location (index test)."""
         tenant_id = "smoke-test-tenant"
+        unique_id = str(uuid4())[:8]
 
         # Create customers with different locations
         customer1 = Customer(
             tenant_id=tenant_id,
-            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
-            email="customer1@example.com",
+            customer_number=f"CUST-{unique_id.upper()}-1",
+            email=f"customer1.{unique_id}@example.com",
             first_name="Customer",
             last_name="One",
             service_address_line1="123 Main St, Springfield, IL",
         )
         customer2 = Customer(
             tenant_id=tenant_id,
-            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
-            email="customer2@example.com",
+            customer_number=f"CUST-{unique_id.upper()}-2",
+            email=f"customer2.{unique_id}@example.com",
             first_name="Customer",
             last_name="Two",
             service_address_line1="456 Oak Ave, Springfield, IL",
@@ -112,33 +118,38 @@ class TestISPCustomerFieldsSmoke:
         await async_session.commit()
 
         # Query by service location (tests index: ix_customer_service_location)
+        # Filter by unique_id to only get customers from this test run
         result = await async_session.execute(
             select(Customer).where(
                 Customer.tenant_id == tenant_id,
                 Customer.service_address_line1.ilike("%Springfield%"),
+                Customer.customer_number.like(f"CUST-{unique_id.upper()}%"),
             )
         )
         customers = result.scalars().all()
 
         assert len(customers) == 2
 
-    async def test_query_customers_by_installation_status(self, async_session: AsyncSession):
+    async def test_query_customers_by_installation_status(
+        self, async_session: AsyncSession, smoke_test_tenant
+    ):
         """Test querying customers by installation status (index test)."""
         tenant_id = "smoke-test-tenant"
+        unique_id = str(uuid4())[:8]
 
         # Create customers with different installation statuses
         customer_scheduled = Customer(
             tenant_id=tenant_id,
-            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
-            email="scheduled@example.com",
+            customer_number=f"CUST-{unique_id.upper()}-SCHED",
+            email=f"scheduled.{unique_id}@example.com",
             first_name="Scheduled",
             last_name="Customer",
             installation_status="scheduled",
         )
         customer_completed = Customer(
             tenant_id=tenant_id,
-            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
-            email="completed@example.com",
+            customer_number=f"CUST-{unique_id.upper()}-COMPL",
+            email=f"completed.{unique_id}@example.com",
             first_name="Completed",
             last_name="Customer",
             installation_status="completed",
@@ -148,10 +159,12 @@ class TestISPCustomerFieldsSmoke:
         await async_session.commit()
 
         # Query by installation status (tests index: ix_customer_installation_status)
+        # Filter by unique_id to only get customers from this test run
         result = await async_session.execute(
             select(Customer).where(
                 Customer.tenant_id == tenant_id,
                 Customer.installation_status == "scheduled",
+                Customer.customer_number.like(f"CUST-{unique_id.upper()}%"),
             )
         )
         customers = result.scalars().all()
@@ -165,17 +178,18 @@ class TestISPCustomerFieldsSmoke:
 class TestEnhancedTicketingSmoke:
     """Smoke tests for enhanced ticketing with ISP fields."""
 
-    async def test_create_ticket_with_isp_fields(self, async_session: AsyncSession):
+    async def test_create_ticket_with_isp_fields(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test creating ticket with ISP-specific fields."""
         tenant_id = "smoke-test-tenant"
-        customer_id = uuid4()
         user_id = uuid4()
 
         # Create ISP-specific ticket
         ticket = Ticket(
             tenant_id=tenant_id,
             ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
-            customer_id=customer_id,
+            customer_id=smoke_test_customer.id,
             subject="Internet Connection Issue",
             status=TicketStatus.OPEN,
             priority=TicketPriority.HIGH,
@@ -209,15 +223,18 @@ class TestEnhancedTicketingSmoke:
         assert ticket.sla_due_date is not None
         assert ticket.escalation_level == 0
 
-    async def test_sla_breach_detection(self, async_session: AsyncSession):
+    async def test_sla_breach_detection(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test SLA breach detection and tracking."""
         tenant_id = "smoke-test-tenant"
+        unique_id = uuid4().hex[:8].upper()
 
         # Create ticket with past SLA due date
         ticket = Ticket(
             tenant_id=tenant_id,
-            ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
-            customer_id=uuid4(),
+            ticket_number=f"TKT-SLA-{unique_id}",
+            customer_id=smoke_test_customer.id,
             subject="SLA Test",
             status=TicketStatus.OPEN,
             priority=TicketPriority.NORMAL,
@@ -232,10 +249,12 @@ class TestEnhancedTicketingSmoke:
         await async_session.commit()
 
         # Query breached SLA tickets
+        # Filter by unique_id to isolate this test's data
         result = await async_session.execute(
             select(Ticket).where(
                 Ticket.tenant_id == tenant_id,
                 Ticket.sla_breached == True,  # noqa: E712
+                Ticket.ticket_number.like(f"%{unique_id}%"),
             )
         )
         breached_tickets = result.scalars().all()
@@ -243,16 +262,19 @@ class TestEnhancedTicketingSmoke:
         assert len(breached_tickets) == 1
         assert breached_tickets[0].sla_breached is True
 
-    async def test_ticket_escalation(self, async_session: AsyncSession):
+    async def test_ticket_escalation(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test ticket escalation workflow."""
         tenant_id = "smoke-test-tenant"
+        unique_id = uuid4().hex[:8].upper()
         escalated_to_user = uuid4()
 
         # Create escalated ticket
         ticket = Ticket(
             tenant_id=tenant_id,
-            ticket_number=f"TKT-{uuid4().hex[:8].upper()}",
-            customer_id=uuid4(),
+            ticket_number=f"TKT-ESC-{unique_id}",
+            customer_id=smoke_test_customer.id,
             subject="Escalated Issue",
             status=TicketStatus.IN_PROGRESS,
             priority=TicketPriority.URGENT,
@@ -268,8 +290,13 @@ class TestEnhancedTicketingSmoke:
         await async_session.commit()
 
         # Query escalated tickets
+        # Filter by unique_id to isolate this test's data
         result = await async_session.execute(
-            select(Ticket).where(Ticket.tenant_id == tenant_id, Ticket.escalation_level > 0)
+            select(Ticket).where(
+                Ticket.tenant_id == tenant_id,
+                Ticket.escalation_level > 0,
+                Ticket.ticket_number.like(f"%{unique_id}%"),
+            )
         )
         escalated_tickets = result.scalars().all()
 
@@ -327,6 +354,7 @@ class TestDunningSmoke:
         """Test starting a dunning execution."""
         tenant_id = "smoke-test-tenant"
         user_id = uuid4()
+        unique_id = str(uuid4())[:8]  # Add unique ID for data isolation
 
         service = DunningService(async_session)
 
@@ -350,9 +378,9 @@ class TestDunningSmoke:
         execution = await service.start_execution(
             campaign_id=campaign.id,
             tenant_id=tenant_id,
-            subscription_id="sub_smoke_test_123",
+            subscription_id=f"sub_smoke_test_{unique_id}",  # Unique per test run
             customer_id=uuid4(),
-            invoice_id="inv_smoke_test_123",
+            invoice_id=f"inv_smoke_test_{unique_id}",  # Unique per test run
             outstanding_amount=10000,  # $100.00
         )
 
@@ -404,17 +432,19 @@ class TestDunningSmoke:
 class TestUsageBillingSmoke:
     """Smoke tests for usage billing."""
 
-    async def test_create_usage_record(self, async_session: AsyncSession):
+    async def test_create_usage_record(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test creating a usage record."""
         tenant_id = "smoke-test-tenant"
-        customer_id = uuid4()
         user_id = uuid4()
+        unique_id = str(uuid4())[:8]
 
         # Create usage record
         usage = UsageRecord(
             tenant_id=tenant_id,
-            subscription_id="sub_smoke_123",
-            customer_id=customer_id,
+            subscription_id=f"sub_smoke_{unique_id}",
+            customer_id=smoke_test_customer.id,
             usage_type=UsageType.DATA_TRANSFER,
             quantity=Decimal("15.5"),  # 15.5 GB
             unit="GB",
@@ -441,17 +471,19 @@ class TestUsageBillingSmoke:
         assert usage.total_amount == 155
         assert usage.billed_status == BilledStatus.PENDING
 
-    async def test_query_usage_by_subscription(self, async_session: AsyncSession):
+    async def test_query_usage_by_subscription(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test querying usage records by subscription (index test)."""
         tenant_id = "smoke-test-tenant"
-        subscription_id = "sub_test_456"
-        customer_id = uuid4()
+        unique_id = str(uuid4())[:8]
+        subscription_id = f"sub_test_{unique_id}"
 
         # Create multiple usage records
         usage1 = UsageRecord(
             tenant_id=tenant_id,
             subscription_id=subscription_id,
-            customer_id=customer_id,
+            customer_id=smoke_test_customer.id,
             usage_type=UsageType.DATA_TRANSFER,
             quantity=Decimal("10.0"),
             unit="GB",
@@ -465,7 +497,7 @@ class TestUsageBillingSmoke:
         usage2 = UsageRecord(
             tenant_id=tenant_id,
             subscription_id=subscription_id,
-            customer_id=customer_id,
+            customer_id=smoke_test_customer.id,
             usage_type=UsageType.VOICE_MINUTES,
             quantity=Decimal("120.0"),
             unit="minutes",
@@ -491,15 +523,18 @@ class TestUsageBillingSmoke:
 
         assert len(records) == 2
 
-    async def test_query_pending_usage(self, async_session: AsyncSession):
+    async def test_query_pending_usage(
+        self, async_session: AsyncSession, smoke_test_customer
+    ):
         """Test querying pending usage records for billing."""
         tenant_id = "smoke-test-tenant"
+        unique_id = str(uuid4())[:8]
 
         # Create usage records with different statuses
         pending_usage = UsageRecord(
             tenant_id=tenant_id,
-            subscription_id="sub_pending",
-            customer_id=uuid4(),
+            subscription_id=f"sub_pending_{unique_id}",
+            customer_id=smoke_test_customer.id,
             usage_type=UsageType.OVERAGE_GB,
             quantity=Decimal("5.0"),
             unit="GB",
@@ -512,8 +547,8 @@ class TestUsageBillingSmoke:
         )
         billed_usage = UsageRecord(
             tenant_id=tenant_id,
-            subscription_id="sub_billed",
-            customer_id=uuid4(),
+            subscription_id=f"sub_billed_{unique_id}",
+            customer_id=smoke_test_customer.id,
             usage_type=UsageType.DATA_TRANSFER,
             quantity=Decimal("10.0"),
             unit="GB",
@@ -531,10 +566,12 @@ class TestUsageBillingSmoke:
         await async_session.commit()
 
         # Query pending usage (tests index: ix_usage_records_billed_status)
+        # Filter by unique_id to isolate this test's data
         result = await async_session.execute(
             select(UsageRecord).where(
                 UsageRecord.tenant_id == tenant_id,
                 UsageRecord.billed_status == BilledStatus.PENDING,
+                UsageRecord.subscription_id.like(f"%_{unique_id}"),
             )
         )
         pending_records = result.scalars().all()
@@ -545,7 +582,8 @@ class TestUsageBillingSmoke:
     async def test_create_usage_aggregate(self, async_session: AsyncSession):
         """Test creating usage aggregate for reporting."""
         tenant_id = "smoke-test-tenant"
-        subscription_id = "sub_agg_test"
+        unique_id = str(uuid4())[:8]
+        subscription_id = f"sub_agg_{unique_id}"
 
         # Create aggregate
         aggregate = UsageAggregate(
@@ -625,13 +663,13 @@ class TestDatabaseMigrations:
             FROM information_schema.columns
             WHERE table_name = 'customers'
             AND column_name IN (
-                'service_location',
+                'service_address_line1',
                 'installation_status',
                 'connection_type',
-                'bandwidth_plan',
+                'service_plan_speed',
                 'static_ip_assigned',
-                'router_mac_address',
-                'ont_serial_number'
+                'assigned_devices',
+                'current_bandwidth_profile'
             )
             ORDER BY column_name
             """
@@ -640,12 +678,12 @@ class TestDatabaseMigrations:
         columns = [row[0] for row in result.fetchall()]
 
         expected_columns = [
-            "bandwidth_plan",
+            "assigned_devices",
             "connection_type",
+            "current_bandwidth_profile",
             "installation_status",
-            "ont_serial_number",
-            "router_mac_address",
-            "service_location",
+            "service_address_line1",
+            "service_plan_speed",
             "static_ip_assigned",
         ]
 

@@ -10,11 +10,13 @@ Provides endpoints to:
 
 from __future__ import annotations
 
+import secrets
 from datetime import datetime
+from time import time
 from typing import Annotated
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,6 +25,7 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.platform_admin import is_platform_admin
 from dotmac.platform.db import get_async_session
+from dotmac.platform.core.rate_limiting import rate_limit
 from dotmac.platform.monitoring.alert_webhook_router import (
     Alert,
     AlertChannel,
@@ -33,12 +36,81 @@ from dotmac.platform.monitoring.alert_webhook_router import (
 )
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
 from dotmac.platform.monitoring.plugins import get_plugin, register_builtin_plugins
+from dotmac.platform.settings import settings
+from dotmac.platform.core.caching import get_redis
 
 logger = structlog.get_logger(__name__)
 
 register_builtin_plugins()
 
 router = APIRouter(prefix="/alerts", tags=["Alert Management"])
+
+_local_rate_counters: dict[str, tuple[int, float]] = {}
+
+
+def _parse_rate_limit_config(config: str) -> tuple[int, int]:
+    try:
+        count_str, window_str = config.split("/", 1)
+        max_requests = int(count_str.strip())
+    except Exception:
+        return 120, 60
+
+    unit = window_str.strip().lower()
+    if unit.startswith("per"):
+        unit = unit[3:].strip()
+
+    if unit in {"s", "sec", "second", "seconds"}:
+        return max_requests, 1
+    if unit in {"m", "min", "minute", "minutes"}:
+        return max_requests, 60
+    if unit in {"h", "hour", "hours"}:
+        return max_requests, 3600
+    if unit in {"d", "day", "days"}:
+        return max_requests, 86400
+    return max_requests, 60
+
+
+def _enforce_alertmanager_rate_limit(request: Request) -> None:
+    config = getattr(settings.observability, "alertmanager_rate_limit", "120/minute")
+    max_requests, window_seconds = _parse_rate_limit_config(config)
+    client_ip = request.client.host if request.client else "unknown"
+    cache_key = f"alertmanager:webhook:{client_ip}"
+
+    redis_client = None
+    try:
+        redis_client = get_redis()
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        logger.debug("alertmanager.webhook.rate_limit.redis_unavailable", error=str(exc))
+
+    if redis_client is not None:
+        try:
+            count = redis_client.incr(cache_key)
+            if count == 1:
+                redis_client.expire(cache_key, window_seconds)
+            if count > max_requests:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Alertmanager webhook rate limit exceeded",
+                )
+            return
+        except HTTPException:
+            raise
+        except Exception as exc:  # pragma: no cover - redis failure fallback
+            logger.debug("alertmanager.webhook.rate_limit.redis_error", error=str(exc))
+
+    now = time()
+    count, expiry = _local_rate_counters.get(cache_key, (0, now + window_seconds))
+    if expiry <= now:
+        _local_rate_counters[cache_key] = (1, now + window_seconds)
+        return
+
+    count += 1
+    if count > max_requests:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Alertmanager webhook rate limit exceeded",
+        )
+    _local_rate_counters[cache_key] = (count, expiry)
 
 
 # ==========================================
@@ -176,9 +248,53 @@ class WebhookProcessingResult(BaseModel):
 # ==========================================
 
 
+def _get_alertmanager_secret() -> str | None:
+    return getattr(settings.observability, "alertmanager_webhook_secret", None)
+
+
+async def _authenticate_alertmanager_webhook(
+    request: Request,
+    token_header: str | None = Header(default=None, alias="X-Alertmanager-Token"),
+    authorization: str | None = Header(default=None),
+) -> None:
+    """Validate shared secret for Alertmanager webhook requests."""
+    _enforce_alertmanager_rate_limit(request)
+    secret = _get_alertmanager_secret()
+    if not secret:
+        logger.error(
+            "alertmanager.webhook.secret_missing",
+            path=str(request.url),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Alertmanager webhook secret is not configured",
+        )
+
+    candidate = None
+    if token_header:
+        candidate = token_header.strip()
+    elif authorization:
+        if authorization.lower().startswith("bearer "):
+            candidate = authorization[7:].strip()
+    if candidate is None:
+        candidate = request.query_params.get("token")
+
+    if not candidate or not secrets.compare_digest(candidate, secret):
+        logger.warning(
+            "alertmanager.webhook.auth_failed",
+            client=request.client.host if request.client else None,
+            path=str(request.url),
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid Alertmanager webhook token",
+        )
+
+
 @router.post("/webhook", status_code=status.HTTP_202_ACCEPTED)
 async def receive_alertmanager_webhook(
-    payload: AlertmanagerWebhook,
+    payload: Annotated[AlertmanagerWebhook, Body(embed=False)],
+    _: None = Depends(_authenticate_alertmanager_webhook),
 ) -> WebhookProcessingResult:
     """
     Receive webhook from Prometheus Alertmanager.
@@ -186,8 +302,8 @@ async def receive_alertmanager_webhook(
     This endpoint should be configured in Alertmanager as a webhook receiver.
     It will route alerts to configured channels based on severity, tenant, etc.
 
-    **No authentication required** - Alertmanager doesn't support auth headers.
-    Consider using network-level security or API key in URL query param if needed.
+    Authentication: requires shared secret via `X-Alertmanager-Token` header,
+    `Authorization: Bearer` token, or `token` query parameter.
     """
     logger.info(
         "Received Alertmanager webhook",
