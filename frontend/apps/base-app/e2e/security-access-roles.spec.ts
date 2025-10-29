@@ -43,7 +43,7 @@ test.describe("Security Access · Role assignments", () => {
     const userLabel = await firstAvailable.locator("[data-testid=\"user-label\"]").textContent();
     await firstAvailable.click();
 
-    await dialog.locator('[data-testid="assign-selected"] button").click();
+    await dialog.locator('[data-testid="assign-selected"] button').click();
     await expect(dialog.locator('.success-toast')).toContainText("Assigned");
 
     const assignedList = dialog.locator('[data-testid="assigned-users-list"]');
