@@ -195,9 +195,10 @@ class TestDunningSmoke:
             "trigger_after_days": 7,
             "actions": [
                 {
-                    "action_type": "send_email",
+                    "type": "email",
                     "delay_days": 0,
-                    "parameters": {"template_id": "payment_reminder"},
+                    "template": "payment_reminder",
+                    "custom_config": {},
                 }
             ],
             "is_active": False,  # Create inactive for testing
