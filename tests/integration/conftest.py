@@ -39,6 +39,28 @@ def event_loop():
     loop.close()
 
 
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def init_redis():
+    """
+    Initialize Redis client for integration tests.
+
+    Session-scoped to initialize once for all tests.
+    Auto-used to ensure Redis is available for all integration tests.
+    """
+    from dotmac.platform.redis_client import redis_manager
+
+    try:
+        # Initialize Redis with test configuration
+        await redis_manager.initialize()
+        yield
+    finally:
+        # Clean up Redis connections after all tests
+        try:
+            await redis_manager.close()
+        except Exception:
+            pass
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_integration_test_data(async_db_session):
     """
