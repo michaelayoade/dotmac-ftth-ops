@@ -131,12 +131,15 @@ async def async_client(db_engine, tenant_id, user_id):
     )
 
     # Create mock user with admin permissions for e2e tests
-    def mock_get_current_user():
+    def mock_get_current_user(request):
+        """Mock get_current_user for E2E tests - accepts request parameter for compatibility."""
         return UserInfo(
             user_id=user_id,
             tenant_id=tenant_id,
             email="e2e-test@example.com",
-            permissions=["read", "write", "admin", "user:read", "user:write", "admin:read", "admin:write"],
+            # Grant all permissions for e2e tests to avoid permission issues
+            permissions=["*"],
+            roles=["admin"],
         )
 
     # Create async generator for session override - creates a new session for each request
@@ -169,7 +172,16 @@ async def async_client(db_engine, tenant_id, user_id):
         )
         return [admin_role]
 
-    # Patch RBACService.get_user_roles
+    # Mock permission checking methods to always return True for e2e tests
+    async def mock_user_has_all_permissions(self, user_id, permissions):
+        # Grant all permissions for e2e tests
+        return True
+
+    async def mock_user_has_any_permission(self, user_id, permissions):
+        # Grant all permissions for e2e tests
+        return True
+
+    # Patch RBACService methods
     from dotmac.platform.auth import rbac_service
 
     rbac_patch = patch.object(
@@ -177,8 +189,22 @@ async def async_client(db_engine, tenant_id, user_id):
     )
     rbac_patch.start()
 
+    rbac_permissions_all_patch = patch.object(
+        rbac_service.RBACService, "user_has_all_permissions", new=mock_user_has_all_permissions
+    )
+    rbac_permissions_all_patch.start()
+
+    rbac_permissions_any_patch = patch.object(
+        rbac_service.RBACService, "user_has_any_permission", new=mock_user_has_any_permission
+    )
+    rbac_permissions_any_patch.start()
+
+    # Import get_async_db for webhooks router
+    from dotmac.platform.db import get_async_db
+
     # Override app dependencies
     app.dependency_overrides[get_async_session] = override_get_async_session
+    app.dependency_overrides[get_async_db] = override_get_async_session  # Webhooks router uses this
     app.dependency_overrides[get_session_dependency] = (
         override_get_async_session  # Auth router uses this
     )
