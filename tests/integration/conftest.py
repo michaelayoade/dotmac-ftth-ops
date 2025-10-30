@@ -157,6 +157,32 @@ def test_tenant_id():
     return "integration-test-tenant"
 
 
+@pytest_asyncio.fixture
+async def test_tenant(async_session, test_tenant_id):
+    """Create test tenant in database for integration tests."""
+    from dotmac.platform.tenant.models import Tenant, TenantStatus
+
+    # Check if tenant already exists
+    from sqlalchemy import select
+    stmt = select(Tenant).where(Tenant.id == test_tenant_id)
+    result = await async_session.execute(stmt)
+    existing_tenant = result.scalar_one_or_none()
+
+    if existing_tenant:
+        return existing_tenant
+
+    # Create new tenant
+    tenant = Tenant(
+        id=test_tenant_id,
+        name="Integration Test Tenant",
+        slug=test_tenant_id,
+        status=TenantStatus.ACTIVE,
+    )
+    async_session.add(tenant)
+    await async_session.flush()
+    return tenant
+
+
 @pytest.fixture
 def mock_user_info():
     """Mock user info for integration tests."""
@@ -360,18 +386,21 @@ async def smoke_test_subscriber(subscriber_factory, smoke_test_tenant, smoke_tes
 
 
 @pytest_asyncio.fixture
-async def async_client(test_tenant_id, mock_user_info):
+async def async_client(test_tenant_id, test_tenant, mock_user_info, async_session):
     """
     Async HTTP client for integration tests.
 
     Includes default tenant ID header to pass tenant middleware validation.
     Adds authentication overrides to bypass real auth for testing.
+    Adds database session override to use test PostgreSQL database.
+    Ensures test tenant exists in database before making requests.
     """
     from httpx import ASGITransport, AsyncClient
     from fastapi import Request
     from dotmac.platform.main import app
     from dotmac.platform.auth.dependencies import get_current_user, get_current_user_optional
     from dotmac.platform.auth.core import UserInfo
+    from dotmac.platform.db import get_session_dependency
 
     # Override authentication dependencies for testing
     async def override_get_current_user(request: Request) -> UserInfo:
@@ -382,9 +411,15 @@ async def async_client(test_tenant_id, mock_user_info):
         """Override to return mock user for optional auth requests."""
         return mock_user_info
 
+    # Override database session to use test PostgreSQL database
+    async def override_get_session_dependency():
+        """Override to return test database session."""
+        yield async_session
+
     # Apply dependency overrides
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
+    app.dependency_overrides[get_session_dependency] = override_get_session_dependency
 
     transport = ASGITransport(app=app)
     async with AsyncClient(
