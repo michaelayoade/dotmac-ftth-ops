@@ -400,7 +400,9 @@ async def async_client(test_tenant_id, test_tenant, mock_user_info, async_sessio
     from dotmac.platform.main import app
     from dotmac.platform.auth.dependencies import get_current_user, get_current_user_optional
     from dotmac.platform.auth.core import UserInfo
-    from dotmac.platform.db import get_session_dependency, get_async_session
+    from dotmac.platform.db import get_session_dependency
+    from dotmac.platform.db import get_async_session as get_async_session_db
+    from dotmac.platform.database import get_async_session as get_async_session_database
 
     # Override authentication dependencies for testing
     async def override_get_current_user(request: Request) -> UserInfo:
@@ -424,7 +426,9 @@ async def async_client(test_tenant_id, test_tenant, mock_user_info, async_sessio
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
     app.dependency_overrides[get_session_dependency] = override_get_session_dependency
-    app.dependency_overrides[get_async_session] = override_get_async_session
+    # Override BOTH get_async_session patterns (from db.py and database.py)
+    app.dependency_overrides[get_async_session_db] = override_get_async_session
+    app.dependency_overrides[get_async_session_database] = override_get_async_session
 
     transport = ASGITransport(app=app)
     async with AsyncClient(

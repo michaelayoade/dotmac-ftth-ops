@@ -59,7 +59,7 @@ async def _get_current_user_dependency(
     # Honor those overrides first to keep tests simple.
     override = request.app.dependency_overrides.get(auth_dependencies.get_current_user)
     if override is not None:
-        value = override()
+        value = override(request)
         if inspect.isawaitable(value):
             value = await value
         return value
