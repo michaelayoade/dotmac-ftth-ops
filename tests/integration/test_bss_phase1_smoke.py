@@ -74,7 +74,7 @@ class TestCRMSmoke:
 
         # Create lead
         response = await async_client.post(
-            "/api/v1/crm/crm/leads", json=lead_data, headers=auth_headers
+            "/api/v1/crm/leads", json=lead_data, headers=auth_headers
         )
         assert response.status_code in [200, 201], (
             f"Lead creation failed with status {response.status_code}: {response.text}"
@@ -85,14 +85,14 @@ class TestCRMSmoke:
 
         # Get lead
         response = await async_client.get(
-            f"/api/v1/crm/crm/leads/{lead_id}", headers=auth_headers
+            f"/api/v1/crm/leads/{lead_id}", headers=auth_headers
         )
         assert response.status_code == 200
         assert response.json()["email"] == "smoke.test@example.com"
 
     async def test_list_leads(self, async_client, auth_headers: dict):
         """Test listing leads."""
-        response = await async_client.get("/api/v1/crm/crm/leads", headers=auth_headers)
+        response = await async_client.get("/api/v1/crm/leads", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
         data = response.json()
@@ -100,7 +100,7 @@ class TestCRMSmoke:
 
     async def test_list_quotes(self, async_client, auth_headers: dict):
         """Test listing quotes."""
-        response = await async_client.get("/api/v1/crm/crm/quotes", headers=auth_headers)
+        response = await async_client.get("/api/v1/crm/quotes", headers=auth_headers)
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
         data = response.json()
@@ -109,7 +109,7 @@ class TestCRMSmoke:
     async def test_list_site_surveys(self, async_client, auth_headers: dict):
         """Test listing site surveys."""
         response = await async_client.get(
-            "/api/v1/crm/crm/site-surveys", headers=auth_headers
+            "/api/v1/crm/site-surveys", headers=auth_headers
         )
         assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
 
@@ -274,7 +274,7 @@ class TestBSSPhase1Integration:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/leads", json=lead_data, headers=auth_headers
+            "/api/v1/crm/leads", json=lead_data, headers=auth_headers
         )
         assert response.status_code in [200, 201], (
             f"Lead creation failed with status {response.status_code}: {response.text}"
@@ -296,7 +296,7 @@ class TestBSSPhase1Integration:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/quotes", json=quote_data, headers=auth_headers
+            "/api/v1/crm/quotes", json=quote_data, headers=auth_headers
         )
         assert response.status_code in [200, 201, 422], (
             f"Quote creation returned status {response.status_code}: {response.text}"
@@ -361,9 +361,9 @@ class TestBSSPhase1Acceptance:
         """Test that all required BSS Phase 1 endpoints are available."""
         required_endpoints = [
             # CRM
-            "/api/v1/crm/crm/leads",
-            "/api/v1/crm/crm/quotes",
-            "/api/v1/crm/crm/site-surveys",
+            "/api/v1/crm/leads",
+            "/api/v1/crm/quotes",
+            "/api/v1/crm/site-surveys",
             # Jobs
             "/api/v1/jobs",
             "/api/v1/jobs/statistics",
