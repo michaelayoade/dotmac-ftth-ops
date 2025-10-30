@@ -338,14 +338,31 @@ async def smoke_test_subscriber(subscriber_factory, smoke_test_tenant, smoke_tes
 
 
 @pytest_asyncio.fixture
-async def async_client(test_tenant_id):
+async def async_client(test_tenant_id, mock_user_info):
     """
     Async HTTP client for integration tests.
 
     Includes default tenant ID header to pass tenant middleware validation.
+    Adds authentication overrides to bypass real auth for testing.
     """
     from httpx import ASGITransport, AsyncClient
+    from fastapi import Request
     from dotmac.platform.main import app
+    from dotmac.platform.auth.dependencies import get_current_user, get_current_user_optional
+    from dotmac.platform.auth.core import UserInfo
+
+    # Override authentication dependencies for testing
+    async def override_get_current_user(request: Request) -> UserInfo:
+        """Override to return mock user for all authenticated requests."""
+        return mock_user_info
+
+    async def override_get_current_user_optional(request: Request) -> UserInfo | None:
+        """Override to return mock user for optional auth requests."""
+        return mock_user_info
+
+    # Apply dependency overrides
+    app.dependency_overrides[get_current_user] = override_get_current_user
+    app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
 
     transport = ASGITransport(app=app)
     async with AsyncClient(
@@ -354,6 +371,9 @@ async def async_client(test_tenant_id):
         headers={"X-Tenant-ID": test_tenant_id}
     ) as client:
         yield client
+
+    # Clean up overrides after test
+    app.dependency_overrides.clear()
 
 
 @pytest.fixture
