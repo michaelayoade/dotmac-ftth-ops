@@ -105,43 +105,48 @@ class TestSecretsAuthIntegration:
 
     @pytest.mark.skipif(not HAS_SECRETS_AUTH, reason="Secrets/Auth modules not available")
     @pytest.mark.asyncio
-    async def test_jwt_service_with_secrets_manager(self):
+    async def test_jwt_service_with_secrets_manager(self, tmp_path):
         """Test JWT service can retrieve keys from secrets manager."""
-        # Mock secrets manager
-        mock_manager = Mock(spec=SecretsManager)
-        mock_manager.get_secret = Mock(
-            return_value={
-                "private_key": "test-private-key",
-                "public_key": "test-public-key",
-                "algorithm": "RS256",
-            }
-        )
+        # Use real local secrets manager with temporary directory
+        import os
+        os.environ["SECRETS_BACKEND"] = "local"
+        os.environ["LOCAL_SECRETS_PATH"] = str(tmp_path)
 
-        # Test JWT service initialization with secrets
-        with patch(
-            "dotmac.platform.secrets.factory.SecretsManagerFactory.create_secrets_manager"
-        ) as mock_create:
-            mock_create.return_value = mock_manager
+        # Create secrets manager and store test keys
+        secrets_mgr = SecretsManagerFactory.create_secrets_manager("local")
+        test_keypair = {
+            "private_key": "test-private-key",
+            "public_key": "test-public-key",
+            "algorithm": "RS256",
+        }
 
-            # Create secrets manager and retrieve keys
-            secrets_mgr = SecretsManagerFactory.create_secrets_manager("local")
-            keypair = secrets_mgr.get_secret("jwt/keypair")
-            assert "private_key" in keypair
-            assert "public_key" in keypair
+        # Store the secret
+        secrets_mgr.set_secret("jwt/keypair", test_keypair)
+
+        # Retrieve and verify
+        keypair = secrets_mgr.get_secret("jwt/keypair")
+        assert "private_key" in keypair
+        assert "public_key" in keypair
+        assert keypair["private_key"] == "test-private-key"
 
     @pytest.mark.skipif(not HAS_SECRETS_AUTH, reason="Secrets/Auth modules not available")
     def test_auth_service_secrets_integration(self):
         """Test authentication services integrate with secrets management."""
-        # Mock the secrets retrieval for JWT keys
-        with patch("dotmac.platform.auth.core.JWTService.__init__") as mock_jwt_init:
-            mock_jwt_init.return_value = None
+        # Create real JWT service with test secret
+        jwt_service = JWTService(algorithm="HS256", secret="test-secret-key-for-integration-test")
 
-            # Verify that JWT service would be initialized with secret keys
-            jwt_service = Mock()
-            jwt_service.create_token = Mock(return_value="mock-token")
+        # Create token with user claims
+        token = jwt_service.create_access_token(
+            subject="user123",
+            additional_claims={"tenant_id": "test-tenant"}
+        )
+        assert token is not None
+        assert isinstance(token, str)
 
-            token = jwt_service.create_token({"sub": "user123"})
-            assert token == "mock-token"
+        # Verify token can be decoded
+        decoded = jwt_service.verify_token(token)
+        assert decoded["sub"] == "user123"
+        assert decoded["tenant_id"] == "test-tenant"
 
 
 @pytest.mark.integration

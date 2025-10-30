@@ -13,6 +13,7 @@ from dotmac.platform.netbox.client import NetBoxClient
 
 
 @pytest.mark.integration
+@pytest.mark.serial_only
 @pytest.mark.asyncio
 class TestNetBoxDualStackIntegration:
     """Integration tests for NetBox dual-stack IP operations."""

@@ -15,9 +15,8 @@ from dotmac.platform.radius.service import RADIUSService
 
 
 @pytest.mark.integration
+@pytest.mark.serial_only
 @pytest.mark.asyncio
-
-
 class TestDualStackSubscriberProvisioning:
     """Integration tests for complete dual-stack subscriber provisioning."""
 
@@ -210,8 +209,7 @@ class TestDualStackSubscriberProvisioning:
             assert updated.framed_ipv6_address == "2001:db8:400::200"
             assert updated.framed_ipv6_prefix == "2001:db8:400::/64"
 
-    @pytest.mark.skip(reason="TODO: Add smoke_test_tenant_a and smoke_test_tenant_b fixtures for multi-tenant isolation testing")
-    async def test_provision_multiple_subscribers_tenant_isolation(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_provision_multiple_subscribers_tenant_isolation(self, async_session, smoke_test_tenant_a, smoke_test_tenant_b, subscriber_factory):
         """
         Test tenant isolation in dual-stack provisioning.
         """
@@ -220,10 +218,10 @@ class TestDualStackSubscriberProvisioning:
             mock_settings.is_production = False
 
             # Tenant A service
-            service_a = RADIUSService(session=async_session, tenant_id="tenant_a")
+            service_a = RADIUSService(session=async_session, tenant_id=smoke_test_tenant_a.id)
 
             # Tenant B service
-            service_b = RADIUSService(session=async_session, tenant_id="tenant_b")
+            service_b = RADIUSService(session=async_session, tenant_id=smoke_test_tenant_b.id)
 
             # Create subscriber in Tenant A (use uuid for uniqueness)
             unique_id_a = str(uuid4())[:8]
@@ -234,7 +232,7 @@ class TestDualStackSubscriberProvisioning:
             from dotmac.platform.subscribers.models import SubscriberStatus
             await subscriber_factory.create(
                 id=subscriber_id_a,
-                tenant_id="tenant_a",
+                tenant_id=smoke_test_tenant_a.id,
                 username=username_a,
                 subscriber_number=f"SUB-{unique_id_a.upper()}",
                 status=SubscriberStatus.ACTIVE,
@@ -258,7 +256,7 @@ class TestDualStackSubscriberProvisioning:
             # Create Subscriber record first (required for FK constraint)
             await subscriber_factory.create(
                 id=subscriber_id_b,
-                tenant_id="tenant_b",
+                tenant_id=smoke_test_tenant_b.id,
                 username=username_b,
                 subscriber_number=f"SUB-{unique_id_b.upper()}",
                 status=SubscriberStatus.ACTIVE,
@@ -275,8 +273,8 @@ class TestDualStackSubscriberProvisioning:
             result_b = await service_b.create_subscriber(subscriber_b)
 
             # Verify both created successfully
-            assert result_a.tenant_id == "tenant_a"
-            assert result_b.tenant_id == "tenant_b"
+            assert result_a.tenant_id == smoke_test_tenant_a.id
+            assert result_b.tenant_id == smoke_test_tenant_b.id
 
             # Tenant A cannot see Tenant B's subscriber
             tenant_a_sub = await service_a.get_subscriber(subscriber_id=subscriber_id_b)
@@ -355,7 +353,7 @@ class TestDualStackSubscriberProvisioning:
                     username=username,
                     password="SecurePass123!",
                     framed_ipv4_address=f"10.200.1.{i}",
-                    framed_ipv6_address=f"2001:db8:bulk::{i:x}",
+                    framed_ipv6_address=f"2001:db8:1000::{i:x}",
                 )
 
                 result = await service.create_subscriber(subscriber_data)
@@ -367,8 +365,8 @@ class TestDualStackSubscriberProvisioning:
             # Verify sequential IPs
             assert created_subs[0].framed_ipv4_address == "10.200.1.1"
             assert created_subs[9].framed_ipv4_address == "10.200.1.10"
-            assert created_subs[0].framed_ipv6_address == "2001:db8:bulk::1"
-            assert created_subs[9].framed_ipv6_address == "2001:db8:bulk::a"
+            assert created_subs[0].framed_ipv6_address == "2001:db8:1000::1"
+            assert created_subs[9].framed_ipv6_address == "2001:db8:1000::a"
 
     async def test_delete_subscriber_cleanup_dual_stack(self, async_session, smoke_test_tenant, subscriber_factory):
         """

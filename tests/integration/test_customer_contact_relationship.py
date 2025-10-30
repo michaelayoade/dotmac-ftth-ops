@@ -37,6 +37,7 @@ from dotmac.platform.tenant.models import Tenant, TenantStatus
 
 pytestmark = [
     pytest.mark.integration,
+    pytest.mark.parallel_safe,
     pytest.mark.asyncio,
 ]
 
@@ -64,6 +65,7 @@ async def test_tenant(async_db_session):
     return tenant
 
 
+@pytest.mark.serial_only
 @pytest.mark.asyncio
 class TestCustomerContactRelationship:
     """Test CustomerContactLink ORM relationship integrity."""
