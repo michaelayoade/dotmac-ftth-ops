@@ -4,12 +4,16 @@ Tests for Monitoring Metrics Router.
 Tests caching, rate limiting, tenant isolation, and error handling
 for both monitoring metrics and log statistics endpoints.
 """
+import pytest
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import patch
 
 from httpx import AsyncClient
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestMonitoringMetricsEndpoint:
     """Test monitoring metrics endpoint."""
@@ -39,7 +43,7 @@ class TestMonitoringMetricsEndpoint:
                     {"error": "validation_error", "count": 30},
                 ],
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -83,7 +87,7 @@ class TestMonitoringMetricsEndpoint:
                 "timeout_count": 5,
                 "top_errors": [],
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -122,7 +126,7 @@ class TestMonitoringMetricsEndpoint:
                 "timeout_count": 0,
                 "top_errors": [],
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -192,7 +196,7 @@ class TestLogStatsEndpoint:
                 "logs_last_hour": 500,
                 "logs_last_24h": 5000,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -238,7 +242,7 @@ class TestLogStatsEndpoint:
                 "logs_last_hour": 100,
                 "logs_last_24h": 1000,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -278,7 +282,7 @@ class TestLogStatsEndpoint:
                 "logs_last_hour": 200,
                 "logs_last_24h": 2000,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -319,7 +323,7 @@ class TestLogStatsEndpoint:
                 "logs_last_hour": 0,
                 "logs_last_24h": 0,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -398,7 +402,7 @@ class TestMonitoringMetricsCaching:
                 "timeout_count": 10,
                 "top_errors": [],
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
             mock_cached.return_value = mock_data
 
@@ -440,7 +444,7 @@ class TestMonitoringMetricsCaching:
                 "logs_last_hour": 250,
                 "logs_last_24h": 2500,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
             mock_cached.return_value = mock_data
 
@@ -484,7 +488,7 @@ class TestMonitoringMetricsTenantIsolation:
                 "timeout_count": 5,
                 "top_errors": [],
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(
@@ -521,7 +525,7 @@ class TestMonitoringMetricsTenantIsolation:
                 "logs_last_hour": 150,
                 "logs_last_24h": 1500,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             response = await client.get(

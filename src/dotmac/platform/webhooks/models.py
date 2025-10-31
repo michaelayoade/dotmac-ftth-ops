@@ -4,7 +4,10 @@ Webhook database models and schemas.
 
 import secrets
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 
@@ -267,6 +270,14 @@ class WebhookSubscriptionResponse(BaseModel):  # BaseModel resolves to Any in is
     def convert_uuid(cls, v: Any) -> Any:
         """Convert UUID to string."""
         return str(v) if v else None
+
+
+class WebhookSubscriptionCreateResponse(WebhookSubscriptionResponse):
+    """Response returned when creating a webhook subscription."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    secret: str
 
 
 class WebhookDeliveryResponse(BaseModel):  # BaseModel resolves to Any in isolation

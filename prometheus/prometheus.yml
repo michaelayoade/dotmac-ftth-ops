@@ -24,29 +24,32 @@ scrape_configs:
   # DotMac Platform API
   - job_name: 'dotmac-api'
     static_configs:
-      - targets: ['host.docker.internal:8000']
+      - targets: ['app:8000']
     metrics_path: '/metrics'
     scrape_interval: 10s
-
-  # PostgreSQL Database (if exporter is available)
-  - job_name: 'postgres'
-    static_configs:
-      - targets: ['postgres-exporter:9187']
-    scrape_interval: 30s
-
-  # Redis (if exporter is available)
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis-exporter:9121']
-    scrape_interval: 30s
-
-  # Node exporter for system metrics
-  - job_name: 'node'
-    static_configs:
-      - targets: ['node-exporter:9100']
-    scrape_interval: 30s
 
   # Prometheus self-monitoring
   - job_name: 'prometheus'
     static_configs:
       - targets: ['localhost:9090']
+
+# NOTE: The following exporters are commented out as they are not deployed by default
+# Uncomment and deploy the corresponding services if you want to enable these metrics:
+#
+#  # PostgreSQL Database exporter
+#  - job_name: 'postgres'
+#    static_configs:
+#      - targets: ['postgres-exporter:9187']
+#    scrape_interval: 30s
+#
+#  # Redis exporter
+#  - job_name: 'redis'
+#    static_configs:
+#      - targets: ['redis-exporter:9121']
+#    scrape_interval: 30s
+#
+#  # Node exporter for system metrics
+#  - job_name: 'node'
+#    static_configs:
+#      - targets: ['node-exporter:9100']
+#    scrape_interval: 30s

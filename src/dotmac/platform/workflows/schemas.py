@@ -137,9 +137,7 @@ class StepDefinition(BaseModel):
     """Schema for a single workflow step definition"""
 
     name: str = Field(..., description="Step name")
-    type: str = Field(
-        ..., description="Step type: service_call, transform, condition, wait"
-    )
+    type: str = Field(..., description="Step type: service_call, transform, condition, wait")
     description: str | None = Field(None, description="Step description")
     input: dict[str, Any] | None = Field(None, description="Step input parameters")
     params: dict[str, Any] | None = Field(None, description="Service call parameters")

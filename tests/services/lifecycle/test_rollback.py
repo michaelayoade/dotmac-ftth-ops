@@ -1,3 +1,4 @@
+
 """
 Tests for provisioning workflow rollback mechanisms.
 
@@ -8,8 +9,12 @@ clean up allocated resources.
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.services.lifecycle.models import (
+
+
+
     ProvisioningStatus,
     ProvisioningWorkflow,
     ServiceInstance,
@@ -19,7 +24,11 @@ from dotmac.platform.services.lifecycle.models import (
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
-@pytest.fixture
+
+
+pytestmark = pytest.mark.integration
+
+@pytest_asyncio.fixture
 async def failed_service_with_workflow(
     async_session,
 ) -> tuple[ServiceInstance, ProvisioningWorkflow]:

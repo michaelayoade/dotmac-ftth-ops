@@ -4,50 +4,82 @@ Integration tests for usage billing workflows.
 Tests complete lifecycle: RADIUS accounting → usage aggregation → invoice generation
 """
 
-import pytest
-
-# Skip entire module - UsageBillingService not yet implemented
-pytest.skip("UsageBillingService module not yet implemented", allow_module_level=True)
-
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from uuid import uuid4
 
+import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
-# Module not yet implemented - all imports commented out
-# from dotmac.platform.billing.usage.models import (
-#     BilledStatus,
-#     UsageType,
-# )
-# from dotmac.platform.billing.usage.schemas import (
-#     UsageRecordCreate,
-#     UsageReportRequest,
-# )
-# from dotmac.platform.billing.usage.service import UsageBillingService
+from dotmac.platform.billing.usage.models import BilledStatus, UsageType
+from dotmac.platform.billing.usage.schemas import UsageRecordCreate, UsageReportRequest
+from dotmac.platform.billing.usage.service import UsageBillingService
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
-from dotmac.platform.customer_management.models import Customer
+from dotmac.platform.customer_management.models import (
+    Customer,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 
 
-# Disabled fixtures - module not implemented
-# @pytest.fixture
-# async def usage_service(db_session: AsyncSession):
-#     """Create UsageBillingService instance."""
-#     pass
+@pytest.fixture
+def test_tenant_id() -> str:
+    """Generate a unique tenant identifier for the test."""
+    return f"tenant-{uuid4().hex[:8]}"
 
 
-# @pytest.fixture
-# async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
-#     """Create test customer for usage billing tests."""
-#     pass
+@pytest_asyncio.fixture
+async def db_session(async_db_session: AsyncSession):
+    """Provide a writable async session for the usage billing tests."""
+    yield async_db_session
 
 
-# @pytest.fixture
-# def test_usage_record_data(test_customer: Customer):
-#     """Create test usage record data."""
-#     pass
+@pytest_asyncio.fixture
+async def usage_service(db_session: AsyncSession) -> UsageBillingService:
+    """Create UsageBillingService instance backed by the shared session."""
+    return UsageBillingService(db_session)
 
 
+@pytest_asyncio.fixture
+async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
+    """Create test customer for usage billing tests."""
+    customer = Customer(
+        tenant_id=test_tenant_id,
+        customer_number=f"CUST-{uuid4().hex[:8]}",
+        first_name="Test",
+        last_name="Customer",
+        email=f"test.customer.{uuid4().hex[:6]}@example.com",
+        status=CustomerStatus.ACTIVE,
+        customer_type=CustomerType.INDIVIDUAL,
+        tier=CustomerTier.BASIC,
+    )
+    db_session.add(customer)
+    await db_session.commit()
+    await db_session.refresh(customer)
+    return customer
+
+
+@pytest.fixture
+def test_usage_record_data(test_customer: Customer):
+    """Create reusable usage record payload for tests."""
+    now = datetime.now(timezone.utc)
+    return UsageRecordCreate(
+        subscription_id="sub_test_usage_001",
+        customer_id=test_customer.id,
+        usage_type=UsageType.DATA_TRANSFER,
+        quantity=Decimal("15.5"),
+        unit="GB",
+        unit_price=Decimal("0.10"),
+        period_start=now - timedelta(hours=1),
+        period_end=now,
+        source_system="radius",
+        description="Test usage record",
+    )
+
+
+@pytest.mark.integration
 class TestUsageRecordManagement:
     """Test usage record CRUD operations."""
 
@@ -97,8 +129,8 @@ class TestUsageRecordManagement:
             quantity=Decimal("-10.0"),  # Negative quantity should fail
             unit="GB",
             unit_price=Decimal("0.10"),
-            period_start=datetime.now(UTC) - timedelta(hours=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
+            period_end=datetime.now(timezone.utc),
             source_system="test",
         )
 
@@ -169,8 +201,8 @@ class TestUsageRecordManagement:
                 quantity=Decimal(f"{i + 1}.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(UTC) - timedelta(hours=i + 1),
-                period_end=datetime.now(UTC) - timedelta(hours=i),
+                period_start=datetime.now(timezone.utc) - timedelta(hours=i + 1),
+                period_end=datetime.now(timezone.utc) - timedelta(hours=i),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -189,6 +221,7 @@ class TestUsageRecordManagement:
         assert all(r.subscription_id == subscription_id for r in records)
 
 
+@pytest.mark.integration
 class TestUsageBillingWorkflow:
     """Test complete usage billing workflow."""
 
@@ -205,8 +238,8 @@ class TestUsageBillingWorkflow:
         radius_session = {
             "acctsessionid": "TEST-SESSION-001",
             "username": "test.user@alpha.com",
-            "acctstarttime": datetime.now(UTC) - timedelta(hours=2),
-            "acctstoptime": datetime.now(UTC),
+            "acctstarttime": datetime.now(timezone.utc) - timedelta(hours=2),
+            "acctstoptime": datetime.now(timezone.utc),
             "acctinputoctets": 5368709120,  # 5 GB download
             "acctoutputoctets": 1073741824,  # 1 GB upload
             "acctsessiontime": 7200,  # 2 hours
@@ -294,8 +327,8 @@ class TestUsageBillingWorkflow:
                 quantity=Decimal(f"{i + 1}.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(UTC) - timedelta(days=i + 1),
-                period_end=datetime.now(UTC) - timedelta(days=i),
+                period_start=datetime.now(timezone.utc) - timedelta(days=i + 1),
+                period_end=datetime.now(timezone.utc) - timedelta(days=i),
                 source_system="test",
             )
             record = await usage_service.create_usage_record(
@@ -339,8 +372,8 @@ class TestUsageBillingWorkflow:
                 quantity=Decimal("10.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(UTC) - timedelta(days=i + 1),
-                period_end=datetime.now(UTC) - timedelta(days=i),
+                period_start=datetime.now(timezone.utc) - timedelta(days=i + 1),
+                period_end=datetime.now(timezone.utc) - timedelta(days=i),
                 source_system="test",
             )
             record = await usage_service.create_usage_record(
@@ -368,6 +401,7 @@ class TestUsageBillingWorkflow:
         assert all(r.billed_status == BilledStatus.PENDING for r in pending)
 
 
+@pytest.mark.integration
 class TestUsageAggregation:
     """Test usage aggregation for reporting."""
 
@@ -381,7 +415,7 @@ class TestUsageAggregation:
     ):
         """Test daily usage aggregation."""
         subscription_id = "sub_aggregate_test"
-        target_date = datetime.now(UTC).date()
+        target_date = datetime.now(timezone.utc).date()
 
         # Create multiple hourly usage records for the same day
         total_expected = Decimal("0")
@@ -436,7 +470,7 @@ class TestUsageAggregation:
     ):
         """Test monthly usage aggregation."""
         subscription_id = "sub_monthly_test"
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Create daily usage records for the month
@@ -474,6 +508,7 @@ class TestUsageAggregation:
         assert aggregate.record_count == 5
 
 
+@pytest.mark.integration
 class TestUsageReporting:
     """Test usage reporting and analytics."""
 
@@ -503,8 +538,8 @@ class TestUsageReporting:
                 quantity=quantity,
                 unit=unit,
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(UTC) - timedelta(days=1),
-                period_end=datetime.now(UTC),
+                period_start=datetime.now(timezone.utc) - timedelta(days=1),
+                period_end=datetime.now(timezone.utc),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -516,8 +551,8 @@ class TestUsageReporting:
         # Generate report
         report_request = UsageReportRequest(
             subscription_id=subscription_id,
-            period_start=datetime.now(UTC) - timedelta(days=7),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=7),
+            period_end=datetime.now(timezone.utc),
         )
 
         report = await usage_service.generate_usage_report(
@@ -552,8 +587,8 @@ class TestUsageReporting:
                 quantity=Decimal("10.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(UTC) - timedelta(days=1),
-                period_end=datetime.now(UTC),
+                period_start=datetime.now(timezone.utc) - timedelta(days=1),
+                period_end=datetime.now(timezone.utc),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -574,6 +609,7 @@ class TestUsageReporting:
         assert summary.pending_amount > 0  # Should have pending records
 
 
+@pytest.mark.integration
 class TestOverageCharges:
     """Test overage charge calculations."""
 
@@ -598,8 +634,8 @@ class TestOverageCharges:
             quantity=total_usage,
             unit="GB",
             unit_price=Decimal("0.05"),  # Base rate
-            period_start=datetime.now(UTC) - timedelta(days=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=1),
+            period_end=datetime.now(timezone.utc),
             source_system="test",
         )
         await usage_service.create_usage_record(
@@ -637,6 +673,7 @@ class TestOverageCharges:
         assert overage_record.total_amount == 375  # 25 * 0.15 * 100 = 375 cents ($3.75)
 
 
+@pytest.mark.integration
 class TestUsageEdgeCases:
     """Test edge cases and error handling."""
 
@@ -656,8 +693,8 @@ class TestUsageEdgeCases:
             quantity=Decimal("0.0"),  # Zero usage
             unit="GB",
             unit_price=Decimal("0.10"),
-            period_start=datetime.now(UTC) - timedelta(hours=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
+            period_end=datetime.now(timezone.utc),
             source_system="test",
         )
 
@@ -687,8 +724,8 @@ class TestUsageEdgeCases:
             quantity=Decimal("10.123456"),  # 6 decimal places
             unit="GB",
             unit_price=Decimal("0.123456"),
-            period_start=datetime.now(UTC) - timedelta(hours=1),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
+            period_end=datetime.now(timezone.utc),
             source_system="test",
         )
 

@@ -4,7 +4,10 @@ Rate Limit Management Router.
 API endpoints for managing rate limit rules.
 """
 
-from datetime import UTC
+from datetime import timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -25,7 +28,9 @@ from dotmac.platform.rate_limit.models import (
 from dotmac.platform.rate_limit.service import RateLimitService
 from dotmac.platform.user_management.models import User
 
-router = APIRouter(prefix="/rate-limits", )
+router = APIRouter(
+    prefix="/rate-limits",
+)
 
 
 # Request/Response Models

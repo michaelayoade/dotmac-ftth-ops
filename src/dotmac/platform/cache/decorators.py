@@ -15,7 +15,7 @@ from typing import Any, TypeVar
 import structlog
 
 from dotmac.platform.cache.models import CacheNamespace
-from dotmac.platform.cache.service import CacheService
+from dotmac.platform.cache.service import get_cache_service
 
 logger = structlog.get_logger(__name__)
 
@@ -28,6 +28,7 @@ def cached(
     key_prefix: str | None = None,
     include_tenant: bool = True,
     include_user: bool = False,
+    key_builder: Callable[..., Any] | None = None,
 ) -> Callable[..., Any]:
     """
     Decorator to cache function results.
@@ -49,11 +50,17 @@ def cached(
     def decorator(func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
-            cache = CacheService()
+            cache = get_cache_service()
 
             # Generate cache key from function args
             cache_key = _generate_cache_key(
-                func, args, kwargs, key_prefix, include_tenant, include_user
+                func,
+                args,
+                kwargs,
+                key_prefix,
+                include_tenant,
+                include_user,
+                key_builder(*args, **kwargs) if key_builder else None,
             )
 
             # Extract tenant_id for isolation
@@ -90,10 +97,16 @@ def cached(
         @functools.wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             # For sync functions, run async cache operations
-            cache = CacheService()
+            cache = get_cache_service()
 
             cache_key = _generate_cache_key(
-                func, args, kwargs, key_prefix, include_tenant, include_user
+                func,
+                args,
+                kwargs,
+                key_prefix,
+                include_tenant,
+                include_user,
+                key_builder(*args, **kwargs) if key_builder else None,
             )
             tenant_id = _extract_tenant_id(args, kwargs) if include_tenant else None
 
@@ -137,7 +150,7 @@ def cache_aside(
             result = await db.execute(stmt)
             return result.scalar_one_or_none()
     """
-    return cached(ttl=ttl, namespace=namespace, key_prefix=None)
+    return cached(ttl=ttl, namespace=namespace, key_prefix=None, key_builder=key_builder)
 
 
 def invalidate_cache(
@@ -170,7 +183,7 @@ def invalidate_cache(
             result = await func(*args, **kwargs)
 
             # Invalidate cache
-            cache = CacheService()
+            cache = get_cache_service()
             tenant_id = _extract_tenant_id(args, kwargs)
 
             if key_pattern:
@@ -197,7 +210,7 @@ def invalidate_cache(
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             result = func(*args, **kwargs)
 
-            cache = CacheService()
+            cache = get_cache_service()
             tenant_id = _extract_tenant_id(args, kwargs)
 
             if key_pattern:
@@ -263,6 +276,7 @@ def _generate_cache_key(
     key_prefix: str | None,
     include_tenant: bool,
     include_user: bool,
+    custom_key: Any | None,
 ) -> str:
     """Generate cache key from function signature."""
     # Start with function name or custom prefix
@@ -280,44 +294,46 @@ def _generate_cache_key(
     skip_params = {"self", "cls"}
 
     # Extract tenant_id and user_id if needed
-    tenant_id_value = None
-    user_id_value = None
+    tenant_id_value = _extract_tenant_id(args, kwargs) if include_tenant else None
+    user_id_value = _extract_user_id(args, kwargs) if include_user else None
 
-    for param_name, param_value in bound_args.arguments.items():
-        if param_name in skip_params:
-            continue
+    if custom_key is not None:
+        key_parts.append(str(custom_key))
+    else:
+        for param_name, param_value in bound_args.arguments.items():
+            if param_name in skip_params:
+                continue
 
-        # Track tenant_id and user_id for key
-        if param_name == "tenant_id" and include_tenant:
-            tenant_id_value = str(param_value)
-            continue
-        if param_name == "user_id" and include_user:
-            user_id_value = str(param_value)
-            continue
+            if include_tenant and param_name == "tenant_id":
+                continue
+            if include_user and param_name == "user_id":
+                continue
 
-        # Convert value to string for key
-        try:
-            if hasattr(param_value, "id"):  # Database models
-                key_parts.append(f"{param_name}:{param_value.id}")
-            elif isinstance(param_value, (str, int, float, bool)):
-                key_parts.append(f"{param_name}:{param_value}")
-            else:
-                # Hash complex objects
-                # MD5 used for cache key generation, not security
-                value_str = json.dumps(param_value, sort_keys=True, default=str)
-                value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[
-                    :8
-                ]  # nosec B324
-                key_parts.append(f"{param_name}:{value_hash}")
-        except Exception:
-            # Skip unpicklable objects
-            continue
+            # Convert value to string for key
+            try:
+                if hasattr(param_value, "id"):  # Database models
+                    key_parts.append(f"{param_name}:{param_value.id}")
+                elif isinstance(param_value, (str, int, float, bool)):
+                    key_parts.append(f"{param_name}:{param_value}")
+                else:
+                    # Hash complex objects
+                    # MD5 used for cache key generation, not security
+                    value_str = json.dumps(param_value, sort_keys=True, default=str)
+                    value_hash = hashlib.md5(value_str.encode(), usedforsecurity=False).hexdigest()[
+                        :8
+                    ]  # nosec B324
+                    key_parts.append(f"{param_name}:{value_hash}")
+            except Exception:
+                # Skip unpicklable objects
+                continue
 
     # Add tenant_id and user_id to key if requested
+    insert_index = 1
     if tenant_id_value:
-        key_parts.insert(1, f"tenant:{tenant_id_value}")
+        key_parts.insert(insert_index, f"tenant:{tenant_id_value}")
+        insert_index += 1
     if user_id_value:
-        key_parts.insert(2, f"user:{user_id_value}")
+        key_parts.insert(insert_index, f"user:{user_id_value}")
 
     return ":".join(key_parts)
 

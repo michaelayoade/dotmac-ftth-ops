@@ -5,7 +5,6 @@ Provides self-service endpoints for tenant admins to manage their subscriptions,
 upgrade/downgrade plans, and cancel subscriptions without operator intervention.
 """
 
-
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -72,7 +71,9 @@ async def get_current_tenant_subscription(
             user_id=current_user.user_id,
         )
 
-        return subscription
+        # FIXED: Convert Subscription to SubscriptionResponse with computed fields
+        # Response model requires is_in_trial and days_until_renewal
+        return service._subscription_to_response(subscription)
 
     except SubscriptionNotFoundError as e:
         raise HTTPException(
@@ -253,8 +254,9 @@ async def change_subscription_plan(
     service = SubscriptionService(db_session)
 
     try:
-        # Execute plan change
-        updated_subscription = await service.change_plan(
+        # Execute plan change using tenant-aware helper
+        # FIXED: Was calling change_plan() with wrong signature, causing TypeError
+        updated_subscription = await service.change_tenant_subscription_plan(
             tenant_id=tenant_id,
             new_plan_id=request.new_plan_id,
             effective_date=request.effective_date,
@@ -272,7 +274,9 @@ async def change_subscription_plan(
             reason=request.reason,
         )
 
-        return updated_subscription
+        # FIXED: Convert Subscription to SubscriptionResponse with computed fields
+        # Response model requires is_in_trial and days_until_renewal
+        return service._subscription_to_response(updated_subscription)
 
     except PlanNotFoundError as e:
         raise HTTPException(
@@ -340,8 +344,9 @@ async def cancel_tenant_subscription(
     service = SubscriptionService(db_session)
 
     try:
-        # Cancel subscription
-        cancelled_subscription = await service.cancel_subscription(
+        # Cancel subscription using tenant-aware helper
+        # FIXED: Was calling cancel_subscription() with wrong signature, causing TypeError
+        cancelled_subscription = await service.cancel_tenant_subscription(
             tenant_id=tenant_id,
             cancel_at_period_end=request.cancel_at_period_end,
             cancelled_by_user_id=current_user.user_id,
@@ -358,7 +363,9 @@ async def cancel_tenant_subscription(
             reason=request.reason,
         )
 
-        return cancelled_subscription
+        # FIXED: Convert Subscription to SubscriptionResponse with computed fields
+        # Response model requires is_in_trial and days_until_renewal
+        return service._subscription_to_response(cancelled_subscription)
 
     except SubscriptionNotFoundError as e:
         raise HTTPException(
@@ -410,8 +417,9 @@ async def reactivate_tenant_subscription(
     service = SubscriptionService(db_session)
 
     try:
-        # Reactivate subscription
-        reactivated_subscription = await service.reactivate_subscription(
+        # FIXED: Call reactivate_tenant_subscription (tenant-aware helper)
+        # Was calling reactivate_subscription which requires subscription_id as first arg
+        reactivated_subscription = await service.reactivate_tenant_subscription(
             tenant_id=tenant_id,
             reactivated_by_user_id=current_user.user_id,
         )
@@ -423,7 +431,9 @@ async def reactivate_tenant_subscription(
             user_id=current_user.user_id,
         )
 
-        return reactivated_subscription
+        # FIXED: Convert Subscription to SubscriptionResponse with computed fields
+        # Response model requires is_in_trial and days_until_renewal
+        return service._subscription_to_response(reactivated_subscription)
 
     except SubscriptionNotFoundError as e:
         raise HTTPException(

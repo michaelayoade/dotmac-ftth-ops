@@ -19,7 +19,6 @@ from .models import (
     License,
     LicenseOrder,
     LicenseTemplate,
-    OrderStatus,
 )
 from .schemas import (
     ActivationCreate,
@@ -57,6 +56,92 @@ from .service import LicensingService
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api/licensing", tags=["Licensing"])
+
+
+def _serialize_template(template: LicenseTemplate) -> LicenseTemplateResponse:
+    features_raw = getattr(template, "features", None)
+    if isinstance(features_raw, dict):
+        features_raw = features_raw.get("features", [])
+    if features_raw is None:
+        features_raw = []
+
+    restrictions_raw = getattr(template, "restrictions", None)
+    if isinstance(restrictions_raw, dict):
+        restrictions_raw = restrictions_raw.get("restrictions", [])
+    if restrictions_raw is None:
+        restrictions_raw = []
+
+    pricing_raw = getattr(template, "pricing", None)
+    if pricing_raw is None:
+        pricing_raw = {}
+    elif not isinstance(pricing_raw, dict):
+        pricing_raw = pricing_raw.model_dump()
+
+    payload = {
+        "id": template.id,
+        "template_name": template.template_name,
+        "product_id": template.product_id,
+        "description": getattr(template, "description", None),
+        "license_type": template.license_type,
+        "license_model": template.license_model,
+        "default_duration": getattr(template, "default_duration", 0),
+        "max_activations": getattr(template, "max_activations", 0),
+        "features": features_raw,
+        "restrictions": restrictions_raw,
+        "pricing": pricing_raw,
+        "auto_renewal_enabled": getattr(template, "auto_renewal_enabled", False),
+        "trial_allowed": getattr(template, "trial_allowed", False),
+        "trial_duration_days": getattr(template, "trial_duration_days", 0),
+        "grace_period_days": getattr(template, "grace_period_days", 0),
+        "active": getattr(template, "active", True),
+        "created_at": getattr(template, "created_at", None),
+        "updated_at": getattr(template, "updated_at", None),
+    }
+
+    return LicenseTemplateResponse.model_validate(payload)
+
+
+def _serialize_order(order: LicenseOrder) -> LicenseOrderResponse:
+    features_raw = order.custom_features
+    if isinstance(features_raw, dict):
+        features_raw = features_raw.get("features", [])
+
+    restrictions_raw = order.custom_restrictions
+    if isinstance(restrictions_raw, dict):
+        restrictions_raw = restrictions_raw.get("restrictions", [])
+
+    pricing_override = order.pricing_override
+    if pricing_override and not isinstance(pricing_override, dict):
+        pricing_override = pricing_override.model_dump()
+
+    payload = {
+        "id": order.id,
+        "order_number": order.order_number,
+        "template_id": order.template_id,
+        "quantity": order.quantity,
+        "customer_id": str(order.customer_id) if order.customer_id else None,
+        "reseller_id": order.reseller_id,
+        "custom_features": features_raw,
+        "custom_restrictions": restrictions_raw,
+        "duration_override": order.duration_override,
+        "pricing_override": pricing_override,
+        "special_instructions": order.special_instructions,
+        "fulfillment_method": order.fulfillment_method,
+        "status": order.status,
+        "total_amount": float(order.total_amount or 0),
+        "discount_applied": float(order.discount_applied)
+        if order.discount_applied is not None
+        else None,
+        "payment_status": order.payment_status,
+        "invoice_id": str(order.invoice_id) if order.invoice_id else None,
+        "subscription_id": order.subscription_id,
+        "generated_licenses": order.generated_licenses,
+        "created_at": order.created_at,
+        "fulfilled_at": order.fulfilled_at,
+        "updated_at": order.updated_at,
+    }
+
+    return LicenseOrderResponse.model_validate(payload)
 
 
 def get_licensing_service(
@@ -139,7 +224,9 @@ async def get_license_by_key(
     return {"data": LicenseResponse.model_validate(license_obj)}
 
 
-@router.post("/licenses", response_model=dict[str, LicenseResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/licenses", response_model=dict[str, LicenseResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_license(
     data: LicenseCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -201,7 +288,9 @@ async def suspend_license(
 ) -> Any:
     """Suspend a license."""
     try:
-        license_obj = await service.suspend_license(license_id, data.get("reason", "No reason provided"))
+        license_obj = await service.suspend_license(
+            license_id, data.get("reason", "No reason provided")
+        )
         await service.session.commit()
         return {"data": LicenseResponse.model_validate(license_obj)}
     except ValueError as e:
@@ -220,7 +309,9 @@ async def revoke_license(
 ) -> Any:
     """Revoke a license permanently."""
     try:
-        license_obj = await service.revoke_license(license_id, data.get("reason", "No reason provided"))
+        license_obj = await service.revoke_license(
+            license_id, data.get("reason", "No reason provided")
+        )
         await service.session.commit()
         return {"data": LicenseResponse.model_validate(license_obj)}
     except ValueError as e:
@@ -253,7 +344,11 @@ async def transfer_license(
 # ==================== Activation Management ====================
 
 
-@router.post("/activations", response_model=dict[str, ActivationResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/activations",
+    response_model=dict[str, ActivationResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def activate_license(
     data: ActivationCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -340,7 +435,9 @@ async def validate_activation(
     return {"data": response}
 
 
-@router.post("/activations/{activation_id}/deactivate", response_model=dict[str, ActivationResponse])
+@router.post(
+    "/activations/{activation_id}/deactivate", response_model=dict[str, ActivationResponse]
+)
 async def deactivate_license(
     activation_id: str,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
@@ -431,7 +528,7 @@ async def get_templates(
     templates = result.scalars().all()
 
     return {
-        "data": [LicenseTemplateResponse.model_validate(tpl) for tpl in templates],
+        "data": [_serialize_template(tpl) for tpl in templates],
         "total": len(templates),
         "limit": limit,
         "offset": offset,
@@ -455,42 +552,27 @@ async def get_template(
     if not template:
         raise HTTPException(status_code=404, detail="Template not found")
 
-    return {"data": LicenseTemplateResponse.model_validate(template)}
+    return {"data": _serialize_template(template)}
 
 
-@router.post("/templates", response_model=dict[str, LicenseTemplateResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/templates",
+    response_model=dict[str, LicenseTemplateResponse],
+    status_code=status.HTTP_201_CREATED,
+)
 async def create_template(
     data: LicenseTemplateCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Create a new license template."""
-    # Convert to dict for JSON storage
-    features_dict = [f.model_dump() for f in data.features]
-    restrictions_dict = [r.model_dump() for r in data.restrictions]
-    pricing_dict = data.pricing.model_dump()
-
-    template = LicenseTemplate(
-        template_name=data.template_name,
-        product_id=data.product_id,
-        description=data.description,
-        tenant_id=service.tenant_id,
-        license_type=data.license_type,
-        license_model=data.license_model,
-        default_duration=data.default_duration,
-        max_activations=data.max_activations,
-        features={"features": features_dict},
-        restrictions={"restrictions": restrictions_dict},
-        pricing=pricing_dict,
-        auto_renewal_enabled=data.auto_renewal_enabled,
-        trial_allowed=data.trial_allowed,
-        trial_duration_days=data.trial_duration_days,
-        grace_period_days=data.grace_period_days,
-    )
-
-    service.session.add(template)
-    await service.session.commit()
-
-    return {"data": LicenseTemplateResponse.model_validate(template)}
+    try:
+        template = await service.create_template(data)
+        await service.session.commit()
+        return {"data": _serialize_template(template)}
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to create template", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.put("/templates/{template_id}", response_model=dict[str, LicenseTemplateResponse])
@@ -500,35 +582,17 @@ async def update_template(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Update a license template."""
-    result = await service.session.execute(
-        select(LicenseTemplate).where(
-            LicenseTemplate.id == template_id,
-            LicenseTemplate.tenant_id == service.tenant_id,
-        )
-    )
-    template = result.scalar_one_or_none()
-
-    if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
-
-    # Update fields
-    update_data = data.model_dump(exclude_unset=True)
-
-    if "features" in update_data and update_data["features"]:
-        update_data["features"] = {"features": [f.model_dump() for f in update_data["features"]]}
-
-    if "restrictions" in update_data and update_data["restrictions"]:
-        update_data["restrictions"] = {"restrictions": [r.model_dump() for r in update_data["restrictions"]]}
-
-    if "pricing" in update_data and update_data["pricing"]:
-        update_data["pricing"] = update_data["pricing"].model_dump()
-
-    for key, value in update_data.items():
-        setattr(template, key, value)
-
-    await service.session.commit()
-
-    return {"data": LicenseTemplateResponse.model_validate(template)}
+    try:
+        template = await service.update_template(template_id, data)
+        await service.session.commit()
+        return {"data": _serialize_template(template)}
+    except ValueError as e:
+        await service.session.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to update template", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ==================== License Orders ====================
@@ -547,7 +611,7 @@ async def get_orders(
     orders = result.scalars().all()
 
     return {
-        "data": [LicenseOrderResponse.model_validate(order) for order in orders],
+        "data": [_serialize_order(order) for order in orders],
         "total": len(orders),
         "limit": limit,
         "offset": offset,
@@ -571,56 +635,28 @@ async def get_order(
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
 
-    return {"data": LicenseOrderResponse.model_validate(order)}
+    return {"data": _serialize_order(order)}
 
 
-@router.post("/orders", response_model=dict[str, LicenseOrderResponse], status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/orders", response_model=dict[str, LicenseOrderResponse], status_code=status.HTTP_201_CREATED
+)
 async def create_order(
     data: LicenseOrderCreate,
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Create a new license order."""
-    # Generate order number
-    import secrets
-    order_number = f"LO-{secrets.token_hex(4).upper()}"
-
-    # Get template to calculate pricing
-    result = await service.session.execute(
-        select(LicenseTemplate).where(LicenseTemplate.id == data.template_id)
-    )
-    template = result.scalar_one_or_none()
-
-    if not template:
-        raise HTTPException(status_code=404, detail="Template not found")
-
-    # Calculate total amount
-    pricing = data.pricing_override or template.pricing
-    if isinstance(pricing, dict):
-        base_price = pricing.get("base_price", 0)
-    else:
-        base_price = 0  # LicensePricing object
-    total_amount = base_price * data.quantity
-
-    order = LicenseOrder(
-        order_number=order_number,
-        customer_id=data.customer_id,
-        reseller_id=data.reseller_id,
-        tenant_id=service.tenant_id,
-        template_id=data.template_id,
-        quantity=data.quantity,
-        custom_features=[f.model_dump() for f in data.custom_features] if data.custom_features else None,
-        custom_restrictions=[r.model_dump() for r in data.custom_restrictions] if data.custom_restrictions else None,
-        duration_override=data.duration_override,
-        pricing_override=data.pricing_override.model_dump() if data.pricing_override else None,
-        special_instructions=data.special_instructions,
-        total_amount=total_amount,
-        fulfillment_method=data.fulfillment_method,
-    )
-
-    service.session.add(order)
-    await service.session.commit()
-
-    return {"data": LicenseOrderResponse.model_validate(order)}
+    try:
+        order = await service.create_order(data)
+        await service.session.commit()
+        return {"data": LicenseOrderResponse.model_validate(order)}
+    except ValueError as e:
+        await service.session.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to create order", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/orders/{order_id}/approve", response_model=dict[str, LicenseOrderResponse])
@@ -630,21 +666,17 @@ async def approve_order(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Approve a license order."""
-    result = await service.session.execute(
-        select(LicenseOrder).where(
-            LicenseOrder.id == order_id,
-            LicenseOrder.tenant_id == service.tenant_id,
-        )
-    )
-    order = result.scalar_one_or_none()
-
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    order.status = OrderStatus.APPROVED
-    await service.session.commit()
-
-    return {"data": LicenseOrderResponse.model_validate(order)}
+    try:
+        order = await service.approve_order(order_id, data)
+        await service.session.commit()
+        return {"data": _serialize_order(order)}
+    except ValueError as e:
+        await service.session.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to approve order", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/orders/{order_id}/fulfill", response_model=dict[str, LicenseOrderResponse])
@@ -653,9 +685,17 @@ async def fulfill_order(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Fulfill a license order (generate licenses)."""
-    # This would be implemented with order fulfillment logic
-    # For now, return placeholder
-    raise HTTPException(status_code=501, detail="Order fulfillment not yet implemented")
+    try:
+        order = await service.fulfill_order(order_id)
+        await service.session.commit()
+        return {"data": _serialize_order(order)}
+    except ValueError as e:
+        await service.session.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to fulfill order", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.post("/orders/{order_id}/cancel", response_model=dict[str, LicenseOrderResponse])
@@ -665,21 +705,17 @@ async def cancel_order(
     service: Annotated[LicensingService, Depends(get_licensing_service)],
 ) -> Any:
     """Cancel a license order."""
-    result = await service.session.execute(
-        select(LicenseOrder).where(
-            LicenseOrder.id == order_id,
-            LicenseOrder.tenant_id == service.tenant_id,
-        )
-    )
-    order = result.scalar_one_or_none()
-
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-
-    order.status = OrderStatus.CANCELLED
-    await service.session.commit()
-
-    return {"data": LicenseOrderResponse.model_validate(order)}
+    try:
+        order = await service.cancel_order(order_id, data)
+        await service.session.commit()
+        return {"data": _serialize_order(order)}
+    except ValueError as e:
+        await service.session.rollback()
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        await service.session.rollback()
+        logger.error("Failed to cancel order", error=str(e))
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 # ==================== Validation & Security ====================
@@ -735,10 +771,10 @@ async def generate_emergency_code(
 ) -> Any:
     """Generate emergency override code."""
     import secrets
-    from datetime import UTC, datetime, timedelta
+    from datetime import datetime, timedelta, timezone
 
     emergency_code = secrets.token_hex(8).upper()
-    valid_until = datetime.now(UTC) + timedelta(hours=24)
+    valid_until = datetime.now(timezone.utc) + timedelta(hours=24)
 
     return {
         "data": EmergencyCodeResponse(

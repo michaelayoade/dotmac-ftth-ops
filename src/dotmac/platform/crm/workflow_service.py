@@ -51,7 +51,11 @@ class CRMService:
             raise ValueError("Quote ID must be UUID string, not int. Check workflow context.")
 
         quote_uuid = UUID(str(quote_id)) if not isinstance(quote_id, UUID) else quote_id
-        accepted_by_uuid = UUID(str(accepted_by)) if accepted_by and not isinstance(accepted_by, UUID) else accepted_by
+        accepted_by_uuid = (
+            UUID(str(accepted_by))
+            if accepted_by and not isinstance(accepted_by, UUID)
+            else accepted_by
+        )
 
         # Get tenant_id from quote (in a real scenario, this would come from context)
         # For now, we'll need to fetch the quote first to get tenant_id
@@ -136,8 +140,14 @@ class CRMService:
 
         # Convert IDs to UUIDs
         try:
-            customer_uuid = UUID(str(customer_id)) if not isinstance(customer_id, UUID) else customer_id
-            subscription_uuid = UUID(str(subscription_id)) if not isinstance(subscription_id, UUID) else subscription_id
+            customer_uuid = (
+                UUID(str(customer_id)) if not isinstance(customer_id, UUID) else customer_id
+            )
+            subscription_uuid = (
+                UUID(str(subscription_id))
+                if not isinstance(subscription_id, UUID)
+                else subscription_id
+            )
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid ID format: {e}") from e
 
@@ -179,7 +189,9 @@ class CRMService:
                 "bandwidth": getattr(subscription, "bandwidth", "N/A"),
                 "amount": float(subscription.amount),
                 "renewal_price": float(subscription.amount),  # Could apply renewal pricing logic
-                "billing_cycle": subscription.billing_cycle.value if hasattr(subscription.billing_cycle, "value") else str(subscription.billing_cycle),
+                "billing_cycle": subscription.billing_cycle.value
+                if hasattr(subscription.billing_cycle, "value")
+                else str(subscription.billing_cycle),
                 "contract_term_months": renewal_term,
                 "service_plan_speed": getattr(subscription, "service_plan_speed", None),
             }
@@ -246,20 +258,30 @@ class CRMService:
         # We need to find the lead associated with this customer
 
         from sqlalchemy import select
+        from uuid import UUID
 
         from ..customer_management.models import Customer
         from .models import Lead, SiteSurvey, SiteSurveyStatus
 
         # Find customer's associated lead (via email or other identifier)
-        customer_stmt = select(Customer).where(Customer.id == int(customer_id))
+        # Convert customer_id to UUID safely
+        try:
+            customer_uuid = UUID(str(customer_id))
+        except (ValueError, AttributeError) as e:
+            raise ValueError(f"Invalid customer ID format: {customer_id}") from e
+
+        customer_stmt = select(Customer).where(Customer.id == customer_uuid)
         customer_result = await self.db.execute(customer_stmt)
         customer = customer_result.scalar_one_or_none()
 
         if not customer:
             raise ValueError(f"Customer {customer_id} not found")
 
-        # Find lead by email
-        lead_stmt = select(Lead).where(Lead.email == customer.email)
+        # Find lead by email with tenant isolation
+        lead_stmt = select(Lead).where(
+            Lead.email == customer.email,
+            Lead.tenant_id == customer.tenant_id
+        )
         lead_result = await self.db.execute(lead_stmt)
         lead = lead_result.scalar_one_or_none()
 
@@ -275,11 +297,8 @@ class CRMService:
         # Get the most recent completed survey for this lead
         survey_stmt = (
             select(SiteSurvey)
-            .where(
-                SiteSurvey.lead_id == lead.id,
-                SiteSurvey.status == SiteSurveyStatus.COMPLETED
-            )
-            .order_by(SiteSurvey.completed_at.desc())
+            .where(SiteSurvey.lead_id == lead.id, SiteSurvey.status == SiteSurveyStatus.COMPLETED)
+            .order_by(SiteSurvey.completed_date.desc())
         )
         survey_result = await self.db.execute(survey_stmt)
         survey = survey_result.scalar_one_or_none()
@@ -297,7 +316,7 @@ class CRMService:
             "status": survey.status.value,
             "completed": True,
             "scheduled_date": survey.scheduled_date.isoformat() if survey.scheduled_date else None,
-            "completed_at": survey.completed_at.isoformat() if survey.completed_at else None,
+            "completed_at": survey.completed_date.isoformat() if survey.completed_date else None,
             "data": survey.survey_data or {},
             "serviceability": survey.serviceability.value if survey.serviceability else None,
             "notes": survey.notes,

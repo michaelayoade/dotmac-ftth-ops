@@ -9,7 +9,10 @@ import csv
 import io
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
@@ -18,7 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from dotmac.platform.billing.payments.service import PaymentService
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
-from dotmac.platform.customer_management.mappers import CustomerMapper
+from dotmac.platform.customer_management.mappers import CustomerImportSchema, CustomerMapper
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.data_import.models import (
     ImportFailure,
@@ -166,8 +169,18 @@ class DataImportService:
             result.total_records = len(rows)
             job.total_records = result.total_records
 
-            # Validate all rows
             valid_customers, validation_errors = CustomerMapper.batch_validate(rows)
+            failed_row_numbers = {error["row_number"] for error in validation_errors}
+
+            valid_customers_with_rows: list[tuple[int, CustomerImportSchema]] = []
+            valid_index = 0
+            for row_number in range(1, len(rows) + 1):
+                if row_number in failed_row_numbers:
+                    continue
+                if valid_index >= len(valid_customers):
+                    break
+                valid_customers_with_rows.append((row_number, valid_customers[valid_index]))
+                valid_index += 1
 
             # Record validation errors
             for error in validation_errors:
@@ -181,20 +194,24 @@ class DataImportService:
                 )
                 result.errors.append(error)
                 result.failed_records += 1
+                job.failed_records += 1
+                job.processed_records += 1
 
             if dry_run:
-                result.successful_records = len(valid_customers)
+                result.successful_records = len(valid_customers_with_rows)
+                job.successful_records = result.successful_records
                 result.warnings.append("Dry run mode - no data persisted")
+                job.processed_records = result.failed_records + result.successful_records
                 await self._update_job_status(job, ImportJobStatus.COMPLETED)
                 return result
 
             # Process valid customers in batches
             await self._update_job_status(job, ImportJobStatus.IN_PROGRESS)
 
-            for i in range(0, len(valid_customers), batch_size):
-                batch = valid_customers[i : i + batch_size]
+            for i in range(0, len(valid_customers_with_rows), batch_size):
+                batch = valid_customers_with_rows[i : i + batch_size]
 
-                for customer_data in batch:
+                for row_number, customer_data in batch:
                     try:
                         # Convert to model format
                         model_data = CustomerMapper.from_import_to_model(
@@ -208,22 +225,29 @@ class DataImportService:
 
                     except Exception as e:
                         logger.error(f"Failed to create customer: {e}")
+                        payload_dict = (
+                            customer_data.model_dump()
+                            if hasattr(customer_data, "model_dump")
+                            else customer_data.dict()
+                        )
                         await self._record_import_failure(
                             job=job,
-                            row_number=i + 1,
+                            row_number=row_number,
                             error_type="creation",
                             error_message=str(e),
-                            row_data=customer_data.dict(),
+                            row_data=payload_dict,
                             tenant_id=tenant_id,
                         )
                         result.failed_records += 1
                         job.failed_records += 1
                         result.errors.append(
-                            {"row_number": i + 1, "error": str(e), "data": customer_data.dict()}
+                            {"row_number": row_number, "error": str(e), "data": payload_dict}
                         )
 
+                    finally:
+                        job.processed_records = result.failed_records + result.successful_records
+
                 # Update progress
-                job.processed_records = min(i + batch_size, len(valid_customers))
                 await self.session.commit()
 
             # Complete job
@@ -243,6 +267,9 @@ class DataImportService:
 
         finally:
             # Update job summary
+            job.processed_records = result.successful_records + result.failed_records
+            job.successful_records = result.successful_records
+            job.failed_records = result.failed_records
             job.summary = result.to_dict()
             await self.session.commit()
 
@@ -288,6 +315,17 @@ class DataImportService:
             # Validate all records
             await self._update_job_status(job, ImportJobStatus.VALIDATING)
             valid_customers, validation_errors = CustomerMapper.batch_validate(json_data)
+            failed_row_numbers = {error["row_number"] for error in validation_errors}
+
+            valid_customers_with_rows: list[tuple[int, CustomerImportSchema]] = []
+            valid_index = 0
+            for row_number in range(1, len(json_data) + 1):
+                if row_number in failed_row_numbers:
+                    continue
+                if valid_index >= len(valid_customers):
+                    break
+                valid_customers_with_rows.append((row_number, valid_customers[valid_index]))
+                valid_index += 1
 
             # Record validation errors
             for error in validation_errors:
@@ -301,9 +339,13 @@ class DataImportService:
                 )
                 result.errors.append(error)
                 result.failed_records += 1
+                job.failed_records += 1
+                job.processed_records += 1
 
             if dry_run:
-                result.successful_records = len(valid_customers)
+                result.successful_records = len(valid_customers_with_rows)
+                job.successful_records = result.successful_records
+                job.processed_records = result.failed_records + result.successful_records
                 result.warnings.append("Dry run mode - no data persisted")
                 await self._update_job_status(job, ImportJobStatus.COMPLETED)
                 return result
@@ -312,10 +354,10 @@ class DataImportService:
             await self._update_job_status(job, ImportJobStatus.IN_PROGRESS)
 
             # Similar processing logic as CSV import
-            for i in range(0, len(valid_customers), batch_size):
-                batch = valid_customers[i : i + batch_size]
+            for i in range(0, len(valid_customers_with_rows), batch_size):
+                batch = valid_customers_with_rows[i : i + batch_size]
 
-                for customer_data in batch:
+                for row_number, customer_data in batch:
                     try:
                         model_data = CustomerMapper.from_import_to_model(
                             customer_data, tenant_id=tenant_id, generate_customer_number=True
@@ -328,9 +370,26 @@ class DataImportService:
                         logger.error(f"Failed to create customer: {e}")
                         result.failed_records += 1
                         job.failed_records += 1
-                        result.errors.append({"error": str(e), "data": customer_data.dict()})
+                        payload_dict = (
+                            customer_data.model_dump()
+                            if hasattr(customer_data, "model_dump")
+                            else customer_data.dict()
+                        )
+                        result.errors.append(
+                            {"row_number": row_number, "error": str(e), "data": payload_dict}
+                        )
+                        await self._record_import_failure(
+                            job=job,
+                            row_number=row_number,
+                            error_type="creation",
+                            error_message=str(e),
+                            row_data=payload_dict,
+                            tenant_id=tenant_id,
+                        )
 
-                job.processed_records = min(i + batch_size, len(valid_customers))
+                    finally:
+                        job.processed_records = result.failed_records + result.successful_records
+
                 await self.session.commit()
 
             # Complete job
@@ -348,6 +407,9 @@ class DataImportService:
             raise
 
         finally:
+            job.processed_records = result.successful_records + result.failed_records
+            job.successful_records = result.successful_records
+            job.failed_records = result.failed_records
             job.summary = result.to_dict()
             await self.session.commit()
 

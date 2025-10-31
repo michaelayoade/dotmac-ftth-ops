@@ -1,17 +1,24 @@
 """Test fixtures for partner management tests."""
 
-import os
-
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-# Set test environment
-os.environ["TESTING"] = "1"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+pytestmark = pytest.mark.integration
 
+
+@pytest.fixture(autouse=True)
+def partner_management_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+
+from dotmac.platform.auth.models import user_roles  # noqa: F401
+from dotmac.platform.billing.core.entities import InvoiceEntity  # noqa: F401
 from dotmac.platform.db import Base
+from dotmac.platform.tenant import set_current_tenant_id
+from dotmac.platform.user_management.models import User  # noqa: F401
+from tests.test_utils import TenantContext
 
 # Import partner management models to ensure they're registered
 
@@ -62,3 +69,15 @@ async def db_session(db_engine):
 def test_tenant_id():
     """Generate a test tenant ID."""
     return "test-tenant-123"
+
+
+@pytest.fixture
+def tenant_context(test_tenant_id):
+    """Provide tenant context fixture expected by partner tests."""
+    previous = TenantContext().current
+    set_current_tenant_id(test_tenant_id)
+    context = TenantContext(test_tenant_id)
+    try:
+        yield context
+    finally:
+        set_current_tenant_id(previous)

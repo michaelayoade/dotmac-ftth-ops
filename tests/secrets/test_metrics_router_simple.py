@@ -5,7 +5,7 @@ Tests the actual endpoint and response model validation without full database in
 Uses partial mocking - only mocks database queries, tests actual router logic.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 from fastapi import FastAPI, status
@@ -15,6 +15,9 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.secrets.metrics_router import SecretsMetricsResponse, router
 
+
+
+pytestmark = pytest.mark.integration
 
 def mock_current_user():
     """Mock current user for testing."""
@@ -54,7 +57,7 @@ class TestSecretsMetricsEndpoint:
 
     def test_metrics_response_model_validation(self):
         """Test SecretsMetricsResponse model validation."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Valid data
         response = SecretsMetricsResponse(
@@ -104,7 +107,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=5,
             secrets_deleted_last_7d=2,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         assert len(response.high_frequency_users) == 3
@@ -130,7 +133,7 @@ class TestSecretsMetricsEndpoint:
                 secrets_created_last_7d=0,
                 secrets_deleted_last_7d=0,
                 period=f"{days}d",
-                timestamp=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc),
             )
             assert response.period == f"{days}d"
 
@@ -152,7 +155,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=0,
             secrets_deleted_last_7d=0,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
         assert response.avg_accesses_per_secret == 0.0
 
@@ -172,7 +175,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=5,
             secrets_deleted_last_7d=2,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
         assert response2.avg_accesses_per_secret == 5.0
 
@@ -193,7 +196,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=3,
             secrets_deleted_last_7d=1,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         # Security indicators should be tracked
@@ -218,7 +221,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=0,
             secrets_deleted_last_7d=0,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         assert response.high_frequency_users == []
@@ -250,7 +253,7 @@ class TestSecretsMetricsEndpoint:
             secrets_created_last_7d=5,
             secrets_deleted_last_7d=2,
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         # Verify descending order

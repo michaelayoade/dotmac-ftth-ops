@@ -305,38 +305,86 @@ class CoAClient:
             "details": response.to_dict(),
         }
 
+    async def send_disconnect(
+        self,
+        username: str,
+        nas_ip: str | None = None,
+        session_id: str | None = None,
+    ) -> bool:
+        """Compatibility wrapper returning boolean success value."""
+        result = await self.disconnect_session(username, nas_ip=nas_ip, session_id=session_id)
+        return bool(result.get("success"))
+
     async def change_bandwidth(
         self,
         username: str,
         download_kbps: int,
         upload_kbps: int,
         nas_ip: str | None = None,
+        download_burst_kbps: int | None = None,
+        upload_burst_kbps: int | None = None,
+        nas_vendor: str | None = None,
     ) -> dict[str, Any]:
         """
-        Send CoA request to change bandwidth limits.
+        Send CoA request to change bandwidth limits with vendor-aware packet construction.
 
         Args:
             username: RADIUS username
             download_kbps: Download speed in Kbps
             upload_kbps: Upload speed in Kbps
             nas_ip: NAS IP address
+            download_burst_kbps: Optional download burst speed in Kbps
+            upload_burst_kbps: Optional upload burst speed in Kbps
+            nas_vendor: Optional NAS vendor override (mikrotik, cisco, huawei, juniper)
 
         Returns:
             Dictionary with result status and structured response details.
         """
+        from dotmac.platform.radius.vendors import get_coa_strategy
+        from dotmac.platform.settings import settings
+
         client = self._create_client()
 
         try:
             if download_kbps <= 0 or upload_kbps <= 0:
                 raise ValueError("Bandwidth values must be greater than zero")
 
-            rate_limit = f"{download_kbps}/{upload_kbps}"
-            packet = client.CreateCoAPacket(code=self._coa_request_code)
-            packet["User-Name"] = username
-            packet["Filter-Id"] = rate_limit
+            # Get vendor-specific CoA strategy
+            if settings.radius.vendor_aware and nas_vendor:
+                strategy = get_coa_strategy(vendor=nas_vendor, tenant_id=self.tenant_id)
+                logger.info(
+                    "Using vendor-specific CoA strategy",
+                    vendor=nas_vendor,
+                    username=username,
+                )
+            else:
+                # Fallback to Mikrotik if vendor-aware disabled or vendor not specified
+                from dotmac.platform.radius.vendors import MikrotikCoAStrategy
 
-            if nas_ip:
-                packet["NAS-IP-Address"] = self._validate_nas_ip(nas_ip)
+                strategy = MikrotikCoAStrategy()
+                logger.debug(
+                    "Using Mikrotik CoA strategy (default)",
+                    username=username,
+                )
+
+            # Build vendor-specific CoA packet
+            packet_attrs = strategy.build_bandwidth_change_packet(
+                username=username,
+                download_kbps=download_kbps,
+                upload_kbps=upload_kbps,
+                download_burst_kbps=download_burst_kbps,
+                upload_burst_kbps=upload_burst_kbps,
+                nas_ip=nas_ip,
+            )
+
+            # Create CoA packet and populate with vendor-specific attributes
+            packet = client.CreateCoAPacket(code=self._coa_request_code)
+            for attr_name, attr_value in packet_attrs.items():
+                if attr_name == "NAS-IP-Address":
+                    # Validate IP addresses
+                    packet[attr_name] = self._validate_nas_ip(attr_value)
+                else:
+                    packet[attr_name] = attr_value
 
             response = await self._send_packet(client, packet)
         except (ValueError, RADIUSCoAError) as exc:
@@ -358,7 +406,8 @@ class CoAClient:
                 "error": str(exc),
             }
 
-        success = response.code == self._coa_ack_code
+        # Validate response using vendor-specific strategy
+        success = strategy.validate_response(response.to_dict())
         message = (
             "Bandwidth change acknowledged by RADIUS server"
             if success
@@ -371,6 +420,7 @@ class CoAClient:
                 username=username,
                 download_kbps=download_kbps,
                 upload_kbps=upload_kbps,
+                vendor=nas_vendor or "mikrotik",
                 details=response.to_dict(),
             )
         else:
@@ -379,6 +429,7 @@ class CoAClient:
                 username=username,
                 download_kbps=download_kbps,
                 upload_kbps=upload_kbps,
+                vendor=nas_vendor or "mikrotik",
                 details=response.to_dict(),
             )
 
@@ -519,6 +570,15 @@ class CoAClientHTTP:
                 "username": username,
                 "error": str(e),
             }
+
+    async def send_disconnect(
+        self,
+        username: str,
+        nas_ip: str | None = None,
+        session_id: str | None = None,
+    ) -> bool:
+        result = await self.disconnect_session(username, nas_ip=nas_ip, session_id=session_id)
+        return bool(result.get("success"))
 
 
 async def disconnect_session_helper(

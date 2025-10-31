@@ -7,6 +7,7 @@ ensuring the UUID conversion works correctly throughout.
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -58,7 +59,7 @@ def tenant_headers():
     return {"X-Tenant-ID": "test-tenant"}
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_with_roles(async_db_session: AsyncSession):
     """Create test user with roles in database."""
     # Create roles first
@@ -100,6 +101,7 @@ async def test_user_with_roles(async_db_session: AsyncSession):
     return user
 
 
+@pytest.mark.integration
 class TestAuthToRBACIntegration:
     """Integration tests for complete auth → RBAC flow."""
 
@@ -298,6 +300,7 @@ class TestAuthToRBACIntegration:
         assert user_perm["action"] == "update"
 
 
+@pytest.mark.integration
 class TestUUIDConversionHelper:
     """Test the ensure_uuid helper function."""
 

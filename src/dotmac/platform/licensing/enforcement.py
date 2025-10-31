@@ -1,4 +1,3 @@
-from typing import Any
 """
 Enforcement decorators and middleware for composable licensing framework.
 
@@ -10,6 +9,7 @@ Provides:
 
 import functools
 from collections.abc import Callable
+from typing import Any
 from uuid import UUID
 
 from fastapi import HTTPException, Request, status
@@ -343,9 +343,7 @@ class FeatureEntitlementMiddleware:
 
                     if not entitled:
                         feature_name = (
-                            f"{module_code}.{capability_code}"
-                            if capability_code
-                            else module_code
+                            f"{module_code}.{capability_code}" if capability_code else module_code
                         )
                         return HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
@@ -408,9 +406,7 @@ async def require_module_dependency(
     )
 
     if not entitled:
-        feature_name = (
-            f"{module_code}.{capability_code}" if capability_code else module_code
-        )
+        feature_name = f"{module_code}.{capability_code}" if capability_code else module_code
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail=f"Feature not entitled: {feature_name}. Please upgrade your plan.",

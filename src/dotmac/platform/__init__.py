@@ -20,7 +20,9 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:  # pragma: no cover - typings only
     from .observability import ObservabilityManager as _ObservabilityManager
 
-__version__ = "1.0.0"
+from .version import get_version as _load_version
+
+__version__ = _load_version()
 __author__ = "DotMac Team"
 __email__ = "dev@dotmac.com"
 

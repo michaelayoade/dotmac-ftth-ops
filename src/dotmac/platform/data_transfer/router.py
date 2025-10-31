@@ -1,6 +1,9 @@
 """Data transfer API router."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -22,7 +25,9 @@ from .models import (
 )
 
 logger = structlog.get_logger(__name__)
-data_transfer_router = APIRouter(prefix="/data-transfer", )
+data_transfer_router = APIRouter(
+    prefix="/data-transfer",
+)
 
 
 def _safe_user_context(user: Any | None) -> tuple[str | None, str | None]:

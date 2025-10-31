@@ -1,7 +1,7 @@
 """Tests for team management API router."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock
 
 import pytest
@@ -19,6 +19,9 @@ from dotmac.platform.user_management.schemas import (
 )
 from dotmac.platform.user_management.team_service import TeamService
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_team_service():
@@ -41,8 +44,8 @@ def sample_team():
         color="#FF5733",
         icon="code",
         metadata_={"department": "tech"},
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -56,10 +59,10 @@ def sample_team_member(sample_team):
         role="member",
         tenant_id="tenant-123",
         is_active=True,
-        joined_at=datetime.now(UTC),
+        joined_at=datetime.now(timezone.utc),
         left_at=None,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -235,7 +238,7 @@ class TestUpdateTeam:
             icon=sample_team.icon,
             metadata_=sample_team.metadata_,
             created_at=sample_team.created_at,
-            updated_at=datetime.now(UTC),
+            updated_at=datetime.now(timezone.utc),
         )
         mock_team_service.update_team.return_value = updated_team
 
@@ -370,7 +373,7 @@ class TestUpdateTeamMember:
             joined_at=sample_team_member.joined_at,
             left_at=sample_team_member.left_at,
             created_at=sample_team_member.created_at,
-            updated_at=datetime.now(UTC),
+            updated_at=datetime.now(timezone.utc),
         )
         mock_team_service.update_team_member.return_value = updated_member
 
@@ -403,7 +406,7 @@ class TestUpdateTeamMember:
             joined_at=sample_team_member.joined_at,
             left_at=sample_team_member.left_at,
             created_at=sample_team_member.created_at,
-            updated_at=datetime.now(UTC),
+            updated_at=datetime.now(timezone.utc),
         )
         mock_team_service.update_team_member.return_value = wrong_team_member
 

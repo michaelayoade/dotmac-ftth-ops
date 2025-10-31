@@ -2,12 +2,15 @@
 Invoice service with tenant support and idempotency
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 
 import structlog
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -350,7 +353,10 @@ class InvoiceService:
             await self.db.refresh(invoice, attribute_names=["line_items"])
             return Invoice.model_validate(invoice)
 
-        if invoice.payment_status in [PaymentStatus.SUCCEEDED, PaymentStatus.PARTIALLY_REFUNDED]:
+        if (
+            invoice.payment_status == PaymentStatus.SUCCEEDED
+            or invoice.remaining_balance < invoice.total_amount
+        ):
             raise InvalidInvoiceStatusError("Cannot void paid or partially refunded invoices")
 
         invoice.status = InvoiceStatus.VOID
@@ -471,7 +477,8 @@ class InvoiceService:
             invoice.payment_status = PaymentStatus.SUCCEEDED
             invoice.status = InvoiceStatus.PAID
         elif invoice.total_credits_applied > 0:
-            invoice.payment_status = PaymentStatus.PARTIALLY_REFUNDED
+            invoice.payment_status = PaymentStatus.PENDING
+            invoice.status = InvoiceStatus.PARTIALLY_PAID
 
         await self.db.commit()
         await self.db.refresh(invoice, attribute_names=["line_items"])
@@ -512,7 +519,10 @@ class InvoiceService:
             invoice.status = InvoiceStatus.PAID
             invoice.paid_at = datetime.now(UTC)
             invoice.remaining_balance = 0
-        elif payment_status == PaymentStatus.PARTIALLY_REFUNDED:
+        elif (
+            payment_status == PaymentStatus.PENDING
+            and invoice.remaining_balance < invoice.total_amount
+        ):
             invoice.status = InvoiceStatus.PARTIALLY_PAID
 
         await self.db.commit()
@@ -711,7 +721,11 @@ Best regards,
             raise InvoiceNotFoundError(f"Invoice {invoice_id} not found")
 
         # Check if invoice is in remindable status
-        if invoice.status not in [InvoiceStatus.OPEN, InvoiceStatus.OVERDUE, InvoiceStatus.PARTIALLY_PAID]:
+        if invoice.status not in [
+            InvoiceStatus.OPEN,
+            InvoiceStatus.OVERDUE,
+            InvoiceStatus.PARTIALLY_PAID,
+        ]:
             raise InvalidInvoiceStatusError(
                 f"Cannot send reminder for invoice with status: {invoice.status.value}"
             )
@@ -880,7 +894,7 @@ Best regards,
             invoice.payment_status = PaymentStatus.SUCCEEDED
         elif new_balance < invoice.total_amount:
             invoice.status = InvoiceStatus.PARTIALLY_PAID
-            invoice.payment_status = PaymentStatus.PARTIALLY_REFUNDED
+            invoice.payment_status = PaymentStatus.PENDING
 
         # Store payment reference in metadata
         current_metadata = invoice.extra_data or {}
@@ -977,13 +991,32 @@ Best regards,
         return result.scalar_one_or_none()
 
     async def _generate_invoice_number(self, tenant_id: str) -> str:
-        """Generate unique invoice number for tenant"""
+        """Generate unique invoice number for tenant using advisory lock for atomicity.
+
+        SECURITY: Uses PostgreSQL advisory lock to prevent duplicate invoice numbers
+        under concurrent load. The lock is automatically released at transaction end.
+        """
 
         # Get tenant settings for invoice number format
         # For now, use simple sequential numbering
         year = datetime.now(UTC).year
 
-        # Get the last invoice number for this tenant and year
+        # CRITICAL: Use PostgreSQL advisory lock to prevent race conditions
+        # Lock key is derived from tenant_id and year to allow concurrent generation
+        # for different tenants/years while ensuring atomicity within same tenant/year
+        import hashlib
+
+        lock_key = int(hashlib.sha256(f"{tenant_id}-{year}".encode()).hexdigest()[:15], 16) % (
+            2**31
+        )
+
+        # Acquire advisory lock (automatically released at transaction end)
+        # Only use PostgreSQL advisory locks when using PostgreSQL
+        if self.db.bind.dialect.name == "postgresql":
+            await self.db.execute(text(f"SELECT pg_advisory_xact_lock({lock_key})"))
+        # For SQLite and other databases, the transaction isolation provides sufficient protection
+
+        # Now safely query for last invoice number (protected by advisory lock)
         query = (
             select(InvoiceEntity)
             .where(

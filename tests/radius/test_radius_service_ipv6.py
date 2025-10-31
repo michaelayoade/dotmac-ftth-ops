@@ -4,14 +4,14 @@ Tests for RADIUS Service with IPv6 Support
 Test dual-stack IP assignment in RADIUS subscriber management.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
 
 from dotmac.platform.radius.schemas import (
     RADIUSSubscriberCreate,
     RADIUSSubscriberUpdate,
-    RADIUSSubscriberResponse,
 )
 from dotmac.platform.radius.service import RADIUSService
 
@@ -27,14 +27,22 @@ def mock_session():
 @pytest.fixture
 def radius_service(mock_session):
     """Create RADIUS service with mocked dependencies"""
-    with patch('dotmac.platform.settings.settings') as mock_settings:
+    with patch("dotmac.platform.settings.settings") as mock_settings:
         mock_settings.radius.shared_secret = "test_secret"
         mock_settings.is_production = False
         service = RADIUSService(session=mock_session, tenant_id="test_tenant")
         service.repository = AsyncMock()
+        # Ensure session.execute returns an object with scalar_one_or_none()
+        async def _execute(*args, **kwargs):
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = None
+            return result
+
+        service.session.execute = AsyncMock(side_effect=_execute)
         return service
 
 
+@pytest.mark.integration
 class TestRADIUSServiceCreateSubscriberIPv6:
     """Test creating RADIUS subscribers with IPv6 support."""
 
@@ -71,12 +79,12 @@ class TestRADIUSServiceCreateSubscriberIPv6:
         # Verify IPv4 radreply created
         ipv4_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Framed-IP-Address':
+            if call.kwargs.get("attribute") == "Framed-IP-Address":
                 ipv4_call = call
                 break
 
         assert ipv4_call is not None
-        assert ipv4_call.kwargs['value'] == '192.168.1.100'
+        assert ipv4_call.kwargs["value"] == "192.168.1.100"
 
         # Verify response
         assert result.framed_ipv4_address == "192.168.1.100"
@@ -111,12 +119,12 @@ class TestRADIUSServiceCreateSubscriberIPv6:
         # Verify IPv6 radreply created
         ipv6_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Framed-IPv6-Address':
+            if call.kwargs.get("attribute") == "Framed-IPv6-Address":
                 ipv6_call = call
                 break
 
         assert ipv6_call is not None
-        assert ipv6_call.kwargs['value'] == '2001:db8::100'
+        assert ipv6_call.kwargs["value"] == "2001:db8::100"
 
         # Verify response
         assert result.framed_ipv4_address is None
@@ -152,16 +160,18 @@ class TestRADIUSServiceCreateSubscriberIPv6:
 
         # Verify all three IP-related radreply entries created
         call_args_list = radius_service.repository.create_radreply.call_args_list
-        attributes_created = {call.kwargs['attribute']: call.kwargs['value'] for call in call_args_list}
+        attributes_created = {
+            call.kwargs["attribute"]: call.kwargs["value"] for call in call_args_list
+        }
 
-        assert 'Framed-IP-Address' in attributes_created
-        assert attributes_created['Framed-IP-Address'] == '10.1.1.50'
+        assert "Framed-IP-Address" in attributes_created
+        assert attributes_created["Framed-IP-Address"] == "10.1.1.50"
 
-        assert 'Framed-IPv6-Address' in attributes_created
-        assert attributes_created['Framed-IPv6-Address'] == '2001:db8::50'
+        assert "Framed-IPv6-Address" in attributes_created
+        assert attributes_created["Framed-IPv6-Address"] == "2001:db8::50"
 
-        assert 'Delegated-IPv6-Prefix' in attributes_created
-        assert attributes_created['Delegated-IPv6-Prefix'] == '2001:db8:1::/64'
+        assert "Delegated-IPv6-Prefix" in attributes_created
+        assert attributes_created["Delegated-IPv6-Prefix"] == "2001:db8:1::/64"
 
         # Verify response
         assert result.framed_ipv4_address == "10.1.1.50"
@@ -197,16 +207,17 @@ class TestRADIUSServiceCreateSubscriberIPv6:
         # Verify IPv6 prefix delegation radreply created
         pd_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Delegated-IPv6-Prefix':
+            if call.kwargs.get("attribute") == "Delegated-IPv6-Prefix":
                 pd_call = call
                 break
 
         assert pd_call is not None
-        assert pd_call.kwargs['value'] == '2001:db8:abcd::/48'
+        assert pd_call.kwargs["value"] == "2001:db8:abcd::/48"
 
         assert result.delegated_ipv6_prefix == "2001:db8:abcd::/48"
 
 
+@pytest.mark.integration
 class TestRADIUSServiceGetSubscriberIPv6:
     """Test retrieving RADIUS subscribers with IPv6 support."""
 
@@ -244,6 +255,7 @@ class TestRADIUSServiceGetSubscriberIPv6:
         assert result.session_timeout == 3600
 
 
+@pytest.mark.integration
 class TestRADIUSServiceUpdateSubscriberIPv6:
     """Test updating RADIUS subscribers with IPv6 support."""
 
@@ -275,12 +287,12 @@ class TestRADIUSServiceUpdateSubscriberIPv6:
         # Verify new IPv4 created
         ipv4_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Framed-IP-Address':
+            if call.kwargs.get("attribute") == "Framed-IP-Address":
                 ipv4_call = call
                 break
 
         assert ipv4_call is not None
-        assert ipv4_call.kwargs['value'] == '10.2.2.200'
+        assert ipv4_call.kwargs["value"] == "10.2.2.200"
 
     @pytest.mark.asyncio
     async def test_update_subscriber_ipv6_address(self, radius_service):
@@ -310,12 +322,12 @@ class TestRADIUSServiceUpdateSubscriberIPv6:
         # Verify new IPv6 created
         ipv6_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Framed-IPv6-Address':
+            if call.kwargs.get("attribute") == "Framed-IPv6-Address":
                 ipv6_call = call
                 break
 
         assert ipv6_call is not None
-        assert ipv6_call.kwargs['value'] == '2001:db8::200'
+        assert ipv6_call.kwargs["value"] == "2001:db8::200"
 
     @pytest.mark.asyncio
     async def test_update_subscriber_delegated_prefix(self, radius_service):
@@ -345,12 +357,12 @@ class TestRADIUSServiceUpdateSubscriberIPv6:
         # Verify new prefix created
         pd_call = None
         for call in radius_service.repository.create_radreply.call_args_list:
-            if call.kwargs.get('attribute') == 'Delegated-IPv6-Prefix':
+            if call.kwargs.get("attribute") == "Delegated-IPv6-Prefix":
                 pd_call = call
                 break
 
         assert pd_call is not None
-        assert pd_call.kwargs['value'] == '2001:db8:cafe::/64'
+        assert pd_call.kwargs["value"] == "2001:db8:cafe::/64"
 
     @pytest.mark.asyncio
     async def test_update_subscriber_dual_stack(self, radius_service):
@@ -389,8 +401,10 @@ class TestRADIUSServiceUpdateSubscriberIPv6:
 
         # Verify all new values created
         call_args_list = radius_service.repository.create_radreply.call_args_list
-        attributes_created = {call.kwargs['attribute']: call.kwargs['value'] for call in call_args_list}
+        attributes_created = {
+            call.kwargs["attribute"]: call.kwargs["value"] for call in call_args_list
+        }
 
-        assert attributes_created['Framed-IP-Address'] == '172.16.1.1'
-        assert attributes_created['Framed-IPv6-Address'] == 'fe80::1'
-        assert attributes_created['Delegated-IPv6-Prefix'] == '2001:db8::/56'
+        assert attributes_created["Framed-IP-Address"] == "172.16.1.1"
+        assert attributes_created["Framed-IPv6-Address"] == "fe80::1"
+        assert attributes_created["Delegated-IPv6-Prefix"] == "2001:db8::/56"

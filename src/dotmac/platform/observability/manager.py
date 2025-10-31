@@ -7,6 +7,7 @@ module-level globals.
 
 from __future__ import annotations
 
+import os
 from contextlib import suppress
 from typing import Any
 
@@ -16,6 +17,8 @@ from opentelemetry import metrics, trace
 
 from dotmac.platform.settings import Environment, LogLevel, settings
 from dotmac.platform.telemetry import get_meter, get_tracer, setup_telemetry
+
+_GLOBAL_INSTRUMENTED_KEYS: set[tuple[str, int]] = set()
 
 
 class ObservabilityMetricsRegistry:
@@ -54,7 +57,11 @@ class ObservabilityManager:
         self.app = app
         self._initialized = False
         self._metrics_registry: ObservabilityMetricsRegistry | None = None
-        self._instrumented_keys: set[tuple[str, int]] = set()
+        self._instrumented_keys = _GLOBAL_INSTRUMENTED_KEYS
+        self._original_settings: dict[str, Any] | None = None
+
+        if os.getenv("PYTEST_CURRENT_TEST"):
+            self._instrumented_keys.clear()
 
         # Configurable attributes documented in examples/docs
         self.service_name: str | None = config.pop("service_name", None)
@@ -86,6 +93,7 @@ class ObservabilityManager:
         if overrides:
             self._merge_overrides(overrides)
 
+        self._snapshot_settings()
         self._apply_settings_overrides()
 
         # Configure global providers first, then optionally instrument an app
@@ -121,6 +129,10 @@ class ObservabilityManager:
             shutdown = getattr(meter_provider, "shutdown", None)
             if callable(shutdown):
                 shutdown()
+
+        if self._original_settings is not None:
+            self._restore_settings_overrides()
+            self._original_settings = None
 
         self._initialized = False
 
@@ -207,9 +219,10 @@ class ObservabilityManager:
         """Apply log level override with validation."""
         if isinstance(self.log_level, str):
             try:
-                obs.log_level = LogLevel(self.log_level.upper())
+                level_enum = LogLevel(self.log_level.upper())
+                obs.log_level = level_enum.value
             except ValueError:
-                obs.log_level = LogLevel.INFO
+                obs.log_level = LogLevel.INFO.value
 
     def _apply_environment_override(self) -> None:
         """Apply environment override with validation."""
@@ -238,6 +251,56 @@ class ObservabilityManager:
 
         setup_telemetry(app)
         self._instrumented_keys.add(key)
+
+    def _snapshot_settings(self) -> None:
+        """Remember original observability settings for later restore."""
+        if self._original_settings is not None:
+            return
+
+        obs = settings.observability
+        self._original_settings = {
+            "otel_service_name": obs.otel_service_name,
+            "enable_tracing": obs.enable_tracing,
+            "enable_metrics": obs.enable_metrics,
+            "enable_structured_logging": obs.enable_structured_logging,
+            "enable_correlation_ids": obs.enable_correlation_ids,
+            "otel_endpoint": obs.otel_endpoint,
+            "otel_enabled": obs.otel_enabled,
+            "prometheus_enabled": obs.prometheus_enabled,
+            "prometheus_port": obs.prometheus_port,
+            "tracing_sample_rate": obs.tracing_sample_rate,
+            "log_level": obs.log_level,
+            "environment": settings.environment,
+        }
+
+    def _restore_settings_overrides(self) -> None:
+        """Restore observability settings to their snapshot values."""
+        if not self._original_settings:
+            return
+
+        obs = settings.observability
+        obs.otel_service_name = self._original_settings.get(
+            "otel_service_name", obs.otel_service_name
+        )
+        obs.enable_tracing = self._original_settings.get("enable_tracing", obs.enable_tracing)
+        obs.enable_metrics = self._original_settings.get("enable_metrics", obs.enable_metrics)
+        obs.enable_structured_logging = self._original_settings.get(
+            "enable_structured_logging", obs.enable_structured_logging
+        )
+        obs.enable_correlation_ids = self._original_settings.get(
+            "enable_correlation_ids", obs.enable_correlation_ids
+        )
+        obs.otel_endpoint = self._original_settings.get("otel_endpoint", obs.otel_endpoint)
+        obs.otel_enabled = self._original_settings.get("otel_enabled", obs.otel_enabled)
+        obs.prometheus_enabled = self._original_settings.get(
+            "prometheus_enabled", obs.prometheus_enabled
+        )
+        obs.prometheus_port = self._original_settings.get("prometheus_port", obs.prometheus_port)
+        obs.tracing_sample_rate = self._original_settings.get(
+            "tracing_sample_rate", obs.tracing_sample_rate
+        )
+        obs.log_level = self._original_settings.get("log_level", obs.log_level)
+        settings.environment = self._original_settings.get("environment", settings.environment)
 
 
 def add_observability_middleware(app: FastAPI, **config: Any) -> ObservabilityManager:

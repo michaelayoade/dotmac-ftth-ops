@@ -4,7 +4,10 @@ Observability API router for traces and metrics.
 Provides REST endpoints for distributed tracing and metrics collection.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 
@@ -168,7 +171,9 @@ class PerformanceResponse(BaseModel):  # BaseModel resolves to Any in isolation
 # Router
 # ============================================================
 
-traces_router = APIRouter(prefix="/observability", )
+traces_router = APIRouter(
+    prefix="/observability",
+)
 
 
 # ============================================================

@@ -11,6 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -59,7 +60,7 @@ def client(app, async_db_session):
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def active_user(async_db_session: AsyncSession):
     """Create an active test user in the database."""
     user = User(
@@ -79,7 +80,7 @@ async def active_user(async_db_session: AsyncSession):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def inactive_user(async_db_session: AsyncSession):
     """Create an inactive test user."""
     user = User(
@@ -107,6 +108,7 @@ def tenant_headers():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLoginEndpoint:
     """Test POST /auth/login endpoint."""
 
@@ -241,6 +243,7 @@ class TestLoginEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestTokenEndpoint:
     """Test POST /auth/token endpoint (OAuth2 password flow)."""
 
@@ -286,6 +289,7 @@ class TestTokenEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestRegisterEndpoint:
     """Test POST /auth/register endpoint."""
 
@@ -403,6 +407,7 @@ class TestRegisterEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogoutEndpoint:
     """Test POST /auth/logout endpoint."""
 
@@ -444,6 +449,7 @@ class TestLogoutEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestRefreshEndpoint:
     """Test POST /auth/refresh endpoint."""
 
@@ -495,6 +501,7 @@ class TestRefreshEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestPasswordResetEndpoint:
     """Test password reset endpoints."""
 
@@ -540,6 +547,7 @@ class TestPasswordResetEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestVerifyEndpoint:
     """Test POST /auth/verify endpoint."""
 
@@ -589,6 +597,7 @@ class TestVerifyEndpoint:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestMeEndpoint:
     """Test GET /auth/me endpoint."""
 

@@ -4,7 +4,10 @@ Fault Management Database Models
 Models for alarms, alarm correlation, SLA tracking, and breach detection.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum as PyEnum
 from typing import Any
 from uuid import UUID, uuid4
@@ -327,7 +330,10 @@ class SLAInstance(BaseModel):  # type: ignore[misc]  # BaseModel resolves to Any
         "period_start", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
     )
     end_date: Mapped[datetime] = mapped_column(
-        "period_end", DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC) + timedelta(days=30)
+        "period_end",
+        DateTime(timezone=True),
+        nullable=False,
+        default=lambda: datetime.now(UTC) + timedelta(days=30),
     )
 
     # Downtime tracking (minutes)
@@ -452,3 +458,160 @@ class MaintenanceWindow(BaseModel):  # type: ignore[misc]  # BaseModel resolves 
     notification_sent: Mapped[bool] = mapped_column(Boolean, default=False)
 
     __table_args__ = (Index("ix_maintenance_windows_time", "start_time", "end_time", "status"),)
+
+
+# =============================================================================
+# On-Call Schedule Models
+# =============================================================================
+
+
+class OnCallScheduleType(str, PyEnum):
+    """On-call schedule rotation types"""
+
+    DAILY = "daily"
+    WEEKLY = "weekly"
+    CUSTOM = "custom"
+
+
+class OnCallSchedule(BaseModel):  # type: ignore[misc]
+    """
+    On-call schedule definition.
+
+    Defines rotation schedules for fault management and alarm notifications.
+    """
+
+    __tablename__ = "oncall_schedules"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+
+    # Schedule identification
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Schedule type and configuration
+    schedule_type: Mapped[OnCallScheduleType] = mapped_column(
+        Enum(OnCallScheduleType),
+        nullable=False,
+        default=OnCallScheduleType.WEEKLY,
+    )
+
+    # Rotation settings
+    rotation_start: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+    rotation_duration_hours: Mapped[int] = mapped_column(
+        Integer,
+        nullable=False,
+        default=168,  # 1 week
+    )
+
+    # Schedule scope
+    alarm_severities: Mapped[list[str]] = mapped_column(
+        JSON,
+        default=list,
+        nullable=False,
+    )  # List of AlarmSeverity values to trigger for
+    team_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False, index=True)
+    timezone: Mapped[str] = mapped_column(String(100), default="UTC")
+
+    # Metadata (using metadata_ to avoid SQLAlchemy reserved name)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_oncall_schedules_tenant_active", "tenant_id", "is_active"),
+        Index("ix_oncall_schedules_rotation", "rotation_start", "is_active"),
+    )
+
+
+class OnCallRotation(BaseModel):  # type: ignore[misc]
+    """
+    On-call rotation assignment.
+
+    Assigns users to specific on-call periods within a schedule.
+    """
+
+    __tablename__ = "oncall_rotations"
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
+
+    # Schedule reference
+    schedule_id: Mapped[UUID] = mapped_column(
+        ForeignKey("oncall_schedules.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # User assignment
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+
+    # Rotation period
+    start_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+    end_time: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True,
+    )
+
+    # Override settings
+    is_override: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )  # Manual override vs automatic rotation
+    override_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    acknowledged: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        nullable=False,
+    )  # User acknowledged the rotation
+
+    # Metadata (using metadata_ to avoid SQLAlchemy reserved name)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata", JSON, default=dict, nullable=False
+    )
+
+    # Timestamps
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    __table_args__ = (
+        Index("ix_oncall_rotations_time", "start_time", "end_time", "is_active"),
+        Index("ix_oncall_rotations_schedule_user", "schedule_id", "user_id"),
+        Index("ix_oncall_rotations_current", "tenant_id", "start_time", "end_time", "is_active"),
+    )

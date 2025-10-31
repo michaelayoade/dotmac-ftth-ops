@@ -26,6 +26,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { AlertCircle, Search, Package, TrendingUp, Zap } from "lucide-react";
+import { toast } from "@/components/ui/toast";
 
 export default function AddonsPage() {
   const {
@@ -49,11 +50,22 @@ export default function AddonsPage() {
   const [addonToCancel, setAddonToCancel] = useState<string | null>(null);
   const [cancelImmediately, setCancelImmediately] = useState(false);
 
-  // Fetch available add-ons on mount
+  // Fetch both available and active add-ons on mount
+  // Note: useTenantAddons hook auto-fetches activeAddons, but we also need availableAddons
   React.useEffect(() => {
-    if (availableAddons.length === 0) {
-      fetchAvailableAddons();
-    }
+    const loadAddons = async () => {
+      try {
+        // Fetch available add-ons (if not already loaded)
+        if (availableAddons.length === 0) {
+          await fetchAvailableAddons();
+        }
+      } catch (err: any) {
+        // Error already set by hook, but surface to user
+        const errorMsg = err?.response?.data?.detail || "Failed to load add-ons marketplace";
+        toast.error(errorMsg);
+      }
+    };
+    loadAddons();
   }, [availableAddons.length, fetchAvailableAddons]);
 
   // Filter and search add-ons
@@ -87,7 +99,10 @@ export default function AddonsPage() {
     setIsPurchasing(true);
     try {
       await purchaseAddon(addonId, { quantity });
+      toast.success("Add-on purchased successfully!");
     } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || "Failed to purchase add-on";
+      toast.error(errorMsg);
       console.error("Failed to purchase add-on:", err);
     } finally {
       setIsPurchasing(false);
@@ -98,7 +113,10 @@ export default function AddonsPage() {
     setIsUpdating(true);
     try {
       await updateAddonQuantity(tenantAddonId, { quantity });
+      toast.success("Add-on quantity updated successfully!");
     } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || "Failed to update add-on quantity";
+      toast.error(errorMsg);
       console.error("Failed to update add-on quantity:", err);
     } finally {
       setIsUpdating(false);
@@ -121,9 +139,16 @@ export default function AddonsPage() {
         cancel_at_period_end: !cancelImmediately,
       };
       await cancelAddon(addonToCancel, request);
+      toast.success(
+        cancelImmediately
+          ? "Add-on canceled immediately"
+          : "Add-on will be canceled at end of billing period",
+      );
       setCancelModalOpen(false);
       setAddonToCancel(null);
     } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || "Failed to cancel add-on";
+      toast.error(errorMsg);
       console.error("Failed to cancel add-on:", err);
     } finally {
       setIsUpdating(false);
@@ -134,7 +159,10 @@ export default function AddonsPage() {
     setIsUpdating(true);
     try {
       await reactivateAddon(tenantAddonId);
+      toast.success("Add-on reactivated successfully!");
     } catch (err: any) {
+      const errorMsg = err?.response?.data?.detail || "Failed to reactivate add-on";
+      toast.error(errorMsg);
       console.error("Failed to reactivate add-on:", err);
     } finally {
       setIsUpdating(false);

@@ -4,7 +4,7 @@ Comprehensive tests for partner management schemas.
 Tests Pydantic validation for partners, users, accounts, commissions, and referrals.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -31,6 +31,7 @@ from dotmac.platform.partner_management.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestPartnerCreateSchema:
     """Test PartnerCreate schema validation."""
 
@@ -226,6 +227,7 @@ class TestPartnerCreateSchema:
         assert any("unknown_field" in str(error) for error in errors)
 
 
+@pytest.mark.unit
 class TestPartnerUpdateSchema:
     """Test PartnerUpdate schema validation."""
 
@@ -258,7 +260,7 @@ class TestPartnerUpdateSchema:
 
     def test_partner_update_dates(self):
         """Test updating partner dates."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         update = PartnerUpdate(
             partnership_end_date=now,
@@ -270,6 +272,7 @@ class TestPartnerUpdateSchema:
         assert update.last_review_date == now
 
 
+@pytest.mark.unit
 class TestPartnerUserCreateSchema:
     """Test PartnerUserCreate schema validation."""
 
@@ -346,6 +349,7 @@ class TestPartnerUserCreateSchema:
         assert user.user_id == user_id
 
 
+@pytest.mark.unit
 class TestPartnerAccountSchema:
     """Test PartnerAccount schema validation."""
 
@@ -397,6 +401,7 @@ class TestPartnerAccountSchema:
         assert update.is_active is False
 
 
+@pytest.mark.unit
 class TestCommissionEventSchema:
     """Test PartnerCommissionEvent schema validation."""
 
@@ -467,6 +472,7 @@ class TestCommissionEventSchema:
         assert update.notes == "Paid in batch #123"
 
 
+@pytest.mark.unit
 class TestReferralLeadSchema:
     """Test ReferralLead schema validation."""
 
@@ -543,7 +549,7 @@ class TestReferralLeadSchema:
     def test_referral_lead_update(self):
         """Test referral lead update schema."""
         customer_id = uuid4()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         update = ReferralLeadUpdate(
             status=ReferralStatus.CONVERTED,
@@ -559,7 +565,7 @@ class TestReferralLeadSchema:
 
     def test_referral_lead_status_progression(self):
         """Test typical referral status progression updates."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # New -> Contacted
         update1 = ReferralLeadUpdate(
@@ -584,6 +590,7 @@ class TestReferralLeadSchema:
         assert update3.status == ReferralStatus.CONVERTED
 
 
+@pytest.mark.unit
 class TestEnumValues:
     """Test enum value validation in schemas."""
 
@@ -637,6 +644,7 @@ class TestEnumValues:
             assert partner.commission_model == model
 
 
+@pytest.mark.unit
 class TestWhitespaceStripping:
     """Test whitespace stripping configuration."""
 

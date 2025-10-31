@@ -7,8 +7,13 @@ from starlette.datastructures import Headers
 
 from dotmac.platform.tenant.tenant import TenantIdentityResolver
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+pytestmark = pytest.mark.asyncio
 
 def make_request(headers=None, query=None, state_dict=None) -> Request:
     scope = {
@@ -29,23 +34,29 @@ def make_request(headers=None, query=None, state_dict=None) -> Request:
 @pytest.mark.unit
 @pytest.mark.asyncio
 async def test_resolve_prefers_header_then_query_then_state():
+    """Test that resolver ONLY reads from request.state for security.
+
+    SECURITY: The resolver now only trusts middleware-set request.state.tenant_id
+    to prevent tenant ID spoofing. Headers and query params are ignored.
+    Middleware is responsible for setting state based on priority: header > query > default
+    """
     from dotmac.platform.tenant.config import TenantConfiguration, TenantMode
 
     # Create a multi-tenant config for this test
     config = TenantConfiguration(mode=TenantMode.MULTI)
     r = TenantIdentityResolver(config=config)
 
-    # Header wins
+    # SECURITY: Only state is trusted (headers/query are ignored)
     req = make_request(
         headers={"X-Tenant-ID": "H"}, query={"tenant_id": "Q"}, state_dict={"tenant_id": "S"}
     )
-    assert await r.resolve(req) == "H"
+    assert await r.resolve(req) == "S"  # Only state is read
 
-    # Query used when header missing
+    # State is used even when header/query are present
     req2 = make_request(headers={}, query={"tenant_id": "Q"}, state_dict={"tenant_id": "S"})
-    assert await r.resolve(req2) == "Q"
+    assert await r.resolve(req2) == "S"  # Only state is read
 
-    # State used when others missing
+    # State used (as expected)
     req3 = make_request(headers={}, query={}, state_dict={"tenant_id": "S"})
     assert await r.resolve(req3) == "S"
 

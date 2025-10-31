@@ -10,7 +10,7 @@ This test file covers:
 - Error conditions
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -69,6 +69,7 @@ async def sample_permissions(async_db_session: AsyncSession):
     return perms
 
 
+@pytest.mark.integration
 class TestPermissionWildcards:
     """Test permission wildcard matching."""
 
@@ -160,6 +161,7 @@ class TestPermissionWildcards:
         )
 
 
+@pytest.mark.integration
 class TestRoleExpiration:
     """Test role expiration handling."""
 
@@ -183,7 +185,7 @@ class TestRoleExpiration:
             user_id=user_id,
             role_name="temp_role",
             granted_by=user_id,
-            expires_at=datetime.now(UTC) - timedelta(hours=1),
+            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
         )
         await async_db_session.commit()
 
@@ -214,7 +216,7 @@ class TestRoleExpiration:
             user_id=user_id,
             role_name="expired_role",
             granted_by=user_id,
-            expires_at=datetime.now(UTC) - timedelta(days=1),
+            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
         )
         await async_db_session.commit()
 
@@ -228,6 +230,7 @@ class TestRoleExpiration:
         assert roles[0].name == "expired_role"
 
 
+@pytest.mark.integration
 class TestPermissionRevocation:
     """Test permission revocation and overrides."""
 
@@ -290,6 +293,7 @@ class TestPermissionRevocation:
         assert "ticket.read" not in perms
 
 
+@pytest.mark.integration
 class TestRoleCRUDErrors:
     """Test role CRUD error conditions."""
 
@@ -391,6 +395,7 @@ class TestRoleCRUDErrors:
             )
 
 
+@pytest.mark.integration
 class TestRoleAssignmentErrors:
     """Test role assignment error conditions."""
 
@@ -480,7 +485,7 @@ class TestRoleAssignmentErrors:
     ):
         """Test granting permission with expiration."""
         user_id = uuid4()
-        expires_at = datetime.now(UTC) + timedelta(days=7)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
 
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
@@ -511,7 +516,7 @@ class TestRoleAssignmentErrors:
         await async_db_session.commit()
 
         # Grant again with different expiration (update)
-        new_expires = datetime.now(UTC) + timedelta(days=30)
+        new_expires = datetime.now(timezone.utc) + timedelta(days=30)
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
             permission_name="ticket.read",
@@ -525,6 +530,7 @@ class TestRoleAssignmentErrors:
         assert await rbac_service.user_has_permission(user_id, "ticket.read")
 
 
+@pytest.mark.integration
 class TestCachingBehavior:
     """Test permission caching behavior."""
 
@@ -604,6 +610,7 @@ class TestCachingBehavior:
         assert "ticket.read" not in perms2
 
 
+@pytest.mark.integration
 class TestServiceEdgeCases:
     """Test service edge cases for missing coverage."""
 

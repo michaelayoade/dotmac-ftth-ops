@@ -77,7 +77,7 @@ class Product(BillingBaseModel):  # type: ignore[misc]  # BillingBaseModel resol
     product_type: ProductType = Field(description="How this product is billed")
 
     # Pricing - single base price
-    base_price: Decimal = Field(description="Base price in minor units (e.g., cents)")
+    base_price: Decimal = Field(description="Base price in currency units (e.g., dollars)")
     currency: str = Field(default="USD", description="Price currency", max_length=3)
 
     # Tax handling
@@ -163,12 +163,21 @@ class ProductCreateRequest(AppBaseModel):  # type: ignore[misc]  # AppBaseModel 
     description: str | None = Field(None, description="Product description")
     category: str = Field(description="Product category", max_length=100)
     product_type: ProductType = Field(description="Product type")
-    base_price: Decimal = Field(description="Base price in minor units")
+    base_price: Decimal = Field(description="Base price in currency units")
     currency: str = Field(default="USD", max_length=3)
     tax_class: TaxClass = Field(default=TaxClass.STANDARD)
     usage_type: UsageType | None = Field(None)
     usage_unit_name: str | None = Field(None, max_length=50)
     metadata: dict[str, Any] = Field(default_factory=lambda: {})
+    is_active: bool | None = Field(None, description="Whether the product is active")
+
+    @field_validator("sku")
+    @classmethod
+    def validate_request_sku(cls, v: str) -> str:
+        """Ensure SKU is not empty and properly formatted."""
+        if not v or not v.strip():
+            raise ValueError("SKU cannot be empty")
+        return v.strip().upper()
 
     @field_validator("base_price")
     @classmethod
@@ -208,6 +217,12 @@ class ProductFilters(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolv
     is_active: bool = Field(default=True, description="Filter by active status")
     usage_type: UsageType | None = Field(None, description="Filter by usage type")
     search: str | None = Field(None, description="Search in name and description")
+
+
+class ProductPriceUpdateRequest(AppBaseModel):  # type: ignore[misc]
+    """Request model for updating product price."""
+
+    new_price: Decimal = Field(description="New price in currency units", ge=0)
 
 
 class ProductResponse(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resolves to Any in isolation

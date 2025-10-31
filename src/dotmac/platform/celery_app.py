@@ -24,6 +24,10 @@ celery_app = Celery(
         "dotmac.platform.billing.dunning.tasks",
         "dotmac.platform.services.lifecycle.tasks",
         "dotmac.platform.genieacs.tasks",
+        "dotmac.platform.tenant.provisioning_tasks",
+        "dotmac.platform.radius.tasks",
+        "dotmac.platform.services.internet_plans.usage_monitoring_tasks",
+        "dotmac.platform.services.internet_plans.usage_billing_tasks",
     ],  # Auto-discover task modules
 )
 
@@ -44,7 +48,7 @@ celery_app.conf.update(
     task_serializer="json",
     accept_content=["json"],
     result_serializer="json",
-    timezone="UTC",
+    timezone="timezone.utc",
     enable_utc=True,
     # Task result settings
     result_expires=3600,  # 1 hour
@@ -132,28 +136,76 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
     )
 
     # GenieACS - Check scheduled firmware upgrades every minute
-    from dotmac.platform.genieacs.tasks import check_scheduled_upgrades
+    from dotmac.platform.genieacs.tasks import (
+        check_scheduled_upgrades,
+        replay_pending_operations,
+    )
 
     sender.add_periodic_task(
         60.0,  # 1 minute
         check_scheduled_upgrades.s(),
         name="genieacs-check-scheduled-upgrades",
     )
+    replay_pending_operations.apply_async(countdown=5)
+
+    # RADIUS - Sync sessions to TimescaleDB every 15 minutes (only if configured)
+    if settings.timescaledb.is_configured:
+        from dotmac.platform.radius.tasks import sync_sessions_to_timescaledb
+
+        sender.add_periodic_task(
+            900.0,  # 15 minutes
+            sync_sessions_to_timescaledb.s(batch_size=100, max_age_hours=24),
+            name="radius-sync-sessions-to-timescaledb",
+        )
+
+    # Data Cap Monitoring - Check subscriber usage against caps every hour
+    if settings.timescaledb.is_configured:
+        from dotmac.platform.services.internet_plans.usage_monitoring_tasks import (
+            monitor_data_cap_usage,
+        )
+        from dotmac.platform.services.internet_plans.usage_billing_tasks import (
+            process_usage_billing,
+        )
+
+        sender.add_periodic_task(
+            3600.0,  # 1 hour
+            monitor_data_cap_usage.s(batch_size=100),
+            name="services-monitor-data-cap-usage",
+        )
+
+        # Usage-Based Billing - Process overage charges daily at 00:00 UTC
+        # Run daily to check for subscriptions at end of billing period
+        sender.add_periodic_task(
+            86400.0,  # 24 hours (daily)
+            process_usage_billing.s(batch_size=100),
+            name="services-process-usage-billing",
+        )
 
     logger = structlog.get_logger(__name__)
+
+    # Build periodic tasks list dynamically
+    periodic_task_names = [
+        "currency-refresh-rates",
+        "dunning-process-pending-actions",
+        "lifecycle-process-scheduled-terminations",
+        "lifecycle-process-auto-resume",
+        "lifecycle-perform-health-checks",
+        "genieacs-check-scheduled-upgrades",
+    ]
+
+    if settings.timescaledb.is_configured:
+        periodic_task_names.extend([
+            "radius-sync-sessions-to-timescaledb",
+            "services-monitor-data-cap-usage",
+            "services-process-usage-billing",
+        ])
+
     logger.info(
         "celery.worker.configured",
         broker=settings.celery.broker_url,
         backend=settings.celery.result_backend,
         queues=["default", "high_priority", "low_priority"],
-        periodic_tasks=[
-            "currency-refresh-rates",
-            "dunning-process-pending-actions",
-            "lifecycle-process-scheduled-terminations",
-            "lifecycle-process-auto-resume",
-            "lifecycle-perform-health-checks",
-            "genieacs-check-scheduled-upgrades",
-        ],
+        periodic_tasks=periodic_task_names,
     )
 
 

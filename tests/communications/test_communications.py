@@ -9,40 +9,33 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-# Test the communications services
-try:
-    from dotmac.platform.communications.email_service import (
-        EmailMessage,
-        EmailResponse,
-        EmailService,
-        get_email_service,
-        send_email,
-    )
-    from dotmac.platform.communications.task_service import (
-        BulkEmailJob,
-        BulkEmailResult,
-        TaskService,
-        get_task_service,
-        queue_bulk_emails,
-        queue_email,
-    )
-    from dotmac.platform.communications.template_service import (
-        RenderedTemplate,
-        TemplateData,
-        TemplateService,
-        create_template,
-        get_template_service,
-        quick_render,
-        render_template,
-    )
-
-    _COMMUNICATIONS_AVAILABLE = True
-except ImportError as e:
-    print(f"Communications import failed: {e}")
-    _COMMUNICATIONS_AVAILABLE = False
+from dotmac.platform.communications.email_service import (
+    EmailMessage,
+    EmailResponse,
+    EmailService,
+    get_email_service,
+    send_email,
+)
+from dotmac.platform.communications.task_service import (
+    BulkEmailJob,
+    BulkEmailResult,
+    TaskService,
+    get_task_service,
+    queue_bulk_emails,
+    queue_email,
+)
+from dotmac.platform.communications.template_service import (
+    RenderedTemplate,
+    TemplateData,
+    TemplateService,
+    create_template,
+    get_template_service,
+    quick_render,
+    render_template,
+)
 
 
-@pytest.mark.skipif(not _COMMUNICATIONS_AVAILABLE, reason="Communications not available")
+@pytest.mark.integration
 class TestEmailService:
     """Test the email service."""
 
@@ -151,7 +144,7 @@ class TestEmailService:
             mock_service.send_email.assert_called_once()
 
 
-@pytest.mark.skipif(not _COMMUNICATIONS_AVAILABLE, reason="Communications not available")
+@pytest.mark.integration
 class TestTemplateService:
     """Test the template service."""
 
@@ -337,7 +330,7 @@ class TestTemplateService:
         assert result["text_body"] == "This is test"
 
 
-@pytest.mark.skipif(not _COMMUNICATIONS_AVAILABLE, reason="Communications not available")
+@pytest.mark.integration
 class TestTaskService:
     """Test the task service."""
 
@@ -443,7 +436,7 @@ class TestTaskService:
         mock_task.delay.assert_called_once()
 
 
-@pytest.mark.skipif(not _COMMUNICATIONS_AVAILABLE, reason="Communications not available")
+@pytest.mark.integration
 class TestIntegration:
     """Test integration between services."""
 
@@ -517,25 +510,27 @@ class TestIntegration:
             )
 
 
+@pytest.mark.integration
 class TestServiceAvailability:
-    """Test service availability and graceful degradation."""
+    """Test service availability."""
 
     def test_services_available(self):
-        """Test whether services are available."""
-        if _COMMUNICATIONS_AVAILABLE:
-            # Services should work
-            email_service = get_email_service()
-            template_service = get_template_service()
-            task_service = get_task_service()
+        """Test that all communication services are available and can be instantiated."""
+        # If imports failed, the test suite would have failed at import time
+        # This test verifies that services can be properly instantiated
+        email_service = get_email_service()
+        template_service = get_template_service()
+        task_service = get_task_service()
 
-            assert email_service is not None
-            assert template_service is not None
-            assert task_service is not None
-        else:
-            # If not available, tests should be skipped gracefully
-            pytest.skip("Simplified services not available - imports failed")
+        assert email_service is not None
+        assert template_service is not None
+        assert task_service is not None
 
-    def test_graceful_import_handling(self):
-        """Test that imports are handled gracefully."""
-        # This test will always pass, showing that import handling works
-        assert True
+    def test_imports_successful(self):
+        """Test that all required imports are successful."""
+        # If this test runs, it means all imports succeeded
+        # Any import errors will cause the test file to fail at import time
+        assert EmailMessage is not None
+        assert EmailService is not None
+        assert TemplateService is not None
+        assert TaskService is not None

@@ -77,25 +77,24 @@ class ConsulServiceRegistry:
         if service_id is None:
             service_id = f"{name}-{address}-{port}"
 
-        service_def = {
-            "Name": name,
-            "ID": service_id,
-            "Address": address,
-            "Port": port,
-            "Tags": tags or [],
-            "Meta": meta or {},
-        }
-
-        # Add health check if provided
+        check_args: dict[str, Any] | None = None
         if health_check:
-            service_def["Check"] = {
+            check_args = {
                 "HTTP": f"http://{address}:{port}{health_check}",
                 "Interval": health_interval,
                 "Timeout": "10s",
                 "DeregisterCriticalServiceAfter": "90s",
             }
 
-        await self.consul.agent.service.register(**service_def)
+        await self.consul.agent.service.register(
+            name=name,
+            service_id=service_id,
+            address=address,
+            port=port,
+            tags=tags or [],
+            meta=meta or {},
+            check=check_args,
+        )
         self._registered_services.add(service_id)
         logger.info(f"Registered service '{name}' with ID '{service_id}' at {address}:{port}")
         return service_id
@@ -124,6 +123,7 @@ class ConsulServiceRegistry:
         result = []
         for service_data in services:
             service = service_data["Service"]
+            node_info = service_data.get("Node", {})
             checks = service_data["Checks"]
 
             # Determine health status
@@ -133,9 +133,11 @@ class ConsulServiceRegistry:
                     health_status = check["Status"]
                     break
 
+            address = service.get("Address") or node_info.get("Address") or ""
+
             service_info = ConsulServiceInfo(
                 name=service["Service"],
-                address=service["Address"],
+                address=address,
                 port=service["Port"],
                 service_id=service["ID"],
                 tags=service.get("Tags", []),

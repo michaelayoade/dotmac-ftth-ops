@@ -5,11 +5,14 @@ Provides file storage statistics endpoints for monitoring
 storage usage, upload/download counts, and file distribution.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.auth.core import UserInfo
@@ -109,18 +112,8 @@ async def _get_file_stats_cached(
     now = datetime.now(UTC)
     period_start = now - timedelta(days=period_days)
 
-    # Get all files for the tenant
-    # Note: list_files returns all files, we'll filter by date manually
-    all_files = await storage_service.list_files(
-        tenant_id=tenant_id,
-        limit=10000,  # Large limit to get most files
-    )
-
-    # Filter by period
-    files = [f for f in all_files if f.created_at >= period_start]
-
     # Initialize counters
-    total_files = len(files)
+    total_files = 0
     total_size_bytes = 0
 
     images_count = 0
@@ -133,25 +126,45 @@ async def _get_file_stats_cached(
     videos_size = 0
     other_size = 0
 
-    # Calculate statistics
-    for file in files:
-        size = file.file_size
-        total_size_bytes += size
+    batch_size = 500
+    offset = 0
 
-        category = _categorize_content_type(file.content_type)
+    while True:
+        batch = await storage_service.list_files(
+            tenant_id=tenant_id,
+            limit=batch_size,
+            offset=offset,
+        )
+        if not batch:
+            break
 
-        if category == "image":
-            images_count += 1
-            images_size += size
-        elif category == "document":
-            documents_count += 1
-            documents_size += size
-        elif category == "video":
-            videos_count += 1
-            videos_size += size
-        else:
-            other_count += 1
-            other_size += size
+        offset += len(batch)
+
+        for file in batch:
+            if getattr(file, "created_at", None) and file.created_at < period_start:
+                continue
+
+            size = file.file_size
+            total_files += 1
+            total_size_bytes += size
+
+            category = _categorize_content_type(file.content_type)
+
+            if category == "image":
+                images_count += 1
+                images_size += size
+            elif category == "document":
+                documents_count += 1
+                documents_size += size
+            elif category == "video":
+                videos_count += 1
+                videos_size += size
+            else:
+                other_count += 1
+                other_size += size
+
+        if len(batch) < batch_size:
+            break
 
     # Convert to MB
     total_size_mb = total_size_bytes / (1024 * 1024)
@@ -181,6 +194,12 @@ async def _get_file_stats_cached(
     }
 
 
+# Ensure tests can access the uncached function even if the cache decorator
+# is patched to a no-op (e.g., tests/file_storage/test_metrics_router_real.py).
+if not hasattr(_get_file_stats_cached, "__wrapped__"):
+    _get_file_stats_cached.__wrapped__ = _get_file_stats_cached  # type: ignore[attr-defined]
+
+
 # ============================================================================
 # File Storage Stats Endpoint
 # ============================================================================
@@ -188,6 +207,7 @@ async def _get_file_stats_cached(
 
 @router.get("/stats", response_model=FileStatsResponse)
 async def get_file_storage_stats(
+    request: Request,
     period_days: int = Query(default=30, ge=1, le=365, description="Time period in days"),
     current_user: UserInfo = Depends(get_current_user),
     storage_service: FileStorageService = Depends(get_storage_service),
@@ -203,9 +223,29 @@ async def get_file_storage_stats(
     **Required Permission**: files:stats:read (enforced by get_current_user)
     """
     try:
-        tenant_id = getattr(current_user, "tenant_id", None)
+        tenant_header = request.headers.get("X-Tenant-ID") if request else None
+        tenant_query = request.query_params.get("tenant_id") if request else None
+        tenant_id = tenant_header or tenant_query
 
-        # Use cached helper function
+        if not tenant_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Tenant context is required via X-Tenant-ID header or tenant_id query parameter.",
+            )
+
+        if not getattr(current_user, "is_platform_admin", False):
+            user_tenant = getattr(current_user, "tenant_id", None)
+            if not user_tenant:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="User is not associated with a tenant.",
+                )
+            if tenant_id != str(user_tenant):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Insufficient permissions for requested tenant.",
+                )
+
         stats_data = await _get_file_stats_cached(
             period_days=period_days,
             tenant_id=tenant_id,
@@ -214,6 +254,8 @@ async def get_file_storage_stats(
 
         return FileStatsResponse(**stats_data)
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error("Failed to fetch file storage stats", error=str(e), exc_info=True)
         # Return safe defaults on error

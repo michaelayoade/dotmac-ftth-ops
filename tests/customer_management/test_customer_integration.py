@@ -1,3 +1,4 @@
+
 """
 Integration Tests for Customer Management Service.
 
@@ -17,11 +18,17 @@ from uuid import uuid4
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+
 # Skip all integration tests due to database I/O errors
 # Module already achieves 91% coverage through unit tests
-pytestmark = pytest.mark.skip(
-    reason="Database I/O errors - 91% coverage already achieved via unit tests"
-)
+
+
+
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skip(reason="Database I/O errors - 91% coverage already achieved via unit tests"),
+]
 
 from dotmac.platform.customer_management.models import (  # noqa: E402
     ActivityType,

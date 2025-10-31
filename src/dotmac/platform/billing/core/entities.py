@@ -3,6 +3,7 @@ Billing module SQLAlchemy entities with tenant support
 """
 
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -15,6 +16,7 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    Numeric,
     String,
     Text,
     UniqueConstraint,
@@ -86,10 +88,16 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ign
 
     # Status
     status: Mapped[InvoiceStatus] = mapped_column(
-        Enum(InvoiceStatus), nullable=False, default=InvoiceStatus.DRAFT, index=True
+        Enum(InvoiceStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=InvoiceStatus.DRAFT,
+        index=True,
     )
     payment_status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING, index=True
+        Enum(PaymentStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=PaymentStatus.PENDING,
+        index=True,
     )
 
     # References
@@ -182,12 +190,16 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
 
     # Status
     status: Mapped[PaymentStatus] = mapped_column(
-        Enum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING, index=True
+        Enum(PaymentStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=PaymentStatus.PENDING,
+        index=True,
     )
 
     # Payment method
     payment_method_type: Mapped[PaymentMethodType] = mapped_column(
-        Enum(PaymentMethodType), nullable=False
+        Enum(PaymentMethodType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
     )
     payment_method_details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
@@ -195,6 +207,7 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     provider_payment_id: Mapped[str | None] = mapped_column(String(255), index=True)
     provider_fee: Mapped[int | None] = mapped_column(Integer)
+    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
 
     # Failure handling
     failure_reason: Mapped[str | None] = mapped_column(String(500))
@@ -203,9 +216,11 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
 
     # Additional timestamp
     processed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Metadata
     extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    refund_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
 
     # Relationships
     invoices: Mapped[list["PaymentInvoiceEntity"]] = relationship(back_populates="payment")
@@ -252,9 +267,14 @@ class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):  
     customer_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     # Payment method details
-    type: Mapped[PaymentMethodType] = mapped_column(Enum(PaymentMethodType), nullable=False)
+    type: Mapped[PaymentMethodType] = mapped_column(
+        Enum(PaymentMethodType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+    )
     status: Mapped[PaymentMethodStatus] = mapped_column(
-        Enum(PaymentMethodStatus), nullable=False, default=PaymentMethodStatus.ACTIVE
+        Enum(PaymentMethodStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=PaymentMethodStatus.ACTIVE,
     )
 
     # Provider info
@@ -270,7 +290,9 @@ class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):  
 
     # Bank account specific
     bank_name: Mapped[str | None] = mapped_column(String(100))
-    account_type: Mapped[BankAccountType | None] = mapped_column(Enum(BankAccountType))
+    account_type: Mapped[BankAccountType | None] = mapped_column(
+        Enum(BankAccountType, values_callable=lambda x: [e.value for e in x])
+    )
     routing_number_last_four: Mapped[str | None] = mapped_column(String(4))
 
     # Settings
@@ -308,7 +330,9 @@ class TransactionEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has t
     amount: Mapped[int] = mapped_column(Integer, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     transaction_type: Mapped[TransactionType] = mapped_column(
-        Enum(TransactionType), nullable=False, index=True
+        Enum(TransactionType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        index=True,
     )
     description: Mapped[str] = mapped_column(String(500), nullable=False)
 
@@ -366,13 +390,22 @@ class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: 
     total_amount: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Credit note type and reason
-    credit_type: Mapped[CreditType] = mapped_column(Enum(CreditType), nullable=False)
-    reason: Mapped[CreditReason] = mapped_column(Enum(CreditReason), nullable=False)
+    credit_type: Mapped[CreditType] = mapped_column(
+        Enum(CreditType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+    )
+    reason: Mapped[CreditReason] = mapped_column(
+        Enum(CreditReason, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+    )
     reason_description: Mapped[str | None] = mapped_column(String(500))
 
     # Status
     status: Mapped[CreditNoteStatus] = mapped_column(
-        Enum(CreditNoteStatus), nullable=False, default=CreditNoteStatus.DRAFT, index=True
+        Enum(CreditNoteStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=CreditNoteStatus.DRAFT,
+        index=True,
     )
 
     # Application
@@ -455,7 +488,8 @@ class CreditApplicationEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin
 
     # Application target
     applied_to_type: Mapped[CreditApplicationType] = mapped_column(
-        Enum(CreditApplicationType), nullable=False
+        Enum(CreditApplicationType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
     )
     applied_to_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
@@ -532,14 +566,19 @@ class ServiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteMix
 
     # Service details
     service_type: Mapped[ServiceType] = mapped_column(
-        Enum(ServiceType), nullable=False, default=ServiceType.BROADBAND
+        Enum(ServiceType, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ServiceType.BROADBAND,
     )
     service_name: Mapped[str] = mapped_column(String(255), nullable=False)
     service_description: Mapped[str | None] = mapped_column(Text)
 
     # Status
     status: Mapped[ServiceStatus] = mapped_column(
-        Enum(ServiceStatus), nullable=False, default=ServiceStatus.PENDING, index=True
+        Enum(ServiceStatus, values_callable=lambda x: [e.value for e in x]),
+        nullable=False,
+        default=ServiceStatus.PENDING,
+        index=True,
     )
 
     # Lifecycle timestamps

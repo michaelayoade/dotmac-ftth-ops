@@ -33,9 +33,7 @@ router.include_router(catalog_router, prefix="", tags=["Billing - Catalog"])
 router.include_router(
     subscriptions_router, prefix="/subscriptions", tags=["Billing - Subscriptions"]
 )
-router.include_router(
-    tenant_subscriptions_router, prefix="", tags=["Tenant - Subscriptions"]
-)
+router.include_router(tenant_subscriptions_router, prefix="", tags=["Tenant - Subscriptions"])
 router.include_router(addons_router, prefix="", tags=["Tenant - Add-ons"])
 router.include_router(payment_methods_router, prefix="", tags=["Tenant - Payment Methods"])
 router.include_router(payments_router, prefix="", tags=["Billing - Payments"])

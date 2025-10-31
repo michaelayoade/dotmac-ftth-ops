@@ -5,7 +5,6 @@ Provides efficient network monitoring queries with conditional loading of traffi
 and alerts via DataLoaders to prevent N+1 queries.
 """
 
-
 import strawberry
 import structlog
 
@@ -58,10 +57,8 @@ class NetworkQueries:
         # Get monitoring service
         # Note: In production, service would be injected via dependency injection
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Fetch overview from service
@@ -110,10 +107,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum if provided
@@ -132,14 +127,15 @@ class NetworkQueries:
         if search:
             search_lower = search.lower()
             devices_list = [
-                d for d in devices_list
+                d
+                for d in devices_list
                 if search_lower in d.device_name.lower()
                 or (d.ip_address and search_lower in d.ip_address.lower())
             ]
 
         # Calculate pagination
         total_count = len(devices_list)
-        paginated_devices = devices_list[offset:offset + page_size]
+        paginated_devices = devices_list[offset : offset + page_size]
 
         # Convert to GraphQL types
         devices = [DeviceHealth.from_model(d) for d in paginated_devices]
@@ -196,10 +192,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -241,10 +235,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -258,7 +250,9 @@ class NetworkQueries:
 
         return TrafficStats.from_model(traffic_model, include_interfaces=include_interfaces)
 
-    @strawberry.field(description="Get comprehensive device metrics (health + traffic + device-specific)")  # type: ignore[misc]
+    @strawberry.field(
+        description="Get comprehensive device metrics (health + traffic + device-specific)"
+    )  # type: ignore[misc]
     async def device_metrics(
         self,
         info: strawberry.Info[Context],
@@ -289,10 +283,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enum to Pydantic enum
@@ -344,10 +336,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Convert GraphQL enums to Pydantic enums if provided
@@ -369,13 +359,12 @@ class NetworkQueries:
         # Apply device_type filter locally (service doesn't support this filter)
         if device_type:
             alerts_list = [
-                a for a in alerts_list
-                if a.device_type and a.device_type.value == device_type.value
+                a for a in alerts_list if a.device_type and a.device_type.value == device_type.value
             ]
 
         # Calculate pagination
         total_count = len(alerts_list)
-        paginated_alerts = alerts_list[offset:offset + page_size]
+        paginated_alerts = alerts_list[offset : offset + page_size]
 
         # Convert to GraphQL types
         alerts = [NetworkAlert.from_model(a) for a in paginated_alerts]
@@ -413,10 +402,8 @@ class NetworkQueries:
 
         # Get monitoring service
         service = NetworkMonitoringService(
-            netbox_client=None,
-            voltha_client=None,
-            genieacs_client=None,
-            radius_client=None,
+            tenant_id=tenant_id,
+            session=info.context.db,
         )
 
         # Fetch all alerts and find the specific one

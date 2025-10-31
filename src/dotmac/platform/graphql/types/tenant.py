@@ -13,9 +13,7 @@ from typing import TYPE_CHECKING, Any
 import strawberry
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
-    JSONScalar: TypeAlias = Any
+    type JSONScalar = Any
 else:
     from strawberry.scalars import JSON as JSONScalar
 

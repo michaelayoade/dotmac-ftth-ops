@@ -1,8 +1,9 @@
+
 """
 Extended tests for communication metrics service to improve coverage.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -10,6 +11,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.communications.metrics_service import (
+
+
     CommunicationMetricsService,
     get_metrics_service,
 )
@@ -20,13 +23,16 @@ from dotmac.platform.communications.models import (
     CommunicationType,
 )
 
-pytestmark = pytest.mark.asyncio
 
 
 # ============================================================================
 # Fixtures
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -67,6 +73,7 @@ def sample_log_entry():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestUpdateCommunicationStatusDelivered:
     """Test updating communication status to delivered."""
 
@@ -169,6 +176,7 @@ class TestUpdateCommunicationStatusDelivered:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogCommunication:
     """Test logging communication."""
 
@@ -232,6 +240,7 @@ class TestLogCommunication:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetRecentActivity:
     """Test getting recent communication activity."""
 
@@ -284,6 +293,7 @@ class TestGetRecentActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestAggregateDailyStats:
     """Test aggregating daily statistics."""
 
@@ -336,7 +346,7 @@ class TestAggregateDailyStats:
     @pytest.mark.asyncio
     async def test_aggregate_daily_stats_specific_date(self, metrics_service, mock_db_session):
         """Test aggregating stats for a specific date."""
-        specific_date = datetime(2024, 1, 15, tzinfo=UTC)
+        specific_date = datetime(2024, 1, 15, tzinfo=timezone.utc)
 
         # Setup mocks
         status_result_mock = MagicMock()
@@ -382,7 +392,7 @@ class TestAggregateDailyStats:
         # Create existing stats entry with proper attribute initialization
         existing_stats = MagicMock(spec=CommunicationStats)
         existing_stats.id = uuid4()
-        existing_stats.stats_date = datetime.now(UTC).replace(
+        existing_stats.stats_date = datetime.now(timezone.utc).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
         existing_stats.type = CommunicationType.EMAIL
@@ -480,6 +490,7 @@ class TestAggregateDailyStats:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetMetricsServiceFactory:
     """Test the get_metrics_service factory function."""
 

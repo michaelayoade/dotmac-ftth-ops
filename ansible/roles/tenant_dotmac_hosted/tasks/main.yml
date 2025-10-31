@@ -1,0 +1,25 @@
+---
+# Provision a tenant on DotMac-managed infrastructure.
+
+- name: "Include common provisioning steps"
+  ansible.builtin.import_role:
+    name: tenant_common
+
+- name: "Deploy tenant Docker Compose stack"
+  community.docker.docker_compose_v2:
+    project_src: "{{ tenant_workspace_root }}/{{ tenant_id }}/compose"
+    state: present
+  vars:
+    compose_files:
+      - "{{ tenant_compose_bundle }}"
+  when: tenant_compose_bundle is defined
+
+- name: "Register monitoring endpoints"
+  ansible.builtin.uri:
+    url: "{{ observability_register_url }}"
+    method: POST
+    body_format: json
+    body:
+      tenant_id: "{{ tenant_id }}"
+      endpoints: "{{ tenant_service_endpoints }}"
+  when: observability_register_url is defined

@@ -2,15 +2,20 @@
 Main FastAPI application entry point for DotMac Platform Services.
 """
 
+import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import JSONResponse
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -32,6 +37,7 @@ from dotmac.platform.monitoring.error_middleware import (
     RequestMetricsMiddleware,
 )
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
+from dotmac.platform.infrastructure_health import run_startup_health_checks
 from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
@@ -40,6 +46,7 @@ from dotmac.platform.settings import settings
 from dotmac.platform.telemetry import setup_telemetry
 from dotmac.platform.tenant import TenantMiddleware
 from dotmac.platform.tenant_app import tenant_app
+from dotmac.platform.timeseries import init_timescaledb, shutdown_timescaledb
 
 
 def rate_limit_handler(request: Request, exc: Exception) -> Response:
@@ -79,6 +86,18 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     import structlog
 
     logger = structlog.get_logger(__name__)
+    print("DotMac Platform Services starting...")
+
+    # Ensure telemetry is configured (lifespan may be used outside create_application)
+    try:
+        telemetry_configured = bool(getattr(app.state, "telemetry_configured", False))
+    except AttributeError:
+        telemetry_configured = False
+
+    if not telemetry_configured:
+        setup_telemetry(app)
+        if hasattr(app, "state"):
+            app.state.telemetry_configured = True
 
     # Structured startup event
     logger.info(
@@ -118,6 +137,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             failed_services=failed_services,
             emoji="❌",
         )
+        print(f"Required services unavailable: {', '.join(failed_services)}")
     elif not all_healthy:
         optional_failed = [c.name for c in checks if not c.required and not c.is_healthy]
         logger.warning(
@@ -125,8 +145,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             optional_failed_services=optional_failed,
             emoji="⚠️",
         )
+        print(f"Optional services unavailable: {', '.join(optional_failed)}")
     else:
         logger.info("service.startup.all_services_healthy", emoji="✅")
+        print("All services healthy")
 
     # Fail fast in production if required services are missing
     if not all_healthy:
@@ -136,6 +158,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
                 failed_services=failed_services,
                 environment=settings.environment,
             )
+            print("Startup failed due to required service outage")
             raise RuntimeError(f"Required services unavailable: {failed_services}")
         else:
             logger.warning(
@@ -144,6 +167,24 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
                     c.name for c in checks if not c.required and not c.is_healthy
                 ],
             )
+            print("Running in degraded mode")
+
+    # Run comprehensive infrastructure health checks (Docker containers)
+    try:
+        # Check ISP services if ISP mode is enabled (optional)
+        include_isp_services = os.getenv("CHECK_ISP_SERVICES", "false").lower() == "true"
+
+        await run_startup_health_checks(
+            fail_on_unhealthy=False,  # Don't fail startup, just report
+            include_isp_services=include_isp_services,
+        )
+    except Exception as e:
+        logger.warning(
+            "infrastructure.health_check.failed",
+            error=str(e),
+            emoji="⚠️",
+        )
+        print(f"Infrastructure health check failed: {e}")
 
     # Load secrets from Vault/OpenBao if configured
     try:
@@ -155,27 +196,42 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         if settings.is_production:
             logger.error("secrets.load.production_failure", error=str(e))
             raise
+        print(f"Using default secrets (Vault unavailable: {e})")
 
     # Initialize database
     try:
         init_db()
         logger.info("database.init.success", emoji="✅")
+        print("Database initialized")
     except Exception as e:
         logger.error("database.init.failed", error=str(e), emoji="❌")
         # Continue in development, fail in production
         if settings.is_production:
             raise
+        print(f"Database initialization failed: {e}")
 
     # Initialize Redis
     try:
         await init_redis()
         logger.info("redis.init.success", emoji="✅")
+        print("Redis initialized")
     except Exception as e:
         logger.error("redis.init.failed", error=str(e), emoji="❌")
-        # Continue in development, fail in production if Redis is critical
-        # Allow graceful degradation for features that can work without Redis
-        if settings.is_production:
-            logger.warning("redis.production.unavailable", emoji="⚠️")
+        print(f"Redis initialization failed: {e}")
+        raise
+
+    # Initialize TimescaleDB (optional time-series database)
+    if settings.timescaledb.is_configured:
+        try:
+            init_timescaledb()
+            logger.info("timescaledb.init.success", emoji="✅")
+            print("TimescaleDB initialized")
+        except Exception as e:
+            logger.error("timescaledb.init.failed", error=str(e), emoji="❌")
+            # Continue in development, fail in production
+            if settings.is_production:
+                raise
+            print(f"TimescaleDB initialization failed: {e}")
 
     # Seed RBAC permissions/roles after database init
     try:
@@ -197,11 +253,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.warning("auth.default_admin.failed", error=str(e), emoji="⚠️")
 
     logger.info("service.startup.complete", healthy=all_healthy, emoji="🎉")
+    print("Startup complete")
 
     yield
 
     # Shutdown with structured logging
     logger.info("service.shutdown.begin", emoji="👋")
+    print("Shutting down")
 
     # Cleanup Redis connections
     try:
@@ -209,6 +267,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.info("redis.shutdown.success", emoji="✅")
     except Exception as e:
         logger.error("redis.shutdown.failed", error=str(e), emoji="❌")
+
+    # Cleanup TimescaleDB connections
+    if settings.timescaledb.is_configured:
+        try:
+            await shutdown_timescaledb()
+            logger.info("timescaledb.shutdown.success", emoji="✅")
+        except Exception as e:
+            logger.error("timescaledb.shutdown.failed", error=str(e), emoji="❌")
 
     logger.info("service.shutdown.complete", emoji="✅")
 
@@ -226,13 +292,27 @@ def create_application() -> FastAPI:
     )
 
     # Configure telemetry early so middleware instrumentation happens before startup events.
-    setup_telemetry(app)
+    disable_telemetry = os.getenv("PYTEST_DOTMAC_PLATFORM") == "1"
+    if (
+        not disable_telemetry
+        and settings.observability.enable_tracing
+        and settings.observability.otel_enabled
+    ):
+        setup_telemetry(app)
+        try:
+            app.state.telemetry_configured = True
+        except AttributeError:
+            pass
 
     # Get logger after telemetry is configured
     logger = structlog.get_logger(__name__)
 
     # Add GZip compression
     app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+    # Enforce trusted host validation (defaults to wildcard in development)
+    allowed_hosts = settings.trusted_hosts if settings.trusted_hosts else ["*"]
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
     # Add error tracking middleware (should be early in the chain)
     # Tracks HTTP errors and exceptions in Prometheus
@@ -249,13 +329,11 @@ def create_application() -> FastAPI:
     if settings.DEPLOYMENT_MODE == "single_tenant":
         app.add_middleware(SingleTenantMiddleware)
 
-    # Add app boundary middleware to enforce platform/tenant route separation
-    # This runs after tenant context is set but before audit logging
-    # NOTE: Auth middleware runs via route dependencies, so user context is set in request.state
-    app.add_middleware(AppBoundaryMiddleware)
-
-    # Add audit context middleware for user tracking
+    # Add audit context middleware before boundary enforcement so user context is available
     app.add_middleware(AuditContextMiddleware)
+
+    # Add app boundary middleware to enforce platform/tenant route separation
+    app.add_middleware(AppBoundaryMiddleware)
 
     # Configure CORS last so it wraps responses generated by upstream middleware.
     if settings.cors.enabled:

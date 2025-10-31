@@ -1,6 +1,6 @@
 """Tests for billing validation utilities."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -22,6 +22,7 @@ from dotmac.platform.billing.validation import (
 )
 
 
+@pytest.mark.unit
 class TestCurrencyValidator:
     """Test currency validation."""
 
@@ -111,6 +112,7 @@ class TestCurrencyValidator:
         assert "Invalid amount format" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestSKUValidator:
     """Test SKU validation."""
 
@@ -160,13 +162,14 @@ class TestSKUValidator:
             assert "Invalid SKU format" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestDateRangeValidator:
     """Test date range validation."""
 
     def test_validate_billing_period_success(self):
         """Test valid billing period."""
-        start = datetime(2024, 1, 1, tzinfo=UTC)
-        end = datetime(2024, 1, 31, tzinfo=UTC)
+        start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 31, tzinfo=timezone.utc)
 
         validated_start, validated_end = DateRangeValidator.validate_billing_period(start, end)
 
@@ -174,19 +177,19 @@ class TestDateRangeValidator:
         assert validated_end == end
 
     def test_validate_billing_period_naive_dates(self):
-        """Test naive dates are converted to UTC."""
+        """Test naive dates are converted to timezone.utc."""
         start = datetime(2024, 1, 1)  # Naive
         end = datetime(2024, 1, 31)  # Naive
 
         validated_start, validated_end = DateRangeValidator.validate_billing_period(start, end)
 
-        assert validated_start.tzinfo == UTC
-        assert validated_end.tzinfo == UTC
+        assert validated_start.tzinfo == timezone.utc
+        assert validated_end.tzinfo == timezone.utc
 
     def test_validate_billing_period_invalid_order(self):
         """Test end date before start date."""
-        start = datetime(2024, 1, 31, tzinfo=UTC)
-        end = datetime(2024, 1, 1, tzinfo=UTC)
+        start = datetime(2024, 1, 31, tzinfo=timezone.utc)
+        end = datetime(2024, 1, 1, tzinfo=timezone.utc)
 
         with pytest.raises(SubscriptionError) as exc_info:
             DateRangeValidator.validate_billing_period(start, end)
@@ -195,8 +198,8 @@ class TestDateRangeValidator:
 
     def test_validate_billing_period_too_long(self):
         """Test period exceeds maximum."""
-        start = datetime(2024, 1, 1, tzinfo=UTC)
-        end = datetime(2025, 12, 31, tzinfo=UTC)  # ~730 days
+        start = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        end = datetime(2025, 12, 31, tzinfo=timezone.utc)  # ~730 days
 
         with pytest.raises(SubscriptionError) as exc_info:
             DateRangeValidator.validate_billing_period(start, end, max_period_days=365)
@@ -225,6 +228,7 @@ class TestDateRangeValidator:
         assert "Trial period exceeds maximum" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPricingRuleValidator:
     """Test pricing rule validation."""
 
@@ -307,6 +311,7 @@ class TestPricingRuleValidator:
         assert "Minimum quantity cannot exceed maximum" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestBusinessRulesValidator:
     """Test business rules validation."""
 
@@ -342,7 +347,7 @@ class TestBusinessRulesValidator:
 
     def test_validate_refund_eligibility_success(self):
         """Test eligible refund."""
-        payment_date = datetime.now(UTC) - timedelta(days=10)
+        payment_date = datetime.now(timezone.utc) - timedelta(days=10)
         amount = Decimal("100.00")
         refunded = Decimal("0.00")
 
@@ -355,7 +360,7 @@ class TestBusinessRulesValidator:
 
     def test_validate_refund_eligibility_window_expired(self):
         """Test refund window expired."""
-        payment_date = datetime.now(UTC) - timedelta(days=35)
+        payment_date = datetime.now(timezone.utc) - timedelta(days=35)
         amount = Decimal("100.00")
         refunded = Decimal("0.00")
 
@@ -371,7 +376,7 @@ class TestBusinessRulesValidator:
 
     def test_validate_refund_eligibility_fully_refunded(self):
         """Test fully refunded payment."""
-        payment_date = datetime.now(UTC) - timedelta(days=5)
+        payment_date = datetime.now(timezone.utc) - timedelta(days=5)
         amount = Decimal("100.00")
         refunded = Decimal("100.00")
 
@@ -394,6 +399,7 @@ class TestBusinessRulesValidator:
         )
 
 
+@pytest.mark.unit
 class TestValidationContext:
     """Test validation context manager."""
 

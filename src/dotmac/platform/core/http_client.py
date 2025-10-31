@@ -6,6 +6,7 @@ for all OSS/BSS HTTP clients (VOLTHA, GenieACS, NetBox, etc.).
 """
 
 import asyncio
+import hashlib
 from collections.abc import Awaitable, Callable
 from typing import Any, ClassVar, cast
 from urllib.parse import urljoin
@@ -101,7 +102,11 @@ class RobustHTTPClient:
             self.logger = logger.bind(service=service_name)
 
         # Connection pooling key
-        pool_key = f"{service_name}:{tenant_id or 'default'}:{base_url}"
+        # Fixed: Include auth material in pool key to prevent credential reuse across different auth contexts
+        # This ensures that rotating tokens, switching auth methods, or different tenant credentials
+        # each get their own httpx.AsyncClient instance with correct authentication
+        self.auth_key = self._create_auth_key(api_token, username, password)
+        pool_key = f"{service_name}:{tenant_id or 'default'}:{base_url}:{self.auth_key}"
 
         # Create or reuse HTTP client (connection pooling)
         if pool_key not in self._client_pool:
@@ -142,6 +147,42 @@ class RobustHTTPClient:
             )
 
         self.circuit_breaker = self._circuit_breakers[breaker_key]
+
+    @staticmethod
+    def _create_auth_key(
+        api_token: str | None,
+        username: str | None,
+        password: str | None,
+    ) -> str:
+        """
+        Create a secure hash key for authentication credentials.
+
+        This key is used in the connection pool key to ensure that different
+        credentials get separate httpx.AsyncClient instances, preventing
+        credential reuse when tokens rotate or auth methods change.
+
+        Args:
+            api_token: Bearer token
+            username: Basic auth username
+            password: Basic auth password
+
+        Returns:
+            8-character hash of the auth credentials (or "none" if no auth)
+        """
+        if api_token:
+            # Hash the bearer token
+            auth_str = f"bearer:{api_token}"
+        elif username and password:
+            # Hash the username:password combo
+            auth_str = f"basic:{username}:{password}"
+        else:
+            # No authentication
+            return "none"
+
+        # Create SHA256 hash and take first 8 characters for pool key
+        # This provides sufficient uniqueness while keeping pool keys readable
+        auth_hash = hashlib.sha256(auth_str.encode()).hexdigest()[:8]
+        return auth_hash
 
     class _CircuitBreakerListener(
         CircuitBreakerListener
@@ -335,7 +376,10 @@ class RobustHTTPClient:
                     )
                     if attempt < self.max_retries:
                         await asyncio.sleep(min(2**attempt * 0.5, 5.0))
-                        raise httpx.NetworkError(f"Server error: {response.status_code}")
+                        raise httpx.NetworkError(
+                            f"Server error: {response.status_code}",
+                            request=response.request,
+                        )
 
                 # Retry on 429 (rate limit)
                 if response.status_code == 429:
@@ -349,7 +393,10 @@ class RobustHTTPClient:
                     )
                     if attempt < self.max_retries:
                         await asyncio.sleep(wait_time)
-                        raise httpx.NetworkError("Rate limited")
+                        raise httpx.NetworkError(
+                            f"Rate limited (Retry-After: {wait_time}s)",
+                            request=response.request,
+                        )
 
                 response.raise_for_status()
 
@@ -385,7 +432,10 @@ class RobustHTTPClient:
 
     async def close(self) -> None:
         """Close HTTP client and cleanup resources."""
-        pool_key = f"{self.service_name}:{self.tenant_id or 'default'}:{self.base_url}"
+        # Fixed: Include auth_key in pool key to match the key used in __init__
+        pool_key = (
+            f"{self.service_name}:{self.tenant_id or 'default'}:{self.base_url}:{self.auth_key}"
+        )
         if pool_key in self._client_pool:
             await self._client_pool[pool_key].aclose()
             del self._client_pool[pool_key]

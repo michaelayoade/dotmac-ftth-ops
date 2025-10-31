@@ -4,18 +4,21 @@ Fault Management Celery Tasks
 Background tasks for alarm correlation, SLA monitoring, and maintenance.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
 import structlog
 from celery import shared_task
-from sqlalchemy import and_, or_, select
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.db import get_async_session
 from dotmac.platform import db as db_module
+from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.correlation import CorrelationEngine
 from dotmac.platform.fault_management.models import (
     Alarm,
@@ -23,8 +26,8 @@ from dotmac.platform.fault_management.models import (
     AlarmStatus,
     MaintenanceWindow,
     SLAInstance,
+    SLAStatus,
 )
-from dotmac.platform.fault_management.archival import AlarmArchivalService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 from dotmac.platform.notifications.models import (
     NotificationChannel,
@@ -129,33 +132,51 @@ async def _get_oncall_users(session: AsyncSession, tenant_id: str, alarm: Alarm)
     - Alarm severity and escalation rules
     - Team assignments and on-call groups
 
-    Note: This is a placeholder implementation that can be extended
-    when a dedicated on-call schedule system is implemented (e.g., PagerDuty integration,
-    custom rotation schedules, etc.).
-
     Args:
         session: Database session
         tenant_id: Tenant ID
         alarm: The alarm to check on-call schedules for
 
     Returns:
-        List of on-call users (empty list if no on-call system configured)
+        List of on-call users
     """
-    # TODO: Implement on-call schedule integration
-    # Possible integrations:
-    # 1. Internal rotation schedule (user_oncall_schedules table)
-    # 2. External systems (PagerDuty, Opsgenie, VictorOps)
-    # 3. Team-based rotations with handoff times
-    # 4. Escalation policies based on alarm severity
-    #
-    # For now, return empty list - standard permission-based notifications will be used
-    logger.debug(
-        "oncall.check_skipped",
-        alarm_id=alarm.alarm_id,
-        tenant_id=tenant_id,
-        reason="on_call_system_not_configured",
-    )
-    return []
+    from dotmac.platform.fault_management.oncall_service import OnCallScheduleService
+
+    try:
+        # Initialize on-call service
+        oncall_service = OnCallScheduleService(session, tenant_id)
+
+        # Get current on-call users for this alarm
+        oncall_users = await oncall_service.get_current_oncall_users(alarm=alarm)
+
+        if oncall_users:
+            logger.info(
+                "oncall.users_found",
+                alarm_id=alarm.alarm_id,
+                tenant_id=tenant_id,
+                alarm_severity=alarm.severity.value,
+                oncall_user_count=len(oncall_users),
+                oncall_user_ids=[str(u.id) for u in oncall_users],
+            )
+        else:
+            logger.debug(
+                "oncall.no_users_found",
+                alarm_id=alarm.alarm_id,
+                tenant_id=tenant_id,
+                alarm_severity=alarm.severity.value,
+            )
+
+        return oncall_users
+
+    except Exception as e:
+        logger.error(
+            "oncall.query_failed",
+            alarm_id=alarm.alarm_id,
+            tenant_id=tenant_id,
+            error=str(e),
+        )
+        # Return empty list on error - fall back to permission-based notifications
+        return []
 
 
 async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Alarm) -> list[User]:
@@ -187,11 +208,13 @@ async def _get_users_to_notify(session: AsyncSession, tenant_id: str, alarm: Ala
             and_(
                 user_permissions.c.granted == True,  # noqa: E712
                 Permission.is_active == True,  # noqa: E712
-                Permission.name.in_([
-                    "fault:alarm:view",
-                    "fault:alarm:manage",
-                    "fault:*",  # Wildcard for all fault management permissions
-                ]),
+                Permission.name.in_(
+                    [
+                        "fault:alarm:view",
+                        "fault:alarm:manage",
+                        "fault:*",  # Wildcard for all fault management permissions
+                    ]
+                ),
                 or_(
                     user_permissions.c.expires_at.is_(None),
                     user_permissions.c.expires_at > func.now(),
@@ -313,7 +336,6 @@ def correlate_pending_alarms() -> dict[str, Any]:
 
     Scheduled: Every 5 minutes
     """
-    import asyncio
 
     async def _correlate() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -358,7 +380,6 @@ def check_sla_compliance() -> dict[str, Any]:
 
     Scheduled: Every 15 minutes
     """
-    import asyncio
 
     async def _check() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -379,7 +400,9 @@ def check_sla_compliance() -> dict[str, Any]:
                 # Check for breaches
                 await service._check_availability_breach(instance)
 
-                if instance.status != "compliant":
+                status = instance.status
+                status_value = status.value if isinstance(status, SLAStatus) else str(status)
+                if status_value != SLAStatus.COMPLIANT.value:
                     breaches_detected += 1
 
             await session.commit()
@@ -410,7 +433,6 @@ def check_unacknowledged_alarms() -> dict[str, Any]:
 
     Scheduled: Every 10 minutes
     """
-    import asyncio
 
     async def _check() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -464,7 +486,6 @@ def update_maintenance_windows() -> dict[str, Any]:
 
     Scheduled: Every 5 minutes
     """
-    import asyncio
 
     async def _update() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -529,7 +550,6 @@ def cleanup_old_cleared_alarms(days: int | None = None) -> dict[str, Any]:
     Returns:
         dict with archival statistics
     """
-    import asyncio
 
     from ..settings import settings
 
@@ -666,7 +686,6 @@ def process_alarm_correlation(alarm_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On alarm creation
     """
-    import asyncio
 
     async def _process() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -699,7 +718,6 @@ def calculate_sla_metrics(instance_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On downtime recording
     """
-    import asyncio
 
     async def _calculate() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:
@@ -738,7 +756,6 @@ def send_alarm_notifications(alarm_id: str, tenant_id: str) -> dict[str, Any]:
 
     Triggered: On critical/major alarm creation
     """
-    import asyncio
 
     async def _notify() -> dict[str, Any]:
         async with db_module.AsyncSessionLocal() as session:

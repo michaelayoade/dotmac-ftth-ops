@@ -345,6 +345,11 @@ class NetworkOverviewResponse(BaseModel):
     recent_offline_devices: list[str] = Field(default_factory=list)
     recent_alerts: list[NetworkAlertResponse] = Field(default_factory=list)
 
+    data_source_status: dict[str, str] = Field(
+        default_factory=dict,
+        description="Status of upstream monitoring data sources",
+    )
+
     model_config = ConfigDict(from_attributes=True)
 
 

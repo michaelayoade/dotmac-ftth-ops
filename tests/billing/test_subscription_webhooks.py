@@ -13,7 +13,7 @@ Tests webhook event emission and delivery for subscription lifecycle:
 import hashlib
 import hmac
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -24,8 +24,8 @@ from aiohttp import ClientError, ClientTimeout
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
-    SubscriptionStatus,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
@@ -51,13 +51,13 @@ def webhook_endpoint():
 def mock_http_client():
     """Mock HTTP client for webhook delivery."""
     client = MagicMock()
-    client.post = AsyncMock(return_value=MagicMock(
-        status=200,
-        text=AsyncMock(return_value='{"success": true}')
-    ))
+    client.post = AsyncMock(
+        return_value=MagicMock(status=200, text=AsyncMock(return_value='{"success": true}'))
+    )
     return client
 
 
+@pytest.mark.integration
 class TestWebhookEventEmission:
     """Test webhook event emission on subscription lifecycle changes."""
 
@@ -82,7 +82,7 @@ class TestWebhookEventEmission:
         plan = await service.create_plan(plan_data=plan_data, tenant_id=tenant_id)
 
         # Mock webhook service
-        with patch('dotmac.platform.webhooks.service.WebhookService') as MockWebhook:
+        with patch("dotmac.platform.webhooks.service.WebhookService") as MockWebhook:
             mock_webhook_service = MockWebhook.return_value
             mock_webhook_service.emit = AsyncMock()
 
@@ -92,25 +92,26 @@ class TestWebhookEventEmission:
                 plan_id=plan.plan_id,
             )
             subscription = await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
 
             # In real implementation, webhook would be emitted
             # For now, we test the structure
             webhook_payload = {
                 "event": "subscription.created",
-                "timestamp": datetime.now(UTC).isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "data": {
                     "subscription_id": subscription.subscription_id,
                     "customer_id": subscription.customer_id,
                     "plan_id": subscription.plan_id,
                     "status": subscription.status.value,
-                    "trial_end": subscription.trial_end.isoformat() if subscription.trial_end else None,
-                }
+                    "trial_end": subscription.trial_end.isoformat()
+                    if subscription.trial_end
+                    else None,
+                },
             }
 
-            print(f"\n📨 Webhook payload structure:")
+            print("\n📨 Webhook payload structure:")
             print(f"   Event: {webhook_payload['event']}")
             print(f"   Subscription ID: {webhook_payload['data']['subscription_id']}")
             print(f"   Status: {webhook_payload['data']['status']}")
@@ -118,9 +119,7 @@ class TestWebhookEventEmission:
             assert subscription.subscription_id is not None
 
     @pytest.mark.asyncio
-    async def test_plan_change_emits_webhook(
-        self, async_db_session, webhook_endpoint
-    ):
+    async def test_plan_change_emits_webhook(self, async_db_session, webhook_endpoint):
         """Test that changing plans emits a webhook event."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -137,7 +136,7 @@ class TestWebhookEventEmission:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         premium_plan = await service.create_plan(
@@ -150,7 +149,7 @@ class TestWebhookEventEmission:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Create subscription
@@ -159,38 +158,37 @@ class TestWebhookEventEmission:
                 customer_id=str(uuid4()),
                 plan_id=basic_plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Change plan
-        upgraded = await service.change_plan(
+        change_request = SubscriptionPlanChangeRequest(new_plan_id=premium_plan.plan_id)
+        upgraded, _ = await service.change_plan(
             subscription_id=subscription.subscription_id,
+            change_request=change_request,
             tenant_id=tenant_id,
-            new_plan_id=premium_plan.plan_id
         )
 
         # Expected webhook payload
-        webhook_payload = {
+        {
             "event": "subscription.plan_changed",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "subscription_id": upgraded.subscription_id,
                 "old_plan_id": basic_plan.plan_id,
                 "new_plan_id": premium_plan.plan_id,
                 "proration_amount": None,  # Would be calculated in real implementation
-            }
+            },
         }
 
-        print(f"\n🔄 Plan change webhook:")
+        print("\n🔄 Plan change webhook:")
         print(f"   Old Plan: {basic_plan.name}")
         print(f"   New Plan: {premium_plan.name}")
 
         assert upgraded.plan_id == premium_plan.plan_id
 
     @pytest.mark.asyncio
-    async def test_cancellation_emits_webhook(
-        self, async_db_session, webhook_endpoint
-    ):
+    async def test_cancellation_emits_webhook(self, async_db_session, webhook_endpoint):
         """Test that canceling a subscription emits a webhook event."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -206,7 +204,7 @@ class TestWebhookEventEmission:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         subscription = await service.create_subscription(
@@ -214,49 +212,46 @@ class TestWebhookEventEmission:
                 customer_id=str(uuid4()),
                 plan_id=plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Cancel subscription
         canceled = await service.cancel_subscription(
-            subscription_id=subscription.subscription_id,
-            tenant_id=tenant_id,
-            immediately=False
+            subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
         )
 
         # Expected webhook payload
         webhook_payload = {
             "event": "subscription.canceled",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "subscription_id": canceled.subscription_id,
                 "canceled_at": canceled.canceled_at.isoformat(),
                 "cancel_at_period_end": canceled.cancel_at_period_end,
                 "ended_at": canceled.ended_at.isoformat() if canceled.ended_at else None,
-            }
+            },
         }
 
-        print(f"\n❌ Cancellation webhook:")
+        print("\n❌ Cancellation webhook:")
         print(f"   Cancel at period end: {webhook_payload['data']['cancel_at_period_end']}")
 
         assert canceled.cancel_at_period_end is True
 
 
+@pytest.mark.integration
 class TestWebhookDelivery:
     """Test webhook delivery mechanism."""
 
     @pytest.mark.asyncio
-    async def test_successful_webhook_delivery(
-        self, webhook_endpoint, mock_http_client
-    ):
+    async def test_successful_webhook_delivery(self, webhook_endpoint, mock_http_client):
         """Test successful webhook delivery."""
         webhook_payload = {
             "event": "subscription.created",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": {
                 "subscription_id": str(uuid4()),
                 "customer_id": str(uuid4()),
-            }
+            },
         }
 
         # Simulate webhook delivery
@@ -274,14 +269,12 @@ class TestWebhookDelivery:
         result = await response.text()
         assert "success" in result
 
-        print(f"\n✅ Webhook delivered successfully")
+        print("\n✅ Webhook delivered successfully")
         print(f"   URL: {webhook_endpoint['url']}")
         print(f"   Status: {response.status}")
 
     @pytest.mark.asyncio
-    async def test_webhook_delivery_retry_on_failure(
-        self, webhook_endpoint
-    ):
+    async def test_webhook_delivery_retry_on_failure(self, webhook_endpoint):
         """Test webhook retry logic on delivery failure."""
         webhook_payload = {
             "event": "subscription.created",
@@ -298,10 +291,7 @@ class TestWebhookDelivery:
             if attempt_count < 3:
                 raise ClientError("Connection timeout")
 
-            return MagicMock(
-                status=200,
-                text=AsyncMock(return_value='{"success": true}')
-            )
+            return MagicMock(status=200, text=AsyncMock(return_value='{"success": true}'))
 
         mock_client = MagicMock()
         mock_client.post = mock_post
@@ -330,14 +320,12 @@ class TestWebhookDelivery:
                     delay = retry_delays[retry]
                     print(f"   Retrying in {delay}s...")
                 else:
-                    print(f"⛔ Max retries reached, giving up")
+                    print("⛔ Max retries reached, giving up")
 
         assert attempt_count == 3  # Should succeed on 3rd attempt
 
     @pytest.mark.asyncio
-    async def test_webhook_delivery_timeout(
-        self, webhook_endpoint
-    ):
+    async def test_webhook_delivery_timeout(self, webhook_endpoint):
         """Test webhook delivery timeout handling."""
         webhook_payload = {
             "event": "subscription.created",
@@ -358,23 +346,20 @@ class TestWebhookDelivery:
                 json=webhook_payload,
                 timeout=ClientTimeout(total=5),
             )
-            assert False, "Should have raised timeout error"
+            raise AssertionError("Should have raised timeout error")
         except ClientError as e:
             print(f"\n⏱️  Webhook delivery timeout caught: {e}")
             assert "timeout" in str(e).lower()
 
 
+@pytest.mark.integration
 class TestWebhookSignatureVerification:
     """Test webhook signature generation and verification."""
 
     def generate_signature(self, payload: dict, secret: str) -> str:
         """Generate HMAC-SHA256 signature for webhook payload."""
-        payload_bytes = json.dumps(payload, sort_keys=True).encode('utf-8')
-        signature = hmac.new(
-            secret.encode('utf-8'),
-            payload_bytes,
-            hashlib.sha256
-        ).hexdigest()
+        payload_bytes = json.dumps(payload, sort_keys=True).encode("utf-8")
+        signature = hmac.new(secret.encode("utf-8"), payload_bytes, hashlib.sha256).hexdigest()
         return signature
 
     def verify_signature(self, payload: dict, signature: str, secret: str) -> bool:
@@ -390,17 +375,14 @@ class TestWebhookSignatureVerification:
             "timestamp": "2025-10-17T12:00:00Z",
             "data": {
                 "subscription_id": "sub_test_123",
-            }
+            },
         }
 
-        signature = self.generate_signature(
-            webhook_payload,
-            webhook_endpoint["secret"]
-        )
+        signature = self.generate_signature(webhook_payload, webhook_endpoint["secret"])
 
-        print(f"\n🔐 Webhook signature:")
+        print("\n🔐 Webhook signature:")
         print(f"   Signature: {signature}")
-        print(f"   Algorithm: HMAC-SHA256")
+        print("   Algorithm: HMAC-SHA256")
 
         assert len(signature) == 64  # SHA256 produces 64 hex characters
         assert signature.isalnum()
@@ -415,17 +397,10 @@ class TestWebhookSignatureVerification:
         }
 
         # Generate signature
-        signature = self.generate_signature(
-            webhook_payload,
-            webhook_endpoint["secret"]
-        )
+        signature = self.generate_signature(webhook_payload, webhook_endpoint["secret"])
 
         # Verify signature
-        is_valid = self.verify_signature(
-            webhook_payload,
-            signature,
-            webhook_endpoint["secret"]
-        )
+        is_valid = self.verify_signature(webhook_payload, signature, webhook_endpoint["secret"])
 
         print(f"\n✅ Signature verification: {'PASS' if is_valid else 'FAIL'}")
 
@@ -444,9 +419,7 @@ class TestWebhookSignatureVerification:
 
         # Verify signature
         is_valid = self.verify_signature(
-            webhook_payload,
-            wrong_signature,
-            webhook_endpoint["secret"]
+            webhook_payload, wrong_signature, webhook_endpoint["secret"]
         )
 
         print(f"\n❌ Signature verification with wrong signature: {'PASS' if is_valid else 'FAIL'}")
@@ -462,10 +435,7 @@ class TestWebhookSignatureVerification:
         }
 
         # Generate signature for original payload
-        signature = self.generate_signature(
-            original_payload,
-            webhook_endpoint["secret"]
-        )
+        signature = self.generate_signature(original_payload, webhook_endpoint["secret"])
 
         # Tamper with payload
         tampered_payload = {
@@ -474,48 +444,41 @@ class TestWebhookSignatureVerification:
         }
 
         # Verify signature with tampered payload
-        is_valid = self.verify_signature(
-            tampered_payload,
-            signature,
-            webhook_endpoint["secret"]
-        )
+        is_valid = self.verify_signature(tampered_payload, signature, webhook_endpoint["secret"])
 
         print(f"\n🚨 Tampering detection: {'DETECTED' if not is_valid else 'FAILED TO DETECT'}")
-        print(f"   Original amount: $29.99")
-        print(f"   Tampered amount: $0.01")
+        print("   Original amount: $29.99")
+        print("   Tampered amount: $0.01")
 
         assert is_valid is False
 
 
+@pytest.mark.integration
 class TestWebhookEndpointHealth:
     """Test webhook endpoint health checks."""
 
     @pytest.mark.asyncio
-    async def test_webhook_endpoint_health_check(
-        self, webhook_endpoint, mock_http_client
-    ):
+    async def test_webhook_endpoint_health_check(self, webhook_endpoint, mock_http_client):
         """Test webhook endpoint health check."""
         # Mock health check response
-        mock_http_client.get = AsyncMock(return_value=MagicMock(
-            status=200,
-            text=AsyncMock(return_value='{"status": "healthy"}')
-        ))
+        mock_http_client.get = AsyncMock(
+            return_value=MagicMock(status=200, text=AsyncMock(return_value='{"status": "healthy"}'))
+        )
 
         # Perform health check
         health_url = f"{webhook_endpoint['url']}/health"
         response = await mock_http_client.get(health_url)
 
-        print(f"\n🏥 Webhook endpoint health:")
+        print("\n🏥 Webhook endpoint health:")
         print(f"   URL: {health_url}")
         print(f"   Status: {response.status}")
 
         assert response.status == 200
 
     @pytest.mark.asyncio
-    async def test_webhook_endpoint_unreachable(
-        self, webhook_endpoint
-    ):
+    async def test_webhook_endpoint_unreachable(self, webhook_endpoint):
         """Test handling of unreachable webhook endpoint."""
+
         # Mock client that cannot reach endpoint
         async def mock_get(*args, **kwargs):
             raise ClientError("Connection refused")
@@ -526,28 +489,24 @@ class TestWebhookEndpointHealth:
         # Attempt health check
         try:
             await mock_client.get(f"{webhook_endpoint['url']}/health")
-            assert False, "Should have raised connection error"
+            raise AssertionError("Should have raised connection error")
         except ClientError as e:
             print(f"\n🔌 Endpoint unreachable: {e}")
             assert "refused" in str(e).lower()
 
 
+@pytest.mark.integration
 class TestConcurrentWebhookDelivery:
     """Test concurrent webhook deliveries."""
 
     @pytest.mark.asyncio
-    async def test_concurrent_webhook_deliveries(
-        self, webhook_endpoint, mock_http_client
-    ):
+    async def test_concurrent_webhook_deliveries(self, webhook_endpoint, mock_http_client):
         """Test sending multiple webhooks concurrently."""
         import asyncio
 
         # Create multiple webhook payloads
         webhook_payloads = [
-            {
-                "event": "subscription.created",
-                "data": {"subscription_id": str(uuid4())}
-            }
+            {"event": "subscription.created", "data": {"subscription_id": str(uuid4())}}
             for _ in range(10)
         ]
 
@@ -587,9 +546,9 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
     service = SubscriptionService(db_session=async_db_session)
     tenant_id = str(uuid4())
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📨 COMPLETE WEBHOOK WORKFLOW TEST")
-    print("="*70)
+    print("=" * 70)
 
     # Step 1: Create plan
     print("\n📋 Step 1: Creating subscription plan...")
@@ -603,7 +562,7 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
             trial_days=0,
             is_active=True,
         ),
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
     print(f"✅ Plan created: {plan.name}")
 
@@ -614,27 +573,25 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
             customer_id=str(uuid4()),
             plan_id=plan.plan_id,
         ),
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
 
     webhook_payload = {
         "event": "subscription.created",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "data": {
             "subscription_id": subscription.subscription_id,
             "plan_id": plan.plan_id,
             "status": subscription.status.value,
-        }
+        },
     }
     print(f"✅ Subscription created: {subscription.subscription_id}")
 
     # Step 3: Generate signature
     print("\n🔐 Step 3: Generating webhook signature...")
-    payload_bytes = json.dumps(webhook_payload, sort_keys=True).encode('utf-8')
+    payload_bytes = json.dumps(webhook_payload, sort_keys=True).encode("utf-8")
     signature = hmac.new(
-        webhook_endpoint["secret"].encode('utf-8'),
-        payload_bytes,
-        hashlib.sha256
+        webhook_endpoint["secret"].encode("utf-8"), payload_bytes, hashlib.sha256
     ).hexdigest()
     print(f"✅ Signature: {signature[:16]}...")
 
@@ -650,28 +607,26 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
     # Step 5: Cancel subscription (would emit webhook)
     print("\n❌ Step 5: Canceling subscription...")
     canceled = await service.cancel_subscription(
-        subscription_id=subscription.subscription_id,
-        tenant_id=tenant_id,
-        immediately=False
+        subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
     )
 
-    cancel_webhook = {
+    {
         "event": "subscription.canceled",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
         "data": {
             "subscription_id": canceled.subscription_id,
             "canceled_at": canceled.canceled_at.isoformat(),
-        }
+        },
     }
-    print(f"✅ Cancellation webhook would be emitted")
+    print("✅ Cancellation webhook would be emitted")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("✅ COMPLETE WEBHOOK WORKFLOW SUCCESSFUL")
-    print("="*70)
-    print(f"\nWebhooks emitted:")
-    print(f"  1. subscription.created")
-    print(f"  2. subscription.canceled")
-    print(f"\nDelivery:")
+    print("=" * 70)
+    print("\nWebhooks emitted:")
+    print("  1. subscription.created")
+    print("  2. subscription.canceled")
+    print("\nDelivery:")
     print(f"  - Endpoint: {webhook_endpoint['url']}")
-    print(f"  - Signature: HMAC-SHA256")
-    print(f"  - Status: Delivered successfully")
+    print("  - Signature: HMAC-SHA256")
+    print("  - Status: Delivered successfully")

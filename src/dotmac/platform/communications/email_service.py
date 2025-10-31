@@ -7,7 +7,10 @@ Supports Vault integration for secure credential management.
 
 import os
 import smtplib
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from uuid import uuid4
@@ -17,6 +20,11 @@ from pydantic import BaseModel, ConfigDict, EmailStr, Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.communications.plugins import (
+    EmailTransport,
+    get_plugin,
+    register_builtin_plugins,
+)
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
@@ -69,7 +77,9 @@ class EmailService:
         db: AsyncSession | None = None,
         use_vault: bool = False,
         vault_path: str = "secret/smtp",
+        transport_plugin_id: str | None = None,
     ):
+        register_builtin_plugins()
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.use_tls = use_tls
@@ -79,6 +89,9 @@ class EmailService:
         self.use_vault = use_vault or os.getenv("SMTP_USE_VAULT", "false").lower() == "true"
         self.vault_path = vault_path
         self._vault_credentials: dict[str, str] | None = None
+
+        self._transport_plugin_id = transport_plugin_id or "communications.smtp"
+        self._transport: EmailTransport | None = None
 
         # Store credentials (will be overridden if using Vault)
         self.smtp_user = smtp_user
@@ -105,11 +118,8 @@ class EmailService:
         message_id = f"email_{uuid4().hex[:8]}"
 
         try:
-            # Create MIME message
-            msg = self._create_mime_message(message, message_id)
-
-            # Send via SMTP
-            await self._send_smtp(msg, message)
+            transport = self._get_transport()
+            await transport.send(self, message, message_id)
 
             recipients_count = len(message.to) + len(message.cc) + len(message.bcc)
             response = EmailResponse(
@@ -341,6 +351,16 @@ class EmailService:
         )
 
         return responses
+
+    def _get_transport(self) -> EmailTransport:
+        if self._transport is None:
+            plugin = get_plugin(self._transport_plugin_id)
+            if not plugin:
+                raise RuntimeError(
+                    f"Email transport plugin '{self._transport_plugin_id}' is not registered"
+                )
+            self._transport = plugin.create_transport(self)
+        return self._transport
 
 
 # Global service instance

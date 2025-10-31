@@ -5,7 +5,10 @@ Provides comprehensive metrics endpoints for billing overview, payment history,
 and customer insights with caching and tenant isolation.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -28,8 +31,14 @@ from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="", )
-customer_metrics_router = APIRouter(prefix="", )
+router = APIRouter(
+    prefix="",
+    tags=["Billing Metrics"],
+)
+customer_metrics_router = APIRouter(
+    prefix="",
+    tags=["Customer Metrics"],
+)
 
 
 # ============================================================================

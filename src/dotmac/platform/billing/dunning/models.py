@@ -5,7 +5,10 @@ Provides automated dunning workflows for past-due accounts,
 including email/SMS reminders and service suspension automation.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
@@ -210,7 +213,7 @@ class DunningExecution(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: 
 
     # Execution details
     status: Mapped[DunningExecutionStatus] = mapped_column(
-        SQLEnum(DunningExecutionStatus),
+        SQLEnum(DunningExecutionStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=DunningExecutionStatus.PENDING,
         index=True,

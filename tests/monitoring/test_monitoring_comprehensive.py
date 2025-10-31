@@ -34,6 +34,7 @@ from dotmac.platform.monitoring.benchmarks import (
 )
 
 
+@pytest.mark.integration
 class TestMonitoringModuleIntegration:
     """Test integration between different monitoring components."""
 
@@ -119,6 +120,7 @@ class TestMonitoringModuleIntegration:
         assert suite_stats["completed"] == 2
 
 
+@pytest.mark.integration
 class TestMonitoringErrorHandling:
     """Test error handling across monitoring components."""
 
@@ -232,6 +234,7 @@ class TestMonitoringErrorHandling:
             assert name in prometheus_format
 
 
+@pytest.mark.integration
 class TestMonitoringPerformance:
     """Test performance characteristics of monitoring components."""
 
@@ -331,6 +334,7 @@ class TestMonitoringPerformance:
         assert sequential_time > 0
 
 
+@pytest.mark.integration
 class TestMonitoringConfigurationAndSettings:
     """Test configuration and settings handling in monitoring components."""
 
@@ -401,6 +405,7 @@ class TestMonitoringConfigurationAndSettings:
         assert len(metrics) == 1
 
 
+@pytest.mark.integration
 class TestMonitoringEdgeCases:
     """Test edge cases and boundary conditions in monitoring components."""
 

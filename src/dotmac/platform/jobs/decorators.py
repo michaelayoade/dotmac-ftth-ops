@@ -7,7 +7,10 @@ Decorators for easy background job creation and management.
 import asyncio
 import functools
 from collections.abc import Callable
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, TypedDict, TypeVar, cast
 from uuid import uuid4
 

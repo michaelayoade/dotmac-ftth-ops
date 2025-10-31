@@ -1,16 +1,19 @@
+
 """
 Integration tests for complete subscription workflows.
 
 Tests end-to-end subscription scenarios that span multiple operations.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from dotmac.platform.billing.models import (
+
+
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
@@ -25,8 +28,11 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db():
@@ -44,6 +50,7 @@ def subscription_service(mock_db):
     return SubscriptionService(mock_db)
 
 
+@pytest.mark.integration
 class TestCompleteSubscriptionLifecycle:
     """Test complete subscription lifecycle from creation to cancellation."""
 
@@ -56,7 +63,7 @@ class TestCompleteSubscriptionLifecycle:
         3. Record usage
         4. Cancel subscription
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Step 1: Create plan
         plan_request = SubscriptionPlanCreateRequest(
@@ -109,7 +116,7 @@ class TestCompleteSubscriptionLifecycle:
         2. Verify trial status
         3. Simulate trial end (would be done by background job)
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create plan with trial
         mock_db_plan = MagicMock(spec=BillingSubscriptionPlanTable)
@@ -184,6 +191,7 @@ class TestCompleteSubscriptionLifecycle:
         assert subscription.trial_end is not None
 
 
+@pytest.mark.integration
 class TestPlanUpgradeDowngradeWorkflows:
     """Test plan upgrade and downgrade workflows."""
 
@@ -195,7 +203,7 @@ class TestPlanUpgradeDowngradeWorkflows:
         2. Upgrade to pro plan mid-cycle
         3. Calculate proration
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Basic plan
         basic_plan = SubscriptionPlan(
@@ -275,7 +283,7 @@ class TestPlanUpgradeDowngradeWorkflows:
         2. Downgrade to basic plan mid-cycle
         3. Calculate credit
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Pro plan
         pro_plan = SubscriptionPlan(
@@ -347,6 +355,7 @@ class TestPlanUpgradeDowngradeWorkflows:
         assert proration.old_plan_unused_amount > proration.new_plan_prorated_amount
 
 
+@pytest.mark.integration
 class TestUsageBasedBillingWorkflows:
     """Test usage-based billing workflows."""
 
@@ -358,7 +367,7 @@ class TestUsageBasedBillingWorkflows:
         2. Record multiple usage events
         3. Verify accumulated usage
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         mock_db_sub = MagicMock(spec=BillingSubscriptionTable)
         mock_db_sub.subscription_id = "sub_usage"
@@ -417,6 +426,7 @@ class TestUsageBasedBillingWorkflows:
         assert result3["storage_gb"] == 100
 
 
+@pytest.mark.integration
 class TestCancellationWorkflows:
     """Test various cancellation workflows."""
 
@@ -429,7 +439,7 @@ class TestCancellationWorkflows:
         1. Cancel subscription at period end
         2. Change mind and reactivate before period ends
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Initial active subscription
         mock_db_sub = MagicMock(spec=BillingSubscriptionTable)
@@ -490,6 +500,7 @@ class TestCancellationWorkflows:
         assert mock_db_sub.canceled_at is None
 
 
+@pytest.mark.integration
 class TestMultiTenantWorkflows:
     """Test multi-tenant isolation in subscription workflows."""
 
@@ -498,7 +509,7 @@ class TestMultiTenantWorkflows:
         """
         Test that plans are properly isolated by tenant.
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Plans for tenant_a
         plan_a1 = MagicMock(spec=BillingSubscriptionPlanTable)
@@ -533,7 +544,7 @@ class TestMultiTenantWorkflows:
         """
         Test that subscriptions are properly isolated by tenant.
         """
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Subscription for tenant_a
         sub_a = MagicMock(spec=BillingSubscriptionTable)

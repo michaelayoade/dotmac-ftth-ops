@@ -21,8 +21,11 @@ class WorkflowStatus(str, Enum):
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
+    PARTIALLY_COMPLETED = "partially_completed"
     ROLLING_BACK = "rolling_back"
     ROLLED_BACK = "rolled_back"
+    ROLLBACK_FAILED = "rollback_failed"
+    TIMEOUT = "timeout"
     COMPENSATED = "compensated"
 
 
@@ -103,7 +106,7 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
         "OrchestrationWorkflowStep",
         back_populates="workflow",
         cascade="all, delete-orphan",
-        order_by="OrchestrationWorkflowStep.step_order",
+        order_by="OrchestrationWorkflowStep.sequence_number",
     )
 
     def __repr__(self) -> str:
@@ -113,7 +116,7 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
         )
 
 
-class OrchestrationWorkflowStep(Base, TimestampMixin):
+class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
     """
     Individual step within a workflow.
 
@@ -130,13 +133,13 @@ class OrchestrationWorkflowStep(Base, TimestampMixin):
         nullable=False,
         index=True,
     )
-    step_id = Column(String(64), nullable=False, index=True)
-    step_order = Column(Integer, nullable=False)
+    step_id = Column(String(64), nullable=True, index=True)
+    sequence_number = Column(Integer, nullable=False)
 
     # Step identification
     step_name = Column(String(128), nullable=False)
     step_type = Column(String(64), nullable=False)  # 'database', 'api', 'external'
-    target_system = Column(String(64), nullable=False)  # 'radius', 'voltha', 'netbox', etc.
+    target_system = Column(String(64), nullable=True)  # 'radius', 'voltha', 'netbox', etc.
 
     # Status
     status: WorkflowStepStatus = Column(  # type: ignore[assignment]
@@ -173,6 +176,15 @@ class OrchestrationWorkflowStep(Base, TimestampMixin):
     # Relationships
     workflow = relationship("OrchestrationWorkflow", back_populates="steps")
 
+    @property
+    def step_order(self) -> int:
+        """Backward-compatible accessor for step ordering."""
+        return self.sequence_number
+
+    @step_order.setter
+    def step_order(self, value: int) -> None:
+        self.sequence_number = value
+
     def __repr__(self) -> str:
         return (
             f"<OrchestrationWorkflowStep(id={self.id}, step_id={self.step_id}, "
@@ -196,7 +208,7 @@ Index(
 Index(
     "idx_orchestration_workflow_step_order",
     OrchestrationWorkflowStep.workflow_id,
-    OrchestrationWorkflowStep.step_order,
+    OrchestrationWorkflowStep.sequence_number,
 )
 
 # Backwards compatibility aliases (to be removed in a future major release)

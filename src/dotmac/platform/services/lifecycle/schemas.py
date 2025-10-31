@@ -94,9 +94,14 @@ class ServiceSuspensionRequest(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    service_instance_id: UUID = Field(description="Service instance to suspend")
+    service_instance_id: UUID | None = Field(
+        default=None, description="Service instance to suspend", alias="service_instance_id"
+    )
     suspension_reason: str = Field(
-        min_length=5, max_length=1000, description="Reason for suspension"
+        min_length=5,
+        max_length=1000,
+        description="Reason for suspension",
+        alias="reason",
     )
     suspension_type: str | None = Field(
         None, description="Type of suspension (non_payment, customer_request, fraud)"
@@ -104,6 +109,7 @@ class ServiceSuspensionRequest(BaseModel):
     auto_resume_at: datetime | None = Field(None, description="Scheduled automatic resumption date")
     send_notification: bool = Field(True, description="Send suspension notification to customer")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    suspension_note: str | None = Field(None, description="Suspension note", alias="suspension_note")
 
 
 class ServiceResumptionRequest(BaseModel):
@@ -111,7 +117,9 @@ class ServiceResumptionRequest(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    service_instance_id: UUID = Field(description="Service instance to resume")
+    service_instance_id: UUID | None = Field(
+        default=None, description="Service instance to resume", alias="service_instance_id"
+    )
     resumption_note: str | None = Field(None, description="Resumption notes")
     send_notification: bool = Field(True, description="Send resumption notification to customer")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
@@ -122,12 +130,18 @@ class ServiceTerminationRequest(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    service_instance_id: UUID = Field(description="Service instance to terminate")
+    service_instance_id: UUID | None = Field(
+        default=None, description="Service instance to terminate", alias="service_instance_id"
+    )
     termination_reason: str = Field(
-        min_length=5, max_length=1000, description="Reason for termination"
+        min_length=5,
+        max_length=1000,
+        description="Reason for termination",
+        alias="reason",
     )
     termination_type: str = Field(
-        description="Type of termination (customer_request, non_payment, churn, etc.)"
+        default="customer_request",
+        description="Type of termination (customer_request, non_payment, churn, etc.)",
     )
     termination_date: datetime | None = Field(
         None, description="Scheduled termination date (default: immediate)"
@@ -135,6 +149,7 @@ class ServiceTerminationRequest(BaseModel):
     return_equipment: bool = Field(True, description="Whether equipment needs to be returned")
     send_notification: bool = Field(True, description="Send termination notification to customer")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
+    termination_note: str | None = Field(None, description="Termination note", alias="termination_note")
 
 
 class ServiceModificationRequest(BaseModel):
@@ -142,7 +157,9 @@ class ServiceModificationRequest(BaseModel):
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
-    service_instance_id: UUID = Field(description="Service instance to modify")
+    service_instance_id: UUID | None = Field(
+        default=None, description="Service instance to modify", alias="service_instance_id"
+    )
 
     # Fields that can be modified
     service_name: str | None = Field(None, min_length=3, max_length=255)
@@ -154,7 +171,10 @@ class ServiceModificationRequest(BaseModel):
     notes: str | None = Field(None)
 
     modification_reason: str = Field(
-        min_length=5, max_length=1000, description="Reason for modification"
+        min_length=5,
+        max_length=1000,
+        description="Reason for modification",
+        alias="reason",
     )
     send_notification: bool = Field(True, description="Send modification notification")
 
@@ -399,3 +419,8 @@ class BulkServiceOperationResult(BaseModel):
     total_failed: int
     results: list[ServiceOperationResult]
     execution_time_seconds: float
+
+    @property
+    def successful(self) -> int:
+        """Compatibility alias for total_successful."""
+        return self.total_successful

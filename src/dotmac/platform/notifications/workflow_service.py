@@ -6,7 +6,10 @@ Enhanced with comprehensive error handling, retry logic, and metrics.
 """
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy import select
@@ -163,9 +166,7 @@ class NotificationsService(WorkflowServiceBase):
         # Use transaction context manager with automatic rollback
         async with self.transaction("notify_team"):
             # Step 1: Fetch team members based on role mapping with retry logic
-            team_members = await self.with_retry(
-                self._get_team_members, team, tenant_id
-            )
+            team_members = await self.with_retry(self._get_team_members, team, tenant_id)
 
             if not team_members:
                 raise ValueError(
@@ -247,9 +248,7 @@ class NotificationsService(WorkflowServiceBase):
             "priority": priority,
         }
 
-    async def _get_team_members(
-        self, team: str, tenant_id: str | None = None
-    ) -> list[User]:
+    async def _get_team_members(self, team: str, tenant_id: str | None = None) -> list[User]:
         """
         Fetch all active users belonging to a team based on role mapping.
 

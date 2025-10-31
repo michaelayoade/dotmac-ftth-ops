@@ -5,7 +5,10 @@ Provides authentication and security metrics endpoints for monitoring
 login activity, user registrations, and authentication events.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog

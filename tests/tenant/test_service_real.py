@@ -9,7 +9,7 @@ This test file focuses on:
 5. Avoiding over-mocking
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import Mock, patch
 from uuid import uuid4
 
@@ -130,10 +130,11 @@ def create_tenant_data(
         company_size=kwargs.get("company_size"),
         industry=kwargs.get("industry"),
         country=kwargs.get("country"),
-        timezone=kwargs.get("timezone", "UTC"),
+        timezone=kwargs.get("timezone", "timezone.utc"),
     )
 
 
+@pytest.mark.integration
 class TestTenantServiceInit:
     """Test TenantService initialization."""
 
@@ -144,6 +145,7 @@ class TestTenantServiceInit:
         assert service.db is fake_db
 
 
+@pytest.mark.integration
 class TestCreateTenant:
     """Test tenant creation."""
 
@@ -188,7 +190,7 @@ class TestCreateTenant:
         tenant = await tenant_service.create_tenant(tenant_data)
 
         # Trial should be ~14 days from now
-        expected_trial_end = datetime.now(UTC) + timedelta(days=14)
+        expected_trial_end = datetime.now(timezone.utc) + timedelta(days=14)
         assert abs((tenant.trial_ends_at - expected_trial_end).total_seconds()) < 5
 
     @pytest.mark.asyncio
@@ -271,6 +273,7 @@ class TestCreateTenant:
         assert "domain" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestGetTenant:
     """Test getting tenants."""
 
@@ -314,6 +317,7 @@ class TestGetTenant:
         assert "nonexistent" in str(exc_info.value)
 
 
+@pytest.mark.integration
 class TestGetTenantBySlug:
     """Test getting tenant by slug."""
 
@@ -354,6 +358,7 @@ class TestGetTenantBySlug:
             await tenant_service.get_tenant_by_slug("nonexistent-slug")
 
 
+@pytest.mark.integration
 class TestUpdateTenant:
     """Test tenant updates."""
 
@@ -404,6 +409,7 @@ class TestUpdateTenant:
             await tenant_service.update_tenant("nonexistent", update_data)
 
 
+@pytest.mark.integration
 class TestDeleteTenant:
     """Test tenant deletion (soft delete)."""
 
@@ -429,7 +435,7 @@ class TestDeleteTenant:
         with patch.object(
             tenant,
             "soft_delete",
-            side_effect=lambda: setattr(tenant, "deleted_at", datetime.now(UTC)),
+            side_effect=lambda: setattr(tenant, "deleted_at", datetime.now(timezone.utc)),
         ):
             await tenant_service.delete_tenant("tenant-123", deleted_by="user-789")
 
@@ -439,6 +445,7 @@ class TestDeleteTenant:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestGetDefaultFeatures:
     """Test _get_default_features method."""
 
@@ -471,6 +478,7 @@ class TestGetDefaultFeatures:
         assert features.get("webhooks") is True
 
 
+@pytest.mark.integration
 class TestTenantSettings:
     """Test tenant settings management."""
 
@@ -510,6 +518,7 @@ class TestTenantSettings:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestTenantUsageTracking:
     """Test usage tracking."""
 
@@ -531,7 +540,7 @@ class TestTenantUsageTracking:
 
         fake_db.execute = mock_execute
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         usage_data = TenantUsageCreate(
             period_start=now,
             period_end=now + timedelta(hours=1),
@@ -547,6 +556,7 @@ class TestTenantUsageTracking:
         assert fake_db.committed is True
 
 
+@pytest.mark.integration
 class TestTenantInvitations:
     """Test tenant invitation system."""
 

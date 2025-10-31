@@ -4,7 +4,10 @@ Database models for data import tracking.
 Stores import job metadata, status, and failure records.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4

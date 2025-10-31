@@ -4,10 +4,13 @@ Integration tests for service lifecycle workflows.
 Tests complete lifecycle: provision → activate → suspend → resume → terminate
 """
 
-from datetime import UTC, datetime, timedelta
+import inspect
+from datetime import timezone, datetime, timedelta
+from typing import Any
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -15,7 +18,12 @@ from dotmac.platform.core.exceptions import (
     BusinessRuleError,
     ValidationError,
 )
-from dotmac.platform.customer_management.models import Customer
+from dotmac.platform.customer_management.models import (
+    Customer,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 from dotmac.platform.services.lifecycle.models import (
     LifecycleEvent,
     LifecycleEventType,
@@ -30,24 +38,61 @@ from dotmac.platform.services.lifecycle.schemas import (
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
+async def _provision_service_instance(
+    lifecycle_service: LifecycleOrchestrationService,
+    tenant_id: str,
+    provision_request: ServiceProvisionRequest,
+    db_session: AsyncSession,
+    **kwargs: Any,
+):
+    """Provision a service and return the persisted instance."""
+    response = await lifecycle_service.provision_service(
+        tenant_id=tenant_id,
+        data=provision_request,
+        **kwargs,
+    )
+    await db_session.commit()
+    service = await lifecycle_service.get_service_instance(response.service_instance_id, tenant_id)
+    assert service is not None
+    return service
+
+
 @pytest.fixture
+def test_tenant_id() -> str:
+    """Provide tenant id for lifecycle tests."""
+    return "tenant-lifecycle-test"
+
+
+@pytest_asyncio.fixture
 async def lifecycle_service(db_session: AsyncSession) -> LifecycleOrchestrationService:
     """Create LifecycleOrchestrationService instance."""
     return LifecycleOrchestrationService(db_session)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
     """Create test customer for lifecycle tests."""
     customer = Customer(
         id=uuid4(),
         tenant_id=test_tenant_id,
+        customer_number=f"CUST-{uuid4().hex[:8]}",
+        first_name="Lifecycle",
+        last_name="Customer",
+        status=CustomerStatus.ACTIVE,
+        customer_type=CustomerType.INDIVIDUAL,
+        tier=CustomerTier.STANDARD,
         email="lifecycle.test@example.com",
-        name="Lifecycle Test Customer",
         phone="+1234567890",
+        address_line1="123 Test St",
+        city="Test City",
+        state_province="TS",
+        postal_code="12345",
+        country="USA",
     )
     db_session.add(customer)
-    await db_session.flush()
+    flush_result = db_session.flush()
+    if inspect.isawaitable(flush_result):
+        await flush_result
     return customer
 
 
@@ -66,10 +111,11 @@ def test_service_provision_request(test_customer: Customer) -> ServiceProvisionR
             "vlan_id": 100,
         },
         installation_address="123 Test St, Test City, TS 12345",
-        installation_scheduled_date=datetime.now(UTC) + timedelta(days=7),
+        installation_scheduled_date=datetime.now(timezone.utc) + timedelta(days=7),
     )
 
 
+@pytest.mark.integration
 class TestServiceProvisioning:
     """Test service provisioning workflows."""
 
@@ -83,11 +129,12 @@ class TestServiceProvisioning:
     ):
         """Test successful service provisioning."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         # Verify service created
         assert service.id is not None
@@ -122,17 +169,18 @@ class TestServiceProvisioning:
     ):
         """Test provisioning fails with invalid data."""
         # Create invalid request (missing required service_config)
-        invalid_request = ServiceProvisionRequest(
+        invalid_request = ServiceProvisionRequest.model_construct(
             customer_id=test_customer.id,
             service_type=ServiceType.FIBER_INTERNET,
             service_name="",  # Empty name should fail validation
             plan_id="plan_test",
+            service_config={},
         )
 
         with pytest.raises(ValidationError):
             await lifecycle_service.provision_service(
                 tenant_id=test_tenant_id,
-                request=invalid_request,
+                data=invalid_request,
             )
 
     @pytest.mark.asyncio
@@ -147,15 +195,17 @@ class TestServiceProvisioning:
         # Add subscription ID to request
         test_service_provision_request.subscription_id = "sub_test123"
 
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         assert service.subscription_id == "sub_test123"
 
 
+@pytest.mark.integration
 class TestServiceActivation:
     """Test service activation workflows."""
 
@@ -169,12 +219,13 @@ class TestServiceActivation:
     ):
         """Test successful service activation."""
         # Provision service without auto-activation
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
             auto_activate=False,
         )
-        await db_session.commit()
 
         assert service.status == ServiceStatus.PENDING
 
@@ -208,11 +259,12 @@ class TestServiceActivation:
     ):
         """Test activating already active service."""
         # Provision service (auto-activated)
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         assert service.status == ServiceStatus.ACTIVE
 
@@ -224,6 +276,7 @@ class TestServiceActivation:
             )
 
 
+@pytest.mark.integration
 class TestServiceSuspension:
     """Test service suspension workflows."""
 
@@ -237,11 +290,12 @@ class TestServiceSuspension:
     ):
         """Test successful service suspension."""
         # Provision and activate service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         assert service.status == ServiceStatus.ACTIVE
 
@@ -266,7 +320,7 @@ class TestServiceSuspension:
         result = await db_session.execute(stmt)
         event = result.scalar_one()
         assert event is not None
-        assert event.metadata_.get("reason") == "Non-payment"
+        assert event.event_data.get("suspension_reason") == "Non-payment"
 
     @pytest.mark.asyncio
     async def test_suspend_fraud_service(
@@ -278,11 +332,12 @@ class TestServiceSuspension:
     ):
         """Test fraud suspension."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         # Suspend for fraud
         suspended = await lifecycle_service.suspend_service(
@@ -305,12 +360,13 @@ class TestServiceSuspension:
     ):
         """Test suspending non-active service fails."""
         # Provision without activation
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
             auto_activate=False,
         )
-        await db_session.commit()
 
         assert service.status == ServiceStatus.PENDING
 
@@ -323,6 +379,7 @@ class TestServiceSuspension:
             )
 
 
+@pytest.mark.integration
 class TestServiceResumption:
     """Test service resumption workflows."""
 
@@ -336,9 +393,11 @@ class TestServiceResumption:
     ):
         """Test successful service resumption."""
         # Provision, activate, and suspend service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
         suspended = await lifecycle_service.suspend_service(
             service_id=service.id,
@@ -380,11 +439,12 @@ class TestServiceResumption:
     ):
         """Test resuming non-suspended service fails."""
         # Provision active service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         assert service.status == ServiceStatus.ACTIVE
 
@@ -396,6 +456,7 @@ class TestServiceResumption:
             )
 
 
+@pytest.mark.integration
 class TestServiceTermination:
     """Test service termination workflows."""
 
@@ -409,11 +470,12 @@ class TestServiceTermination:
     ):
         """Test successful service termination."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         # Terminate service
         terminated = await lifecycle_service.terminate_service(
@@ -436,7 +498,7 @@ class TestServiceTermination:
         result = await db_session.execute(stmt)
         event = result.scalar_one()
         assert event is not None
-        assert event.metadata_.get("reason") == "Customer cancellation"
+        assert event.event_data.get("termination_reason") == "Customer cancellation"
 
     @pytest.mark.asyncio
     async def test_terminate_suspended_service(
@@ -448,9 +510,11 @@ class TestServiceTermination:
     ):
         """Test terminating suspended service."""
         # Provision and suspend service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
         await lifecycle_service.suspend_service(
             service_id=service.id,
@@ -479,9 +543,11 @@ class TestServiceTermination:
     ):
         """Test terminating already terminated service fails."""
         # Provision and terminate service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
         await lifecycle_service.terminate_service(
             service_id=service.id,
@@ -499,6 +565,7 @@ class TestServiceTermination:
             )
 
 
+@pytest.mark.integration
 class TestServiceModification:
     """Test service modification workflows."""
 
@@ -512,28 +579,36 @@ class TestServiceModification:
     ):
         """Test successful service configuration modification."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         original_bandwidth = service.service_config["bandwidth_down_mbps"]
         assert original_bandwidth == 100
 
         # Modify service (upgrade bandwidth)
-        modification_request = ServiceModificationRequest(
+        modification_request = ServiceModificationRequest.model_construct(
+            service_instance_id=service.id,
+            modification_reason="Bandwidth upgrade",
             service_config={
                 "bandwidth_down_mbps": 200,  # Upgrade to 200 Mbps
                 "bandwidth_up_mbps": 100,
-            }
+            },
         )
-        modified = await lifecycle_service.modify_service(
+        modified_result = await lifecycle_service.modify_service(
             service_id=service.id,
             tenant_id=test_tenant_id,
-            request=modification_request,
+            data=modification_request,
         )
         await db_session.commit()
+
+        if hasattr(modified_result, "service_config"):
+            modified = modified_result
+        else:
+            modified = await lifecycle_service.get_service_instance(service.id, test_tenant_id)
 
         # Verify modification
         assert modified.service_config["bandwidth_down_mbps"] == 200
@@ -547,10 +622,12 @@ class TestServiceModification:
         result = await db_session.execute(stmt)
         event = result.scalar_one()
         assert event is not None
-        assert event.metadata_.get("old_config", {}).get("bandwidth_down_mbps") == 100
-        assert event.metadata_.get("new_config", {}).get("bandwidth_down_mbps") == 200
+        changes = event.event_data.get("changes", {})
+        assert changes.get("bandwidth_down_mbps", {}).get("old") == 100
+        assert changes.get("bandwidth_down_mbps", {}).get("new") == 200
 
 
+@pytest.mark.integration
 class TestServiceHealthChecks:
     """Test service health check workflows."""
 
@@ -564,11 +641,12 @@ class TestServiceHealthChecks:
     ):
         """Test successful health check."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         # Perform health check
         health_result = await lifecycle_service.perform_health_check(
@@ -591,6 +669,7 @@ class TestServiceHealthChecks:
         assert event is not None
 
 
+@pytest.mark.integration
 class TestBulkOperations:
     """Test bulk service operations."""
 
@@ -613,12 +692,13 @@ class TestBulkOperations:
                 plan_id=f"plan_bulk_{i}",
                 service_config={"bandwidth_down_mbps": 100},
             )
-            service = await lifecycle_service.provision_service(
-                tenant_id=test_tenant_id,
-                request=request,
+            service_instance = await _provision_service_instance(
+                lifecycle_service,
+                test_tenant_id,
+                request,
+                db_session,
             )
-            service_ids.append(service.id)
-        await db_session.commit()
+            service_ids.append(service_instance.id)
 
         # Bulk suspend
         results = await lifecycle_service.bulk_service_operation(
@@ -652,17 +732,18 @@ class TestBulkOperations:
                 plan_id=f"plan_resume_{i}",
                 service_config={"bandwidth_down_mbps": 100},
             )
-            service = await lifecycle_service.provision_service(
-                tenant_id=test_tenant_id,
-                request=request,
+            service_instance = await _provision_service_instance(
+                lifecycle_service,
+                test_tenant_id,
+                request,
+                db_session,
             )
             await lifecycle_service.suspend_service(
-                service_id=service.id,
+                service_id=service_instance.id,
                 tenant_id=test_tenant_id,
                 reason="Test",
             )
-            service_ids.append(service.id)
-        await db_session.commit()
+            service_ids.append(service_instance.id)
 
         # Bulk resume
         results = await lifecycle_service.bulk_service_operation(
@@ -677,6 +758,7 @@ class TestBulkOperations:
         assert all(r.status == ServiceStatus.ACTIVE for r in results)
 
 
+@pytest.mark.integration
 class TestLifecycleEvents:
     """Test lifecycle event tracking."""
 
@@ -690,9 +772,11 @@ class TestLifecycleEvents:
     ):
         """Test complete lifecycle event tracking."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
 
         # Suspend
@@ -741,11 +825,12 @@ class TestLifecycleEvents:
     ):
         """Test filtering events by type."""
         # Provision service
-        service = await lifecycle_service.provision_service(
-            tenant_id=test_tenant_id,
-            request=test_service_provision_request,
+        service = await _provision_service_instance(
+            lifecycle_service,
+            test_tenant_id,
+            test_service_provision_request,
+            db_session,
         )
-        await db_session.commit()
 
         # Get only provisioning events
         events = await lifecycle_service.get_lifecycle_events(
@@ -756,3 +841,9 @@ class TestLifecycleEvents:
 
         assert len(events) >= 1
         assert all(e.event_type == LifecycleEventType.PROVISION_COMPLETED for e in events)
+
+
+@pytest_asyncio.fixture
+async def db_session(async_db_session: AsyncSession) -> AsyncSession:
+    """Alias async session fixture expected by tests."""
+    return async_db_session

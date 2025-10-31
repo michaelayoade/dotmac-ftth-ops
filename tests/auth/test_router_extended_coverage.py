@@ -1,3 +1,4 @@
+
 """
 Extended coverage tests for auth router to push coverage higher.
 
@@ -9,11 +10,11 @@ Focuses on:
 - Helper functions
 """
 
-from datetime import UTC, datetime
-from unittest.mock import patch
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +24,14 @@ from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
 
-@pytest.fixture
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
+@pytest_asyncio.fixture
 async def test_user_extended(async_db_session: AsyncSession):
     """Create a unique test user for extended tests."""
     import asyncio
@@ -40,8 +48,8 @@ async def test_user_extended(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -75,8 +83,8 @@ async def test_enable_2fa_already_enabled(extended_app: FastAPI, async_db_sessio
         is_verified=True,
         mfa_enabled=True,  # Already enabled
         mfa_secret="EXISTING_SECRET",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -198,8 +206,8 @@ async def test_verify_2fa_wrong_token(extended_app: FastAPI, async_db_session):
         is_verified=True,
         mfa_enabled=True,
         mfa_secret="JBSWY3DPEHPK3PXP",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -317,8 +325,8 @@ async def test_resend_email_verification(extended_app: FastAPI, async_db_session
         tenant_id="test-tenant",
         is_active=True,
         is_verified=False,  # Not verified yet
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -429,8 +437,8 @@ async def test_get_me_with_roles_permissions(extended_app: FastAPI, async_db_ses
         is_verified=True,
         roles=["admin", "user"],
         permissions=["read:all", "write:all"],
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -536,19 +544,15 @@ async def test_login_with_username_and_spaces(
 
     extended_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=extended_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": f"  {test_user_extended.username}  ",  # With spaces
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=extended_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": f"  {test_user_extended.username}  ",  # With spaces
+                "password": "TestPassword123!",
+            },
+        )
 
     # May succeed if implementation trims, or fail
     assert response.status_code in [200, 401]

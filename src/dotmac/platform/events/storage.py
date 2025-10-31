@@ -10,6 +10,9 @@ from dotmac.platform.events.models import Event, EventStatus
 logger = structlog.get_logger(__name__)
 
 
+INDEX_TTL_SECONDS = 86400 * 7
+
+
 class EventStorage:
     """
     Event storage for persistence and querying.
@@ -38,20 +41,24 @@ class EventStorage:
         """
         if self._redis:
             try:
+                existing_event = await self.get_event(event.event_id)
+                if existing_event:
+                    self._remove_from_indices(existing_event)
+
                 key = f"event:{event.event_id}"
                 value = json.dumps(event.to_dict())
-                self._redis.setex(key, 86400 * 7, value)  # 7 days TTL
+                self._redis.setex(key, INDEX_TTL_SECONDS, value)  # 7 days TTL
 
                 # Add to indices
-                self._add_to_index(event)
+                self._add_to_indices(event)
             except Exception as e:
                 logger.warning("Failed to save event to Redis", error=str(e))
                 self._memory_store[event.event_id] = event
         else:
             self._memory_store[event.event_id] = event
 
-    def _add_to_index(self, event: Event) -> None:
-        """Add event to type and status indices."""
+    def _add_to_indices(self, event: Event) -> None:
+        """Add event to type, status, tenant, and all-events indices."""
         if not self._redis:
             return
 
@@ -59,20 +66,45 @@ class EventStorage:
             # Index by type
             type_key = f"events:type:{event.event_type}"
             self._redis.zadd(type_key, {event.event_id: event.created_at.timestamp()})
-            self._redis.expire(type_key, 86400 * 7)
+            self._redis.expire(type_key, INDEX_TTL_SECONDS)
 
             # Index by status
             status_key = f"events:status:{event.status.value}"
             self._redis.zadd(status_key, {event.event_id: event.created_at.timestamp()})
-            self._redis.expire(status_key, 86400 * 7)
+            self._redis.expire(status_key, INDEX_TTL_SECONDS)
 
             # Index by tenant if available
             if event.metadata.tenant_id:
                 tenant_key = f"events:tenant:{event.metadata.tenant_id}"
                 self._redis.zadd(tenant_key, {event.event_id: event.created_at.timestamp()})
-                self._redis.expire(tenant_key, 86400 * 7)
+                self._redis.expire(tenant_key, INDEX_TTL_SECONDS)
+
+            # Global index for fetching all events (newest first)
+            all_key = "events:all"
+            self._redis.zadd(all_key, {event.event_id: event.created_at.timestamp()})
+            self._redis.expire(all_key, INDEX_TTL_SECONDS)
         except Exception as e:
             logger.warning("Failed to update event indices", error=str(e))
+
+    def _remove_from_indices(self, event: Event) -> None:
+        """Remove event from existing indices prior to update."""
+        if not self._redis:
+            return
+
+        try:
+            type_key = f"events:type:{event.event_type}"
+            self._redis.zrem(type_key, event.event_id)
+
+            status_key = f"events:status:{event.status.value}"
+            self._redis.zrem(status_key, event.event_id)
+
+            if event.metadata.tenant_id:
+                tenant_key = f"events:tenant:{event.metadata.tenant_id}"
+                self._redis.zrem(tenant_key, event.event_id)
+
+            self._redis.zrem("events:all", event.event_id)
+        except Exception as e:
+            logger.warning("Failed to remove event from indices", error=str(e))
 
     async def get_event(self, event_id: str) -> Event | None:
         """
@@ -143,8 +175,8 @@ class EventStorage:
         elif tenant_id:
             return f"events:tenant:{tenant_id}"
         else:
-            # Get all events (not recommended for production)
-            return "events:type:*"
+            # Global catch-all index
+            return "events:all"
 
     def _decode_event_id(self, event_id: bytes | str) -> str:
         """Decode event ID from bytes to string if needed."""

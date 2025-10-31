@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for the resilience module.
 
@@ -6,7 +7,7 @@ load balancing, traffic policies, and other resilience patterns.
 """
 
 import time
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -14,6 +15,8 @@ import pytest
 from tenacity import RetryError
 
 from dotmac.platform.resilience.circuit_breaker import (
+
+
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -36,6 +39,11 @@ from dotmac.platform.resilience.service_mesh import (
     setup_service_mesh_for_consolidated_services,
 )
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestCircuitBreakerPatterns:
     """Test circuit breaker functionality using tenacity."""
@@ -311,7 +319,7 @@ class TestServiceCall:
         call_id = str(uuid4())
         trace_id = str(uuid4())
         span_id = str(uuid4())
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         call = ServiceCall(
             call_id=call_id,
@@ -342,7 +350,7 @@ class TestServiceCall:
         call_id = str(uuid4())
         trace_id = str(uuid4())
         span_id = str(uuid4())
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
 
         call = ServiceCall(
             call_id=call_id,

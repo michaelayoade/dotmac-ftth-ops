@@ -9,12 +9,50 @@ from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 
+@pytest_asyncio.fixture
+async def tenant_a_user(async_db_session):
+    """Create user in tenant-a."""
+    user = User(
+        id=uuid4(),
+        username="tenant_a_user",
+        email="a@example.com",
+        password_hash="hashed",
+        tenant_id="tenant-a",
+        is_active=True,
+        is_verified=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.flush()
+    await async_db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def tenant_b_user(async_db_session):
+    """Create user in tenant-b."""
+    user = User(
+        id=uuid4(),
+        username="tenant_b_user",
+        email="b@example.com",
+        password_hash="hashed",
+        tenant_id="tenant-b",
+        is_active=True,
+        is_verified=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.flush()
+    await async_db_session.refresh(user)
+    return user
+
+
+@pytest.mark.integration
 class TestUserServiceTenantRequirements:
     """Test that UserService enforces tenant requirements by default."""
 
@@ -135,42 +173,9 @@ class TestUserServiceTenantRequirements:
         assert mock_session.execute.call_count == 1
 
 
+@pytest.mark.integration
 class TestUserServiceCrossTenantPrevention:
     """Test that UserService prevents cross-tenant data access."""
-
-    @pytest.fixture
-    async def tenant_a_user(self, async_db_session):
-        """Create user in tenant-a."""
-        user = User(
-            id=uuid4(),
-            username="tenant_a_user",
-            email="a@example.com",
-            password_hash="hashed",
-            tenant_id="tenant-a",
-            is_active=True,
-            is_verified=True,
-        )
-        async_db_session.add(user)
-        await async_db_session.flush()
-        await async_db_session.refresh(user)
-        return user
-
-    @pytest.fixture
-    async def tenant_b_user(self, async_db_session):
-        """Create user in tenant-b."""
-        user = User(
-            id=uuid4(),
-            username="tenant_b_user",
-            email="b@example.com",
-            password_hash="hashed",
-            tenant_id="tenant-b",
-            is_active=True,
-            is_verified=True,
-        )
-        async_db_session.add(user)
-        await async_db_session.flush()
-        await async_db_session.refresh(user)
-        return user
 
     @pytest.fixture
     def user_service(self, async_db_session):
@@ -302,6 +307,7 @@ class TestUserServiceCrossTenantPrevention:
         assert len([u for u in all_users_from_a if u.tenant_id == "tenant-b"]) == 0
 
 
+@pytest.mark.integration
 class TestUserServiceTenantContextIntegration:
     """Test tenant context integration with UserService."""
 

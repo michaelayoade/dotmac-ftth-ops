@@ -1,3 +1,4 @@
+
 """
 Comprehensive GenieACS TR-069 Flow Tests.
 
@@ -10,10 +11,17 @@ Tests complete TR-069/CWMP workflows including:
 - Integration with service provisioning
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestGenieACSDeviceManagement:
@@ -69,7 +77,7 @@ class TestGenieACSDeviceManagement:
                 "serial_number": f"SN{i:09d}",
                 "manufacturer": "Huawei",
                 "model": "EG8145V5",
-                "last_inform": datetime.now(UTC).isoformat(),
+                "last_inform": datetime.now(timezone.utc).isoformat(),
             }
             await service.register_device(**device_data)
 
@@ -272,7 +280,7 @@ class TestGenieACSFirmwareManagement:
         mock_genieacs_client.devices[sample_cpe_device["device_id"]] = sample_cpe_device
 
         # Schedule upgrade for 2 hours from now
-        scheduled_time = datetime.now(UTC) + timedelta(hours=2)
+        scheduled_time = datetime.now(timezone.utc) + timedelta(hours=2)
 
         upgrade_request = FirmwareUpgradeRequest(
             device_id=sample_cpe_device["device_id"],
@@ -301,7 +309,7 @@ class TestGenieACSFirmwareManagement:
                 "manufacturer": "Huawei",
                 "model": "EG8145V5",
                 "software_version": "V5R019C10S115",  # Old version
-                "last_inform": datetime.now(UTC).isoformat(),
+                "last_inform": datetime.now(timezone.utc).isoformat(),
             }
             device = await service.register_device(**device_data)
             device_ids.append(device["device_id"])
@@ -429,7 +437,7 @@ class TestGenieACSBulkOperations:
                 "serial_number": f"SN{i:09d}",
                 "manufacturer": "Huawei",
                 "model": "EG8145V5",
-                "last_inform": datetime.now(UTC).isoformat(),
+                "last_inform": datetime.now(timezone.utc).isoformat(),
             }
             device = await service.register_device(**device_data)
             device_ids.append(device["device_id"])
@@ -463,7 +471,7 @@ class TestGenieACSBulkOperations:
                 "serial_number": f"SN{i:09d}",
                 "manufacturer": "Huawei",
                 "model": "EG8145V5",
-                "last_inform": datetime.now(UTC).isoformat(),
+                "last_inform": datetime.now(timezone.utc).isoformat(),
             }
             device = await service.register_device(**device_data)
             device_ids.append(device["device_id"])
@@ -494,7 +502,7 @@ class TestGenieACSBulkOperations:
                 "serial_number": f"SN{i:09d}",
                 "manufacturer": "Huawei",
                 "model": "EG8145V5",
-                "last_inform": datetime.now(UTC).isoformat(),
+                "last_inform": datetime.now(timezone.utc).isoformat(),
             }
             device = await service.register_device(**device_data)
             device_ids.append(device["device_id"])
@@ -622,7 +630,7 @@ class TestGenieACSMonitoring:
         service = GenieACSService(async_session, test_tenant_id, mock_genieacs_client)
 
         # Register device with recent inform
-        sample_cpe_device["last_inform"] = datetime.now(UTC).isoformat()
+        sample_cpe_device["last_inform"] = datetime.now(timezone.utc).isoformat()
         mock_genieacs_client.devices[sample_cpe_device["device_id"]] = sample_cpe_device
 
         # Check online status
@@ -631,7 +639,7 @@ class TestGenieACSMonitoring:
         assert is_online is True
 
         # Test offline detection (no inform for > 15 minutes)
-        sample_cpe_device["last_inform"] = (datetime.now(UTC) - timedelta(minutes=30)).isoformat()
+        sample_cpe_device["last_inform"] = (datetime.now(timezone.utc) - timedelta(minutes=30)).isoformat()
         is_online = await service.is_device_online(device_id=sample_cpe_device["device_id"])
 
         assert is_online is False

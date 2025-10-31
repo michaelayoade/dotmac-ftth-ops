@@ -1,3 +1,4 @@
+
 """
 Invoice Integration Tests - Real Database End-to-End Testing.
 
@@ -7,7 +8,7 @@ Coverage Target: 85-90% invoice service coverage.
 """
 
 import uuid
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,10 +16,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.core.exceptions import (
+
+
     InvalidInvoiceStatusError,
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestInvoiceCreation:
@@ -498,7 +506,8 @@ class TestInvoicePaymentApplication:
 
         assert updated_invoice.total_credits_applied == 5000
         assert updated_invoice.remaining_balance == 5000
-        assert updated_invoice.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert updated_invoice.payment_status == PaymentStatus.PENDING
+        assert updated_invoice.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_overpayment_handling(self, async_session: AsyncSession) -> None:
         """Test that overpayment brings balance to zero (not negative)."""
@@ -889,7 +898,7 @@ class TestInvoiceLifecycle:
         service = InvoiceService(async_session)
 
         # Create invoice with past due date
-        past_due_date = datetime.now(UTC) - timedelta(days=5)
+        past_due_date = datetime.now(timezone.utc) - timedelta(days=5)
 
         with patch("dotmac.platform.billing.invoicing.service.get_event_bus") as mock_event_bus:
             mock_event_bus.return_value.publish = AsyncMock()

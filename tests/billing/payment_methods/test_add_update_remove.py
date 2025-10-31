@@ -1,8 +1,9 @@
+
 """
 Tests for Payment Methods Service - Add, Update, Remove operations.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -10,6 +11,9 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PaymentMethodError
 from dotmac.platform.billing.payment_methods.models import (
+
+
+    CardBrand,
     PaymentMethodResponse,
     PaymentMethodStatus,
     PaymentMethodType,
@@ -17,14 +21,22 @@ from dotmac.platform.billing.payment_methods.models import (
 from dotmac.platform.billing.payment_methods.service import PaymentMethodService
 from tests.billing.payment_methods.conftest import build_mock_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestAddPaymentMethod:
     """Test adding payment methods."""
 
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin')
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method')
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin"
+    )
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method"
+    )
     async def test_add_card_as_first_payment_method(
         self, mock_check_dup, mock_plugin, mock_db_session
     ):
@@ -37,7 +49,7 @@ class TestAddPaymentMethod:
         mock_check_dup.return_value = None  # No duplicate
 
         # Mock list_payment_methods to return empty (first method)
-        with patch.object(service, 'list_payment_methods', return_value=[]):
+        with patch.object(service, "list_payment_methods", return_value=[]):
             # Mock refresh to set the ORM object attributes
             async def mock_refresh(obj):
                 # Set all attributes that _orm_to_response needs
@@ -45,6 +57,7 @@ class TestAddPaymentMethod:
                 obj.id = test_orm.id
                 obj.created_at = test_orm.created_at
                 obj.updated_at = test_orm.updated_at
+                obj.auto_pay_enabled = test_orm.auto_pay_enabled
 
             mock_db_session.refresh.side_effect = mock_refresh
 
@@ -72,11 +85,13 @@ class TestAddPaymentMethod:
             added_obj = mock_db_session.add.call_args[0][0]
             assert added_obj.is_default is True
 
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin')
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method')
-    async def test_add_bank_account(
-        self, mock_check_dup, mock_plugin, mock_db_session
-    ):
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin"
+    )
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method"
+    )
+    async def test_add_bank_account(self, mock_check_dup, mock_plugin, mock_db_session):
         """Test adding bank account payment method."""
         from tests.billing.payment_methods.conftest import create_payment_method_orm
 
@@ -85,7 +100,8 @@ class TestAddPaymentMethod:
         mock_plugin.return_value = MagicMock()
         mock_check_dup.return_value = None
 
-        with patch.object(service, 'list_payment_methods', return_value=[]):
+        with patch.object(service, "list_payment_methods", return_value=[]):
+
             async def mock_refresh(obj):
                 test_orm = create_payment_method_orm(
                     payment_method_type=PaymentMethodType.BANK_ACCOUNT,
@@ -97,11 +113,12 @@ class TestAddPaymentMethod:
                         "billing_name": "Jane Doe",
                         "billing_email": "jane@example.com",
                         "billing_country": "NG",
-                    }
+                    },
                 )
                 obj.id = test_orm.id
                 obj.created_at = test_orm.created_at
                 obj.updated_at = test_orm.updated_at
+                obj.auto_pay_enabled = test_orm.auto_pay_enabled
 
             mock_db_session.refresh.side_effect = mock_refresh
 
@@ -124,18 +141,20 @@ class TestAddPaymentMethod:
             added_obj = mock_db_session.add.call_args[0][0]
             assert added_obj.is_verified is False  # Bank accounts need verification
 
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin')
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method')
-    async def test_add_duplicate_payment_method(
-        self, mock_check_dup, mock_plugin, mock_db_session
-    ):
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin"
+    )
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._check_duplicate_payment_method"
+    )
+    async def test_add_duplicate_payment_method(self, mock_check_dup, mock_plugin, mock_db_session):
         """Test adding duplicate payment method raises error."""
         # Setup
         service = PaymentMethodService(mock_db_session)
         mock_plugin.return_value = MagicMock()
         mock_check_dup.return_value = MagicMock()  # Duplicate found
 
-        with patch.object(service, 'list_payment_methods', return_value=[]):
+        with patch.object(service, "list_payment_methods", return_value=[]):
             # Execute & Verify
             with pytest.raises(PaymentMethodError, match="already been added"):
                 await service.add_payment_method(
@@ -147,16 +166,16 @@ class TestAddPaymentMethod:
                     added_by_user_id="user-123",
                 )
 
-    @patch('dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin')
-    async def test_add_unsupported_payment_method_type(
-        self, mock_plugin, mock_db_session
-    ):
+    @patch(
+        "dotmac.platform.billing.payment_methods.service.PaymentMethodService._get_paystack_plugin"
+    )
+    async def test_add_unsupported_payment_method_type(self, mock_plugin, mock_db_session):
         """Test adding unsupported payment method type."""
         # Setup
         service = PaymentMethodService(mock_db_session)
         mock_plugin.return_value = MagicMock()
 
-        with patch.object(service, 'list_payment_methods', return_value=[]):
+        with patch.object(service, "list_payment_methods", return_value=[]):
             # Execute & Verify
             with pytest.raises(PaymentMethodError, match="Unsupported payment method type"):
                 await service.add_payment_method(
@@ -169,12 +188,11 @@ class TestAddPaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestUpdatePaymentMethod:
     """Test updating payment methods."""
 
-    async def test_update_payment_method_billing_details(
-        self, mock_db_session
-    ):
+    async def test_update_payment_method_billing_details(self, mock_db_session):
         """Test updating payment method billing details."""
         from tests.billing.payment_methods.conftest import create_payment_method_orm
 
@@ -185,7 +203,7 @@ class TestUpdatePaymentMethod:
         # Mock get_payment_method
         with patch.object(
             service,
-            'get_payment_method',
+            "get_payment_method",
             return_value=PaymentMethodResponse(
                 payment_method_id=str(test_orm.id),
                 tenant_id="tenant-123",
@@ -204,15 +222,14 @@ class TestUpdatePaymentMethod:
                 billing_email=None,
                 billing_country="NG",
                 is_verified=True,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                auto_pay_enabled=False,
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
                 expires_at=None,
-            )
+            ),
         ):
             # Mock the ORM fetch
-            mock_db_session.execute.return_value = build_mock_result(
-                scalar_value=test_orm
-            )
+            mock_db_session.execute.return_value = build_mock_result(scalar_value=test_orm)
 
             # Mock refresh
             async def mock_refresh(obj):
@@ -240,7 +257,7 @@ class TestUpdatePaymentMethod:
         # Setup
         service = PaymentMethodService(mock_db_session)
 
-        with patch.object(service, 'get_payment_method', return_value=None):
+        with patch.object(service, "get_payment_method", return_value=None):
             # Execute & Verify
             with pytest.raises(PaymentMethodError, match="not found"):
                 await service.update_payment_method(
@@ -251,12 +268,11 @@ class TestUpdatePaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestSetDefaultPaymentMethod:
     """Test setting default payment method."""
 
-    async def test_set_default_success(
-        self, mock_db_session
-    ):
+    async def test_set_default_success(self, mock_db_session):
         """Test successfully setting default payment method."""
         from tests.billing.payment_methods.conftest import (
             create_payment_method_orm,
@@ -269,14 +285,10 @@ class TestSetDefaultPaymentMethod:
 
         with patch.object(
             service,
-            'get_payment_method',
-            return_value=create_payment_method_response(
-                id=test_orm.id, is_default=False
-            )
+            "get_payment_method",
+            return_value=create_payment_method_response(id=test_orm.id, is_default=False),
         ):
-            mock_db_session.execute.return_value = build_mock_result(
-                scalar_value=test_orm
-            )
+            mock_db_session.execute.return_value = build_mock_result(scalar_value=test_orm)
 
             # Execute
             result = await service.set_default_payment_method(
@@ -294,7 +306,7 @@ class TestSetDefaultPaymentMethod:
         # Setup
         service = PaymentMethodService(mock_db_session)
 
-        with patch.object(service, 'get_payment_method', return_value=None):
+        with patch.object(service, "get_payment_method", return_value=None):
             # Execute & Verify
             with pytest.raises(PaymentMethodError, match="not found"):
                 await service.set_default_payment_method(
@@ -304,12 +316,11 @@ class TestSetDefaultPaymentMethod:
                 )
 
 
+@pytest.mark.integration
 class TestRemovePaymentMethod:
     """Test removing payment methods."""
 
-    async def test_remove_non_default_payment_method(
-        self, mock_db_session
-    ):
+    async def test_remove_non_default_payment_method(self, mock_db_session):
         """Test removing non-default payment method."""
         from tests.billing.payment_methods.conftest import (
             create_payment_method_orm,
@@ -322,15 +333,11 @@ class TestRemovePaymentMethod:
 
         with patch.object(
             service,
-            'get_payment_method',
-            return_value=create_payment_method_response(
-                id=test_orm.id, is_default=False
-            )
+            "get_payment_method",
+            return_value=create_payment_method_response(id=test_orm.id, is_default=False),
         ):
             # Mock the ORM fetch
-            mock_db_session.execute.return_value = build_mock_result(
-                scalar_value=test_orm
-            )
+            mock_db_session.execute.return_value = build_mock_result(scalar_value=test_orm)
 
             # Execute
             await service.remove_payment_method(
@@ -347,7 +354,7 @@ class TestRemovePaymentMethod:
         # Setup
         service = PaymentMethodService(mock_db_session)
 
-        with patch.object(service, 'get_payment_method', return_value=None):
+        with patch.object(service, "get_payment_method", return_value=None):
             # Execute & Verify
             with pytest.raises(PaymentMethodError, match="not found"):
                 await service.remove_payment_method(
@@ -356,9 +363,7 @@ class TestRemovePaymentMethod:
                     removed_by_user_id="user-123",
                 )
 
-    async def test_remove_default_with_active_subscriptions(
-        self, mock_db_session
-    ):
+    async def test_remove_default_with_active_subscriptions(self, mock_db_session):
         """Test removing default payment method with active subscriptions fails."""
         from tests.billing.payment_methods.conftest import (
             create_payment_method_orm,
@@ -371,10 +376,8 @@ class TestRemovePaymentMethod:
 
         with patch.object(
             service,
-            'get_payment_method',
-            return_value=create_payment_method_response(
-                id=test_orm.id, is_default=True
-            )
+            "get_payment_method",
+            return_value=create_payment_method_response(id=test_orm.id, is_default=True),
         ):
             # Mock the database execute to return active subscriptions
             # This will be called twice:
@@ -392,3 +395,48 @@ class TestRemovePaymentMethod:
                     tenant_id="tenant-123",
                     removed_by_user_id="user-123",
                 )
+
+
+@pytest.mark.integration
+class TestPaymentMethodBrandParsing:
+    """Ensure card brand parsing is resilient."""
+
+    def test_card_brand_normalization(self, mock_db_session):
+        """Uppercase provider responses should map to enum values."""
+        from tests.billing.payment_methods.conftest import create_payment_method_orm
+
+        service = PaymentMethodService(mock_db_session)
+        pm = create_payment_method_orm(
+            details={
+                "last4": "1111",
+                "brand": "VISA",
+                "exp_month": 5,
+                "exp_year": 2030,
+                "billing_name": "Case Normalize",
+                "billing_email": "case@example.com",
+                "billing_country": "US",
+            }
+        )
+
+        response = service._orm_to_response(pm)
+        assert response.card_brand == CardBrand.VISA
+
+    def test_unknown_card_brand_maps_to_unknown(self, mock_db_session):
+        """Unexpected brands should not crash and return UNKNOWN."""
+        from tests.billing.payment_methods.conftest import create_payment_method_orm
+
+        service = PaymentMethodService(mock_db_session)
+        pm = create_payment_method_orm(
+            details={
+                "last4": "2222",
+                "brand": "Verve",
+                "exp_month": 6,
+                "exp_year": 2031,
+                "billing_name": "Unknown Brand",
+                "billing_email": "unknown@example.com",
+                "billing_country": "NG",
+            }
+        )
+
+        response = service._orm_to_response(pm)
+        assert response.card_brand == CardBrand.UNKNOWN

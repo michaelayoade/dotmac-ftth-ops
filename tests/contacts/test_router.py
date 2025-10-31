@@ -8,8 +8,13 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
+
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.contacts.schemas import (
+
+
     ContactStage,
     ContactStatus,
 )
@@ -82,7 +87,8 @@ def test_client(mock_contact_service):
     app.dependency_overrides[get_current_tenant_id] = mock_get_tenant
 
     # Include router with prefix
-    app.include_router(contacts_module.router, prefix="/api/v1/contacts")
+    # Note: router already has prefix="/contacts", so we only add "/api/v1"
+    app.include_router(contacts_module.router, prefix="/api/v1")
 
     # Set up permission overrides
     permission_names = {

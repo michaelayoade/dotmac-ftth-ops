@@ -11,11 +11,14 @@ Provides:
 
 import asyncio
 import time
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, cast
 
 import structlog
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from fastapi import HTTPException
 from pydantic import BaseModel, ConfigDict, Field
 

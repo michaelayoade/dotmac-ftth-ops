@@ -4,7 +4,10 @@ Alarm Service Layer
 Business logic for alarm management, correlation, and ticket integration.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -94,10 +97,7 @@ class AlarmService:
             }
 
             # Update severity if new alarm is more severe
-            if (
-                severity_rank.get(data.severity, 0)
-                >= severity_rank.get(existing_alarm.severity, 0)
-            ):
+            if severity_rank.get(data.severity, 0) >= severity_rank.get(existing_alarm.severity, 0):
                 existing_alarm.severity = data.severity
 
             existing_alarm.source = data.source

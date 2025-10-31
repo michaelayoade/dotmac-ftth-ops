@@ -9,7 +9,10 @@ Provides monitoring endpoints for workflow service metrics, including:
 - Integration with existing monitoring infrastructure
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -183,12 +186,8 @@ async def _get_workflow_metrics_cached(
         # Calculate durations
         durations = sorted(data["durations"])
         avg_duration = sum(durations) / len(durations) if durations else 0.0
-        p95_duration = (
-            durations[int(len(durations) * 0.95)] if len(durations) > 1 else avg_duration
-        )
-        p99_duration = (
-            durations[int(len(durations) * 0.99)] if len(durations) > 1 else avg_duration
-        )
+        p95_duration = durations[int(len(durations) * 0.95)] if len(durations) > 1 else avg_duration
+        p99_duration = durations[int(len(durations) * 0.99)] if len(durations) > 1 else avg_duration
 
         # Top operations by volume
         operation_counts: dict[str, int] = {}
@@ -198,9 +197,7 @@ async def _get_workflow_metrics_cached(
 
         top_operations = [
             {"operation": op, "count": count}
-            for op, count in sorted(
-                operation_counts.items(), key=lambda x: x[1], reverse=True
-            )[:5]
+            for op, count in sorted(operation_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         ]
 
         # Top errors
@@ -211,9 +208,7 @@ async def _get_workflow_metrics_cached(
 
         top_errors = [
             {"error": error, "count": count}
-            for error, count in sorted(error_counts.items(), key=lambda x: x[1], reverse=True)[
-                :5
-            ]
+            for error, count in sorted(error_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         ]
 
         services_metrics.append(
@@ -222,9 +217,7 @@ async def _get_workflow_metrics_cached(
                 "total_operations": total_ops,
                 "successful_operations": successful_ops,
                 "failed_operations": failed_ops,
-                "success_rate": (
-                    (successful_ops / total_ops * 100) if total_ops > 0 else 100.0
-                ),
+                "success_rate": ((successful_ops / total_ops * 100) if total_ops > 0 else 100.0),
                 "avg_duration_seconds": round(avg_duration, 3),
                 "p95_duration_seconds": round(p95_duration, 3),
                 "p99_duration_seconds": round(p99_duration, 3),

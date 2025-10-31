@@ -1,3 +1,4 @@
+
 """
 Performance and load tests for GenieACS Client
 
@@ -5,14 +6,24 @@ Tests client performance with large numbers of devices,
 connection pooling efficiency, and scalability.
 """
 
-import pytest
 import asyncio
 import time
+
+import pytest
+import pytest_asyncio
 from aiohttp import web
+
 from dotmac.platform.genieacs.client import GenieACSClient
 
 
-@pytest.fixture
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
+@pytest_asyncio.fixture
 async def performance_genieacs_server(aiohttp_server):
     """
     Mock GenieACS server with 1000+ devices for performance testing.
@@ -48,7 +59,7 @@ async def performance_genieacs_server(aiohttp_server):
         skip = int(request.query.get("skip", 0))
 
         # Apply pagination
-        paginated = mock_devices[skip:skip + limit]
+        paginated = mock_devices[skip : skip + limit]
         return web.json_response(paginated)
 
     async def get_device(request):
@@ -72,12 +83,15 @@ async def performance_genieacs_server(aiohttp_server):
         device_id = request.match_info["device_id"]
         task_data = await request.json()
 
-        return web.json_response({
-            "_id": f"task-{request_stats['create_task']}",
-            "device": device_id,
-            "name": task_data.get("name"),
-            "timestamp": int(time.time() * 1000),
-        }, status=200)
+        return web.json_response(
+            {
+                "_id": f"task-{request_stats['create_task']}",
+                "device": device_id,
+                "name": task_data.get("name"),
+                "timestamp": int(time.time() * 1000),
+            },
+            status=200,
+        )
 
     # Create app with routes
     app = web.Application()
@@ -98,6 +112,7 @@ async def performance_genieacs_server(aiohttp_server):
 def reset_circuit_breaker():
     """Reset circuit breaker state before each test"""
     from dotmac.platform.core.http_client import RobustHTTPClient
+
     RobustHTTPClient._circuit_breakers.clear()
     yield
     RobustHTTPClient._circuit_breakers.clear()
@@ -109,7 +124,9 @@ class TestGenieACSPerformance:
     @pytest.mark.asyncio
     @pytest.mark.slow
     @pytest.mark.performance
-    async def test_list_1000_devices_paginated(self, performance_genieacs_server, reset_circuit_breaker):
+    async def test_list_1000_devices_paginated(
+        self, performance_genieacs_server, reset_circuit_breaker
+    ):
         """Test listing 1000 devices with pagination"""
         client = GenieACSClient(base_url=str(performance_genieacs_server.make_url("/")))
 
@@ -129,12 +146,16 @@ class TestGenieACSPerformance:
         # Assertions
         assert len(all_devices) == 1000
         assert elapsed_time < 5.0  # Should complete in under 5 seconds
-        print(f"\n✓ Listed 1000 devices in {elapsed_time:.2f}s ({len(all_devices)/elapsed_time:.0f} devices/sec)")
+        print(
+            f"\n✓ Listed 1000 devices in {elapsed_time:.2f}s ({len(all_devices) / elapsed_time:.0f} devices/sec)"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.slow
     @pytest.mark.performance
-    async def test_concurrent_device_fetches(self, performance_genieacs_server, reset_circuit_breaker):
+    async def test_concurrent_device_fetches(
+        self, performance_genieacs_server, reset_circuit_breaker
+    ):
         """Test fetching 100 devices concurrently"""
         client = GenieACSClient(base_url=str(performance_genieacs_server.make_url("/")))
 
@@ -152,12 +173,16 @@ class TestGenieACSPerformance:
         assert len(results) == 100
         assert all(device is not None for device in results)
         assert elapsed_time < 3.0  # Should complete in under 3 seconds
-        print(f"\n✓ Fetched 100 devices concurrently in {elapsed_time:.2f}s ({100/elapsed_time:.0f} req/sec)")
+        print(
+            f"\n✓ Fetched 100 devices concurrently in {elapsed_time:.2f}s ({100 / elapsed_time:.0f} req/sec)"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.slow
     @pytest.mark.performance
-    async def test_concurrent_task_creation(self, performance_genieacs_server, reset_circuit_breaker):
+    async def test_concurrent_task_creation(
+        self, performance_genieacs_server, reset_circuit_breaker
+    ):
         """Test creating 50 tasks concurrently"""
         client = GenieACSClient(base_url=str(performance_genieacs_server.make_url("/")))
 
@@ -178,12 +203,16 @@ class TestGenieACSPerformance:
         assert len(results) == 50
         assert all(task.get("device") == device_ids[i] for i, task in enumerate(results))
         assert elapsed_time < 3.0  # Should complete in under 3 seconds
-        print(f"\n✓ Created 50 tasks concurrently in {elapsed_time:.2f}s ({50/elapsed_time:.0f} tasks/sec)")
+        print(
+            f"\n✓ Created 50 tasks concurrently in {elapsed_time:.2f}s ({50 / elapsed_time:.0f} tasks/sec)"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.slow
     @pytest.mark.performance
-    async def test_connection_pool_efficiency(self, performance_genieacs_server, reset_circuit_breaker):
+    async def test_connection_pool_efficiency(
+        self, performance_genieacs_server, reset_circuit_breaker
+    ):
         """Test connection pooling efficiency with sequential requests"""
         client = GenieACSClient(base_url=str(performance_genieacs_server.make_url("/")))
 
@@ -198,7 +227,9 @@ class TestGenieACSPerformance:
 
         # With connection pooling, this should be much faster than without
         assert elapsed_time < 5.0  # Should complete in under 5 seconds
-        print(f"\n✓ Made 100 sequential requests in {elapsed_time:.2f}s ({100/elapsed_time:.0f} req/sec)")
+        print(
+            f"\n✓ Made 100 sequential requests in {elapsed_time:.2f}s ({100 / elapsed_time:.0f} req/sec)"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.slow
@@ -223,7 +254,9 @@ class TestGenieACSPerformance:
         # 10 task creation operations
         for i in range(10):
             tasks.append(
-                client.create_task(f"device-{i:04d}", "refreshObject", {"objectName": "InternetGatewayDevice."})
+                client.create_task(
+                    f"device-{i:04d}", "refreshObject", {"objectName": "InternetGatewayDevice."}
+                )
             )
 
         results = await asyncio.gather(*tasks)
@@ -233,7 +266,9 @@ class TestGenieACSPerformance:
         # Assertions
         assert len(results) == 40
         assert elapsed_time < 5.0  # Should complete in under 5 seconds
-        print(f"\n✓ Executed mixed workload (40 operations) in {elapsed_time:.2f}s ({40/elapsed_time:.0f} ops/sec)")
+        print(
+            f"\n✓ Executed mixed workload (40 operations) in {elapsed_time:.2f}s ({40 / elapsed_time:.0f} ops/sec)"
+        )
 
     @pytest.mark.asyncio
     @pytest.mark.slow
@@ -285,11 +320,11 @@ class TestGenieACSPerformance:
 
         rounds = 5
         requests_per_round = 20
-        total_requests = rounds * requests_per_round
+        rounds * requests_per_round
 
         start_time = time.time()
 
-        for round_num in range(rounds):
+        for _round_num in range(rounds):
             tasks = [client.get_device(f"device-{i:04d}") for i in range(requests_per_round)]
             results = await asyncio.gather(*tasks)
             assert len(results) == requests_per_round
@@ -299,7 +334,9 @@ class TestGenieACSPerformance:
 
         # Assertions
         assert avg_time_per_round < 2.0  # Each round should complete in under 2 seconds
-        print(f"\n✓ Sustained {rounds} rounds of {requests_per_round} requests in {elapsed_time:.2f}s")
+        print(
+            f"\n✓ Sustained {rounds} rounds of {requests_per_round} requests in {elapsed_time:.2f}s"
+        )
         print(f"  Average: {avg_time_per_round:.2f}s per round")
 
 
@@ -309,7 +346,9 @@ class TestGenieACSScalability:
     @pytest.mark.asyncio
     @pytest.mark.slow
     @pytest.mark.performance
-    async def test_scaling_concurrent_requests(self, performance_genieacs_server, reset_circuit_breaker):
+    async def test_scaling_concurrent_requests(
+        self, performance_genieacs_server, reset_circuit_breaker
+    ):
         """Test how performance scales with increasing concurrency"""
         client = GenieACSClient(base_url=str(performance_genieacs_server.make_url("/")))
 
@@ -325,18 +364,22 @@ class TestGenieACSScalability:
             elapsed_time = time.time() - start_time
             throughput = concurrency / elapsed_time
 
-            results_summary.append({
-                "concurrency": concurrency,
-                "elapsed_time": elapsed_time,
-                "throughput": throughput,
-            })
+            results_summary.append(
+                {
+                    "concurrency": concurrency,
+                    "elapsed_time": elapsed_time,
+                    "throughput": throughput,
+                }
+            )
 
             assert len(results) == concurrency
 
         # Print scaling results
         print("\n✓ Concurrency scaling results:")
         for result in results_summary:
-            print(f"  {result['concurrency']:3d} requests: {result['elapsed_time']:.2f}s ({result['throughput']:.0f} req/sec)")
+            print(
+                f"  {result['concurrency']:3d} requests: {result['elapsed_time']:.2f}s ({result['throughput']:.0f} req/sec)"
+            )
 
         # Verify reasonable scaling (throughput should increase with concurrency)
         assert results_summary[-1]["throughput"] > results_summary[0]["throughput"]

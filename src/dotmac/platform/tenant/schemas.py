@@ -9,7 +9,14 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from .models import BillingCycle, TenantInvitationStatus, TenantPlanType, TenantStatus
+from .models import (
+    BillingCycle,
+    TenantDeploymentMode,
+    TenantInvitationStatus,
+    TenantPlanType,
+    TenantProvisioningStatus,
+    TenantStatus,
+)
 
 
 # Base schemas
@@ -342,3 +349,58 @@ class TenantBulkDeleteRequest(BaseModel):  # BaseModel resolves to Any in isolat
 
     tenant_ids: list[str] = Field(min_length=1, description="List of tenant IDs to delete")
     permanent: bool = Field(default=False, description="Permanently delete (vs soft delete)")
+
+
+# Provisioning workflows
+class TenantProvisioningJobCreate(BaseModel):  # BaseModel resolves to Any in isolation
+    """Request payload for scheduling tenant infrastructure provisioning."""
+
+    model_config = ConfigDict(validate_assignment=True)
+
+    deployment_mode: TenantDeploymentMode = Field(
+        description="Target infrastructure profile for the tenant environment."
+    )
+    awx_template_id: int | None = Field(
+        default=None,
+        description="Optional AWX job template identifier to launch.",
+    )
+    extra_vars: dict[str, Any] | None = Field(
+        default_factory=dict,
+        description="Additional Ansible variables injected into the job template.",
+    )
+    connection_profile: dict[str, Any] | None = Field(
+        default=None,
+        description="Connectivity metadata (host, port, credentials reference) for customer supplied servers.",
+    )
+
+
+class TenantProvisioningJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response payload representing a provisioning job."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    tenant_id: str
+    status: TenantProvisioningStatus
+    deployment_mode: TenantDeploymentMode
+    awx_template_id: int | None
+    awx_job_id: int | None
+    requested_by: str | None
+    started_at: datetime | None
+    finished_at: datetime | None
+    retry_count: int
+    error_message: str | None
+    extra_vars: dict[str, Any] | None
+    connection_profile: dict[str, Any] | None
+    last_acknowledged_at: datetime | None
+    created_at: datetime
+    updated_at: datetime
+
+
+class TenantProvisioningJobListResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Paginated list of provisioning jobs for a tenant."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    items: list[TenantProvisioningJobResponse]
+    total: int

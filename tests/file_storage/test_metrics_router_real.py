@@ -8,13 +8,16 @@ Uses the fake implementation pattern:
 """
 
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
+
+
+pytestmark = pytest.mark.integration
 
 # Patch cached_result BEFORE importing the router
 def mock_cached_result(*args, **kwargs):
@@ -64,12 +67,17 @@ class FakeFileStorageService:
         self.files: list[FileMetadata] = []
 
     async def list_files(
-        self, tenant_id: str | None = None, limit: int = 1000
+        self,
+        tenant_id: str | None = None,
+        limit: int = 1000,
+        offset: int = 0,
     ) -> list[FileMetadata]:
         """Return list of files."""
+        filtered = self.files
         if tenant_id:
-            return [f for f in self.files if f.tenant_id == tenant_id]
-        return self.files
+            filtered = [f for f in filtered if f.tenant_id == tenant_id]
+
+        return filtered[offset : offset + limit]
 
     def add_file(
         self,
@@ -179,7 +187,7 @@ class TestFileStatsResponse:
 
     def test_response_model_validation(self):
         """Test response model with valid data."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         response = FileStatsResponse(
             total_files=100,
@@ -219,7 +227,7 @@ class TestFileStatsResponse:
             other_size_mb=0.0,
             avg_file_size_mb=0.0,
             period="7d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         assert response.total_files == 0
@@ -242,7 +250,7 @@ class TestFileStatsResponse:
             other_size_mb=100.0,
             avg_file_size_mb=10.0,  # 1000 / 100
             period="30d",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
         )
 
         # Verify totals
@@ -268,7 +276,10 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_with_no_files(self, client, fake_storage_service):
         """Test stats endpoint with no files."""
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -279,7 +290,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_with_image_files(self, client, fake_storage_service):
         """Test stats with image files."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add 3 image files (1MB each)
         for i in range(3):
@@ -291,7 +302,10 @@ class TestFileStorageStatsEndpoint:
                 created_at=now - timedelta(days=i),
             )
 
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -303,7 +317,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_with_mixed_file_types(self, client, fake_storage_service):
         """Test stats with mixed file types."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add different file types
         fake_storage_service.add_file(
@@ -319,7 +333,10 @@ class TestFileStorageStatsEndpoint:
             "other1", "data.json", 524288, "application/json", now - timedelta(days=4)
         )
 
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -332,7 +349,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_filters_by_period(self, client, fake_storage_service):
         """Test that stats filters files by time period."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add files at different times
         fake_storage_service.add_file(
@@ -343,7 +360,10 @@ class TestFileStorageStatsEndpoint:
         )
 
         # Request 7-day period - should only get recent file
-        response = client.get("/api/v1/metrics/files/stats?period_days=7")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=7",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -351,7 +371,10 @@ class TestFileStorageStatsEndpoint:
         assert data["period"] == "7d"
 
         # Request 60-day period - should get both files
-        response = client.get("/api/v1/metrics/files/stats?period_days=60")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=60",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -360,7 +383,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_calculates_averages(self, client, fake_storage_service):
         """Test average file size calculation."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add 4 files with different sizes (total 10 MB)
         sizes = [1048576, 2097152, 3145728, 4194304]  # 1, 2, 3, 4 MB
@@ -373,7 +396,10 @@ class TestFileStorageStatsEndpoint:
                 now - timedelta(days=i),
             )
 
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -385,13 +411,16 @@ class TestFileStorageStatsEndpoint:
         """Test stats with different time periods."""
         # Test period validation
         for days in [7, 30, 90, 365]:
-            response = client.get(f"/api/v1/metrics/files/stats?period_days={days}")
+            response = client.get(
+                f"/api/v1/metrics/files/stats?period_days={days}",
+                headers={"X-Tenant-ID": "test-tenant"},
+            )
             assert response.status_code == status.HTTP_200_OK
             assert response.json()["period"] == f"{days}d"
 
     def test_get_stats_tenant_isolation(self, client, fake_storage_service):
         """Test that stats are isolated per tenant."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add files for different tenants
         fake_storage_service.add_file(
@@ -402,7 +431,10 @@ class TestFileStorageStatsEndpoint:
         )
 
         # Should only see test-tenant files (mocked user has tenant_id="test-tenant")
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -410,12 +442,15 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_size_conversions(self, client, fake_storage_service):
         """Test byte to MB conversions."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # 1 MB = 1048576 bytes
         fake_storage_service.add_file("file1", "1mb.bin", 1048576, "application/octet-stream", now)
 
-        response = client.get("/api/v1/metrics/files/stats?period_days=30")
+        response = client.get(
+            "/api/v1/metrics/files/stats?period_days=30",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
@@ -425,6 +460,9 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_endpoint_exists(self, client):
         """Test that stats endpoint is registered."""
-        response = client.get("/api/v1/metrics/files/stats")
+        response = client.get(
+            "/api/v1/metrics/files/stats",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
         # Should return 200 (or possibly error, but not 404)
         assert response.status_code != status.HTTP_404_NOT_FOUND

@@ -5,7 +5,7 @@ This module provides common fixtures that are used across multiple test modules,
 reducing duplication and improving maintenance.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
@@ -13,6 +13,11 @@ from uuid import uuid4
 import pytest
 
 # Import models and services based on availability
+
+
+
+pytestmark = pytest.mark.integration
+
 try:
     from dotmac.platform.auth.core import UserInfo
 
@@ -217,8 +222,8 @@ if HAS_CUSTOMER_MODELS:
             name="Test Customer",
             email="customer@example.com",
             tenant_id="tenant-123",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -237,8 +242,8 @@ if HAS_USER_MODELS:
             username="testuser",
             email="user@example.com",
             tenant_id="tenant-123",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
 
@@ -284,7 +289,7 @@ def sample_api_response() -> dict[str, Any]:
         "success": True,
         "data": {"id": "123", "name": "test"},
         "message": "Success",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -295,7 +300,7 @@ def sample_error_response() -> dict[str, Any]:
         "success": False,
         "error": "Not Found",
         "message": "Resource not found",
-        "timestamp": datetime.now(UTC).isoformat(),
+        "timestamp": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -307,7 +312,7 @@ def sample_error_response() -> dict[str, Any]:
 @pytest.fixture
 def fixed_datetime() -> datetime:
     """Fixed datetime for consistent testing."""
-    return datetime(2024, 1, 15, 12, 0, 0, tzinfo=UTC)
+    return datetime(2024, 1, 15, 12, 0, 0, tzinfo=timezone.utc)
 
 
 @pytest.fixture
@@ -389,13 +394,13 @@ def create_test_data(model_type: str, **kwargs) -> dict[str, Any]:
             "id": str(uuid4()),
             "username": "testuser",
             "email": "test@example.com",
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         },
         "customer": {
             "id": str(uuid4()),
             "name": "Test Customer",
             "email": "customer@example.com",
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         },
     }
 

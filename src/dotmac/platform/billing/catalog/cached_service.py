@@ -84,13 +84,18 @@ class CachedProductService(ProductService):  # type: ignore[misc]  # ProductServ
 
         SKU lookups are frequent, so we cache them separately.
         """
-        cache_key = CacheKey.product_by_sku(sku, tenant_id)
+        normalized_sku = sku.strip().upper()
+        cache_key = CacheKey.product_by_sku(normalized_sku, tenant_id)
 
         # Try cache first
         cached_product = await self.cache.get(cache_key)
 
         if cached_product:
-            logger.debug("Product retrieved from cache by SKU", sku=sku, tenant_id=tenant_id)
+            logger.debug(
+                "Product retrieved from cache by SKU",
+                sku=normalized_sku,
+                tenant_id=tenant_id,
+            )
             return Product.model_validate(cached_product)
 
         # Load from database
@@ -102,7 +107,7 @@ class CachedProductService(ProductService):  # type: ignore[misc]  # ProductServ
                 cache_key,
                 product.model_dump(),
                 ttl=self.config.PRODUCT_TTL,
-                tags=[f"tenant:{tenant_id}", f"sku:{sku.upper()}"],
+                tags=[f"tenant:{tenant_id}", f"sku:{normalized_sku}"],
             )
 
             # Also cache by product ID for consistency

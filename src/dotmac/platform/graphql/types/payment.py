@@ -13,9 +13,7 @@ from typing import TYPE_CHECKING, Any
 import strawberry
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
-    JSONScalar: TypeAlias = Any
+    type JSONScalar = Any
 else:
     from strawberry.scalars import JSON as JSONScalar
 
@@ -151,7 +149,9 @@ class Payment:
             customer=None,  # Populated by DataLoader
             invoice_id=strawberry.ID(str(payment.invoice_id)) if payment.invoice_id else None,
             invoice=None,  # Populated by DataLoader
-            subscription_id=strawberry.ID(str(payment.subscription_id)) if payment.subscription_id else None,
+            subscription_id=strawberry.ID(str(payment.subscription_id))
+            if payment.subscription_id
+            else None,
             created_at=payment.created_at,
             processed_at=payment.processed_at,
             refunded_at=payment.refunded_at,

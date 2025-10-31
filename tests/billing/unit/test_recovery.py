@@ -1,7 +1,7 @@
 """Tests for billing recovery mechanisms."""
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -21,6 +21,7 @@ from dotmac.platform.billing.recovery import (
 )
 
 
+@pytest.mark.unit
 class TestRetryStrategies:
     """Test retry strategy implementations."""
 
@@ -51,6 +52,7 @@ class TestRetryStrategies:
         assert strategy.get_delay(5) == 3.5  # 1.0 + 5 * 0.5
 
 
+@pytest.mark.unit
 class TestBillingRetry:
     """Test BillingRetry class."""
 
@@ -126,6 +128,7 @@ class TestBillingRetry:
         assert isinstance(call_args[0][1], PaymentError)
 
 
+@pytest.mark.unit
 class TestWithRetryDecorator:
     """Test with_retry decorator."""
 
@@ -164,6 +167,7 @@ class TestWithRetryDecorator:
             await process_payment("fail", 100.0)
 
 
+@pytest.mark.unit
 class TestCircuitBreaker:
     """Test CircuitBreaker pattern."""
 
@@ -202,7 +206,7 @@ class TestCircuitBreaker:
         # Open the circuit
         breaker.state = CircuitBreaker.OPEN
         breaker.failure_count = 1
-        breaker.last_failure_time = datetime.now(UTC).timestamp()
+        breaker.last_failure_time = datetime.now(timezone.utc).timestamp()
 
         with pytest.raises(BillingError) as exc_info:
             await breaker.call(mock_func)
@@ -220,7 +224,7 @@ class TestCircuitBreaker:
         # Set to open state
         breaker.state = CircuitBreaker.OPEN
         breaker.failure_count = 3
-        breaker.last_failure_time = datetime.now(UTC).timestamp() - 1
+        breaker.last_failure_time = datetime.now(timezone.utc).timestamp() - 1
 
         # Wait for recovery timeout
         await asyncio.sleep(0.02)
@@ -241,7 +245,7 @@ class TestCircuitBreaker:
         # Set to open state
         breaker.state = CircuitBreaker.OPEN
         breaker.failure_count = 3
-        breaker.last_failure_time = datetime.now(UTC).timestamp() - 1
+        breaker.last_failure_time = datetime.now(timezone.utc).timestamp() - 1
 
         # Wait for recovery timeout
         await asyncio.sleep(0.02)
@@ -254,6 +258,7 @@ class TestCircuitBreaker:
         assert breaker.failure_count == 4
 
 
+@pytest.mark.unit
 class TestRecoveryContext:
     """Test RecoveryContext manager."""
 
@@ -325,6 +330,7 @@ class TestRecoveryContext:
         assert ctx.state["custom_data"] == "test"
 
 
+@pytest.mark.unit
 class TestIdempotencyManager:
     """Test IdempotencyManager for preventing duplicates."""
 
@@ -387,7 +393,7 @@ class TestIdempotencyManager:
         """Test cleanup of expired cache entries."""
         manager = IdempotencyManager(cache_ttl=1)  # 1 second TTL
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Add old entry (expired - 2 seconds ago)
         old_time = now - timedelta(seconds=2)
@@ -403,6 +409,7 @@ class TestIdempotencyManager:
         assert "recent_key" in manager._cache
 
 
+@pytest.mark.unit
 class TestIntegration:
     """Integration tests combining multiple recovery mechanisms."""
 

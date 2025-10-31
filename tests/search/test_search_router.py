@@ -9,9 +9,14 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.search.interfaces import SearchBackend
 from dotmac.platform.search.router import SearchResponse, SearchResult, search_router
+
+
 
 
 @pytest.fixture
@@ -321,12 +326,12 @@ class TestSearchRouter:
     @patch("dotmac.platform.search.router.logger")
     def test_index_content_fallback_to_memory(self, mock_logger, client, mock_user, monkeypatch):
         """When backend communication fails, router should fall back to in-memory backend."""
+        from dotmac.platform.search.interfaces import SearchQuery, SearchResponse
         from dotmac.platform.search.router import (
             _COMMUNICATION_ERRORS,
             _backend_state,
             get_current_user,
         )
-        from dotmac.platform.search.interfaces import SearchQuery, SearchResponse, SearchResult
 
         class FailingBackend(SearchBackend):
             async def index(self, index_name: str, doc_id: str, document: dict[str, Any]) -> bool:
@@ -575,11 +580,21 @@ class TestRouterIntegration:
 
         client.post(
             "/search/index",
-            json={"id": "doc-1", "title": "Doc One", "content": "First document", "type": "customer"},
+            json={
+                "id": "doc-1",
+                "title": "Doc One",
+                "content": "First document",
+                "type": "customer",
+            },
         )
         client.post(
             "/search/index",
-            json={"id": "doc-2", "title": "Doc Two", "content": "Second document", "type": "ticket"},
+            json={
+                "id": "doc-2",
+                "title": "Doc Two",
+                "content": "Second document",
+                "type": "ticket",
+            },
         )
 
         first_page = client.get("/search/?q=Doc&limit=1&page=1")

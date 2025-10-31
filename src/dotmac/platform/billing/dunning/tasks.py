@@ -7,7 +7,10 @@ Provides background workers for executing scheduled dunning actions.
 import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +19,7 @@ from celery import Task
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
-from dotmac.platform.db import _async_session_maker
+from dotmac.platform.db import async_session_maker
 
 from .models import DunningActionType, DunningExecution, DunningExecutionStatus
 from .service import DunningService
@@ -164,7 +167,7 @@ async def _process_pending_actions() -> dict[str, Any]:
     errors = 0
     results = []
 
-    async with _async_session_maker() as session:
+    async with async_session_maker() as session:
         service = DunningService(session)
 
         # Get all tenants with pending actions (we'll iterate through all)
@@ -260,7 +263,7 @@ async def _execute_action(
     }
 
     try:
-        async with _async_session_maker() as session:
+        async with async_session_maker() as session:
             service = DunningService(session)
 
             # Get execution details
@@ -299,9 +302,10 @@ async def _execute_action(
                 action_type=action_type,
                 action_config=action_config,
                 step_number=step_number,
-                executed_at=executed_at,
-                status=result["status"],
-                result=result.get("details", {}),
+                attempted_at=executed_at,
+                completed_at=datetime.now(UTC),
+                success=result.get("status") == "success",
+                response_data=result.get("details", {}),
                 error_message=result.get("error"),
                 external_id=result.get("external_id"),
             )
@@ -377,7 +381,7 @@ async def _send_dunning_email(
         from dotmac.platform.communications.task_service import send_single_email_task
 
         # Get customer email - would need to query customer service
-        async with _async_session_maker() as session:
+        async with async_session_maker() as session:
             from dotmac.platform.customer_management.service import CustomerService
 
             customer_service = CustomerService(session)
@@ -455,7 +459,7 @@ async def _send_dunning_sms(
 
     try:
         # Get customer phone number
-        async with _async_session_maker() as session:
+        async with async_session_maker() as session:
             from dotmac.platform.customer_management.service import CustomerService
 
             customer_service = CustomerService(session)
@@ -547,7 +551,7 @@ async def _suspend_service(
         try:
             from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
-            async with _async_session_maker() as session:
+            async with async_session_maker() as session:
                 lifecycle_service = LifecycleOrchestrationService(session)
 
                 # Suspend the service via lifecycle orchestration
@@ -577,7 +581,7 @@ async def _suspend_service(
             # Fallback if service lifecycle not available - use subscription service directly
             from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-            async with _async_session_maker() as session:
+            async with async_session_maker() as session:
                 subscription_service = SubscriptionService(session)
 
                 # Suspend subscription (simplified fallback)
@@ -640,7 +644,7 @@ async def _terminate_service(
         try:
             from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
-            async with _async_session_maker() as session:
+            async with async_session_maker() as session:
                 lifecycle_service = LifecycleOrchestrationService(session)
 
                 # Terminate the service via lifecycle orchestration
@@ -671,7 +675,7 @@ async def _terminate_service(
             # Fallback if service lifecycle not available - use subscription service directly
             from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-            async with _async_session_maker() as session:
+            async with async_session_maker() as session:
                 subscription_service = SubscriptionService(session)
 
                 # Cancel subscription (simplified fallback)

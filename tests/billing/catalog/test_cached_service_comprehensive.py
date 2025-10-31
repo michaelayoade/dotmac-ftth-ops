@@ -5,7 +5,7 @@ Tests caching layer for product catalog service including cache hits/misses,
 invalidation, and cache warming strategies.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -62,8 +62,8 @@ def sample_product_dict():
         "base_price": "99.99",
         "currency": "USD",
         "is_active": True,
-        "created_at": datetime.now(UTC).isoformat(),
-        "updated_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "updated_at": datetime.now(timezone.utc).isoformat(),
     }
 
 
@@ -73,6 +73,7 @@ def sample_product(sample_product_dict):
     return Product.model_validate(sample_product_dict)
 
 
+@pytest.mark.unit
 class TestCachedProductServiceInitialization:
     """Test cached product service initialization."""
 
@@ -85,6 +86,7 @@ class TestCachedProductServiceInitialization:
         assert cached_service.config is not None
 
 
+@pytest.mark.unit
 class TestGetProductCaching:
     """Test get_product with caching behavior."""
 
@@ -173,6 +175,7 @@ class TestGetProductCaching:
             assert "product:prod-123" in tags
 
 
+@pytest.mark.unit
 class TestGetProductBySkuCaching:
     """Test get_product_by_sku with caching."""
 
@@ -226,6 +229,7 @@ class TestGetProductBySkuCaching:
             assert result is None
 
 
+@pytest.mark.unit
 class TestCreateProductInvalidation:
     """Test cache invalidation on product creation."""
 
@@ -253,8 +257,8 @@ class TestCreateProductInvalidation:
             base_price="49.99",
             currency="USD",
             is_active=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         with patch.object(
@@ -271,6 +275,7 @@ class TestCreateProductInvalidation:
             # (implementation may vary based on actual cache invalidation logic)
 
 
+@pytest.mark.unit
 class TestUpdateProductInvalidation:
     """Test cache invalidation on product updates."""
 
@@ -313,6 +318,7 @@ class TestUpdateProductInvalidation:
                 mock_cache.invalidate_pattern.assert_called()
 
 
+@pytest.mark.unit
 class TestDeleteProductInvalidation:
     """Test cache invalidation on product deletion."""
 
@@ -336,6 +342,7 @@ class TestDeleteProductInvalidation:
             # (implementation may vary)
 
 
+@pytest.mark.unit
 class TestListProductsCaching:
     """Test list_products with caching."""
 
@@ -368,6 +375,7 @@ class TestListProductsCaching:
         assert result[0].product_id == "prod-123"
 
 
+@pytest.mark.unit
 class TestCacheErrorHandling:
     """Test error handling in cached service."""
 

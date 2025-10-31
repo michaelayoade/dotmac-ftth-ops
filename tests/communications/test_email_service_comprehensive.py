@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for email service to improve coverage.
 """
@@ -8,6 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.communications.email_service import (
+
+
     EmailMessage,
     EmailResponse,
     EmailService,
@@ -15,9 +18,13 @@ from dotmac.platform.communications.email_service import (
     send_email,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestEmailServiceSMTP:
     """Test SMTP operations in email service."""
 
@@ -105,6 +112,7 @@ class TestEmailServiceSMTP:
             assert len(recipients) == 3
 
 
+@pytest.mark.integration
 class TestEmailServiceMIME:
     """Test MIME message creation."""
 
@@ -202,6 +210,7 @@ class TestEmailServiceMIME:
             assert mime_msg["Subject"] == "No Body"
 
 
+@pytest.mark.integration
 class TestEmailServiceBulk:
     """Test bulk email operations."""
 
@@ -270,6 +279,7 @@ class TestEmailServiceBulk:
                 assert any("Bulk email progress: 10/15" in str(call) for call in info_calls)
 
 
+@pytest.mark.integration
 class TestEmailServiceFactory:
     """Test factory functions."""
 

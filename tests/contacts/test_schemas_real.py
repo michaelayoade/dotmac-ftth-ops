@@ -8,7 +8,7 @@ This test file focuses on:
 4. Avoiding over-mocking
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
@@ -44,6 +44,7 @@ from dotmac.platform.contacts.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestContactMethodSchemas:
     """Test ContactMethod schemas."""
 
@@ -96,7 +97,7 @@ class TestContactMethodSchemas:
 
     def test_contact_method_response(self):
         """Test ContactMethodResponse schema."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         contact_id = uuid4()
         method_id = uuid4()
 
@@ -113,6 +114,7 @@ class TestContactMethodSchemas:
         assert response.contact_id == contact_id
 
 
+@pytest.mark.unit
 class TestContactSchemas:
     """Test Contact schemas."""
 
@@ -159,7 +161,7 @@ class TestContactSchemas:
         """Test contact with all optional fields."""
         owner_id = uuid4()
         team_id = uuid4()
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         contact = ContactCreate(
             first_name="John",
@@ -192,7 +194,7 @@ class TestContactSchemas:
 
     def test_contact_response_schema(self):
         """Test ContactResponse schema."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         contact_id = uuid4()
         tenant_id = uuid4()
 
@@ -221,8 +223,8 @@ class TestContactSchemas:
                 last_name="Doe",
                 display_name="John Doe",
                 is_verified=False,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
         ]
 
@@ -240,6 +242,7 @@ class TestContactSchemas:
         assert list_response.has_next is True
 
 
+@pytest.mark.unit
 class TestContactLabelSchemas:
     """Test ContactLabel schemas."""
 
@@ -273,7 +276,7 @@ class TestContactLabelSchemas:
 
     def test_label_definition_response(self):
         """Test ContactLabelDefinitionResponse."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         label_id = uuid4()
         tenant_id = uuid4()
 
@@ -289,6 +292,7 @@ class TestContactLabelSchemas:
         assert response.name == "VIP"
 
 
+@pytest.mark.unit
 class TestContactFieldSchemas:
     """Test ContactField schemas."""
 
@@ -339,7 +343,7 @@ class TestContactFieldSchemas:
 
     def test_field_definition_response(self):
         """Test ContactFieldDefinitionResponse."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         field_id = uuid4()
         tenant_id = uuid4()
 
@@ -356,6 +360,7 @@ class TestContactFieldSchemas:
         assert response.field_type == ContactFieldType.TEXT
 
 
+@pytest.mark.unit
 class TestContactActivitySchemas:
     """Test ContactActivity schemas."""
 
@@ -393,7 +398,7 @@ class TestContactActivitySchemas:
 
     def test_activity_response(self):
         """Test ContactActivityResponse."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         activity_id = uuid4()
         contact_id = uuid4()
         user_id = uuid4()
@@ -414,6 +419,7 @@ class TestContactActivitySchemas:
         assert response.performed_by == user_id
 
 
+@pytest.mark.unit
 class TestContactSearchSchemas:
     """Test ContactSearch schemas."""
 
@@ -474,6 +480,7 @@ class TestContactSearchSchemas:
             ContactSearchRequest(page_size=1000)
 
 
+@pytest.mark.unit
 class TestContactBulkOperationSchemas:
     """Test bulk operation schemas."""
 
@@ -512,6 +519,7 @@ class TestContactBulkOperationSchemas:
         assert bulk_delete2.hard_delete is False
 
 
+@pytest.mark.unit
 class TestSchemaConfigurations:
     """Test Pydantic model configurations."""
 

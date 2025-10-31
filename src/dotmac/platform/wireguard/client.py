@@ -130,7 +130,7 @@ class WireGuardClient:
 
             if process.returncode != 0:
                 raise WireGuardClientError(
-                    f"Command failed: {' '.join(command)}\n" f"Error: {stderr.decode('utf-8')}"
+                    f"Command failed: {' '.join(command)}\nError: {stderr.decode('utf-8')}"
                 )
 
             return stdout.decode("utf-8"), stderr.decode("utf-8")
@@ -351,12 +351,12 @@ class WireGuardClient:
         config = f"""[Interface]
 PrivateKey = {peer_private_key}
 Address = {peer_address}
-DNS = {', '.join(dns_servers)}
+DNS = {", ".join(dns_servers)}
 
 [Peer]
 PublicKey = {server_public_key}
 Endpoint = {server_endpoint}
-AllowedIPs = {', '.join(allowed_ips)}
+AllowedIPs = {", ".join(allowed_ips)}
 """
 
         if persistent_keepalive:
@@ -450,16 +450,18 @@ AllowedIPs = {', '.join(allowed_ips)}
         if preshared_key:
             self._validate_preshared_key(preshared_key)
             # wg requires preshared key to be in a file, so write to temp file
-            # Create temp file in /tmp inside container (will be cleaned up by OS)
-            temp_filename = f"/tmp/psk_{secrets.token_hex(8)}.tmp"
+            # Use /dev/shm (memory-backed tmpfs) for better security in container
+            # Generate secure random filename
+            temp_basename = f"wg_psk_{secrets.token_urlsafe(16)}.tmp"
+            # Safe: /dev/shm inside container is isolated, ephemeral, memory-backed
+            temp_filename = f"/dev/shm/{temp_basename}"  # nosec B108
 
             try:
-                # Write preshared key to temp file in container
+                # Write preshared key to temp file in container with restrictive permissions
                 await self._docker_exec(
-                    ["tee", temp_filename],
-                    input_data=f"{preshared_key}\n".encode("utf-8"),
+                    ["sh", "-c", f"umask 077 && tee {temp_filename} > /dev/null"],
+                    input_data=f"{preshared_key}\n".encode(),
                 )
-                await self._docker_exec(["chmod", "600", temp_filename])
 
                 # Add preshared-key argument to command
                 command.extend(["preshared-key", temp_filename])
@@ -467,17 +469,16 @@ AllowedIPs = {', '.join(allowed_ips)}
                 # Execute wg set command
                 await self._docker_exec(command)
 
-                # Clean up temp file
-                cleanup_cmd = ["rm", "-f", temp_filename]
-                await self._docker_exec(cleanup_cmd)
             except Exception as e:
-                # Attempt cleanup even on failure
+                raise WireGuardClientError(f"Failed to add peer with preshared key: {e}") from e
+            finally:
+                # Always cleanup temp file (success or failure)
                 try:
                     cleanup_cmd = ["rm", "-f", temp_filename]
                     await self._docker_exec(cleanup_cmd)
                 except Exception:
-                    pass  # Ignore cleanup errors
-                raise WireGuardClientError(f"Failed to add peer with preshared key: {e}") from e
+                    # Log but don't fail on cleanup errors
+                    logger.warning(f"Failed to cleanup temp file {temp_filename}")
         else:
             # No preshared key, execute command normally
             try:

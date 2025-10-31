@@ -14,7 +14,10 @@ import time
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any, cast
 from uuid import uuid4

@@ -1,3 +1,4 @@
+
 """
 Comprehensive Orchestration Service Tests
 
@@ -12,25 +13,31 @@ Tests for orchestration service covering:
 Target: 90%+ coverage
 """
 
-import pytest
-from unittest.mock import AsyncMock, Mock, patch, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
-from datetime import datetime
 
-from dotmac.platform.orchestration.service import OrchestrationService
+import pytest
+
 from dotmac.platform.orchestration.models import (
+
+
+
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
-    WorkflowStepStatus,
 )
 from dotmac.platform.orchestration.schemas import (
-    ProvisionSubscriberRequest,
-    DeprovisionSubscriberRequest,
     ActivateServiceRequest,
+    DeprovisionSubscriberRequest,
+    ProvisionSubscriberRequest,
     SuspendServiceRequest,
 )
+from dotmac.platform.orchestration.service import OrchestrationService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestOrchestrationServiceInitialization:
@@ -74,11 +81,11 @@ class TestProvisionSubscriberWorkflow:
         )
 
         # Mock the saga orchestrator
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
-                context={'subscriber_id': str(uuid4())}
+                context={"subscriber_id": str(uuid4())},
             )
 
             response = await service.provision_subscriber(request)
@@ -99,17 +106,17 @@ class TestProvisionSubscriberWorkflow:
             ipv4_address="10.0.1.100",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
             )
 
-            response = await service.provision_subscriber(request)
+            await service.provision_subscriber(request)
 
             # Verify IPv4 was included in workflow context
             call_args = mock_execute.call_args
-            assert 'ipv4_address' in str(call_args) or call_args is not None
+            assert "ipv4_address" in str(call_args) or call_args is not None
 
     async def test_provision_subscriber_with_ipv6(self, db_session, test_tenant):
         """Test provisioning with IPv6 prefix"""
@@ -124,7 +131,7 @@ class TestProvisionSubscriberWorkflow:
             ipv6_prefix="2001:db8::/64",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -146,11 +153,11 @@ class TestProvisionSubscriberWorkflow:
             service_address="999 Error St",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.FAILED,
                 id=str(uuid4()),
-                error_message="RADIUS provisioning failed"
+                error_message="RADIUS provisioning failed",
             )
 
             response = await service.provision_subscriber(request)
@@ -172,16 +179,14 @@ class TestProvisionSubscriberWorkflow:
 
         initiator_id = str(uuid4())
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
             )
 
             response = await service.provision_subscriber(
-                request,
-                initiator_id=initiator_id,
-                initiator_type="admin"
+                request, initiator_id=initiator_id, initiator_type="admin"
             )
 
             assert response is not None
@@ -201,7 +206,7 @@ class TestDeprovisionSubscriberWorkflow:
             reason="Contract ended",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -222,7 +227,7 @@ class TestDeprovisionSubscriberWorkflow:
             force=True,
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -241,11 +246,11 @@ class TestDeprovisionSubscriberWorkflow:
             reason="Partial cleanup test",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.PARTIALLY_COMPLETED,
                 id=str(uuid4()),
-                error_message="NetBox cleanup failed"
+                error_message="NetBox cleanup failed",
             )
 
             response = await service.deprovision_subscriber(request)
@@ -266,7 +271,7 @@ class TestActivateServiceWorkflow:
             service_id=str(uuid4()),
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -287,7 +292,7 @@ class TestActivateServiceWorkflow:
             bandwidth_profile_id="profile-100mbps",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -306,11 +311,9 @@ class TestActivateServiceWorkflow:
             service_id=str(uuid4()),
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
-                status=WorkflowStatus.COMPLETED,
-                id=str(uuid4()),
-                context={'already_active': True}
+                status=WorkflowStatus.COMPLETED, id=str(uuid4()), context={"already_active": True}
             )
 
             response = await service.activate_service(request)
@@ -331,7 +334,7 @@ class TestSuspendServiceWorkflow:
             reason="Non-payment",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -352,7 +355,7 @@ class TestSuspendServiceWorkflow:
             grace_period_hours=24,
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
@@ -372,11 +375,11 @@ class TestSuspendServiceWorkflow:
             disconnect_active_sessions=True,
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.COMPLETED,
                 id=str(uuid4()),
-                context={'sessions_disconnected': 3}
+                context={"sessions_disconnected": 3},
             )
 
             response = await service.suspend_service(request)
@@ -400,7 +403,7 @@ class TestWorkflowManagement:
         mock_workflow.status = WorkflowStatus.COMPLETED
         mock_workflow.workflow_type = WorkflowType.PROVISION_SUBSCRIBER
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_workflow
 
             workflow = await service.get_workflow(workflow_id)
@@ -411,7 +414,7 @@ class TestWorkflowManagement:
         """Test getting non-existent workflow returns None"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = None
 
             workflow = await service.get_workflow(str(uuid4()))
@@ -422,14 +425,14 @@ class TestWorkflowManagement:
         """Test listing workflows with filters"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = []
 
             workflows = await service.list_workflows(
                 status=WorkflowStatus.COMPLETED,
                 workflow_type=WorkflowType.PROVISION_SUBSCRIBER,
                 skip=0,
-                limit=10
+                limit=10,
             )
 
             assert workflows is not None
@@ -438,7 +441,7 @@ class TestWorkflowManagement:
         """Test workflow list pagination"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.offset.return_value.limit.return_value.all.return_value = []
 
             # Page 1
@@ -459,10 +462,10 @@ class TestWorkflowManagement:
         mock_workflow.id = workflow_id
         mock_workflow.status = WorkflowStatus.FAILED
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_workflow
 
-            with patch.object(service.saga, 'retry_workflow', new_callable=AsyncMock) as mock_retry:
+            with patch.object(service.saga, "retry_workflow", new_callable=AsyncMock) as mock_retry:
                 mock_retry.return_value = mock_workflow
 
                 result = await service.retry_workflow(workflow_id)
@@ -477,7 +480,7 @@ class TestWorkflowManagement:
         mock_workflow = Mock(spec=OrchestrationWorkflow)
         mock_workflow.status = WorkflowStatus.COMPLETED
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_workflow
 
             with pytest.raises(ValueError):
@@ -493,10 +496,12 @@ class TestWorkflowManagement:
         mock_workflow.id = workflow_id
         mock_workflow.status = WorkflowStatus.RUNNING
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_workflow
 
-            with patch.object(service.saga, 'cancel_workflow', new_callable=AsyncMock) as mock_cancel:
+            with patch.object(
+                service.saga, "cancel_workflow", new_callable=AsyncMock
+            ) as mock_cancel:
                 mock_cancel.return_value = mock_workflow
 
                 result = await service.cancel_workflow(workflow_id)
@@ -511,7 +516,7 @@ class TestWorkflowManagement:
         mock_workflow = Mock(spec=OrchestrationWorkflow)
         mock_workflow.status = WorkflowStatus.COMPLETED
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.first.return_value = mock_workflow
 
             with pytest.raises(ValueError):
@@ -526,20 +531,20 @@ class TestWorkflowStatistics:
         """Test getting workflow statistics"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             # Mock count queries
             mock_query.return_value.filter.return_value.count.return_value = 10
 
             stats = await service.get_workflow_statistics()
 
             assert stats is not None
-            assert hasattr(stats, 'total_workflows') or stats is not None
+            assert hasattr(stats, "total_workflows") or stats is not None
 
     async def test_workflow_statistics_by_status(self, db_session, test_tenant):
         """Test statistics broken down by status"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.group_by.return_value.all.return_value = [
                 (WorkflowStatus.COMPLETED, 50),
                 (WorkflowStatus.FAILED, 5),
@@ -554,7 +559,7 @@ class TestWorkflowStatistics:
         """Test statistics broken down by workflow type"""
         service = OrchestrationService(db_session, test_tenant.id)
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.group_by.return_value.all.return_value = [
                 (WorkflowType.PROVISION_SUBSCRIBER, 30),
                 (WorkflowType.ACTIVATE_SERVICE, 15),
@@ -582,7 +587,7 @@ class TestWorkflowErrorHandling:
             service_address="404 Not Found St",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.side_effect = ValueError("Customer not found")
 
             with pytest.raises(ValueError):
@@ -600,11 +605,11 @@ class TestWorkflowErrorHandling:
             service_address="999 Timeout Ln",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.TIMEOUT,
                 id=str(uuid4()),
-                error_message="Workflow exceeded 5 minute timeout"
+                error_message="Workflow exceeded 5 minute timeout",
             )
 
             response = await service.provision_subscriber(request)
@@ -624,11 +629,11 @@ class TestWorkflowErrorHandling:
             service_address="777 Rollback Ave",
         )
 
-        with patch.object(service.saga, 'execute_workflow', new_callable=AsyncMock) as mock_execute:
+        with patch.object(service.saga, "execute_workflow", new_callable=AsyncMock) as mock_execute:
             mock_execute.return_value = MagicMock(
                 status=WorkflowStatus.ROLLBACK_FAILED,
                 id=str(uuid4()),
-                error_message="Could not remove RADIUS entry during rollback"
+                error_message="Could not remove RADIUS entry during rollback",
             )
 
             response = await service.provision_subscriber(request)
@@ -684,7 +689,7 @@ class TestTenantIsolation:
         service2 = OrchestrationService(db_session, test_tenant_2.id)
 
         # Each service should only see its own tenant's workflows
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             mock_query.return_value.filter.return_value.all.return_value = []
 
             workflows1 = await service1.list_workflows()
@@ -694,14 +699,16 @@ class TestTenantIsolation:
             assert isinstance(workflows1, (list, type(None)))
             assert isinstance(workflows2, (list, type(None)))
 
-    async def test_cannot_access_other_tenant_workflow(self, db_session, test_tenant, test_tenant_2):
+    async def test_cannot_access_other_tenant_workflow(
+        self, db_session, test_tenant, test_tenant_2
+    ):
         """Test cannot access workflow from other tenant"""
         service = OrchestrationService(db_session, test_tenant.id)
 
         # Workflow belongs to tenant_2
         workflow_id = str(uuid4())
 
-        with patch.object(db_session, 'query') as mock_query:
+        with patch.object(db_session, "query") as mock_query:
             # Return None (filtered out by tenant)
             mock_query.return_value.filter.return_value.first.return_value = None
 

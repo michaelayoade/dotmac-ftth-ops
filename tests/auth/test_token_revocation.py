@@ -1,7 +1,7 @@
 """Tests for JWT token revocation and session management fixes."""
 
 import json
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
@@ -10,6 +10,9 @@ from fastapi.security import HTTPAuthorizationCredentials
 
 from dotmac.platform.auth.core import JWTService, SessionManager, get_current_user
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestJWTRevocation:
     """Test JWT token revocation functionality."""
@@ -216,8 +219,8 @@ class TestAuthenticationDependencyFix:
         jwt_service_mock.verify_token_async.return_value = {
             "sub": "user123",
             "type": "access",
-            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
-            "iat": datetime.now(UTC).timestamp(),
+            "exp": (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp(),
+            "iat": datetime.now(timezone.utc).timestamp(),
         }
 
         credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials="valid-token")
@@ -246,8 +249,8 @@ class TestAuthenticationDependencyFix:
         jwt_service_mock.verify_token_async.return_value = {
             "sub": "test_user",
             "type": "access",
-            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
-            "iat": datetime.now(UTC).timestamp(),
+            "exp": (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp(),
+            "iat": datetime.now(timezone.utc).timestamp(),
         }
 
         mock_request = Mock(spec=Request)
@@ -324,7 +327,7 @@ class TestSessionManagerEnhancements:
         """Test session deletion with user session set cleanup."""
         session_data = {
             "user_id": "user123",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "data": {"test": "data"},
         }
 

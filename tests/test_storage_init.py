@@ -9,6 +9,7 @@ import dotmac.platform.storage_init
 from dotmac.platform.storage_init import get_storage, init_storage
 
 
+@pytest.mark.unit
 class TestStorageInit:
     """Test storage initialization functionality."""
 

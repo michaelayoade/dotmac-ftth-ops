@@ -5,7 +5,10 @@ Provides efficient subscription queries with conditional loading of customers,
 plans, and invoices via DataLoaders to prevent N+1 queries.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 
 import strawberry
@@ -223,21 +226,11 @@ class SubscriptionQueries:
         # Get status counts
         status_stmt = select(
             func.count(SubscriptionModel.subscription_id).label("total"),
-            func.count(
-                func.case((SubscriptionModel.status == 'active', 1))
-            ).label("active"),
-            func.count(
-                func.case((SubscriptionModel.status == 'trialing', 1))
-            ).label("trialing"),
-            func.count(
-                func.case((SubscriptionModel.status == 'past_due', 1))
-            ).label("past_due"),
-            func.count(
-                func.case((SubscriptionModel.status == 'canceled', 1))
-            ).label("canceled"),
-            func.count(
-                func.case((SubscriptionModel.status == 'paused', 1))
-            ).label("paused"),
+            func.count(func.case((SubscriptionModel.status == "active", 1))).label("active"),
+            func.count(func.case((SubscriptionModel.status == "trialing", 1))).label("trialing"),
+            func.count(func.case((SubscriptionModel.status == "past_due", 1))).label("past_due"),
+            func.count(func.case((SubscriptionModel.status == "canceled", 1))).label("canceled"),
+            func.count(func.case((SubscriptionModel.status == "paused", 1))).label("paused"),
         )
 
         status_result = await db.execute(status_stmt)
@@ -263,9 +256,9 @@ class SubscriptionQueries:
         last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
 
         growth_stmt = select(
-            func.count(
-                func.case((SubscriptionModel.created_at >= this_month_start, 1))
-            ).label("this_month"),
+            func.count(func.case((SubscriptionModel.created_at >= this_month_start, 1))).label(
+                "this_month"
+            ),
             func.count(
                 func.case(
                     (

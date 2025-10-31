@@ -6,10 +6,13 @@ Reuses existing REST endpoint logic with caching.
 """
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 import strawberry
 import structlog
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from sqlalchemy import select
 
 from dotmac.platform.auth.api_keys_metrics_router import _get_api_key_metrics_cached

@@ -14,6 +14,7 @@ import {
   X,
   Handshake,
   BarChart3,
+  CreditCard,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
 
@@ -30,6 +31,7 @@ const navigation: NavItem[] = [
   { name: "Referrals", href: "/portal/referrals", icon: UserPlus },
   { name: "Commissions", href: "/portal/commissions", icon: DollarSign },
   { name: "Customers", href: "/portal/customers", icon: Users },
+  { name: "Billing", href: "/portal/billing", icon: CreditCard },
   { name: "Performance", href: "/portal/performance", icon: BarChart3 },
   { name: "Settings", href: "/portal/settings", icon: Settings },
 ];

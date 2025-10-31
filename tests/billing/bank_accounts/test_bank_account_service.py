@@ -5,7 +5,7 @@ Tests bank account CRUD operations, primary account management,
 and payment reconciliation features.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -49,9 +49,9 @@ def mock_db_session():
         if not hasattr(obj, "id") or obj.id is None:
             obj.id = 123
         if not hasattr(obj, "created_at") or obj.created_at is None:
-            obj.created_at = datetime.now(UTC)
+            obj.created_at = datetime.now(timezone.utc)
         if not hasattr(obj, "updated_at") or obj.updated_at is None:
-            obj.updated_at = datetime.now(UTC)
+            obj.updated_at = datetime.now(timezone.utc)
         if not hasattr(obj, "reconciled") or obj.reconciled is None:
             obj.reconciled = False
         # Bank account specific fields
@@ -99,6 +99,7 @@ def bank_account_create():
     )
 
 
+@pytest.mark.unit
 class TestCreateBankAccount:
     """Test bank account creation."""
 
@@ -130,9 +131,9 @@ class TestCreateBankAccount:
             if not hasattr(obj, "status") or obj.status is None:
                 obj.status = BankAccountStatus.PENDING
             if not hasattr(obj, "created_at") or obj.created_at is None:
-                obj.created_at = datetime.now(UTC)
+                obj.created_at = datetime.now(timezone.utc)
             if not hasattr(obj, "updated_at") or obj.updated_at is None:
-                obj.updated_at = datetime.now(UTC)
+                obj.updated_at = datetime.now(timezone.utc)
             if not hasattr(obj, "is_active") or obj.is_active is None:
                 obj.is_active = True  # Default to active
             # Ensure account_type is preserved (service doesn't set it as enum)
@@ -185,6 +186,7 @@ class TestCreateBankAccount:
             assert added_account.account_number_last_four == "6789"
 
 
+@pytest.mark.unit
 class TestGetBankAccounts:
     """Test bank account retrieval."""
 
@@ -211,8 +213,8 @@ class TestGetBankAccounts:
                 status=BankAccountStatus.VERIFIED,
                 is_primary=True,
                 accepts_deposits=True,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
         ]
         mock_db_session.execute.return_value = mock_result
@@ -237,6 +239,7 @@ class TestGetBankAccounts:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestUpdateBankAccount:
     """Test bank account updates."""
 
@@ -261,8 +264,8 @@ class TestUpdateBankAccount:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_result = MagicMock()
@@ -281,6 +284,7 @@ class TestUpdateBankAccount:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestDeleteBankAccount:
     """Test bank account deletion."""
 
@@ -304,8 +308,8 @@ class TestDeleteBankAccount:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_result = MagicMock()
@@ -320,6 +324,7 @@ class TestDeleteBankAccount:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestRecordManualPayment:
     """Test manual payment recording."""
 
@@ -331,7 +336,7 @@ class TestRecordManualPayment:
             customer_id=str(uuid4()),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             received_by="user-1",
             notes="Cash payment received",
         )
@@ -351,7 +356,7 @@ class TestRecordManualPayment:
             customer_id=str(uuid4()),
             amount=Decimal("500.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             bank_account_id=123,
             reference_number="TRF12345",
             notes="Wire transfer",
@@ -365,6 +370,7 @@ class TestRecordManualPayment:
         assert mock_db_session.commit.called
 
 
+@pytest.mark.unit
 class TestPaymentSearch:
     """Test payment search and filtering."""
 
@@ -374,8 +380,8 @@ class TestPaymentSearch:
         from dotmac.platform.billing.bank_accounts.models import PaymentSearchFilters
 
         filters = PaymentSearchFilters(
-            start_date=datetime(2025, 1, 1, tzinfo=UTC),
-            end_date=datetime(2025, 12, 31, tzinfo=UTC),
+            start_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
+            end_date=datetime(2025, 12, 31, tzinfo=timezone.utc),
         )
 
         mock_result = MagicMock()
@@ -406,6 +412,7 @@ class TestPaymentSearch:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestBankAccountSummary:
     """Test bank account summary generation."""
 
@@ -430,8 +437,8 @@ class TestBankAccountSummary:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_account_result = MagicMock()
@@ -459,6 +466,7 @@ class TestBankAccountSummary:
         assert result is not None
 
 
+@pytest.mark.unit
 class TestHelperMethods:
     """Test service helper methods."""
 
@@ -493,8 +501,8 @@ class TestHelperMethods:
                 is_active=True,
                 status=BankAccountStatus.VERIFIED,
                 accepts_deposits=True,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
         ]
         mock_db_session.execute.return_value = mock_result
@@ -506,6 +514,7 @@ class TestHelperMethods:
         assert mock_db_session.execute.called
 
 
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling in bank account operations."""
 
@@ -536,6 +545,7 @@ class TestErrorHandling:
             pass  # Expected behavior
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation in bank account operations."""
 

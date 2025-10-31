@@ -139,10 +139,10 @@ Each overlay automatically pulls in the shared service definitions, so you only 
 
 ### Prerequisites
 
-- **Docker** (20.10+) and **Docker Compose** (v2.0+)
-- **Python** 3.12+ (for backend development)
-- **Node.js** 18+ and **pnpm** (for frontend development)
-- **8GB+ RAM** and **50GB+ disk space**
+- **Docker Desktop** 20.10+ with Compose v2
+- **Python** 3.12+ and **Poetry**
+- **Node.js** 18+ and **pnpm** 9+
+- At least **8GB RAM** and **50GB disk space** free
 
 ### 1. Clone Repository
 
@@ -151,60 +151,62 @@ git clone https://github.com/your-org/dotmac-isp-ops.git
 cd dotmac-isp-ops
 ```
 
-### 2. Setup Environment
+### 2. Prepare Environment
 
 ```bash
-# Copy environment template
 cp .env.example .env
-
-# Edit .env with your settings (optional for development)
-# nano .env
+# Update secrets as needed (development defaults work out of the box)
 ```
 
-### 3. Start Infrastructure
+### 3. Start Core Infrastructure
 
 ```bash
-# Start all ISP services (takes ~5 minutes)
-./scripts/init-infrastructure.sh
+make start-platform          # postgres, redis, vault, minio
+make start-platform-obs      # optional: observability stack (otel, prometheus, grafana, jaeger)
+# or: ./scripts/infra.sh platform start --with-obs
+make status-platform         # verify health
 ```
 
-This will start:
-- Core services (PostgreSQL, Redis, MinIO, OpenBao)
-- ISP services (FreeRADIUS, NetBox, GenieACS, WireGuard, LibreNMS)
-- Monitoring services (Prometheus, Grafana, Jaeger)
-
-### 4. Initialize RADIUS Database
+### 4. Start ISP Services (Optional)
 
 ```bash
-# Create RADIUS tables
-./scripts/init-radius-db.sh
+make start-isp
+make status-isp
 ```
 
-### 5. Start Backend API
+### 5. Backend Setup
 
 ```bash
-cd backend
 poetry install --with dev
 
-# Configure database connection (sync + async URLs for SQLAlchemy/Alembic)
-export DOTMAC_DATABASE_URL="postgresql://user:pass@localhost:5432/dotmac"
-export DOTMAC_DATABASE_URL_ASYNC="postgresql+asyncpg://user:pass@localhost:5432/dotmac"
+# Use Docker PostgreSQL credentials unless you override them
+export DOTMAC_DATABASE_URL="postgresql://dotmac_user:change-me@localhost:5432/dotmac"
+export DOTMAC_DATABASE_URL_ASYNC="postgresql+asyncpg://dotmac_user:change-me@localhost:5432/dotmac"
 
 poetry run alembic upgrade head
-poetry run uvicorn dotmac.platform.api.main:app --reload
+poetry run uvicorn src.dotmac.platform.main:app \
+  --reload --host 0.0.0.0 --port 8000
 ```
 
-Backend API will be available at: http://localhost:8000/docs
+FastAPI docs: http://localhost:8000/docs
 
-### 6. Start Frontend
+### 6. Frontend Apps
 
 ```bash
 cd frontend
 pnpm install
-pnpm --filter @dotmac/base-app dev
+
+# ISP tenant experience
+pnpm dev:isp          # http://localhost:3001
+
+# Platform super-admin console
+pnpm dev:admin        # http://localhost:3002
+
+# (Optional) legacy monolith for comparison
+pnpm dev:base-app     # http://localhost:3000
 ```
 
-Frontend will be available at: http://localhost:3000
+Press `Ctrl+C` to stop the dev servers. Use `make stop-platform` / `make stop-isp` when you are done.
 
 ## 🌐 Access Services
 
@@ -212,13 +214,9 @@ Once deployed, access these services:
 
 ### ISP Management
 - **Backend API**: http://localhost:8000/docs (FastAPI Swagger)
-- **Frontend**: http://localhost:3000 (Next.js - 6 portals)
-  - Main Dashboard: http://localhost:3000/dashboard
-  - Platform Admin: http://localhost:3000/dashboard/platform-admin
-  - Tenant Portal: http://localhost:3000/tenant
-  - Customer Portal: http://localhost:3000/customer-portal
-  - Partner Referral: http://localhost:3000/portal
-  - Partner Reseller: http://localhost:3000/partner
+- **ISP Operations App**: http://localhost:3001/dashboard – tenant-facing operations (subscribers, devices, billing, automation)
+- **Platform Admin App**: http://localhost:3002/dashboard/platform-admin – super-admin controls (feature flags, plugins, licensing, jobs)
+- **Legacy Base App**: http://localhost:3000 (optional compatibility build)
 
 ### Network Services
 - **NetBox**: http://localhost:8080 (admin / admin)
@@ -236,21 +234,18 @@ Once deployed, access these services:
 
 ## 📚 Documentation
 
-Complete documentation is available in the `docs/` folder:
+Start with these active resources:
 
-### Core Documentation
-- **[README_ISP_PLATFORM.md](docs/README_ISP_PLATFORM.md)** - Platform overview and navigation
-- **[ISP_PLATFORM_ARCHITECTURE.md](docs/ISP_PLATFORM_ARCHITECTURE.md)** - Complete system architecture
-- **[PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md)** - 6 portal architecture with user journeys
-- **[FRONTEND_SITEMAP.md](docs/architecture/FRONTEND_SITEMAP.md)** - Complete route hierarchy and navigation
-- **[INFRASTRUCTURE_SETUP.md](docs/INFRASTRUCTURE_SETUP.md)** - Detailed deployment guide
-- **[INFRASTRUCTURE_QUICKSTART.md](INFRASTRUCTURE_QUICKSTART.md)** - 5-minute quick start
+- **[docs/INDEX.md](docs/INDEX.md)** – curated map of production-ready documentation
+- **[INFRASTRUCTURE.md](INFRASTRUCTURE.md)** & **[README-INFRASTRUCTURE.md](README-INFRASTRUCTURE.md)** – platform/ISP deployment workflows
+- **[docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)** – backend/frontend configuration matrix
+- **[docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** – canonical entity model overview
+- **[docs/API_SPECIFICATIONS.md](docs/API_SPECIFICATIONS.md)** – REST and integration surface area
+- **[docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md)** – diagnostics tooling and APIs
+- **[docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md)** – fiber data model and workflows
+- **Frontend architecture**: see [frontend/MULTI-APP-ARCHITECTURE.md](frontend/MULTI-APP-ARCHITECTURE.md) and [frontend/DEPLOYMENT-ARCHITECTURE.md](frontend/DEPLOYMENT-ARCHITECTURE.md)
 
-### Planning & Implementation
-- **[TEAM_ASSIGNMENTS.md](docs/TEAM_ASSIGNMENTS.md)** - Team structure (11 teams, 38-48 people)
-- **[IMPLEMENTATION_PLAN.md](docs/IMPLEMENTATION_PLAN.md)** - Timeline (MVP: 12 weeks, Full: 48 weeks)
-- **[DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** - Complete database design (140+ tables)
-- **[API_SPECIFICATIONS.md](docs/API_SPECIFICATIONS.md)** - REST API documentation
+Historical planning artifacts (timelines, team allocations) remain in [docs/README_ISP_PLATFORM.md](docs/README_ISP_PLATFORM.md) for reference.
 
 ## 🛠️ Technology Stack
 
@@ -270,16 +265,12 @@ Complete documentation is available in the `docs/` folder:
 - **Leaflet** for maps
 - **ReactFlow** for topology diagrams
 
-#### Portal Architecture
-The platform features **6 specialized portals** in a single Next.js monolith:
-- **Main Dashboard** (`/dashboard/*`) - ISP operations & management
-- **Platform Admin** (`/dashboard/platform-admin/*`) - Multi-tenant platform management
-- **Tenant Self-Service** (`/tenant/*`) - ISP subscription & billing management
-- **Customer Portal** (`/customer-portal/*`) - End-subscriber self-service
-- **Partner Referral** (`/portal/*`) - Sales partner commission tracking
-- **Partner Reseller** (`/partner/*`) - MSP multi-tenant management
+#### Frontend Architecture
+- `@dotmac/isp-ops-app` (port 3001) delivers tenant-facing dashboards for subscribers, network assets, automation, and operations.
+- `@dotmac/platform-admin-app` (port 3002) adds platform-level controls (feature flags, plugins, licensing, jobs) while retaining visibility into ISP views.
+- A legacy `@dotmac/base-app` build remains for compatibility and Storybook workflows.
 
-See [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md) for detailed portal documentation.
+Each app shares the same domain-focused portals (operations, billing, diagnostics, partners, customer management) via the `frontend/shared` workspace packages. Refer to [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md) and the multi-app guides above for navigation details.
 
 ### Infrastructure
 - **Docker** & **Docker Compose**
@@ -415,6 +406,37 @@ See [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITEC
 - ⏳ Platform configuration testing (Settings, Catalog, Dunning services)
 - ⏳ End-to-end workflow integration tests
 - ⏳ Performance testing and optimization
+
+## 🧪 Running Customer Management Tests with PostgreSQL
+
+The customer-management integration tests rely on database constraints that are only available when a real PostgreSQL instance is present. A helper compose file and script are provided:
+
+```bash
+# start a throwaway Postgres, run migrations, execute tests, and clean up
+chmod +x scripts/run_customer_tests.sh
+./scripts/run_customer_tests.sh
+
+# pass additional pytest flags (examples)
+./scripts/run_customer_tests.sh -k lifecycle -vv
+```
+
+If you already have a PostgreSQL instance running with the required schema, skip the Compose orchestration and migration steps:
+
+```bash
+export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+SKIP_COMPOSE=1 SKIP_MIGRATIONS=1 ./scripts/run_customer_tests.sh
+```
+
+The script exports `DOTMAC_DATABASE_URL` / `DOTMAC_DATABASE_URL_ASYNC`, applies the latest Alembic migration, and runs `poetry run pytest tests/customer_management`. To keep the database service running between test runs, you can start it manually:
+
+```bash
+docker compose -f docker-compose.test-db.yml up -d db-test
+export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
+poetry run alembic upgrade head
+poetry run pytest tests/customer_management
+```
 
 ## 🤝 Contributing
 

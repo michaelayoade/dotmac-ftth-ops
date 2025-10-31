@@ -21,6 +21,7 @@ from dotmac.platform.data_transfer.factory import (
 )
 
 
+@pytest.mark.unit
 class TestFactoryMinimal:
     """Minimal tests for real factory usage."""
 

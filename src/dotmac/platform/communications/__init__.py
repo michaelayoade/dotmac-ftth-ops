@@ -5,12 +5,20 @@ Provides a simple, clean API for the communications system using standard librar
 This replaces the complex 392-line __init__.py with a much simpler implementation.
 """
 
+# Version info
+from ..version import get_version
 from .email_service import (
     EmailMessage,
     EmailResponse,
     EmailService,
     get_email_service,
     send_email,
+)
+from .plugins import (
+    list_plugins as list_email_plugins,
+)
+from .plugins import (
+    register_plugin as register_email_plugin,
 )
 from .router import router
 from .task_service import (
@@ -31,8 +39,7 @@ from .template_service import (
     render_template,
 )
 
-# Version info
-__version__ = "2.0.0-simplified"
+__version__ = get_version()
 
 # Public API
 __all__ = [
@@ -42,6 +49,9 @@ __all__ = [
     "EmailService",
     "get_email_service",
     "send_email",
+    # Plugin helpers
+    "register_email_plugin",
+    "list_email_plugins",
     # Templates
     "TemplateData",
     "RenderedTemplate",

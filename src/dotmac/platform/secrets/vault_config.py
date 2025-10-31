@@ -4,9 +4,12 @@ Vault/OpenBao configuration and connection management.
 This module provides utilities to configure and connect to Vault/OpenBao backends.
 """
 
+import asyncio
+import inspect
 import os
 from typing import Any
 
+import httpx
 import structlog
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -141,13 +144,7 @@ class VaultConnectionManager:
                 timeout=self.config.timeout,
             )
 
-            # Authenticate if using AppRole
-            if self.config.role_id and self.config.secret_id:
-                self._authenticate_approle()
-
-            # Authenticate if using Kubernetes
-            if self.config.kubernetes_role:
-                self._authenticate_kubernetes()
+        self._ensure_authenticated()
 
         return self._client
 
@@ -165,66 +162,128 @@ class VaultConnectionManager:
                 timeout=self.config.timeout,
             )
 
+        self._ensure_authenticated()
+
         return self._async_client
 
-    def _authenticate_approle(self) -> None:
-        """Authenticate using AppRole."""
-        if not self._client:
-            return
+    def _ensure_authenticated(self) -> None:
+        """Authenticate with Vault if dynamic auth is configured and no token present."""
+        if self.config.role_id and self.config.secret_id and not self.config.token:
+            self._authenticate_approle()
 
-        try:
-            # Send AppRole authentication request
-            response = self._client.client.post(
-                "/v1/auth/approle/login",
-                json={
-                    "role_id": self.config.role_id,
-                    "secret_id": self.config.secret_id,
-                },
-            )
-            response.raise_for_status()
+        if self.config.kubernetes_role and not self.config.token:
+            self._authenticate_kubernetes()
 
-            # Extract token from response
-            data = response.json()
-            token = data["auth"]["client_token"]
+    def _apply_token(self, token: str) -> None:
+        """Propagate a newly acquired token to managed clients."""
+        self.config.token = token
 
-            # Update client with new token
+        if self._client is not None:
             self._client.token = token
             self._client.client.headers["X-Vault-Token"] = token
 
+        if self._async_client is not None:
+            update_token = getattr(self._async_client, "update_token", None)
+            if callable(update_token):
+                update_token(token)
+
+    def _login_with_approle(self) -> str:
+        """Perform AppRole login and return client token."""
+        if not (self.config.role_id and self.config.secret_id):
+            return ""
+
+        payload = {
+            "role_id": self.config.role_id,
+            "secret_id": self.config.secret_id,
+        }
+
+        if self._client is not None:
+            response = self._client.client.post("/v1/auth/approle/login", json=payload)
+            response.raise_for_status()
+            data = response.json()
+        else:
+            headers = {}
+            if self.config.namespace:
+                headers["X-Vault-Namespace"] = self.config.namespace
+
+            with httpx.Client(
+                base_url=self.config.url,
+                timeout=self.config.timeout,
+                headers=headers,
+            ) as client:
+                response = client.post("/v1/auth/approle/login", json=payload)
+                response.raise_for_status()
+                data = response.json()
+
+        token = data.get("auth", {}).get("client_token")
+        if not token:
+            raise ValueError("AppRole login response missing client_token")
+
+        return token
+
+    def _authenticate_approle(self) -> None:
+        """Authenticate using AppRole."""
+        if self._client is None and self._async_client is None:
+            return
+
+        try:
+            token = self._login_with_approle()
+            if not token:
+                return
+            self._apply_token(token)
             logger.info("Successfully authenticated with AppRole")
 
         except Exception as e:
             logger.error("Failed to authenticate with AppRole", error=str(e))
             raise
 
+    def _login_with_kubernetes(self) -> str:
+        """Perform Kubernetes login and return client token."""
+        if not self.config.kubernetes_role:
+            return ""
+
+        with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
+            jwt_token = f.read()
+
+        payload = {
+            "role": self.config.kubernetes_role,
+            "jwt": jwt_token,
+        }
+
+        if self._client is not None:
+            response = self._client.client.post("/v1/auth/kubernetes/login", json=payload)
+            response.raise_for_status()
+            data = response.json()
+        else:
+            headers = {}
+            if self.config.namespace:
+                headers["X-Vault-Namespace"] = self.config.namespace
+
+            with httpx.Client(
+                base_url=self.config.url,
+                timeout=self.config.timeout,
+                headers=headers,
+            ) as client:
+                response = client.post("/v1/auth/kubernetes/login", json=payload)
+                response.raise_for_status()
+                data = response.json()
+
+        token = data.get("auth", {}).get("client_token")
+        if not token:
+            raise ValueError("Kubernetes login response missing client_token")
+
+        return token
+
     def _authenticate_kubernetes(self) -> None:
         """Authenticate using Kubernetes service account."""
-        if not self._client:
+        if self._client is None and self._async_client is None:
             return
 
         try:
-            # Read service account token
-            with open("/var/run/secrets/kubernetes.io/serviceaccount/token") as f:
-                jwt_token = f.read()
-
-            # Send Kubernetes authentication request
-            response = self._client.client.post(
-                "/v1/auth/kubernetes/login",
-                json={
-                    "role": self.config.kubernetes_role,
-                    "jwt": jwt_token,
-                },
-            )
-            response.raise_for_status()
-
-            # Extract token from response
-            data = response.json()
-            token = data["auth"]["client_token"]
-
-            # Update client with new token
-            self._client.token = token
-            self._client.client.headers["X-Vault-Token"] = token
-
+            token = self._login_with_kubernetes()
+            if not token:
+                return
+            self._apply_token(token)
             logger.info("Successfully authenticated with Kubernetes")
 
         except FileNotFoundError:
@@ -241,7 +300,17 @@ class VaultConnectionManager:
             self._client = None
 
         if self._async_client:
-            self._async_client.close()
+            if hasattr(type(self._async_client), "close_sync"):
+                close_sync = self._async_client.close_sync
+                close_sync()
+            else:
+                result = self._async_client.close()
+                if inspect.isawaitable(result):
+                    try:
+                        asyncio.run(result)
+                    except RuntimeError:
+                        loop = asyncio.get_running_loop()
+                        loop.create_task(result)
             self._async_client = None
 
 

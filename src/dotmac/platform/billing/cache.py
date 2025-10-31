@@ -8,7 +8,10 @@ with intelligent invalidation and multi-tier caching strategies.
 import hashlib
 import json
 from collections.abc import Awaitable, Callable, MutableMapping
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from functools import wraps
 from typing import Any, TypeVar
@@ -117,9 +120,7 @@ class CacheKey:
     def generate_hash(data: dict[str, Any]) -> str:
         """Generate hash from dictionary data for cache keys."""
         json_str = json.dumps(data, sort_keys=True)
-        return hashlib.md5(
-            json_str.encode(), usedforsecurity=False
-        ).hexdigest()  # nosec B324 - MD5 used for cache key generation, not security
+        return hashlib.md5(json_str.encode(), usedforsecurity=False).hexdigest()  # nosec B324 - MD5 used for cache key generation, not security
 
 
 class BillingCacheMetrics:
@@ -564,6 +565,8 @@ def cached_result(
 
             return result
 
+        # Explicitly set __wrapped__ for test access
+        wrapper.__wrapped__ = func  # type: ignore[attr-defined]
         return wrapper
 
     return decorator

@@ -1,6 +1,6 @@
 """Tests for main module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import FastAPI
@@ -12,6 +12,36 @@ from dotmac.platform.main import (
     lifespan,
 )
 
+pytestmark = pytest.mark.integration
+from dotmac.platform.version import get_version
+
+
+@pytest.fixture(autouse=True)
+def patch_lifespan_dependencies():
+    """Patch asynchronous startup dependencies introduced in main.lifespan."""
+    with (
+        patch("dotmac.platform.main.ensure_isp_rbac", new_callable=AsyncMock) as mock_isp_rbac,
+        patch("dotmac.platform.main.ensure_billing_rbac", new_callable=AsyncMock) as mock_billing_rbac,
+        patch(
+            "dotmac.platform.main.ensure_default_admin_user", new_callable=AsyncMock
+        ) as mock_default_admin,
+        patch("dotmac.platform.main.init_redis", new_callable=AsyncMock) as mock_init_redis,
+        patch("dotmac.platform.main.shutdown_redis", new_callable=AsyncMock) as mock_shutdown_redis,
+        patch("dotmac.platform.main.AsyncSessionLocal") as mock_session_factory,
+    ):
+        session_cm = MagicMock()
+        session_cm.__aenter__ = AsyncMock(return_value=MagicMock())
+        session_cm.__aexit__ = AsyncMock(return_value=None)
+        mock_session_factory.return_value = session_cm
+        yield {
+            "isp_rbac": mock_isp_rbac,
+            "billing_rbac": mock_billing_rbac,
+            "default_admin": mock_default_admin,
+            "init_redis": mock_init_redis,
+            "shutdown_redis": mock_shutdown_redis,
+            "session_factory": mock_session_factory,
+        }
+
 
 class TestCreateApplication:
     """Test create_application function."""
@@ -22,7 +52,7 @@ class TestCreateApplication:
 
         assert isinstance(test_app, FastAPI)
         assert test_app.title == "DotMac Platform Services"
-        assert test_app.version == "1.0.0"
+        assert test_app.version == get_version()
         assert test_app.docs_url == "/docs"
         assert test_app.redoc_url == "/redoc"
 
@@ -45,14 +75,12 @@ class TestCreateApplication:
 class TestLifespan:
     """Test lifespan context manager."""
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_startup_success(
         self,
         mock_print,
@@ -64,6 +92,7 @@ class TestLifespan:
     ):
         """Test lifespan startup sequence."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         # Mock HealthChecker
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
@@ -85,16 +114,16 @@ class TestLifespan:
         assert any("Startup complete" in str(call) for call in print_calls)
         assert any("Shutting down" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_startup_deps_failed_production(
         self, mock_print, mock_settings, mock_health_checker
     ):
         """Test lifespan when dependencies fail in production."""
         mock_settings.environment = "production"
+        mock_settings.is_production = True
+        mock_settings.is_production = True
         # Mock HealthChecker with failed checks
         mock_checker_instance = MagicMock()
         mock_check = MagicMock()
@@ -112,14 +141,12 @@ class TestLifespan:
             async with lifespan(test_app):
                 pass
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_secrets_loading_error_dev(
         self,
         mock_print,
@@ -131,6 +158,7 @@ class TestLifespan:
     ):
         """Test lifespan continues when secrets loading fails in dev."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
         mock_health_checker.return_value = mock_checker_instance
@@ -146,16 +174,15 @@ class TestLifespan:
         print_calls = [str(call) for call in mock_print.call_args_list]
         assert any("Using default secrets (Vault unavailable:" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.settings")
-    @pytest.mark.asyncio
     async def test_lifespan_secrets_loading_error_production(
         self, mock_settings, mock_load_secrets, mock_health_checker
     ):
         """Test lifespan raises when secrets loading fails in production."""
         mock_settings.environment = "production"
+        mock_settings.is_production = True
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
         mock_health_checker.return_value = mock_checker_instance
@@ -309,14 +336,12 @@ class TestMissingCoverage:
             assert result is mock_response
             mock_handler.assert_called_once_with(request, exc)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_degraded_startup_dev(
         self,
         mock_print,
@@ -328,6 +353,7 @@ class TestMissingCoverage:
     ):
         """Test lifespan with optional services failed in dev (line 86)."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
 
         # Mock health checker with optional services failed
         mock_checker_instance = MagicMock()
@@ -351,14 +377,12 @@ class TestMissingCoverage:
         print_calls = [str(call) for call in mock_print.call_args_list]
         assert any("Optional services unavailable: Redis" in str(call) for call in print_calls)
 
-    @pytest.mark.asyncio
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.init_db")
     @patch("dotmac.platform.main.setup_telemetry")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
-    @pytest.mark.asyncio
     async def test_lifespan_database_init_failure(
         self,
         mock_print,
@@ -370,6 +394,7 @@ class TestMissingCoverage:
     ):
         """Test lifespan when database init fails (lines 109-111)."""
         mock_settings.environment = "development"
+        mock_settings.is_production = False
 
         # Mock health checker success
         mock_checker_instance = MagicMock()
@@ -397,8 +422,9 @@ class TestMissingCoverage:
     ):
         """Test application creation with CORS enabled (line 141->152)."""
         # Enable CORS in settings
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = get_version()
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_settings.cors.enabled = True
         mock_settings.cors.origins = ["*"]
         mock_settings.cors.credentials = True
@@ -422,8 +448,9 @@ class TestMissingCoverage:
     @patch("dotmac.platform.main.settings")
     def test_create_application_metrics_enabled(self, mock_settings):
         """Test application creation with metrics enabled (lines 210->216)."""
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = get_version()
         mock_settings.environment = "development"
+        mock_settings.is_production = False
         mock_settings.cors.enabled = False
         mock_settings.observability.enable_metrics = True
 

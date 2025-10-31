@@ -139,7 +139,9 @@ class LeadConvertToCustomerRequest(BaseModel):
     service_coordinates: dict[str, Any] | None = None
 
     # Installation details
-    installation_status: str | None = Field(None, pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$")
+    installation_status: str | None = Field(
+        None, pattern="^(pending|scheduled|in_progress|completed|failed|canceled)$"
+    )
     scheduled_installation_date: datetime | None = None
     installation_notes: str | None = None
 
@@ -196,13 +198,13 @@ class LeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     first_contact_date: datetime | None
     last_contact_date: datetime | None
     expected_close_date: datetime | None
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None
 
 
 # Quote Schemas
@@ -275,13 +277,13 @@ class QuoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     rejection_reason: str | None
     signature_data: dict[str, Any]
     line_items: list[dict[str, Any]]
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None
 
 
 # Site Survey Schemas
@@ -341,10 +343,10 @@ class SiteSurveyResponse(BaseModel):  # BaseModel resolves to Any in isolation
     photos: list[dict[str, Any]]
     recommendations: str | None
     obstacles: str | None
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime
     deleted_at: datetime | None
-    created_by_id: UUID | None
-    updated_by_id: UUID | None
+    created_by: str | None
+    updated_by: str | None

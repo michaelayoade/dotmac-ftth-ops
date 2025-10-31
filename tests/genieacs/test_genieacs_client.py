@@ -1,22 +1,29 @@
+
 """
 Tests for GenieACS NBI Client
 
 Updated for RobustHTTPClient architecture with proper mocking strategy.
 """
 
-import pytest
-import sys
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
-import os
+
+import pytest
 
 from dotmac.platform.genieacs.client import GenieACSClient
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture(autouse=True)
 def reset_circuit_breaker():
     """Reset circuit breaker state before each test to prevent pollution."""
     from dotmac.platform.core.http_client import RobustHTTPClient
+
     RobustHTTPClient._circuit_breakers.clear()
     yield
     RobustHTTPClient._circuit_breakers.clear()
@@ -40,12 +47,15 @@ class TestGenieACSClientInitialization:
     def test_client_initialization_with_env(self):
         """Test client initialization from environment variables"""
         # Mock the settings import to raise ImportError
-        with patch.dict('sys.modules', {'dotmac.platform.settings': None}):
-            with patch.dict("os.environ", {
-                "GENIEACS_URL": "http://genieacs:7557",
-                "GENIEACS_USERNAME": "admin",
-                "GENIEACS_PASSWORD": "pass",
-            }):
+        with patch.dict("sys.modules", {"dotmac.platform.settings": None}):
+            with patch.dict(
+                "os.environ",
+                {
+                    "GENIEACS_URL": "http://genieacs:7557",
+                    "GENIEACS_USERNAME": "admin",
+                    "GENIEACS_PASSWORD": "pass",
+                },
+            ):
                 client = GenieACSClient()
                 assert client.base_url == "http://genieacs:7557/"
                 assert client.service_name == "genieacs"
@@ -53,7 +63,7 @@ class TestGenieACSClientInitialization:
     def test_client_initialization_defaults_to_localhost(self):
         """Test client initialization defaults to localhost"""
         # Clear any env vars and mock import error
-        with patch.dict('sys.modules', {'dotmac.platform.settings': None}):
+        with patch.dict("sys.modules", {"dotmac.platform.settings": None}):
             with patch.dict("os.environ", {}, clear=True):
                 client = GenieACSClient()
                 assert client.base_url == "http://localhost:7557/"
@@ -68,7 +78,7 @@ class TestGenieACSDeviceOperations:
         client = GenieACSClient(base_url="http://genieacs:7557")
 
         # Mock the internal request method
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = [
                 {"_id": "device1", "_lastInform": 1234567890000},
                 {"_id": "device2", "_lastInform": 1234567891000},
@@ -79,18 +89,14 @@ class TestGenieACSDeviceOperations:
             assert len(result) == 2
             assert result[0]["_id"] == "device1"
             assert result[1]["_id"] == "device2"
-            mock_req.assert_called_once_with(
-                "GET",
-                "devices",
-                params={"limit": 10, "skip": 0}
-            )
+            mock_req.assert_called_once_with("GET", "devices", params={"limit": 10, "skip": 0})
 
     @pytest.mark.asyncio
     async def test_get_devices_with_query(self):
         """Test getting devices with query filter"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = [
                 {"_id": "device1", "InternetGatewayDevice.DeviceInfo.ModelName": "HG8245H"}
             ]
@@ -110,11 +116,11 @@ class TestGenieACSDeviceOperations:
         """Test getting single device by ID"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "_id": "device1",
                 "_lastInform": 1234567890000,
-                "InternetGatewayDevice.DeviceInfo.SerialNumber": "SN12345"
+                "InternetGatewayDevice.DeviceInfo.SerialNumber": "SN12345",
             }
 
             result = await client.get_device("device1")
@@ -122,30 +128,41 @@ class TestGenieACSDeviceOperations:
             assert result["_id"] == "device1"
             assert result["InternetGatewayDevice.DeviceInfo.SerialNumber"] == "SN12345"
             # get_device uses URL-encoded device ID in endpoint
-            mock_req.assert_called_once_with(
-                "GET",
-                "devices/device1"
-            )
+            mock_req.assert_called_once_with("GET", "devices/device1")
 
     @pytest.mark.asyncio
     async def test_get_device_not_found(self):
         """Test getting non-existent device returns None"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             # Simulate 404 by raising HTTPStatusError
             import httpx
+
             response = MagicMock()
             response.status_code = 404
-            mock_req.side_effect = httpx.HTTPStatusError("Not found", request=MagicMock(), response=response)
+            mock_req.side_effect = httpx.HTTPStatusError(
+                "Not found", request=MagicMock(), response=response
+            )
 
             result = await client.get_device("nonexistent")
 
             assert result is None
-            mock_req.assert_called_once_with(
-                "GET",
-                "devices/nonexistent"
-            )
+            mock_req.assert_called_once_with("GET", "devices/nonexistent")
+
+    @pytest.mark.asyncio
+    async def test_update_device(self):
+        """Test updating device metadata"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"_id": "device1", "_tags": ["example"]}
+
+            payload = {"_tags": ["example"]}
+            result = await client.update_device("device1", payload)
+
+            assert result["_id"] == "device1"
+            mock_req.assert_called_once_with("PATCH", "devices/device1", json=payload)
 
 
 class TestGenieACSTaskOperations:
@@ -156,18 +173,18 @@ class TestGenieACSTaskOperations:
         """Test creating task for device"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "_id": "task123",
                 "device": "device1",
                 "name": "refreshObject",
-                "timestamp": 1234567890000
+                "timestamp": 1234567890000,
             }
 
             result = await client.create_task(
                 device_id="device1",
                 task_name="refreshObject",
-                task_data={"objectName": "InternetGatewayDevice."}
+                task_data={"objectName": "InternetGatewayDevice."},
             )
 
             assert result["_id"] == "task123"
@@ -184,12 +201,8 @@ class TestGenieACSTaskOperations:
         """Test refreshing device parameters"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = {
-                "_id": "task123",
-                "device": "device1",
-                "name": "refreshObject"
-            }
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"_id": "task123", "device": "device1", "name": "refreshObject"}
 
             result = await client.refresh_device("device1")
 
@@ -204,16 +217,16 @@ class TestGenieACSTaskOperations:
         """Test setting device parameter values"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = {
                 "_id": "task123",
                 "device": "device1",
-                "name": "setParameterValues"
+                "name": "setParameterValues",
             }
 
             parameters = {
                 "InternetGatewayDevice.ManagementServer.PeriodicInformEnable": True,
-                "InternetGatewayDevice.ManagementServer.PeriodicInformInterval": 300
+                "InternetGatewayDevice.ManagementServer.PeriodicInformInterval": 300,
             }
 
             result = await client.set_parameter_values("device1", parameters)
@@ -228,17 +241,54 @@ class TestGenieACSTaskOperations:
         """Test rebooting device"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
-            mock_req.return_value = {
-                "_id": "task123",
-                "device": "device1",
-                "name": "reboot"
-            }
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
+            mock_req.return_value = {"_id": "task123", "device": "device1", "name": "reboot"}
 
             result = await client.reboot_device("device1")
 
             assert result["name"] == "reboot"
             mock_req.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_add_task_delegates_to_create(self):
+        """Test add_task convenience wrapper"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, "create_task", new_callable=AsyncMock) as mock_create:
+            mock_create.return_value = {"_id": "task123", "name": "download"}
+
+            result = await client.add_task(
+                device_id="device1",
+                task_name="download",
+                file_name="fw.bin",
+            )
+
+            assert result["_id"] == "task123"
+            mock_create.assert_called_once_with(
+                device_id="device1",
+                task_name="download",
+                task_data={"fileName": "fw.bin"},
+            )
+
+    @pytest.mark.asyncio
+    async def test_add_task_converts_object_name(self):
+        """Ensure add_task converts snake_case keys"""
+        client = GenieACSClient(base_url="http://genieacs:7557")
+
+        with patch.object(client, "create_task", new_callable=AsyncMock) as mock_create:
+            mock_create.return_value = {"_id": "task456", "name": "refreshObject"}
+
+            await client.add_task(
+                device_id="device1",
+                task_name="refreshObject",
+                object_name="InternetGatewayDevice",
+            )
+
+            mock_create.assert_called_once_with(
+                device_id="device1",
+                task_name="refreshObject",
+                task_data={"objectName": "InternetGatewayDevice"},
+            )
 
 
 class TestGenieACSHealthChecks:
@@ -250,7 +300,7 @@ class TestGenieACSHealthChecks:
         client = GenieACSClient(base_url="http://genieacs:7557")
 
         # ping() calls get_devices(limit=1), so mock get_devices instead
-        with patch.object(client, 'get_devices', new_callable=AsyncMock) as mock_get:
+        with patch.object(client, "get_devices", new_callable=AsyncMock) as mock_get:
             mock_get.return_value = []
 
             result = await client.ping()
@@ -264,7 +314,7 @@ class TestGenieACSHealthChecks:
         client = GenieACSClient(base_url="http://genieacs:7557")
 
         # ping() calls get_devices, so mock that instead
-        with patch.object(client, 'get_devices', new_callable=AsyncMock) as mock_get:
+        with patch.object(client, "get_devices", new_callable=AsyncMock) as mock_get:
             # Simulate connection failure
             mock_get.side_effect = Exception("Connection refused")
 
@@ -282,10 +332,10 @@ class TestGenieACSPresetOperations:
         """Test getting provisioning presets"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = [
                 {"_id": "preset1", "name": "Initial Provisioning"},
-                {"_id": "preset2", "name": "Firmware Update"}
+                {"_id": "preset2", "name": "Firmware Update"},
             ]
 
             result = await client.get_presets()
@@ -294,10 +344,7 @@ class TestGenieACSPresetOperations:
             assert result[0]["name"] == "Initial Provisioning"
             assert result[1]["name"] == "Firmware Update"
             # get_presets doesn't pass params argument
-            mock_req.assert_called_once_with(
-                "GET",
-                "presets"
-            )
+            mock_req.assert_called_once_with("GET", "presets")
 
 
 class TestGenieACSFaultOperations:
@@ -308,13 +355,13 @@ class TestGenieACSFaultOperations:
         """Test getting device faults"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             mock_req.return_value = [
                 {
                     "_id": "fault1",
                     "device": "device1",
                     "faultCode": "9005",
-                    "faultString": "Invalid parameter name"
+                    "faultString": "Invalid parameter name",
                 }
             ]
 
@@ -336,10 +383,11 @@ class TestGenieACSErrorHandling:
         """Test request timeout handling"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             # Simulate timeout
             import asyncio
-            mock_req.side_effect = asyncio.TimeoutError()
+
+            mock_req.side_effect = TimeoutError()
 
             with pytest.raises(asyncio.TimeoutError):
                 await client.get_devices()
@@ -349,7 +397,7 @@ class TestGenieACSErrorHandling:
         """Test network error handling"""
         client = GenieACSClient(base_url="http://genieacs:7557")
 
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             # Simulate network error
             mock_req.side_effect = Exception("Connection refused")
 
@@ -369,12 +417,12 @@ class TestGenieACSErrorHandling:
         assert client.circuit_breaker.name == "genieacs:default"
 
         # Test that repeated failures are handled gracefully
-        with patch.object(client, '_genieacs_request', new_callable=AsyncMock) as mock_req:
+        with patch.object(client, "_genieacs_request", new_callable=AsyncMock) as mock_req:
             # Simulate repeated failures
             mock_req.side_effect = Exception("Service unavailable")
 
             # Multiple failed requests should be caught
-            for i in range(3):
+            for _i in range(3):
                 try:
                     await client.get_devices()
                 except Exception:

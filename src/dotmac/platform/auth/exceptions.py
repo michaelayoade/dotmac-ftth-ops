@@ -10,14 +10,15 @@ from typing import TYPE_CHECKING, Any
 try:
     from jwt import ExpiredSignatureError as JWTExpiredSignatureError
 except ImportError:  # pragma: no cover - fallback when PyJWT is unavailable
+
     class _FallbackExpiredSignatureError(Exception):
         """Fallback ExpiredSignatureError used when PyJWT is missing."""
 
     JWTExpiredSignatureError = _FallbackExpiredSignatureError
 
 if TYPE_CHECKING:
-    class _ExpiredSignatureError(Exception):
-        ...
+
+    class _ExpiredSignatureError(Exception): ...
 
     ExpiredSignatureErrorBase = _ExpiredSignatureError
 else:  # pragma: no cover - runtime path uses actual implementation

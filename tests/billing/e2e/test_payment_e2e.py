@@ -1,35 +1,31 @@
 """
-End-to-End Tests for Payment DDD Flow.
+Integration Tests for Payment DDD Flow.
 
-Tests complete payment lifecycle:
+Tests complete payment lifecycle with mocked dependencies:
 - Payment creation and processing
 - Payment refunds
 - Payment-invoice linking
 - Event propagation
-"""
 
-from unittest.mock import AsyncMock, patch
+NOTE: These are INTEGRATION tests (not true E2E) because they use mocked
+database sessions and event bus. True E2E tests should use real database
+and real services without mocking.
+
+All imports are done lazily inside test methods to avoid event bus
+initialization during pytest collection phase.
+"""
 
 import pytest
 
-from dotmac.platform.billing.commands.aggregate_handlers import (
-    AggregatePaymentCommandHandler,
-)
-from dotmac.platform.billing.commands.payment_commands import (
-    CreatePaymentCommand,
-    RefundPaymentCommand,
-)
-from dotmac.platform.core import Money
 
-
-@pytest.mark.e2e
-class TestPaymentCreationE2E:
-    """E2E tests for payment creation flow."""
+@pytest.mark.integration
+class TestPaymentCreationIntegration:
+    """Integration tests for payment creation flow with mocked dependencies."""
 
     @pytest.mark.asyncio
-    async def test_create_payment_e2e_flow(self):
+    async def test_create_payment_integration_flow(self):
         """
-        E2E: Create payment → Process → Persist → Publish events
+        Integration: Create payment → Process → Persist → Publish events
 
         Flow:
         1. CreatePaymentCommand executed
@@ -39,6 +35,15 @@ class TestPaymentCreationE2E:
         5. Integration events published
         6. Payment persisted
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            CreatePaymentCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -84,13 +89,22 @@ class TestPaymentCreationE2E:
     @pytest.mark.asyncio
     async def test_create_payment_with_authorization_only(self):
         """
-        E2E: Create payment with authorization (no capture)
+        Integration: Create payment with authorization (no capture)
 
         Tests two-step payment flow:
         1. Authorize payment (capture_immediately=False)
         2. Payment stays in pending state
         3. Can be captured later
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            CreatePaymentCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -117,14 +131,14 @@ class TestPaymentCreationE2E:
             assert payment.processed_at is None
 
 
-@pytest.mark.e2e
-class TestPaymentRefundE2E:
-    """E2E tests for payment refund flow."""
+@pytest.mark.integration
+class TestPaymentRefundIntegration:
+    """Integration tests for payment refund flow with mocked dependencies."""
 
     @pytest.mark.asyncio
-    async def test_refund_payment_e2e_flow(self):
+    async def test_refund_payment_integration_flow(self):
         """
-        E2E: Process payment → Refund → Persist → Events
+        Integration: Process payment → Refund → Persist → Events
 
         Flow:
         1. Create and process payment
@@ -133,6 +147,17 @@ class TestPaymentRefundE2E:
         4. Refund events raised
         5. Database updated
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            RefundPaymentCommand,
+        )
+        from dotmac.platform.billing.domain import Payment
+        from dotmac.platform.core import Money
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -144,8 +169,6 @@ class TestPaymentRefundE2E:
             handler = AggregatePaymentCommandHandler(mock_db_session)
 
             # Step 1: Create payment
-            from dotmac.platform.billing.domain import Payment
-
             payment = Payment.create(
                 tenant_id="tenant-123",
                 customer_id="cust-789",
@@ -183,14 +206,23 @@ class TestPaymentRefundE2E:
     @pytest.mark.asyncio
     async def test_cannot_refund_pending_payment(self):
         """
-        E2E: Business rule - cannot refund pending payment
+        Integration: Business rule - cannot refund pending payment
 
         Validates:
         1. Payment in pending state
         2. Refund attempt fails
         3. Business rule error raised
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            RefundPaymentCommand,
+        )
         from dotmac.platform.billing.domain import Payment
+        from dotmac.platform.core import Money
         from dotmac.platform.core.exceptions import BusinessRuleError
 
         mock_db_session = AsyncMock()
@@ -224,14 +256,14 @@ class TestPaymentRefundE2E:
                     await handler.handle_refund_payment(refund_command)
 
 
-@pytest.mark.e2e
-class TestPaymentInvoiceLinkingE2E:
-    """E2E tests for payment-invoice integration."""
+@pytest.mark.integration
+class TestPaymentInvoiceLinkingIntegration:
+    """Integration tests for payment-invoice integration with mocked dependencies."""
 
     @pytest.mark.asyncio
-    async def test_payment_updates_invoice_e2e(self):
+    async def test_payment_updates_invoice_integration(self):
         """
-        E2E: Payment → Invoice update flow
+        Integration: Payment → Invoice update flow
 
         In a complete system:
         1. Payment created and linked to invoice
@@ -242,12 +274,18 @@ class TestPaymentInvoiceLinkingE2E:
 
         This test simulates the command flow.
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
+            AggregatePaymentCommandHandler,
         )
         from dotmac.platform.billing.commands.invoice_commands import (
             ApplyPaymentToInvoiceCommand,
             CreateInvoiceCommand,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            CreatePaymentCommand,
         )
 
         mock_db_session = AsyncMock()
@@ -317,14 +355,14 @@ class TestPaymentInvoiceLinkingE2E:
                     assert mock_event_bus.publish.call_count >= 1
 
 
-@pytest.mark.e2e
-class TestPaymentEventPropagationE2E:
-    """E2E tests for payment event flows."""
+@pytest.mark.integration
+class TestPaymentEventPropagationIntegration:
+    """Integration tests for payment event flows with mocked dependencies."""
 
     @pytest.mark.asyncio
     async def test_payment_succeeded_event_flow(self):
         """
-        E2E: Payment success event triggers side effects
+        Integration: Payment success event triggers side effects
 
         Complete flow:
         1. Payment created and processed
@@ -335,6 +373,15 @@ class TestPaymentEventPropagationE2E:
            - Analytics tracked
            - Invoice updated
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            CreatePaymentCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -374,7 +421,7 @@ class TestPaymentEventPropagationE2E:
     @pytest.mark.asyncio
     async def test_payment_refunded_event_flow(self):
         """
-        E2E: Payment refund event triggers side effects
+        Integration: Payment refund event triggers side effects
 
         Flow:
         1. Payment refunded
@@ -385,7 +432,16 @@ class TestPaymentEventPropagationE2E:
            - Invoice balance updated
            - Analytics tracked
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregatePaymentCommandHandler,
+        )
+        from dotmac.platform.billing.commands.payment_commands import (
+            RefundPaymentCommand,
+        )
         from dotmac.platform.billing.domain import Payment
+        from dotmac.platform.core import Money
 
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()

@@ -1,3 +1,4 @@
+
 """
 Unit tests for GraphQL Context helper logic.
 
@@ -16,6 +17,13 @@ from starlette.requests import Request
 from dotmac.platform.auth.core import TokenType, UserInfo
 from dotmac.platform.graphql.context import Context
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class DummySession:
     """Minimal async session stub."""

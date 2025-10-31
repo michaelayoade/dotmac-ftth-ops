@@ -10,8 +10,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.dependencies import require_user
 from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import require_user
 from dotmac.platform.db import get_async_session
 from dotmac.platform.network_monitoring.schemas import (
     AcknowledgeAlertRequest,
@@ -33,16 +33,20 @@ router = APIRouter()
 
 # Dependency to get monitoring service
 async def get_monitoring_service(
+    current_user: Annotated[UserInfo, Depends(require_user)],
     session: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> NetworkMonitoringService:
     """Get network monitoring service instance."""
-    # Initialize service with actual clients
-    # For now, passing None - clients would be injected via dependency injection
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User must belong to a tenant",
+        )
+
     return NetworkMonitoringService(
-        netbox_client=None,
-        voltha_client=None,
-        genieacs_client=None,
-        radius_client=None,
+        tenant_id=tenant_id,
+        session=session,
     )
 
 
@@ -58,7 +62,7 @@ async def get_monitoring_service(
     description="Get comprehensive network monitoring dashboard with device counts, alerts, and bandwidth",
 )
 async def get_network_overview(
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
 ) -> NetworkOverviewResponse:
     """Get network overview dashboard."""
@@ -93,7 +97,7 @@ async def get_network_overview(
     description="Get health status for all network devices in the tenant",
 )
 async def list_devices(
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
     device_type: DeviceType | None = Query(None, description="Filter by device type"),
     status_filter: str | None = Query(None, alias="status", description="Filter by status"),
@@ -132,7 +136,7 @@ async def list_devices(
 )
 async def get_device_health(
     device_id: str,
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
     device_type: DeviceType = Query(..., description="Device type"),
 ) -> DeviceHealthResponse:
@@ -177,7 +181,7 @@ async def get_device_health(
 )
 async def get_device_metrics(
     device_id: str,
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
     device_type: DeviceType = Query(..., description="Device type"),
 ) -> DeviceMetricsResponse:
@@ -222,7 +226,7 @@ async def get_device_metrics(
 )
 async def get_device_traffic(
     device_id: str,
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
     device_type: DeviceType = Query(..., description="Device type"),
 ) -> TrafficStatsResponse:
@@ -271,7 +275,7 @@ async def get_device_traffic(
     description="Get network monitoring alerts with filtering",
 )
 async def list_alerts(
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
     severity: AlertSeverity | None = Query(None, description="Filter by severity"),
     active_only: bool = Query(True, description="Show only active alerts"),
@@ -313,7 +317,7 @@ async def list_alerts(
 async def acknowledge_alert(
     alert_id: str,
     request: AcknowledgeAlertRequest,
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
 ) -> NetworkAlertResponse:
     """Acknowledge an alert."""
@@ -364,7 +368,7 @@ async def acknowledge_alert(
 )
 async def create_alert_rule(
     request: CreateAlertRuleRequest,
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
 ) -> dict:
     """Create an alert rule."""
@@ -405,7 +409,7 @@ async def create_alert_rule(
     description="Get all alert rules for the tenant",
 )
 async def list_alert_rules(
-    current_user: Annotated[User, Depends(require_user)],
+    current_user: Annotated[UserInfo, Depends(require_user)],
     service: Annotated[NetworkMonitoringService, Depends(get_monitoring_service)],
 ) -> list[dict]:
     """List alert rules."""

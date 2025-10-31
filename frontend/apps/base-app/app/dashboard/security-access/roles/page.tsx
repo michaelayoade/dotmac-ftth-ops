@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,7 +36,6 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Shield,
   Users,
-  Settings,
   MoreHorizontal,
   Search,
   Plus,
@@ -45,10 +44,10 @@ import {
   Copy,
   Key,
   Lock,
-  Unlock,
   UserPlus,
   AlertCircle,
   CheckCircle2,
+  RefreshCw,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import {
@@ -59,6 +58,8 @@ import {
   type Permission,
 } from "@/contexts/RBACContext";
 import { LoadingState, LoadingTable, LoadingSpinner } from "@/components/ui/loading-states";
+import { logger } from "@/lib/logger";
+import { apiClient } from "@/lib/api/client";
 
 // Group permissions by category for display
 function groupPermissionsByCategory(permissions: Permission[]): Record<string, Permission[]> {
@@ -91,6 +92,19 @@ function getCategoryDisplayName(category: PermissionCategory): string {
   return categoryNames[category] || category;
 }
 
+interface DirectoryUser {
+  id: string;
+  username: string;
+  email: string;
+  full_name?: string;
+  is_active?: boolean;
+}
+
+interface RoleAssignmentUser extends DirectoryUser {
+  granted_at?: string;
+  granted_by?: string;
+}
+
 export default function RolesPage() {
   const { toast } = useToast();
   const {
@@ -115,6 +129,12 @@ export default function RolesPage() {
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
   const [permissionsLoading, setPermissionsLoading] = useState(false);
   const [operationLoading, setOperationLoading] = useState(false);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [assignLoading, setAssignLoading] = useState(false);
+  const [assignSaving, setAssignSaving] = useState(false);
+  const [availableUsers, setAvailableUsers] = useState<DirectoryUser[]>([]);
+  const [assignedUsers, setAssignedUsers] = useState<RoleAssignmentUser[]>([]);
+  const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
 
   // New role form state
   const [newRole, setNewRole] = useState({
@@ -135,7 +155,7 @@ export default function RolesPage() {
         const permissions = await getAllPermissions();
         setAllPermissions(permissions);
       } catch (error) {
-        console.error("Failed to load permissions:", error);
+        logger.error("Failed to load permissions", error);
         toast({
           title: "Error",
           description: "Failed to load permissions",
@@ -150,6 +170,155 @@ export default function RolesPage() {
       loadPermissions();
     }
   }, [getAllPermissions, canManageRoles, toast]);
+
+  const loadRoleAssignments = useCallback(async () => {
+    if (!selectedRole) return;
+    setAssignLoading(true);
+    try {
+      const [usersResponse, assignmentsResponse] = await Promise.all([
+        apiClient.get("/users"),
+        apiClient.get(`/auth/rbac/roles/${selectedRole.name}/users`),
+      ]);
+      setAvailableUsers((usersResponse.data as DirectoryUser[]) ?? []);
+      setAssignedUsers((assignmentsResponse.data as RoleAssignmentUser[]) ?? []);
+    } catch (error) {
+      logger.error("Failed to load role assignments", error);
+      toast({
+        title: "Error loading users",
+        description: "We could not load the users for this role. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAssignLoading(false);
+    }
+  }, [selectedRole, toast]);
+
+  useEffect(() => {
+    if (isAssignOpen && selectedRole) {
+      loadRoleAssignments();
+    } else if (!isAssignOpen) {
+      setAssignSearch("");
+      setSelectedUserIds(new Set());
+    }
+  }, [isAssignOpen, selectedRole, loadRoleAssignments]);
+
+  const filteredAvailableUsers = useMemo(() => {
+    const assignedIds = new Set(assignedUsers.map((user) => user.id));
+    const query = assignSearch.trim().toLowerCase();
+
+    return availableUsers
+      .filter((user) => user.is_active !== false && !assignedIds.has(user.id))
+      .filter((user) => {
+        if (!query) return true;
+        return (
+          user.username.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          (user.full_name && user.full_name.toLowerCase().includes(query))
+        );
+      })
+      .sort((a, b) => {
+        const aLabel = a.full_name || a.username || a.email;
+        const bLabel = b.full_name || b.username || b.email;
+        return aLabel.localeCompare(bLabel);
+      });
+  }, [availableUsers, assignedUsers, assignSearch]);
+
+  const toggleUserSelection = useCallback((userId: string) => {
+    setSelectedUserIds((prev) => {
+      const updated = new Set(prev);
+      if (updated.has(userId)) {
+        updated.delete(userId);
+      } else {
+        updated.add(userId);
+      }
+      return updated;
+    });
+  }, []);
+
+  const handleAssignSelectedUsers = useCallback(async () => {
+    if (!selectedRole) {
+      toast({
+        title: "Select a role",
+        description: "Please select a role before assigning users.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedUserIds.size === 0) {
+      toast({
+        title: "No users selected",
+        description: "Select at least one user to assign.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setAssignSaving(true);
+    try {
+      await Promise.all(
+        Array.from(selectedUserIds).map((userId) =>
+          apiClient.post("/auth/rbac/users/assign-role", {
+            user_id: userId,
+            role_name: selectedRole.name,
+          }),
+        ),
+      );
+
+      toast({
+        title: "Role assigned",
+        description: `Assigned "${selectedRole.display_name}" to ${selectedUserIds.size} user(s).`,
+      });
+
+      setSelectedUserIds(new Set());
+      await loadRoleAssignments();
+    } catch (error) {
+      logger.error("Failed to assign role", error);
+      toast({
+        title: "Assignment failed",
+        description: "We couldn't assign the role to the selected user(s). Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setAssignSaving(false);
+    }
+  }, [selectedRole, selectedUserIds, toast, loadRoleAssignments]);
+
+  const handleRevokeUser = useCallback(
+    async (userId: string) => {
+      if (!selectedRole) return;
+      if (
+        !confirm(
+          "Are you sure you want to remove this role from the user? The user will immediately lose associated permissions.",
+        )
+      ) {
+        return;
+      }
+
+      setAssignSaving(true);
+      try {
+        await apiClient.post("/auth/rbac/users/revoke-role", {
+          user_id: userId,
+          role_name: selectedRole.name,
+        });
+        toast({
+          title: "Role revoked",
+          description: "The role was removed from the user.",
+        });
+        await loadRoleAssignments();
+      } catch (error) {
+        logger.error("Failed to revoke role", error);
+        toast({
+          title: "Removal failed",
+          description: "We couldn't remove the role. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setAssignSaving(false);
+      }
+    },
+    [selectedRole, toast, loadRoleAssignments],
+  );
 
   // Filter roles
   const filteredRoles = roles.filter((role) => {
@@ -202,7 +371,7 @@ export default function RolesPage() {
         permissions: new Set(),
       });
     } catch (error) {
-      console.error("Failed to create role:", error);
+      logger.error("Failed to create role", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -238,7 +407,7 @@ export default function RolesPage() {
 
       setIsEditOpen(false);
     } catch (error) {
-      console.error("Failed to update role:", error);
+      logger.error("Failed to update role", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -271,7 +440,7 @@ export default function RolesPage() {
       setIsDeleteOpen(false);
       setSelectedRole(null);
     } catch (error) {
-      console.error("Failed to delete role:", error);
+      logger.error("Failed to delete role", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -297,7 +466,7 @@ export default function RolesPage() {
         permissions: role.permissions.map((p) => p.name),
       });
     } catch (error) {
-      console.error("Failed to duplicate role:", error);
+      logger.error("Failed to duplicate role", error);
       // Error is handled by the RBAC context
     } finally {
       setOperationLoading(false);
@@ -811,43 +980,174 @@ export default function RolesPage() {
 
       {/* Assign Users Dialog */}
       <Dialog open={isAssignOpen} onOpenChange={setIsAssignOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-4xl max-h-[85vh]" data-testid="assign-role-dialog">
           <DialogHeader>
             <DialogTitle>Assign Users to Role</DialogTitle>
             <DialogDescription>
               Add or remove users from {selectedRole?.display_name}
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <div className="space-y-2">
-              <Label htmlFor="user-search">Search Users</Label>
-              <Input id="user-search" placeholder="Search by name or email..." />
-            </div>
-            <div className="mt-4 border rounded-md p-4 bg-muted">
-              <p className="text-sm text-muted-foreground text-center">
-                User assignment interface would be implemented here
-              </p>
-            </div>
+          <div className="py-4 space-y-6">
+            {selectedRole ? (
+              <>
+                <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div className="w-full md:max-w-sm space-y-2">
+                    <Label htmlFor="user-search">Search Users</Label>
+                    <Input
+                      id="user-search"
+                      placeholder="Search by name or email..."
+                      value={assignSearch}
+                      onChange={(event) => setAssignSearch(event.target.value)}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={loadRoleAssignments}
+                    disabled={assignLoading}
+                    className="self-start md:self-auto"
+                    data-testid="assign-refresh"
+                  >
+                    <RefreshCw
+                      className={`h-4 w-4 mr-2 ${assignLoading ? "animate-spin" : ""}`}
+                    />
+                    Refresh
+                  </Button>
+                </div>
+
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="border rounded-md" data-testid="assigned-users-list">
+                    <div className="flex items-center justify-between px-4 py-3 border-b">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Assigned Users ({assignedUsers.length})
+                      </h3>
+                    </div>
+                    <ScrollArea className="h-64">
+                      {assignLoading ? (
+                        <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                          <LoadingSpinner className="mr-2 h-4 w-4" />
+                          Loading assignments...
+                        </div>
+                      ) : assignedUsers.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground">
+                          No users currently have this role.
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-border">
+                          {assignedUsers.map((user) => (
+                            <div
+                              key={user.id}
+                              className="flex items-center justify-between px-4 py-3"
+                              data-testid="assigned-user-row"
+                            >
+                              <div>
+                                <p className="text-sm font-medium text-foreground" data-testid="user-label">
+                                  {user.full_name || user.username || user.email}
+                                </p>
+                                <p className="text-xs text-muted-foreground">{user.email}</p>
+                                {user.granted_at && (
+                                  <p className="text-xs text-muted-foreground mt-1">
+                                    Assigned on {new Date(user.granted_at).toLocaleDateString()}
+                                  </p>
+                                )}
+                              </div>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRevokeUser(user.id)}
+                                disabled={assignSaving}
+                                className="text-destructive hover:text-destructive"
+                                data-testid="revoke-role"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Remove
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+
+                  <div className="border rounded-md" data-testid="available-users-list">
+                    <div className="flex items-center justify-between px-4 py-3 border-b">
+                      <h3 className="text-sm font-semibold text-foreground">
+                        Available Users ({filteredAvailableUsers.length})
+                      </h3>
+                      <span className="text-xs text-muted-foreground">
+                        Selected {selectedUserIds.size}
+                      </span>
+                    </div>
+                    <ScrollArea className="h-64">
+                      {assignLoading ? (
+                        <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
+                          <LoadingSpinner className="mr-2 h-4 w-4" />
+                          Loading users...
+                        </div>
+                      ) : filteredAvailableUsers.length === 0 ? (
+                        <div className="p-4 text-sm text-muted-foreground">
+                          {assignSearch
+                            ? "No users match your search."
+                            : "All active users already have this role."}
+                        </div>
+                      ) : (
+                        <div className="divide-y divide-border">
+                          {filteredAvailableUsers.map((user) => {
+                            const selected = selectedUserIds.has(user.id);
+                            return (
+                              <button
+                                key={user.id}
+                                type="button"
+                                onClick={() => toggleUserSelection(user.id)}
+                                className={`w-full text-left px-4 py-3 flex items-start gap-3 transition-colors ${
+                                  selected ? "bg-primary/10" : "hover:bg-muted"
+                                }`}
+                                data-testid="available-user-row"
+                              >
+                                <Checkbox
+                                  checked={selected}
+                                  onCheckedChange={() => toggleUserSelection(user.id)}
+                                  aria-label={`Select ${user.full_name || user.username || user.email}`}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium text-foreground">
+                                    {user.full_name || user.username || user.email}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{user.email}</p>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div className="p-4 border rounded-md bg-muted text-sm text-muted-foreground">
+                Select a role to manage user assignments.
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsAssignOpen(false)}
-              disabled={operationLoading}
+              disabled={operationLoading || assignSaving}
+              data-testid="assign-cancel"
             >
               Cancel
             </Button>
             <Button
-              onClick={() => {
-                setIsAssignOpen(false);
-                toast({
-                  title: "Success",
-                  description: "User assignments updated successfully",
-                });
-              }}
-              disabled={operationLoading}
+              onClick={handleAssignSelectedUsers}
+              disabled={assignSaving || assignLoading || selectedUserIds.size === 0}
+              data-testid="assign-selected"
             >
-              Save Assignments
+              {(assignSaving || assignLoading) && <LoadingSpinner size="sm" className="mr-2" />}
+              Assign Selected
             </Button>
           </DialogFooter>
         </DialogContent>

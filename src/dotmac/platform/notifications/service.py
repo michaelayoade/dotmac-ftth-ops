@@ -6,6 +6,7 @@ Handles user notification creation, delivery, and preference management.
 
 # mypy: ignore-errors
 
+import asyncio
 from datetime import datetime
 from typing import Any
 from uuid import UUID
@@ -315,6 +316,31 @@ class NotificationService:
 
         return notification
 
+    async def delete_notification(
+        self, tenant_id: str, user_id: UUID, notification_id: UUID
+    ) -> Notification:
+        """Soft delete a notification."""
+        stmt = select(Notification).where(
+            and_(
+                Notification.tenant_id == tenant_id,
+                Notification.user_id == user_id,
+                Notification.id == notification_id,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        notification = result.scalar_one_or_none()
+
+        if not notification:
+            raise NotFoundError(f"Notification {notification_id} not found")
+
+        if not notification.deleted_at:
+            notification.deleted_at = datetime.utcnow()
+            notification.is_active = False
+
+        await self.db.flush()
+        return notification
+
     async def get_user_preferences(self, tenant_id: str, user_id: UUID) -> NotificationPreference:
         """Get or create user notification preferences."""
         stmt = select(NotificationPreference).where(
@@ -398,7 +424,125 @@ class NotificationService:
         )
 
         result = await self.db.execute(stmt)
-        return result.scalar_one_or_none()
+        scalar = result.scalar_one_or_none()
+        if asyncio.iscoroutine(scalar):
+            scalar = await scalar
+        if not isinstance(scalar, NotificationTemplate):
+            return None
+        return scalar
+
+    async def create_template(
+        self,
+        tenant_id: str,
+        notification_type: NotificationType,
+        name: str,
+        title_template: str,
+        message_template: str,
+        *,
+        description: str | None = None,
+        action_url_template: str | None = None,
+        action_label: str | None = None,
+        default_priority: NotificationPriority = NotificationPriority.MEDIUM,
+        default_channels: list[str | NotificationChannel] | None = None,
+        email_template_name: str | None = None,
+        sms_template: str | None = None,
+        push_title_template: str | None = None,
+        push_body_template: str | None = None,
+        required_variables: list[str] | None = None,
+    ) -> NotificationTemplate:
+        """Create a notification template."""
+        channels = default_channels or [NotificationChannel.IN_APP]
+        normalized_channels = [
+            channel.value if isinstance(channel, NotificationChannel) else str(channel)
+            for channel in channels
+        ]
+
+        template = NotificationTemplate(
+            tenant_id=tenant_id,
+            type=notification_type,
+            name=name,
+            description=description,
+            title_template=title_template,
+            message_template=message_template,
+            action_url_template=action_url_template,
+            action_label=action_label,
+            email_template_name=email_template_name,
+            sms_template=sms_template,
+            push_title_template=push_title_template,
+            push_body_template=push_body_template,
+            default_priority=default_priority,
+            default_channels=normalized_channels,
+            required_variables=required_variables or [],
+        )
+
+        self.db.add(template)
+        await self.db.flush()
+        await self.db.refresh(template)
+
+        return template
+
+    async def update_template(
+        self,
+        tenant_id: str,
+        notification_type: NotificationType,
+        *,
+        name: str | None = None,
+        title_template: str | None = None,
+        message_template: str | None = None,
+        action_url_template: str | None = None,
+        action_label: str | None = None,
+        default_priority: NotificationPriority | None = None,
+        default_channels: list[str | NotificationChannel] | None = None,
+        description: str | None = None,
+        email_template_name: str | None = None,
+        sms_template: str | None = None,
+        push_title_template: str | None = None,
+        push_body_template: str | None = None,
+        required_variables: list[str] | None = None,
+        is_active: bool | None = None,
+    ) -> NotificationTemplate:
+        """Update an existing notification template."""
+        template = await self.get_template(tenant_id, notification_type)
+        if not template:
+            raise NotFoundError(
+                f"Template for type {notification_type.value} not found for tenant {tenant_id}"
+            )
+
+        if name is not None:
+            template.name = name
+        if description is not None:
+            template.description = description
+        if title_template is not None:
+            template.title_template = title_template
+        if message_template is not None:
+            template.message_template = message_template
+        if action_url_template is not None:
+            template.action_url_template = action_url_template
+        if action_label is not None:
+            template.action_label = action_label
+        if email_template_name is not None:
+            template.email_template_name = email_template_name
+        if sms_template is not None:
+            template.sms_template = sms_template
+        if push_title_template is not None:
+            template.push_title_template = push_title_template
+        if push_body_template is not None:
+            template.push_body_template = push_body_template
+        if default_priority is not None:
+            template.default_priority = default_priority
+        if default_channels is not None:
+            template.default_channels = [
+                channel.value if isinstance(channel, NotificationChannel) else str(channel)
+                for channel in default_channels
+            ]
+        if required_variables is not None:
+            template.required_variables = required_variables
+        if is_active is not None:
+            template.is_active = is_active
+
+        await self.db.flush()
+        await self.db.refresh(template)
+        return template
 
     async def _determine_channels(
         self,
@@ -713,11 +857,7 @@ class NotificationService:
             users = result.scalars().all()
 
             # Filter by role (roles is JSON array)
-            target_users = [
-                user.id
-                for user in users
-                if role_filter in (user.roles or [])
-            ]
+            target_users = [user.id for user in users if role_filter in (user.roles or [])]
 
             logger.info(
                 "Role-based team notification",
@@ -740,11 +880,13 @@ class NotificationService:
 
         # Add team context to metadata
         team_metadata = metadata or {}
-        team_metadata.update({
-            "team_notification": True,
-            "team_size": len(target_users),
-            "role_filter": role_filter,
-        })
+        team_metadata.update(
+            {
+                "team_notification": True,
+                "team_size": len(target_users),
+                "role_filter": role_filter,
+            }
+        )
 
         for user_id in target_users:
             try:

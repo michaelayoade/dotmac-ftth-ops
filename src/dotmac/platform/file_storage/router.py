@@ -5,7 +5,10 @@ Provides REST endpoints for file storage operations.
 """
 
 import posixpath
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -27,6 +30,7 @@ from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.platform_admin import is_platform_admin
 from dotmac.platform.file_storage.service import (
     FileMetadata,
+    FileStorageService,
     get_storage_service,
 )
 from dotmac.platform.tenant import get_current_tenant_id
@@ -34,11 +38,11 @@ from dotmac.platform.tenant import get_current_tenant_id
 logger = structlog.get_logger(__name__)
 
 # Create router
-file_storage_router = APIRouter(prefix="/files/storage", )
+file_storage_router = APIRouter(prefix="/files/storage")
 storage_router = file_storage_router  # Alias for backward compatibility
 
-# Get service instance
-storage_service = get_storage_service()
+# Maintain a module-level storage service for legacy test patches.
+storage_service: FileStorageService = get_storage_service()
 
 
 def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:
@@ -142,7 +146,8 @@ async def upload_file(
             path = f"uploads/{tenant_id}/{current_user.user_id}/{datetime.now(UTC).strftime('%Y/%m/%d')}"
 
         # Store file
-        file_id = await storage_service.store_file(
+        service = storage_service
+        file_id = await service.store_file(
             file_data=contents,
             file_name=file.filename or "unnamed",
             content_type=file.content_type or "application/octet-stream",
@@ -190,9 +195,10 @@ async def download_file(
     try:
         tenant_id = _resolve_tenant_id(request, current_user)
 
-        file_data, metadata = await storage_service.retrieve_file(file_id, tenant_id)
+        service = storage_service
+        file_data, metadata = await service.retrieve_file(file_id, tenant_id)
 
-        if not file_data:
+        if file_data is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"File {file_id} not found",
@@ -240,7 +246,8 @@ async def delete_file(
     """
     try:
         tenant_id = _resolve_tenant_id(request, current_user)
-        success = await storage_service.delete_file(file_id, tenant_id)
+        service = storage_service
+        success = await service.delete_file(file_id, tenant_id)
 
         if not success:
             raise HTTPException(
@@ -293,7 +300,8 @@ async def list_files(
         else:
             full_path = base_prefix
 
-        files = await storage_service.list_files(
+        service = storage_service
+        files = await service.list_files(
             path=full_path,
             limit=limit,
             offset=skip,
@@ -330,7 +338,8 @@ async def get_file_metadata(
     """
     try:
         tenant_id = _resolve_tenant_id(request, current_user)
-        metadata = await storage_service.get_file_metadata(file_id)
+        service = storage_service
+        metadata = await service.get_file_metadata(file_id)
 
         if not metadata or metadata.get("tenant_id") != tenant_id:
             raise HTTPException(
@@ -367,17 +376,39 @@ async def batch_operation(
     try:
         tenant_id = _resolve_tenant_id(request, current_user)
         results = []
+        service = storage_service
 
         for file_id in operations.file_ids:
             if operations.operation == "delete":
-                success = await storage_service.delete_file(file_id, tenant_id)
+                success = await service.delete_file(file_id, tenant_id)
                 results.append({"file_id": file_id, "status": "deleted" if success else "failed"})
-            elif operations.operation == "move" and operations.destination:
-                # Implement move operation
-                results.append({"file_id": file_id, "status": "moved"})
-            elif operations.operation == "copy" and operations.destination:
-                # Implement copy operation
-                results.append({"file_id": file_id, "status": "copied"})
+            elif operations.operation == "move":
+                destination = (operations.destination or "").strip()
+                if not destination:
+                    results.append({"file_id": file_id, "status": "missing_destination"})
+                    continue
+                success = await service.move_file(
+                    file_id=file_id,
+                    destination=destination,
+                    tenant_id=tenant_id,
+                )
+                results.append({"file_id": file_id, "status": "moved" if success else "failed"})
+            elif operations.operation == "copy":
+                destination = (operations.destination or "").strip()
+                if not destination:
+                    results.append({"file_id": file_id, "status": "missing_destination"})
+                    continue
+                new_file_id = await service.copy_file(
+                    file_id=file_id,
+                    destination=destination,
+                    tenant_id=tenant_id,
+                )
+                if new_file_id:
+                    results.append(
+                        {"file_id": file_id, "status": "copied", "new_file_id": new_file_id}
+                    )
+                else:
+                    results.append({"file_id": file_id, "status": "failed"})
             else:
                 results.append({"file_id": file_id, "status": "unsupported_operation"})
 
@@ -400,4 +431,4 @@ async def batch_operation(
 
 
 # Export router
-__all__ = ["file_storage_router", "storage_router"]
+__all__ = ["file_storage_router", "storage_router", "storage_service"]

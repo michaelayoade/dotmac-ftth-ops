@@ -4,7 +4,10 @@ Job Service
 Business logic for managing async jobs.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import uuid4
 
 import structlog
@@ -206,6 +209,8 @@ class JobService:
             job.error_message = update_data.error_message
         if update_data.error_details is not None:
             job.error_details = update_data.error_details
+        if update_data.error_traceback is not None:
+            job.error_traceback = update_data.error_traceback
         if update_data.result is not None:
             job.result = update_data.result
 
@@ -305,6 +310,14 @@ class JobService:
         """
         original_job = await self.get_job(job_id, tenant_id)
         if not original_job:
+            return None
+
+        if not original_job.is_terminal:
+            logger.warning(
+                "job.retry_failed.not_terminal",
+                job_id=job_id,
+                status=original_job.status,
+            )
             return None
 
         if not original_job.failed_items or len(original_job.failed_items) == 0:

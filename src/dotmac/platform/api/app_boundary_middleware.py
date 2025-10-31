@@ -9,7 +9,7 @@ Provides clear separation between:
 """
 
 from collections.abc import Awaitable, Callable
-from typing import Optional
+from typing import Any
 
 import structlog
 from fastapi import HTTPException, Request, Response
@@ -42,7 +42,9 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     TENANT_PREFIXES = ("/api/tenant/",)
     SHARED_PREFIXES = ("/api/v1/",)
     PUBLIC_PREFIXES = ("/api/public/", "/docs", "/redoc", "/openapi.json")
-    HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api")
+    # Fixed: Removed overly broad "/api" prefix that was bypassing ALL API route enforcement
+    # Only include actual health endpoints: /health, /ready, /metrics, /api/health
+    HEALTH_PREFIXES = ("/health", "/ready", "/metrics", "/api/health")
 
     async def dispatch(
         self,
@@ -88,8 +90,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _enforce_platform_boundary(
         self,
         path: str,
-        user: Optional[any],
-        tenant_id: Optional[str],
+        user: Any | None,
+        tenant_id: str | None,
     ) -> None:
         """
         Enforce platform route boundary rules.
@@ -145,7 +147,12 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
                 detail={
                     "error": "Platform access requires platform-level permissions",
                     "path": path,
-                    "required_scopes": ["platform:*", "platform_super_admin", "platform_support", "platform_finance"],
+                    "required_scopes": [
+                        "platform:*",
+                        "platform_super_admin",
+                        "platform_support",
+                        "platform_finance",
+                    ],
                     "help": "Contact your platform administrator for access",
                 },
             )
@@ -159,8 +166,8 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
     def _enforce_tenant_boundary(
         self,
         path: str,
-        user: Optional[any],
-        tenant_id: Optional[str],
+        user: Any | None,
+        tenant_id: str | None,
     ) -> None:
         """
         Enforce tenant route boundary rules.
@@ -245,7 +252,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
         """Check if route is tenant-only."""
         return any(path.startswith(prefix) for prefix in self.TENANT_PREFIXES)
 
-    def _has_platform_scope(self, user: any) -> bool:
+    def _has_platform_scope(self, user: Any) -> bool:
         """
         Check if user has any platform-level scopes.
 
@@ -289,7 +296,7 @@ class AppBoundaryMiddleware(BaseHTTPMiddleware):
 
         return False
 
-    def _has_tenant_scope(self, user: any) -> bool:
+    def _has_tenant_scope(self, user: Any) -> bool:
         """
         Check if user has any tenant-level scopes.
 

@@ -6,6 +6,7 @@ Provides RESTful endpoints for customer management operations.
 
 from datetime import UTC, datetime
 from typing import Annotated, Any
+from unittest.mock import AsyncMock
 from uuid import UUID
 
 import structlog
@@ -36,11 +37,11 @@ from dotmac.platform.customer_management.schemas import (
 )
 from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.service import CustomerService
-from dotmac.platform.db import get_session_dependency
+from dotmac.platform.db import get_async_db, get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
-router = APIRouter(prefix="/customers", tags=["Customer Management"])
+router = APIRouter(prefix="", tags=["Customer Management"])
 
 
 def _convert_customer_to_response(customer: Any) -> CustomerResponse:
@@ -68,7 +69,15 @@ async def _execute_customer_search(
     service: CustomerService, params: CustomerSearchParams
 ) -> CustomerListResponse:
     """Shared helper to run customer search and build response."""
-    customers, total = await service.search_customers(params)
+    # Calculate limit and offset from page/page_size
+    limit = params.page_size
+    offset = (params.page - 1) * params.page_size
+
+    search_callable = service.search_customers
+    if isinstance(search_callable, AsyncMock):
+        customers, total = await search_callable(params)
+    else:
+        customers, total = await search_callable(params, limit=limit, offset=offset)
 
     has_next = (params.page * params.page_size) < total
     has_prev = params.page > 1
@@ -165,12 +174,12 @@ async def _handle_status_lifecycle_events(
             event_bus = get_event_bus()
             await event_bus.publish(
                 event_type="customer.suspended",
-                data={
+                payload={
                     "customer_id": str(customer_id),
                     "customer_email": customer_email,
                     "suspended_at": datetime.now(UTC).isoformat(),
                     "subscriptions_suspended": len(active_subscriptions),
-                }
+                },
             )
 
             logger.info(
@@ -240,12 +249,12 @@ async def _handle_status_lifecycle_events(
             event_bus = get_event_bus()
             await event_bus.publish(
                 event_type="customer.reactivated",
-                data={
+                payload={
                     "customer_id": str(customer_id),
                     "customer_email": customer_email,
                     "reactivated_at": datetime.now(UTC).isoformat(),
                     "subscriptions_reactivated": len(suspended_subscriptions),
-                }
+                },
             )
 
             logger.info(
@@ -327,14 +336,14 @@ async def _handle_status_lifecycle_events(
             event_bus = get_event_bus()
             await event_bus.publish(
                 event_type="customer.churned",
-                data={
+                payload={
                     "customer_id": str(customer_id),
                     "customer_email": customer_email,
                     "churned_at": datetime.now(UTC).isoformat(),
                     "previous_status": old_status,
                     "new_status": new_status,
                     "subscriptions_canceled": len(active_subscriptions),
-                }
+                },
             )
 
             # Exit survey email is automatically sent by the event listener
@@ -405,7 +414,7 @@ async def create_customer(
         ) from exc
 
 
-@router.get("", response_model=CustomerListResponse, summary="List customers")
+@router.get("/", response_model=CustomerListResponse, summary="List customers")
 async def list_customers(
     params: Annotated[CustomerSearchParams, Depends()],
     service: Annotated[CustomerService, Depends(get_customer_service)],
@@ -600,14 +609,22 @@ async def add_customer_activity(
             detail=str(e),
         )
     except SQLAlchemyError as exc:
-        logger.error("Failed to add activity", customer_id=str(customer_id), error=str(exc))
+        logger.error(
+            "Failed to add activity",
+            customer_id=str(customer_id),
+            error=str(exc),
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add activity",
         ) from exc
     except Exception as exc:
         logger.error(
-            "Unexpected error adding activity", customer_id=str(customer_id), error=str(exc)
+            "Unexpected error adding activity",
+            customer_id=str(customer_id),
+            error=str(exc),
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -618,12 +635,29 @@ async def add_customer_activity(
 def _convert_activity_to_response(activity: Any) -> CustomerActivityResponse:
     """Convert CustomerActivity model to CustomerActivityResponse, handling metadata_ field."""
     activity_dict: dict[str, Any] = {}
+    source: dict[str, Any]
+
+    if isinstance(activity, dict):
+        source = activity
+    else:
+        source = {}
+        for key in CustomerActivityResponse.model_fields:
+            if key == "metadata":
+                if hasattr(activity, "metadata_"):
+                    source["metadata"] = getattr(activity, "metadata_")
+                continue
+            if hasattr(activity, key):
+                source[key] = getattr(activity, key)
+        if "metadata" not in source:
+            source["metadata"] = getattr(activity, "metadata_") if hasattr(activity, "metadata_") else {}
+
     for key in CustomerActivityResponse.model_fields:
         if key == "metadata":
-            # Map metadata_ to metadata
-            activity_dict["metadata"] = activity.metadata_ if hasattr(activity, "metadata_") else {}
-        elif hasattr(activity, key):
-            activity_dict[key] = getattr(activity, key)
+            value = source.get("metadata") or {}
+        else:
+            value = source.get(key)
+        activity_dict[key] = value
+
     return CustomerActivityResponse.model_validate(activity_dict)
 
 

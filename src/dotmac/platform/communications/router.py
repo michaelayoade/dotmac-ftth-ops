@@ -4,7 +4,10 @@ Communications router.
 FastAPI router for communications services.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from smtplib import SMTPException
 from typing import Any
 
@@ -17,7 +20,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from dotmac.platform.auth.dependencies import UserInfo
 from dotmac.platform.auth.rbac_dependencies import require_admin
-from dotmac.platform.db import get_async_db
+from dotmac.platform.db import get_async_session_context
 
 from .email_service import EmailMessage, EmailResponse, get_email_service
 from .metrics_service import get_metrics_service
@@ -51,7 +54,7 @@ router = APIRouter(prefix="/communications", tags=["Communications"])
 
 
 class EmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
-    """Email request model."""
+    """Email request model with full email options support."""
 
     model_config = ConfigDict()
 
@@ -61,6 +64,9 @@ class EmailRequest(BaseModel):  # BaseModel resolves to Any in isolation
     html_body: str | None = Field(None, description="HTML body")
     from_email: EmailStr | None = Field(None, description="From email")
     from_name: str | None = Field(None, description="From name")
+    reply_to: EmailStr | None = Field(None, description="Reply-to email")
+    cc: list[EmailStr] = Field(default_factory=list, description="CC recipients")
+    bcc: list[EmailStr] = Field(default_factory=list, description="BCC recipients")
 
 
 @router.post("/email/send", response_model=EmailResponse)
@@ -76,7 +82,7 @@ async def send_email_endpoint(
         # Try to log communication if database is available
         log_entry = None
         try:
-            async with get_async_db() as db:
+            async with get_async_session_context() as db:
                 from uuid import UUID
 
                 metrics_service = get_metrics_service(db)
@@ -110,7 +116,9 @@ async def send_email_endpoint(
             html_body=request.html_body,
             from_email=request.from_email,
             from_name=request.from_name,
-            reply_to=None,  # Can be added to EmailRequest if needed
+            reply_to=request.reply_to,
+            cc=request.cc,
+            bcc=request.bcc,
         )
 
         response = await email_service.send_email(message)
@@ -118,7 +126,7 @@ async def send_email_endpoint(
         # Update communication status if we have a log entry
         if log_entry:
             try:
-                async with get_async_db() as db:
+                async with get_async_session_context() as db:
                     metrics_service = get_metrics_service(db)
                     status = (
                         CommunicationStatus.SENT
@@ -168,6 +176,11 @@ async def queue_email_endpoint(
             subject=request.subject,
             text_body=request.text_body,
             html_body=request.html_body,
+            from_email=request.from_email,
+            from_name=request.from_name,
+            reply_to=request.reply_to,
+            cc=request.cc,
+            bcc=request.bcc,
         )
 
         logger.info(
@@ -437,9 +450,7 @@ async def cancel_bulk_email_job(
 
 
 @router.get("/tasks/{task_id}")
-async def get_task_status(
-    task_id: str, current_user: UserInfo = Depends(require_admin)
-) -> Any:
+async def get_task_status(task_id: str, current_user: UserInfo = Depends(require_admin)) -> Any:
     """Get the status of a background task."""
     task_service = get_task_service()
     return task_service.get_task_status(task_id)
@@ -539,7 +550,7 @@ async def get_communication_stats(
     user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real stats from database if available
     try:
-        async with get_async_db() as db:
+        async with get_async_session_context() as db:
             metrics_service = get_metrics_service(db)
 
             stats_data = await metrics_service.get_stats(tenant_id=tenant_id)
@@ -582,7 +593,7 @@ async def get_recent_activity(
     user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real activity from database if available
     try:
-        async with get_async_db() as db:
+        async with get_async_session_context() as db:
             metrics_service = get_metrics_service(db)
 
             # Parse type filter if provided

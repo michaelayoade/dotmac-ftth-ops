@@ -211,10 +211,12 @@ class TrafficStats:
         # Compute properties
         current_rate_in_mbps = traffic.current_rate_in_bps / 1_000_000
         current_rate_out_mbps = traffic.current_rate_out_bps / 1_000_000
-        total_bandwidth_gbps = (traffic.current_rate_in_bps + traffic.current_rate_out_bps) / 1_000_000_000
+        total_bandwidth_gbps = (
+            traffic.current_rate_in_bps + traffic.current_rate_out_bps
+        ) / 1_000_000_000
 
         interfaces = []
-        if include_interfaces and hasattr(traffic, 'interfaces') and traffic.interfaces:
+        if include_interfaces and hasattr(traffic, "interfaces") and traffic.interfaces:
             interfaces = [InterfaceStats.from_model(i) for i in traffic.interfaces]
 
         return cls(
@@ -323,9 +325,15 @@ class DeviceMetrics:
             device_type=DeviceTypeEnum(metrics.device_type.value),
             timestamp=metrics.timestamp,
             health=DeviceHealth.from_model(metrics.health),
-            traffic=TrafficStats.from_model(metrics.traffic) if hasattr(metrics, 'traffic') and metrics.traffic else None,
-            onu_metrics=ONUMetrics.from_model(metrics.onu_metrics) if hasattr(metrics, 'onu_metrics') and metrics.onu_metrics else None,
-            cpe_metrics=CPEMetrics.from_model(metrics.cpe_metrics) if hasattr(metrics, 'cpe_metrics') and metrics.cpe_metrics else None,
+            traffic=TrafficStats.from_model(metrics.traffic)
+            if hasattr(metrics, "traffic") and metrics.traffic
+            else None,
+            onu_metrics=ONUMetrics.from_model(metrics.onu_metrics)
+            if hasattr(metrics, "onu_metrics") and metrics.onu_metrics
+            else None,
+            cpe_metrics=CPEMetrics.from_model(metrics.cpe_metrics)
+            if hasattr(metrics, "cpe_metrics") and metrics.cpe_metrics
+            else None,
         )
 
 
@@ -424,6 +432,19 @@ class DeviceTypeSummary:
 
 
 @strawberry.type
+class DataSourceStatus:
+    """Status of upstream monitoring data sources."""
+
+    name: str
+    status: str
+
+    @classmethod
+    def from_dict(cls, entry: tuple[str, str]) -> "DataSourceStatus":
+        name, status = entry
+        return cls(name=name, status=status)
+
+
+@strawberry.type
 class NetworkOverview:
     """Network monitoring overview/dashboard."""
 
@@ -453,6 +474,7 @@ class NetworkOverview:
     # Recent events
     recent_offline_devices: list[str]
     recent_alerts: list[NetworkAlert] = strawberry.field(default_factory=list)
+    data_source_status: list[DataSourceStatus] = strawberry.field(default_factory=list)
 
     # Computed properties
     uptime_percentage: float
@@ -463,16 +485,35 @@ class NetworkOverview:
         """Convert network overview model to GraphQL type."""
         # Compute properties
         total_devices = overview.total_devices or 1  # Avoid division by zero
-        uptime_percentage = (overview.online_devices / total_devices) * 100 if total_devices > 0 else 0
-        total_bandwidth_gbps = (overview.total_bandwidth_in_bps + overview.total_bandwidth_out_bps) / 1_000_000_000
+        uptime_percentage = (
+            (overview.online_devices / total_devices) * 100 if total_devices > 0 else 0
+        )
+        total_bandwidth_gbps = (
+            overview.total_bandwidth_in_bps + overview.total_bandwidth_out_bps
+        ) / 1_000_000_000
 
         device_type_summary = []
-        if hasattr(overview, 'device_type_summary') and overview.device_type_summary:
-            device_type_summary = [DeviceTypeSummary.from_dict(d) for d in overview.device_type_summary]
+        if hasattr(overview, "device_type_summary") and overview.device_type_summary:
+            device_type_summary = [
+                DeviceTypeSummary.from_dict(d) for d in overview.device_type_summary
+            ]
 
         recent_alerts = []
-        if hasattr(overview, 'recent_alerts') and overview.recent_alerts:
+        if hasattr(overview, "recent_alerts") and overview.recent_alerts:
             recent_alerts = [NetworkAlert.from_model(a) for a in overview.recent_alerts]
+
+        data_source_status = []
+        if hasattr(overview, "data_source_status") and overview.data_source_status:
+            raw_status = overview.data_source_status
+            if isinstance(raw_status, dict):
+                iterator = raw_status.items()
+            else:
+                iterator = list(raw_status)
+            data_source_status = [
+                DataSourceStatus.from_dict(item)
+                for item in iterator
+                if isinstance(item, (tuple, list)) and len(item) == 2
+            ]
 
         return cls(
             tenant_id=overview.tenant_id,
@@ -491,6 +532,7 @@ class NetworkOverview:
             device_type_summary=device_type_summary,
             recent_offline_devices=overview.recent_offline_devices or [],
             recent_alerts=recent_alerts,
+            data_source_status=data_source_status,
             uptime_percentage=round(uptime_percentage, 2),
             total_bandwidth_gbps=round(total_bandwidth_gbps, 4),
         )

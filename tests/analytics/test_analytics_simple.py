@@ -4,7 +4,7 @@ Simple tests for Analytics module to improve coverage.
 Tests core analytics functionality with actual available classes.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -23,6 +23,7 @@ from dotmac.platform.analytics.base import (
 from dotmac.platform.analytics.service import AnalyticsService
 
 
+@pytest.mark.unit
 class TestAnalyticsBaseClasses:
     """Test base analytics classes and models."""
 
@@ -63,7 +64,7 @@ class TestAnalyticsBaseClasses:
 
     def test_metric_creation(self):
         """Test Metric dataclass."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         metric = Metric(
             tenant_id="tenant123",
             timestamp=now,
@@ -174,6 +175,7 @@ class TestAnalyticsBaseClasses:
             BaseAnalyticsCollector("tenant", "service")
 
 
+@pytest.mark.unit
 class TestMetricRegistry:
     """Test MetricRegistry functionality."""
 
@@ -257,6 +259,7 @@ class TestMetricRegistry:
         assert registry.validate(metric) is True
 
 
+@pytest.mark.unit
 class TestAnalyticsService:
     """Test AnalyticsService functionality."""
 
@@ -357,7 +360,7 @@ class TestAnalyticsService:
         event_data = {
             "event_type": "user_login",
             "user_id": "user123",
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         event_id = await analytics_service.track_event(**event_data)
@@ -386,6 +389,7 @@ class TestAnalyticsService:
         assert len(analytics_service._events_store) == 2
 
 
+@pytest.mark.unit
 class TestAnalyticsServiceUtilities:
     """Test analytics service utility functions."""
 
@@ -402,6 +406,7 @@ class TestAnalyticsServiceUtilities:
         assert service1 is not service2
 
 
+@pytest.mark.unit
 class TestAnalyticsErrorHandling:
     """Test error handling in analytics components."""
 
@@ -492,6 +497,7 @@ class TestAnalyticsErrorHandling:
         # Since BaseAnalyticsCollector is abstract, test the enrichment logic concept
 
         # Create a minimal concrete implementation for testing
+        @pytest.mark.unit
         class TestCollector(BaseAnalyticsCollector):
             async def collect(self, metric):
                 pass

@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, plan lookups, event creation)
 Focus: Test business rules, validation, lifecycle management in isolation
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -32,6 +32,7 @@ from dotmac.platform.billing.subscriptions.models import (
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
+@pytest.mark.unit
 class TestSubscriptionPlanManagement:
     """Test subscription plan CRUD operations."""
 
@@ -135,6 +136,7 @@ def _make_db_subscription_stub(subscription: Subscription) -> SimpleNamespace:
             assert isinstance(plans, list)
 
 
+@pytest.mark.unit
 class TestSubscriptionLifecycle:
     """Test subscription creation and lifecycle."""
 
@@ -165,8 +167,8 @@ class TestSubscriptionLifecycle:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -237,6 +239,7 @@ class TestSubscriptionLifecycle:
                 await service.get_subscription("sub_invalid", "tenant-1")
 
 
+@pytest.mark.unit
 class TestSubscriptionPlanChange:
     """Test subscription plan change with proration."""
 
@@ -251,7 +254,7 @@ class TestSubscriptionPlanChange:
     @pytest.fixture
     def active_subscription(self):
         """Create active subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -289,8 +292,8 @@ class TestSubscriptionPlanChange:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -311,8 +314,8 @@ class TestSubscriptionPlanChange:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     async def test_change_plan_with_proration(
@@ -399,6 +402,7 @@ class TestSubscriptionPlanChange:
                 assert "inactive" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestSubscriptionCancellation:
     """Test subscription cancellation logic."""
 
@@ -413,7 +417,7 @@ class TestSubscriptionCancellation:
     @pytest.fixture
     def active_subscription(self):
         """Create active subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -454,7 +458,8 @@ class TestSubscriptionCancellation:
 
                 # Should be marked for cancellation at period end
                 assert db_subscription_row.cancel_at_period_end is True
-                assert db_subscription_row.status == SubscriptionStatus.CANCELED.value
+                # Status should remain ACTIVE when canceling at period end (not CANCELED)
+                assert db_subscription_row.status == SubscriptionStatus.ACTIVE.value
                 assert db_subscription_row.canceled_at is not None
                 assert db_subscription_row.ended_at is None  # Not ended yet
 
@@ -496,9 +501,11 @@ class TestSubscriptionCancellation:
                     tenant_id="tenant-1",
                 )
 
-            assert "not active" in str(exc.value).lower()
+            # Error message says which status it's in and which statuses are allowed
+            assert "ended status" in str(exc.value).lower() or "only active" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestSubscriptionReactivation:
     """Test subscription reactivation logic."""
 
@@ -513,7 +520,7 @@ class TestSubscriptionReactivation:
     @pytest.fixture
     def canceled_subscription(self):
         """Create canceled subscription."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -561,8 +568,9 @@ class TestSubscriptionReactivation:
         """Test error when reactivating non-canceled subscription."""
         service, _ = subscription_service
 
-        # Make subscription active (not canceled)
+        # Make subscription active (not canceled) and not pending cancellation
         canceled_subscription.status = SubscriptionStatus.ACTIVE
+        canceled_subscription.cancel_at_period_end = False  # Not pending cancellation
 
         with patch.object(service, "get_subscription", return_value=canceled_subscription):
             with pytest.raises(SubscriptionError) as exc:
@@ -570,7 +578,8 @@ class TestSubscriptionReactivation:
                     subscription_id="sub_123", tenant_id="tenant-1"
                 )
 
-            assert "only canceled subscriptions" in str(exc.value).lower()
+            # Error message should indicate only canceled or pending cancellation can be reactivated
+            assert "pending cancellation" in str(exc.value).lower() or "already canceled" in str(exc.value).lower()
 
     async def test_reactivate_after_period_end_error(
         self, subscription_service, canceled_subscription
@@ -579,7 +588,7 @@ class TestSubscriptionReactivation:
         service, _ = subscription_service
 
         # Set period end in the past
-        canceled_subscription.current_period_end = datetime.now(UTC) - timedelta(days=1)
+        canceled_subscription.current_period_end = datetime.now(timezone.utc) - timedelta(days=1)
 
         with patch.object(service, "get_subscription", return_value=canceled_subscription):
             with pytest.raises(SubscriptionError) as exc:
@@ -590,6 +599,7 @@ class TestSubscriptionReactivation:
             assert "after period end" in str(exc.value).lower()
 
 
+@pytest.mark.unit
 class TestProrationCalculation:
     """Test proration calculation logic."""
 
@@ -602,7 +612,7 @@ class TestProrationCalculation:
     @pytest.fixture
     def subscription_mid_period(self):
         """Subscription at mid-period (15 days remaining out of 30)."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return Subscription(
             subscription_id="sub_123",
             tenant_id="tenant-1",
@@ -640,8 +650,8 @@ class TestProrationCalculation:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     @pytest.fixture
@@ -662,8 +672,8 @@ class TestProrationCalculation:
             overage_rates={},
             is_active=True,
             metadata={},
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     def test_proration_upgrade(

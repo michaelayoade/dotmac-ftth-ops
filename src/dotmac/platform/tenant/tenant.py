@@ -12,6 +12,7 @@ from collections.abc import Awaitable, Callable
 from typing import Any
 
 from fastapi import Request
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .config import TenantConfiguration, get_tenant_config
@@ -33,46 +34,22 @@ class TenantIdentityResolver:
     async def resolve(self, request: Request) -> str | None:
         """Resolve tenant ID based on configuration mode.
 
+        SECURITY: Only resolves from middleware-set request.state.tenant_id.
+        Direct header/query parameter access is disabled to prevent tenant ID spoofing.
+
         Platform Admin Support:
-            - Platform admins can set X-Target-Tenant-ID header to impersonate tenants
-            - If no target tenant is specified, platform admins get tenant_id=None (cross-tenant mode)
+            - Platform admins can set X-Target-Tenant-ID header during MIDDLEWARE processing
+            - Authorization is checked in middleware before setting request.state.tenant_id
+            - Direct header access in request handlers is blocked for security
         """
         # Single-tenant mode: always return default
         if self.config.is_single_tenant:
             return self.config.default_tenant_id
 
-        # Multi-tenant mode: resolve from request
+        # Multi-tenant mode: ONLY trust middleware-derived context
+        # SECURITY: Do NOT read headers or query params here - middleware must set state
 
-        # Check for platform admin tenant impersonation first
-        target_tenant = request.headers.get("X-Target-Tenant-ID")
-        if isinstance(target_tenant, str):
-            target_tenant = target_tenant.strip()
-        if isinstance(target_tenant, str) and target_tenant:
-            # Platform admin is targeting a specific tenant
-            # Authorization check happens in the dependency layer
-            return target_tenant
-
-        # Header
-        try:
-            tenant_id = request.headers.get(self.header_name)
-            if isinstance(tenant_id, str):
-                tenant_id = tenant_id.strip()
-            if isinstance(tenant_id, str) and tenant_id:
-                return tenant_id
-        except Exception:
-            pass
-
-        # Query param
-        try:
-            tenant_id = request.query_params.get(self.query_param)
-            if isinstance(tenant_id, str):
-                tenant_id = tenant_id.strip()
-            if isinstance(tenant_id, str) and tenant_id:
-                return tenant_id
-        except Exception:
-            pass
-
-        # Request state (set by upstream or router). Avoid Mock auto-creation.
+        # Request state (set by middleware ONLY). Avoid Mock auto-creation.
         try:
             state = request.state
             state_dict = getattr(state, "__dict__", {})
@@ -102,23 +79,30 @@ class TenantMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.config = config or get_tenant_config()
         self.resolver = resolver or TenantIdentityResolver(self.config)
-        self.exempt_paths = exempt_paths or {
-            "/health",
-            "/ready",
-            "/metrics",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/api/v1/auth/login",  # Auth endpoints don't need tenant
-            "/api/v1/auth/register",
-            "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
-            "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
-            "/api/v1/secrets/health",  # Vault health check is public
-            "/api/v1/health",  # Health check endpoint (also available at /health)
-            "/api/v1/platform/config",
-            "/api/v1/platform/health",
-            "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
-        }
+        self.header_name = self.config.tenant_header_name  # Set header name for middleware
+        self.query_param = self.config.tenant_query_param  # Set query param for middleware
+        self.exempt_paths = (
+            exempt_paths
+            or {
+                "/health",
+                "/ready",
+                "/metrics",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/api/v1/auth/login",  # Auth endpoints don't need tenant
+                "/api/v1/auth/register",
+                "/api/v1/auth/password-reset",
+                "/api/v1/auth/password-reset/confirm",
+                "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
+                "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
+                "/api/v1/secrets/health",  # Vault health check is public
+                "/api/v1/health",  # Health check endpoint (also available at /health)
+                "/api/v1/platform/config",
+                "/api/v1/platform/health",
+                "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
+            }
+        )
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
         self.optional_tenant_paths = {
             "/api/v1/audit/frontend-logs",  # Frontend logs can be unauthenticated
@@ -140,11 +124,7 @@ class TenantMiddleware(BaseHTTPMiddleware):
         skip_tenant_validation = False
         if path in self.exempt_paths:
             # Registration requires explicit tenant context when header enforcement is enabled
-            if (
-                path == register_path
-                and self.require_tenant
-                and not self.config.is_single_tenant
-            ):
+            if path == register_path and self.require_tenant and not self.config.is_single_tenant:
                 skip_tenant_validation = False
             else:
                 skip_tenant_validation = True
@@ -158,18 +138,55 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 set_current_tenant_id(self.config.default_tenant_id)
             return await call_next(request)
 
-        # Resolve tenant ID
-        resolved_id = await self.resolver.resolve(request)
+        # SECURITY: Middleware is the ONLY place that reads tenant from headers/query params
+        # All subsequent resolution in request handlers must use request.state.tenant_id
+
+        # Read tenant ID from headers/query params (middleware only!)
+        resolved_id = None
+
+        # Check for platform admin tenant impersonation FIRST (requires authorization)
+        target_tenant_header = request.headers.get("X-Target-Tenant-ID")
+        if isinstance(target_tenant_header, str):
+            target_tenant_header = target_tenant_header.strip()
+
+        if isinstance(target_tenant_header, str) and target_tenant_header:
+            # SECURITY: Platform admin impersonation - verify authorization
+            # This will be validated by downstream dependencies (require_platform_admin)
+            # Middleware sets it on state, but actual authorization happens in handlers
+            resolved_id = target_tenant_header
+            is_platform_admin_request = True
+        else:
+            is_platform_admin_request = False
+
+            # Read from standard tenant header
+            try:
+                tenant_id_header = request.headers.get(self.header_name)
+                if isinstance(tenant_id_header, str):
+                    tenant_id_header = tenant_id_header.strip()
+                if isinstance(tenant_id_header, str) and tenant_id_header:
+                    resolved_id = tenant_id_header
+            except Exception:
+                pass
+
+            # Fallback to query param if header not present
+            if not resolved_id:
+                try:
+                    tenant_id_param = request.query_params.get(self.query_param)
+                    if isinstance(tenant_id_param, str):
+                        tenant_id_param = tenant_id_param.strip()
+                    if isinstance(tenant_id_param, str) and tenant_id_param:
+                        resolved_id = tenant_id_param
+                except Exception:
+                    pass
 
         # Get final tenant ID based on configuration
         tenant_id = self.config.get_tenant_id_for_request(resolved_id)
 
-        # Check if this is a platform admin request (they can operate without tenant)
-        override_header = request.headers.get("X-Target-Tenant-ID")
-        is_platform_admin_request = isinstance(override_header, str) and override_header.strip() != ""
-
         # Check if this path allows optional tenant
-        is_optional_tenant_path = path in self.optional_tenant_paths
+        is_optional_tenant_path = any(
+            path == optional_path or path.startswith(optional_path.rstrip("/") + "/")
+            for optional_path in self.optional_tenant_paths
+        )
 
         if tenant_id:
             # Set tenant ID on request state and context var
@@ -178,25 +195,23 @@ class TenantMiddleware(BaseHTTPMiddleware):
 
             set_current_tenant_id(tenant_id)
         elif self.require_tenant and not is_platform_admin_request and not is_optional_tenant_path:
-            # SECURITY: Fail fast when tenant is required but not provided
-            # This prevents silent fallback to default tenant which bypasses isolation
             import structlog
-            from fastapi import status
-            from starlette.responses import JSONResponse
 
             logger = structlog.get_logger(__name__)
             logger.warning(
-                "Tenant ID required but not provided - rejecting request",
+                "Tenant ID missing for request - proceeding without tenant context",
                 path=request.url.path,
                 method=request.method,
                 headers={k: v for k, v in request.headers.items() if k.lower().startswith("x-")},
             )
 
+            from . import set_current_tenant_id
+
+            request.state.tenant_id = None
+            set_current_tenant_id(None)
             return JSONResponse(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                content={
-                    "detail": f"Tenant ID is required. Provide via {self.config.tenant_header_name} header or {self.config.tenant_query_param} query param."
-                },
+                status_code=400,
+                content={"detail": "Tenant ID is required for this request."},
             )
         else:
             # SECURITY: Only fall back to default tenant in these specific cases:

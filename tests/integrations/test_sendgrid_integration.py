@@ -12,6 +12,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.integration
 class TestSendGridIntegration:
     """Test SendGridIntegration."""
 

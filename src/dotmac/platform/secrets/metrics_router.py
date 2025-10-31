@@ -5,11 +5,14 @@ Provides secrets management statistics endpoints for monitoring
 secret access patterns, creation/deletion rates, and security metrics.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -215,7 +218,21 @@ async def get_secrets_metrics(
     **Required Permission**: secrets:metrics:read (enforced by get_current_user)
     """
     try:
+        permissions = set(getattr(current_user, "permissions", []) or [])
+        is_platform_admin = bool(getattr(current_user, "is_platform_admin", False))
+
+        if "secrets:metrics:read" not in permissions and not is_platform_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Missing secrets:metrics:read permission",
+            )
+
         tenant_id = getattr(current_user, "tenant_id", None)
+        if tenant_id is None and not is_platform_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Tenant context required for metrics access",
+            )
 
         # Use cached helper function
         stats_data = await _get_secrets_metrics_cached(

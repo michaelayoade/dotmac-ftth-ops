@@ -224,7 +224,7 @@ def track_exception(
         "Exception tracked",
         extra={
             "exception_type": exception_type,
-            "module": module,
+            "module_name": module,
             "endpoint": endpoint,
             "tenant_id": tenant_id,
             "traceback": traceback.format_exc(),

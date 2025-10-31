@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Iterable
+from collections.abc import Iterable
+from typing import Any
 from uuid import uuid4
 
 import structlog
@@ -17,6 +18,7 @@ from dotmac.platform.search.interfaces import SearchType
 from dotmac.platform.search.service import InMemorySearchBackend, SearchBackend
 
 from .factory import get_default_search_backend
+
 try:  # pragma: no cover - optional dependency
     from meilisearch.errors import MeilisearchCommunicationError
 

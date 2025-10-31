@@ -31,6 +31,7 @@ def cache_manager():
         yield manager
 
 
+@pytest.mark.unit
 class TestCacheManagerInitialization:
     """Test cache manager initialization."""
 
@@ -56,6 +57,7 @@ class TestCacheManagerInitialization:
         assert cache_manager.dependency_map["plan"] == {"subscription"}
 
 
+@pytest.mark.unit
 class TestCacheEventHandling:
     """Test cache event handling and invalidation."""
 
@@ -116,6 +118,7 @@ class TestCacheEventHandling:
         assert cache_manager.cache is not None
 
 
+@pytest.mark.unit
 class TestInvalidationStrategies:
     """Test different cache invalidation strategies."""
 
@@ -174,6 +177,7 @@ class TestInvalidationStrategies:
         assert True
 
 
+@pytest.mark.unit
 class TestDependencyManagement:
     """Test cache dependency tracking and cascade invalidation."""
 
@@ -199,6 +203,7 @@ class TestDependencyManagement:
         assert "pricing" in dependencies
 
 
+@pytest.mark.unit
 class TestCacheEventTypes:
     """Test different cache event types."""
 
@@ -225,6 +230,7 @@ class TestCacheEventTypes:
         assert True
 
 
+@pytest.mark.unit
 class TestInvalidationQueue:
     """Test invalidation queue management."""
 
@@ -250,6 +256,7 @@ class TestInvalidationQueue:
         assert len(cache_manager.invalidation_queue) >= initial_queue_size
 
 
+@pytest.mark.unit
 class TestInvalidationStrategyEnum:
     """Test InvalidationStrategy enum."""
 
@@ -266,6 +273,7 @@ class TestInvalidationStrategyEnum:
         assert isinstance(InvalidationStrategy.LAZY.value, str)
 
 
+@pytest.mark.unit
 class TestCacheManagerEdgeCases:
     """Test edge cases and error scenarios."""
 

@@ -5,7 +5,10 @@ Provides workflow-compatible methods for ticketing operations.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -79,8 +82,7 @@ class TicketingService:
             RuntimeError: If ticket creation fails
         """
         logger.info(
-            f"Creating ticket for customer {customer_id}, "
-            f"priority {priority}, type {ticket_type}"
+            f"Creating ticket for customer {customer_id}, priority {priority}, type {ticket_type}"
         )
 
         # Convert customer_id to UUID if needed
@@ -152,14 +154,19 @@ class TicketingService:
             ticket_service = TicketService(self.db)
 
             # Build ticket creation request
+            # Workflow-generated tickets are created by tenant context and target platform support
+            # This follows the ALLOWED_TARGETS matrix: TENANT -> {PARTNER, PLATFORM}
             ticket_data = TicketCreate(
                 subject=title,
                 message=description,
-                target_type=TicketActorType.TENANT,  # Customer tickets target tenant
+                target_type=TicketActorType.PLATFORM,  # Tenant tickets target platform support
                 priority=priority_enum,
                 tenant_id=tenant_id,
                 metadata=metadata,
                 attachments=[],
+                # ISP-specific fields
+                ticket_type=ticket_type_enum,
+                service_address=service_address,
             )
 
             # Create the ticket
@@ -167,12 +174,19 @@ class TicketingService:
                 data=ticket_data, current_user=system_user, tenant_id=tenant_id
             )
 
-            # Update ISP-specific fields if provided
-            if ticket_type_enum or service_address:
+            # CRITICAL: Propagate customer_id so customers can see their tickets
+            # Workflow-driven tickets use tenant/system actor, so create_ticket sets customer_id=None
+            # We must explicitly patch it here with the resolved customer_uuid
+            ticket.customer_id = customer_uuid
+
+            # Update ISP-specific fields if already provided via schema (belt-and-suspenders)
+            if ticket_type_enum and not ticket.ticket_type:
                 ticket.ticket_type = ticket_type_enum
+            if service_address and not ticket.service_address:
                 ticket.service_address = service_address
-                await self.db.flush()
-                await self.db.commit()
+
+            await self.db.flush()
+            await self.db.commit()
 
             logger.info(
                 f"Ticket created successfully: {ticket.ticket_number} "
@@ -249,11 +263,9 @@ class TicketingService:
         Raises:
             ValueError: If customer not found or invalid date format
         """
-        from datetime import UTC, timedelta
+        from datetime import timedelta, timezone
 
-        logger.info(
-            f"Scheduling installation for customer {customer_id} at {installation_address}"
-        )
+        logger.info(f"Scheduling installation for customer {customer_id} at {installation_address}")
 
         customer_id_str = str(customer_id)
 
@@ -283,10 +295,14 @@ class TicketingService:
             from ..user_management.models import User
 
             # Find technicians in the tenant (users with "field_technician" role)
-            tech_stmt = select(User).where(
-                User.tenant_id == tenant_id,
-                User.is_active == True,  # noqa: E712
-            ).limit(1)
+            tech_stmt = (
+                select(User)
+                .where(
+                    User.tenant_id == tenant_id,
+                    User.is_active == True,  # noqa: E712
+                )
+                .limit(1)
+            )
 
             result = await self.db.execute(tech_stmt)
             technician = result.scalar_one_or_none()
@@ -304,10 +320,10 @@ class TicketingService:
 
 Customer ID: {customer_id_str}
 Installation Address: {installation_address}
-Scheduled Date: {scheduled_dt.strftime('%Y-%m-%d %H:%M %Z')}
+Scheduled Date: {scheduled_dt.strftime("%Y-%m-%d %H:%M %Z")}
 Assigned Technician: {technician_id}
 
-{notes or 'No additional notes'}
+{notes or "No additional notes"}
 
 This installation was automatically scheduled via the workflow system.
 """
@@ -345,7 +361,7 @@ This installation was automatically scheduled via the workflow system.
                         "technician_id": str(technician_id),
                         "installation_address": installation_address,
                         "auto_scheduled": not bool(scheduled_date),
-                    }
+                    },
                 }
             )
         )

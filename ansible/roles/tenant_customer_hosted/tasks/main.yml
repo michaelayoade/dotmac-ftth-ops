@@ -1,0 +1,25 @@
+---
+# Provision a tenant using customer-provided infrastructure.
+
+- name: "Include common provisioning steps"
+  ansible.builtin.import_role:
+    name: tenant_common
+
+- name: "Validate target host prerequisites"
+  ansible.builtin.shell: |
+    docker info >/dev/null 2>&1
+  register: docker_check
+  changed_when: false
+  failed_when: docker_check.rc != 0
+
+- name: "Render environment file for tenant services"
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ tenant_workspace_root }}/{{ tenant_id }}/.env"
+    mode: "0600"
+
+- name: "Launch tenant services via systemd unit"
+  ansible.builtin.systemd:
+    name: "dotmac-tenant-{{ tenant_id }}"
+    state: restarted
+    enabled: true

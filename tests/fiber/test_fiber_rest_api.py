@@ -1,25 +1,24 @@
+
 """
 Integration tests for Fiber Infrastructure REST API.
 
 Tests all fiber REST API endpoints with real database operations.
 """
 
-from datetime import datetime
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fiber.models import (
+
+
     CableInstallationType,
-    DistributionPointType,
     FiberCable,
     FiberCableStatus,
-    FiberHealthMetric,
-    FiberHealthStatus,
     FiberType,
-    OTDRTestResult,
     ServiceArea,
     ServiceAreaType,
 )
@@ -30,7 +29,11 @@ from dotmac.platform.fiber.models import (
 # ============================================================================
 
 
-@pytest.fixture
+
+
+pytestmark = pytest.mark.integration
+
+@pytest_asyncio.fixture
 async def fiber_cable(db_session: AsyncSession, test_tenant_id: str) -> FiberCable:
     """Create a test fiber cable."""
     cable = FiberCable(
@@ -54,7 +57,7 @@ async def fiber_cable(db_session: AsyncSession, test_tenant_id: str) -> FiberCab
     return cable
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def service_area(db_session: AsyncSession, test_tenant_id: str) -> ServiceArea:
     """Create a test service area."""
     area = ServiceArea(

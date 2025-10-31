@@ -1,225 +1,202 @@
-/**
- * Tests for Dashboard page component
- *
- * Tests dashboard rendering, metric cards, and user interactions
- */
-
+import React from "react";
 import { render, screen, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { AuthProvider } from "@/hooks/useAuth";
-import { authService } from "@/lib/api/services/auth.service";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import DashboardPage from "../../app/dashboard/page";
+import { useRouter } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import { apiClient } from "@/lib/api/client";
-import type { AxiosResponse, AxiosRequestConfig } from "axios";
 
-// Mock dependencies
-jest.mock("@/lib/api/services/auth.service");
-jest.mock("@/lib/api-client");
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({
-    push: jest.fn(),
-    replace: jest.fn(),
-    refresh: jest.fn(),
-  }),
-  usePathname: () => "/dashboard",
+  useRouter: jest.fn(),
 }));
 
-const mockAuthService = authService as jest.Mocked<typeof authService>;
-const mockApiClient = apiClient as jest.Mocked<typeof apiClient>;
+jest.mock("@/lib/auth", () => ({
+  getCurrentUser: jest.fn(),
+  logout: jest.fn(),
+}));
 
-const createAxiosResponse = <T,>(data: T, config: AxiosRequestConfig = {}): AxiosResponse<T> =>
-  ({
-    data,
-    status: 200,
-    statusText: "OK",
-    headers: {},
-    config: config as AxiosRequestConfig,
-    request: undefined,
-  }) as AxiosResponse<T>;
+jest.mock("@/lib/logger", () => ({
+  logger: {
+    error: jest.fn(),
+    info: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+  },
+}));
 
-// Mock Dashboard component (simplified)
-const MockDashboard = () => {
-  return (
-    <div>
-      <h1>Dashboard</h1>
-      <div data-testid="metrics-section">
-        <div data-testid="metric-card-users">
-          <span>Total Users</span>
-          <span>150</span>
-        </div>
-        <div data-testid="metric-card-revenue">
-          <span>Revenue</span>
-          <span>$12,450</span>
-        </div>
-        <div data-testid="metric-card-active">
-          <span>Active Sessions</span>
-          <span>42</span>
-        </div>
-      </div>
-      <div data-testid="recent-activity">
-        <h2>Recent Activity</h2>
-        <ul>
-          <li>User logged in</li>
-          <li>Invoice created</li>
-          <li>Payment received</li>
-        </ul>
-      </div>
-    </div>
-  );
+jest.mock("@/lib/api/client", () => ({
+  apiClient: {
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+
+jest.mock("@/lib/config", () => {
+  const actual = jest.requireActual("@/lib/config");
+  return {
+    ...actual,
+    platformConfig: {
+      ...actual.platformConfig,
+      features: {
+        ...actual.platformConfig.features,
+        enableRadius: true,
+        enableAutomation: true,
+        enableNetwork: true,
+      },
+    },
+  };
+});
+
+jest.mock("@/lib/feature-flags", () => ({
+  useFeatureFlag: jest.fn(() => ({ enabled: true })),
+}));
+
+jest.mock("@/contexts/RBACContext", () => {
+  const mockHasPermission = jest.fn();
+  return {
+    useRBAC: () => ({ hasPermission: mockHasPermission }),
+    RBACProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+    __mockHasPermission: mockHasPermission,
+  };
+});
+
+const hasPermissionMock = jest.requireMock("@/contexts/RBACContext")
+  .__mockHasPermission as jest.Mock;
+
+const setupApiMocks = (overrides: Record<string, unknown> = {}) => {
+  const responses: Record<string, unknown> = {
+    "/services/lifecycle/statistics": overrides.serviceStats ?? {
+      active_count: 12,
+      provisioning_count: 2,
+    },
+    "/services/lifecycle/services": overrides.serviceInstances ?? [],
+    "/health": {
+      status: "healthy",
+      checks: {},
+      timestamp: new Date().toISOString(),
+    },
+    "/netbox/health": overrides.netboxHealth ?? { healthy: true, message: "Healthy" },
+    "/netbox/dcim/sites": overrides.netboxSites ?? [],
+  };
+
+  (apiClient.get as jest.Mock).mockImplementation((url: string) => {
+    const match = Object.keys(responses).find((key) => url.startsWith(key));
+    if (!match) {
+      throw new Error(`Unhandled apiClient.get call for URL: ${url}`);
+    }
+    return Promise.resolve({ data: responses[match] });
+  });
 };
 
-describe("Dashboard Component", () => {
+const setupFetchMocks = (overrides: Record<string, unknown> = {}) => {
+  const subscribers =
+    overrides.subscribers ??
+    [
+      {
+        id: 1,
+        tenant_id: "tenant-1",
+        subscriber_id: "sub-1",
+        username: "alice",
+        enabled: true,
+        bandwidth_profile_id: "Premium",
+        created_at: "2024-02-01T12:00:00Z",
+      },
+    ];
+
+  const fetchMock = jest.fn((input: RequestInfo | URL) => {
+    const url = typeof input === "string" ? input : input.toString();
+
+    if (url.includes("/api/v1/radius/subscribers")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => subscribers,
+      });
+    }
+
+    if (url.includes("/api/v1/radius/sessions")) {
+      return Promise.resolve({
+        ok: true,
+        json: async () => [],
+      });
+    }
+
+    return Promise.resolve({
+      ok: true,
+      json: async () => ({}),
+    });
+  });
+
+  (global.fetch as unknown) = fetchMock;
+};
+
+const renderWithProviders = (ui: React.ReactElement) => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+};
+
+describe("DashboardPage access states", () => {
+  const mockPush = jest.fn();
+  const mockReplace = jest.fn();
+  let getItemSpy: jest.SpyInstance;
+
   beforeEach(() => {
     jest.clearAllMocks();
-
-    mockAuthService.getCurrentUser.mockResolvedValue({
-      success: true,
-      data: {
-        id: "123",
-        username: "testuser",
-        email: "test@example.com",
-      },
+    (useRouter as jest.Mock).mockReturnValue({
+      push: mockPush,
+      replace: mockReplace,
     });
 
-    mockApiClient.get.mockResolvedValue(createAxiosResponse({ effective_permissions: [] }));
+    (getCurrentUser as jest.Mock).mockResolvedValue({
+      id: "u-1",
+      email: "operator@example.com",
+      roles: ["Operator"],
+    });
+
+    setupApiMocks();
+    setupFetchMocks();
+
+    getItemSpy = jest.spyOn(window.localStorage.__proto__, "getItem").mockReturnValue("token");
   });
 
-  describe("Rendering", () => {
-    it("should render dashboard title", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByText("Dashboard")).toBeInTheDocument();
-    });
-
-    it("should render metrics section", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      const metricsSection = screen.getByTestId("metrics-section");
-      expect(metricsSection).toBeInTheDocument();
-    });
-
-    it("should render all metric cards", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByTestId("metric-card-users")).toBeInTheDocument();
-      expect(screen.getByTestId("metric-card-revenue")).toBeInTheDocument();
-      expect(screen.getByTestId("metric-card-active")).toBeInTheDocument();
-    });
-
-    it("should display metric values", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByText("150")).toBeInTheDocument();
-      expect(screen.getByText("$12,450")).toBeInTheDocument();
-      expect(screen.getByText("42")).toBeInTheDocument();
-    });
-
-    it("should render recent activity section", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByTestId("recent-activity")).toBeInTheDocument();
-      expect(screen.getByText("Recent Activity")).toBeInTheDocument();
-    });
+  afterEach(() => {
+    getItemSpy.mockRestore();
   });
 
-  describe("Accessibility", () => {
-    it("should have proper heading hierarchy", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
+  it("shows permission warning when RADIUS access is denied", async () => {
+    hasPermissionMock.mockImplementation((permission: string) => permission !== "isp.radius.read");
 
-      const h1 = screen.getByRole("heading", { level: 1 });
-      const h2 = screen.getByRole("heading", { level: 2 });
+    renderWithProviders(<DashboardPage />);
 
-      expect(h1).toHaveTextContent("Dashboard");
-      expect(h2).toHaveTextContent("Recent Activity");
+    await waitFor(() => {
+      expect(screen.getByText("Network Operations Center")).toBeInTheDocument();
     });
 
-    it("should render lists properly", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      const list = screen.getByRole("list");
-      expect(list).toBeInTheDocument();
-
-      const listItems = screen.getAllByRole("listitem");
-      expect(listItems).toHaveLength(3);
-    });
+    expect(
+      screen.getByText(/Radius access is disabled for your role/i),
+    ).toBeInTheDocument();
   });
 
-  describe("Content", () => {
-    it("should display user metrics", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByText("Total Users")).toBeInTheDocument();
-      expect(screen.getByText("150")).toBeInTheDocument();
+  it("falls back to lifecycle placeholder when statistics are unavailable", async () => {
+    hasPermissionMock.mockImplementation(() => true);
+    setupApiMocks({
+      serviceStats: undefined,
     });
 
-    it("should display revenue metrics", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
+    renderWithProviders(<DashboardPage />);
 
-      expect(screen.getByText("Revenue")).toBeInTheDocument();
-      expect(screen.getByText("$12,450")).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText("Network Operations Center")).toBeInTheDocument();
     });
 
-    it("should display activity information", () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      expect(screen.getByText("User logged in")).toBeInTheDocument();
-      expect(screen.getByText("Invoice created")).toBeInTheDocument();
-      expect(screen.getByText("Payment received")).toBeInTheDocument();
-    });
-  });
-
-  describe("Authentication State", () => {
-    it("should render for authenticated users", async () => {
-      render(
-        <AuthProvider>
-          <MockDashboard />
-        </AuthProvider>,
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText("Dashboard")).toBeInTheDocument();
-      });
-
-      expect(mockAuthService.getCurrentUser).toHaveBeenCalled();
-    });
+    expect(screen.getByText("Lifecycle stats unavailable")).toBeInTheDocument();
+    expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 });

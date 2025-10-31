@@ -14,15 +14,46 @@ import {
   Receipt,
   TrendingUp,
   Database,
-  DollarSign,
+  Loader2,
+  Plus,
 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRBAC } from "@/contexts/RBACContext";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useUsageRecords,
   useUsageStatistics,
   useUsageOperations,
   useUsageChartData,
+  useCreateUsageRecord,
   type UsageRecord,
 } from "@/hooks/useUsageBilling";
 
@@ -168,10 +199,23 @@ const mockUsageChartData: UsageChartData[] = Array.from({ length: 7 }, (_, i) =>
 // ============================================================================
 
 export default function UsageBillingPage() {
+  const { toast } = useToast();
   const { hasPermission } = useRBAC();
   const hasBillingAccess = hasPermission("billing.read");
-  const [selectedUsageRecord, setSelectedUsageRecord] = useState<UsageRecord | null>(null);
   const [invoiceIdForBilling, setInvoiceIdForBilling] = useState<string>("");
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [showRecordUsage, setShowRecordUsage] = useState(false);
+  const [pendingBulkAction, setPendingBulkAction] = useState<UsageRecord[] | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [newUsageRecord, setNewUsageRecord] = useState({
+    customer_id: "",
+    customer_name: "",
+    usage_type: "data_transfer" as UsageType,
+    quantity: 0,
+    unit: "GB",
+    unit_price: 10,
+    description: "",
+  });
 
   // API Hooks
   const {
@@ -188,10 +232,36 @@ export default function UsageBillingPage() {
     days: 7,
   });
   const { markAsBilled, excludeFromBilling, isLoading: operationsLoading } = useUsageOperations();
+  const createUsageRecord = useCreateUsageRecord({
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: `Usage record for ${newUsageRecord.customer_name || newUsageRecord.customer_id} created successfully`,
+      });
+      setShowRecordUsage(false);
+      setNewUsageRecord({
+        customer_id: "",
+        customer_name: "",
+        usage_type: "data_transfer",
+        quantity: 0,
+        unit: "GB",
+        unit_price: 10,
+        description: "",
+      });
+      refetch();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to record usage. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
 
   // Use API data with fallback to mock data for development
   const usageRecords = apiRecords.length > 0 ? apiRecords : mockUsageRecords;
-  const isLoading = recordsLoading || operationsLoading;
+  const isLoading = recordsLoading || operationsLoading || createUsageRecord.isPending;
 
   // Calculate statistics from API or local data
   const statistics = useMemo(() => {
@@ -218,6 +288,97 @@ export default function UsageBillingPage() {
           .reduce((sum, r) => sum + r.total_amount, 0) / 100,
     };
   }, [apiStatistics, usageRecords]);
+
+  // ============================================================================
+  // Handlers
+  // ============================================================================
+
+  const handleRecordUsage = async () => {
+    if (!newUsageRecord.customer_id || !newUsageRecord.quantity) {
+      toast({
+        title: "Validation Error",
+        description: "Customer ID and quantity are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Create usage record with proper date periods
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - 86400000); // 24 hours ago
+
+      await createUsageRecord.mutateAsync({
+        subscription_id: `sub-${newUsageRecord.customer_id}`, // Generate subscription ID from customer
+        customer_id: newUsageRecord.customer_id,
+        usage_type: newUsageRecord.usage_type,
+        quantity: newUsageRecord.quantity,
+        unit: newUsageRecord.unit,
+        unit_price: newUsageRecord.unit_price,
+        period_start: periodStart.toISOString(),
+        period_end: now.toISOString(),
+        source_system: "manual",
+        description: newUsageRecord.description || `${newUsageRecord.usage_type} usage`,
+      });
+
+      logger.info("Usage record created", {
+        customerId: newUsageRecord.customer_id,
+        usageType: newUsageRecord.usage_type,
+        quantity: newUsageRecord.quantity,
+      });
+    } catch (error) {
+      logger.error("Failed to record usage", error);
+      // Error handling is done in the hook's onError callback
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleMarkAsBilled = async () => {
+    if (!pendingBulkAction || !invoiceIdForBilling.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Invoice ID is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const usageIds = pendingBulkAction.map((r) => r.id);
+      const success = await markAsBilled(usageIds, invoiceIdForBilling.trim());
+
+      if (success) {
+        logger.info("Usage records marked as billed", {
+          count: pendingBulkAction.length,
+          invoiceId: invoiceIdForBilling,
+        });
+
+        toast({
+          title: "Success",
+          description: `Successfully marked ${pendingBulkAction.length} usage record(s) as billed to invoice ${invoiceIdForBilling}`,
+        });
+
+        await refetch();
+        setShowInvoiceDialog(false);
+        setInvoiceIdForBilling("");
+        setPendingBulkAction(null);
+      } else {
+        throw new Error("Failed to mark as billed");
+      }
+    } catch (error) {
+      logger.error("Failed to mark usage records as billed", error);
+      toast({
+        title: "Error",
+        description: "Failed to mark usage records as billed. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // ============================================================================
   // Table Configuration
@@ -342,26 +503,8 @@ export default function UsageBillingPage() {
       label: "Mark as Billed",
       icon: Receipt,
       action: async (selected) => {
-        // Prompt for invoice ID
-        const invoiceId = prompt("Enter the invoice ID to associate with these usage records:");
-
-        if (!invoiceId || invoiceId.trim() === "") {
-          alert("Invoice ID is required to mark usage records as billed.");
-          return;
-        }
-
-        const usageIds = selected.map((r) => r.id);
-        const success = await markAsBilled(usageIds, invoiceId.trim());
-
-        if (success) {
-          // Refetch data to show updated records
-          await refetch();
-          alert(
-            `Successfully marked ${selected.length} usage record(s) as billed to invoice ${invoiceId}`,
-          );
-        } else {
-          alert("Failed to mark usage records as billed. Please try again.");
-        }
+        setPendingBulkAction(selected);
+        setShowInvoiceDialog(true);
       },
       disabled: (selected) => selected.every((r) => r.billed_status !== "pending"),
     },
@@ -369,14 +512,27 @@ export default function UsageBillingPage() {
       label: "Exclude from Billing",
       icon: Database,
       action: async (selected) => {
-        const usageIds = selected.map((r) => r.id);
-        const success = await excludeFromBilling(usageIds);
+        try {
+          const usageIds = selected.map((r) => r.id);
+          const success = await excludeFromBilling(usageIds);
 
-        if (success) {
-          // Refetch data to show updated records
-          await refetch();
-        } else {
-          alert("Failed to exclude usage records from billing. Please try again.");
+          if (success) {
+            logger.info("Usage records excluded from billing", { count: selected.length });
+            toast({
+              title: "Success",
+              description: `Successfully excluded ${selected.length} usage record(s) from billing`,
+            });
+            await refetch();
+          } else {
+            throw new Error("Failed to exclude from billing");
+          }
+        } catch (error) {
+          logger.error("Failed to exclude usage records from billing", error);
+          toast({
+            title: "Error",
+            description: "Failed to exclude usage records from billing. Please try again.",
+            variant: "destructive",
+          });
         }
       },
     },
@@ -385,10 +541,8 @@ export default function UsageBillingPage() {
       icon: Download,
       action: async (selected) => {
         try {
-          // Prepare usage record IDs for download
           const usageIds = selected.map((r) => r.id);
 
-          // Call API to generate CSV
           const response = await fetch("/api/billing/usage/export", {
             method: "POST",
             headers: {
@@ -401,25 +555,28 @@ export default function UsageBillingPage() {
             throw new Error(`Failed to download CSV: ${response.statusText}`);
           }
 
-          // Get the CSV blob
           const blob = await response.blob();
-
-          // Create a download link and trigger download
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;
           link.download = `usage-records-${new Date().toISOString().split("T")[0]}.csv`;
           document.body.appendChild(link);
           link.click();
-
-          // Cleanup
           document.body.removeChild(link);
           window.URL.revokeObjectURL(url);
 
-          alert(`Successfully downloaded ${selected.length} usage record(s)`);
+          logger.info("Usage records exported", { count: selected.length });
+          toast({
+            title: "Success",
+            description: `Successfully downloaded ${selected.length} usage record(s)`,
+          });
         } catch (error) {
-          console.error("Failed to download usage records:", error);
-          alert(`Failed to download: ${error instanceof Error ? error.message : "Unknown error"}`);
+          logger.error("Failed to download usage records", error);
+          toast({
+            title: "Error",
+            description: `Failed to download: ${error instanceof Error ? error.message : "Unknown error"}`,
+            variant: "destructive",
+          });
         }
       },
     },
@@ -478,7 +635,7 @@ export default function UsageBillingPage() {
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
-          <Button>
+          <Button onClick={() => setShowRecordUsage(true)}>
             <Activity className="h-4 w-4 mr-2" />
             Record Usage
           </Button>
@@ -649,13 +806,197 @@ export default function UsageBillingPage() {
                 ],
               },
             ]}
-            onRowClick={(record) => {
-              // Open usage record detail modal
-              setSelectedUsageRecord(record);
-            }}
           />
         </CardContent>
       </Card>
+
+      {/* Record Usage Modal */}
+      <Dialog open={showRecordUsage} onOpenChange={setShowRecordUsage}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Record Usage</DialogTitle>
+            <DialogDescription>
+              Manually record usage for a customer's subscription
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="customer-id">Customer ID *</Label>
+              <Input
+                id="customer-id"
+                placeholder="cust-001"
+                value={newUsageRecord.customer_id}
+                onChange={(e) =>
+                  setNewUsageRecord({ ...newUsageRecord, customer_id: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="customer-name">Customer Name</Label>
+              <Input
+                id="customer-name"
+                placeholder="John Doe"
+                value={newUsageRecord.customer_name}
+                onChange={(e) =>
+                  setNewUsageRecord({ ...newUsageRecord, customer_name: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="usage-type">Usage Type *</Label>
+              <Select
+                value={newUsageRecord.usage_type}
+                onValueChange={(value: UsageType) =>
+                  setNewUsageRecord({ ...newUsageRecord, usage_type: value })
+                }
+              >
+                <SelectTrigger id="usage-type">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="data_transfer">Data Transfer</SelectItem>
+                  <SelectItem value="voice_minutes">Voice Minutes</SelectItem>
+                  <SelectItem value="sms_count">SMS</SelectItem>
+                  <SelectItem value="bandwidth_gb">Bandwidth</SelectItem>
+                  <SelectItem value="overage_gb">Data Overage</SelectItem>
+                  <SelectItem value="static_ip">Static IP</SelectItem>
+                  <SelectItem value="equipment_rental">Equipment Rental</SelectItem>
+                  <SelectItem value="installation_fee">Installation</SelectItem>
+                  <SelectItem value="custom">Custom</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="quantity">Quantity *</Label>
+              <Input
+                id="quantity"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={newUsageRecord.quantity}
+                onChange={(e) =>
+                  setNewUsageRecord({ ...newUsageRecord, quantity: parseFloat(e.target.value) || 0 })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit">Unit</Label>
+              <Input
+                id="unit"
+                placeholder="GB"
+                value={newUsageRecord.unit}
+                onChange={(e) => setNewUsageRecord({ ...newUsageRecord, unit: e.target.value })}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="unit-price">Unit Price (cents)</Label>
+              <Input
+                id="unit-price"
+                type="number"
+                min="0"
+                placeholder="10"
+                value={newUsageRecord.unit_price}
+                onChange={(e) =>
+                  setNewUsageRecord({ ...newUsageRecord, unit_price: parseInt(e.target.value) || 0 })
+                }
+              />
+            </div>
+
+            <div className="col-span-2 space-y-2">
+              <Label htmlFor="description">Description</Label>
+              <Input
+                id="description"
+                placeholder="Internet data usage"
+                value={newUsageRecord.description}
+                onChange={(e) =>
+                  setNewUsageRecord({ ...newUsageRecord, description: e.target.value })
+                }
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowRecordUsage(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleRecordUsage} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Recording...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Record Usage
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invoice ID Dialog for Bulk Billing */}
+      <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mark as Billed</DialogTitle>
+            <DialogDescription>
+              Enter the invoice ID to associate with {pendingBulkAction?.length || 0} usage record(s)
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="invoice-id">Invoice ID *</Label>
+              <Input
+                id="invoice-id"
+                placeholder="inv-001"
+                value={invoiceIdForBilling}
+                onChange={(e) => setInvoiceIdForBilling(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowInvoiceDialog(false);
+                setInvoiceIdForBilling("");
+                setPendingBulkAction(null);
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleMarkAsBilled} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Marking...
+                </>
+              ) : (
+                <>
+                  <Receipt className="mr-2 h-4 w-4" />
+                  Mark as Billed
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </main>
   );
 }

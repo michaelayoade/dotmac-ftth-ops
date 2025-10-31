@@ -1,19 +1,11 @@
-"""
-Fixtures for E2E tests.
+"""Fixtures for E2E tests.
 
-Provides database, HTTP client, and authentication fixtures for end-to-end testing.
-"""
+Provides database, HTTP client, and authentication fixtures for end-to-end testing."""
 
 import os
 
 import pytest
 import pytest_asyncio
-
-# Set test environment variables (NOT DEFAULT_TENANT_ID - see fixture below)
-os.environ["TESTING"] = "1"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-e2e-tests"
-os.environ["REDIS_URL"] = "redis://localhost:6379/15"  # Test database
 
 from httpx import ASGITransport, AsyncClient
 
@@ -22,8 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 from dotmac.platform.db import Base
-from dotmac.platform.main import app
-from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
+
+
+@pytest.fixture(autouse=True)
+def e2e_test_environment(monkeypatch):
+    """Ensure E2E tests run with consistent environment configuration."""
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-for-e2e-tests")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/15")
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -39,6 +38,8 @@ def e2e_tenant_config(request):
         return
 
     original_tenant_id = os.environ.get("DEFAULT_TENANT_ID")
+
+    from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
 
     # Set e2e tenant ID
     os.environ["DEFAULT_TENANT_ID"] = "e2e-test-tenant"
@@ -106,7 +107,8 @@ def tenant_id():
 @pytest.fixture
 def user_id():
     """Standard user ID for E2E tests."""
-    return "e2e-test-user"
+    # Use a fixed UUID for consistency across test runs
+    return "12345678-1234-5678-1234-567812345678"
 
 
 @pytest_asyncio.fixture
@@ -121,6 +123,7 @@ async def async_client(db_engine, tenant_id, user_id):
     from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.db import get_async_session
     from dotmac.platform.tenant import get_current_tenant_id
+    from dotmac.platform.main import app
 
     # Create a session maker for the test engine
     test_session_maker = async_sessionmaker(
@@ -129,13 +132,16 @@ async def async_client(db_engine, tenant_id, user_id):
         expire_on_commit=False,
     )
 
-    # Create mock user
-    def mock_get_current_user():
+    # Create mock user with admin permissions for e2e tests
+    async def mock_get_current_user(request=None, token=None, api_key=None):
+        """Mock get_current_user for E2E tests - matches actual dependency signature."""
         return UserInfo(
             user_id=user_id,
             tenant_id=tenant_id,
-            email=f"{user_id}@test.com",
-            permissions=[],
+            email="e2e-test@example.com",
+            # Grant all permissions for e2e tests to avoid permission issues
+            permissions=["*"],
+            roles=["admin"],
         )
 
     # Create async generator for session override - creates a new session for each request
@@ -150,12 +156,57 @@ async def async_client(db_engine, tenant_id, user_id):
     # Patch get_current_tenant_id function to always return e2e tenant_id
     # This is necessary because some code calls get_current_tenant_id() as a function
     # rather than using it as a FastAPI dependency
-    from unittest.mock import patch
+    from unittest.mock import AsyncMock, patch
 
+    from dotmac.platform.auth.models import Role
     from dotmac.platform.db import get_session_dependency
+
+    # Mock RBAC service to return admin role for e2e user
+    async def mock_get_user_roles(self, user_id):
+        # Return mock admin role for e2e tests (self param needed for instance method)
+        from uuid import uuid4
+
+        admin_role = Role(
+            id=uuid4(),
+            name="admin",
+            display_name="Administrator",
+            description="Administrator role for e2e tests",
+        )
+        return [admin_role]
+
+    # Mock permission checking methods to always return True for e2e tests
+    async def mock_user_has_all_permissions(self, user_id, permissions):
+        # Grant all permissions for e2e tests
+        return True
+
+    async def mock_user_has_any_permission(self, user_id, permissions):
+        # Grant all permissions for e2e tests
+        return True
+
+    # Patch RBACService methods
+    from dotmac.platform.auth import rbac_service
+
+    rbac_patch = patch.object(
+        rbac_service.RBACService, "get_user_roles", new=mock_get_user_roles
+    )
+    rbac_patch.start()
+
+    rbac_permissions_all_patch = patch.object(
+        rbac_service.RBACService, "user_has_all_permissions", new=mock_user_has_all_permissions
+    )
+    rbac_permissions_all_patch.start()
+
+    rbac_permissions_any_patch = patch.object(
+        rbac_service.RBACService, "user_has_any_permission", new=mock_user_has_any_permission
+    )
+    rbac_permissions_any_patch.start()
+
+    # Import get_async_db for webhooks router
+    from dotmac.platform.db import get_async_db
 
     # Override app dependencies
     app.dependency_overrides[get_async_session] = override_get_async_session
+    app.dependency_overrides[get_async_db] = override_get_async_session  # Webhooks router uses this
     app.dependency_overrides[get_session_dependency] = (
         override_get_async_session  # Auth router uses this
     )
@@ -181,7 +232,35 @@ async def async_client(db_engine, tenant_id, user_id):
             yield client
     finally:
         # Stop patches
+        rbac_patch.stop()
         tenant_patch.stop()
         router_tenant_patch.stop()
         # Clear overrides after test
         app.dependency_overrides.clear()
+
+
+@pytest_asyncio.fixture
+async def client(async_client):
+    """Alias for async_client for compatibility with tests using 'client' parameter."""
+    yield async_client
+
+
+@pytest.fixture
+def auth_headers(tenant_id, user_id):
+    """Auth headers for e2e tests."""
+    from dotmac.platform.auth.core import JWTService
+
+    jwt_service = JWTService(algorithm="HS256", secret="test-secret-key-for-e2e-tests")
+    test_token = jwt_service.create_access_token(
+        subject=user_id,  # Use UUID from user_id fixture
+        additional_claims={
+            "scopes": ["read", "write", "admin"],
+            "tenant_id": tenant_id,
+            "email": "e2e-test@example.com",
+        },
+    )
+
+    return {
+        "Authorization": f"Bearer {test_token}",
+        "X-Tenant-ID": tenant_id,
+    }

@@ -1,12 +1,14 @@
 """Tests for Partner Portal API endpoints."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 
 from dotmac.platform.partner_management.models import (
+
+
     CommissionModel,
     CommissionStatus,
     PartnerPayout,
@@ -21,12 +23,20 @@ from dotmac.platform.partner_management.schemas import (
     ReferralLeadCreate,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = [
+    pytest.mark.e2e,
+    pytest.mark.asyncio,
+]
 
 @pytest.mark.asyncio
 class TestPortalDashboard:
     """Test partner portal dashboard endpoint."""
+
 
     async def test_get_dashboard_stats(self, async_db_session, test_tenant_id):
         """Test retrieving dashboard statistics."""
@@ -309,7 +319,7 @@ class TestPortalStatements:
             PartnerCreate(company_name="Statement Partner", primary_email="statement@example.com"),
         )
 
-        period_end = datetime.now(UTC)
+        period_end = datetime.now(timezone.utc)
         period_start = period_end - timedelta(days=30)
 
         payout = PartnerPayout(
@@ -322,11 +332,11 @@ class TestPortalStatements:
             payment_reference="ACH-123",
             payment_method="ach",
             status=PayoutStatus.COMPLETED,
-            payout_date=datetime.now(UTC),
+            payout_date=datetime.now(timezone.utc),
             period_start=period_start,
             period_end=period_end,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add(payout)
         await async_db_session.commit()
@@ -386,7 +396,7 @@ class TestPortalPayouts:
             PartnerCreate(company_name="Payout Partner", primary_email="payout@example.com"),
         )
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         payouts = []
         for index, amount in enumerate([Decimal("500.00"), Decimal("250.00")]):
             payout = PartnerPayout(

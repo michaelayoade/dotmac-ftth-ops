@@ -1,3 +1,4 @@
+
 """
 Tests for avatar upload endpoint.
 """
@@ -6,6 +7,7 @@ import io
 import uuid
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 
@@ -13,6 +15,13 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def app():
@@ -22,7 +31,7 @@ def app():
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user(async_db_session):
     """Create a test user in the database."""
     user = User(
@@ -66,10 +75,13 @@ def auth_headers(test_user):
         roles=test_user.roles,
         permissions=test_user.permissions,
     )
-    return {"Authorization": f"Bearer {access_token}"}
+    return {
+        "Authorization": f"Bearer {access_token}",
+        "X-Tenant-ID": test_user.tenant_id,
+    }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app, async_db_session):
     """Create async test client."""
     from unittest.mock import AsyncMock, patch

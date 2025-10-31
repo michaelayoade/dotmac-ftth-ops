@@ -278,7 +278,9 @@ class BatchMigrationService:
 
         # Check totals match
         legacy_total_cents = legacy_invoice.total_amount
-        money_total_cents = int(money_invoice.total_amount.amount * 100)
+        money_total_cents = InvoiceMigrationAdapter.money_to_cents(
+            money_invoice.total_amount.amount
+        )
 
         if legacy_total_cents != money_total_cents:
             issues.append(

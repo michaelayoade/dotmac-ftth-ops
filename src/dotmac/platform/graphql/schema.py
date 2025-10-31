@@ -20,6 +20,7 @@ from dotmac.platform.graphql.queries.user import UserQueries
 from dotmac.platform.graphql.queries.wireless import WirelessQueries
 from dotmac.platform.graphql.subscriptions.customer import CustomerSubscriptions
 from dotmac.platform.graphql.subscriptions.network import NetworkSubscriptions
+from dotmac.platform.version import get_version
 
 
 @strawberry.type
@@ -58,7 +59,7 @@ class Query(
     @strawberry.field(description="API version and info")  # type: ignore[misc]
     def version(self) -> str:
         """Get GraphQL API version."""
-        return "1.0.0"
+        return get_version()
 
 
 @strawberry.type

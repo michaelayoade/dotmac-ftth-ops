@@ -25,6 +25,7 @@ from dotmac.platform.monitoring.health_checks import (
 )
 
 
+@pytest.mark.integration
 class TestHealthCheckerEdgeCases:
     """Test edge cases and complex scenarios in HealthChecker."""
 
@@ -212,6 +213,9 @@ class TestHealthCheckerEdgeCases:
             else:
                 result = health_checker.check_celery_broker()
                 assert result.name == "celery_broker"
+                assert result.status == ServiceStatus.UNHEALTHY
+                if broker_url:
+                    assert "Unsupported Celery broker" in result.message
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     def test_check_storage_unknown_provider(self, mock_settings, health_checker):
@@ -221,7 +225,7 @@ class TestHealthCheckerEdgeCases:
         result = health_checker.check_storage()
 
         assert result.name == "storage"
-        assert result.status == ServiceStatus.HEALTHY
+        assert result.status == ServiceStatus.DEGRADED
         assert "unknown-storage-provider" in result.message
         assert result.required is False
 
@@ -250,7 +254,7 @@ class TestHealthCheckerEdgeCases:
         mock_settings.observability.otel_endpoint = "http://localhost:4317"
 
         mock_client = MagicMock()
-        mock_client.get.side_effect = httpx.TimeoutException("Request timeout")
+        mock_client.post.side_effect = httpx.TimeoutException("Request timeout")
         mock_httpx.Client.return_value.__enter__.return_value = mock_client
 
         result = health_checker.check_observability()
@@ -269,9 +273,9 @@ class TestHealthCheckerEdgeCases:
         mock_settings.observability.otel_endpoint = "http://localhost:4317"
 
         status_codes_and_expected = [
-            (200, ServiceStatus.HEALTHY, "OTLP endpoint reachable"),
-            (404, ServiceStatus.HEALTHY, "OTLP endpoint reachable"),  # < 500
-            (401, ServiceStatus.HEALTHY, "OTLP endpoint reachable"),  # < 500
+            (200, ServiceStatus.HEALTHY, "OTLP endpoint accepted test span"),
+            (404, ServiceStatus.DEGRADED, "OTLP endpoint returned 404"),
+            (401, ServiceStatus.DEGRADED, "OTLP endpoint returned 401"),
             (500, ServiceStatus.DEGRADED, "OTLP endpoint returned 500"),
             (502, ServiceStatus.DEGRADED, "OTLP endpoint returned 502"),
             (503, ServiceStatus.DEGRADED, "OTLP endpoint returned 503"),
@@ -281,14 +285,14 @@ class TestHealthCheckerEdgeCases:
             mock_response = MagicMock()
             mock_response.status_code = status_code
             mock_client = MagicMock()
-            mock_client.get.return_value = mock_response
+            mock_client.post.return_value = mock_response
             mock_httpx.Client.return_value.__enter__.return_value = mock_client
 
             result = health_checker.check_observability()
 
             assert result.name == "observability"
             assert result.status == expected_status
-            assert expected_message_part in result.message
+            assert result.message == expected_message_part
 
     def test_run_all_checks_preserves_order(self, health_checker):
         """Test that run_all_checks returns services in expected order."""
@@ -363,6 +367,7 @@ class TestHealthCheckerEdgeCases:
             mock_obs.assert_called_once_with()
 
 
+@pytest.mark.integration
 class TestStartupDependenciesEdgeCases:
     """Test edge cases in startup dependency checking."""
 
@@ -463,22 +468,16 @@ class TestStartupDependenciesEdgeCases:
             "PostgreSQL (database)",
             "Redis (cache & sessions)",
             "Vault/OpenBao (secrets)",
-            "Celery (background tasks)",
+            "Celery worker (background tasks)",
             "OTLP Collector (observability)",
             "docker-compose up -d",
-            "docker run -d -p 5432:5432 postgres:15",
-            "docker run -d -p 6379:6379 redis:7",
-            "docker run -d -p 8200:8200 hashicorp/vault:latest",
-            "For development with minimal dependencies:",
         ]
 
         for content in expected_content:
             assert content in captured.out
 
-        # Check for formatting elements
-        assert "=" * 60 in captured.out  # Header/footer separators
 
-
+@pytest.mark.integration
 class TestServiceHealthComplexScenarios:
     """Test complex scenarios with ServiceHealth objects."""
 

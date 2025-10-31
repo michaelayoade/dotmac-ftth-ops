@@ -5,11 +5,15 @@ This module provides REST API endpoints for managing plugins,
 their configurations, and testing connections.
 """
 
+from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, ConfigDict
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 from ..auth.core import UserInfo
 from ..auth.dependencies import get_current_user
@@ -310,7 +314,7 @@ async def bulk_health_check(
             health_check = await registry.health_check_plugin(instance_id)
             results.append(health_check)
         except Exception as e:
-            from datetime import UTC, datetime
+            from datetime import datetime, timezone
 
             # Create error health check result
             results.append(

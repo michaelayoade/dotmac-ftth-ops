@@ -220,8 +220,7 @@ async def init_redis() -> None:
         logger.info("redis.startup_complete")
     except Exception as e:
         logger.error("redis.startup_failed", error=str(e))
-        # Don't raise - allow application to start without Redis
-        # Services using Redis should handle the error gracefully
+        raise RuntimeError("Redis initialization failed") from e
 
 
 async def shutdown_redis() -> None:

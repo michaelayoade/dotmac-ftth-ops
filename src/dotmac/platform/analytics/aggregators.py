@@ -5,7 +5,10 @@ Metric aggregation utilities for analytics processing.
 import statistics
 from collections import defaultdict, deque
 from collections.abc import Callable
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from .base import Metric
@@ -175,7 +178,7 @@ class TimeWindowAggregator:
         self, metric_name: str, value: float, attributes: dict[str, Any] | None = None
     ) -> None:
         """Add a data point to the aggregator."""
-        current_time = datetime.now(UTC).replace(tzinfo=None)
+        current_time = datetime.now(UTC)
         window_start = self._get_window_start(current_time)
         key = metric_name
         self.windows[window_start][key].append(value)
@@ -225,7 +228,7 @@ class TimeWindowAggregator:
         Returns:
             List of window aggregates with timestamps
         """
-        current_time = datetime.now(UTC).replace(tzinfo=None)
+        current_time = datetime.now(UTC)
         results = []
 
         for i in range(count):

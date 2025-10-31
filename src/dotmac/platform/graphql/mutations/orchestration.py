@@ -4,7 +4,6 @@ GraphQL mutations for Orchestration Service.
 Provides mutations for subscriber provisioning and workflow management.
 """
 
-
 import strawberry
 import structlog
 
@@ -171,9 +170,7 @@ class OrchestrationMutations:
             )
 
             workflow_model = (
-                db.query(WorkflowModel)
-                .filter(WorkflowModel.workflow_id == workflow_id)
-                .first()
+                db.query(WorkflowModel).filter(WorkflowModel.workflow_id == workflow_id).first()
             )
 
             if not workflow_model:
@@ -226,9 +223,7 @@ class OrchestrationMutations:
             )
 
             workflow_model = (
-                db.query(WorkflowModel)
-                .filter(WorkflowModel.workflow_id == workflow_id)
-                .first()
+                db.query(WorkflowModel).filter(WorkflowModel.workflow_id == workflow_id).first()
             )
 
             if not workflow_model:

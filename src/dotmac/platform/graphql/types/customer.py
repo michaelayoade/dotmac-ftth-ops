@@ -115,9 +115,7 @@ class CustomerNote:
             subject=note.subject,
             content=note.content,
             is_internal=note.is_internal,
-            created_by_id=strawberry.ID(str(note.created_by_id))
-            if note.created_by_id
-            else None,
+            created_by_id=strawberry.ID(str(note.created_by_id)) if note.created_by_id else None,
             created_at=note.created_at,
             updated_at=note.updated_at,
         )

@@ -1,14 +1,18 @@
+
 """
 Tests for payment refund functionality.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
+from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodType,
     PaymentStatus,
 )
@@ -24,9 +28,13 @@ from tests.billing.payments.conftest import (
 )
 from tests.fixtures.async_db import create_mock_async_result
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPaymentRefunds:
     """Test payment refund functionality"""
 
@@ -101,7 +109,7 @@ class TestPaymentRefunds:
         setup_mock_db_result(mock_payment_db_session, scalar_value=sample_payment_entity)
 
         # Execute & Verify
-        with pytest.raises(PaymentError, match="Can only refund successful payments"):
+        with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
             await payment_service.refund_payment(
                 tenant_id="test-tenant",
                 payment_id="payment_123",
@@ -116,7 +124,7 @@ class TestPaymentRefunds:
 
         # Execute & Verify
         with pytest.raises(
-            PaymentError, match="Refund amount cannot exceed original payment amount"
+            PaymentError, match="Refund amount .* exceeds remaining refundable amount"
         ):
             await payment_service.refund_payment(
                 tenant_id="test-tenant",
@@ -129,7 +137,7 @@ class TestPaymentRefunds:
     ):
         """Test refund with idempotency key"""
         # Setup
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         existing_refund = MagicMock(spec=PaymentEntity)
         existing_refund.tenant_id = "test-tenant"
         existing_refund.payment_id = "refund_456"
@@ -150,6 +158,9 @@ class TestPaymentRefunds:
         existing_refund.failure_reason = None
         existing_refund.next_retry_at = None
         existing_refund.extra_data = {}
+        existing_refund.provider_payment_data = {}
+        existing_refund.refund_amount = Decimal("0")
+        existing_refund.refunded_at = now
 
         # Need to return results in order: payment entity first, then idempotency check
         mock_result_payment = create_mock_async_result([sample_payment_entity])
@@ -204,10 +215,12 @@ class TestPaymentRefunds:
 
         # Execute
         with patch("dotmac.platform.billing.payments.service.logger") as mock_logger:
-            result = await payment_service.refund_payment(
-                tenant_id="test-tenant",
-                payment_id="payment_123",
-            )
+            with patch("dotmac.platform.billing.payments.service.settings") as mock_settings:
+                mock_settings.billing.require_payment_plugin = False
+                result = await payment_service.refund_payment(
+                    tenant_id="test-tenant",
+                    payment_id="payment_123",
+                )
 
         # Verify
         assert result.status == PaymentStatus.REFUNDED

@@ -15,6 +15,7 @@ from dotmac.platform.api.middleware import (
 )
 
 
+@pytest.mark.unit
 class TestGatewayMiddleware:
     """Test GatewayMiddleware functionality."""
 
@@ -159,6 +160,7 @@ class TestGatewayMiddleware:
             )
 
 
+@pytest.mark.unit
 class TestRequestTransformMiddleware:
     """Test RequestTransformMiddleware functionality."""
 
@@ -211,15 +213,14 @@ class TestRequestTransformMiddleware:
         mock_request.headers = Headers({"X-Correlation-ID": "existing-correlation"})
 
         async def call_next(request):
-            # Verify correlation_id is NOT in state when header exists
-            assert "X-Correlation-ID" in request.headers
+            assert request.headers["X-Correlation-ID"] == "existing-correlation"
             return Response(content="OK", status_code=200)
 
-        await middleware.dispatch(mock_request, call_next)
+        response = await middleware.dispatch(mock_request, call_next)
 
-        # Middleware should not add correlation_id to state if header exists
-        # Response won't have X-Correlation-ID since it's only added from state
-        # This is expected behavior - header pass-through happens at different layer
+        assert hasattr(mock_request.state, "correlation_id")
+        assert mock_request.state.correlation_id == "existing-correlation"
+        assert response.headers["X-Correlation-ID"] == "existing-correlation"
 
     @pytest.mark.asyncio
     async def test_middleware_adds_correlation_id_to_response(self, middleware, mock_request):
@@ -233,6 +234,7 @@ class TestRequestTransformMiddleware:
         assert "X-Correlation-ID" in response.headers
 
 
+@pytest.mark.unit
 class TestCircuitBreakerMiddleware:
     """Test CircuitBreakerMiddleware functionality."""
 
@@ -371,6 +373,7 @@ class TestCircuitBreakerMiddleware:
         assert middleware.gateway is gateway
 
 
+@pytest.mark.unit
 class TestMiddlewareIntegration:
     """Test middleware working together."""
 

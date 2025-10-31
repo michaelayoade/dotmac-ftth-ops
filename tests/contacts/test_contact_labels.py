@@ -1,3 +1,4 @@
+
 """
 Contact label service tests - Migrated to use shared helpers.
 
@@ -13,13 +14,19 @@ from dotmac.platform.contacts.models import ContactLabelDefinition
 from dotmac.platform.contacts.schemas import ContactLabelDefinitionCreate
 from dotmac.platform.contacts.service import ContactLabelService
 from tests.helpers import (
+
+
     build_mock_db_session,
     create_entity_test_helper,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactLabelService:
     """Test contact label service."""
 

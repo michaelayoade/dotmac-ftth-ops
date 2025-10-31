@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from dotmac.platform.radius.schemas import RADIUSSessionDisconnect
 
 
+@pytest.mark.unit
 class TestRADIUSAttributeInjectionPrevention:
     """Test suite for RADIUS attribute injection attack prevention"""
 
@@ -216,6 +217,7 @@ class TestRADIUSAttributeInjectionPrevention:
                 )
 
 
+@pytest.mark.unit
 class TestRADIUSSecurityBoundaries:
     """Test security boundaries and edge cases"""
 
@@ -277,6 +279,7 @@ class TestRADIUSSecurityBoundaries:
                 RADIUSSessionDisconnect(username=pattern)
 
 
+@pytest.mark.unit
 class TestRADIUSValidatorEdgeCases:
     """Test edge cases and unusual inputs"""
 
@@ -340,6 +343,7 @@ class TestRADIUSValidatorEdgeCases:
         assert schema.username == "../../../etc/passwd"
 
 
+@pytest.mark.unit
 class TestRADIUSSecurityDocumentation:
     """Tests that verify security documentation and comments are in place"""
 
@@ -370,6 +374,7 @@ class TestRADIUSSecurityDocumentation:
 
 
 # Integration-style tests (would need actual CoA client in integration tests)
+@pytest.mark.unit
 class TestRADIUSDisconnectEndToEnd:
     """
     End-to-end security tests for RADIUS disconnect functionality.

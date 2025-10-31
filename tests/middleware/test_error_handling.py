@@ -1,3 +1,4 @@
+
 """
 Middleware and Error Handling Testing - Phase 2
 Comprehensive testing of middleware components, error handling, and request/response processing.
@@ -6,15 +7,24 @@ Comprehensive testing of middleware components, error handling, and request/resp
 import json
 import time
 from collections.abc import Awaitable, Callable
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from enum import Enum
 from typing import Any
 from unittest.mock import Mock
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
 
 class ErrorType(Enum):
     """Error type enumeration"""
@@ -124,7 +134,7 @@ class AuthenticationMiddleware:
         session_id = request.headers.get("X-Session-ID")
         if session_id and session_id in self.session_store:
             session = self.session_store[session_id]
-            if session["expires"] > datetime.now(UTC):
+            if session["expires"] > datetime.now(timezone.utc):
                 request.state["auth_type"] = "session"
                 request.state["authenticated"] = True
                 request.state["user_id"] = session["user_id"]
@@ -147,7 +157,7 @@ class AuthenticationMiddleware:
             return {
                 "sub": "user_123",
                 "tenant_id": "tenant_123",
-                "exp": int(datetime.now(UTC).timestamp() + 3600),
+                "exp": int(datetime.now(timezone.utc).timestamp() + 3600),
             }
         elif token == "expired_token":
             raise CustomException("Token expired", "TOKEN_EXPIRED")
@@ -300,7 +310,7 @@ class ErrorHandlingMiddleware:
             "method": request.method,
             "url": request.url,
             "status_code": status_code,
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.logger.error(json.dumps(log_data))
@@ -487,7 +497,7 @@ class TestMiddlewareAndErrorHandling:
         session_id = "session_123"
         auth_middleware.session_store[session_id] = {
             "user_id": "user_456",
-            "expires": datetime.now(UTC) + timedelta(hours=1),
+            "expires": datetime.now(timezone.utc) + timedelta(hours=1),
         }
 
         request = MockRequest(headers={"X-Session-ID": session_id})

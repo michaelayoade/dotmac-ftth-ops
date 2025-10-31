@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from collections.abc import Mapping, Sequence
 from typing import Any, cast
@@ -240,7 +241,8 @@ class VaultClient:
             # Build the delete path
             path = path.strip("/")
             if self.kv_version == 2:
-                delete_path = f"/v1/{self.mount_path}/metadata/{path}"
+                # KV v2 delete uses /data/ endpoint for soft deletes
+                delete_path = f"/v1/{self.mount_path}/data/{path}"
             else:
                 delete_path = f"/v1/{self.mount_path}/{path}"
 
@@ -317,6 +319,14 @@ class AsyncVaultClient:
             headers=headers,
             timeout=httpx.Timeout(timeout),
         )
+
+    def update_token(self, token: str | None) -> None:
+        """Update the authentication token for the underlying HTTP client."""
+        self.token = token
+        if token:
+            self.client.headers["X-Vault-Token"] = token
+        else:
+            self.client.headers.pop("X-Vault-Token", None)
 
     def _get_secret_path(self, path: str) -> str:
         """Build the full API path for a secret."""
@@ -526,7 +536,7 @@ class AsyncVaultClient:
             # Build the delete path
             path = path.strip("/")
             if self.kv_version == 2:
-                delete_path = f"/v1/{self.mount_path}/metadata/{path}"
+                delete_path = f"/v1/{self.mount_path}/data/{path}"
             else:
                 delete_path = f"/v1/{self.mount_path}/{path}"
 
@@ -554,6 +564,15 @@ class AsyncVaultClient:
     async def close(self) -> None:
         """Close the async HTTP client."""
         await self.client.aclose()
+
+    def close_sync(self) -> None:
+        """Close the async HTTP client from synchronous code."""
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(self.close())
+        else:
+            loop.create_task(self.close())
 
     async def __aenter__(self) -> AsyncVaultClient:
         """Async context manager entry."""

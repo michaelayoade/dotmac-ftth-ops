@@ -1,6 +1,6 @@
 """Comprehensive tests for RBAC service to achieve 90%+ coverage."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -10,12 +10,17 @@ from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.models import Permission, Role
 from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.mark.asyncio
 class TestUserPermissions:
     """Test user permission retrieval and checking."""
+
 
     @pytest.fixture
     def mock_session(self):
@@ -368,7 +373,7 @@ class TestPermissionManagement:
         """Test granting permission with expiration."""
         user_id = uuid4()
         granted_by = uuid4()
-        expires_at = datetime.now(UTC) + timedelta(days=30)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=30)
 
         with patch.object(rbac_service, "_get_permission_by_name", return_value=mock_permission):
             mock_result = MagicMock()
@@ -586,6 +591,7 @@ class TestHelperMethods:
         rbac_service.db.add.assert_called_once()
 
 
+@pytest.mark.integration
 class TestGetRBACService:
     """Test dependency function."""
 

@@ -1,14 +1,17 @@
+
 """
 Tests for audit service functionality.
 """
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timezone, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
 
 from dotmac.platform.audit.models import (
+
+
     ActivitySeverity,
     ActivityType,
     AuditActivity,
@@ -21,8 +24,11 @@ from dotmac.platform.audit.service import (
     log_user_activity,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def audit_service():
@@ -45,6 +51,7 @@ def mock_request():
     return request
 
 
+@pytest.mark.integration
 class TestAuditService:
     """Test AuditService core functionality."""
 
@@ -126,9 +133,9 @@ class TestAuditService:
                 tenant_id="tenant456",
                 action="test_action",
                 description=f"Test activity {i}",
-                timestamp=datetime.now(UTC) - timedelta(hours=i),
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc) - timedelta(hours=i),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             async_db_session.add(activity)
         await async_db_session.commit()
@@ -161,9 +168,9 @@ class TestAuditService:
                 tenant_id="tenant456",
                 action="test_action",
                 description=f"Test activity {i}",
-                timestamp=datetime.now(UTC) - timedelta(minutes=i),
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                timestamp=datetime.now(timezone.utc) - timedelta(minutes=i),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             async_db_session.add(activity)
         await async_db_session.commit()
@@ -193,7 +200,7 @@ class TestAuditService:
         audit_service._session = async_db_session
 
         # Create activities with different ages
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Recent activity
         recent = AuditActivity(
@@ -244,7 +251,7 @@ class TestAuditService:
         audit_service._session = async_db_session
 
         # Create activities with different types and severities
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         activities_data = [
             (ActivityType.USER_LOGIN, ActivitySeverity.LOW),
@@ -373,6 +380,7 @@ class TestAuditService:
         assert not any(a.tenant_id == "tenant2" for a in result.activities)
 
 
+@pytest.mark.integration
 class TestAuditHelperFunctions:
     """Test audit helper functions."""
 

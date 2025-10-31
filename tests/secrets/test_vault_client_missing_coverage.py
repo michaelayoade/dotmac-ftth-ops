@@ -17,6 +17,7 @@ from dotmac.platform.secrets.vault_client import (
 )
 
 
+@pytest.mark.unit
 class TestVaultClientErrorHandling:
     """Test error handling paths in VaultClient."""
 
@@ -111,6 +112,7 @@ class TestVaultClientErrorHandling:
         assert "Failed to delete secret" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestAsyncVaultClientErrorHandling:
     """Test error handling paths in AsyncVaultClient."""
 
@@ -270,6 +272,7 @@ class TestAsyncVaultClientErrorHandling:
         mock_async_client.aclose.assert_called_once()
 
 
+@pytest.mark.unit
 class TestVaultClientNamespace:
     """Test namespace handling in VaultClient."""
 
@@ -292,6 +295,7 @@ class TestVaultClientNamespace:
         assert client.client.headers["X-Vault-Namespace"] == "my-namespace"
 
 
+@pytest.mark.unit
 class TestVaultClientKVVersion:
     """Test KV version handling."""
 
@@ -318,6 +322,7 @@ class TestVaultClientKVVersion:
         assert "/data/" in path
 
 
+@pytest.mark.unit
 class TestAsyncVaultClientListSecretsAdvanced:
     """Test advanced async list_secrets scenarios."""
 

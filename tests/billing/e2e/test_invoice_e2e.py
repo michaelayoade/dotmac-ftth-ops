@@ -1,42 +1,34 @@
 """
-End-to-End Tests for Invoice DDD Flow.
+Integration Tests for Invoice DDD Flow.
 
-Tests the complete flow:
+Tests the complete flow with mocked dependencies:
 1. Command → Aggregate Handler
 2. Aggregate → Business Rules
 3. Domain Events → Event Handlers
 4. Repository → Database Persistence
 5. Query Handler → Read Models
+
+NOTE: These are INTEGRATION tests (not true E2E) because they use mocked
+database sessions and event bus. True E2E tests should use real database
+and real services without mocking.
+
+All imports are done lazily inside test methods to avoid event bus
+initialization during pytest collection phase.
 """
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, patch
+from datetime import timezone, datetime, timedelta
 
 import pytest
 
-from dotmac.platform.billing.commands.aggregate_handlers import (
-    AggregateInvoiceCommandHandler,
-)
-from dotmac.platform.billing.commands.invoice_commands import (
-    ApplyPaymentToInvoiceCommand,
-    CreateInvoiceCommand,
-    VoidInvoiceCommand,
-)
-from dotmac.platform.billing.queries.handlers import InvoiceQueryHandler
-from dotmac.platform.billing.queries.invoice_queries import (
-    GetInvoiceQuery,
-    ListInvoicesQuery,
-)
 
-
-@pytest.mark.e2e
-class TestInvoiceE2EFlow:
-    """End-to-end tests for complete invoice lifecycle."""
+@pytest.mark.integration
+class TestInvoiceIntegrationFlow:
+    """Integration tests for complete invoice lifecycle with mocked dependencies."""
 
     @pytest.mark.asyncio
-    async def test_create_invoice_e2e_flow(self):
+    async def test_create_invoice_integration_flow(self):
         """
-        E2E: Create invoice → Persist → Query back
+        Integration: Create invoice → Persist → Query back
 
         Flow:
         1. CreateInvoiceCommand executed
@@ -46,6 +38,15 @@ class TestInvoiceE2EFlow:
         5. Invoice persisted to database
         6. Query handler retrieves invoice
         """
+        # Lazy imports to avoid event bus initialization during collection
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+        )
+
         # Mock dependencies
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
@@ -111,9 +112,9 @@ class TestInvoiceE2EFlow:
             assert invoice.id is not None
 
     @pytest.mark.asyncio
-    async def test_invoice_payment_e2e_flow(self):
+    async def test_invoice_payment_integration_flow(self):
         """
-        E2E: Apply payment → Update aggregate → Persist → Query
+        Integration: Apply payment → Update aggregate → Persist → Query
 
         Flow:
         1. Create invoice
@@ -124,6 +125,16 @@ class TestInvoiceE2EFlow:
         6. Events published
         7. Database updated
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+            ApplyPaymentToInvoiceCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -187,9 +198,9 @@ class TestInvoiceE2EFlow:
                     assert "billing.invoice.paid" in event_types
 
     @pytest.mark.asyncio
-    async def test_invoice_void_e2e_flow(self):
+    async def test_invoice_void_integration_flow(self):
         """
-        E2E: Void invoice → Business rule validation → Persist
+        Integration: Void invoice → Business rule validation → Persist
 
         Flow:
         1. Create invoice
@@ -198,6 +209,16 @@ class TestInvoiceE2EFlow:
         4. Void succeeds for draft invoice
         5. Events published
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+            VoidInvoiceCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 
@@ -249,21 +270,24 @@ class TestInvoiceE2EFlow:
                     assert event_call[1]["event_type"] == "billing.invoice.voided"
 
 
-@pytest.mark.e2e
-class TestInvoiceQueryE2E:
-    """E2E tests for invoice query flows."""
+@pytest.mark.integration
+class TestInvoiceQueryIntegration:
+    """Integration tests for invoice query flows with mocked dependencies."""
 
     @pytest.mark.asyncio
     async def test_query_invoice_after_creation(self):
         """
-        E2E: Create → Query single invoice
+        Integration: Create → Query single invoice
 
         Simulates:
         1. Invoice created and persisted
         2. Query handler retrieves from database
         3. Returns proper read model
         """
+        # Lazy imports
         from unittest.mock import AsyncMock, MagicMock
+        from dotmac.platform.billing.queries.handlers import InvoiceQueryHandler
+        from dotmac.platform.billing.queries.invoice_queries import GetInvoiceQuery
 
         mock_db_session = AsyncMock()
         query_handler = InvoiceQueryHandler(mock_db_session)
@@ -284,10 +308,10 @@ class TestInvoiceQueryE2E:
         mock_invoice.remaining_balance = 100000
         mock_invoice.currency = "USD"
         mock_invoice.status = "draft"
-        mock_invoice.created_at = datetime.now(UTC)
-        mock_invoice.updated_at = datetime.now(UTC)
-        mock_invoice.issue_date = datetime.now(UTC)
-        mock_invoice.due_date = datetime.now(UTC) + timedelta(days=30)
+        mock_invoice.created_at = datetime.now(timezone.utc)
+        mock_invoice.updated_at = datetime.now(timezone.utc)
+        mock_invoice.issue_date = datetime.now(timezone.utc)
+        mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=30)
         mock_invoice.finalized_at = None
         mock_invoice.paid_at = None
         mock_invoice.voided_at = None
@@ -322,14 +346,17 @@ class TestInvoiceQueryE2E:
     @pytest.mark.asyncio
     async def test_list_invoices_with_pagination(self):
         """
-        E2E: List invoices with filters and pagination
+        Integration: List invoices with filters and pagination
 
         Tests:
         1. Database query with filters
         2. Pagination logic
         3. Read model transformation
         """
+        # Lazy imports
         from unittest.mock import AsyncMock, MagicMock
+        from dotmac.platform.billing.queries.handlers import InvoiceQueryHandler
+        from dotmac.platform.billing.queries.invoice_queries import ListInvoicesQuery
 
         mock_db_session = AsyncMock()
         query_handler = InvoiceQueryHandler(mock_db_session)
@@ -361,14 +388,14 @@ class TestInvoiceQueryE2E:
         assert "items" in result
 
 
-@pytest.mark.e2e
-class TestInvoiceBusinessRulesE2E:
-    """E2E tests validating business rules are enforced throughout the flow."""
+@pytest.mark.integration
+class TestInvoiceBusinessRulesIntegration:
+    """Integration tests validating business rules are enforced throughout the flow."""
 
     @pytest.mark.asyncio
-    async def test_cannot_void_paid_invoice_e2e(self):
+    async def test_cannot_void_paid_invoice_integration(self):
         """
-        E2E: Business rule enforcement across layers
+        Integration: Business rule enforcement across layers
 
         Validates:
         1. Create invoice
@@ -376,9 +403,17 @@ class TestInvoiceBusinessRulesE2E:
         3. Attempt to void (should fail)
         4. Business rule exception propagates correctly
         """
-
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
         from dotmac.platform.core import Money
         from dotmac.platform.core.exceptions import BusinessRuleError
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+            VoidInvoiceCommand,
+        )
 
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
@@ -426,17 +461,25 @@ class TestInvoiceBusinessRulesE2E:
                     await handler.handle_void_invoice(void_command)
 
     @pytest.mark.asyncio
-    async def test_payment_currency_must_match_e2e(self):
+    async def test_payment_currency_must_match_integration(self):
         """
-        E2E: Currency validation across the flow
+        Integration: Currency validation across the flow
 
         Validates:
         1. Invoice created in USD
         2. Attempt payment in EUR (should fail)
         3. Business rule enforced at aggregate level
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
         from dotmac.platform.core import Money
         from dotmac.platform.core.exceptions import BusinessRuleError
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+        )
 
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
@@ -474,14 +517,14 @@ class TestInvoiceBusinessRulesE2E:
                 invoice.apply_payment("pay-123", Money(amount=100.00, currency="EUR"))
 
 
-@pytest.mark.e2e
-class TestInvoiceEventFlowE2E:
-    """E2E tests for event propagation through the system."""
+@pytest.mark.integration
+class TestInvoiceEventFlowIntegration:
+    """Integration tests for event propagation through the system with mocked dependencies."""
 
     @pytest.mark.asyncio
     async def test_invoice_created_event_triggers_side_effects(self):
         """
-        E2E: Event propagation and side effects
+        Integration: Event propagation and side effects
 
         Flow:
         1. Invoice created
@@ -489,6 +532,15 @@ class TestInvoiceEventFlowE2E:
         3. Integration event published
         4. Side effects triggered (notifications, webhooks, analytics)
         """
+        # Lazy imports
+        from unittest.mock import AsyncMock, patch
+        from dotmac.platform.billing.commands.aggregate_handlers import (
+            AggregateInvoiceCommandHandler,
+        )
+        from dotmac.platform.billing.commands.invoice_commands import (
+            CreateInvoiceCommand,
+        )
+
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
 

@@ -2,12 +2,20 @@
 Billing settings service
 """
 
+import json
 import logging
-from typing import Any
+from datetime import datetime, timezone
 
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
+from typing import Any
+from uuid import uuid4
+
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.metrics import get_billing_metrics
+from dotmac.platform.billing.models import BillingSettingsTable
 
 from .models import (
     BillingSettings,
@@ -31,25 +39,24 @@ class BillingSettingsService:
     async def get_settings(self, tenant_id: str) -> BillingSettings:
         """Get billing settings for tenant"""
 
-        # In a real implementation, this would query a settings table
-        # For now, return default settings
-        default_settings = self._get_default_settings(tenant_id)
+        row = await self._get_settings_row(tenant_id)
+        if row:
+            settings = self._table_to_model(row)
+        else:
+            settings = self._get_default_settings(tenant_id)
 
-        logger.info(f"Retrieved billing settings for tenant {tenant_id}")
-        return default_settings
+        logger.info("Retrieved billing settings", extra={"tenant_id": tenant_id})
+        return settings
 
     async def update_settings(self, tenant_id: str, settings: BillingSettings) -> BillingSettings:
         """Update billing settings for tenant"""
 
-        # Validate settings
         await self._validate_settings(settings)
-
-        # In a real implementation, this would save to database
-        # For now, just return the settings with updated tenant_id
         settings.tenant_id = tenant_id
+        persisted = await self._save_settings(tenant_id, settings)
 
-        logger.info(f"Updated billing settings for tenant {tenant_id}")
-        return settings
+        logger.info("Updated billing settings", extra={"tenant_id": tenant_id})
+        return persisted
 
     async def update_company_info(
         self, tenant_id: str, company_info: CompanyInfo
@@ -169,13 +176,68 @@ class BillingSettingsService:
             warnings.append("Payment reminders enabled but no reminder schedule configured")
 
         logger.info(
-            f"Settings validation for tenant {tenant_id}: {'valid' if validation_report['valid'] else 'invalid'}"
+            "Billing settings validation",
+            extra={
+                "tenant_id": tenant_id,
+                "valid": validation_report["valid"],
+            },
         )
         return validation_report
 
     # ============================================================================
     # Private helper methods
     # ============================================================================
+
+    async def _get_settings_row(self, tenant_id: str) -> BillingSettingsTable | None:
+        stmt = select(BillingSettingsTable).where(BillingSettingsTable.tenant_id == tenant_id)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def _save_settings(self, tenant_id: str, settings: BillingSettings) -> BillingSettings:
+        row = await self._get_settings_row(tenant_id)
+        if row is None:
+            row = BillingSettingsTable(
+                settings_id=settings.settings_id or str(uuid4()),
+                tenant_id=tenant_id,
+            )
+            self.db.add(row)
+        self._apply_model_to_row(row, settings)
+        row.updated_at = datetime.now(UTC)
+        await self.db.commit()
+        await self.db.refresh(row)
+        return self._table_to_model(row)
+
+    def _apply_model_to_row(self, row: BillingSettingsTable, settings: BillingSettings) -> None:
+        row.tenant_id = settings.tenant_id
+        row.settings_id = settings.settings_id or row.settings_id or str(uuid4())
+        row.company_info = json.loads(settings.company_info.model_dump_json())
+        row.tax_settings = json.loads(settings.tax_settings.model_dump_json())
+        row.payment_settings = json.loads(settings.payment_settings.model_dump_json())
+        row.invoice_settings = json.loads(settings.invoice_settings.model_dump_json())
+        row.notification_settings = json.loads(settings.notification_settings.model_dump_json())
+        row.features_enabled = dict(settings.features_enabled)
+        row.custom_settings = dict(settings.custom_settings)
+        row.api_settings = dict(settings.api_settings)
+        row.metadata_json = row.metadata_json or {}
+
+    def _table_to_model(self, row: BillingSettingsTable) -> BillingSettings:
+        defaults = self._get_default_settings(row.tenant_id)
+        defaults.settings_id = row.settings_id
+        defaults.company_info = CompanyInfo.model_validate(row.company_info or {})
+        defaults.tax_settings = TaxSettings.model_validate(row.tax_settings or {})
+        defaults.payment_settings = PaymentSettings.model_validate(row.payment_settings or {})
+        defaults.invoice_settings = InvoiceSettings.model_validate(row.invoice_settings or {})
+        defaults.notification_settings = NotificationSettings.model_validate(
+            row.notification_settings or {}
+        )
+        defaults.features_enabled.update(row.features_enabled or {})
+        defaults.custom_settings.update(row.custom_settings or {})
+        defaults.api_settings.update(row.api_settings or {})
+        defaults.tenant_id = row.tenant_id
+        defaults.settings_id = row.settings_id
+        defaults.created_at = row.created_at
+        defaults.updated_at = row.updated_at
+        return defaults
 
     def _get_default_settings(self, tenant_id: str) -> BillingSettings:
         """Get default billing settings"""

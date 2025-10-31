@@ -1,0 +1,12 @@
+---
+- name: "Provision DotMac tenant environment"
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: false
+  vars:
+    provisioning_requested_at: "{{ lookup('pipe', 'date -Iseconds') }}"
+  roles:
+    - role: tenant_dotmac_hosted
+      when: deployment_mode == 'dotmac_hosted'
+    - role: tenant_customer_hosted
+      when: deployment_mode == 'customer_hosted'
+    - role: tenant_post_provision

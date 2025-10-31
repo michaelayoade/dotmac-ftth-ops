@@ -4,7 +4,6 @@ Adapter Factory
 Factory for creating deployment adapters based on backend type.
 """
 
-
 from ..models import DeploymentBackend
 from .awx import AWXAdapter
 from .base import DeploymentAdapter

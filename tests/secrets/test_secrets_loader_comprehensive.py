@@ -28,12 +28,14 @@ from dotmac.platform.secrets.secrets_loader import (
 from dotmac.platform.secrets.vault_client import VaultError
 
 
+@pytest.mark.unit
 class TestNestedAttributeHelpers:
     """Test nested attribute getter/setter functions."""
 
     def test_set_nested_attr_single_level(self):
         """Test setting a single-level attribute."""
 
+        @pytest.mark.unit
         class TestObj:
             value = "old"
 
@@ -73,6 +75,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_single_level(self):
         """Test getting a single-level attribute."""
 
+        @pytest.mark.unit
         class TestObj:
             value = "test_value"
 
@@ -96,6 +99,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_with_default(self):
         """Test getting non-existent attribute returns default."""
 
+        @pytest.mark.unit
         class TestObj:
             pass
 
@@ -106,6 +110,7 @@ class TestNestedAttributeHelpers:
     def test_get_nested_attr_missing_no_default(self):
         """Test getting non-existent attribute returns None by default."""
 
+        @pytest.mark.unit
         class TestObj:
             pass
 
@@ -114,6 +119,7 @@ class TestNestedAttributeHelpers:
         assert result is None
 
 
+@pytest.mark.unit
 class TestSecretsMapping:
     """Test secrets mapping constants."""
 
@@ -146,6 +152,7 @@ class TestSecretsMapping:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestLoadSecretsFromVault:
     """Test async load_secrets_from_vault function."""
 
@@ -186,6 +193,8 @@ class TestLoadSecretsFromVault:
         mock_settings.database.password = "old_password"
         mock_settings.jwt = Mock()
         mock_settings.jwt.secret_key = "old_key"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "old_webhook_secret"
 
         mock_client = AsyncMock()
         mock_client.health_check = AsyncMock(return_value=True)
@@ -194,6 +203,7 @@ class TestLoadSecretsFromVault:
                 "database/password": {"value": "new_db_password"},
                 "auth/jwt_secret": {"value": "new_jwt_secret"},
                 "app/secret_key": {"value": "new_app_secret"},
+                "observability/alertmanager/webhook_secret": {"value": "vault-webhook"},
             }
         )
         mock_client.close = AsyncMock()
@@ -206,6 +216,9 @@ class TestLoadSecretsFromVault:
         # Verify settings were updated
         assert mock_settings.database.password == "new_db_password"
         assert mock_settings.jwt.secret_key == "new_jwt_secret"
+        assert (
+            mock_settings.observability.alertmanager_webhook_secret == "vault-webhook"
+        )
 
     async def test_load_secrets_with_dict_without_value_key(self):
         """Test loading secrets when dict doesn't have 'value' key."""
@@ -288,6 +301,7 @@ class TestLoadSecretsFromVault:
         mock_client.close.assert_called_once()
 
 
+@pytest.mark.unit
 class TestLoadSecretsFromVaultSync:
     """Test synchronous load_secrets_from_vault_sync function."""
 
@@ -337,6 +351,7 @@ class TestLoadSecretsFromVaultSync:
         mock_client.get_secrets.assert_called_once()
 
 
+@pytest.mark.unit
 class TestValidateProductionSecrets:
     """Test production secrets validation."""
 
@@ -346,6 +361,8 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "very-secure-secret-key-123"
         mock_settings.jwt.secret_key = "secure-jwt-key-456"
         mock_settings.database.password = "very-secure-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         # Should not raise
         validate_production_secrets(mock_settings)
@@ -356,6 +373,8 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "change-me-in-production"
         mock_settings.jwt.secret_key = "valid-key"
         mock_settings.database.password = "valid-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         with pytest.raises(ValueError, match="secret_key must be changed"):
             validate_production_secrets(mock_settings)
@@ -366,8 +385,22 @@ class TestValidateProductionSecrets:
         mock_settings.secret_key = "valid-key"
         mock_settings.jwt.secret_key = "change-me"
         mock_settings.database.password = "valid-password-123"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = "webhook-secret"
 
         with pytest.raises(ValueError, match="JWT secret_key must be changed"):
+            validate_production_secrets(mock_settings)
+
+    def test_validate_production_missing_alertmanager_secret(self):
+        """Test validation fails when Alertmanager webhook secret is missing."""
+        mock_settings = Mock()
+        mock_settings.secret_key = "secure-app-key"
+        mock_settings.jwt.secret_key = "secure-jwt-key"
+        mock_settings.database.password = "secure-db-password"
+        mock_settings.observability = Mock()
+        mock_settings.observability.alertmanager_webhook_secret = ""
+
+        with pytest.raises(ValueError, match="Alertmanager webhook secret must be set"):
             validate_production_secrets(mock_settings)
 
     def test_validate_production_no_database_password(self):
@@ -406,6 +439,7 @@ class TestValidateProductionSecrets:
         assert "Database password" in error_message
 
 
+@pytest.mark.unit
 class TestGetVaultSecret:
     """Test convenience function get_vault_secret."""
 
@@ -462,6 +496,7 @@ class TestGetVaultSecret:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestGetVaultSecretAsync:
     """Test async convenience function get_vault_secret_async."""
 
@@ -517,6 +552,7 @@ class TestGetVaultSecretAsync:
         assert result is None
 
 
+@pytest.mark.unit
 class TestEdgeCasesCoverage:
     """Tests to cover edge cases and missing lines for 90% coverage."""
 

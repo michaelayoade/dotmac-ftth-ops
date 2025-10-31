@@ -6,20 +6,24 @@ Advanced features moved to optional extensions.
 """
 
 import collections
+import json
 import itertools
 import operator
 import secrets
 from collections.abc import Callable, Iterable, Iterator
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any, TypeVar
 from uuid import UUID
 
+import sqlalchemy as sa
 import structlog
-from sqlalchemy import Select, and_, func, or_, select, update
+from sqlalchemy import Select, and_, func, or_, select, text, update
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from dotmac.platform.customer_management.models import (
     ActivityType,
@@ -49,10 +53,14 @@ def validate_uuid(value: UUID | str, field_name: str = "id") -> UUID:
     """Validate and convert string to UUID with standard library validation."""
     if value is None:
         raise ValueError(f"Invalid UUID for {field_name}: {value}")
-    try:
-        return UUID(value) if isinstance(value, str) else value
-    except (ValueError, AttributeError) as e:
-        raise ValueError(f"Invalid UUID for {field_name}: {value}") from e
+    if isinstance(value, UUID):
+        return value
+    if isinstance(value, str):
+        try:
+            return UUID(value)
+        except (ValueError, AttributeError) as e:
+            raise ValueError(f"Invalid UUID for {field_name}: {value}") from e
+    raise ValueError(f"Invalid UUID for {field_name}: {value}")
 
 
 logger = structlog.get_logger(__name__)
@@ -239,16 +247,16 @@ class CustomerService:
         include_activities: bool = False,
         include_notes: bool = False,
     ) -> Customer | None:
-        """Get customer by ID using standard SQLAlchemy queries."""
+        """Get customer by ID using standard SQLAlchemy queries.
+
+        Note: include_activities and include_notes parameters are kept for API compatibility
+        but are not used because activities and notes use lazy="dynamic" relationships.
+        Use get_customer_activities() and get_customer_notes() to fetch these separately.
+        """
         customer_id, tenant_id = self._validate_and_get_tenant(customer_id)
 
-        # Build query with optional includes using SQLAlchemy's selectinload
+        # Build base query (selectinload is incompatible with lazy="dynamic" relationships)
         query = self._get_base_customer_query(tenant_id).where(Customer.id == customer_id)
-
-        if include_activities:
-            query = query.options(selectinload(Customer.activities))
-        if include_notes:
-            query = query.options(selectinload(Customer.notes))
 
         result: Result[tuple[Customer]] = await self.session.execute(query)
         return result.scalar_one_or_none()
@@ -256,7 +264,12 @@ class CustomerService:
     async def get_customer_by_number(
         self, customer_number: str, include_activities: bool = False
     ) -> Customer | None:
-        """Get customer by customer number using standard filtering."""
+        """Get customer by customer number using standard filtering.
+
+        Note: include_activities parameter is kept for API compatibility but is not used
+        because activities use lazy="dynamic" relationships. Use get_customer_activities()
+        to fetch activities separately.
+        """
         tenant_id = self._resolve_tenant_id()
 
         query = select(Customer).where(
@@ -267,16 +280,18 @@ class CustomerService:
             )
         )
 
-        if include_activities:
-            query = query.options(selectinload(Customer.activities))
-
         result: Result[tuple[Customer]] = await self.session.execute(query)
         return result.scalar_one_or_none()
 
     async def get_customer_by_email(
         self, email: str, include_activities: bool = False
     ) -> Customer | None:
-        """Get customer by email using standard filtering."""
+        """Get customer by email using standard filtering.
+
+        Note: include_activities parameter is kept for API compatibility but is not used
+        because activities use lazy="dynamic" relationships. Use get_customer_activities()
+        to fetch activities separately.
+        """
         tenant_id = self._resolve_tenant_id()
 
         query = select(Customer).where(
@@ -286,9 +301,6 @@ class CustomerService:
                 Customer.deleted_at.is_(None),
             )
         )
-
-        if include_activities:
-            query = query.options(selectinload(Customer.activities))
 
         result: Result[tuple[Customer]] = await self.session.execute(query)
         return result.scalar_one_or_none()
@@ -419,7 +431,7 @@ class CustomerService:
         limit: int = 50,
         offset: int = 0,
     ) -> tuple[list[Customer], int]:
-        """Direct search implementation using standard library optimizations."""
+        """Comprehensive search with all filter parameters from CustomerSearchParams."""
         tenant_id = self._resolve_tenant_id()
 
         # Start with base query
@@ -430,10 +442,9 @@ class CustomerService:
             )
         )
 
-        # Add search filters using standard patterns
+        # Text search filter (searches across multiple fields)
         if params.query:
             search_term = f"%{params.query}%"
-            # Use standard SQLAlchemy with cleaner organization
             search_fields = [
                 Customer.first_name,
                 Customer.last_name,
@@ -443,26 +454,165 @@ class CustomerService:
             ]
             query = query.where(or_(*[field.ilike(search_term) for field in search_fields]))
 
-        # Use collections for efficient filtering
+        # Basic filters
         filter_conditions = []
+
         if params.status:
             filter_conditions.append(Customer.status == params.status)
         if params.customer_type:
             filter_conditions.append(Customer.customer_type == params.customer_type)
         if params.tier:
             filter_conditions.append(Customer.tier == params.tier)
+        if params.country:
+            filter_conditions.append(Customer.country == params.country)
+        if params.assigned_to:
+            filter_conditions.append(Customer.assigned_to == params.assigned_to)
+        if params.segment_id:
+            filter_conditions.append(Customer.segment_id == params.segment_id)
+
+        # Tags filter (JSON array contains any of the provided tags)
+        if params.tags:
+            # For PostgreSQL use @> operator with JSONB, for SQLite use LIKE
+            dialect_name = self.session.bind.dialect.name if self.session.bind else "sqlite"
+
+            if dialect_name == "postgresql":
+                # Use PostgreSQL's @> (contains) operator with JSONB
+                # Must cast both sides to JSONB since column is JSON type
+                from sqlalchemy.dialects.postgresql import JSONB
+
+                tag_conditions = [
+                    func.cast(Customer.tags, JSONB).op("@>")(func.cast([tag], JSONB))
+                    for tag in params.tags
+                ]
+                filter_conditions.append(or_(*tag_conditions))
+            else:
+                # For SQLite and other databases, use LIKE on serialized JSON
+                # This doesn't require JSON1 extension and works reliably
+                tag_conditions = []
+                for tag in params.tags:
+                    # Cast column to text and check if tag appears in JSON array
+                    # Tags are stored as ["tag1", "tag2"], so we look for "tag"
+                    tag_conditions.append(func.cast(Customer.tags, sa.String).like(f'%"{tag}"%'))
+                filter_conditions.append(or_(*tag_conditions))
+
+        # Date range filters
+        if params.created_after:
+            filter_conditions.append(Customer.created_at >= params.created_after)
+        if params.created_before:
+            filter_conditions.append(Customer.created_at <= params.created_before)
+        if params.last_purchase_after:
+            filter_conditions.append(Customer.last_purchase_date >= params.last_purchase_after)
+        if params.last_purchase_before:
+            filter_conditions.append(Customer.last_purchase_date <= params.last_purchase_before)
+
+        # Value range filters
+        if params.min_lifetime_value is not None:
+            filter_conditions.append(Customer.lifetime_value >= params.min_lifetime_value)
+        if params.max_lifetime_value is not None:
+            filter_conditions.append(Customer.lifetime_value <= params.max_lifetime_value)
+
+        # ISP-specific filters
+        if params.installation_status:
+            filter_conditions.append(Customer.installation_status == params.installation_status)
+        if params.connection_type:
+            filter_conditions.append(Customer.connection_type == params.connection_type)
+        if params.service_city:
+            filter_conditions.append(Customer.service_city == params.service_city)
+        if params.service_state_province:
+            filter_conditions.append(
+                Customer.service_state_province == params.service_state_province
+            )
+        if params.service_country:
+            filter_conditions.append(Customer.service_country == params.service_country)
+
+        # Network parameter filters
+        if params.static_ip_assigned:
+            # Support both exact match and partial IP search (e.g., "192.168.1" finds all in subnet)
+            filter_conditions.append(
+                Customer.static_ip_assigned.like(f"{params.static_ip_assigned}%")
+            )
+        if params.ipv6_prefix:
+            # Support prefix search (e.g., "2001:db8" finds all matching prefixes)
+            filter_conditions.append(Customer.ipv6_prefix.like(f"{params.ipv6_prefix}%"))
+        if params.current_bandwidth_profile:
+            filter_conditions.append(
+                Customer.current_bandwidth_profile == params.current_bandwidth_profile
+            )
+        if params.last_mile_technology:
+            filter_conditions.append(Customer.last_mile_technology == params.last_mile_technology)
+        if params.device_serial:
+            # Search within assigned_devices JSON for device serial numbers
+            # This searches for the serial in ONU, CPE, router IDs, MAC addresses, etc.
+            dialect_name = self.session.bind.dialect.name if self.session.bind else "sqlite"
+
+            if dialect_name == "postgresql":
+                # Use PostgreSQL's JSONB text search
+                from sqlalchemy.dialects.postgresql import JSONB
+
+                filter_conditions.append(
+                    func.cast(Customer.assigned_devices, JSONB).op("@>")(
+                        func.cast({"onu_serial": params.device_serial}, JSONB)
+                    )
+                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
+                        func.cast({"router_id": params.device_serial}, JSONB)
+                    )
+                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
+                        func.cast({"cpe_mac": params.device_serial}, JSONB)
+                    )
+                    # Also do a text search for any serial number in the JSON
+                    | func.cast(Customer.assigned_devices, sa.Text).like(
+                        f"%{params.device_serial}%"
+                    )
+                )
+            else:
+                # For SQLite, use LIKE on the JSON text representation
+                filter_conditions.append(
+                    func.cast(Customer.assigned_devices, sa.String).like(
+                        f"%{params.device_serial}%"
+                    )
+                )
 
         # Apply all filters at once
         if filter_conditions:
             query = query.where(and_(*filter_conditions))
 
-        # Count total results
-        count_query = select(func.count(Customer.id)).select_from(query.subquery())
+        # Count total results before pagination
+        count_query = select(func.count()).select_from(query.subquery())
         count_result: Result[tuple[int]] = await self.session.execute(count_query)
         total = count_result.scalar_one()
 
-        # Add pagination and ordering using operator
-        query = query.order_by(Customer.created_at.desc()).limit(limit).offset(offset)
+        # Dynamic sorting
+        sort_column_map = {
+            "created_at": Customer.created_at,
+            "updated_at": Customer.updated_at,
+            "first_name": Customer.first_name,
+            "last_name": Customer.last_name,
+            "email": Customer.email,
+            "company_name": Customer.company_name,
+            "customer_number": Customer.customer_number,
+            "status": Customer.status,
+            "tier": Customer.tier,
+            "lifetime_value": Customer.lifetime_value,
+            "total_purchases": Customer.total_purchases,
+            "last_purchase_date": Customer.last_purchase_date,
+            "acquisition_date": Customer.acquisition_date,
+            # Network parameters
+            "static_ip_assigned": Customer.static_ip_assigned,
+            "ipv6_prefix": Customer.ipv6_prefix,
+            "current_bandwidth_profile": Customer.current_bandwidth_profile,
+            "last_mile_technology": Customer.last_mile_technology,
+            "installation_date": Customer.installation_date,
+        }
+
+        sort_column = sort_column_map.get(params.sort_by, Customer.created_at)
+
+        if params.sort_order == "asc":
+            query = query.order_by(sort_column.asc())
+        else:
+            query = query.order_by(sort_column.desc())
+
+        # Add pagination
+        query = query.limit(limit).offset(offset)
 
         result: Result[tuple[Customer]] = await self.session.execute(query)
         customers = list(result.scalars().all())
@@ -484,6 +634,11 @@ class CustomerService:
         # Verify customer exists
         customer = await self.get_customer(customer_id)
         if not customer:
+            logger.warning(
+                "Customer not found when adding activity",
+                customer_id=str(customer_id),
+                tenant_id=tenant_id,
+            )
             raise ValueError(f"Customer not found: {customer_id}")
 
         # Convert performed_by to UUID if it's a string
@@ -503,12 +658,13 @@ class CustomerService:
             customer_id=customer_id,
             tenant_id=tenant_id,
             performed_by=performed_by_uuid,
-            **data.model_dump(),
+            **data.model_dump(exclude={"metadata"}),
         )
+        # Map metadata to metadata_ for ORM compatibility
+        activity.metadata_ = data.metadata
 
         self.session.add(activity)
         await self.session.commit()
-        await self.session.refresh(activity)
 
         return activity
 
@@ -518,25 +674,77 @@ class CustomerService:
         activity_type: ActivityType | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[CustomerActivity]:
+    ) -> list[dict[str, Any]]:
         """Get customer activities using standard queries."""
         customer_id = validate_uuid(customer_id, "customer_id")
         tenant_id = self._resolve_tenant_id()
 
-        query = select(CustomerActivity).where(
-            and_(
-                CustomerActivity.customer_id == customer_id,
-                CustomerActivity.tenant_id == tenant_id,
-            )
+        stmt = text(
+            """
+            SELECT
+                id,
+                customer_id,
+                activity_type,
+                title,
+                description,
+                metadata,
+                performed_by,
+                ip_address,
+                user_agent,
+                created_at
+            FROM customer_activities
+            WHERE customer_id = :customer_id
+              AND tenant_id = :tenant_id
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+            """
         )
 
-        if activity_type:
-            query = query.where(CustomerActivity.activity_type == activity_type)
+        params = {
+            "customer_id": str(customer_id),
+            "tenant_id": tenant_id,
+            "limit": limit,
+            "offset": offset,
+        }
 
-        query = query.order_by(CustomerActivity.created_at.desc()).limit(limit).offset(offset)
+        result = await self.session.execute(stmt, params)
+        rows = result.mappings().all()
 
-        result = await self.session.execute(query)
-        return list(result.scalars().all())
+        activities: list[dict[str, Any]] = []
+        def _normalize_uuid(value: Any) -> str | None:
+            """Normalize UUID to standard string format with hyphens."""
+            if isinstance(value, str):
+                # If it's already a valid UUID string (with or without hyphens), ensure proper format
+                cleaned = value.replace("-", "")
+                if len(cleaned) == 32:
+                    # Format as standard UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    return f"{cleaned[0:8]}-{cleaned[8:12]}-{cleaned[12:16]}-{cleaned[16:20]}-{cleaned[20:32]}"
+                return value
+            if isinstance(value, (bytes, bytearray)):
+                # Convert bytes to hex and format as UUID
+                hex_str = value.hex()
+                return f"{hex_str[0:8]}-{hex_str[8:12]}-{hex_str[12:16]}-{hex_str[16:20]}-{hex_str[20:32]}"
+            return None
+
+        for row in rows:
+            data = dict(row)
+            data["id"] = _normalize_uuid(data.get("id")) or ""
+            data["customer_id"] = _normalize_uuid(data.get("customer_id")) or ""
+            data["performed_by"] = _normalize_uuid(data.get("performed_by"))
+            activity_type = data.get("activity_type")
+            if isinstance(activity_type, str):
+                data["activity_type"] = activity_type.lower()
+            metadata_value = data.get("metadata")
+            if isinstance(metadata_value, str):
+                try:
+                    data["metadata"] = json.loads(metadata_value)
+                except json.JSONDecodeError:
+                    data["metadata"] = {}
+            elif metadata_value is None:
+                data["metadata"] = {}
+            activities.append(data)
+
+        return activities
 
     # NOTE MANAGEMENT (core functionality)
 
@@ -585,7 +793,6 @@ class CustomerService:
         self.session.add(activity)
 
         await self.session.commit()
-        await self.session.refresh(note)
 
         return note
 

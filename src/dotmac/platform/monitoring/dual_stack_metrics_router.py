@@ -13,7 +13,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.platform_admin import is_platform_admin
 from dotmac.platform.db import get_async_session
 from dotmac.platform.monitoring.dual_stack_metrics import (
     AlertEvaluator,
@@ -70,11 +72,36 @@ class SummaryResponse(BaseModel):
     health_status: str
 
 
+def _resolve_tenant_scope(current_user: UserInfo, requested_tenant: str | None) -> str | None:
+    """
+    Determine the effective tenant scope for a request.
+
+    Non-admin users are restricted to their own tenant context.
+    Platform administrators may inspect arbitrary tenants.
+    """
+    if is_platform_admin(current_user):
+        return requested_tenant
+
+    if not current_user.tenant_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Tenant context is required for dual-stack metrics",
+        )
+
+    if requested_tenant and requested_tenant != current_user.tenant_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Insufficient permissions to query another tenant's metrics",
+        )
+
+    return current_user.tenant_id
+
+
 @router.get("/current", response_model=MetricsResponse)
 async def get_current_metrics(
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: Any = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Get current dual-stack metrics.
@@ -83,11 +110,14 @@ async def get_current_metrics(
     performance, and migration progress.
     """
     try:
-        collector = DualStackMetricsCollector(session=session, tenant_id=tenant_id)
+        effective_tenant = _resolve_tenant_scope(current_user, tenant_id)
+        collector = DualStackMetricsCollector(session=session, tenant_id=effective_tenant)
         metrics = await collector.collect_all_metrics()
 
         return metrics.to_dict()
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to collect metrics: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to collect metrics: {str(e)}")
@@ -97,7 +127,7 @@ async def get_current_metrics(
 async def get_metrics_summary(
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: Any = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Get high-level metrics summary.
@@ -105,7 +135,8 @@ async def get_metrics_summary(
     Returns a condensed view of key metrics for dashboard overview.
     """
     try:
-        collector = DualStackMetricsCollector(session=session, tenant_id=tenant_id)
+        effective_tenant = _resolve_tenant_scope(current_user, tenant_id)
+        collector = DualStackMetricsCollector(session=session, tenant_id=effective_tenant)
         metrics = await collector.collect_all_metrics()
 
         # Evaluate alerts
@@ -134,6 +165,8 @@ async def get_metrics_summary(
             "health_status": health_status,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get metrics summary: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get metrics summary: {str(e)}")
@@ -143,7 +176,7 @@ async def get_metrics_summary(
 async def get_alerts(
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: Any = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Evaluate metrics and return active alerts.
@@ -151,7 +184,8 @@ async def get_alerts(
     Returns alerts based on predefined thresholds for various metrics.
     """
     try:
-        collector = DualStackMetricsCollector(session=session, tenant_id=tenant_id)
+        effective_tenant = _resolve_tenant_scope(current_user, tenant_id)
+        collector = DualStackMetricsCollector(session=session, tenant_id=effective_tenant)
         metrics = await collector.collect_all_metrics()
 
         evaluator = AlertEvaluator()
@@ -167,6 +201,8 @@ async def get_alerts(
             "warning_count": warning_count,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to evaluate alerts: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to evaluate alerts: {str(e)}")
@@ -178,7 +214,7 @@ async def get_metric_trend(
     period: MetricPeriod = Query(MetricPeriod.LAST_DAY, description="Time period"),
     tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     session: AsyncSession = Depends(get_async_session),
-    current_user: Any = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Get trend data for a specific metric over time.
@@ -186,9 +222,11 @@ async def get_metric_trend(
     Useful for visualizing metric changes over different time periods.
     """
     try:
+        effective_tenant = _resolve_tenant_scope(current_user, tenant_id)
+
         aggregator = MetricsAggregator(session=session)
         data_points = await aggregator.get_trend_data(
-            metric_name=metric_name, period=period, tenant_id=tenant_id
+            metric_name=metric_name, period=period, tenant_id=effective_tenant
         )
 
         return {
@@ -197,6 +235,8 @@ async def get_metric_trend(
             "data_points": data_points,
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to get trend data: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to get trend data: {str(e)}")

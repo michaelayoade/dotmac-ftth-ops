@@ -1,8 +1,9 @@
+
 """
 Direct router function tests for better coverage.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -10,6 +11,8 @@ from fastapi import HTTPException
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.router import (
+
+
     BulkEmailRequest,
     EmailRequest,
     QuickRenderRequest,
@@ -33,8 +36,14 @@ from dotmac.platform.communications.router import (
 )
 from dotmac.platform.communications.template_service import RenderedTemplate, TemplateData
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+pytestmark = pytest.mark.integration
+
+pytestmark = pytest.mark.asyncio
 
 class TestEmailEndpointsDirect:
     """Direct tests of email endpoints."""
@@ -46,7 +55,9 @@ class TestEmailEndpointsDirect:
         )
 
         with patch("dotmac.platform.communications.router.get_email_service") as mock_get_service:
-            with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+            with patch(
+                "dotmac.platform.communications.router.get_async_session_context"
+            ) as mock_get_db:
                 # Mock email service
                 mock_service = AsyncMock()
                 mock_service.send_email.return_value = EmailResponse(
@@ -117,7 +128,7 @@ class TestTemplateEndpointsDirect:
                 variables=["name"],
             )
             template.id = "tpl_123"
-            template.created_at = datetime.now(UTC)
+            template.created_at = datetime.now(timezone.utc)
             mock_create.return_value = template
 
             result = await create_template_endpoint(request)
@@ -148,7 +159,7 @@ class TestTemplateEndpointsDirect:
                 name="test", subject_template="Subject", text_template="Body", variables=[]
             )
             template.id = "tpl_1"
-            template.created_at = datetime.now(UTC)
+            template.created_at = datetime.now(timezone.utc)
             mock_service.list_templates.return_value = [template]
             mock_get_service.return_value = mock_service
 
@@ -167,7 +178,7 @@ class TestTemplateEndpointsDirect:
                 name="test", subject_template="Subject", text_template="Body", variables=[]
             )
             template.id = "tpl_abc"
-            template.created_at = datetime.now(UTC)
+            template.created_at = datetime.now(timezone.utc)
             mock_service.get_template.return_value = template
             mock_get_service.return_value = mock_service
 
@@ -395,7 +406,9 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_communication_stats_from_db(self):
         """Test getting stats from database."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch(
+            "dotmac.platform.communications.router.get_async_session_context"
+        ) as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -424,7 +437,9 @@ class TestStatsActivityEndpointsDirect:
         mock_user = Mock()
         mock_user.tenant_id = "tenant_123"
 
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch(
+            "dotmac.platform.communications.router.get_async_session_context"
+        ) as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -449,7 +464,9 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_recent_activity_from_db(self):
         """Test getting activity from database."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch(
+            "dotmac.platform.communications.router.get_async_session_context"
+        ) as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:
@@ -464,7 +481,7 @@ class TestStatsActivityEndpointsDirect:
                 mock_log.recipient = "user@example.com"
                 mock_log.subject = "Test"
                 mock_log.status = Mock(value="sent")
-                mock_log.created_at = datetime.now(UTC)
+                mock_log.created_at = datetime.now(timezone.utc)
                 mock_log.metadata_ = {}
 
                 mock_metrics = AsyncMock()
@@ -481,7 +498,9 @@ class TestStatsActivityEndpointsDirect:
 
     async def test_get_recent_activity_with_filters(self):
         """Test getting activity with filters."""
-        with patch("dotmac.platform.communications.router.get_async_db") as mock_get_db:
+        with patch(
+            "dotmac.platform.communications.router.get_async_session_context"
+        ) as mock_get_db:
             with patch(
                 "dotmac.platform.communications.router.get_metrics_service"
             ) as mock_get_metrics:

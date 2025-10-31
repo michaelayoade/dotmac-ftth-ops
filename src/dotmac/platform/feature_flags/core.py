@@ -7,8 +7,10 @@ Supports simple on/off flags, context-based evaluation, and A/B testing.
 
 import inspect
 import json
+import threading
 import time
 from collections.abc import Callable
+from hashlib import sha256
 from typing import Any, TypeVar, cast
 
 import redis.asyncio as redis
@@ -112,12 +114,55 @@ async def get_redis_client() -> RedisClientType | None:
     return _redis_client
 
 
-async def set_flag(name: str, enabled: bool, context: dict[str, Any] | None = None) -> None:
+def _normalize_flag_data(raw: dict[str, Any]) -> dict[str, Any]:
+    """Ensure flag data has expected keys and migrate legacy metadata."""
+    normalized_context = dict(raw.get("context") or {})
+    normalized_metadata = dict(raw.get("metadata") or {})
+
+    legacy_metadata_keys = {
+        "_description": "description",
+        "_created_at": "created_at",
+        "_created_by": "created_by",
+        "_updated_at": "updated_at",
+        "_updated_by": "updated_by",
+        "_bulk_updated_at": "bulk_updated_at",
+    }
+
+    for legacy_key, target_key in legacy_metadata_keys.items():
+        if legacy_key in normalized_context and target_key not in normalized_metadata:
+            normalized_metadata[target_key] = normalized_context.pop(legacy_key)
+
+    return {
+        "enabled": bool(raw.get("enabled", False)),
+        "context": normalized_context,
+        "metadata": normalized_metadata,
+        "updated_at": raw.get("updated_at", int(time.time())),
+    }
+
+
+def _cache_flag(name: str, raw_flag: dict[str, Any]) -> dict[str, Any]:
+    """Store normalized flag data in cache and return it."""
+    normalized = _normalize_flag_data(raw_flag)
+    _flag_cache[name] = normalized
+    return normalized
+
+
+async def set_flag(
+    name: str,
+    enabled: bool,
+    context: dict[str, Any] | None = None,
+    metadata: dict[str, Any] | None = None,
+) -> None:
     """Set feature flag value."""
-    flag_data = {"enabled": enabled, "context": context or {}, "updated_at": int(time.time())}
+    flag_data = {
+        "enabled": enabled,
+        "context": dict(context or {}),
+        "metadata": dict(metadata or {}),
+        "updated_at": int(time.time()),
+    }
 
     # Always update cache
-    _flag_cache[name] = flag_data
+    _cache_flag(name, flag_data)
 
     # Try to persist to Redis  # type: ignore[misc] if available
     client = await get_redis_client()
@@ -158,8 +203,8 @@ async def is_enabled(name: str, context: dict[str, Any] | None = None) -> bool:
             try:
                 flag_json = await client.hget("feature_flags", name)
                 if flag_json:
-                    flag_data = json.loads(flag_json)
-                    _flag_cache[name] = flag_data
+                    raw_flag_data = json.loads(flag_json)
+                    flag_data = _cache_flag(name, raw_flag_data)
             except Exception as e:
                 logger.warning(
                     "Failed to get flag from Redis  # type: ignore[misc], checking cache only",
@@ -175,10 +220,12 @@ async def is_enabled(name: str, context: dict[str, Any] | None = None) -> bool:
     enabled: bool = flag_data.get("enabled", False)
 
     # Simple context matching (can be extended)
-    flag_context: dict[str, Any] = flag_data.get("context", {})
+    flag_context: dict[str, Any] = dict(flag_data.get("context", {}))
     if context and flag_context:
         # Check if all flag context conditions match
         for key, value in flag_context.items():
+            if key.startswith("_"):
+                continue
             if context.get(key) != value:
                 enabled = False
                 break
@@ -194,8 +241,9 @@ async def get_variant(name: str, context: dict[str, Any] | None = None) -> str:
 
     # Simple A/B test based on user_id hash
     if context and "user_id" in context:
-        user_hash = hash(f"{name}:{context['user_id']}") % 100
-        return "variant_a" if user_hash < 50 else "variant_b"
+        digest = sha256(f"{name}:{context['user_id']}".encode()).digest()
+        bucket = int.from_bytes(digest[:8], "big") % 100
+        return "variant_a" if bucket < 50 else "variant_b"
 
     return "control"
 
@@ -206,7 +254,7 @@ async def list_flags() -> dict[str, dict[str, Any]]:
 
     # Start with flags from cache
     for name, flag_data in _flag_cache.items():
-        result[name] = flag_data.copy()
+        result[name] = _normalize_flag_data(flag_data)
 
     # Try to get additional flags from Redis  # type: ignore[misc] if available
     client = await get_redis_client()
@@ -221,10 +269,9 @@ async def list_flags() -> dict[str, dict[str, Any]]:
                     flag_json = flag_json.decode()
 
                 try:
-                    flag_data = json.loads(flag_json)
+                    raw_flag = json.loads(flag_json)
+                    flag_data = _cache_flag(name, raw_flag)
                     result[name] = flag_data
-                    # Update cache with fresh data from Redis  # type: ignore[misc]
-                    _flag_cache[name] = flag_data
                 except json.JSONDecodeError:
                     logger.warning("Invalid flag data in Redis  # type: ignore[misc]", flag=name)
         except Exception as e:
@@ -327,8 +374,8 @@ async def sync_from_redis() -> int:
                 flag_json = flag_json.decode()
 
             try:
-                flag_data = json.loads(flag_json)
-                _flag_cache[name] = flag_data
+                raw_flag = json.loads(flag_json)
+                _cache_flag(name, raw_flag)
                 synced_count += 1
             except json.JSONDecodeError:
                 logger.warning("Skipped invalid flag data during sync", flag=name)
@@ -371,9 +418,41 @@ def feature_flag(flag_name: str, default: bool = False) -> Callable[[F], F]:
                 # Extract context from kwargs if available
                 context = kwargs.pop("_feature_context", None)
 
-                # Run async check in sync context
-                loop = asyncio.get_event_loop()
-                enabled = loop.run_until_complete(is_enabled(flag_name, context))
+                async def evaluate() -> bool:
+                    return await is_enabled(flag_name, context)
+
+                try:
+                    loop = asyncio.get_event_loop()
+                except RuntimeError:
+                    loop = None
+
+                try:
+                    running_loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    running_loop = None
+
+                if running_loop and running_loop.is_running():
+                    result_container: dict[str, Any] = {}
+                    exception_container: dict[str, BaseException] = {}
+
+                    def runner() -> None:
+                        try:
+                            result_container["value"] = asyncio.run(evaluate())
+                        except BaseException as exc:  # pragma: no cover - defensive
+                            exception_container["error"] = exc
+
+                    thread = threading.Thread(target=runner)
+                    thread.start()
+                    thread.join()
+
+                    if "error" in exception_container:
+                        raise exception_container["error"]
+
+                    enabled = bool(result_container.get("value", False))
+                elif loop:
+                    enabled = loop.run_until_complete(evaluate())
+                else:
+                    enabled = asyncio.run(evaluate())
 
                 if enabled or default:
                     return func(*args, **kwargs)

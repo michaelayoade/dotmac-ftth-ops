@@ -5,6 +5,8 @@ These handlers use domain aggregates instead of services,
 enabling proper business rule enforcement and domain event publishing.
 """
 
+from decimal import Decimal
+
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -67,19 +69,21 @@ class AggregateInvoiceCommandHandler:
         )
 
         # Convert line items to domain value objects
-        line_items = [
-            InvoiceLineItem(
-                description=item["description"],
-                quantity=item["quantity"],
-                unit_price=Money(amount=item["unit_price"], currency=command.currency),
-                total_price=Money(
-                    amount=item["quantity"] * item["unit_price"],
-                    currency=command.currency,
-                ),
-                product_id=item.get("product_id"),
+        line_items = []
+        for item in command.line_items:
+            quantity = Decimal(str(item["quantity"]))
+            unit_price_major = Decimal(str(item["unit_price"])).quantize(Decimal("0.01"))
+            total_price_major = (quantity * unit_price_major).quantize(Decimal("0.01"))
+
+            line_items.append(
+                InvoiceLineItem(
+                    description=item["description"],
+                    quantity=int(quantity),
+                    unit_price=Money(amount=float(unit_price_major), currency=command.currency),
+                    total_price=Money(amount=float(total_price_major), currency=command.currency),
+                    product_id=item.get("product_id"),
+                )
             )
-            for item in command.line_items
-        ]
 
         # Create invoice aggregate - business logic encapsulated
         invoice = Invoice.create(

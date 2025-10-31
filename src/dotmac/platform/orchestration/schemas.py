@@ -8,7 +8,14 @@ Pydantic schemas for API requests and responses.
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import (
+    AliasChoices,
+    BaseModel,
+    Field,
+    FieldValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 from .models import WorkflowStatus, WorkflowStepStatus, WorkflowType
 
@@ -20,27 +27,34 @@ from .models import WorkflowStatus, WorkflowStepStatus, WorkflowType
 class ProvisionSubscriberRequest(BaseModel):
     """Request schema for subscriber provisioning orchestration."""
 
-    # Customer information
+    # Core identifiers
     customer_id: str | None = Field(None, description="Existing customer ID")
-    first_name: str = Field(..., min_length=1, description="Customer first name")
-    last_name: str = Field(..., min_length=1, description="Customer last name")
-    email: str = Field(..., description="Customer email address")
-    phone: str = Field(..., description="Primary phone number")
-    secondary_phone: str | None = Field(None, description="Secondary phone number")
+    plan_id: str | None = Field(None, description="Billing plan identifier")
+    service_plan_id: str | None = Field(None, description="Legacy service plan identifier")
+    subscriber_id: str | None = Field(None, description="Existing subscriber being updated")
+
+    # Contact / login details
+    first_name: str | None = Field(None, description="Customer first name")
+    last_name: str | None = Field(None, description="Customer last name")
+    email: str | None = Field(None, description="Customer email address")
+    phone: str | None = Field(None, description="Primary phone number")
+    username: str | None = Field(None, description="Portal or RADIUS username")
+    password: str | None = Field(None, description="Portal or RADIUS password")
 
     # Service address
     service_address: str = Field(..., description="Service installation address")
-    service_city: str = Field(..., description="City")
-    service_state: str = Field(..., description="State/Province")
-    service_postal_code: str = Field(..., description="Postal/ZIP code")
-    service_country: str = Field(default="USA", description="Country")
+    service_city: str | None = Field(None, description="City for installation")
+    service_state: str | None = Field(None, description="State/Province for installation")
+    service_postal_code: str | None = Field(None, description="Postal/ZIP code")
+    service_country: str | None = Field("USA", description="Country")
 
-    # Service plan
-    service_plan_id: str = Field(..., description="Service plan/package ID")
-    bandwidth_mbps: int = Field(..., gt=0, description="Bandwidth allocation in Mbps")
-    connection_type: str = Field(..., description="Connection type: ftth, fttb, wireless, hybrid")
+    # Service plan characteristics
+    bandwidth_mbps: int | None = Field(None, gt=0, description="Bandwidth allocation in Mbps")
+    connection_type: str | None = Field(
+        None, description="Connection type: ftth, fttb, wireless, hybrid"
+    )
 
-    # Network equipment
+    # Equipment details
     onu_serial: str | None = Field(None, description="ONU/ONT serial number")
     onu_mac: str | None = Field(None, description="ONU/ONT MAC address")
     cpe_mac: str | None = Field(None, description="CPE/Router MAC address")
@@ -50,66 +64,128 @@ class ProvisionSubscriberRequest(BaseModel):
     ipv4_address: str | None = Field(None, description="Static IPv4 address")
     ipv6_prefix: str | None = Field(None, description="IPv6 prefix")
 
-    # Installation
+    # Scheduling
     installation_date: datetime | None = Field(None, description="Scheduled installation date")
     installation_notes: str | None = Field(None, description="Installation notes")
 
     # Options
-    auto_activate: bool = Field(default=True, description="Automatically activate service after provisioning")
-    send_welcome_email: bool = Field(default=True, description="Send welcome email to customer")
-    create_radius_account: bool = Field(default=True, description="Create RADIUS authentication")
-    allocate_ip_from_netbox: bool = Field(default=True, description="Allocate IP from NetBox")
-    configure_voltha: bool = Field(default=True, description="Configure ONU in VOLTHA")
-    configure_genieacs: bool = Field(default=True, description="Configure CPE in GenieACS")
+    auto_activate: bool = Field(
+        True, description="Automatically activate service after provisioning"
+    )
+    send_welcome_email: bool = Field(True, description="Send welcome email to customer")
+    create_radius_account: bool = Field(True, description="Create RADIUS authentication")
+    allocate_ip_from_netbox: bool = Field(True, description="Allocate IP from NetBox")
+    configure_voltha: bool = Field(True, description="Configure ONU in VOLTHA")
+    configure_genieacs: bool = Field(True, description="Configure CPE in GenieACS")
 
     # Metadata
     notes: str | None = Field(None, description="Additional notes")
-    tags: dict[str, Any] | None = Field(default_factory=dict, description="Custom tags")
+    tags: dict[str, Any] = Field(default_factory=dict, description="Custom tags")
 
     @field_validator("email")
     @classmethod
-    def validate_email(cls, v: str) -> str:
-        """Validate email format."""
-        if "@" not in v:
+    def validate_email(cls, value: str | None) -> str | None:
+        """Validate basic email format when provided."""
+        if value is None:
+            return value
+        if "@" not in value:
             raise ValueError("Invalid email address")
-        return v.lower()
+        return value.lower()
 
     @field_validator("connection_type")
     @classmethod
-    def validate_connection_type(cls, v: str) -> str:
-        """Validate connection type."""
-        allowed = ["ftth", "fttb", "wireless", "hybrid"]
-        if v.lower() not in allowed:
-            raise ValueError(f"Connection type must be one of: {', '.join(allowed)}")
-        return v.lower()
+    def validate_connection_type(cls, value: str | None) -> str | None:
+        """Ensure connection type matches supported values when provided."""
+        if value is None:
+            return value
+        allowed = {"ftth", "fttb", "wireless", "hybrid"}
+        normalized = value.lower()
+        if normalized not in allowed:
+            raise ValueError(f"Connection type must be one of: {', '.join(sorted(allowed))}")
+        return normalized
+
+    @model_validator(mode="after")
+    def ensure_minimum_identifiers(self) -> "ProvisionSubscriberRequest":
+        """Ensure the request contains at least one identifier for the subscriber."""
+        if not any([self.email, self.username, self.customer_id]):
+            raise ValueError(
+                "Provisioning request must include at least email, username, or customer_id"
+            )
+        return self
+
+    @field_validator("first_name", "last_name")
+    @classmethod
+    def validate_non_empty(cls, value: str | None, info: FieldValidationInfo) -> str | None:
+        """Ensure optional name fields are non-empty when provided."""
+        if value is None:
+            return value
+        if not value.strip():
+            raise ValueError(f"{info.field_name.replace('_', ' ').title()} cannot be empty")
+        return value
 
 
 class DeprovisionSubscriberRequest(BaseModel):
     """Request schema for subscriber deprovisioning."""
 
-    subscriber_id: str = Field(..., description="Subscriber ID to deprovision")
+    subscriber_id: str | None = Field(None, description="Subscriber ID to deprovision")
+    customer_id: str | None = Field(None, description="Customer ID to deprovision")
     reason: str = Field(..., description="Reason for deprovisioning")
-    terminate_immediately: bool = Field(default=False, description="Terminate immediately or at end of billing cycle")
+    terminate_immediately: bool = Field(
+        False, description="Terminate immediately or at end of billing cycle"
+    )
+    termination_date: datetime | None = Field(None, description="Requested termination date")
+    force: bool = Field(False, description="Force deprovision even if clean-up fails")
     refund_amount: float | None = Field(None, ge=0, description="Refund amount if applicable")
     notes: str | None = Field(None, description="Additional notes")
+
+    @model_validator(mode="after")
+    def ensure_identifier(self) -> "DeprovisionSubscriberRequest":
+        if not self.subscriber_id and not self.customer_id:
+            raise ValueError("Deprovision request requires subscriber_id or customer_id")
+        return self
 
 
 class ActivateServiceRequest(BaseModel):
     """Request schema for service activation."""
 
-    subscriber_id: str = Field(..., description="Subscriber ID")
+    subscriber_id: str | None = Field(None, description="Subscriber ID")
+    customer_id: str | None = Field(None, description="Customer ID")
     service_id: str | None = Field(None, description="Specific service ID to activate")
+    service_plan: str | None = Field(None, description="Service plan identifier")
     activation_date: datetime | None = Field(None, description="Scheduled activation date")
-    send_notification: bool = Field(default=True, description="Send activation notification")
+    effective_date: datetime | None = Field(None, description="Alias for activation date")
+    send_notification: bool = Field(True, description="Send activation notification")
+
+    @model_validator(mode="after")
+    def ensure_identifier(self) -> "ActivateServiceRequest":
+        if not self.subscriber_id and not self.customer_id:
+            raise ValueError("Activation request requires subscriber_id or customer_id")
+        if self.effective_date and not self.activation_date:
+            self.activation_date = self.effective_date
+        return self
 
 
 class SuspendServiceRequest(BaseModel):
     """Request schema for service suspension."""
 
-    subscriber_id: str = Field(..., description="Subscriber ID")
+    subscriber_id: str | None = Field(None, description="Subscriber ID")
+    customer_id: str | None = Field(None, description="Customer ID")
     reason: str = Field(..., description="Reason for suspension")
     suspend_until: datetime | None = Field(None, description="Auto-resume date")
-    send_notification: bool = Field(default=True, description="Send suspension notification")
+    send_notification: bool = Field(True, description="Send suspension notification")
+    disconnect_sessions: bool = Field(
+        False,
+        description="Disconnect active subscriber sessions",
+        validation_alias=AliasChoices("disconnect_sessions", "disconnect_active_sessions"),
+    )
+
+    @model_validator(mode="after")
+    def ensure_identifier(self) -> "SuspendServiceRequest":
+        if not self.subscriber_id and not self.customer_id:
+            raise ValueError("Suspend service request requires subscriber_id or customer_id")
+        return self
+
+    model_config = {"populate_by_name": True}
 
 
 # ============================================================================
@@ -120,10 +196,10 @@ class SuspendServiceRequest(BaseModel):
 class WorkflowStepResponse(BaseModel):
     """Response schema for workflow step."""
 
-    step_id: str
+    step_id: str | None = None
     step_name: str
-    step_order: int
-    target_system: str
+    sequence_number: int
+    target_system: str | None = None
     status: WorkflowStepStatus
     started_at: datetime | None = None
     completed_at: datetime | None = None
@@ -133,6 +209,11 @@ class WorkflowStepResponse(BaseModel):
     output_data: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
+
+    @property
+    def step_order(self) -> int:
+        """Backward-compatible accessor."""
+        return self.sequence_number
 
 
 class WorkflowResponse(BaseModel):
@@ -145,34 +226,43 @@ class WorkflowResponse(BaseModel):
     completed_at: datetime | None = None
     failed_at: datetime | None = None
     error_message: str | None = None
-    retry_count: int = 0
-    steps: list[WorkflowStepResponse] = []
+    retry_count: int | None = 0
+    steps: list[WorkflowStepResponse] = Field(default_factory=list)
+    context: dict[str, Any] | None = None
+    output_data: dict[str, Any] | None = None
 
     model_config = {"from_attributes": True}
+
+    @model_validator(mode="after")
+    def _normalize_retry_count(self) -> "WorkflowResponse":
+        if self.retry_count is None:
+            self.retry_count = 0
+        return self
 
 
 class ProvisionSubscriberResponse(BaseModel):
     """Response schema for subscriber provisioning."""
 
     workflow_id: str = Field(..., description="Orchestration workflow ID")
-    subscriber_id: str = Field(..., description="Created subscriber ID")
-    customer_id: str = Field(..., description="Associated customer ID")
     status: WorkflowStatus = Field(..., description="Provisioning status")
+    subscriber_id: str | None = Field(None, description="Created subscriber ID")
+    customer_id: str | None = Field(None, description="Associated customer ID")
 
     # Created resources
     radius_username: str | None = Field(None, description="RADIUS username")
     ipv4_address: str | None = Field(None, description="Assigned IPv4 address")
+    ipv6_prefix: str | None = Field(None, description="Assigned IPv6 prefix")
     vlan_id: int | None = Field(None, description="Assigned VLAN ID")
     onu_id: str | None = Field(None, description="VOLTHA ONU ID")
     cpe_id: str | None = Field(None, description="GenieACS CPE ID")
     service_id: str | None = Field(None, description="Billing service ID")
 
     # Workflow details
-    steps_completed: int = Field(..., description="Number of completed steps")
-    total_steps: int = Field(..., description="Total number of steps")
+    steps_completed: int | None = Field(None, description="Number of completed steps")
+    total_steps: int | None = Field(None, description="Total number of steps")
     error_message: str | None = Field(None, description="Error message if failed")
 
-    created_at: datetime = Field(..., description="Workflow creation time")
+    created_at: datetime | None = Field(None, description="Workflow creation time")
     completed_at: datetime | None = Field(None, description="Workflow completion time")
 
 
@@ -201,6 +291,30 @@ class WorkflowStatsResponse(BaseModel):
 
     by_type: dict[str, int]
     by_status: dict[str, int]
+
+    @property
+    def total_count(self) -> int:
+        return self.total_workflows
+
+    @property
+    def pending_count(self) -> int:
+        return self.pending_workflows
+
+    @property
+    def running_count(self) -> int:
+        return self.running_workflows
+
+    @property
+    def completed_count(self) -> int:
+        return self.completed_workflows
+
+    @property
+    def failed_count(self) -> int:
+        return self.failed_workflows
+
+    @property
+    def rolled_back_count(self) -> int:
+        return self.rolled_back_workflows
 
 
 # ============================================================================

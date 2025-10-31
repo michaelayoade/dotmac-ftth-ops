@@ -312,12 +312,8 @@ class SLAInstanceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     service_id: UUID | None = None
     service_name: str | None = None
     subscription_id: str | None = None
-    start_date: datetime = Field(
-        ..., validation_alias=AliasChoices("start_date", "period_start")
-    )
-    end_date: datetime | None = Field(
-        None, validation_alias=AliasChoices("end_date", "period_end")
-    )
+    start_date: datetime = Field(..., validation_alias=AliasChoices("start_date", "period_start"))
+    end_date: datetime | None = Field(None, validation_alias=AliasChoices("end_date", "period_end"))
 
 
 class SLAInstanceResponse(BaseModel):  # BaseModel resolves to Any in isolation

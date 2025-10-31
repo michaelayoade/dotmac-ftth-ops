@@ -1,14 +1,17 @@
+
 """
 Tests for payment method management functionality.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import MagicMock
 
 import pytest
 
 from dotmac.platform.billing.core.entities import PaymentMethodEntity
 from dotmac.platform.billing.core.enums import (
+
+
     PaymentMethodStatus,
     PaymentMethodType,
 )
@@ -22,9 +25,13 @@ from tests.billing.payments.conftest import (
     setup_mock_refresh,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPaymentMethodManagement:
     """Test payment method management functionality"""
 
@@ -179,7 +186,7 @@ class TestPaymentMethodManagement:
     ):
         """Test listing payment methods including inactive ones"""
         # Setup
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         inactive_method = MagicMock(spec=PaymentMethodEntity)
         inactive_method.tenant_id = "test-tenant"
         inactive_method.payment_method_id = "pm_inactive"

@@ -13,6 +13,7 @@ from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 
+@pytest.mark.unit
 class TestUserModel:
     """Test User model functionality."""
 
@@ -56,6 +57,7 @@ class TestUserModel:
         assert "mfa_secret" not in user_dict
 
 
+@pytest.mark.unit
 class TestUserService:
     """Test UserService functionality."""
 
@@ -142,6 +144,7 @@ class TestUserService:
             "email": "new@example.com",
             "password": "secure_password123",
             "full_name": "New User",
+            "tenant_id": "tenant-123",
         }
 
         with patch.object(user_service, "_hash_password", return_value="hashed_password"):
@@ -156,14 +159,19 @@ class TestUserService:
     @pytest.mark.asyncio
     async def test_create_user_duplicate_username(self, user_service, mock_user):
         """Test user creation with duplicate username."""
+        from sqlalchemy.exc import IntegrityError
+
         # Mock that user already exists
         user_service.session.execute = AsyncMock(
             return_value=Mock(scalar_one_or_none=Mock(return_value=mock_user))
         )
 
-        with pytest.raises(ValueError, match="Username testuser already exists"):
+        with pytest.raises(IntegrityError, match="Username testuser already exists"):
             await user_service.create_user(
-                username="testuser", email="new@example.com", password="password"
+                username="testuser",
+                email="new@example.com",
+                password="password",
+                tenant_id="tenant-123",
             )
 
     @pytest.mark.asyncio

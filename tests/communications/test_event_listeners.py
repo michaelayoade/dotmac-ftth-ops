@@ -1,10 +1,11 @@
+
 """
 Tests for communications event listeners.
 
 Tests event handlers that react to domain events and send notifications.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from smtplib import SMTPException
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -13,6 +14,8 @@ import pytest
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.event_listeners import (
+
+
     _email_html_message,
     init_communications_event_listeners,
     send_invoice_created_email,
@@ -25,7 +28,6 @@ from dotmac.platform.communications.event_listeners import (
 )
 from dotmac.platform.events.models import Event
 
-pytestmark = pytest.mark.asyncio
 
 
 # ============================================================================
@@ -33,6 +35,11 @@ pytestmark = pytest.mark.asyncio
 # ============================================================================
 
 
+
+
+pytestmark = pytest.mark.asyncio
+
+@pytest.mark.integration
 class TestEmailHtmlMessage:
     """Test the _email_html_message helper function."""
 
@@ -63,6 +70,7 @@ class TestEmailHtmlMessage:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestInvoiceCreatedEmailHandler:
     """Test send_invoice_created_email handler."""
 
@@ -71,7 +79,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_123",
                 "customer_id": "cust_456",
@@ -109,7 +117,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_789",
                 "customer_id": "cust_999",
@@ -141,7 +149,7 @@ class TestInvoiceCreatedEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_fail",
                 "customer_id": "cust_fail",
@@ -161,6 +169,7 @@ class TestInvoiceCreatedEmailHandler:
                 await send_invoice_created_email(event)
 
 
+@pytest.mark.integration
 class TestInvoicePaidEmailHandler:
     """Test send_invoice_paid_email handler."""
 
@@ -169,7 +178,7 @@ class TestInvoicePaidEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.paid",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_paid_123",
                 "customer_id": "cust_123",
@@ -204,7 +213,7 @@ class TestInvoicePaidEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.paid",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_error",
                 "customer_id": "cust_error",
@@ -224,6 +233,7 @@ class TestInvoicePaidEmailHandler:
                 await send_invoice_paid_email(event)
 
 
+@pytest.mark.integration
 class TestInvoiceOverdueReminderHandler:
     """Test send_invoice_overdue_reminder handler."""
 
@@ -232,7 +242,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_overdue_123",
                 "customer_id": "cust_overdue",
@@ -267,7 +277,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_overdue_456",
                 "customer_id": "cust_456",
@@ -299,7 +309,7 @@ class TestInvoiceOverdueReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="invoice.overdue",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "invoice_id": "inv_os_error",
                 "customer_id": "cust_os_error",
@@ -323,6 +333,7 @@ class TestInvoiceOverdueReminderHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestPaymentFailedNotificationHandler:
     """Test send_payment_failed_notification handler."""
 
@@ -331,7 +342,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_failed_123",
                 "invoice_id": "inv_failed_123",
@@ -366,7 +377,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_failed_456",
                 "invoice_id": "inv_failed_456",
@@ -398,7 +409,7 @@ class TestPaymentFailedNotificationHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="payment.failed",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "payment_id": "pay_value_error",
                 "invoice_id": "inv_value_error",
@@ -422,6 +433,7 @@ class TestPaymentFailedNotificationHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestSubscriptionWelcomeEmailHandler:
     """Test send_subscription_welcome_email handler."""
 
@@ -430,7 +442,7 @@ class TestSubscriptionWelcomeEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_123",
                 "customer_id": "cust_123",
@@ -464,7 +476,7 @@ class TestSubscriptionWelcomeEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.created",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_smtp_error",
                 "customer_id": "cust_smtp_error",
@@ -483,6 +495,7 @@ class TestSubscriptionWelcomeEmailHandler:
                 await send_subscription_welcome_email(event)
 
 
+@pytest.mark.integration
 class TestSubscriptionCancelledEmailHandler:
     """Test send_subscription_cancelled_email handler."""
 
@@ -491,7 +504,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_cancelled_123",
                 "customer_id": "cust_cancelled",
@@ -525,7 +538,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_cancelled_456",
                 "customer_id": "cust_cancelled_456",
@@ -557,7 +570,7 @@ class TestSubscriptionCancelledEmailHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.cancelled",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_runtime_error",
                 "customer_id": "cust_runtime_error",
@@ -575,6 +588,7 @@ class TestSubscriptionCancelledEmailHandler:
                 await send_subscription_cancelled_email(event)
 
 
+@pytest.mark.integration
 class TestTrialEndingReminderHandler:
     """Test send_trial_ending_reminder handler."""
 
@@ -583,7 +597,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_trial_123",
                 "customer_id": "cust_trial",
@@ -617,7 +631,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_trial_456",
                 "customer_id": "cust_trial_456",
@@ -648,7 +662,7 @@ class TestTrialEndingReminderHandler:
         event = Event(
             event_id=str(uuid4()),
             event_type="subscription.trial_ending",
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             payload={
                 "subscription_id": "sub_os_error",
                 "customer_id": "cust_os_error",
@@ -671,6 +685,7 @@ class TestTrialEndingReminderHandler:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestInitCommunicationsEventListeners:
     """Test init_communications_event_listeners function."""
 

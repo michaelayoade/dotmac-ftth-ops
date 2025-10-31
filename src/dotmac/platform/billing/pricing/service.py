@@ -4,7 +4,10 @@ Pricing engine service.
 Simple pricing calculations with rule-based discounts - first match wins approach.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -76,7 +79,7 @@ class PricingEngine:
             )
 
         # Validate discount value based on type
-        if rule_data.discount_type == DiscountType.PERCENTAGE and rule_data.discount_value > 100:
+        if rule_data.discount_type == DiscountType.PERCENTAGE:
             max_discount = settings.billing.max_discount_percentage
             if rule_data.discount_value > max_discount:
                 raise InvalidPricingRuleError(f"Percentage discount cannot exceed {max_discount}%")
@@ -385,7 +388,7 @@ class PricingEngine:
         plan = await subscription_service.get_plan(plan_id, tenant_id)
 
         # Use custom price if set, otherwise plan price
-        effective_price = custom_price or plan.price
+        effective_price = plan.price if custom_price is None else custom_price
         plan_currency = getattr(plan, "currency", settings.billing.default_currency).upper()
 
         # Build simple context for subscription

@@ -4,12 +4,13 @@ Integration tests for reconciliation router and service.
 Tests real database interactions and service workflows.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -28,7 +29,7 @@ def mock_audit_service():
     return mock
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_bank_account(async_session: AsyncSession, tenant_id: str):
     """Create a test bank account."""
     from dotmac.platform.billing.bank_accounts.entities import AccountType, CompanyBankAccount
@@ -53,7 +54,7 @@ async def test_bank_account(async_session: AsyncSession, tenant_id: str):
     return bank_account
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_manual_payment(
     async_session: AsyncSession, tenant_id: str, test_bank_account, mock_audit_service
 ):
@@ -66,7 +67,7 @@ async def test_manual_payment(
         customer_id=uuid4(),
         amount=Decimal("100.00"),
         currency="USD",
-        payment_date=datetime.now(UTC),
+        payment_date=datetime.now(timezone.utc),
         payment_method=PaymentMethodType.BANK_TRANSFER,
         payment_reference="REF-001",
         status="verified",
@@ -79,6 +80,7 @@ async def test_manual_payment(
     return payment
 
 
+@pytest.mark.integration
 class TestReconciliationServiceIntegration:
     """Integration tests for ReconciliationService with real database."""
 
@@ -89,8 +91,8 @@ class TestReconciliationServiceIntegration:
         """Test starting a reconciliation session."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
-        period_start = datetime.now(UTC) - timedelta(days=30)
-        period_end = datetime.now(UTC)
+        period_start = datetime.now(timezone.utc) - timedelta(days=30)
+        period_end = datetime.now(timezone.utc)
 
         reconciliation = await service.start_reconciliation_session(
             tenant_id=tenant_id,
@@ -121,8 +123,8 @@ class TestReconciliationServiceIntegration:
         await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(UTC) - timedelta(days=30),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=30),
+            period_end=datetime.now(timezone.utc),
             opening_balance=Decimal("1000.00"),
             statement_balance=Decimal("1100.00"),
             user_id="user-123",
@@ -139,6 +141,7 @@ class TestReconciliationServiceIntegration:
         assert summary["approved_sessions"] == 0
 
 
+@pytest.mark.integration
 class TestReconciliationCircuitBreaker:
     """Integration tests for circuit breaker functionality."""
 
@@ -168,7 +171,7 @@ class TestReconciliationCircuitBreaker:
             customer_id=uuid4(),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="FAIL-001",
             status="failed",
@@ -182,6 +185,7 @@ class TestReconciliationCircuitBreaker:
         assert initial_state in ["closed", "open", "half_open"]
 
 
+@pytest.mark.integration
 class TestManualPaymentIntegration:
     """Integration tests for manual payment operations."""
 
@@ -197,7 +201,7 @@ class TestManualPaymentIntegration:
             customer_id=uuid4(),
             amount=Decimal("250.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             payment_method=PaymentMethodType.CHECK,
             payment_reference="CHK-12345",
             status="pending",
@@ -217,7 +221,7 @@ class TestManualPaymentIntegration:
     async def test_update_payment_status(self, async_session: AsyncSession, test_manual_payment):
         """Test updating payment status."""
         test_manual_payment.status = "verified"
-        test_manual_payment.verified_at = datetime.now(UTC)
+        test_manual_payment.verified_at = datetime.now(timezone.utc)
         test_manual_payment.verified_by = "user-123"
 
         await async_session.commit()
@@ -231,7 +235,7 @@ class TestManualPaymentIntegration:
     async def test_reconcile_payment(self, async_session: AsyncSession, test_manual_payment):
         """Test reconciling a payment."""
         test_manual_payment.reconciled = True
-        test_manual_payment.reconciled_at = datetime.now(UTC)
+        test_manual_payment.reconciled_at = datetime.now(timezone.utc)
         test_manual_payment.reconciled_by = "system"
 
         await async_session.commit()
@@ -254,7 +258,7 @@ class TestManualPaymentIntegration:
                 customer_id=uuid4(),
                 amount=Decimal(f"{100 * (i + 1)}.00"),
                 currency="USD",
-                payment_date=datetime.now(UTC),
+                payment_date=datetime.now(timezone.utc),
                 payment_method=PaymentMethodType.BANK_TRANSFER,
                 payment_reference=f"REF-{i}",
                 status="verified",
@@ -277,6 +281,7 @@ class TestManualPaymentIntegration:
         assert all(not p.reconciled for p in unreconciled)
 
 
+@pytest.mark.integration
 class TestReconciliationApproval:
     """Integration tests for reconciliation approval workflow."""
 
@@ -291,8 +296,8 @@ class TestReconciliationApproval:
         reconciliation = await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(UTC) - timedelta(days=30),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=30),
+            period_end=datetime.now(timezone.utc),
             opening_balance=Decimal("1000.00"),
             statement_balance=Decimal("1000.00"),
             user_id="user-123",
@@ -326,8 +331,8 @@ class TestReconciliationApproval:
         rec = await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(UTC) - timedelta(days=30),
-            period_end=datetime.now(UTC),
+            period_start=datetime.now(timezone.utc) - timedelta(days=30),
+            period_end=datetime.now(timezone.utc),
             opening_balance=Decimal("500.00"),
             statement_balance=Decimal("500.00"),
             user_id="user-123",
@@ -351,6 +356,7 @@ class TestReconciliationApproval:
         assert rec.status == "approved"
 
 
+@pytest.mark.integration
 class TestReconciliationTenantIsolation:
     """Integration tests for tenant isolation in reconciliation."""
 
@@ -365,7 +371,7 @@ class TestReconciliationTenantIsolation:
             customer_id=uuid4(),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="T1-001",
             status="verified",
@@ -379,7 +385,7 @@ class TestReconciliationTenantIsolation:
             customer_id=uuid4(),
             amount=Decimal("200.00"),
             currency="USD",
-            payment_date=datetime.now(UTC),
+            payment_date=datetime.now(timezone.utc),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="T2-001",
             status="verified",

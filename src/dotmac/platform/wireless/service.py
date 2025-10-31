@@ -6,7 +6,10 @@ Business logic for wireless network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 import structlog
@@ -144,7 +147,9 @@ class WirelessService:
 
         return True
 
-    def update_device_status(self, device_id: UUID, status: DeviceStatus, last_seen: datetime | None = None) -> WirelessDevice | None:
+    def update_device_status(
+        self, device_id: UUID, status: DeviceStatus, last_seen: datetime | None = None
+    ) -> WirelessDevice | None:
         """Update device status and last seen timestamp"""
         device = self.get_device(device_id)
         if not device:
@@ -190,10 +195,14 @@ class WirelessService:
 
     def get_radio(self, radio_id: UUID) -> WirelessRadio | None:
         """Get wireless radio by ID"""
-        return self.db.query(WirelessRadio).filter(
-            WirelessRadio.id == radio_id,
-            WirelessRadio.tenant_id == self.tenant_id,
-        ).first()
+        return (
+            self.db.query(WirelessRadio)
+            .filter(
+                WirelessRadio.id == radio_id,
+                WirelessRadio.tenant_id == self.tenant_id,
+            )
+            .first()
+        )
 
     def list_radios(
         self,
@@ -286,10 +295,14 @@ class WirelessService:
 
     def get_coverage_zone(self, zone_id: UUID) -> CoverageZone | None:
         """Get coverage zone by ID"""
-        return self.db.query(CoverageZone).filter(
-            CoverageZone.id == zone_id,
-            CoverageZone.tenant_id == self.tenant_id,
-        ).first()
+        return (
+            self.db.query(CoverageZone)
+            .filter(
+                CoverageZone.id == zone_id,
+                CoverageZone.tenant_id == self.tenant_id,
+            )
+            .first()
+        )
 
     def list_coverage_zones(
         self,
@@ -363,7 +376,7 @@ class WirelessService:
 
         measurement_data = data.model_dump()
         if not measurement_data.get("measured_at"):
-            measurement_data["measured_at"] = datetime.utcnow()
+            measurement_data["measured_at"] = datetime.now(UTC)
 
         measurement = SignalMeasurement(
             tenant_id=self.tenant_id,
@@ -393,7 +406,9 @@ class WirelessService:
         if since:
             query = query.filter(SignalMeasurement.measured_at >= since)
 
-        return query.order_by(SignalMeasurement.measured_at.desc()).limit(limit).offset(offset).all()
+        return (
+            query.order_by(SignalMeasurement.measured_at.desc()).limit(limit).offset(offset).all()
+        )
 
     # ========================================================================
     # Wireless Client Methods
@@ -426,105 +441,168 @@ class WirelessService:
     def get_statistics(self) -> WirelessStatistics:
         """Get wireless infrastructure statistics"""
         # Device counts by status
-        total_devices = self.db.query(func.count(WirelessDevice.id)).filter(
-            WirelessDevice.tenant_id == self.tenant_id
-        ).scalar() or 0
+        total_devices = (
+            self.db.query(func.count(WirelessDevice.id))
+            .filter(WirelessDevice.tenant_id == self.tenant_id)
+            .scalar()
+            or 0
+        )
 
-        online_devices = self.db.query(func.count(WirelessDevice.id)).filter(
-            WirelessDevice.tenant_id == self.tenant_id,
-            WirelessDevice.status == DeviceStatus.ONLINE,
-        ).scalar() or 0
+        online_devices = (
+            self.db.query(func.count(WirelessDevice.id))
+            .filter(
+                WirelessDevice.tenant_id == self.tenant_id,
+                WirelessDevice.status == DeviceStatus.ONLINE,
+            )
+            .scalar()
+            or 0
+        )
 
-        offline_devices = self.db.query(func.count(WirelessDevice.id)).filter(
-            WirelessDevice.tenant_id == self.tenant_id,
-            WirelessDevice.status == DeviceStatus.OFFLINE,
-        ).scalar() or 0
+        offline_devices = (
+            self.db.query(func.count(WirelessDevice.id))
+            .filter(
+                WirelessDevice.tenant_id == self.tenant_id,
+                WirelessDevice.status == DeviceStatus.OFFLINE,
+            )
+            .scalar()
+            or 0
+        )
 
-        degraded_devices = self.db.query(func.count(WirelessDevice.id)).filter(
-            WirelessDevice.tenant_id == self.tenant_id,
-            WirelessDevice.status == DeviceStatus.DEGRADED,
-        ).scalar() or 0
+        degraded_devices = (
+            self.db.query(func.count(WirelessDevice.id))
+            .filter(
+                WirelessDevice.tenant_id == self.tenant_id,
+                WirelessDevice.status == DeviceStatus.DEGRADED,
+            )
+            .scalar()
+            or 0
+        )
 
         # Radio counts
-        total_radios = self.db.query(func.count(WirelessRadio.id)).filter(
-            WirelessRadio.tenant_id == self.tenant_id
-        ).scalar() or 0
+        total_radios = (
+            self.db.query(func.count(WirelessRadio.id))
+            .filter(WirelessRadio.tenant_id == self.tenant_id)
+            .scalar()
+            or 0
+        )
 
-        active_radios = self.db.query(func.count(WirelessRadio.id)).filter(
-            WirelessRadio.tenant_id == self.tenant_id,
-            WirelessRadio.enabled,
-            WirelessRadio.status == DeviceStatus.ONLINE,
-        ).scalar() or 0
+        active_radios = (
+            self.db.query(func.count(WirelessRadio.id))
+            .filter(
+                WirelessRadio.tenant_id == self.tenant_id,
+                WirelessRadio.enabled,
+                WirelessRadio.status == DeviceStatus.ONLINE,
+            )
+            .scalar()
+            or 0
+        )
 
         # Coverage zones
-        total_coverage_zones = self.db.query(func.count(CoverageZone.id)).filter(
-            CoverageZone.tenant_id == self.tenant_id
-        ).scalar() or 0
+        total_coverage_zones = (
+            self.db.query(func.count(CoverageZone.id))
+            .filter(CoverageZone.tenant_id == self.tenant_id)
+            .scalar()
+            or 0
+        )
 
         # Client counts
-        total_connected_clients = self.db.query(func.count(WirelessClient.id)).filter(
-            WirelessClient.tenant_id == self.tenant_id,
-            WirelessClient.connected,
-        ).scalar() or 0
+        total_connected_clients = (
+            self.db.query(func.count(WirelessClient.id))
+            .filter(
+                WirelessClient.tenant_id == self.tenant_id,
+                WirelessClient.connected,
+            )
+            .scalar()
+            or 0
+        )
 
-        since_24h = datetime.utcnow() - timedelta(hours=24)
-        total_clients_seen_24h = self.db.query(func.count(WirelessClient.id)).filter(
-            WirelessClient.tenant_id == self.tenant_id,
-            WirelessClient.last_seen >= since_24h,
-        ).scalar() or 0
+        since_24h = datetime.now(UTC) - timedelta(hours=24)
+        total_clients_seen_24h = (
+            self.db.query(func.count(WirelessClient.id))
+            .filter(
+                WirelessClient.tenant_id == self.tenant_id,
+                WirelessClient.last_seen >= since_24h,
+            )
+            .scalar()
+            or 0
+        )
 
         # Group by device type
-        by_device_type_results = self.db.query(
-            WirelessDevice.device_type,
-            func.count(WirelessDevice.id),
-        ).filter(
-            WirelessDevice.tenant_id == self.tenant_id
-        ).group_by(WirelessDevice.device_type).all()
+        by_device_type_results = (
+            self.db.query(
+                WirelessDevice.device_type,
+                func.count(WirelessDevice.id),
+            )
+            .filter(WirelessDevice.tenant_id == self.tenant_id)
+            .group_by(WirelessDevice.device_type)
+            .all()
+        )
 
         by_device_type = {str(dt.value): count for dt, count in by_device_type_results}
 
         # Group by frequency
-        by_frequency_results = self.db.query(
-            WirelessRadio.frequency,
-            func.count(WirelessRadio.id),
-        ).filter(
-            WirelessRadio.tenant_id == self.tenant_id
-        ).group_by(WirelessRadio.frequency).all()
+        by_frequency_results = (
+            self.db.query(
+                WirelessRadio.frequency,
+                func.count(WirelessRadio.id),
+            )
+            .filter(WirelessRadio.tenant_id == self.tenant_id)
+            .group_by(WirelessRadio.frequency)
+            .all()
+        )
 
         by_frequency = {str(freq.value): count for freq, count in by_frequency_results}
 
         # Group by site
-        by_site_results = self.db.query(
-            WirelessDevice.site_name,
-            func.count(WirelessDevice.id),
-        ).filter(
-            WirelessDevice.tenant_id == self.tenant_id,
-            WirelessDevice.site_name.isnot(None),
-        ).group_by(WirelessDevice.site_name).all()
+        by_site_results = (
+            self.db.query(
+                WirelessDevice.site_name,
+                func.count(WirelessDevice.id),
+            )
+            .filter(
+                WirelessDevice.tenant_id == self.tenant_id,
+                WirelessDevice.site_name.isnot(None),
+            )
+            .group_by(WirelessDevice.site_name)
+            .all()
+        )
 
         by_site = {site: count for site, count in by_site_results if site}
 
         # Average signal strength from recent measurements
-        since_1h = datetime.utcnow() - timedelta(hours=1)
-        avg_signal = self.db.query(func.avg(SignalMeasurement.rssi_dbm)).filter(
-            SignalMeasurement.tenant_id == self.tenant_id,
-            SignalMeasurement.measured_at >= since_1h,
-            SignalMeasurement.rssi_dbm.isnot(None),
-        ).scalar()
+        since_1h = datetime.now(UTC) - timedelta(hours=1)
+        avg_signal = (
+            self.db.query(func.avg(SignalMeasurement.rssi_dbm))
+            .filter(
+                SignalMeasurement.tenant_id == self.tenant_id,
+                SignalMeasurement.measured_at >= since_1h,
+                SignalMeasurement.rssi_dbm.isnot(None),
+            )
+            .scalar()
+        )
 
-        avg_throughput = self.db.query(func.avg(SignalMeasurement.throughput_mbps)).filter(
-            SignalMeasurement.tenant_id == self.tenant_id,
-            SignalMeasurement.measured_at >= since_1h,
-            SignalMeasurement.throughput_mbps.isnot(None),
-        ).scalar()
+        avg_throughput = (
+            self.db.query(func.avg(SignalMeasurement.throughput_mbps))
+            .filter(
+                SignalMeasurement.tenant_id == self.tenant_id,
+                SignalMeasurement.measured_at >= since_1h,
+                SignalMeasurement.throughput_mbps.isnot(None),
+            )
+            .scalar()
+        )
 
         # Calculate total coverage area from coverage zones
         coverage_area_km2 = None
         if total_coverage_zones > 0:
-            coverage_zones = self.db.query(CoverageZone).filter(
-                CoverageZone.tenant_id == self.tenant_id,
-                CoverageZone.coverage_type == CoverageType.PRIMARY,  # Only count primary coverage
-            ).all()
+            coverage_zones = (
+                self.db.query(CoverageZone)
+                .filter(
+                    CoverageZone.tenant_id == self.tenant_id,
+                    CoverageZone.coverage_type
+                    == CoverageType.PRIMARY,  # Only count primary coverage
+                )
+                .all()
+            )
 
             total_area = 0.0
             for zone in coverage_zones:
@@ -561,48 +639,67 @@ class WirelessService:
 
         # Count radios
         total_radios = len(device.radios)
-        active_radios = sum(1 for r in device.radios if r.enabled and r.status == DeviceStatus.ONLINE)
+        active_radios = sum(
+            1 for r in device.radios if r.enabled and r.status == DeviceStatus.ONLINE
+        )
 
         # Count connected clients
-        connected_clients = self.db.query(func.count(WirelessClient.id)).filter(
-            WirelessClient.tenant_id == self.tenant_id,
-            WirelessClient.device_id == device_id,
-            WirelessClient.connected,
-        ).scalar() or 0
+        connected_clients = (
+            self.db.query(func.count(WirelessClient.id))
+            .filter(
+                WirelessClient.tenant_id == self.tenant_id,
+                WirelessClient.device_id == device_id,
+                WirelessClient.connected,
+            )
+            .scalar()
+            or 0
+        )
 
         # Average metrics from radios
-        radio_metrics = self.db.query(
-            func.avg(WirelessRadio.utilization_percent),
-        ).filter(
-            WirelessRadio.tenant_id == self.tenant_id,
-            WirelessRadio.device_id == device_id,
-            WirelessRadio.enabled,
-        ).first()
+        radio_metrics = (
+            self.db.query(
+                func.avg(WirelessRadio.utilization_percent),
+            )
+            .filter(
+                WirelessRadio.tenant_id == self.tenant_id,
+                WirelessRadio.device_id == device_id,
+                WirelessRadio.enabled,
+            )
+            .first()
+        )
 
         avg_utilization = float(radio_metrics[0]) if radio_metrics and radio_metrics[0] else None
 
         # Recent signal measurements
-        since_1h = datetime.utcnow() - timedelta(hours=1)
-        signal_metrics = self.db.query(
-            func.avg(SignalMeasurement.rssi_dbm),
-            func.avg(SignalMeasurement.snr_db),
-        ).filter(
-            SignalMeasurement.tenant_id == self.tenant_id,
-            SignalMeasurement.device_id == device_id,
-            SignalMeasurement.measured_at >= since_1h,
-        ).first()
+        since_1h = datetime.now(UTC) - timedelta(hours=1)
+        signal_metrics = (
+            self.db.query(
+                func.avg(SignalMeasurement.rssi_dbm),
+                func.avg(SignalMeasurement.snr_db),
+            )
+            .filter(
+                SignalMeasurement.tenant_id == self.tenant_id,
+                SignalMeasurement.device_id == device_id,
+                SignalMeasurement.measured_at >= since_1h,
+            )
+            .first()
+        )
 
         avg_rssi = float(signal_metrics[0]) if signal_metrics and signal_metrics[0] else None
         avg_snr = float(signal_metrics[1]) if signal_metrics and signal_metrics[1] else None
 
         # Total traffic
-        traffic_stats = self.db.query(
-            func.sum(WirelessRadio.tx_bytes),
-            func.sum(WirelessRadio.rx_bytes),
-        ).filter(
-            WirelessRadio.tenant_id == self.tenant_id,
-            WirelessRadio.device_id == device_id,
-        ).first()
+        traffic_stats = (
+            self.db.query(
+                func.sum(WirelessRadio.tx_bytes),
+                func.sum(WirelessRadio.rx_bytes),
+            )
+            .filter(
+                WirelessRadio.tenant_id == self.tenant_id,
+                WirelessRadio.device_id == device_id,
+            )
+            .first()
+        )
 
         total_tx_bytes = int(traffic_stats[0]) if traffic_stats and traffic_stats[0] else 0
         total_rx_bytes = int(traffic_stats[1]) if traffic_stats and traffic_stats[1] else 0
@@ -669,13 +766,13 @@ class WirelessService:
             x2 = math.radians(lon2) * lat_correction
             y2 = math.radians(lat2)
 
-            total_area += (x1 * y2 - x2 * y1)
+            total_area += x1 * y2 - x2 * y1
 
         # Complete the formula
         area_rad2 = abs(total_area) / 2.0
 
         # Convert to km² (R² * area in steradians)
-        area_km2 = area_rad2 * (R ** 2)
+        area_km2 = area_rad2 * (R**2)
 
         return area_km2
 

@@ -1,3 +1,4 @@
+
 """
 Comprehensive Service Lifecycle Automation Tests.
 
@@ -16,6 +17,13 @@ from uuid import uuid4
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestEndToEndServiceProvisioning:
@@ -806,7 +814,7 @@ class TestBulkServiceOperations:
         bulk_request = BulkServiceOperationRequest(
             service_instance_ids=service_ids,
             operation="suspend",
-            reason="Scheduled maintenance",
+            operation_params={"reason": "Scheduled maintenance"},
         )
 
         bulk_result = await lifecycle_service.bulk_service_operation(

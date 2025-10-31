@@ -1,3 +1,4 @@
+
 """
 Unit Tests for Workflow Service
 
@@ -5,13 +6,24 @@ Tests the WorkflowService with mocked database and engine dependencies.
 Focuses on service layer business logic without complex workflow execution.
 """
 
-import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
-from datetime import datetime
 
+import pytest
+
+from dotmac.platform.workflows.models import (
+
+
+
+    Workflow,
+    WorkflowExecution,
+    WorkflowStatus,
+)
 from dotmac.platform.workflows.service import WorkflowService
-from dotmac.platform.workflows.models import WorkflowStatus
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestWorkflowServiceInitialization:

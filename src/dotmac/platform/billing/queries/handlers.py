@@ -8,7 +8,11 @@ Handlers optimize for read performance using:
 4. Minimal data transformation
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
+from decimal import Decimal
 from typing import Any
 
 import structlog
@@ -55,6 +59,17 @@ from .subscription_queries import (
 )
 
 logger = structlog.get_logger(__name__)
+
+
+def _format_currency(amount: int | Decimal | None, currency: str) -> str:
+    """Format minor units as human readable currency string without float rounding."""
+    currency_code = (currency or "USD").upper()
+    minor_amount = Decimal(str(amount if amount is not None else 0))
+    major = (minor_amount / Decimal("100")).quantize(Decimal("0.01"))
+    formatted = format(major, ",.2f")
+    if currency_code == "USD":
+        return f"${formatted}"
+    return f"{currency_code} {formatted}"
 
 
 class InvoiceQueryHandler:
@@ -197,6 +212,7 @@ class InvoiceQueryHandler:
         outstanding_amount = int(row.outstanding_amount or 0)
         paid_amount = total_amount - outstanding_amount
 
+        currency = "USD"
         return InvoiceStatistics(
             total_count=int(row.total_count or 0),
             draft_count=int(row.draft_count or 0),
@@ -208,15 +224,15 @@ class InvoiceQueryHandler:
             paid_amount=max(paid_amount, 0),
             outstanding_amount=outstanding_amount,
             overdue_amount=0,
-            currency="USD",
+            currency=currency,
             average_invoice_amount=int(row.average_amount or 0),
             average_payment_time_days=None,
             period_start=query.start_date,
             period_end=query.end_date,
             previous_period_total=None,
             growth_rate=None,
-            formatted_total=f"${total_amount / 100:.2f}",
-            formatted_outstanding=f"${outstanding_amount / 100:.2f}",
+            formatted_total=_format_currency(total_amount, currency),
+            formatted_outstanding=_format_currency(outstanding_amount, currency),
         )
 
     def _map_to_list_item(self, invoice: InvoiceEntity) -> InvoiceListItem:
@@ -231,6 +247,7 @@ class InvoiceQueryHandler:
             if isinstance(invoice.status, InvoiceStatus)
             else str(invoice.status)
         )
+        currency = getattr(invoice, "currency", None) or "USD"
         customer_name = (
             invoice.billing_address.get("name")
             if isinstance(invoice.billing_address, dict)
@@ -244,8 +261,8 @@ class InvoiceQueryHandler:
         is_overdue = bool(
             invoice.due_date and invoice.due_date < now and invoice.status == InvoiceStatus.OPEN
         )
-        formatted_total = f"${invoice.total_amount / 100:.2f}"
-        formatted_balance = f"${invoice.remaining_balance / 100:.2f}"
+        formatted_total = _format_currency(invoice.total_amount, currency)
+        formatted_balance = _format_currency(invoice.remaining_balance, currency)
 
         return InvoiceListItem(
             invoice_id=invoice.invoice_id,
@@ -255,7 +272,7 @@ class InvoiceQueryHandler:
             customer_email=customer_email,
             total_amount=invoice.total_amount,
             remaining_balance=invoice.remaining_balance,
-            currency=invoice.currency,
+            currency=currency,
             status=status_value,
             is_overdue=is_overdue,
             created_at=invoice.created_at,
@@ -414,8 +431,23 @@ class PaymentQueryHandler:
         result = await self.db.execute(stmt)
         payments = result.scalars().all()
 
+        items = []
+        for payment in payments:
+            currency = getattr(payment, "currency", None) or "USD"
+            data = {k: v for k, v in payment.__dict__.items() if not k.startswith("_")}
+            data["currency"] = currency
+            data["formatted_amount"] = _format_currency(getattr(payment, "amount", 0), currency)
+            if "payment_method" not in data or not data["payment_method"]:
+                payment_type = getattr(payment, "payment_method_type", None)
+                data["payment_method"] = str(payment_type) if payment_type else "unknown"
+            if "customer_name" not in data or not data["customer_name"]:
+                data["customer_name"] = getattr(payment, "customer_name", "") or getattr(
+                    payment, "customer_id", ""
+                )
+            items.append(PaymentListItem.model_validate(data))
+
         return {
-            "items": [PaymentListItem.model_validate(p) for p in payments],
+            "items": items,
             "total": total_count,
             "page": query.page,
             "page_size": query.page_size,

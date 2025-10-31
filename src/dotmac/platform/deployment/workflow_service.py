@@ -125,9 +125,7 @@ class WorkflowDeploymentService:
         template = result.scalar_one_or_none()
 
         if not template:
-            raise ValueError(
-                f"No active deployment template found for backend '{deployment_type}'"
-            )
+            raise ValueError(f"No active deployment template found for backend '{deployment_type}'")
 
         logger.info(
             f"Using deployment template: {template.name} "
@@ -406,8 +404,12 @@ class WorkflowDeploymentService:
 
         # Convert IDs to appropriate types
         try:
-            partner_uuid = UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
-            customer_uuid = UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            partner_uuid = (
+                UUID(partner_id) if isinstance(partner_id, str) else UUID(str(partner_id))
+            )
+            customer_uuid = (
+                UUID(customer_id) if isinstance(customer_id, str) else UUID(str(customer_id))
+            )
         except (ValueError, AttributeError) as e:
             raise ValueError(f"Invalid ID format: {e}") from e
 
@@ -497,15 +499,17 @@ class WorkflowDeploymentService:
                 tenant_url = f"https://{subdomain}.platform.example.com"
 
             # Update tenant_info with partner-specific details
-            tenant_info.update({
-                "partner_id": str(partner_uuid),
-                "partner_number": partner.partner_number,
-                "partner_name": partner.company_name,
-                "white_label_applied": True,
-                "white_label_config": white_label,
-                "custom_domain": custom_domain,
-                "engagement_type": partner_account.engagement_type,
-            })
+            tenant_info.update(
+                {
+                    "partner_id": str(partner_uuid),
+                    "partner_number": partner.partner_number,
+                    "partner_name": partner.company_name,
+                    "white_label_applied": True,
+                    "white_label_config": white_label,
+                    "custom_domain": custom_domain,
+                    "engagement_type": partner_account.engagement_type,
+                }
+            )
 
             # If custom_domain provided, override tenant_url
             if custom_domain:

@@ -7,17 +7,19 @@ pay-as-you-go charges.
 """
 
 from datetime import datetime
-from decimal import Decimal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
-from sqlalchemy import and_, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.billing.settings.service import BillingSettingsService
+from dotmac.platform.billing.usage.service import UsageBillingService
 from dotmac.platform.database import get_async_session
+from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 
 from .models import BilledStatus, UsageAggregate, UsageRecord, UsageType
 from .schemas import (
@@ -34,6 +36,11 @@ from .schemas import (
 # ============================================================================
 
 router = APIRouter(prefix="/usage", tags=["Billing - Usage"])
+
+
+OVERRIDE_CURRENCY_HEADERS = ("X-Currency", "X-Currency-Code")
+OVERRIDE_CURRENCY_QUERY_PARAM = "currency"
+OVERRIDE_CURRENCY_STATE_ATTRS = ("currency", "currency_code")
 
 
 def get_tenant_id_from_request(request: Request) -> str:
@@ -54,6 +61,57 @@ def get_tenant_id_from_request(request: Request) -> str:
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Tenant ID is required. Provide via X-Tenant-ID header or tenant_id query param.",
     )
+
+
+def _get_currency_override(request: Request) -> str | None:
+    """Return currency override from request state, headers, or query parameters."""
+    for attr in OVERRIDE_CURRENCY_STATE_ATTRS:
+        override = getattr(request.state, attr, None)
+        if isinstance(override, str) and override.strip():
+            candidate = override.strip().upper()
+            if len(candidate) == 3:
+                return candidate
+
+    for header_name in OVERRIDE_CURRENCY_HEADERS:
+        header_value = request.headers.get(header_name)
+        if header_value:
+            candidate = header_value.strip().upper()
+            if len(candidate) == 3:
+                return candidate
+
+    query_override = request.query_params.get(OVERRIDE_CURRENCY_QUERY_PARAM)
+    if query_override:
+        candidate = query_override.strip().upper()
+        if len(candidate) == 3:
+            return candidate
+
+    return None
+
+
+async def resolve_usage_currency(request: Request, db: AsyncSession, tenant_id: str) -> str:
+    """
+    Determine currency for usage records.
+
+    Priority order:
+    1. Request override (state/header/query)
+    2. Tenant billing settings default currency
+    3. Fallback to USD
+    """
+    override = _get_currency_override(request)
+    if override:
+        return override
+
+    try:
+        settings_service = BillingSettingsService(db)
+        settings = await settings_service.get_settings(tenant_id)
+        default_currency = settings.payment_settings.default_currency
+        if default_currency:
+            return default_currency.upper()
+    except Exception:
+        # Fallback to USD when settings retrieval fails
+        pass
+
+    return "USD"
 
 
 # ============================================================================
@@ -116,44 +174,34 @@ async def create_usage_record(
     equipment rentals, and other pay-as-you-go charges.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        # Calculate total amount
-        total_amount = int(float(record_data.quantity) * float(record_data.unit_price))
+        currency = await resolve_usage_currency(request, db, tenant_id)
 
-        # Create usage record
-        usage_record = UsageRecord(
+        usage_record = await service.create_usage_record(
             tenant_id=tenant_id,
-            subscription_id=record_data.subscription_id,
-            customer_id=record_data.customer_id,
-            usage_type=record_data.usage_type,
-            quantity=record_data.quantity,
-            unit=record_data.unit,
-            unit_price=record_data.unit_price,
-            total_amount=total_amount,
-            currency="USD",
-            period_start=record_data.period_start,
-            period_end=record_data.period_end,
-            billed_status=BilledStatus.PENDING,
-            source_system=record_data.source_system,
-            source_record_id=record_data.source_record_id,
-            description=record_data.description,
-            device_id=record_data.device_id,
-            service_location=record_data.service_location,
-            created_by=current_user.user_id,
+            data=record_data,
+            currency=currency,
+            created_by=getattr(current_user, "user_id", None),
         )
 
-        db.add(usage_record)
         await db.commit()
         await db.refresh(usage_record)
 
         return UsageRecordResponse.model_validate(usage_record)
+    except ValidationError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except Exception as e:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create usage record: {str(e)}",
-        )
+        ) from e
 
 
 @router.post(
@@ -172,40 +220,23 @@ async def bulk_create_usage_records(
     or other usage tracking systems.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        usage_records = []
+        usage_records: list[UsageRecord] = []
+        currency = await resolve_usage_currency(request, db, tenant_id)
 
         for record_data in bulk_data.records:
-            # Calculate total amount
-            total_amount = int(float(record_data.quantity) * float(record_data.unit_price))
-
-            usage_record = UsageRecord(
+            usage_record = await service.create_usage_record(
                 tenant_id=tenant_id,
-                subscription_id=record_data.subscription_id,
-                customer_id=record_data.customer_id,
-                usage_type=record_data.usage_type,
-                quantity=record_data.quantity,
-                unit=record_data.unit,
-                unit_price=record_data.unit_price,
-                total_amount=total_amount,
-                currency="USD",
-                period_start=record_data.period_start,
-                period_end=record_data.period_end,
-                billed_status=BilledStatus.PENDING,
-                source_system=record_data.source_system,
-                source_record_id=record_data.source_record_id,
-                description=record_data.description,
-                device_id=record_data.device_id,
-                service_location=record_data.service_location,
-                created_by=current_user.user_id,
+                data=record_data,
+                currency=currency,
+                created_by=getattr(current_user, "user_id", None),
             )
             usage_records.append(usage_record)
 
-        db.add_all(usage_records)
         await db.commit()
 
-        # Refresh all records
         for record in usage_records:
             await db.refresh(record)
 
@@ -213,12 +244,18 @@ async def bulk_create_usage_records(
             created_count=len(usage_records),
             usage_records=[UsageRecordResponse.model_validate(r) for r in usage_records],
         )
+    except ValidationError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except Exception as e:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to bulk create usage records: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/records", response_model=UsageRecordListResponse)
@@ -242,32 +279,20 @@ async def list_usage_records(
     and time period for flexible reporting and analysis.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        # Build query
-        query = select(UsageRecord).where(UsageRecord.tenant_id == tenant_id)
-
-        if customer_id:
-            query = query.where(UsageRecord.customer_id == customer_id)
-        if subscription_id:
-            query = query.where(UsageRecord.subscription_id == subscription_id)
-        if usage_type:
-            query = query.where(UsageRecord.usage_type == usage_type)
-        if billed_status:
-            query = query.where(UsageRecord.billed_status == billed_status)
-        if period_start:
-            query = query.where(UsageRecord.period_start >= period_start)
-        if period_end:
-            query = query.where(UsageRecord.period_end <= period_end)
-
-        # Order by most recent first
-        query = query.order_by(UsageRecord.created_at.desc())
-
-        # Apply pagination (fetch one extra to check if there are more)
-        query = query.limit(limit + 1).offset(offset)
-
-        result = await db.execute(query)
-        records = list(result.scalars().all())
+        records = await service.list_usage_records(
+            tenant_id,
+            subscription_id=subscription_id,
+            customer_id=customer_id,
+            usage_type=usage_type,
+            billed_status=billed_status,
+            period_start=period_start,
+            period_end=period_end,
+            limit=limit + 1,
+            offset=offset,
+        )
 
         has_more = len(records) > limit
         if has_more:
@@ -282,7 +307,7 @@ async def list_usage_records(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to list usage records: {str(e)}",
-        )
+        ) from e
 
 
 @router.get("/records/{record_id}", response_model=UsageRecordResponse)
@@ -294,17 +319,14 @@ async def get_usage_record(
 ) -> UsageRecordResponse:
     """Get a specific usage record by ID."""
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
-    query = select(UsageRecord).where(
-        and_(UsageRecord.id == record_id, UsageRecord.tenant_id == tenant_id)
-    )
-    result = await db.execute(query)
-    record = result.scalar_one_or_none()
-
-    if not record:
+    try:
+        record = await service.get_usage_record(record_id, tenant_id)
+    except EntityNotFoundError as exc:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Usage record {record_id} not found"
-        )
+        ) from exc
 
     return UsageRecordResponse.model_validate(record)
 
@@ -324,52 +346,35 @@ async def update_usage_record(
     invoice association, and description.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        query = select(UsageRecord).where(
-            and_(UsageRecord.id == record_id, UsageRecord.tenant_id == tenant_id)
+        record = await service.update_usage_record(
+            tenant_id=tenant_id,
+            record_id=record_id,
+            update=update_data,
+            updated_by=getattr(current_user, "user_id", None),
         )
-        result = await db.execute(query)
-        record = result.scalar_one_or_none()
-
-        if not record:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Usage record {record_id} not found"
-            )
-
-        # Update fields
-        if update_data.quantity is not None:
-            record.quantity = update_data.quantity
-        if update_data.unit_price is not None:
-            record.unit_price = update_data.unit_price
-        if update_data.billed_status is not None:
-            record.billed_status = update_data.billed_status
-            # Set billed_at when marking as billed
-            if update_data.billed_status == BilledStatus.BILLED:
-                record.billed_at = datetime.utcnow()
-        if update_data.invoice_id is not None:
-            record.invoice_id = update_data.invoice_id
-        if update_data.description is not None:
-            record.description = update_data.description
-
-        # Recalculate total amount if quantity or unit_price changed
-        if update_data.quantity is not None or update_data.unit_price is not None:
-            record.total_amount = int(float(record.quantity) * float(record.unit_price))
-
-        record.updated_by = current_user.user_id
-
         await db.commit()
         await db.refresh(record)
-
         return UsageRecordResponse.model_validate(record)
-    except HTTPException:
-        raise
+    except EntityNotFoundError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Usage record {record_id} not found"
+        ) from exc
+    except ValidationError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except Exception as e:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to update usage record: {str(e)}",
-        )
+        ) from e
 
 
 @router.delete("/records/{record_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -386,36 +391,28 @@ async def delete_usage_record(
     Billed records cannot be deleted to maintain audit trail.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        query = select(UsageRecord).where(
-            and_(UsageRecord.id == record_id, UsageRecord.tenant_id == tenant_id)
-        )
-        result = await db.execute(query)
-        record = result.scalar_one_or_none()
-
-        if not record:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND, detail=f"Usage record {record_id} not found"
-            )
-
-        # Prevent deletion of billed records
-        if record.billed_status == BilledStatus.BILLED:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete billed usage records. Mark as excluded instead.",
-            )
-
-        await db.delete(record)
+        await service.delete_usage_record(tenant_id, record_id)
         await db.commit()
-    except HTTPException:
-        raise
+    except EntityNotFoundError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Usage record {record_id} not found"
+        ) from exc
+    except ValidationError as exc:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(exc),
+        ) from exc
     except Exception as e:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to delete usage record: {str(e)}",
-        )
+        ) from e
 
 
 # ============================================================================
@@ -439,72 +436,21 @@ async def get_usage_statistics(
     Returns total records, amounts by status, and breakdown by usage type.
     """
     tenant_id = get_tenant_id_from_request(request)
+    service = UsageBillingService(db)
 
     try:
-        # Build base query
-        base_query = select(UsageRecord).where(UsageRecord.tenant_id == tenant_id)
-
-        if period_start:
-            base_query = base_query.where(UsageRecord.period_start >= period_start)
-        if period_end:
-            base_query = base_query.where(UsageRecord.period_end <= period_end)
-        if customer_id:
-            base_query = base_query.where(UsageRecord.customer_id == customer_id)
-        if subscription_id:
-            base_query = base_query.where(UsageRecord.subscription_id == subscription_id)
-
-        # Get all records
-        result = await db.execute(base_query)
-        records = list(result.scalars().all())
-
-        # Calculate statistics
-        total_records = len(records)
-        total_amount = sum(int(r.total_amount) for r in records)
-        pending_amount = sum(
-            int(r.total_amount) for r in records if r.billed_status == BilledStatus.PENDING
-        )
-        billed_amount = sum(
-            int(r.total_amount) for r in records if r.billed_status == BilledStatus.BILLED
-        )
-
-        # Group by usage type
-        by_type: dict[str, UsageSummary] = {}
-        for record in records:
-            usage_type_str = record.usage_type.value
-
-            if usage_type_str not in by_type:
-                by_type[usage_type_str] = UsageSummary(
-                    usage_type=record.usage_type,
-                    total_quantity=Decimal("0"),
-                    total_amount=0,
-                    currency="USD",
-                    record_count=0,
-                    period_start=(
-                        period_start or records[0].period_start if records else datetime.utcnow()
-                    ),
-                    period_end=(
-                        period_end or records[-1].period_end if records else datetime.utcnow()
-                    ),
-                )
-
-            by_type[usage_type_str].total_quantity += Decimal(record.quantity)
-            by_type[usage_type_str].total_amount += int(record.total_amount)
-            by_type[usage_type_str].record_count += 1
-
-        return UsageStats(
-            total_records=total_records,
-            total_amount=total_amount,
-            pending_amount=pending_amount,
-            billed_amount=billed_amount,
-            by_type=by_type,
-            period_start=period_start or datetime.utcnow(),
-            period_end=period_end or datetime.utcnow(),
+        return await service.get_usage_summary(
+            tenant_id,
+            period_start=period_start,
+            period_end=period_end,
+            customer_id=customer_id,
+            subscription_id=subscription_id,
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to get usage statistics: {str(e)}",
-        )
+        ) from e
 
 
 # ============================================================================

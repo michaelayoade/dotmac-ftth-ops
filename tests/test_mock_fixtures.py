@@ -1,14 +1,22 @@
+
 """
 Comprehensive mock fixtures for external dependencies.
 These fixtures avoid needing real Docker services for unit tests.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def mock_openbao_client():
@@ -235,8 +243,8 @@ def mock_jwt_service():
     mock_service.create_refresh_token.return_value = "eyJ0eXAiOiJKV1QiLCJyZWY"
     mock_service.decode_token.return_value = {
         "sub": "user123",
-        "exp": int((datetime.now(UTC) + timedelta(hours=1)).timestamp()),
-        "iat": int(datetime.now(UTC).timestamp()),
+        "exp": int((datetime.now(timezone.utc) + timedelta(hours=1)).timestamp()),
+        "iat": int(datetime.now(timezone.utc).timestamp()),
         "type": "access",
     }
     mock_service.validate_token.return_value = True
@@ -273,8 +281,8 @@ def mock_session_manager():
     mock_session = {
         "id": "session123",
         "user_id": "user123",
-        "created_at": datetime.now(UTC),
-        "expires_at": datetime.now(UTC) + timedelta(hours=1),
+        "created_at": datetime.now(timezone.utc),
+        "expires_at": datetime.now(timezone.utc) + timedelta(hours=1),
         "data": {"key": "value"},
     }
 

@@ -4,7 +4,11 @@ Subscription management service.
 Handles complete subscription lifecycle with simple, clear operations.
 """
 
-from datetime import UTC, datetime, timedelta
+from calendar import monthrange
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -35,6 +39,7 @@ from dotmac.platform.billing.subscriptions.models import (
     SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
     SubscriptionPlanResponse,
+    SubscriptionResponse,
     SubscriptionStatus,
     SubscriptionUpdateRequest,
     UsageRecordRequest,
@@ -174,13 +179,25 @@ class SubscriptionService:
         trial_end = None
         status = SubscriptionStatus.ACTIVE
 
+        # FIXED: Re-evaluate trial status after computing trial_end to handle expired trials
+        # Was always setting TRIALING even for past trial dates, breaking historical migrations
         if subscription_data.trial_end_override:
             trial_end = subscription_data.trial_end_override
-            status = SubscriptionStatus.TRIALING
+            # Check if trial is still running (not already elapsed)
+            status = (
+                SubscriptionStatus.TRIALING
+                if trial_end > datetime.now(UTC)
+                else SubscriptionStatus.ACTIVE
+            )
         elif plan.has_trial():
             trial_days = plan.trial_days if plan.trial_days is not None else 0
             trial_end = start_date + timedelta(days=trial_days)
-            status = SubscriptionStatus.TRIALING
+            # Check if trial is still running (not already elapsed)
+            status = (
+                SubscriptionStatus.TRIALING
+                if trial_end > datetime.now(UTC)
+                else SubscriptionStatus.ACTIVE
+            )
 
         # Create subscription record
         db_subscription = BillingSubscriptionTable(
@@ -370,8 +387,25 @@ class SubscriptionService:
         if db_subscription is None:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
-        # Use setattr to avoid mypy Column assignment errors
-        db_subscription.plan_id = change_request.new_plan_id
+        # Check if this is a future-dated plan change
+        now = datetime.now(UTC)
+        if effective_date > now:
+            # Schedule the plan change for future processing
+            # The renewal/scheduled job will check scheduled_plan_id and apply it at effective_date
+            db_subscription.scheduled_plan_id = change_request.new_plan_id
+            db_subscription.scheduled_plan_change_date = effective_date
+
+            logger.info(
+                "Scheduled plan change",
+                subscription_id=subscription_id,
+                current_plan=subscription.plan_id,
+                new_plan=change_request.new_plan_id,
+                effective_date=effective_date.isoformat(),
+                tenant_id=tenant_id,
+            )
+        else:
+            # Apply plan change immediately
+            db_subscription.plan_id = change_request.new_plan_id
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -417,8 +451,17 @@ class SubscriptionService:
 
         subscription = await self.get_subscription(subscription_id, tenant_id)
 
-        if not subscription.is_active():
-            raise SubscriptionError("Subscription is not active")
+        # FIXED: Allow cancellation of PAST_DUE subscriptions, not just ACTIVE/TRIALING
+        # Operators need to cancel delinquent subscriptions without manual DB edits
+        if subscription.status not in [
+            SubscriptionStatus.ACTIVE,
+            SubscriptionStatus.TRIALING,
+            SubscriptionStatus.PAST_DUE,
+        ]:
+            raise SubscriptionError(
+                f"Cannot cancel subscription in {subscription.status.value} status. "
+                "Only ACTIVE, TRIALING, or PAST_DUE subscriptions can be canceled."
+            )
 
         now = datetime.now(UTC)
         immediate = not at_period_end
@@ -442,9 +485,11 @@ class SubscriptionService:
             db_subscription.canceled_at = now
         else:
             # Cancel at period end (default behavior) - use setattr to avoid mypy Column assignment errors
+            # IMPORTANT: Keep status as ACTIVE so subscription remains usable until period ends
+            # The renewal job will check cancel_at_period_end and transition to ENDED at current_period_end
             db_subscription.cancel_at_period_end = True
             db_subscription.canceled_at = now
-            db_subscription.status = SubscriptionStatus.CANCELED.value
+            # Do NOT change status to CANCELED - keep it ACTIVE until period actually ends
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -481,8 +526,16 @@ class SubscriptionService:
 
         subscription = await self.get_subscription(subscription_id, tenant_id)
 
-        if subscription.status != SubscriptionStatus.CANCELED:
-            raise SubscriptionError("Only canceled subscriptions can be reactivated")
+        # FIXED: Check cancel_at_period_end flag instead of CANCELED status
+        # Since we keep status=ACTIVE when canceling at period end, we can't check status
+        if (
+            not subscription.cancel_at_period_end
+            and subscription.status != SubscriptionStatus.CANCELED
+        ):
+            raise SubscriptionError(
+                "Only subscriptions with pending cancellation (cancel_at_period_end) "
+                "or already canceled can be reactivated"
+            )
 
         if datetime.now(UTC) > subscription.current_period_end:
             raise SubscriptionError("Cannot reactivate subscription after period end")
@@ -600,7 +653,11 @@ class SubscriptionService:
     async def get_subscriptions_due_for_renewal(
         self, tenant_id: str, look_ahead_days: int = 1
     ) -> list[Subscription]:
-        """Get subscriptions that need renewal within the specified timeframe."""
+        """Get subscriptions that need renewal within the specified timeframe.
+
+        FIXED: Exclude subscriptions marked for cancellation at period end.
+        These should end naturally when current_period_end is reached, not renew.
+        """
 
         cutoff_date = datetime.now(UTC) + timedelta(days=look_ahead_days)
 
@@ -609,6 +666,9 @@ class SubscriptionService:
                 BillingSubscriptionTable.tenant_id == tenant_id,
                 BillingSubscriptionTable.status == SubscriptionStatus.ACTIVE.value,
                 BillingSubscriptionTable.current_period_end <= cutoff_date,
+                # FIXED: Exclude subscriptions scheduled for cancellation at period end
+                # Without this filter, scheduled cancellations get renewed anyway, defeating the purpose
+                BillingSubscriptionTable.cancel_at_period_end == False,  # noqa: E712
             )
         )
 
@@ -658,7 +718,9 @@ class SubscriptionService:
 
         if days_until_renewal > renewal_window_days:
             is_eligible = False
-            reasons.append(f"Too early to renew - {days_until_renewal} days remaining (renewal window: {renewal_window_days} days)")
+            reasons.append(
+                f"Too early to renew - {days_until_renewal} days remaining (renewal window: {renewal_window_days} days)"
+            )
 
         # 6. Check if customer is past due
         if subscription.is_past_due():
@@ -823,8 +885,11 @@ class SubscriptionService:
             "description": f"Subscription renewal for {plan.name}",
             "billing_cycle": plan.billing_cycle.value,
             "period_start": subscription.current_period_end,
-            "period_end": self._calculate_period_end(subscription.current_period_end, plan.billing_cycle),
-            "idempotency_key": idempotency_key or f"renewal_{subscription_id}_{datetime.now(UTC).timestamp()}",
+            "period_end": self._calculate_period_end(
+                subscription.current_period_end, plan.billing_cycle
+            ),
+            "idempotency_key": idempotency_key
+            or f"renewal_{subscription_id}_{datetime.now(UTC).timestamp()}",
             "metadata": {
                 "renewal": True,
                 "subscription_id": subscription_id,
@@ -843,6 +908,115 @@ class SubscriptionService:
 
         return payment_details
 
+    async def process_scheduled_plan_changes(self) -> dict[str, int]:
+        """Process all pending scheduled plan changes that are due.
+
+        This method should be called by a scheduled job/cron task to apply
+        plan changes that were scheduled for a future date.
+
+        Returns:
+            Dictionary with processing statistics:
+            - processed: Number of plan changes successfully applied
+            - failed: Number of plan changes that failed
+            - skipped: Number of changes skipped (invalid state)
+        """
+        now = datetime.now(UTC)
+
+        # Find all subscriptions with scheduled plan changes that are due
+        stmt = select(BillingSubscriptionTable).where(
+            and_(
+                BillingSubscriptionTable.scheduled_plan_id.isnot(None),
+                BillingSubscriptionTable.scheduled_plan_change_date <= now,
+                BillingSubscriptionTable.status.in_(["active", "trialing"]),
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        subscriptions_to_update = result.scalars().all()
+
+        stats = {"processed": 0, "failed": 0, "skipped": 0}
+
+        for db_subscription in subscriptions_to_update:
+            try:
+                # Validate the scheduled plan still exists
+                scheduled_plan_id = db_subscription.scheduled_plan_id
+                tenant_id = db_subscription.tenant_id
+
+                plan_exists_stmt = select(BillingSubscriptionPlanTable).where(
+                    and_(
+                        BillingSubscriptionPlanTable.plan_id == scheduled_plan_id,
+                        BillingSubscriptionPlanTable.tenant_id == tenant_id,
+                    )
+                )
+                plan_result = await self.db.execute(plan_exists_stmt)
+                scheduled_plan = plan_result.scalar_one_or_none()
+
+                if not scheduled_plan:
+                    logger.warning(
+                        "Scheduled plan not found, skipping change",
+                        subscription_id=db_subscription.subscription_id,
+                        scheduled_plan_id=scheduled_plan_id,
+                        tenant_id=tenant_id,
+                    )
+                    # Clear the scheduled change
+                    db_subscription.scheduled_plan_id = None
+                    db_subscription.scheduled_plan_change_date = None
+                    stats["skipped"] += 1
+                    continue
+
+                # Apply the plan change
+                old_plan_id = db_subscription.plan_id
+                db_subscription.plan_id = scheduled_plan_id
+                db_subscription.scheduled_plan_id = None
+                db_subscription.scheduled_plan_change_date = None
+
+                await self.db.flush()
+
+                # Create event for the plan change
+                await self._create_event(
+                    subscription_id=db_subscription.subscription_id,
+                    event_type=SubscriptionEventType.PLAN_CHANGED,
+                    event_data={
+                        "old_plan_id": old_plan_id,
+                        "new_plan_id": scheduled_plan_id,
+                        "scheduled_change": True,
+                        "applied_at": now.isoformat(),
+                    },
+                    tenant_id=tenant_id,
+                    user_id=None,  # System-initiated
+                )
+
+                logger.info(
+                    "Applied scheduled plan change",
+                    subscription_id=db_subscription.subscription_id,
+                    old_plan_id=old_plan_id,
+                    new_plan_id=scheduled_plan_id,
+                    tenant_id=tenant_id,
+                )
+
+                stats["processed"] += 1
+
+            except Exception as e:
+                logger.error(
+                    "Failed to process scheduled plan change",
+                    subscription_id=db_subscription.subscription_id,
+                    error=str(e),
+                    tenant_id=db_subscription.tenant_id,
+                )
+                stats["failed"] += 1
+                # Don't clear the scheduled change - allow retry
+
+        await self.db.commit()
+
+        logger.info(
+            "Scheduled plan changes processing complete",
+            processed=stats["processed"],
+            failed=stats["failed"],
+            skipped=stats["skipped"],
+        )
+
+        return stats
+
     # ========================================
     # Private Helper Methods
     # ========================================
@@ -851,27 +1025,19 @@ class SubscriptionService:
         """Calculate period end date based on billing cycle."""
 
         if billing_cycle == BillingCycle.MONTHLY:
-            # Add one month
-            if start_date.month == 12:
-                return start_date.replace(year=start_date.year + 1, month=1)
-            else:
-                return start_date.replace(month=start_date.month + 1)
-
+            months_to_add = 1
         elif billing_cycle == BillingCycle.QUARTERLY:
-            # Add 3 months
-            new_month = start_date.month + 3
-            new_year = start_date.year
-            while new_month > 12:
-                new_month -= 12
-                new_year += 1
-            return start_date.replace(year=new_year, month=new_month)
-
+            months_to_add = 3
         elif billing_cycle == BillingCycle.ANNUAL:
-            # Add one year
-            return start_date.replace(year=start_date.year + 1)
-
+            months_to_add = 12
         else:
             raise SubscriptionError(f"Unsupported billing cycle: {billing_cycle}")
+
+        total_months = start_date.month - 1 + months_to_add
+        year = start_date.year + total_months // 12
+        month = total_months % 12 + 1
+        day = min(start_date.day, monthrange(year, month)[1])
+        return start_date.replace(year=year, month=month, day=day)
 
     def _calculate_proration(
         self, subscription: Subscription, old_plan: SubscriptionPlan, new_plan: SubscriptionPlan
@@ -1081,6 +1247,34 @@ class SubscriptionService:
             updated_at=updated_at,
         )
 
+    def _subscription_to_response(self, subscription: Subscription) -> SubscriptionResponse:
+        """Convert Subscription model to SubscriptionResponse with computed fields.
+
+        FIXED: Tenant API endpoints return raw Subscription but declare response_model=SubscriptionResponse,
+        causing FastAPI validation errors. This helper adds the required computed fields.
+        """
+        return SubscriptionResponse(
+            subscription_id=subscription.subscription_id,
+            tenant_id=subscription.tenant_id,
+            customer_id=subscription.customer_id,
+            plan_id=subscription.plan_id,
+            current_period_start=subscription.current_period_start,
+            current_period_end=subscription.current_period_end,
+            status=subscription.status,
+            trial_end=subscription.trial_end,
+            cancel_at_period_end=subscription.cancel_at_period_end,
+            canceled_at=subscription.canceled_at,
+            ended_at=subscription.ended_at,
+            custom_price=subscription.custom_price,
+            usage_records=subscription.usage_records,
+            metadata=subscription.metadata,
+            created_at=subscription.created_at,
+            updated_at=subscription.updated_at,
+            # Computed fields
+            is_in_trial=subscription.is_in_trial(),
+            days_until_renewal=subscription.days_until_renewal(),
+        )
+
     async def _update_subscription_status(
         self, subscription_id: str, status: SubscriptionStatus, tenant_id: str
     ) -> bool:
@@ -1140,9 +1334,19 @@ class SubscriptionService:
         return usage_records
 
     async def calculate_proration_preview(
-        self, subscription_id: str, new_plan_id: str, tenant_id: str
+        self,
+        subscription_id: str,
+        new_plan_id: str,
+        tenant_id: str,
+        proration_behavior: ProrationBehavior = ProrationBehavior.CREATE_PRORATIONS,
     ) -> ProrationResult | None:
-        """Preview proration calculation without making changes."""
+        """Preview proration calculation without making changes.
+
+        Args:
+            proration_behavior: How to handle proration (default: CREATE_PRORATIONS)
+                - If NONE, returns zero proration
+                - Otherwise calculates actual proration
+        """
         subscription = await self.get_subscription(subscription_id, tenant_id)
         if not subscription:
             return None
@@ -1153,6 +1357,18 @@ class SubscriptionService:
         if not old_plan or not new_plan:
             return None
 
+        # FIXED: Respect proration_behavior parameter
+        # Was always calculating proration, showing credits/charges that would never be applied
+        if proration_behavior == ProrationBehavior.NONE:
+            # FIXED: Use correct ProrationResult field names
+            return ProrationResult(
+                proration_amount=Decimal("0"),
+                proration_description="No proration (proration disabled)",
+                old_plan_unused_amount=Decimal("0"),
+                new_plan_prorated_amount=new_plan.price,
+                days_remaining=0,
+            )
+
         return self._calculate_proration(subscription, old_plan, new_plan)
 
     # ========================================
@@ -1162,12 +1378,16 @@ class SubscriptionService:
     async def get_tenant_subscription(self, tenant_id: str) -> Subscription | None:
         """Get tenant's current active subscription."""
 
-        stmt = select(BillingSubscriptionTable).where(
-            and_(
-                BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.status.in_(["active", "trialing", "past_due"]),
+        stmt = (
+            select(BillingSubscriptionTable)
+            .where(
+                and_(
+                    BillingSubscriptionTable.tenant_id == tenant_id,
+                    BillingSubscriptionTable.status.in_(["active", "trialing", "past_due"]),
+                )
             )
-        ).order_by(BillingSubscriptionTable.created_at.desc())
+            .order_by(BillingSubscriptionTable.created_at.desc())
+        )
 
         result = await self.db.execute(stmt)
         db_subscription = result.scalar_one_or_none()
@@ -1199,8 +1419,22 @@ class SubscriptionService:
         current_plan = await self.get_plan(subscription.plan_id, tenant_id)
         new_plan = await self.get_plan(new_plan_id, tenant_id)
 
-        # Calculate proration
-        proration = self._calculate_proration(subscription, current_plan, new_plan)
+        # FIXED: Respect proration_behavior - skip calculation when NONE
+        # Was always calculating proration, showing credits/charges that would never be applied
+        if proration_behavior == ProrationBehavior.NONE:
+            # FIXED: Use correct ProrationResult field names
+            # Fields are: proration_amount, proration_description, old_plan_unused_amount,
+            # new_plan_prorated_amount, days_remaining (not credit_applied, additional_charge, description)
+            proration = ProrationResult(
+                proration_amount=Decimal("0"),
+                proration_description="No proration (proration disabled)",
+                old_plan_unused_amount=Decimal("0"),
+                new_plan_prorated_amount=new_plan.price,
+                days_remaining=0,
+            )
+        else:
+            # Calculate proration for the preview
+            proration = self._calculate_proration(subscription, current_plan, new_plan)
 
         # Determine effective date
         if effective_date is None:
@@ -1237,12 +1471,17 @@ class SubscriptionService:
         # Validate new plan exists
         await self.get_plan(new_plan_id, tenant_id)
 
-        # Use existing change_plan method
-        await self.change_subscription_plan(
-            subscription_id=subscription.subscription_id,
+        # Use existing change_plan method (not change_subscription_plan which doesn't exist)
+        # FIXED: Was hardcoding effective_date=None, ignoring caller's parameter
+        change_request = SubscriptionPlanChangeRequest(
             new_plan_id=new_plan_id,
-            tenant_id=tenant_id,
             proration_behavior=proration_behavior,
+            effective_date=effective_date,  # Pass through caller's effective date for scheduling
+        )
+        await self.change_plan(
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+            change_request=change_request,
         )
 
         # Record event
@@ -1285,10 +1524,11 @@ class SubscriptionService:
             raise ValueError("Subscription has already ended")
 
         # Use existing cancel method
-        await self.cancel_subscription_method(
+        # FIXED: Was calling non-existent cancel_subscription_method, causing AttributeError
+        await self.cancel_subscription(
             subscription_id=subscription.subscription_id,
             tenant_id=tenant_id,
-            cancel_at_period_end=cancel_at_period_end,
+            at_period_end=cancel_at_period_end,
         )
 
         # Record cancellation event with reason
@@ -1305,8 +1545,13 @@ class SubscriptionService:
             user_id=cancelled_by_user_id,
         )
 
-        # Return updated subscription
-        updated_subscription = await self.get_tenant_subscription(tenant_id)
+        # FIXED: Return updated subscription by fetching directly by ID
+        # Cannot use get_tenant_subscription because it filters by status in ["active", "trialing", "past_due"]
+        # After immediate cancel, status becomes ENDED; after cancel-at-period-end, status may be CANCELED
+        updated_subscription = await self.get_subscription(
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+        )
         if not updated_subscription:
             raise SubscriptionError("Failed to retrieve updated subscription")
 
@@ -1324,11 +1569,13 @@ class SubscriptionService:
             raise SubscriptionNotFoundError("No subscription found")
 
         # Validate can reactivate
-        if subscription.status != SubscriptionStatus.CANCELED:
-            raise ValueError("Can only reactivate canceled subscriptions")
-
+        # FIXED: Check cancel_at_period_end flag instead of relying on CANCELED status
+        # Since we keep status=ACTIVE when canceling at period end, we check the flag
         if not subscription.cancel_at_period_end:
-            raise ValueError("Cannot reactivate immediately cancelled subscription")
+            raise ValueError(
+                "Subscription does not have pending cancellation. "
+                "Only subscriptions canceled at period end can be reactivated."
+            )
 
         # Check not already ended
         if datetime.now(UTC) >= subscription.current_period_end:

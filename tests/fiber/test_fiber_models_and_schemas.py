@@ -1,3 +1,4 @@
+
 """
 Tests for Fiber Infrastructure Models and Schemas
 
@@ -5,43 +6,32 @@ Comprehensive tests for fiber cable, distribution point, service area,
 splice point, health metrics, and OTDR test models and schemas.
 """
 
-import pytest
 from datetime import datetime, timedelta
 from uuid import uuid4
+
+import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.fiber.models import (
-    FiberCable,
-    DistributionPoint,
-    ServiceArea,
-    SplicePoint,
-    FiberHealthMetric,
-    OTDRTestResult,
-    FiberType,
-    FiberCableStatus,
+
+
     CableInstallationType,
     DistributionPointType,
-    ServiceAreaType,
-    SpliceStatus,
+    FiberCableStatus,
     FiberHealthStatus,
+    FiberType,
+    ServiceAreaType,
 )
 from dotmac.platform.fiber.schemas import (
-    FiberCableCreate,
-    FiberCableUpdate,
-    FiberCableResponse,
     DistributionPointCreate,
-    DistributionPointUpdate,
     DistributionPointResponse,
-    ServiceAreaCreate,
-    ServiceAreaUpdate,
-    ServiceAreaResponse,
-    SplicePointCreate,
-    SplicePointUpdate,
-    SplicePointResponse,
+    FiberCableCreate,
+    FiberCableResponse,
+    FiberCableUpdate,
     HealthMetricCreate,
-    HealthMetricResponse,
     OTDRTestCreate,
-    OTDRTestResponse,
+    ServiceAreaCreate,
+    SplicePointCreate,
 )
 
 
@@ -49,6 +39,10 @@ from dotmac.platform.fiber.schemas import (
 # Fiber Cable Schema Tests
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestFiberCableSchemas:
     """Test fiber cable schema validation and serialization."""
@@ -257,7 +251,10 @@ class TestServiceAreaSchemas:
             name="Downtown Business District",
             area_type=ServiceAreaType.COMMERCIAL,
             is_serviceable=True,
-            coverage_geojson={"type": "Polygon", "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]]},
+            coverage_geojson={
+                "type": "Polygon",
+                "coordinates": [[[0, 0], [1, 0], [1, 1], [0, 1], [0, 0]]],
+            },
             postal_codes=["12345", "12346"],
             construction_status="COMPLETED",
             go_live_date=datetime.now(),
@@ -386,9 +383,7 @@ class TestHealthMetricSchemas:
             total_loss_db=3.2,
             splice_loss_db=0.8,
             connector_loss_db=0.5,
-            detected_issues=[
-                {"type": "high_loss", "location_km": 2.5, "severity": "medium"}
-            ],
+            detected_issues=[{"type": "high_loss", "location_km": 2.5, "severity": "medium"}],
             recommendations=["Test strand 12 at 2.5km", "Check splice quality"],
         )
         assert metric.health_score == 75.5

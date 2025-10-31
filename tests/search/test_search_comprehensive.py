@@ -38,6 +38,7 @@ from dotmac.platform.search.interfaces import SearchFilter, SortOrder
 from dotmac.platform.search.router import search_router
 
 
+@pytest.mark.integration
 class TestSearchBackendRegistry:
     """Test SearchBackendRegistry class."""
 
@@ -55,6 +56,7 @@ class TestSearchBackendRegistry:
     def test_register_backend(self, registry):
         """Test registering a new backend."""
 
+        @pytest.mark.integration
         class TestBackend(SearchBackend):
             async def search(self, query):
                 pass
@@ -122,6 +124,7 @@ class TestSearchBackendRegistry:
         assert enabled == ["memory"]
 
 
+@pytest.mark.integration
 class TestSearchBackendFactory:
     """Test SearchBackendFactory class."""
 
@@ -188,6 +191,7 @@ class TestSearchBackendFactory:
         assert SearchBackendFactory.validate_backend("invalid") is False
 
 
+@pytest.mark.integration
 class TestConvenienceFunctions:
     """Test convenience functions."""
 
@@ -229,10 +233,11 @@ class TestConvenienceFunctions:
         """Test creating backend when search disabled."""
         mock_settings.features.search_enabled = False
 
-        with pytest.raises(ValueError, match="Search functionality is disabled"):
-            create_search_backend_from_env()
+        backend = create_search_backend_from_env()
+        assert isinstance(backend, InMemorySearchBackend)
 
 
+@pytest.mark.integration
 class TestInMemorySearchBackend:
     """Test InMemorySearchBackend implementation."""
 
@@ -420,6 +425,7 @@ class TestInMemorySearchBackend:
         assert results.total == 0
 
 
+@pytest.mark.integration
 class TestSearchRouter:
     """Test search router endpoints."""
 
@@ -512,6 +518,7 @@ class TestSearchRouter:
         assert response.status_code == 422  # Missing required query parameter
 
 
+@pytest.mark.integration
 class TestSearchService:
     """Test SearchService integration."""
 
@@ -569,6 +576,7 @@ class TestSearchService:
         assert "product1" in search_service.backend.indices["business_product"]
 
 
+@pytest.mark.integration
 class TestSearchIntegration:
     """Test search module integration."""
 
@@ -635,6 +643,7 @@ class TestSearchIntegration:
         assert filtered_results.results[0].data["title"] == "Python Tutorial"
 
 
+@pytest.mark.integration
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 

@@ -13,6 +13,7 @@ Tests cover:
 - Span context creation
 - Test environment detection
 """
+import pytest
 
 import os
 from unittest.mock import Mock, patch
@@ -31,8 +32,12 @@ from dotmac.platform.telemetry import (
     setup_telemetry,
     setup_tracing,
 )
+from dotmac.platform.version import get_version
+
+CURRENT_VERSION = get_version()
 
 
+@pytest.mark.integration
 class TestCreateResource:
     """Test OpenTelemetry resource creation."""
 
@@ -40,7 +45,7 @@ class TestCreateResource:
     def test_create_resource_basic(self, mock_settings):
         """Test creating resource with basic attributes."""
         mock_settings.observability.otel_service_name = "test-service"
-        mock_settings.app_version = "1.0.0"
+        mock_settings.app_version = CURRENT_VERSION
         mock_settings.environment.value = "development"
         mock_settings.observability.otel_resource_attributes = None
 
@@ -49,7 +54,7 @@ class TestCreateResource:
         assert resource is not None
         attrs = resource.attributes
         assert attrs["service.name"] == "test-service"
-        assert attrs["service.version"] == "1.0.0"
+        assert attrs["service.version"] == CURRENT_VERSION
         assert attrs["deployment.environment"] == "development"
 
     @patch("dotmac.platform.telemetry.settings")
@@ -71,6 +76,7 @@ class TestCreateResource:
         assert attrs["team"] == "platform"
 
 
+@pytest.mark.integration
 class TestConfigureStructlog:
     """Test structlog configuration."""
 
@@ -111,6 +117,7 @@ class TestConfigureStructlog:
         mock_configure.assert_called_once()
 
 
+@pytest.mark.integration
 class TestSetupTelemetry:
     """Test main telemetry setup function."""
 
@@ -179,6 +186,7 @@ class TestSetupTelemetry:
         mock_instrument.assert_called_once_with(app)
 
 
+@pytest.mark.integration
 class TestSetupTracing:
     """Test tracing setup."""
 
@@ -241,6 +249,7 @@ class TestSetupTracing:
         setup_tracing(Mock())
 
 
+@pytest.mark.integration
 class TestSetupMetrics:
     """Test metrics setup."""
 
@@ -300,6 +309,7 @@ class TestSetupMetrics:
         setup_metrics(Mock())
 
 
+@pytest.mark.integration
 class TestInstrumentLibraries:
     """Test library instrumentation."""
 
@@ -362,6 +372,7 @@ class TestInstrumentLibraries:
         instrument_libraries(None)
 
 
+@pytest.mark.integration
 class TestGetTracerAndMeter:
     """Test tracer and meter getter functions."""
 
@@ -382,9 +393,9 @@ class TestGetTracerAndMeter:
         mock_tracer = Mock()
         mock_get_tracer.return_value = mock_tracer
 
-        tracer = get_tracer("test-component", "1.0.0")
+        tracer = get_tracer("test-component", CURRENT_VERSION)
 
-        mock_get_tracer.assert_called_once_with("test-component", "1.0.0")
+        mock_get_tracer.assert_called_once_with("test-component", CURRENT_VERSION)
         assert tracer == mock_tracer
 
     @patch("dotmac.platform.telemetry.metrics.get_meter")
@@ -410,6 +421,7 @@ class TestGetTracerAndMeter:
         assert meter == mock_meter
 
 
+@pytest.mark.integration
 class TestRecordError:
     """Test error recording in spans."""
 
@@ -430,6 +442,7 @@ class TestRecordError:
         mock_span.set_status.assert_called_once()
 
 
+@pytest.mark.integration
 class TestCreateSpanContext:
     """Test span context creation."""
 

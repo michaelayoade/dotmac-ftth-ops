@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.dependencies import UserInfo, get_current_user
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.db import get_async_db
 
 from .delivery import WebhookDeliveryService
@@ -15,6 +16,7 @@ from .models import (
     DeliveryStatus,
     WebhookDeliveryResponse,
     WebhookSubscriptionCreate,
+    WebhookSubscriptionCreateResponse,
     WebhookSubscriptionResponse,
     WebhookSubscriptionUpdate,
 )
@@ -30,14 +32,15 @@ router = APIRouter(prefix="/webhooks", tags=["Webhooks"])
 
 @router.post(
     "/subscriptions",
-    response_model=WebhookSubscriptionResponse,
+    response_model=WebhookSubscriptionCreateResponse,
     status_code=status.HTTP_201_CREATED,
 )
 async def create_webhook_subscription(
     subscription_data: WebhookSubscriptionCreate,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
-) -> WebhookSubscriptionResponse:
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
+) -> WebhookSubscriptionCreateResponse:
     """
     Create a new webhook subscription.
 
@@ -72,9 +75,6 @@ async def create_webhook_subscription(
             subscription_data=subscription_data,
         )
 
-        # Convert to response model
-        response = WebhookSubscriptionResponse.model_validate(subscription)
-
         logger.info(
             "Webhook subscription created via API",
             subscription_id=str(subscription.id),
@@ -82,7 +82,11 @@ async def create_webhook_subscription(
             user_id=current_user.user_id,
         )
 
-        return response
+        response = WebhookSubscriptionResponse.model_validate(subscription)
+        return WebhookSubscriptionCreateResponse(
+            **response.model_dump(),
+            secret=subscription.secret,
+        )
 
     except Exception as e:
         logger.error("Failed to create webhook subscription", error=str(e))
@@ -100,6 +104,7 @@ async def list_webhook_subscriptions(
     offset: int = Query(0, ge=0, description="Pagination offset"),
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> list[WebhookSubscriptionResponse]:
     """List all webhook subscriptions for the current tenant."""
     if not current_user.tenant_id:
@@ -133,6 +138,7 @@ async def get_webhook_subscription(
     subscription_id: str,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> WebhookSubscriptionResponse:
     """Get webhook subscription by ID."""
     if not current_user.tenant_id:
@@ -172,6 +178,7 @@ async def update_webhook_subscription(
     update_data: WebhookSubscriptionUpdate,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> WebhookSubscriptionResponse:
     """Update webhook subscription."""
     if not current_user.tenant_id:
@@ -211,6 +218,7 @@ async def delete_webhook_subscription(
     subscription_id: str,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> None:
     """Delete webhook subscription."""
     if not current_user.tenant_id:
@@ -249,6 +257,7 @@ async def rotate_webhook_secret(
     subscription_id: str,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> dict[str, str]:
     """
     Rotate webhook signing secret.
@@ -304,6 +313,7 @@ async def list_webhook_deliveries(
     offset: int = Query(0, ge=0, description="Pagination offset"),
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> list[WebhookDeliveryResponse]:
     """List webhook deliveries for a subscription."""
     if not current_user.tenant_id:
@@ -337,6 +347,7 @@ async def list_all_deliveries(
     limit: int = Query(50, ge=1, le=200, description="Maximum deliveries to return"),
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> list[WebhookDeliveryResponse]:
     """List recent webhook deliveries across all subscriptions."""
     if not current_user.tenant_id:
@@ -367,6 +378,7 @@ async def get_webhook_delivery(
     delivery_id: str,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> WebhookDeliveryResponse:
     """Get webhook delivery details."""
     if not current_user.tenant_id:
@@ -405,6 +417,7 @@ async def retry_webhook_delivery(
     delivery_id: str,
     current_user: UserInfo = Depends(get_current_user),
     db: AsyncSession = Depends(get_async_db),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> dict[str, str]:
     """Manually retry a failed webhook delivery."""
     if not current_user.tenant_id:
@@ -444,6 +457,7 @@ async def retry_webhook_delivery(
 @router.get("/events")
 async def list_available_events(
     current_user: UserInfo = Depends(get_current_user),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> dict[str, int | list[dict[str, str | bool]]]:
     """
     List all available webhook event types.
@@ -484,6 +498,7 @@ async def list_available_events(
 async def get_event_details(
     event_type: str,
     current_user: UserInfo = Depends(get_current_user),
+    _: UserInfo = Depends(require_permission("webhooks:manage")),
 ) -> dict[str, str | dict[str, object] | None]:
     """Get details about a specific event type."""
     try:

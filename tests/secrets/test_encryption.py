@@ -2,7 +2,7 @@
 
 import base64
 import hashlib
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -14,6 +14,7 @@ from dotmac.platform.secrets.encryption import (
 )
 
 
+@pytest.mark.unit
 class TestDataClassification:
     """Test DataClassification enum."""
 
@@ -37,6 +38,7 @@ class TestDataClassification:
         assert classification == "confidential"
 
 
+@pytest.mark.unit
 class TestEncryptedField:
     """Test EncryptedField dataclass."""
 
@@ -68,17 +70,17 @@ class TestEncryptedField:
 
     def test_encrypted_field_default_timestamp(self):
         """Test that default timestamp is recent."""
-        before = datetime.now(UTC)
+        before = datetime.now(timezone.utc)
         field = EncryptedField(
             algorithm="test", encrypted_data="data", classification=DataClassification.PUBLIC
         )
-        after = datetime.now(UTC)
+        after = datetime.now(timezone.utc)
 
         assert before <= field.created_at <= after
 
     def test_encrypted_field_custom_timestamp(self):
         """Test EncryptedField with custom timestamp."""
-        custom_time = datetime(2023, 1, 1, tzinfo=UTC)
+        custom_time = datetime(2023, 1, 1, tzinfo=timezone.utc)
         field = EncryptedField(
             algorithm="test",
             encrypted_data="data",
@@ -89,6 +91,7 @@ class TestEncryptedField:
         assert field.created_at == custom_time
 
 
+@pytest.mark.unit
 class TestSymmetricEncryptionService:
     """Test SymmetricEncryptionService."""
 
@@ -359,6 +362,7 @@ class TestSymmetricEncryptionService:
             assert result.metadata["classification"] == classification.value
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and error conditions."""
 
@@ -416,6 +420,7 @@ class TestEdgeCases:
         assert service.decrypt(encrypted2) == "test2"
 
 
+@pytest.mark.unit
 class TestModuleExports:
     """Test module exports."""
 

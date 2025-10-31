@@ -1,7 +1,9 @@
 """Comprehensive tests for billing configuration - Phase 2."""
 
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+import pytest
 
 from dotmac.platform.billing.config import (
     BillingConfig,
@@ -17,6 +19,7 @@ from dotmac.platform.billing.config import (
 )
 
 
+@pytest.mark.unit
 class TestStripeConfig:
     """Test StripeConfig model."""
 
@@ -41,6 +44,7 @@ class TestStripeConfig:
         assert config.publishable_key == "pk_test_123"
 
 
+@pytest.mark.unit
 class TestPayPalConfig:
     """Test PayPalConfig model."""
 
@@ -70,6 +74,7 @@ class TestPayPalConfig:
         assert config.environment == "live"
 
 
+@pytest.mark.unit
 class TestTaxConfig:
     """Test TaxConfig model."""
 
@@ -109,6 +114,7 @@ class TestTaxConfig:
         assert config.default_tax_rate == 8.5
 
 
+@pytest.mark.unit
 class TestCurrencyConfig:
     """Test CurrencyConfig model."""
 
@@ -144,6 +150,7 @@ class TestCurrencyConfig:
         assert config.currency_format == "{amount} {symbol}"
 
 
+@pytest.mark.unit
 class TestInvoiceConfig:
     """Test InvoiceConfig model."""
 
@@ -189,6 +196,7 @@ class TestInvoiceConfig:
         assert config.send_reminders is False
 
 
+@pytest.mark.unit
 class TestPaymentConfig:
     """Test PaymentConfig model."""
 
@@ -233,6 +241,7 @@ class TestPaymentConfig:
         assert config.require_verification is False
 
 
+@pytest.mark.unit
 class TestWebhookConfig:
     """Test WebhookConfig model."""
 
@@ -268,6 +277,7 @@ class TestWebhookConfig:
         assert config.timeout_seconds == 60
 
 
+@pytest.mark.unit
 class TestBillingConfig:
     """Test BillingConfig model."""
 
@@ -342,6 +352,7 @@ class TestBillingConfig:
         assert config.data_retention_days == 365
 
 
+@pytest.mark.unit
 class TestBillingConfigFromEnv:
     """Test BillingConfig.from_env() method."""
 
@@ -355,30 +366,42 @@ class TestBillingConfigFromEnv:
         assert config.tax.default_tax_rate == 0.0
         assert config.currency.default_currency == "USD"
 
-    @patch.dict(
-        os.environ,
-        {"STRIPE_API_KEY": "sk_test_123", "STRIPE_WEBHOOK_SECRET": "whsec_456"},
-        clear=True,
-    )
-    def test_from_env_with_stripe(self):
+    @patch.dict(os.environ, {}, clear=True)
+    @patch("dotmac.platform.settings.settings")
+    def test_from_env_with_stripe(self, mock_settings):
         """Test from_env with Stripe environment variables."""
+        # Mock settings.billing
+        mock_billing = MagicMock()
+        mock_billing.stripe_api_key = "sk_test_123"
+        mock_billing.stripe_webhook_secret = "whsec_456"
+        mock_billing.stripe_publishable_key = None
+        mock_billing.paypal_client_id = None
+        mock_billing.avalara_api_key = None
+        mock_billing.taxjar_api_token = None
+        mock_settings.billing = mock_billing
+        mock_settings.webhooks = MagicMock(signing_secret=None)
+
         config = BillingConfig.from_env()
 
         assert config.stripe is not None
         assert config.stripe.api_key == "sk_test_123"
         assert config.stripe.webhook_secret == "whsec_456"
 
-    @patch.dict(
-        os.environ,
-        {
-            "PAYPAL_CLIENT_ID": "client_123",
-            "PAYPAL_CLIENT_SECRET": "secret_456",
-            "PAYPAL_ENVIRONMENT": "live",
-        },
-        clear=True,
-    )
-    def test_from_env_with_paypal(self):
+    @patch.dict(os.environ, {"PAYPAL_ENVIRONMENT": "live"}, clear=True)
+    @patch("dotmac.platform.settings.settings")
+    def test_from_env_with_paypal(self, mock_settings):
         """Test from_env with PayPal environment variables."""
+        # Mock settings.billing
+        mock_billing = MagicMock()
+        mock_billing.stripe_api_key = None
+        mock_billing.paypal_client_id = "client_123"
+        mock_billing.paypal_client_secret = "secret_456"
+        mock_billing.paypal_webhook_id = None
+        mock_billing.avalara_api_key = None
+        mock_billing.taxjar_api_token = None
+        mock_settings.billing = mock_billing
+        mock_settings.webhooks = MagicMock(signing_secret=None)
+
         config = BillingConfig.from_env()
 
         assert config.paypal is not None
@@ -390,14 +413,23 @@ class TestBillingConfigFromEnv:
         os.environ,
         {
             "TAX_PROVIDER": "avalara",
-            "AVALARA_API_KEY": "avalara_key",
             "AVALARA_COMPANY_CODE": "COMP01",
             "DEFAULT_TAX_RATE": "8.5",
         },
         clear=True,
     )
-    def test_from_env_with_tax_config(self):
+    @patch("dotmac.platform.settings.settings")
+    def test_from_env_with_tax_config(self, mock_settings):
         """Test from_env with tax configuration."""
+        # Mock settings.billing
+        mock_billing = MagicMock()
+        mock_billing.stripe_api_key = None
+        mock_billing.paypal_client_id = None
+        mock_billing.avalara_api_key = "avalara_key"
+        mock_billing.taxjar_api_token = None
+        mock_settings.billing = mock_billing
+        mock_settings.webhooks = MagicMock(signing_secret=None)
+
         config = BillingConfig.from_env()
 
         assert config.tax.provider == "avalara"
@@ -461,13 +493,27 @@ class TestBillingConfigFromEnv:
         os.environ,
         {
             "WEBHOOK_ENDPOINT_URL": "https://example.com/webhooks",
-            "WEBHOOK_SIGNING_SECRET": "secret_789",
-            "WEBHOOK_RETRY_ATTEMPTS": "5",
         },
         clear=True,
     )
-    def test_from_env_with_webhook_config(self):
+    @patch("dotmac.platform.settings.settings")
+    def test_from_env_with_webhook_config(self, mock_settings):
         """Test from_env with webhook configuration."""
+        # Mock settings
+        mock_billing = MagicMock()
+        mock_billing.stripe_api_key = None
+        mock_billing.paypal_client_id = None
+        mock_billing.avalara_api_key = None
+        mock_billing.taxjar_api_token = None
+        mock_settings.billing = mock_billing
+
+        # Mock webhook settings
+        mock_webhooks = MagicMock()
+        mock_webhooks.signing_secret = "secret_789"
+        mock_webhooks.retry_attempts = 5
+        mock_webhooks.timeout_seconds = 30
+        mock_settings.webhooks = mock_webhooks
+
         config = BillingConfig.from_env()
 
         assert config.webhook is not None
@@ -510,6 +556,7 @@ class TestBillingConfigFromEnv:
         assert config.data_retention_days == 365
 
 
+@pytest.mark.unit
 class TestGlobalConfigFunctions:
     """Test global configuration functions."""
 

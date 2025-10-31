@@ -170,9 +170,7 @@ async def create_onu_status_stream(
     return EventSourceResponse(stream.stream())
 
 
-async def create_alert_stream(
-    redis: RedisClientType, tenant_id: str | None
-) -> EventSourceResponse:
+async def create_alert_stream(redis: RedisClientType, tenant_id: str | None) -> EventSourceResponse:
     """
     Create SSE stream for network alerts.
 

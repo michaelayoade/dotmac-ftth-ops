@@ -1,0 +1,25 @@
+---
+# Post-provision hooks to register tenant metadata back with the platform.
+
+- name: "Notify DotMac platform of provisioning status"
+  ansible.builtin.uri:
+    url: "{{ platform_callback_url }}"
+    method: POST
+    headers:
+      Authorization: "Bearer {{ platform_callback_token }}"
+    body_format: json
+    body:
+      tenant_id: "{{ tenant_id }}"
+      status: "{{ provisioning_status }}"
+      awx_job_id: "{{ awx_job_id | default(omit) }}"
+  when: platform_callback_url is defined and platform_callback_token is defined
+
+- name: "Publish onboarding summary to workspace"
+  ansible.builtin.copy:
+    dest: "{{ tenant_workspace_root }}/{{ tenant_id }}/SUMMARY.md"
+    mode: "0640"
+    content: |
+      # Provisioning Summary
+      - Tenant: {{ tenant_id }}
+      - Mode: {{ deployment_mode }}
+      - Completed: {{ ansible_date_time.iso8601 }}

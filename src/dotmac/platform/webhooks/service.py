@@ -3,10 +3,13 @@ Webhook subscription service for CRUD operations.
 """
 
 import uuid
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import structlog
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -92,32 +95,17 @@ class WebhookSubscriptionService:
         if is_active is not None:
             stmt = stmt.where(WebhookSubscription.is_active == is_active)
 
-        # Check if we're using SQLite
-        dialect_name = self.db.bind.dialect.name if self.db.bind else "sqlite"
-        use_python_filtering = dialect_name == "sqlite" and event_type
-
-        if event_type and not use_python_filtering:
-            # PostgreSQL: Use json_contains in SQL
-            stmt = stmt.where(func.json_array_length(WebhookSubscription.events) > 0).where(
-                func.json_contains(WebhookSubscription.events, f'"{event_type}"')
-            )
-
         stmt = stmt.order_by(WebhookSubscription.created_at.desc())
 
-        if not use_python_filtering:
-            # Apply pagination in SQL
+        if event_type is None:
             stmt = stmt.limit(limit).offset(offset)
+            result = await self.db.execute(stmt)
+            return list(result.scalars().all())
 
         result = await self.db.execute(stmt)
-        subscriptions = list(result.scalars().all())
-
-        if use_python_filtering:
-            # SQLite: Filter by event_type in Python
-            subscriptions = [sub for sub in subscriptions if event_type in sub.events]
-            # Apply pagination in Python
-            subscriptions = subscriptions[offset : offset + limit]
-
-        return subscriptions
+        all_subscriptions = list(result.scalars().all())
+        filtered = [sub for sub in all_subscriptions if event_type in sub.events]
+        return filtered[offset : offset + limit]
 
     async def update_subscription(
         self,

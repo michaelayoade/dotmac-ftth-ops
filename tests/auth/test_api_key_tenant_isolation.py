@@ -9,7 +9,7 @@ These tests verify the fixes for the HIGH severity security issue where
 API keys bypassed tenant isolation by not storing/populating tenant_id.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -58,6 +58,7 @@ def mock_redis():
     return mock_client
 
 
+@pytest.mark.integration
 class TestAPIKeyTenantBinding:
     """Test that API keys are bound to tenants during creation."""
 
@@ -134,6 +135,7 @@ class TestAPIKeyTenantBinding:
             assert stored_data["tenant_id"] is None
 
 
+@pytest.mark.integration
 class TestAPIKeyTenantIsolation:
     """Test that API keys enforce tenant isolation during authentication."""
 
@@ -159,7 +161,7 @@ class TestAPIKeyTenantIsolation:
             "name": "Tenant 1 Key",
             "scopes": ["read"],
             "tenant_id": "tenant-1",  # Stored with tenant binding
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         mock_redis.get = AsyncMock(return_value=json.dumps(stored_data))
@@ -201,6 +203,7 @@ class TestAPIKeyTenantIsolation:
             assert user_info.user_id == tenant1_user.user_id
 
 
+@pytest.mark.integration
 class TestCrossTenantAPIKeyIsolation:
     """
     REGRESSION TESTS: Verify API keys cannot access data from other tenants.
@@ -354,6 +357,7 @@ class TestCrossTenantAPIKeyIsolation:
         assert len(filtered_data) == 0, "Legacy API keys should not access tenant data"
 
 
+@pytest.mark.integration
 class TestAPIKeySecurityValidation:
     """Additional security validations for API keys."""
 

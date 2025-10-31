@@ -22,7 +22,9 @@ from dotmac.platform.diagnostics.models import (
 from dotmac.platform.diagnostics.service import DiagnosticsService
 from dotmac.platform.user_management.models import User
 
-router = APIRouter(prefix="", )
+router = APIRouter(
+    prefix="",
+)
 
 
 # Request/Response Models

@@ -1,6 +1,6 @@
 """Comprehensive tests for dunning API router."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
@@ -8,9 +8,18 @@ from fastapi import status
 from httpx import AsyncClient
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Mock authenticated user."""
+
+
     return MagicMock(
         user_id=uuid4(),
         tenant_id="test-tenant-001",
@@ -18,10 +27,8 @@ def mock_user():
     )
 
 
-@pytest.fixture
-def auth_headers():
-    """Mock authentication headers."""
-    return {"Authorization": "Bearer test-token"}
+# Note: auth_headers fixture is provided by tests/billing/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
 
 
 @pytest.mark.asyncio
@@ -32,25 +39,18 @@ class TestCampaignEndpoints:
         self, async_client: AsyncClient, auth_headers, sample_campaign_data
     ):
         """Test POST /campaigns - successful creation."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/campaigns",
+            json=sample_campaign_data.model_dump(mode="json"),
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/campaigns",
-                json=sample_campaign_data.model_dump(mode="json"),
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_201_CREATED
-            data = response.json()
-            assert data["name"] == sample_campaign_data.name
-            assert data["trigger_after_days"] == sample_campaign_data.trigger_after_days
-            assert len(data["actions"]) == 3
-            assert data["is_active"] is True
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["name"] == sample_campaign_data.name
+        assert data["trigger_after_days"] == sample_campaign_data.trigger_after_days
+        assert len(data["actions"]) == 3
+        assert data["is_active"] is True
 
     async def test_create_campaign_validation_error(self, async_client: AsyncClient, auth_headers):
         """Test POST /campaigns - validation error for empty actions."""
@@ -60,20 +60,13 @@ class TestCampaignEndpoints:
             "actions": [],  # Empty actions
         }
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/campaigns",
+            json=invalid_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/campaigns",
-                json=invalid_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_create_campaign_unauthorized(self, async_client: AsyncClient):
         """Test POST /campaigns - unauthorized without token."""
@@ -86,137 +79,88 @@ class TestCampaignEndpoints:
 
     async def test_list_campaigns(self, async_client: AsyncClient, auth_headers, sample_campaign):
         """Test GET /campaigns - list all campaigns."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/campaigns", headers=auth_headers
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/campaigns", headers=auth_headers
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert isinstance(data, list)
-            assert len(data) >= 1
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) >= 1
 
     async def test_list_campaigns_filtered_by_active(
         self, async_client: AsyncClient, auth_headers, sample_campaign
     ):
         """Test GET /campaigns?active_only=true - filter active campaigns."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/campaigns?active_only=true",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/campaigns?active_only=true",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert all(campaign["is_active"] for campaign in data)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert all(campaign["is_active"] for campaign in data)
 
     async def test_get_campaign(self, async_client: AsyncClient, auth_headers, sample_campaign):
         """Test GET /campaigns/{id} - retrieve specific campaign."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data["id"] == str(sample_campaign.id)
-            assert data["name"] == sample_campaign.name
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == str(sample_campaign.id)
+        assert data["name"] == sample_campaign.name
 
     async def test_get_campaign_not_found(self, async_client: AsyncClient, auth_headers):
         """Test GET /campaigns/{id} - campaign not found."""
         fake_id = uuid4()
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            f"/api/v1/billing/dunning/campaigns/{fake_id}", headers=auth_headers
+        )
 
-            response = await async_client.get(
-                f"/api/v1/billing/dunning/campaigns/{fake_id}", headers=auth_headers
-            )
-
-            assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == status.HTTP_404_NOT_FOUND
 
     async def test_update_campaign(self, async_client: AsyncClient, auth_headers, sample_campaign):
         """Test PATCH /campaigns/{id} - update campaign."""
         update_data = {"name": "Updated Campaign Name", "priority": 10}
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.patch(
+            f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
+            json=update_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.patch(
-                f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
-                json=update_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data["name"] == "Updated Campaign Name"
-            assert data["priority"] == 10
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["name"] == "Updated Campaign Name"
+        assert data["priority"] == 10
 
     async def test_delete_campaign(self, async_client: AsyncClient, auth_headers, sample_campaign):
         """Test DELETE /campaigns/{id} - soft delete campaign."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.delete(
+            f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
+            headers=auth_headers,
+        )
 
-            response = await async_client.delete(
-                f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response.status_code == status.HTTP_204_NO_CONTENT
 
     async def test_get_campaign_stats(
         self, async_client: AsyncClient, auth_headers, sample_campaign
     ):
         """Test GET /campaigns/{id}/stats - retrieve campaign statistics."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}/stats",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                f"/api/v1/billing/dunning/campaigns/{sample_campaign.id}/stats",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data["campaign_id"] == str(sample_campaign.id)
-            assert "total_executions" in data
-            assert "success_rate" in data
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["campaign_id"] == str(sample_campaign.id)
+        assert "total_executions" in data
+        assert "success_rate" in data
 
 
 @pytest.mark.asyncio
@@ -236,25 +180,18 @@ class TestExecutionEndpoints:
             "metadata": {"test": "data"},
         }
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/executions",
+            json=execution_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/executions",
-                json=execution_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_201_CREATED
-            data = response.json()
-            assert data["campaign_id"] == str(sample_campaign.id)
-            assert data["subscription_id"] == "sub_test_456"
-            assert data["outstanding_amount"] == 5000
-            assert data["status"] == "pending"
+        assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["campaign_id"] == str(sample_campaign.id)
+        assert data["subscription_id"] == "sub_test_456"
+        assert data["outstanding_amount"] == 5000
+        assert data["status"] == "pending"
 
     async def test_start_execution_duplicate_subscription(
         self, async_client: AsyncClient, auth_headers, sample_execution
@@ -268,77 +205,49 @@ class TestExecutionEndpoints:
             "outstanding_amount": 3000,
         }
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/executions",
+            json=execution_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/executions",
-                json=execution_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     async def test_list_executions(self, async_client: AsyncClient, auth_headers, sample_execution):
         """Test GET /executions - list all executions."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/executions", headers=auth_headers
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/executions", headers=auth_headers
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert isinstance(data, list)
-            assert len(data) >= 1
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) >= 1
 
     async def test_list_executions_filtered_by_status(
         self, async_client: AsyncClient, auth_headers, sample_execution
     ):
         """Test GET /executions?status=pending - filter by status."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/executions?status=pending",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/executions?status=pending",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert all(execution["status"] == "pending" for execution in data)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert all(execution["status"] == "pending" for execution in data)
 
     async def test_get_execution(self, async_client: AsyncClient, auth_headers, sample_execution):
         """Test GET /executions/{id} - retrieve specific execution."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            f"/api/v1/billing/dunning/executions/{sample_execution.id}",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                f"/api/v1/billing/dunning/executions/{sample_execution.id}",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data["id"] == str(sample_execution.id)
-            assert data["subscription_id"] == sample_execution.subscription_id
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["id"] == str(sample_execution.id)
+        assert data["subscription_id"] == sample_execution.subscription_id
 
     async def test_cancel_execution(
         self, async_client: AsyncClient, auth_headers, sample_execution
@@ -346,43 +255,29 @@ class TestExecutionEndpoints:
         """Test POST /executions/{id}/cancel - cancel execution."""
         cancel_data = {"reason": "Customer paid invoice"}
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            f"/api/v1/billing/dunning/executions/{sample_execution.id}/cancel",
+            json=cancel_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                f"/api/v1/billing/dunning/executions/{sample_execution.id}/cancel",
-                json=cancel_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert data["status"] == "canceled"
-            assert data["canceled_reason"] == "Customer paid invoice"
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["status"] == "canceled"
+        assert data["canceled_reason"] == "Customer paid invoice"
 
     async def test_get_execution_logs(
         self, async_client: AsyncClient, auth_headers, sample_execution
     ):
         """Test GET /executions/{id}/logs - retrieve action logs."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            f"/api/v1/billing/dunning/executions/{sample_execution.id}/logs",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                f"/api/v1/billing/dunning/executions/{sample_execution.id}/logs",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert isinstance(data, list)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
@@ -391,39 +286,25 @@ class TestStatisticsEndpoints:
 
     async def test_get_tenant_stats(self, async_client: AsyncClient, auth_headers):
         """Test GET /stats - retrieve tenant-wide statistics."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get("/api/v1/billing/dunning/stats", headers=auth_headers)
 
-            response = await async_client.get("/api/v1/billing/dunning/stats", headers=auth_headers)
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert "total_campaigns" in data
-            assert "active_campaigns" in data
-            assert "total_executions" in data
-            assert "average_recovery_rate" in data
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert "total_campaigns" in data
+        assert "active_campaigns" in data
+        assert "total_executions" in data
+        assert "average_recovery_rate" in data
 
     async def test_get_pending_actions(self, async_client: AsyncClient, auth_headers):
         """Test GET /pending-actions - retrieve pending actions."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/pending-actions?limit=10",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/pending-actions?limit=10",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_200_OK
-            data = response.json()
-            assert isinstance(data, list)
+        assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert isinstance(data, list)
 
 
 @pytest.mark.asyncio
@@ -434,27 +315,20 @@ class TestRateLimiting:
         self, async_client: AsyncClient, auth_headers, sample_campaign_data
     ):
         """Test rate limiting on POST /campaigns (20/minute)."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        # Make 21 requests rapidly
+        responses = []
+        for _i in range(21):
+            response = await async_client.post(
+                "/api/v1/billing/dunning/campaigns",
+                json=sample_campaign_data.model_dump(mode="json"),
+                headers=auth_headers,
+            )
+            responses.append(response)
 
-            # Make 21 requests rapidly
-            responses = []
-            for _i in range(21):
-                response = await async_client.post(
-                    "/api/v1/billing/dunning/campaigns",
-                    json=sample_campaign_data.model_dump(mode="json"),
-                    headers=auth_headers,
-                )
-                responses.append(response)
-
-            # At least one should be rate limited
-            any(r.status_code == status.HTTP_429_TOO_MANY_REQUESTS for r in responses)
-            # Note: This test may be flaky depending on rate limiter implementation
-            # In production, the 21st request should be rate limited
+        # At least one should be rate limited
+        any(r.status_code == status.HTTP_429_TOO_MANY_REQUESTS for r in responses)
+        # Note: This test may be flaky depending on rate limiter implementation
+        # In production, the 21st request should be rate limited
 
 
 @pytest.mark.asyncio
@@ -463,38 +337,24 @@ class TestErrorHandling:
 
     async def test_invalid_uuid_format(self, async_client: AsyncClient, auth_headers):
         """Test endpoints handle invalid UUID format."""
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.get(
+            "/api/v1/billing/dunning/campaigns/invalid-uuid",
+            headers=auth_headers,
+        )
 
-            response = await async_client.get(
-                "/api/v1/billing/dunning/campaigns/invalid-uuid",
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_missing_required_fields(self, async_client: AsyncClient, auth_headers):
         """Test validation for missing required fields."""
         incomplete_data = {"name": "Test Campaign"}  # Missing required fields
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/campaigns",
+            json=incomplete_data,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/campaigns",
-                json=incomplete_data,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_negative_outstanding_amount(
         self, async_client: AsyncClient, auth_headers, sample_campaign
@@ -507,17 +367,10 @@ class TestErrorHandling:
             "outstanding_amount": -1000,  # Invalid negative amount
         }
 
-        with (
-            patch("dotmac.platform.billing.dunning.router.get_current_user") as mock_auth,
-            patch("dotmac.platform.billing.dunning.router.get_current_tenant_id") as mock_tenant,
-        ):
-            mock_auth.return_value = MagicMock(user_id=uuid4())
-            mock_tenant.return_value = "test-tenant-001"
+        response = await async_client.post(
+            "/api/v1/billing/dunning/executions",
+            json=invalid_execution,
+            headers=auth_headers,
+        )
 
-            response = await async_client.post(
-                "/api/v1/billing/dunning/executions",
-                json=invalid_execution,
-                headers=auth_headers,
-            )
-
-            assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY

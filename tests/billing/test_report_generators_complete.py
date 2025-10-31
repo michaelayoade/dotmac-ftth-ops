@@ -7,7 +7,7 @@ Tests cover:
 - AgingReportGenerator: aging summary, aging report, collections report
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -37,11 +37,12 @@ def tenant_id():
 @pytest.fixture
 def date_range():
     """Test date range."""
-    start = datetime(2024, 1, 1, 0, 0, 0, tzinfo=UTC)
-    end = datetime(2024, 1, 31, 23, 59, 59, tzinfo=UTC)
+    start = datetime(2024, 1, 1, 0, 0, 0, tzinfo=timezone.utc)
+    end = datetime(2024, 1, 31, 23, 59, 59, tzinfo=timezone.utc)
     return {"start": start, "end": end}
 
 
+@pytest.mark.unit
 class TestRevenueReportGenerator:
     """Test RevenueReportGenerator."""
 
@@ -111,19 +112,19 @@ class TestRevenueReportGenerator:
         # Mock query results for 3 months
         mock_rows = [
             Mock(
-                period=datetime(2024, 1, 1, tzinfo=UTC),
+                period=datetime(2024, 1, 1, tzinfo=timezone.utc),
                 invoice_count=10,
                 total_amount=50000,
                 paid_amount=40000,
             ),
             Mock(
-                period=datetime(2024, 2, 1, tzinfo=UTC),
+                period=datetime(2024, 2, 1, tzinfo=timezone.utc),
                 invoice_count=15,
                 total_amount=75000,
                 paid_amount=60000,
             ),
             Mock(
-                period=datetime(2024, 3, 1, tzinfo=UTC),
+                period=datetime(2024, 3, 1, tzinfo=timezone.utc),
                 invoice_count=12,
                 total_amount=60000,
                 paid_amount=55000,
@@ -297,7 +298,7 @@ class TestRevenueReportGenerator:
             paid_count=8,
         )
         mock_trend_row = Mock(
-            period=datetime(2024, 1, 1, tzinfo=UTC),
+            period=datetime(2024, 1, 1, tzinfo=timezone.utc),
             invoice_count=10,
             total_amount=100000,
             paid_amount=80000,
@@ -410,6 +411,7 @@ class TestRevenueReportGenerator:
         assert rate == 0.0
 
 
+@pytest.mark.unit
 class TestCustomerReportGenerator:
     """Test CustomerReportGenerator."""
 
@@ -530,6 +532,7 @@ class TestCustomerReportGenerator:
         assert report["top_customers"][0]["outstanding"] == 0
 
 
+@pytest.mark.unit
 class TestAgingReportGenerator:
     """Test AgingReportGenerator."""
 
@@ -601,7 +604,7 @@ class TestAgingReportGenerator:
         """Test generating aging report."""
         generator = AgingReportGenerator(mock_db_session)
 
-        as_of_date = datetime.now(UTC)
+        as_of_date = datetime.now(timezone.utc)
 
         mock_row = Mock(
             invoice_count=5,

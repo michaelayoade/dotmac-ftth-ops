@@ -6,12 +6,13 @@ Provides secure, multi-tenant WebSocket handlers for real-time communication.
 
 import asyncio
 import json
+import time
+from collections import defaultdict
 from uuid import UUID
 
 import structlog
 from fastapi import WebSocket, WebSocketDisconnect
 from sqlalchemy import and_, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.dunning.models import DunningCampaign
 from dotmac.platform.db import async_session_maker
@@ -26,6 +27,54 @@ from dotmac.platform.realtime.auth import (
 from dotmac.platform.redis_client import RedisClientType
 
 logger = structlog.get_logger(__name__)
+
+# Rate limiting for WebSocket control commands
+# Structure: {user_id: [(timestamp, command_type), ...]}
+_ws_control_command_history: defaultdict[str, list[tuple[float, str]]] = defaultdict(list)
+# Max control commands per user per minute
+_MAX_CONTROL_COMMANDS_PER_MINUTE = 30
+_RATE_LIMIT_WINDOW_SECONDS = 60
+
+
+def _check_control_command_rate_limit(user_id: str, command_type: str) -> tuple[bool, int]:
+    """
+    Check if user has exceeded rate limit for control commands.
+
+    Args:
+        user_id: User ID
+        command_type: Type of control command (e.g., "pause_campaign", "cancel_job")
+
+    Returns:
+        Tuple of (is_allowed, current_count)
+    """
+    current_time = time.time()
+    cutoff_time = current_time - _RATE_LIMIT_WINDOW_SECONDS
+
+    # Clean up old entries
+    if user_id in _ws_control_command_history:
+        _ws_control_command_history[user_id] = [
+            (ts, cmd) for ts, cmd in _ws_control_command_history[user_id] if ts > cutoff_time
+        ]
+
+    # Count recent commands
+    recent_commands = _ws_control_command_history[user_id]
+    current_count = len(recent_commands)
+
+    # Check if limit exceeded
+    if current_count >= _MAX_CONTROL_COMMANDS_PER_MINUTE:
+        logger.warning(
+            "websocket.rate_limit.exceeded",
+            user_id=user_id,
+            command_type=command_type,
+            current_count=current_count,
+            limit=_MAX_CONTROL_COMMANDS_PER_MINUTE,
+        )
+        return (False, current_count)
+
+    # Add current command to history
+    _ws_control_command_history[user_id].append((current_time, command_type))
+
+    return (True, current_count + 1)
 
 
 async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisClientType) -> None:
@@ -97,8 +146,12 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisCli
                                         "session_id": session_id,
                                         "username": session.username,
                                         "status": "active" if session.is_active else "inactive",
-                                        "start_time": session.acctstarttime.isoformat() if session.acctstarttime else None,
-                                        "stop_time": session.acctstoptime.isoformat() if session.acctstoptime else None,
+                                        "start_time": session.acctstarttime.isoformat()
+                                        if session.acctstarttime
+                                        else None,
+                                        "stop_time": session.acctstoptime.isoformat()
+                                        if session.acctstoptime
+                                        else None,
                                         "nas_ip": session.nasipaddress,
                                         "input_bytes": session.acctinputoctets,
                                         "output_bytes": session.acctoutputoctets,
@@ -172,7 +225,7 @@ async def handle_job_ws_authenticated(
         async with async_session_maker() as db:
             query = select(Job).where(
                 and_(
-                    Job.job_id == job_id,
+                    Job.id == job_id,
                     Job.tenant_id == user_info.tenant_id,
                 )
             )
@@ -226,6 +279,21 @@ async def handle_job_ws_authenticated(
 
                 # Handle job control commands
                 elif data.get("type") == "cancel_job":
+                    # Check rate limit
+                    is_allowed, current_count = _check_control_command_rate_limit(
+                        user_info.user_id, "cancel_job"
+                    )
+                    if not is_allowed:
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "error": "rate_limit_exceeded",
+                                "message": f"Rate limit exceeded: {current_count}/{_MAX_CONTROL_COMMANDS_PER_MINUTE} commands per minute",
+                                "retry_after": _RATE_LIMIT_WINDOW_SECONDS,
+                            }
+                        )
+                        continue
+
                     # Verify user has permission to cancel jobs
                     if "jobs.cancel" in user_info.permissions:
                         await connection.send_json(
@@ -257,6 +325,21 @@ async def handle_job_ws_authenticated(
                         )
 
                 elif data.get("type") == "pause_job":
+                    # Check rate limit
+                    is_allowed, current_count = _check_control_command_rate_limit(
+                        user_info.user_id, "pause_job"
+                    )
+                    if not is_allowed:
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "error": "rate_limit_exceeded",
+                                "message": f"Rate limit exceeded: {current_count}/{_MAX_CONTROL_COMMANDS_PER_MINUTE} commands per minute",
+                                "retry_after": _RATE_LIMIT_WINDOW_SECONDS,
+                            }
+                        )
+                        continue
+
                     if "jobs.pause" in user_info.permissions:
                         await connection.send_json(
                             {
@@ -380,7 +463,7 @@ async def handle_campaign_ws_authenticated(
             user_info,
             resource_type="campaign",
             resource_id=campaign_id,
-            required_permissions=["campaigns.read"],
+            required_permissions=["campaigns.read", "firmware.campaigns.read"],
         )
 
         # Create authenticated connection
@@ -412,6 +495,21 @@ async def handle_campaign_ws_authenticated(
 
                 # Handle campaign control commands
                 elif data.get("type") == "pause_campaign":
+                    # Check rate limit
+                    is_allowed, current_count = _check_control_command_rate_limit(
+                        user_info.user_id, "pause_campaign"
+                    )
+                    if not is_allowed:
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "error": "rate_limit_exceeded",
+                                "message": f"Rate limit exceeded: {current_count}/{_MAX_CONTROL_COMMANDS_PER_MINUTE} commands per minute",
+                                "retry_after": _RATE_LIMIT_WINDOW_SECONDS,
+                            }
+                        )
+                        continue
+
                     if "campaigns.pause" in user_info.permissions:
                         await connection.send_json(
                             {
@@ -442,6 +540,21 @@ async def handle_campaign_ws_authenticated(
                         )
 
                 elif data.get("type") == "resume_campaign":
+                    # Check rate limit
+                    is_allowed, current_count = _check_control_command_rate_limit(
+                        user_info.user_id, "resume_campaign"
+                    )
+                    if not is_allowed:
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "error": "rate_limit_exceeded",
+                                "message": f"Rate limit exceeded: {current_count}/{_MAX_CONTROL_COMMANDS_PER_MINUTE} commands per minute",
+                                "retry_after": _RATE_LIMIT_WINDOW_SECONDS,
+                            }
+                        )
+                        continue
+
                     if "campaigns.resume" in user_info.permissions:
                         await connection.send_json(
                             {
@@ -470,6 +583,21 @@ async def handle_campaign_ws_authenticated(
                         )
 
                 elif data.get("type") == "cancel_campaign":
+                    # Check rate limit
+                    is_allowed, current_count = _check_control_command_rate_limit(
+                        user_info.user_id, "cancel_campaign"
+                    )
+                    if not is_allowed:
+                        await connection.send_json(
+                            {
+                                "type": "error",
+                                "error": "rate_limit_exceeded",
+                                "message": f"Rate limit exceeded: {current_count}/{_MAX_CONTROL_COMMANDS_PER_MINUTE} commands per minute",
+                                "retry_after": _RATE_LIMIT_WINDOW_SECONDS,
+                            }
+                        )
+                        continue
+
                     if "campaigns.cancel" in user_info.permissions:
                         await connection.send_json(
                             {

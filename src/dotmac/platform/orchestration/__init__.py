@@ -20,10 +20,6 @@ from .models import (
     WorkflowStepStatus,
     WorkflowType,
 )
-
-# Backwards compatibility exports for legacy imports
-Workflow = OrchestrationWorkflow
-WorkflowStep = OrchestrationWorkflowStep
 from .saga import SagaOrchestrator
 from .schemas import (
     ProvisionSubscriberRequest,
@@ -32,6 +28,10 @@ from .schemas import (
     WorkflowStepResponse,
 )
 from .service import OrchestrationService
+
+# Backwards compatibility exports for legacy imports
+Workflow = OrchestrationWorkflow
+WorkflowStep = OrchestrationWorkflowStep
 
 __all__ = [
     # Models

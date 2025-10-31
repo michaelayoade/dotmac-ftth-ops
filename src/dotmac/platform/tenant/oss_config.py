@@ -14,7 +14,7 @@ from collections.abc import Callable
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,6 +29,7 @@ class OSSService(str, Enum):
     GENIEACS = "genieacs"
     NETBOX = "netbox"
     ANSIBLE = "ansible"
+    PROMETHEUS = "prometheus"
 
 
 class ServiceConfig(BaseModel):  # BaseModel resolves to Any in isolation
@@ -43,6 +44,7 @@ class ServiceConfig(BaseModel):  # BaseModel resolves to Any in isolation
     verify_ssl: bool = True
     timeout_seconds: float = 30.0
     max_retries: int = 2
+    extras: dict[str, Any] = Field(default_factory=dict)
 
     @property
     def auth(self) -> tuple[str, str] | None:
@@ -115,6 +117,9 @@ async def get_service_config(
         override_data = {}
 
     default_config = _get_default_settings(service)
+    override_copy = dict(override_data)
+    override_extras = override_copy.pop("extras", None)
+
     merged: dict[str, Any] = {
         "url": default_config.url,
         "username": default_config.username,
@@ -124,7 +129,20 @@ async def get_service_config(
         "timeout_seconds": default_config.timeout_seconds,
         "max_retries": default_config.max_retries,
     }
-    merged.update({k: v for k, v in override_data.items() if v is not None})
+
+    extras = dict(default_config.extras or {})
+    if isinstance(override_extras, dict):
+        for key, value in override_extras.items():
+            if value is None:
+                extras.pop(key, None)
+            else:
+                extras[key] = value
+    elif override_extras is not None:
+        extras = {}
+    if extras:
+        merged["extras"] = extras
+
+    merged.update({k: v for k, v in override_copy.items() if v is not None})
 
     try:
         config = ServiceConfig(**merged)

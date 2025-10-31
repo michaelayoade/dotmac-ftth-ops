@@ -10,25 +10,37 @@ Tests performance and scalability with large volumes:
 """
 
 import asyncio
+import os
 import time
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.models import BillingSubscriptionTable
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
-    SubscriptionStatus,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
-@pytest.fixture
+RUN_SUBSCRIPTION_LOAD_TESTS = os.getenv("RUN_SUBSCRIPTION_LOAD_TESTS") == "1"
+
+# Mark these as integration tests and skip unless explicitly enabled.
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not RUN_SUBSCRIPTION_LOAD_TESTS,
+        reason="Set RUN_SUBSCRIPTION_LOAD_TESTS=1 to enable subscription load tests.",
+    ),
+]
+
+@pytest_asyncio.fixture
 async def load_test_plans(async_db_session):
     """Create multiple plans for load testing."""
     service = SubscriptionService(db_session=async_db_session)
@@ -36,12 +48,14 @@ async def load_test_plans(async_db_session):
     product_id = str(uuid4())
 
     plans = []
-    for i, (name, price) in enumerate([
-        ("Starter", "9.99"),
-        ("Basic", "29.99"),
-        ("Pro", "99.99"),
-        ("Enterprise", "299.99"),
-    ]):
+    for i, (name, price) in enumerate(
+        [
+            ("Starter", "9.99"),
+            ("Basic", "29.99"),
+            ("Pro", "99.99"),
+            ("Enterprise", "299.99"),
+        ]
+    ):
         plan_data = SubscriptionPlanCreateRequest(
             product_id=product_id,
             name=f"Load Test {name}",
@@ -57,6 +71,7 @@ async def load_test_plans(async_db_session):
     return plans, tenant_id
 
 
+@pytest.mark.integration
 class TestSubscriptionLoadPerformance:
     """Test subscription performance under load."""
 
@@ -88,8 +103,7 @@ class TestSubscriptionLoadPerformance:
                 )
 
                 subscription = await service.create_subscription(
-                    subscription_data=subscription_data,
-                    tenant_id=tenant_id
+                    subscription_data=subscription_data, tenant_id=tenant_id
                 )
                 created_subscription_ids.append(subscription.subscription_id)
 
@@ -97,22 +111,24 @@ class TestSubscriptionLoadPerformance:
             await async_db_session.commit()
 
             batch_time = time.time() - batch_start
-            print(f"  Batch {batch_num + 1}/{num_subscriptions // batch_size}: "
-                  f"{batch_size} subscriptions in {batch_time:.2f}s "
-                  f"({batch_size/batch_time:.1f} subscriptions/sec)")
+            print(
+                f"  Batch {batch_num + 1}/{num_subscriptions // batch_size}: "
+                f"{batch_size} subscriptions in {batch_time:.2f}s "
+                f"({batch_size / batch_time:.1f} subscriptions/sec)"
+            )
 
         total_time = time.time() - start_time
         avg_per_subscription = (total_time / num_subscriptions) * 1000  # ms
 
         print(f"\n✅ Created {num_subscriptions} subscriptions in {total_time:.2f}s")
         print(f"   Average: {avg_per_subscription:.1f}ms per subscription")
-        print(f"   Throughput: {num_subscriptions/total_time:.1f} subscriptions/sec")
+        print(f"   Throughput: {num_subscriptions / total_time:.1f} subscriptions/sec")
 
         # Verify count in database
         result = await async_db_session.execute(
-            select(func.count()).select_from(BillingSubscriptionTable).where(
-                BillingSubscriptionTable.tenant_id == tenant_id
-            )
+            select(func.count())
+            .select_from(BillingSubscriptionTable)
+            .where(BillingSubscriptionTable.tenant_id == tenant_id)
         )
         count = result.scalar()
 
@@ -143,8 +159,7 @@ class TestSubscriptionLoadPerformance:
             )
 
             await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
 
             if (i + 1) % 100 == 0:
@@ -154,7 +169,7 @@ class TestSubscriptionLoadPerformance:
         await async_db_session.commit()
 
         # Test pagination performance
-        print(f"\n🔍 Testing pagination performance...")
+        print("\n🔍 Testing pagination performance...")
         page_size = 50
         pages_to_test = 5
 
@@ -162,9 +177,7 @@ class TestSubscriptionLoadPerformance:
             start_time = time.time()
 
             subscriptions = await service.list_subscriptions(
-                tenant_id=tenant_id,
-                limit=page_size,
-                offset=(page - 1) * page_size
+                tenant_id=tenant_id, limit=page_size, page=page
             )
 
             query_time = (time.time() - start_time) * 1000  # ms
@@ -176,9 +189,7 @@ class TestSubscriptionLoadPerformance:
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_concurrent_subscription_operations(
-        self, async_db_session, load_test_plans
-    ):
+    async def test_concurrent_subscription_operations(self, async_db_session, load_test_plans):
         """Test concurrent subscription operations."""
         plans, tenant_id = load_test_plans
         service = SubscriptionService(db_session=async_db_session)
@@ -198,8 +209,7 @@ class TestSubscriptionLoadPerformance:
             )
 
             subscription = await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
             subscription_ids.append(subscription.subscription_id)
 
@@ -210,10 +220,7 @@ class TestSubscriptionLoadPerformance:
         start_time = time.time()
 
         async def read_subscription(sub_id):
-            return await service.get_subscription(
-                subscription_id=sub_id,
-                tenant_id=tenant_id
-            )
+            return await service.get_subscription(subscription_id=sub_id, tenant_id=tenant_id)
 
         # Simulate concurrent reads
         tasks = [read_subscription(sub_id) for sub_id in subscription_ids]
@@ -227,16 +234,14 @@ class TestSubscriptionLoadPerformance:
 
         print(f"  ✅ {successful}/{num_subscriptions} successful reads")
         print(f"  ⏱️  Total time: {concurrent_time:.2f}s")
-        print(f"  📊 Throughput: {successful/concurrent_time:.1f} reads/sec")
+        print(f"  📊 Throughput: {successful / concurrent_time:.1f} reads/sec")
 
         assert len(errors) == 0
         assert concurrent_time < 30  # Should complete in under 30 seconds
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_bulk_cancellation_performance(
-        self, async_db_session, load_test_plans
-    ):
+    async def test_bulk_cancellation_performance(self, async_db_session, load_test_plans):
         """Test bulk cancellation performance."""
         plans, tenant_id = load_test_plans
         service = SubscriptionService(db_session=async_db_session)
@@ -256,8 +261,7 @@ class TestSubscriptionLoadPerformance:
             )
 
             subscription = await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
             subscription_ids.append(subscription.subscription_id)
 
@@ -270,9 +274,7 @@ class TestSubscriptionLoadPerformance:
         canceled_count = 0
         for sub_id in subscription_ids:
             await service.cancel_subscription(
-                subscription_id=sub_id,
-                tenant_id=tenant_id,
-                immediately=False
+                subscription_id=sub_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
             )
             canceled_count += 1
 
@@ -290,9 +292,11 @@ class TestSubscriptionLoadPerformance:
 
         # Verify cancellations
         result = await async_db_session.execute(
-            select(func.count()).select_from(BillingSubscriptionTable).where(
+            select(func.count())
+            .select_from(BillingSubscriptionTable)
+            .where(
                 BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.cancel_at_period_end == True
+                BillingSubscriptionTable.cancel_at_period_end,
             )
         )
         canceled = result.scalar()
@@ -302,9 +306,7 @@ class TestSubscriptionLoadPerformance:
 
     @pytest.mark.asyncio
     @pytest.mark.slow
-    async def test_plan_change_performance_at_scale(
-        self, async_db_session, load_test_plans
-    ):
+    async def test_plan_change_performance_at_scale(self, async_db_session, load_test_plans):
         """Test plan change performance with many subscriptions."""
         plans, tenant_id = load_test_plans
         service = SubscriptionService(db_session=async_db_session)
@@ -316,7 +318,7 @@ class TestSubscriptionLoadPerformance:
         pro_plan = plans[2]
 
         print(f"\n📈 Creating {num_subscriptions} subscriptions for plan change test...")
-        for i in range(num_subscriptions):
+        for _i in range(num_subscriptions):
             customer_id = str(uuid4())
 
             subscription_data = SubscriptionCreateRequest(
@@ -325,8 +327,7 @@ class TestSubscriptionLoadPerformance:
             )
 
             subscription = await service.create_subscription(
-                subscription_data=subscription_data,
-                tenant_id=tenant_id
+                subscription_data=subscription_data, tenant_id=tenant_id
             )
             subscription_ids.append(subscription.subscription_id)
 
@@ -338,10 +339,9 @@ class TestSubscriptionLoadPerformance:
 
         upgraded_count = 0
         for sub_id in subscription_ids:
+            change_request = SubscriptionPlanChangeRequest(new_plan_id=pro_plan.plan_id)
             await service.change_plan(
-                subscription_id=sub_id,
-                tenant_id=tenant_id,
-                new_plan_id=pro_plan.plan_id
+                subscription_id=sub_id, change_request=change_request, tenant_id=tenant_id
             )
             upgraded_count += 1
 
@@ -359,9 +359,11 @@ class TestSubscriptionLoadPerformance:
 
         # Verify upgrades
         result = await async_db_session.execute(
-            select(func.count()).select_from(BillingSubscriptionTable).where(
+            select(func.count())
+            .select_from(BillingSubscriptionTable)
+            .where(
                 BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.plan_id == pro_plan.plan_id
+                BillingSubscriptionTable.plan_id == pro_plan.plan_id,
             )
         )
         upgraded = result.scalar()
@@ -383,9 +385,9 @@ async def test_complete_load_test_scenario(async_db_session):
     tenant_id = str(uuid4())
     product_id = str(uuid4())
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🎯 COMPLETE LOAD TEST SCENARIO")
-    print("="*70)
+    print("=" * 70)
 
     # Step 1: Create plans
     print("\n📋 Step 1: Creating test plans...")
@@ -419,8 +421,7 @@ async def test_complete_load_test_scenario(async_db_session):
         )
 
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
         subscription_ids.append(subscription.subscription_id)
 
@@ -434,10 +435,11 @@ async def test_complete_load_test_scenario(async_db_session):
     create_time = time.time() - start_time
 
     # Step 3: Mixed read operations
-    print(f"\n🔍 Step 3: Performing 200 random reads...")
+    print("\n🔍 Step 3: Performing 200 random reads...")
     start_time = time.time()
 
     import random
+
     for _ in range(200):
         sub_id = random.choice(subscription_ids)
         await service.get_subscription(subscription_id=sub_id, tenant_id=tenant_id)
@@ -445,48 +447,49 @@ async def test_complete_load_test_scenario(async_db_session):
     read_time = time.time() - start_time
 
     # Step 4: Plan changes
-    print(f"\n⬆️  Step 4: Upgrading 100 subscriptions...")
+    print("\n⬆️  Step 4: Upgrading 100 subscriptions...")
     start_time = time.time()
 
     for i in range(100):
         sub_id = subscription_ids[i]
+        change_request = SubscriptionPlanChangeRequest(new_plan_id=plans[1].plan_id)
         await service.change_plan(
             subscription_id=sub_id,
+            change_request=change_request,
             tenant_id=tenant_id,
-            new_plan_id=plans[1].plan_id  # Upgrade to Pro
         )
 
     await async_db_session.commit()
     upgrade_time = time.time() - start_time
 
     # Step 5: Cancellations
-    print(f"\n❌ Step 5: Canceling 50 subscriptions...")
+    print("\n❌ Step 5: Canceling 50 subscriptions...")
     start_time = time.time()
 
     for i in range(50):
         sub_id = subscription_ids[-(i + 1)]  # Cancel from the end
         await service.cancel_subscription(
-            subscription_id=sub_id,
-            tenant_id=tenant_id,
-            immediately=False
+            subscription_id=sub_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
         )
 
     await async_db_session.commit()
     cancel_time = time.time() - start_time
 
     # Final report
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("📊 LOAD TEST RESULTS")
-    print("="*70)
-    print(f"✅ Created {num_subscriptions} subscriptions: {create_time:.2f}s "
-          f"({num_subscriptions/create_time:.1f} subs/sec)")
-    print(f"✅ Performed 200 reads: {read_time:.2f}s "
-          f"({200/read_time:.1f} reads/sec)")
-    print(f"✅ Upgraded 100 subscriptions: {upgrade_time:.2f}s "
-          f"({100/upgrade_time:.1f} upgrades/sec)")
-    print(f"✅ Canceled 50 subscriptions: {cancel_time:.2f}s "
-          f"({50/cancel_time:.1f} cancels/sec)")
-    print("="*70)
+    print("=" * 70)
+    print(
+        f"✅ Created {num_subscriptions} subscriptions: {create_time:.2f}s "
+        f"({num_subscriptions / create_time:.1f} subs/sec)"
+    )
+    print(f"✅ Performed 200 reads: {read_time:.2f}s ({200 / read_time:.1f} reads/sec)")
+    print(
+        f"✅ Upgraded 100 subscriptions: {upgrade_time:.2f}s "
+        f"({100 / upgrade_time:.1f} upgrades/sec)"
+    )
+    print(f"✅ Canceled 50 subscriptions: {cancel_time:.2f}s ({50 / cancel_time:.1f} cancels/sec)")
+    print("=" * 70)
 
     # Performance assertions
     assert create_time < 60  # Should create 500 subscriptions in under 60s

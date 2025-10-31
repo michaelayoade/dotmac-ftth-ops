@@ -6,6 +6,7 @@ Uses RobustHTTPClient for consistent architecture with other external service cl
 """
 
 import os
+import re
 from typing import Any, cast
 from urllib.parse import urljoin
 
@@ -68,6 +69,14 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
                 # Fallback to environment variable if settings not available
                 base_url = os.getenv("AWX_URL", "http://localhost:80")
 
+        if base_url is None:
+            raise ValueError("AWX base URL is required")
+
+        # Normalise base URL to avoid duplicated /api/v2 segments
+        base_url = re.sub(r"/api(?:/v2)?/?$", "/", base_url.rstrip("/"))
+        if not base_url.endswith("/"):
+            base_url += "/"
+
         username = username or os.getenv("AWX_USERNAME", "admin")
         password = password or os.getenv("AWX_PASSWORD", "password")
         token = token or os.getenv("AWX_TOKEN", "")
@@ -128,9 +137,7 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
 
     async def get_job_templates(self) -> list[dict[str, Any]]:
         """Get all job templates"""
-        response = await self._awx_request(
-            "GET", "job_templates/", timeout=self.TIMEOUTS["list"]
-        )
+        response = await self._awx_request("GET", "job_templates/", timeout=self.TIMEOUTS["list"])
         response_dict = cast(dict[str, Any], response) if isinstance(response, dict) else {}
         return cast(list[dict[str, Any]], response_dict.get("results", []))
 
@@ -202,9 +209,7 @@ class AWXClient(RobustHTTPClient):  # type: ignore[misc]
 
     async def get_inventories(self) -> list[dict[str, Any]]:
         """Get all inventories"""
-        response = await self._awx_request(
-            "GET", "inventories/", timeout=self.TIMEOUTS["list"]
-        )
+        response = await self._awx_request("GET", "inventories/", timeout=self.TIMEOUTS["list"])
         response_dict = cast(dict[str, Any], response) if isinstance(response, dict) else {}
         return cast(list[dict[str, Any]], response_dict.get("results", []))
 

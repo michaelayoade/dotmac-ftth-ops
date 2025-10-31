@@ -1,3 +1,4 @@
+
 """
 Tests for payment service private helper methods.
 """
@@ -8,9 +9,14 @@ from dotmac.platform.billing.core.entities import TransactionEntity
 from dotmac.platform.billing.core.enums import TransactionType
 from tests.billing.payments.conftest import setup_mock_db_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestPrivateHelperMethods:
     """Test private helper methods"""
 

@@ -1,5 +1,5 @@
-import { PartnerManagementView } from "@/components/partners/PartnerManagementView";
+import { TenantManagementView } from "@/components/tenants/TenantManagementView";
 
 export default function PartnerManagedTenantsPage() {
-  return <PartnerManagementView />;
+  return <TenantManagementView />;
 }

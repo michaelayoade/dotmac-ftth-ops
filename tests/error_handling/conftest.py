@@ -4,36 +4,24 @@ Fixtures for error handling integration tests.
 Sets up a test FastAPI app with auth routers and properly configured dependencies.
 """
 
-import os
-
-# Disable rate limiting BEFORE importing any modules that use it
-# This must be done before any rate_limit decorators are applied
-os.environ["RATE_LIMIT__ENABLED"] = "false"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["TESTING"] = "1"
-
 from unittest.mock import patch
 
 import pytest
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def error_handling_test_environment(monkeypatch):
+    """Ensure error-handling tests run with the expected test configuration."""
+    monkeypatch.setenv("RATE_LIMIT__ENABLED", "false")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    monkeypatch.setenv("TESTING", "1")
+
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
-
-# Import all models at module level to register them with Base.metadata
-try:
-    from dotmac.platform.auth import models as auth_models  # noqa: F401
-except ImportError:
-    pass
-try:
-    from dotmac.platform.user_management import models as user_models  # noqa: F401
-except ImportError:
-    pass
-try:
-    from dotmac.platform.tenant import models as tenant_models  # noqa: F401
-except ImportError:
-    pass
-
 
 @pytest.fixture(scope="function")
 def async_db_engine():
@@ -42,6 +30,42 @@ def async_db_engine():
     import tempfile
     from pathlib import Path
 
+    # Import ALL models INSIDE the fixture BEFORE Base to ensure they're registered
+    # This must happen before Base.metadata is used
+    try:
+        from dotmac.platform.auth import models as auth_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.user_management import models as user_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.tenant import models as tenant_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.partner_management import models as partner_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.crm import models as crm_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.customer_management import models as customer_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.billing import models as billing_models  # noqa: F401
+    except ImportError:
+        pass
+    try:
+        from dotmac.platform.audit.models import AuditActivity  # noqa: F401
+    except ImportError:
+        pass
+
+    # NOW import Base after all models are loaded
     from dotmac.platform.db import Base
 
     # Create a temporary database file
@@ -115,10 +139,11 @@ def test_app(async_db_engine):
     app.dependency_overrides[get_async_session] = override_get_session
 
     # Import and register auth routers if available
+    # Note: auth_router already has /auth prefix, so we only add /api/v1
     try:
         from dotmac.platform.auth.router import auth_router
 
-        app.include_router(auth_router, prefix="/api/v1/auth", tags=["Auth"])
+        app.include_router(auth_router, prefix="/api/v1", tags=["Auth"])
     except ImportError:
         pass
 
@@ -131,18 +156,20 @@ def test_app(async_db_engine):
         pass
 
     # Import and register API keys router if available
+    # Note: api_keys_router already has /auth/api-keys prefix, so we only add /api/v1
     try:
         from dotmac.platform.auth.api_keys_router import router as api_keys_router
 
-        app.include_router(api_keys_router, prefix="/api/v1/auth/api-keys", tags=["API Keys"])
+        app.include_router(api_keys_router, prefix="/api/v1", tags=["API Keys"])
     except ImportError:
         pass
 
     # Import and register tenant router if available
+    # Note: tenant_router already has /tenants prefix, so we only add /api/v1
     try:
         from dotmac.platform.tenant.router import router as tenant_router
 
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["Tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["Tenants"])
     except ImportError:
         pass
 

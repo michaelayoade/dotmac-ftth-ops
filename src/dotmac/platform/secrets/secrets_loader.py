@@ -95,6 +95,8 @@ SECRETS_MAPPING = {
     # Webhook Security (CONFIDENTIAL)
     # ============================================================
     "webhooks.signing_secret": "webhooks/signing_secret",
+    # Alertmanager webhook shared secret
+    "observability.alertmanager_webhook_secret": "observability/alertmanager/webhook_secret",
     # ============================================================
     # Search/Indexing (CONFIDENTIAL)
     # ============================================================
@@ -304,8 +306,9 @@ async def load_secrets_from_vault(
         if settings_obj.environment == "production":
             raise
     finally:
-        # Clean up client if we created it
-        await _cleanup_vault_client_async(vault_client)
+        # Always attempt to clean up the client when provided
+        if vault_client is not None:
+            await _cleanup_vault_client_async(vault_client)
 
 
 def load_secrets_from_vault_sync(
@@ -394,11 +397,19 @@ def validate_production_secrets(settings_obj: Settings) -> None:
     # Validate Paystack key format (should start with sk_ or pk_)
     if settings_obj.billing.paystack_secret_key:
         if not settings_obj.billing.paystack_secret_key.startswith(("sk_live_", "sk_test_")):
-            errors.append("Paystack secret key has invalid format (should start with sk_live_ or sk_test_)")
+            errors.append(
+                "Paystack secret key has invalid format (should start with sk_live_ or sk_test_)"
+            )
 
     if settings_obj.billing.paystack_public_key:
         if not settings_obj.billing.paystack_public_key.startswith(("pk_live_", "pk_test_")):
-            errors.append("Paystack public key has invalid format (should start with pk_live_ or pk_test_)")
+            errors.append(
+                "Paystack public key has invalid format (should start with pk_live_ or pk_test_)"
+            )
+
+    webhook_secret = getattr(settings_obj.observability, "alertmanager_webhook_secret", None)
+    if not webhook_secret:
+        errors.append("Alertmanager webhook secret must be set")
 
     if errors:
         error_msg = "Production secrets validation failed:\n" + "\n".join(

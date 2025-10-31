@@ -21,6 +21,7 @@ from dotmac.platform.monitoring.health_checks import (
 )
 
 
+@pytest.mark.integration
 class TestServiceStatus:
     """Test ServiceStatus enum."""
 
@@ -31,6 +32,7 @@ class TestServiceStatus:
         assert ServiceStatus.UNHEALTHY == "unhealthy"
 
 
+@pytest.mark.integration
 class TestServiceHealth:
     """Test ServiceHealth class."""
 
@@ -76,6 +78,7 @@ class TestServiceHealth:
         assert result == expected
 
 
+@pytest.mark.integration
 class TestHealthChecker:
     """Test HealthChecker class."""
 
@@ -360,8 +363,8 @@ class TestHealthChecker:
         result = health_checker.check_celery_broker()
 
         assert result.name == "celery_broker"
-        assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "RabbitMQ broker check not implemented"
+        assert result.status == ServiceStatus.UNHEALTHY
+        assert "Unsupported Celery broker" in result.message
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
@@ -372,8 +375,8 @@ class TestHealthChecker:
         result = health_checker.check_celery_broker()
 
         assert result.name == "celery_broker"
-        assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "RabbitMQ broker check not implemented"
+        assert result.status == ServiceStatus.UNHEALTHY
+        assert "Unsupported Celery broker" in result.message
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
@@ -384,8 +387,8 @@ class TestHealthChecker:
         result = health_checker.check_celery_broker()
 
         assert result.name == "celery_broker"
-        assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "Unknown broker type, assuming healthy"
+        assert result.status == ServiceStatus.UNHEALTHY
+        assert "Unsupported Celery broker" in result.message
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
@@ -404,24 +407,44 @@ class TestHealthChecker:
     def test_check_storage_minio(self, mock_settings, health_checker):
         """Test storage check with MinIO provider."""
         mock_settings.storage.provider = "minio"
+        mock_settings.storage.endpoint = "http://minio:9000"
+        mock_settings.storage.access_key = "minio"
+        mock_settings.storage.secret_key = "minio-secret"
+        mock_settings.storage.bucket = "dotmac-test"
+        mock_settings.storage.region = "us-east-1"
 
-        result = health_checker.check_storage()
+        with patch("minio.Minio") as mock_minio:
+            client = MagicMock()
+            client.bucket_exists.return_value = True
+            mock_minio.return_value = client
+
+            result = health_checker.check_storage()
 
         assert result.name == "storage"
         assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "MinIO health check skipped (minio client not bundled)"
+        assert result.message == "Object storage bucket 'dotmac-test' reachable"
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     def test_check_storage_s3(self, mock_settings, health_checker):
         """Test storage check with S3 provider."""
         mock_settings.storage.provider = "s3"
+        mock_settings.storage.endpoint = "https://s3.amazonaws.com"
+        mock_settings.storage.access_key = "aws-access"
+        mock_settings.storage.secret_key = "aws-secret"
+        mock_settings.storage.bucket = "dotmac-test"
+        mock_settings.storage.region = "us-east-1"
 
-        result = health_checker.check_storage()
+        with patch("minio.Minio") as mock_minio:
+            client = MagicMock()
+            client.bucket_exists.return_value = True
+            mock_minio.return_value = client
+
+            result = health_checker.check_storage()
 
         assert result.name == "storage"
         assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "Storage provider 's3' assumed healthy"
+        assert result.message == "Object storage bucket 'dotmac-test' reachable"
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
@@ -459,14 +482,14 @@ class TestHealthChecker:
         mock_response = MagicMock()
         mock_response.status_code = 200
         mock_client = MagicMock()
-        mock_client.get.return_value = mock_response
+        mock_client.post.return_value = mock_response
         mock_httpx.Client.return_value.__enter__.return_value = mock_client
 
         result = health_checker.check_observability()
 
         assert result.name == "observability"
         assert result.status == ServiceStatus.HEALTHY
-        assert result.message == "OTLP endpoint reachable"
+        assert result.message == "OTLP endpoint accepted test span"
         assert result.required is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
@@ -479,7 +502,7 @@ class TestHealthChecker:
         mock_response = MagicMock()
         mock_response.status_code = 500
         mock_client = MagicMock()
-        mock_client.get.return_value = mock_response
+        mock_client.post.return_value = mock_response
         mock_httpx.Client.return_value.__enter__.return_value = mock_client
 
         result = health_checker.check_observability()
@@ -497,7 +520,7 @@ class TestHealthChecker:
         mock_settings.observability.otel_endpoint = "http://localhost:4317"
 
         mock_client = MagicMock()
-        mock_client.get.side_effect = Exception("Network error")
+        mock_client.post.side_effect = Exception("Network error")
         mock_httpx.Client.return_value.__enter__.return_value = mock_client
 
         result = health_checker.check_observability()
@@ -508,6 +531,7 @@ class TestHealthChecker:
         assert result.required is False
 
 
+@pytest.mark.integration
 class TestHealthCheckerIntegration:
     """Test HealthChecker integration methods."""
 
@@ -632,6 +656,7 @@ class TestHealthCheckerIntegration:
             assert summary == expected
 
 
+@pytest.mark.integration
 class TestStartupDependencies:
     """Test startup dependency checking functions."""
 

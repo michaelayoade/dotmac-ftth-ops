@@ -2,7 +2,7 @@
 Tests for plugin schema and configuration models.
 """
 
-from datetime import UTC
+from datetime import timezone
 
 import pytest
 from pydantic import ValidationError
@@ -21,6 +21,7 @@ from dotmac.platform.plugins.schema import (
 )
 
 
+@pytest.mark.unit
 class TestFieldSpec:
     """Test FieldSpec validation and functionality."""
 
@@ -128,6 +129,7 @@ class TestFieldSpec:
         assert field.order == 5
 
 
+@pytest.mark.unit
 class TestPluginConfig:
     """Test PluginConfig validation and functionality."""
 
@@ -218,6 +220,7 @@ class TestPluginConfig:
             )
 
 
+@pytest.mark.unit
 class TestPluginInstance:
     """Test PluginInstance model."""
 
@@ -261,6 +264,7 @@ class TestPluginInstance:
             assert status in PluginStatus.__members__.values()
 
 
+@pytest.mark.unit
 class TestPluginHealthCheck:
     """Test PluginHealthCheck model."""
 
@@ -277,7 +281,7 @@ class TestPluginHealthCheck:
                 "api_accessible": True,
                 "response_time": 150,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             response_time_ms=150,
         )
 
@@ -299,13 +303,14 @@ class TestPluginHealthCheck:
                 "error": "Connection timeout",
                 "last_successful": "2024-01-01T00:00:00Z",
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
         assert health_check.status == "unhealthy"
         assert "Connection timeout" in health_check.details["error"]
 
 
+@pytest.mark.unit
 class TestPluginTestResult:
     """Test PluginTestResult model."""
 
@@ -320,7 +325,7 @@ class TestPluginTestResult:
                 "endpoint": "https://api.example.com",
                 "latency_ms": 250,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             response_time_ms=250,
         )
 
@@ -339,7 +344,7 @@ class TestPluginTestResult:
                 "error": "Invalid API key",
                 "status_code": 401,
             },
-            timestamp=datetime.now(UTC).isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
         )
 
         assert result.success is False
@@ -347,6 +352,7 @@ class TestPluginTestResult:
         assert result.details["status_code"] == 401
 
 
+@pytest.mark.unit
 class TestFieldTypes:
     """Test all field types."""
 
@@ -378,6 +384,7 @@ class TestFieldTypes:
             assert field.type == field_type
 
 
+@pytest.mark.unit
 class TestPluginTypes:
     """Test all plugin types."""
 

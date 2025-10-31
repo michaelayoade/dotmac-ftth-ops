@@ -4,7 +4,7 @@ End-to-End Tests for Fault Management System
 Tests complete workflows from event generation to alarm resolution.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -31,6 +31,7 @@ from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
 
 
+@pytest.mark.e2e
 class TestDeviceFailureWorkflow:
     """Test complete device failure detection and resolution workflow"""
 
@@ -39,6 +40,7 @@ class TestDeviceFailureWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Device goes down
@@ -75,7 +77,7 @@ class TestDeviceFailureWorkflow:
                 customer_name="Acme Corp",
                 service_id=service_id,
                 service_name="Fiber 1Gbps",
-                start_date=datetime.now(UTC) - timedelta(days=30),
+                start_date=datetime.now(timezone.utc) - timedelta(days=30),
             ),
             user_id=user_id,
         )
@@ -222,6 +224,7 @@ class TestDeviceFailureWorkflow:
             assert db_sla_instance.total_downtime >= downtime_minutes
 
 
+@pytest.mark.e2e
 class TestSLABreachWorkflow:
     """Test SLA breach detection and reporting workflow"""
 
@@ -230,6 +233,7 @@ class TestSLABreachWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: SLA breach detection
@@ -259,7 +263,7 @@ class TestSLABreachWorkflow:
         service_id = uuid4()
 
         # Instance started 30 days ago
-        start_date = datetime.now(UTC) - timedelta(days=30)
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
 
         sla_instance = await sla_service.create_instance(
             SLAInstanceCreate(
@@ -341,6 +345,7 @@ class TestSLABreachWorkflow:
         assert reported_instance.status == SLAStatus.BREACHED
 
 
+@pytest.mark.e2e
 class TestMaintenanceWindowWorkflow:
     """Test maintenance window alarm suppression workflow"""
 
@@ -349,6 +354,7 @@ class TestMaintenanceWindowWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Scheduled maintenance
@@ -362,7 +368,7 @@ class TestMaintenanceWindowWorkflow:
         user_id = uuid4()
 
         # Step 1: Schedule maintenance window for tomorrow
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         start_time = now + timedelta(days=1)
         end_time = start_time + timedelta(hours=4)
 
@@ -439,6 +445,7 @@ class TestMaintenanceWindowWorkflow:
         assert alarm_after_maintenance.status == AlarmStatus.ACTIVE
 
 
+@pytest.mark.e2e
 class TestAlarmEscalationWorkflow:
     """Test alarm escalation for unacknowledged critical alarms"""
 
@@ -447,6 +454,7 @@ class TestAlarmEscalationWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Critical alarm escalation
@@ -484,7 +492,7 @@ class TestAlarmEscalationWorkflow:
 
         # Step 2: Simulate 15 minutes passing (check unacknowledged)
         db_alarm = await session.get(Alarm, critical_alarm.id)
-        db_alarm.first_occurrence = datetime.now(UTC) - timedelta(minutes=15)
+        db_alarm.first_occurrence = datetime.now(timezone.utc) - timedelta(minutes=15)
         await session.commit()
 
         # In real system, Celery task would check for unacknowledged alarms
@@ -517,6 +525,7 @@ class TestAlarmEscalationWorkflow:
         assert resolved.cleared_at is not None
 
 
+@pytest.mark.e2e
 class TestCompleteNetworkOutageScenario:
     """Test complex scenario with multiple correlated alarms and SLA impact"""
 
@@ -525,6 +534,7 @@ class TestCompleteNetworkOutageScenario:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Fiber cut scenario
@@ -602,7 +612,7 @@ class TestCompleteNetworkOutageScenario:
                     customer_name=f"Customer {i}",
                     service_id=service_id,
                     service_name="Residential Fiber 100Mbps",
-                    start_date=datetime.now(UTC) - timedelta(days=60),
+                    start_date=datetime.now(timezone.utc) - timedelta(days=60),
                 ),
                 user_id=user_id,
             )

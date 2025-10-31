@@ -15,9 +15,14 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
+import ssl
 import time
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -294,6 +299,8 @@ class LoadBalancer:
             return self._select_least_connections(healthy_endpoints)
         elif policy == TrafficPolicy.CONSISTENT_HASH:
             return self._select_consistent_hash(healthy_endpoints, source_context or {})
+        elif policy == TrafficPolicy.STICKY_SESSION:
+            return self._select_sticky_session(healthy_endpoints, source_context or {})
         else:
             return healthy_endpoints[0]  # Default to first
 
@@ -353,6 +360,33 @@ class LoadBalancer:
         hash_value = int(hashlib.sha256(hash_input.encode()).hexdigest()[:16], 16)
         index = hash_value % len(endpoints)
         return endpoints[index]
+
+    def _select_sticky_session(
+        self, endpoints: list[ServiceEndpoint], source_context: dict[str, Any]
+    ) -> ServiceEndpoint:
+        """Select endpoint using sticky sessions with well-known context keys."""
+        candidate_value: str | None = None
+
+        if isinstance(source_context, dict):
+            for key in (
+                "session_id",
+                "session",
+                "user_id",
+                "customer_id",
+                "client_ip",
+                "trace_id",
+            ):
+                value = source_context.get(key)
+                if value:
+                    candidate_value = str(value)
+                    break
+
+        if candidate_value:
+            hash_value = int(hashlib.sha256(candidate_value.encode()).hexdigest()[:16], 16)
+            return endpoints[hash_value % len(endpoints)]
+
+        # Fallback to consistent hash using full context (or first endpoint if empty)
+        return self._select_consistent_hash(endpoints, source_context)
 
     async def _is_healthy(self, endpoint: ServiceEndpoint) -> bool:
         """Check if endpoint is healthy."""
@@ -435,6 +469,126 @@ class ServiceMesh:
 
         # Health monitoring
         self.health_check_task: asyncio.Task[None] | None = None
+
+    @staticmethod
+    def _metadata_bool(metadata: dict[str, Any], key: str, default: bool) -> bool:
+        """Convert metadata value to boolean with sensible defaults."""
+        if key not in metadata or metadata[key] is None:
+            return default
+
+        value = metadata[key]
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() in {"1", "true", "yes", "on"}
+        return bool(value)
+
+    def _get_ssl_context(
+        self,
+        endpoint: ServiceEndpoint,
+        traffic_rule: TrafficRule,
+    ) -> ssl.SSLContext | None:
+        """Build or validate SSL context based on encryption policy."""
+        metadata = endpoint.metadata or {}
+        protocol = (endpoint.protocol or "http").lower()
+        encryption = traffic_rule.encryption_level
+
+        if encryption in {EncryptionLevel.TLS, EncryptionLevel.MTLS}:
+            if protocol != "https":
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"Service '{endpoint.service_name}' requires HTTPS for encryption "
+                        f"policy '{encryption.value}', but endpoint protocol is '{endpoint.protocol}'."
+                    ),
+                )
+            return self._create_ssl_context(
+                endpoint=endpoint,
+                metadata=metadata,
+                require_client_cert=encryption == EncryptionLevel.MTLS,
+            )
+
+        # No encryption required, but allow TLS metadata if endpoint already uses HTTPS
+        if protocol == "https":
+            return self._create_ssl_context(
+                endpoint=endpoint,
+                metadata=metadata,
+                require_client_cert=False,
+            )
+
+        return None
+
+    def _create_ssl_context(
+        self,
+        *,
+        endpoint: ServiceEndpoint,
+        metadata: dict[str, Any],
+        require_client_cert: bool,
+    ) -> ssl.SSLContext | None:
+        """Create an SSL context using endpoint metadata."""
+        verify_tls = self._metadata_bool(metadata, "verify_tls", True)
+        ca_cert_path = metadata.get("ca_cert_path") or metadata.get("ca_bundle_path")
+        client_cert_path = metadata.get("client_cert_path") or metadata.get("mtls_client_cert")
+        client_key_path = metadata.get("client_key_path") or metadata.get("mtls_client_key")
+        client_key_password = metadata.get("client_key_password") or metadata.get(
+            "mtls_client_key_password"
+        )
+
+        needs_context = (
+            require_client_cert
+            or ca_cert_path is not None
+            or not verify_tls
+            or client_cert_path is not None
+            or client_key_path is not None
+        )
+
+        if not needs_context:
+            # Default aiohttp SSL handling is sufficient
+            return None
+
+        context = ssl.create_default_context()
+
+        if ca_cert_path:
+            if not os.path.exists(ca_cert_path):
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"CA certificate '{ca_cert_path}' configured for service "
+                        f"'{endpoint.service_name}' was not found on disk."
+                    ),
+                )
+            context.load_verify_locations(cafile=ca_cert_path)
+
+        if not verify_tls:
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+        if require_client_cert or client_cert_path or client_key_path:
+            if not client_cert_path or not client_key_path:
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"mTLS configuration for service '{endpoint.service_name}' requires "
+                        "'client_cert_path' and 'client_key_path'."
+                    ),
+                )
+
+            if not os.path.exists(client_cert_path) or not os.path.exists(client_key_path):
+                raise HTTPException(
+                    status_code=503,
+                    detail=(
+                        f"Client certificate '{client_cert_path}' or key '{client_key_path}' "
+                        f"for service '{endpoint.service_name}' was not found."
+                    ),
+                )
+
+            context.load_cert_chain(
+                certfile=client_cert_path,
+                keyfile=client_key_path,
+                password=client_key_password,
+            )
+
+        return context
 
     async def initialize(self) -> None:
         """Initialize the service mesh."""
@@ -528,10 +682,7 @@ class ServiceMesh:
         )
 
         if not endpoint:
-            raise EntityNotFoundError(
-                entity_type="ServiceEndpoint",
-                entity_id=destination_service,
-            )
+            raise EntityNotFoundError("ServiceEndpoint", destination_service)
 
         # Create service call record
         service_call = ServiceCall(
@@ -547,54 +698,65 @@ class ServiceMesh:
             span_id=span_id,
         )
 
-        try:
-            # Update connection count
+        attempts = 1
+        if traffic_rule.retry_policy != RetryPolicy.NONE:
+            attempts += max(0, traffic_rule.max_retries)
+
+        ssl_context = self._get_ssl_context(endpoint, traffic_rule)
+
+        for attempt in range(1, attempts + 1):
             endpoint_key = f"{endpoint.host}:{endpoint.port}"
             self.registry.connection_counts[endpoint_key] = (
                 self.registry.connection_counts.get(endpoint_key, 0) + 1
             )
+            self.call_metrics["active_connections"] += 1
 
-            # Make the actual HTTP call
-            response = await self._make_http_call(
-                endpoint,
-                method,
-                path,
-                headers,
-                body,
-                timeout or traffic_rule.timeout_seconds,
-            )
+            try:
+                response = await self._make_http_call(
+                    endpoint,
+                    method,
+                    path,
+                    headers,
+                    body,
+                    timeout or traffic_rule.timeout_seconds,
+                    ssl_context,
+                )
 
-            # Record success
-            circuit_breaker.record_success()
-            self._record_call_success(service_call, time.time() - start_time)
+                circuit_breaker.record_success()
+                self._record_call_success(service_call, time.time() - start_time)
 
-            return {
-                "status_code": response["status_code"],
-                "headers": response["headers"],
-                "body": response["body"],
-                "call_id": call_id,
-                "trace_id": trace_id,
-                "span_id": span_id,
-            }
+                return {
+                    "status_code": response["status_code"],
+                    "headers": response["headers"],
+                    "body": response["body"],
+                    "call_id": call_id,
+                    "trace_id": trace_id,
+                    "span_id": span_id,
+                }
 
-        except Exception as e:
-            # Record failure
-            circuit_breaker.record_failure()
-            self._record_call_failure(service_call, time.time() - start_time, str(e))
+            except Exception as e:
+                circuit_breaker.record_failure()
 
-            # Retry logic could be implemented here
-            if traffic_rule.retry_policy != RetryPolicy.NONE and traffic_rule.max_retries > 0:
-                # For now, just re-raise
-                pass
+                if attempt >= attempts or traffic_rule.retry_policy == RetryPolicy.NONE:
+                    self._record_call_failure(service_call, time.time() - start_time, str(e))
+                    raise HTTPException(status_code=500, detail=f"Service call failed: {e}") from e
 
-            raise HTTPException(status_code=500, detail=f"Service call failed: {e}") from e
+                wait_time = self._get_retry_delay(
+                    traffic_rule.retry_policy, attempt, circuit_breaker
+                )
+                if wait_time > 0:
+                    await asyncio.sleep(wait_time)
 
-        finally:
-            # Update connection count
-            if endpoint:
-                endpoint_key = f"{endpoint.host}:{endpoint.port}"
+            finally:
                 current_count = self.registry.connection_counts.get(endpoint_key, 1)
                 self.registry.connection_counts[endpoint_key] = max(0, current_count - 1)
+                self.call_metrics["active_connections"] = max(
+                    0, self.call_metrics["active_connections"] - 1
+                )
+
+        raise HTTPException(
+            status_code=500, detail="Service call failed after retries were exhausted"
+        )
 
     async def _make_http_call(
         self,
@@ -604,6 +766,7 @@ class ServiceMesh:
         headers: dict[str, str] | None,
         body: bytes | None,
         timeout: int,
+        ssl_context: ssl.SSLContext | None,
     ) -> dict[str, Any]:
         """Make the actual HTTP call to the service."""
         url = f"{endpoint.url.rstrip('/')}/{path.lstrip('/')}"
@@ -634,6 +797,7 @@ class ServiceMesh:
             headers=call_headers,
             data=body,
             timeout=client_timeout,
+            ssl=ssl_context,
         ) as response:
             response_body = await response.read()
 
@@ -642,6 +806,24 @@ class ServiceMesh:
                 "headers": dict(response.headers),
                 "body": response_body,
             }
+
+    def _get_retry_delay(
+        self,
+        policy: RetryPolicy,
+        attempt_number: int,
+        circuit_breaker: CircuitBreakerState,
+    ) -> float:
+        """Calculate the delay before the next retry attempt."""
+        if policy == RetryPolicy.EXPONENTIAL_BACKOFF:
+            delay = 0.5 * (2 ** max(0, attempt_number - 1))
+            return min(delay, 10.0)
+        if policy == RetryPolicy.FIXED_INTERVAL:
+            return 1.0
+        if policy == RetryPolicy.CIRCUIT_BREAKER:
+            return max(
+                0.0, circuit_breaker.timeout_seconds / max(1, circuit_breaker.failure_threshold)
+            )
+        return 0.0
 
     def _record_call_success(self, call: ServiceCall, duration: float) -> None:
         """Record a successful service call."""

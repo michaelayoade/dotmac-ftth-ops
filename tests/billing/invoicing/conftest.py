@@ -1,12 +1,18 @@
 """
 Shared fixtures for invoice service tests.
+
+Pytest fixtures for billing invoicing router tests.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
@@ -28,6 +34,14 @@ def mock_db_session():
     session.commit = AsyncMock()
     session.refresh = AsyncMock()
     session.execute = AsyncMock()
+
+    # Mock bind and dialect for database-specific code
+    mock_dialect = MagicMock()
+    mock_dialect.name = "postgresql"
+    mock_bind = MagicMock()
+    mock_bind.dialect = mock_dialect
+    session.bind = mock_bind
+
     return session
 
 
@@ -119,8 +133,8 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
         "postal_code": "94105",
         "country": "US",
     }
-    entity.issue_date = datetime.now(UTC)
-    entity.due_date = datetime.now(UTC) + timedelta(days=30)
+    entity.issue_date = datetime.now(timezone.utc)
+    entity.due_date = datetime.now(timezone.utc) + timedelta(days=30)
     entity.currency = "USD"
     entity.subtotal = 17500
     entity.tax_amount = 1750
@@ -136,8 +150,8 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
     entity.notes = None
     entity.internal_notes = None
     entity.extra_data = {}
-    entity.created_at = datetime.now(UTC)
-    entity.updated_at = datetime.now(UTC)
+    entity.created_at = datetime.now(timezone.utc)
+    entity.updated_at = datetime.now(timezone.utc)
     entity.updated_by = "system"
     entity.paid_at = None
     entity.voided_at = None
@@ -162,20 +176,11 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
         entity.line_items.append(line_item)
 
     return entity
-"""
-Pytest fixtures for billing invoicing router tests.
-"""
-
-import pytest
-from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
-from httpx import AsyncClient, ASGITransport
-from fastapi import FastAPI
-from typing import Any
 
 
 class MockObject:
     """Helper class to convert dict to object with attributes."""
+
     def __init__(self, **kwargs: Any):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -195,7 +200,7 @@ def sample_invoice() -> dict[str, Any]:
             "city": "San Francisco",
             "state": "CA",
             "postal_code": "94105",
-            "country": "US"
+            "country": "US",
         },
         "issue_date": datetime.utcnow().isoformat(),
         "due_date": (datetime.utcnow() + timedelta(days=30)).isoformat(),
@@ -218,7 +223,7 @@ def sample_invoice() -> dict[str, Any]:
                 "tax_amount": 800,
                 "discount_percentage": 0.0,
                 "discount_amount": 0,
-                "extra_data": {}
+                "extra_data": {},
             }
         ],
         "subscription_id": "sub-789",
@@ -230,7 +235,7 @@ def sample_invoice() -> dict[str, Any]:
         "paid_at": None,
         "voided_at": None,
         "created_by": "user-123",
-        "idempotency_key": "idempotency-123"
+        "idempotency_key": "idempotency-123",
     }
 
 
@@ -256,6 +261,7 @@ def mock_invoice_service():
 def mock_current_user():
     """Mock current user for authentication."""
     from dotmac.platform.auth.core import UserInfo
+
     return UserInfo(
         user_id="00000000-0000-0000-0000-000000000001",
         email="test@example.com",
@@ -267,7 +273,7 @@ def mock_current_user():
             "billing.invoices.update",
             "billing.invoices.delete",
         ],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
 
@@ -284,25 +290,18 @@ def mock_rbac_service():
     return mock_rbac
 
 
-@pytest.fixture
-async def async_client(
-    mock_invoice_service,
-    mock_current_user,
-    mock_rbac_service,
-    monkeypatch
-):
+@pytest_asyncio.fixture
+async def async_client(mock_invoice_service, mock_current_user, mock_rbac_service, monkeypatch):
     """Async HTTP client with billing invoicing router registered and dependencies mocked."""
-    from dotmac.platform.billing.invoicing.router import router as invoicing_router
-    from dotmac.platform.auth.core import get_current_user
-    from dotmac.platform.dependencies import get_db
-    from dotmac.platform.billing.dependencies import get_tenant_id
     import dotmac.platform.auth.rbac_dependencies
+    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.billing.dependencies import get_tenant_id
+    from dotmac.platform.billing.invoicing.router import router as invoicing_router
+    from dotmac.platform.dependencies import get_db
 
     # Monkeypatch RBACService class to return our mock instance
     monkeypatch.setattr(
-        dotmac.platform.auth.rbac_dependencies,
-        'RBACService',
-        lambda db: mock_rbac_service
+        dotmac.platform.auth.rbac_dependencies, "RBACService", lambda db: mock_rbac_service
     )
 
     app = FastAPI()
@@ -320,7 +319,8 @@ async def async_client(
     # Mock the service creation in the router
     # Since the router creates service inline, we'll mock at router module level
     from dotmac.platform.billing.invoicing import router as router_module
-    monkeypatch.setattr(router_module, 'InvoiceService', lambda db: mock_invoice_service)
+
+    monkeypatch.setattr(router_module, "InvoiceService", lambda db: mock_invoice_service)
 
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_db] = override_get_db

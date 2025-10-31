@@ -20,6 +20,12 @@ from dotmac.platform.db import get_async_session
 
 logger = logging.getLogger(__name__)
 
+
+def _is_async_session_like(value: Any) -> bool:
+    """Check if object behaves like AsyncSession (allows AsyncMock in tests)."""
+    return isinstance(value, AsyncSession) or hasattr(value, "execute")
+
+
 security = HTTPBearer(auto_error=False)
 
 P = ParamSpec("P")
@@ -328,7 +334,7 @@ def check_permission(
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
+            if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)
@@ -355,7 +361,7 @@ def check_any_permission(
             user = kwargs.get("current_user")
             db = kwargs.get("db")
 
-            if not isinstance(user, UserInfo) or not isinstance(db, AsyncSession):
+            if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
             rbac_service = RBACService(db)

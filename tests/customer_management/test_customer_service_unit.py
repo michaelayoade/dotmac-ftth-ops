@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, tenant context)
 Focus: Test CRUD operations, validation, tenant isolation in isolation
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
@@ -24,6 +24,7 @@ from dotmac.platform.customer_management.schemas import (
 from dotmac.platform.customer_management.service import CustomerService
 
 
+@pytest.mark.unit
 class TestCustomerCreation:
     """Test customer creation logic."""
 
@@ -116,6 +117,7 @@ class TestCustomerCreation:
                 assert activity_created
 
 
+@pytest.mark.unit
 class TestCustomerRetrieval:
     """Test customer retrieval methods."""
 
@@ -137,8 +139,8 @@ class TestCustomerRetrieval:
             last_name="Smith",
             email="jane.smith@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     async def test_get_customer_by_id(self, customer_service, sample_customer):
@@ -214,6 +216,7 @@ class TestCustomerRetrieval:
                 assert customer.customer_number == "CUST-001"
 
 
+@pytest.mark.unit
 class TestCustomerUpdate:
     """Test customer update logic."""
 
@@ -238,8 +241,8 @@ class TestCustomerUpdate:
             last_name="Doe",
             email="john.doe@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     async def test_update_customer_success(self, customer_service, existing_customer):
@@ -313,6 +316,7 @@ class TestCustomerUpdate:
                     assert activity_created
 
 
+@pytest.mark.unit
 class TestCustomerDeletion:
     """Test customer deletion (soft and hard delete)."""
 
@@ -337,8 +341,8 @@ class TestCustomerDeletion:
             last_name="Doe",
             email="john.doe@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
     async def test_soft_delete_customer(self, customer_service, existing_customer):
@@ -398,6 +402,7 @@ class TestCustomerDeletion:
                 assert result is False
 
 
+@pytest.mark.unit
 class TestTenantIsolation:
     """Test tenant isolation in customer operations."""
 
@@ -443,6 +448,7 @@ class TestTenantIsolation:
             assert tenant_id == "default-tenant"
 
 
+@pytest.mark.unit
 class TestValidation:
     """Test input validation."""
 
@@ -473,6 +479,7 @@ class TestValidation:
             assert tenant_id == "tenant-1"
 
 
+@pytest.mark.unit
 class TestBatchOperations:
     """Test batch processing methods."""
 
@@ -501,6 +508,7 @@ class TestBatchOperations:
             await customer_service.batch_process_customers(customer_ids, "activate")
 
 
+@pytest.mark.unit
 class TestHelperMethods:
     """Test internal helper methods."""
 
@@ -525,6 +533,7 @@ class TestHelperMethods:
             assert len(number) > 0
 
 
+@pytest.mark.unit
 class TestUtilityMethods:
     """Test utility methods."""
 

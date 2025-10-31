@@ -1,3 +1,4 @@
+
 """
 Tests for GenieACS Schemas with IPv6 Support
 
@@ -8,15 +9,22 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.genieacs.schemas import (
-    LANConfig,
-    WANConfig,
+
+
+
     CPEConfigRequest,
+    LANConfig,
+    MassConfigFilter,
+    MassConfigRequest,
     MassLANConfig,
     MassWANConfig,
-    MassConfigRequest,
-    MassConfigFilter,
+    WANConfig,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestLANConfigIPv6:
     """Test LAN configuration with dual-stack support."""

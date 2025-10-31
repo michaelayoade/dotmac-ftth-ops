@@ -1,3 +1,4 @@
+
 """
 Contact search service tests - Migrated to use shared helpers.
 
@@ -13,9 +14,14 @@ from dotmac.platform.contacts.models import ContactStage, ContactStatus
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import build_mock_db_session
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactSearch:
     """Test contact search and filtering."""
 

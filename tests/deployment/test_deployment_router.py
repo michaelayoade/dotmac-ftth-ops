@@ -1,3 +1,4 @@
+
 """
 Tests for Deployment Router
 
@@ -5,23 +6,26 @@ Tests HTTP endpoints, request validation, response formatting, and error handlin
 for the deployment management API.
 """
 
-import pytest
 from datetime import datetime
+
+import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from dotmac.platform.deployment.models import DeploymentBackend, DeploymentState, DeploymentType
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class TestDeploymentTemplates:
     """Test deployment template CRUD endpoints."""
 
     @pytest.mark.asyncio
     async def test_list_templates_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_template
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
     ):
         """Test list deployment templates."""
         # Arrange
@@ -37,13 +41,12 @@ class TestDeploymentTemplates:
         assert data[0]["id"] == 1
         assert data[0]["name"] == "test_template"
 
-    @pytest.mark.skip(reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model")
+    @pytest.mark.skip(
+        reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model"
+    )
     @pytest.mark.asyncio
     async def test_create_template_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_template
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
     ):
         """Test create deployment template."""
         # Arrange
@@ -59,8 +62,8 @@ class TestDeploymentTemplates:
                 "description": "Test deployment template",
                 "backend": "kubernetes",
                 "deployment_type": "cloud_shared",
-                "version": "1.0.0"
-            }
+                "version": "1.0.0",
+            },
         )
 
         # Assert
@@ -69,13 +72,12 @@ class TestDeploymentTemplates:
         assert data["id"] == 1
         assert data["name"] == "test_template"
 
-    @pytest.mark.skip(reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model")
+    @pytest.mark.skip(
+        reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model"
+    )
     @pytest.mark.asyncio
     async def test_create_template_duplicate_name(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_template
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
     ):
         """Test create template with duplicate name."""
         # Arrange
@@ -90,8 +92,8 @@ class TestDeploymentTemplates:
                 "description": "Test deployment template",
                 "backend": "kubernetes",
                 "deployment_type": "cloud_shared",
-                "version": "1.0.0"
-            }
+                "version": "1.0.0",
+            },
         )
 
         # Assert
@@ -100,10 +102,7 @@ class TestDeploymentTemplates:
 
     @pytest.mark.asyncio
     async def test_get_template_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_template
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
     ):
         """Test get deployment template by ID."""
         # Arrange
@@ -120,9 +119,7 @@ class TestDeploymentTemplates:
 
     @pytest.mark.asyncio
     async def test_get_template_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get non-existent template."""
         # Arrange
@@ -137,15 +134,12 @@ class TestDeploymentTemplates:
 
     @pytest.mark.asyncio
     async def test_update_template_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_template
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
     ):
         """Test update deployment template."""
         # Arrange
-        from conftest import MockObject
-        from datetime import datetime
+        from tests.deployment.conftest import MockObject
+
         updated_template = MockObject(
             id=1,
             name="test_template",
@@ -170,14 +164,13 @@ class TestDeploymentTemplates:
             terraform_module_path=None,
             docker_compose_path=None,
             created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-            updated_at=datetime.fromisoformat("2025-01-01T12:05:00")  # Changed
+            updated_at=datetime.fromisoformat("2025-01-01T12:05:00"),  # Changed
         )
         mock_deployment_registry.update_template.return_value = updated_template
 
         # Act
         response = await async_client.patch(
-            "/api/v1/deployment/templates/1",
-            json={"description": "Updated description"}
+            "/api/v1/deployment/templates/1", json={"description": "Updated description"}
         )
 
         # Assert
@@ -191,10 +184,7 @@ class TestDeploymentInstances:
 
     @pytest.mark.asyncio
     async def test_list_instances_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_instance
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_instance
     ):
         """Test list deployment instances."""
         # Arrange
@@ -212,10 +202,7 @@ class TestDeploymentInstances:
 
     @pytest.mark.asyncio
     async def test_list_instances_filtered(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_instance
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_instance
     ):
         """Test list instances with filters."""
         # Arrange
@@ -233,10 +220,7 @@ class TestDeploymentInstances:
 
     @pytest.mark.asyncio
     async def test_get_instance_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_instance
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_instance
     ):
         """Test get deployment instance by ID."""
         # Arrange
@@ -253,9 +237,7 @@ class TestDeploymentInstances:
 
     @pytest.mark.asyncio
     async def test_get_instance_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get non-existent instance."""
         # Arrange
@@ -269,10 +251,7 @@ class TestDeploymentInstances:
 
     @pytest.mark.asyncio
     async def test_get_instance_status_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_instance
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_instance
     ):
         """Test get instance status."""
         # Arrange
@@ -298,13 +277,13 @@ class TestDeploymentOperations:
         async_client: AsyncClient,
         mock_deployment_service,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test provision new deployment."""
         # Arrange
         mock_deployment_service.provision_deployment.return_value = (
             sample_deployment_instance,
-            sample_deployment_execution
+            sample_deployment_execution,
         )
 
         # Act
@@ -314,8 +293,8 @@ class TestDeploymentOperations:
                 "template_id": 1,
                 "environment": "staging",
                 "region": "us-west-1",
-                "config_overrides": {}
-            }
+                "config_overrides": {},
+            },
         )
 
         # Assert
@@ -327,9 +306,7 @@ class TestDeploymentOperations:
 
     @pytest.mark.asyncio
     async def test_provision_deployment_validation_error(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_service
+        self, async_client: AsyncClient, mock_deployment_service
     ):
         """Test provision with invalid data."""
         # Arrange
@@ -338,11 +315,7 @@ class TestDeploymentOperations:
         # Act
         response = await async_client.post(
             "/api/v1/deployment/provision",
-            json={
-                "template_id": 999,
-                "environment": "staging",
-                "region": "us-west-1"
-            }
+            json={"template_id": 999, "environment": "staging", "region": "us-west-1"},
         )
 
         # Assert
@@ -355,7 +328,7 @@ class TestDeploymentOperations:
         mock_deployment_service,
         mock_deployment_registry,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test upgrade deployment."""
         # Arrange
@@ -365,10 +338,7 @@ class TestDeploymentOperations:
         # Act
         response = await async_client.post(
             "/api/v1/deployment/instances/1/upgrade",
-            json={
-                "to_version": "2.0.0",
-                "rollback_on_failure": True
-            }
+            json={"to_version": "2.0.0", "rollback_on_failure": True},
         )
 
         # Assert
@@ -384,7 +354,7 @@ class TestDeploymentOperations:
         mock_deployment_service,
         mock_deployment_registry,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test scale deployment."""
         # Arrange
@@ -394,13 +364,7 @@ class TestDeploymentOperations:
         # Act
         response = await async_client.post(
             "/api/v1/deployment/instances/1/scale",
-            json={
-                "replicas": 5,
-                "resources": {
-                    "cpu": "1000m",
-                    "memory": "1Gi"
-                }
-            }
+            json={"replicas": 5, "resources": {"cpu": "1000m", "memory": "1Gi"}},
         )
 
         # Assert
@@ -415,7 +379,7 @@ class TestDeploymentOperations:
         mock_deployment_service,
         mock_deployment_registry,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test suspend deployment."""
         # Arrange
@@ -424,8 +388,7 @@ class TestDeploymentOperations:
 
         # Act
         response = await async_client.post(
-            "/api/v1/deployment/instances/1/suspend",
-            json={"reason": "Maintenance"}
+            "/api/v1/deployment/instances/1/suspend", json={"reason": "Maintenance"}
         )
 
         # Assert
@@ -440,7 +403,7 @@ class TestDeploymentOperations:
         mock_deployment_service,
         mock_deployment_registry,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test resume deployment."""
         # Arrange
@@ -449,8 +412,7 @@ class TestDeploymentOperations:
 
         # Act
         response = await async_client.post(
-            "/api/v1/deployment/instances/1/resume",
-            json={"reason": "Maintenance complete"}
+            "/api/v1/deployment/instances/1/resume", json={"reason": "Maintenance complete"}
         )
 
         # Assert
@@ -465,7 +427,7 @@ class TestDeploymentOperations:
         mock_deployment_service,
         mock_deployment_registry,
         sample_deployment_instance,
-        sample_deployment_execution
+        sample_deployment_execution,
     ):
         """Test destroy deployment."""
         # Arrange
@@ -476,10 +438,7 @@ class TestDeploymentOperations:
         response = await async_client.request(
             "DELETE",
             "/api/v1/deployment/instances/1",
-            json={
-                "reason": "No longer needed",
-                "backup_data": True
-            }
+            json={"reason": "No longer needed", "backup_data": True},
         )
 
         # Assert
@@ -493,10 +452,7 @@ class TestDeploymentExecutions:
 
     @pytest.mark.asyncio
     async def test_list_executions_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_execution
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_execution
     ):
         """Test list execution history."""
         # Arrange
@@ -513,10 +469,7 @@ class TestDeploymentExecutions:
 
     @pytest.mark.asyncio
     async def test_get_execution_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry,
-        sample_deployment_execution
+        self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_execution
     ):
         """Test get execution details."""
         # Arrange
@@ -533,9 +486,7 @@ class TestDeploymentExecutions:
 
     @pytest.mark.asyncio
     async def test_get_execution_not_found(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get non-existent execution."""
         # Arrange
@@ -553,14 +504,12 @@ class TestDeploymentHealth:
 
     @pytest.mark.asyncio
     async def test_list_health_records_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test list health check history."""
         # Arrange
-        from conftest import MockObject
-        from datetime import datetime
+        from tests.deployment.conftest import MockObject
+
         health_record = MockObject(
             id=1,
             instance_id=1,
@@ -573,7 +522,7 @@ class TestDeploymentHealth:
             error_message=None,
             checked_at=datetime.fromisoformat("2025-01-01T12:00:00"),
             created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-            updated_at=datetime.fromisoformat("2025-01-01T12:00:00")
+            updated_at=datetime.fromisoformat("2025-01-01T12:00:00"),
         )
         mock_deployment_registry.list_health_records.return_value = ([health_record], 1)
 
@@ -587,14 +536,12 @@ class TestDeploymentHealth:
 
     @pytest.mark.asyncio
     async def test_trigger_health_check_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_service
+        self, async_client: AsyncClient, mock_deployment_service
     ):
         """Test trigger manual health check."""
         # Arrange
-        from conftest import MockObject
-        from datetime import datetime
+        from tests.deployment.conftest import MockObject
+
         health = MockObject(
             id=1,
             instance_id=1,
@@ -607,7 +554,7 @@ class TestDeploymentHealth:
             error_message=None,
             checked_at=datetime.fromisoformat("2025-01-01T12:00:00"),
             created_at=datetime.fromisoformat("2025-01-01T12:00:00"),
-            updated_at=datetime.fromisoformat("2025-01-01T12:00:00")
+            updated_at=datetime.fromisoformat("2025-01-01T12:00:00"),
         )
         mock_deployment_service.check_health.return_value = health
 
@@ -625,20 +572,11 @@ class TestDeploymentStatistics:
 
     @pytest.mark.asyncio
     async def test_get_deployment_stats_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get deployment statistics."""
         # Arrange
-        stats = {
-            "total_instances": 10,
-            "by_state": {
-                "running": 7,
-                "stopped": 2,
-                "failed": 1
-            }
-        }
+        stats = {"total_instances": 10, "by_state": {"running": 7, "stopped": 2, "failed": 1}}
         mock_deployment_registry.get_deployment_stats.return_value = stats
 
         # Act
@@ -651,17 +589,11 @@ class TestDeploymentStatistics:
 
     @pytest.mark.asyncio
     async def test_get_template_usage_stats_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get template usage statistics."""
         # Arrange
-        stats = {
-            "templates": [
-                {"template_id": 1, "usage_count": 5}
-            ]
-        }
+        stats = {"templates": [{"template_id": 1, "usage_count": 5}]}
         mock_deployment_registry.get_template_usage_stats.return_value = stats
 
         # Act
@@ -674,16 +606,11 @@ class TestDeploymentStatistics:
 
     @pytest.mark.asyncio
     async def test_get_resource_allocation_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_registry
+        self, async_client: AsyncClient, mock_deployment_registry
     ):
         """Test get resource allocation statistics."""
         # Arrange
-        stats = {
-            "total_cpu": "10000m",
-            "total_memory": "20Gi"
-        }
+        stats = {"total_cpu": "10000m", "total_memory": "20Gi"}
         mock_deployment_registry.get_resource_allocation.return_value = stats
 
         # Act
@@ -700,9 +627,7 @@ class TestScheduledDeployments:
 
     @pytest.mark.asyncio
     async def test_schedule_deployment_success(
-        self,
-        async_client: AsyncClient,
-        mock_deployment_service
+        self, async_client: AsyncClient, mock_deployment_service
     ):
         """Test schedule a deployment operation."""
         # Arrange
@@ -714,7 +639,7 @@ class TestScheduledDeployments:
             "cron_expression": None,
             "interval_seconds": None,
             "next_run_at": None,
-            "parameters": {"to_version": "2.0.0"}
+            "parameters": {"to_version": "2.0.0"},
         }
         mock_deployment_service.schedule_deployment.return_value = scheduled
 
@@ -725,11 +650,8 @@ class TestScheduledDeployments:
                 "operation": "upgrade",
                 "instance_id": 1,
                 "scheduled_at": "2099-12-01T02:00:00",  # Far future, naive datetime
-                "upgrade_request": {
-                    "to_version": "2.0.0",
-                    "rollback_on_failure": True
-                }
-            }
+                "upgrade_request": {"to_version": "2.0.0", "rollback_on_failure": True},
+            },
         )
 
         # Assert

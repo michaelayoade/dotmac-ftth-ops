@@ -7,7 +7,7 @@ with proper admin authentication and audit logging.
 
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -114,9 +114,10 @@ async def update_category_settings(
 
     try:
         # First validate the settings
-        validation_result = settings_service.validate_settings(
+        validation_result = await settings_service.validate_settings_async(
             category=category,
             updates=update_request.updates,
+            session=session,
         )
 
         if not validation_result.valid:
@@ -169,9 +170,10 @@ async def validate_settings(
         Validation result with any errors or warnings
     """
     try:
-        return settings_service.validate_settings(
+        return await settings_service.validate_settings_async(
             category=category,
             updates=updates,
+            session=None,
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -211,7 +213,9 @@ async def bulk_update_settings(
     for category, updates in bulk_update.updates.items():
         try:
             # Validate first
-            validation = settings_service.validate_settings(category, updates)
+            validation = await settings_service.validate_settings_async(
+                category, updates, session=session
+            )
             if not validation.valid:
                 errors[category.value] = validation.errors
                 continue
@@ -251,9 +255,12 @@ async def bulk_update_settings(
 
 @router.post("/backup", response_model=SettingsBackup)
 async def create_settings_backup(
-    name: str,
-    description: str | None = None,
-    categories: list[SettingsCategory] | None = None,
+    name: str = Body(..., description="Backup name"),
+    description: str | None = Body(None, description="Optional backup description"),
+    categories: list[SettingsCategory] | None = Body(
+        None, description="Categories to backup (all if not specified)"
+    ),
+    session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.backup")),
 ) -> SettingsBackup:
     """
@@ -271,11 +278,12 @@ async def create_settings_backup(
     Returns:
         Created backup information
     """
-    return settings_service.create_backup(
+    return await settings_service.create_backup_async(
         name=name,
         description=description,
         categories=categories,
         user_id=current_admin.user_id,
+        session=session,
     )
 
 
@@ -357,6 +365,7 @@ async def get_audit_logs(
 @router.post("/export")
 async def export_settings(
     export_request: SettingsExportRequest,
+    session: AsyncSession = Depends(get_session_dependency),
     current_admin: UserInfo = Depends(require_permission("settings.export")),
 ) -> dict[str, Any]:
     """
@@ -373,10 +382,11 @@ async def export_settings(
         Exported settings in requested format
     """
     try:
-        exported = settings_service.export_settings(
+        exported = await settings_service.export_settings_async(
             categories=export_request.categories,
             include_sensitive=export_request.include_sensitive,
             format=export_request.format,
+            session=session,
         )
 
         return {
@@ -426,9 +436,10 @@ async def import_settings(
                 continue
 
             # Validate settings
-            validation = settings_service.validate_settings(
+            validation = await settings_service.validate_settings_async(
                 category=category,
                 updates=settings_data,
+                session=session,
             )
 
             if not validation.valid:
@@ -521,9 +532,11 @@ async def settings_health_check(
     )
     audit_logs_count = audit_count_result.scalar_one()
 
+    backups_count = await settings_service.get_backups_count(session=session)
+
     return {
         "status": "healthy",
         "categories_available": len(categories),
         "audit_logs_count": audit_logs_count,
-        "backups_count": len(settings_service._backups),
+        "backups_count": backups_count,
     }

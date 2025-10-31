@@ -58,7 +58,9 @@ class AWXAdapter(DeploymentAdapter):
             # Launch AWX job template
             job_template_name = f"{context.template_name}-provision"
             job = await self._launch_job_template(
-                template_name=job_template_name, extra_vars=extra_vars, inventory_id=self.default_inventory_id
+                template_name=job_template_name,
+                extra_vars=extra_vars,
+                inventory_id=self.default_inventory_id,
             )
 
             job_id = job["id"]
@@ -109,7 +111,9 @@ class AWXAdapter(DeploymentAdapter):
 
     async def upgrade(self, context: ExecutionContext) -> DeploymentResult:
         """Upgrade deployment using Ansible playbook"""
-        self._log_operation("upgrade", context, f"Upgrading from {context.from_version} to {context.to_version}")
+        self._log_operation(
+            "upgrade", context, f"Upgrading from {context.from_version} to {context.to_version}"
+        )
         started_at = datetime.utcnow()
 
         try:
@@ -117,7 +121,9 @@ class AWXAdapter(DeploymentAdapter):
             job_template_name = f"{context.template_name}-upgrade"
 
             job = await self._launch_job_template(
-                template_name=job_template_name, extra_vars=extra_vars, inventory_id=self.default_inventory_id
+                template_name=job_template_name,
+                extra_vars=extra_vars,
+                inventory_id=self.default_inventory_id,
             )
 
             job_id = job["id"]
@@ -238,7 +244,9 @@ class AWXAdapter(DeploymentAdapter):
 
         return extra_vars
 
-    async def _run_operation(self, context: ExecutionContext, operation: str, success_message: str) -> DeploymentResult:
+    async def _run_operation(
+        self, context: ExecutionContext, operation: str, success_message: str
+    ) -> DeploymentResult:
         """Run generic AWX operation"""
         started_at = datetime.utcnow()
         try:
@@ -282,11 +290,15 @@ class AWXAdapter(DeploymentAdapter):
         if inventory_id:
             launch_data["inventory"] = inventory_id
 
-        return await self._api_request("POST", f"/api/v2/job_templates/{template_id}/launch/", json=launch_data)
+        return await self._api_request(
+            "POST", f"/api/v2/job_templates/{template_id}/launch/", json=launch_data
+        )
 
     async def _get_job_template(self, template_name: str) -> dict[str, Any]:
         """Get job template by name"""
-        response = await self._api_request("GET", "/api/v2/job_templates/", params={"name": template_name})
+        response = await self._api_request(
+            "GET", "/api/v2/job_templates/", params={"name": template_name}
+        )
 
         results = response.get("results", [])
         if not results:
@@ -311,7 +323,9 @@ class AWXAdapter(DeploymentAdapter):
     async def _get_job_output(self, job_id: int) -> str:
         """Get job output/logs"""
         try:
-            response = await self._api_request("GET", f"/api/v2/jobs/{job_id}/stdout/", params={"format": "txt"})
+            response = await self._api_request(
+                "GET", f"/api/v2/jobs/{job_id}/stdout/", params={"format": "txt"}
+            )
             return response if isinstance(response, str) else json.dumps(response)
         except Exception as e:
             return f"Failed to get job output: {e}"
@@ -338,7 +352,13 @@ class AWXAdapter(DeploymentAdapter):
 
         async with aiohttp.ClientSession() as session:
             async with session.request(
-                method, url, json=json, params=params, headers=headers, auth=auth, ssl=self.verify_ssl
+                method,
+                url,
+                json=json,
+                params=params,
+                headers=headers,
+                auth=auth,
+                ssl=self.verify_ssl,
             ) as response:
                 response.raise_for_status()
 

@@ -19,6 +19,7 @@ from dotmac.platform.dependencies import (
 )
 
 
+@pytest.mark.unit
 class TestDependencyError:
     """Test DependencyError exception class."""
 
@@ -47,6 +48,7 @@ class TestDependencyError:
         assert "Install with: custom install command" in str(error)
 
 
+@pytest.mark.unit
 class TestDependencyChecker:
     """Test DependencyChecker class."""
 
@@ -170,6 +172,7 @@ class TestDependencyChecker:
             DependencyChecker.validate_enabled_features()
 
 
+@pytest.mark.unit
 class TestRequireDependencyDecorator:
     """Test require_dependency decorator."""
 
@@ -231,6 +234,7 @@ class TestRequireDependencyDecorator:
         assert result == "a-b-c"
 
 
+@pytest.mark.unit
 class TestSafeImport:
     """Test safe_import function."""
 
@@ -274,6 +278,7 @@ class TestSafeImport:
             safe_import("minio", "storage_enabled")
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test convenience functions for common dependencies."""
 
@@ -358,6 +363,7 @@ class TestConvenienceFunctions:
         assert "Fernet encryption is not enabled" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestFeatureDependencyIntegration:
     """Integration tests for feature dependency system."""
 
@@ -391,8 +397,8 @@ class TestFeatureDependencyIntegration:
                 assert len(packages) > 0, f"Feature {feature} has empty package string"
             elif isinstance(packages, list):
                 assert len(packages) > 0, f"Feature {feature} has empty package list"
-                assert all(
-                    isinstance(pkg, str) for pkg in packages
-                ), f"Feature {feature} has non-string packages"
+                assert all(isinstance(pkg, str) for pkg in packages), (
+                    f"Feature {feature} has non-string packages"
+                )
             else:
                 raise AssertionError(f"Feature {feature} packages must be string or list")

@@ -5,12 +5,15 @@ Provides efficient payment queries with batched loading of related
 customer and invoice data via DataLoaders.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from uuid import UUID
 
 import strawberry
-from sqlalchemy import func, select
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import PaymentEntity
@@ -49,7 +52,10 @@ class PaymentQueries:
         Returns:
             Payment with batched customer and invoice data
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         try:
             payment_id = UUID(id)
@@ -57,7 +63,10 @@ class PaymentQueries:
             return None
 
         # Fetch payment
-        stmt = select(PaymentEntity).where(PaymentEntity.payment_id == payment_id)
+        stmt = select(PaymentEntity).where(
+            PaymentEntity.payment_id == payment_id,
+            PaymentEntity.tenant_id == tenant_id,
+        )
         result = await db.execute(stmt)
         payment_entity = result.scalar_one_or_none()
 
@@ -124,10 +133,17 @@ class PaymentQueries:
         Returns:
             PaymentConnection with paginated payments and aggregated metrics
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Build base query
-        stmt = select(PaymentEntity).order_by(PaymentEntity.created_at.desc())
+        stmt = (
+            select(PaymentEntity)
+            .where(PaymentEntity.tenant_id == tenant_id)
+            .order_by(PaymentEntity.created_at.desc())
+        )
 
         # Apply filters
         if status:
@@ -199,20 +215,29 @@ class PaymentQueries:
                         invoice_idx += 1
 
         # Calculate aggregated metrics from the filtered set
-        metrics_stmt = (
-            select(
-                func.sum(PaymentEntity.amount).label("total"),
-                func.sum(
-                    func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount), else_=0)
-                ).label("succeeded"),
-                func.sum(
-                    func.case((PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount), else_=0)
-                ).label("pending"),
-                func.sum(
-                    func.case((PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount), else_=0)
-                ).label("failed"),
-            )
+        metrics_stmt = select(
+            func.sum(PaymentEntity.amount).label("total"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("succeeded"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("pending"),
+            func.sum(
+                case(
+                    (PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount),
+                    else_=0,
+                )
+            ).label("failed"),
         )
+
+        metrics_stmt = metrics_stmt.where(PaymentEntity.tenant_id == tenant_id)
 
         # Apply same filters to metrics
         if status:
@@ -264,34 +289,40 @@ class PaymentQueries:
         Returns:
             PaymentMetrics with counts, amounts, and success rates
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
+        db: AsyncSession = context.db
 
         # Build base query
         stmt = select(
             func.count(PaymentEntity.payment_id).label("total"),
-            func.count(
-                func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, 1))
-            ).label("succeeded"),
-            func.count(
-                func.case((PaymentEntity.status == PaymentStatus.PENDING, 1))
-            ).label("pending"),
-            func.count(
-                func.case((PaymentEntity.status == PaymentStatus.FAILED, 1))
-            ).label("failed"),
-            func.count(
-                func.case((PaymentEntity.status == PaymentStatus.REFUNDED, 1))
-            ).label("refunded"),
+            func.count(case((PaymentEntity.status == PaymentStatus.SUCCEEDED, 1))).label(
+                "succeeded"
+            ),
+            func.count(case((PaymentEntity.status == PaymentStatus.PENDING, 1))).label("pending"),
+            func.count(case((PaymentEntity.status == PaymentStatus.FAILED, 1))).label("failed"),
+            func.count(case((PaymentEntity.status == PaymentStatus.REFUNDED, 1))).label("refunded"),
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
             ).label("revenue"),
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.PENDING, PaymentEntity.amount),
+                    else_=0,
+                )
             ).label("pending_amount"),
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.FAILED, PaymentEntity.amount),
+                    else_=0,
+                )
             ).label("failed_amount"),
             func.sum(PaymentEntity.refund_amount).label("refunded_amount"),
-        )
+        ).where(PaymentEntity.tenant_id == tenant_id)
 
         # Apply date filters
         if date_from:
@@ -326,27 +357,45 @@ class PaymentQueries:
         # Today's revenue
         today_stmt = select(
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
             )
-        ).where(PaymentEntity.created_at >= today_start)
+        ).where(
+            PaymentEntity.created_at >= today_start,
+            PaymentEntity.tenant_id == tenant_id,
+        )
         today_result = await db.execute(today_stmt)
         today_revenue = Decimal(str(today_result.scalar() or 0))
 
         # This week's revenue
         week_stmt = select(
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
             )
-        ).where(PaymentEntity.created_at >= week_start)
+        ).where(
+            PaymentEntity.created_at >= week_start,
+            PaymentEntity.tenant_id == tenant_id,
+        )
         week_result = await db.execute(week_stmt)
         week_revenue = Decimal(str(week_result.scalar() or 0))
 
         # This month's revenue
         month_stmt = select(
             func.sum(
-                func.case((PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount), else_=0)
+                case(
+                    (PaymentEntity.status == PaymentStatus.SUCCEEDED, PaymentEntity.amount),
+                    else_=0,
+                )
             )
-        ).where(PaymentEntity.created_at >= month_start)
+        ).where(
+            PaymentEntity.created_at >= month_start,
+            PaymentEntity.tenant_id == tenant_id,
+        )
         month_result = await db.execute(month_stmt)
         month_revenue = Decimal(str(month_result.scalar() or 0))
 

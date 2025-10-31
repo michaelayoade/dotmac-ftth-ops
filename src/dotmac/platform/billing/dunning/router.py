@@ -8,12 +8,13 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import ValidationError
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.billing._typing_helpers import rate_limit
+from dotmac.platform.core.exceptions import EntityNotFoundError
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
 
@@ -45,7 +46,7 @@ router = APIRouter(prefix="/billing/dunning", tags=["Billing - Dunning"])
 @rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def create_campaign(
     request: Request,
-    campaign_data: DunningCampaignCreate,
+    campaign_payload: dict[str, Any],
     db_session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
@@ -56,6 +57,19 @@ async def create_campaign(
     A dunning campaign defines automated collection workflows with multiple
     actions (email, SMS, service suspension, etc.) triggered after specific delays.
     """
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
+
+    try:
+        campaign_data = DunningCampaignCreate.model_validate(campaign_payload)
+    except ValidationError as exc:
+        errors = exc.errors()
+        actions_errors = [err for err in errors if err.get("loc", [])[0] == "actions"]
+        if actions_errors and len(errors) == len(actions_errors):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Campaign must have at least one action") from exc
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=errors) from exc
+
     service = DunningService(db_session)
     try:
         campaign = await service.create_campaign(
@@ -94,7 +108,7 @@ async def list_campaigns(
     service = DunningService(db_session)
     campaigns = await service.list_campaigns(
         tenant_id=tenant_id,
-        active_only=active_only,
+        is_active=True if active_only else None,
         skip=skip,
         limit=limit,
     )
@@ -112,9 +126,12 @@ async def get_campaign(
 ) -> dict[str, Any]:
     """Get a specific dunning campaign by ID."""
     service = DunningService(db_session)
-    campaign = await service.get_campaign(campaign_id=campaign_id, tenant_id=tenant_id)
+    try:
+        campaign = await service.get_campaign(campaign_id=campaign_id, tenant_id=tenant_id)
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
-    if not campaign:
+    if campaign is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Campaign {campaign_id} not found",
@@ -149,14 +166,10 @@ async def update_campaign(
             updated_by_user_id=current_user.user_id,
         )
 
-        if not campaign:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Campaign {campaign_id} not found",
-            )
-
         response = DunningCampaignResponse.model_validate(campaign)
         return response.model_dump(mode="json")
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -182,11 +195,14 @@ async def delete_campaign(
     In-progress executions will be canceled.
     """
     service = DunningService(db_session)
-    success = await service.delete_campaign(
-        campaign_id=campaign_id,
-        tenant_id=tenant_id,
-        deleted_by_user_id=current_user.user_id,
-    )
+    try:
+        success = await service.delete_campaign(
+            campaign_id=campaign_id,
+            tenant_id=tenant_id,
+            deleted_by_user_id=current_user.user_id,
+        )
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
     if not success:
         raise HTTPException(
@@ -219,7 +235,10 @@ async def get_campaign_stats(
             detail=f"Campaign {campaign_id} not found",
         )
 
-    stats = await service.get_campaign_stats(campaign_id=campaign_id, tenant_id=tenant_id)
+    try:
+        stats = await service.get_campaign_stats(campaign_id=campaign_id, tenant_id=tenant_id)
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return stats.model_dump(mode="json")  # type: ignore[no-any-return]
 
 
@@ -245,7 +264,7 @@ async def start_execution(
     Creates a new execution workflow for an overdue subscription. The execution
     will proceed through all configured campaign actions based on their delays.
 
-    Returns 409 if an active execution already exists for the subscription.
+    Returns 400 if an active execution already exists for the subscription.
     """
     service = DunningService(db_session)
     try:
@@ -260,10 +279,9 @@ async def start_execution(
         )
         response = DunningExecutionResponse.model_validate(execution)
         return response.model_dump(mode="json")
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as e:
-        # Check if it's an "already exists" error
-        if "already has an active execution" in str(e):
-            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
         raise HTTPException(
@@ -328,9 +346,12 @@ async def get_execution(
 ) -> dict[str, Any]:
     """Get a specific dunning execution by ID with full details."""
     service = DunningService(db_session)
-    execution = await service.get_execution(execution_id=execution_id, tenant_id=tenant_id)
+    try:
+        execution = await service.get_execution(execution_id=execution_id, tenant_id=tenant_id)
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
-    if not execution:
+    if execution is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Execution {execution_id} not found",
@@ -340,7 +361,11 @@ async def get_execution(
     return response.model_dump(mode="json")
 
 
-@router.post("/executions/{execution_id}/cancel", status_code=status.HTTP_200_OK)
+@router.post(
+    "/executions/{execution_id}/cancel",
+    response_model=DunningExecutionResponse,
+    status_code=status.HTTP_200_OK,
+)
 @rate_limit("20/minute")  # type: ignore[misc]  # Rate limit decorator is untyped
 async def cancel_execution(
     request: Request,
@@ -349,7 +374,7 @@ async def cancel_execution(
     db_session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
-) -> JSONResponse:
+) -> dict[str, Any]:
     """
     Cancel an active dunning execution.
 
@@ -360,11 +385,16 @@ async def cancel_execution(
     """
     service = DunningService(db_session)
     try:
+        try:
+            canceled_by_uuid = UUID(str(current_user.user_id)) if current_user.user_id else None
+        except (ValueError, TypeError):
+            canceled_by_uuid = None
+
         success = await service.cancel_execution(
             execution_id=execution_id,
             tenant_id=tenant_id,
             reason=cancel_data.reason,
-            canceled_by_user_id=current_user.user_id,
+            canceled_by_user_id=canceled_by_uuid,
         )
 
         if not success:
@@ -373,14 +403,16 @@ async def cancel_execution(
                 detail=f"Execution {execution_id} not found",
             )
 
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={
-                "message": "Execution canceled successfully",
-                "execution_id": str(execution_id),
-                "reason": cancel_data.reason,
-            },
-        )
+        execution = await service.get_execution(execution_id=execution_id, tenant_id=tenant_id)
+        if execution is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Execution {execution_id} not found",
+            )
+        response = DunningExecutionResponse.model_validate(execution)
+        return response.model_dump(mode="json")
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
@@ -408,14 +440,16 @@ async def get_execution_logs(
     service = DunningService(db_session)
 
     # First verify execution exists and belongs to tenant
-    execution = await service.get_execution(execution_id=execution_id, tenant_id=tenant_id)
-    if not execution:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Execution {execution_id} not found",
-        )
-
-    logs = await service.get_execution_logs(execution_id=execution_id, tenant_id=tenant_id)
+    try:
+        execution = await service.get_execution(execution_id=execution_id, tenant_id=tenant_id)
+        if execution is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Execution {execution_id} not found",
+            )
+        logs = await service.get_execution_logs(execution_id=execution_id, tenant_id=tenant_id)
+    except EntityNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return [DunningActionLogResponse.model_validate(log).model_dump(mode="json") for log in logs]
 
 

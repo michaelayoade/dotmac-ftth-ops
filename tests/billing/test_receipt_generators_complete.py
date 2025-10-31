@@ -90,6 +90,7 @@ def full_receipt(sample_line_items):
     )
 
 
+@pytest.mark.unit
 class TestReceiptGeneratorBase:
     """Test ReceiptGenerator abstract base class."""
 
@@ -108,6 +109,7 @@ class TestReceiptGeneratorBase:
             IncompleteGenerator()
 
 
+@pytest.mark.unit
 class TestHTMLReceiptGenerator:
     """Test HTMLReceiptGenerator."""
 
@@ -259,6 +261,7 @@ class TestHTMLReceiptGenerator:
         assert minimal_receipt.receipt_number in result
 
 
+@pytest.mark.unit
 class TestPDFReceiptGenerator:
     """Test PDFReceiptGenerator."""
 
@@ -393,6 +396,7 @@ class TestPDFReceiptGenerator:
         assert isinstance(result, bytes)
 
 
+@pytest.mark.unit
 class TestTextReceiptGenerator:
     """Test TextReceiptGenerator."""
 
@@ -480,6 +484,7 @@ class TestTextReceiptGenerator:
         assert minimal_receipt.receipt_number in result
 
 
+@pytest.mark.unit
 class TestMultipleGenerators:
     """Test using multiple generators with same receipt."""
 

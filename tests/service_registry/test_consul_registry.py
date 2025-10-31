@@ -1,3 +1,4 @@
+
 """
 Tests for Consul-based service registry.
 """
@@ -7,6 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.service_registry.consul_registry import (
+
+
+
     ConsulServiceInfo,
     ConsulServiceRegistry,
     deregister_service,
@@ -16,6 +20,10 @@ from dotmac.platform.service_registry.consul_registry import (
     register_service,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestConsulServiceInfo:
     """Test ConsulServiceInfo dataclass."""
@@ -120,14 +128,15 @@ class TestConsulServiceRegistry:
 
         # Verify Consul was called correctly
         mock_consul.agent.service.register.assert_called_once()
-        call_args = mock_consul.agent.service.register.call_args[1]
+        call_kwargs = mock_consul.agent.service.register.call_args.kwargs
 
-        assert call_args["Name"] == "test-service"
-        assert call_args["ID"] == expected_service_id
-        assert call_args["Address"] == "localhost"
-        assert call_args["Port"] == 8080
-        assert call_args["Tags"] == []
-        assert call_args["Meta"] == {}
+        assert call_kwargs["name"] == "test-service"
+        assert call_kwargs["service_id"] == expected_service_id
+        assert call_kwargs["address"] == "localhost"
+        assert call_kwargs["port"] == 8080
+        assert call_kwargs["tags"] == []
+        assert call_kwargs["meta"] == {}
+        assert call_kwargs["check"] is None
 
         # Verify service is tracked
         assert expected_service_id in registry._registered_services
@@ -143,8 +152,8 @@ class TestConsulServiceRegistry:
         assert service_id == custom_id
         assert custom_id in registry._registered_services
 
-        call_args = mock_consul.agent.service.register.call_args[1]
-        assert call_args["ID"] == custom_id
+        call_kwargs = mock_consul.agent.service.register.call_args.kwargs
+        assert call_kwargs["service_id"] == custom_id
 
     @pytest.mark.asyncio
     async def test_register_service_with_tags_and_meta(self, registry, mock_consul):
@@ -157,9 +166,9 @@ class TestConsulServiceRegistry:
             meta={"team": "platform", "version": "2.1.0"},
         )
 
-        call_args = mock_consul.agent.service.register.call_args[1]
-        assert call_args["Tags"] == ["api", "v2", "production"]
-        assert call_args["Meta"] == {"team": "platform", "version": "2.1.0"}
+        call_kwargs = mock_consul.agent.service.register.call_args.kwargs
+        assert call_kwargs["tags"] == ["api", "v2", "production"]
+        assert call_kwargs["meta"] == {"team": "platform", "version": "2.1.0"}
 
     @pytest.mark.asyncio
     async def test_register_service_with_health_check(self, registry, mock_consul):
@@ -172,8 +181,8 @@ class TestConsulServiceRegistry:
             health_interval="15s",
         )
 
-        call_args = mock_consul.agent.service.register.call_args[1]
-        check = call_args["Check"]
+        call_kwargs = mock_consul.agent.service.register.call_args.kwargs
+        check = call_kwargs["check"]
 
         assert check["HTTP"] == "http://192.168.1.10:8080/actuator/health"
         assert check["Interval"] == "15s"
@@ -397,10 +406,11 @@ class TestConsulServiceRegistry:
                     "Service": {
                         "Service": "minimal-service",
                         "ID": "minimal-1",
-                        "Address": "10.0.1.1",
+                        "Address": "",
                         "Port": 8080,
                         # Tags and Meta are missing
                     },
+                    "Node": {"Address": "10.0.1.1"},
                     "Checks": [{"Status": "passing"}],
                 }
             ],
@@ -412,6 +422,9 @@ class TestConsulServiceRegistry:
         service = services[0]
         assert service.tags == []  # Should default to empty list
         assert service.meta == {}  # Should default to empty dict
+        assert (
+            service.address == "10.0.1.1"
+        )  # Falls back to node address when service address empty
 
 
 class TestGlobalFunctions:

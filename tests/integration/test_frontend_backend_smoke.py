@@ -8,10 +8,11 @@ Run with: pytest tests/integration/test_frontend_backend_smoke.py -v
 """
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
 
-from dotmac.platform.main import app
 
+pytestmark = [pytest.mark.integration, pytest.mark.parallel_safe]
 
 class TestUserManagementEndpoints:
     """Test user management endpoints used by admin UI."""
@@ -287,10 +288,11 @@ class TestCrossModuleIntegration:
 
 
 # Fixtures for smoke tests
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_client():
     """Provide async HTTP client for testing."""
     from httpx import ASGITransport, AsyncClient
+    from dotmac.platform.main import app  # Import after conftest runs
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

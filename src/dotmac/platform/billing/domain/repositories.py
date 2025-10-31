@@ -140,15 +140,14 @@ class SQLAlchemyInvoiceRepository:
         Args:
             invoice: Invoice aggregate to save
         """
-        # Convert aggregate to entity
-        entity = InvoiceMapper.to_entity(invoice)
+        # Convert aggregate to entity and merge into session (handles upsert)
 
-        # Merge with existing entity or add new
-        self._db.add(entity)
+        merged_entity = await self._db.merge(InvoiceMapper.to_entity(invoice))
+        # Ensure session knows about the merged instance (useful for tests expecting add)
+        self._db.add(merged_entity)
 
         # Flush to ensure constraints are validated
         await self._db.flush()
-
         # Dispatch domain events
         events = invoice.get_domain_events()
         for event in events:
@@ -244,11 +243,8 @@ class SQLAlchemyPaymentRepository:
         Args:
             payment: Payment aggregate to save
         """
-        # Convert aggregate to entity
-        entity = PaymentMapper.to_entity(payment)
-
-        # Merge with existing entity or add new
-        self._db.add(entity)
+        merged_entity = await self._db.merge(PaymentMapper.to_entity(payment))
+        self._db.add(merged_entity)
 
         # Flush to ensure constraints are validated
         await self._db.flush()
@@ -329,11 +325,8 @@ class SQLAlchemyCustomerRepository:
         Args:
             customer: Customer aggregate to save
         """
-        # Convert aggregate to entity
-        entity = CustomerMapper.to_entity(customer)
-
-        # Merge with existing entity or add new
-        self._db.add(entity)
+        merged_entity = await self._db.merge(CustomerMapper.to_entity(customer))
+        self._db.add(merged_entity)
 
         # Flush to ensure constraints are validated
         await self._db.flush()

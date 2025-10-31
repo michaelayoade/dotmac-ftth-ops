@@ -8,37 +8,35 @@ import pytest
 from pydantic import BaseModel, ValidationError, field_validator
 
 from dotmac.platform.core.ip_validation import (
-    # Core validation functions
-    is_valid_ipv4,
-    is_valid_ipv6,
-    is_valid_ipv4_network,
-    is_valid_ipv6_network,
-    is_valid_ip,
-    is_valid_ip_network,
+    IPAddressValidator,
+    IPv4AddressValidator,
+    IPv4NetworkValidator,
+    IPv6AddressValidator,
+    IPv6NetworkValidator,
     detect_ip_version,
-    normalize_ipv6,
-    is_private_ip,
+    is_link_local,
     is_loopback,
     is_multicast,
-    is_link_local,
-    # Pydantic validators
-    IPv4AddressValidator,
-    IPv6AddressValidator,
-    IPv4NetworkValidator,
-    IPv6NetworkValidator,
-    IPAddressValidator,
-    IPNetworkValidator,
+    is_private_ip,
+    is_valid_ip,
+    is_valid_ip_network,
+    # Core validation functions
+    is_valid_ipv4,
+    is_valid_ipv4_network,
+    is_valid_ipv6,
+    is_valid_ipv6_network,
+    normalize_ipv6,
     # Convenience functions
     validate_ipv4_address_field,
     validate_ipv6_address_field,
 )
-
 
 # ============================================================================
 # Core Validation Function Tests
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestIPv4Validation:
     """Test IPv4 address validation."""
 
@@ -74,6 +72,7 @@ class TestIPv4Validation:
             assert not is_valid_ipv4(addr), f"Should reject invalid IPv4: {addr}"
 
 
+@pytest.mark.unit
 class TestIPv6Validation:
     """Test IPv6 address validation."""
 
@@ -117,7 +116,9 @@ class TestIPv6Validation:
         ]
         for input_addr, expected in test_cases:
             result = normalize_ipv6(input_addr)
-            assert result == expected, f"normalize_ipv6({input_addr}) should be {expected}, got {result}"
+            assert result == expected, (
+                f"normalize_ipv6({input_addr}) should be {expected}, got {result}"
+            )
 
     def test_normalize_invalid_ipv6(self):
         """Test normalization of invalid IPv6 returns None."""
@@ -125,6 +126,7 @@ class TestIPv6Validation:
         assert normalize_ipv6("192.168.1.1") is None
 
 
+@pytest.mark.unit
 class TestIPv4NetworkValidation:
     """Test IPv4 CIDR network validation."""
 
@@ -150,7 +152,9 @@ class TestIPv4NetworkValidation:
             "2001:db8::/32",  # IPv6
         ]
         for net in invalid_networks:
-            assert not is_valid_ipv4_network(net, strict=True), f"Should reject invalid IPv4 network: {net}"
+            assert not is_valid_ipv4_network(net, strict=True), (
+                f"Should reject invalid IPv4 network: {net}"
+            )
 
         # Test no prefix separately - Python's ipaddress interprets "192.168.1.0" as /32
         # So we need to check for '/' in the string
@@ -163,6 +167,7 @@ class TestIPv4NetworkValidation:
         assert is_valid_ipv4_network("10.1.2.3/16", strict=False)
 
 
+@pytest.mark.unit
 class TestIPv6NetworkValidation:
     """Test IPv6 CIDR network validation."""
 
@@ -188,7 +193,9 @@ class TestIPv6NetworkValidation:
             "192.168.1.0/24",  # IPv4
         ]
         for net in invalid_networks:
-            assert not is_valid_ipv6_network(net, strict=True), f"Should reject invalid IPv6 network: {net}"
+            assert not is_valid_ipv6_network(net, strict=True), (
+                f"Should reject invalid IPv6 network: {net}"
+            )
 
     def test_ipv6_network_non_strict(self):
         """Test IPv6 network validation in non-strict mode."""
@@ -196,6 +203,7 @@ class TestIPv6NetworkValidation:
         assert is_valid_ipv6_network("fe80::1/10", strict=False)
 
 
+@pytest.mark.unit
 class TestGenericIPValidation:
     """Test generic IP validation (IPv4 or IPv6)."""
 
@@ -217,6 +225,7 @@ class TestGenericIPValidation:
         assert not is_valid_ip_network("not-a-network")
 
 
+@pytest.mark.unit
 class TestIPVersionDetection:
     """Test IP version detection."""
 
@@ -239,6 +248,7 @@ class TestIPVersionDetection:
         assert detect_ip_version("192.168.1.0/24") is None
 
 
+@pytest.mark.unit
 class TestIPAddressProperties:
     """Test IP address property checks."""
 
@@ -285,12 +295,14 @@ class TestIPAddressProperties:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestPydanticIPv4Validator:
     """Test Pydantic IPv4 address validator."""
 
     def test_valid_ipv4_pydantic(self):
         """Test Pydantic model with valid IPv4."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -312,6 +324,7 @@ class TestPydanticIPv4Validator:
     def test_invalid_ipv4_pydantic(self):
         """Test Pydantic model with invalid IPv4."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -329,12 +342,14 @@ class TestPydanticIPv4Validator:
         assert "Invalid IPv4 address" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticIPv6Validator:
     """Test Pydantic IPv6 address validator."""
 
     def test_valid_ipv6_pydantic(self):
         """Test Pydantic model with valid IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -356,6 +371,7 @@ class TestPydanticIPv6Validator:
     def test_invalid_ipv6_pydantic(self):
         """Test Pydantic model with invalid IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -373,12 +389,14 @@ class TestPydanticIPv6Validator:
         assert "Invalid IPv6 address" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticIPv4NetworkValidator:
     """Test Pydantic IPv4 network validator."""
 
     def test_valid_ipv4_network_pydantic(self):
         """Test Pydantic model with valid IPv4 network."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             network: str | None = None
 
@@ -393,6 +411,7 @@ class TestPydanticIPv4NetworkValidator:
     def test_invalid_ipv4_network_pydantic(self):
         """Test Pydantic model with invalid IPv4 network."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             network: str | None = None
 
@@ -406,12 +425,14 @@ class TestPydanticIPv4NetworkValidator:
         assert "Invalid IPv4 CIDR" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestPydanticGenericIPValidator:
     """Test Pydantic generic IP validator (IPv4 or IPv6)."""
 
     def test_valid_dual_stack_pydantic(self):
         """Test Pydantic model accepting both IPv4 and IPv6."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -434,6 +455,7 @@ class TestPydanticGenericIPValidator:
     def test_invalid_dual_stack_pydantic(self):
         """Test Pydantic model rejecting invalid IPs."""
 
+        @pytest.mark.unit
         class TestModel(BaseModel):
             ip: str | None = None
 
@@ -452,6 +474,7 @@ class TestPydanticGenericIPValidator:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test convenience wrapper functions."""
 
@@ -478,6 +501,7 @@ class TestConvenienceFunctions:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestEdgeCases:
     """Test edge cases and error handling."""
 
@@ -506,6 +530,7 @@ class TestEdgeCases:
 # ============================================================================
 
 
+@pytest.mark.unit
 class TestRealWorldUseCases:
     """Test real-world scenarios."""
 
@@ -558,9 +583,6 @@ class TestRealWorldUseCases:
             def validate_ipv6_prefix(cls, v):
                 return IPv6NetworkValidator.validate(v, strict=True)
 
-        config = NetworkConfig(
-            ipv4_prefix="10.0.0.0/8",
-            ipv6_prefix="2001:db8::/32"
-        )
+        config = NetworkConfig(ipv4_prefix="10.0.0.0/8", ipv6_prefix="2001:db8::/32")
         assert config.ipv4_prefix == "10.0.0.0/8"
         assert config.ipv6_prefix == "2001:db8::/32"

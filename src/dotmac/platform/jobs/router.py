@@ -79,31 +79,6 @@ async def create_job(
 
 
 @router.get(
-    "/{job_id}",
-    response_model=JobResponse,
-    summary="Get Job",
-    description="Get job details by ID",
-)
-async def get_job(
-    job_id: str,
-    service: JobService = Depends(get_job_service),
-    current_user: UserInfo = Depends(get_current_user),
-) -> JobResponse:
-    """
-    Get detailed information about a specific job.
-
-    Returns complete job details including progress, errors, and results.
-    """
-    job = await service.get_job(job_id, current_user.tenant_id)
-    if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job {job_id} not found",
-        )
-    return JobResponse.model_validate(job)
-
-
-@router.get(
     "",
     response_model=JobListResponse,
     summary="List Jobs",
@@ -136,6 +111,47 @@ async def list_jobs(
         page=page,
         page_size=page_size,
     )
+
+
+@router.get(
+    "/statistics",
+    response_model=JobStatistics,
+    summary="Job Statistics",
+    description="Get aggregate job statistics for the current tenant",
+)
+async def get_job_statistics(
+    service: JobService = Depends(get_job_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> JobStatistics:
+    """
+    Get aggregated job statistics for dashboards.
+    """
+    return await service.get_statistics(current_user.tenant_id)
+
+
+@router.get(
+    "/{job_id}",
+    response_model=JobResponse,
+    summary="Get Job",
+    description="Get job details by ID",
+)
+async def get_job(
+    job_id: str,
+    service: JobService = Depends(get_job_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> JobResponse:
+    """
+    Get detailed information about a specific job.
+
+    Returns complete job details including progress, errors, and results.
+    """
+    job = await service.get_job(job_id, current_user.tenant_id)
+    if not job:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Job {job_id} not found",
+        )
+    return JobResponse.model_validate(job)
 
 
 @router.patch(
@@ -257,25 +273,3 @@ async def retry_failed_items(
         failed_items_count=failed_items_count,
         message=f"Created retry job {retry_job.id} for {failed_items_count} failed items",
     )
-
-
-@router.get(
-    "/statistics",
-    response_model=JobStatistics,
-    summary="Get Job Statistics",
-    description="Get aggregated job statistics for the tenant",
-)
-async def get_job_statistics(
-    service: JobService = Depends(get_job_service),
-    current_user: UserInfo = Depends(get_current_user),
-) -> JobStatistics:
-    """
-    Get job statistics for the current tenant.
-
-    Returns aggregated metrics including:
-    - Total jobs by status
-    - Average job duration
-    - Total items processed
-    - Overall success rate
-    """
-    return await service.get_statistics(current_user.tenant_id)

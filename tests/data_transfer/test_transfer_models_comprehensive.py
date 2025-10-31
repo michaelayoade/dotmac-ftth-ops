@@ -8,7 +8,7 @@ Tests all Pydantic models and their validation logic including:
 - Custom validators and error cases
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
@@ -38,6 +38,7 @@ from dotmac.platform.data_transfer.models import (  # Enums; Request models; Res
 )
 
 
+@pytest.mark.unit
 class TestEnums:
     """Test enum classes and their values."""
 
@@ -89,6 +90,7 @@ class TestEnums:
         assert len(all_values) == 3
 
 
+@pytest.mark.unit
 class TestImportRequest:
     """Test ImportRequest model and validation."""
 
@@ -346,6 +348,7 @@ class TestImportRequest:
         assert request.encoding == "utf-8"
 
 
+@pytest.mark.unit
 class TestExportRequest:
     """Test ExportRequest model and validation."""
 
@@ -461,13 +464,14 @@ class TestExportRequest:
         assert request.fields is None
 
 
+@pytest.mark.unit
 class TestTransferJobResponse:
     """Test TransferJobResponse model."""
 
     def test_transfer_job_response_creation(self):
         """Test TransferJobResponse creation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         metadata = {"source": "test", "user": "admin"}
 
         response = TransferJobResponse(
@@ -497,9 +501,9 @@ class TestTransferJobResponse:
     def test_transfer_job_response_completed(self):
         """Test TransferJobResponse for completed job."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         started_at = created_at
-        completed_at = datetime.now(UTC)
+        completed_at = datetime.now(timezone.utc)
 
         response = TransferJobResponse(
             job_id=job_id,
@@ -526,9 +530,9 @@ class TestTransferJobResponse:
     def test_transfer_job_response_duration_property(self):
         """Test duration property calculation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
         started_at = created_at
-        completed_at = datetime.now(UTC)
+        completed_at = datetime.now(timezone.utc)
 
         # Job with both start and completion times
         response = TransferJobResponse(
@@ -583,7 +587,7 @@ class TestTransferJobResponse:
     def test_transfer_job_response_success_rate_property(self):
         """Test success_rate property calculation."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
 
         # Job with some failures
         response_with_failures = TransferJobResponse(
@@ -631,6 +635,7 @@ class TestTransferJobResponse:
         assert response_no_records.success_rate == 100.0
 
 
+@pytest.mark.unit
 class TestTransferJobListResponse:
     """Test TransferJobListResponse model."""
 
@@ -642,7 +647,7 @@ class TestTransferJobListResponse:
             type=TransferType.IMPORT,
             status=TransferStatus.COMPLETED,
             progress=100.0,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             records_processed=500,
             records_failed=0,
             records_total=500,
@@ -654,7 +659,7 @@ class TestTransferJobListResponse:
             type=TransferType.EXPORT,
             status=TransferStatus.RUNNING,
             progress=45.5,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
             records_processed=455,
             records_failed=5,
             records_total=1000,
@@ -673,6 +678,7 @@ class TestTransferJobListResponse:
         assert response.has_more is False
 
 
+@pytest.mark.unit
 class TestDataFormatInfo:
     """Test DataFormatInfo model."""
 
@@ -703,6 +709,7 @@ class TestDataFormatInfo:
         assert info.options == options
 
 
+@pytest.mark.unit
 class TestFormatsResponse:
     """Test FormatsResponse model."""
 
@@ -737,13 +744,14 @@ class TestFormatsResponse:
         assert response.compression_types == ["none", "gzip", "zip"]
 
 
+@pytest.mark.unit
 class TestTransferErrorResponse:
     """Test TransferErrorResponse model."""
 
     def test_transfer_error_response_creation(self):
         """Test TransferErrorResponse creation."""
         job_id = uuid4()
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         error = TransferErrorResponse(
             error="VALIDATION_FAILED",
             message="Data validation failed",
@@ -762,7 +770,7 @@ class TestTransferErrorResponse:
 
     def test_transfer_error_response_minimal(self):
         """Test TransferErrorResponse with minimal required fields."""
-        timestamp = datetime.now(UTC)
+        timestamp = datetime.now(timezone.utc)
         error = TransferErrorResponse(
             error="NETWORK_ERROR",
             message="Failed to connect to remote server",
@@ -777,6 +785,7 @@ class TestTransferErrorResponse:
         assert error.timestamp == timestamp
 
 
+@pytest.mark.unit
 class TestTransferValidationResult:
     """Test TransferValidationResult model."""
 
@@ -821,6 +830,7 @@ class TestTransferValidationResult:
         assert result.json_schema is None
 
 
+@pytest.mark.unit
 class TestTransferJobRequest:
     """Test TransferJobRequest model."""
 
@@ -905,6 +915,7 @@ class TestTransferJobRequest:
             TransferJobRequest(name="Test Job", description=long_desc)
 
 
+@pytest.mark.unit
 class TestTransferProgressUpdate:
     """Test TransferProgressUpdate model."""
 
@@ -934,7 +945,7 @@ class TestTransferProgressUpdate:
     def test_transfer_progress_update_full(self):
         """Test TransferProgressUpdate with all fields."""
         job_id = uuid4()
-        estimated_completion = datetime.now(UTC)
+        estimated_completion = datetime.now(timezone.utc)
 
         update = TransferProgressUpdate(
             job_id=job_id,
@@ -983,6 +994,7 @@ class TestTransferProgressUpdate:
         assert update.message == "Job completed successfully"
 
 
+@pytest.mark.unit
 class TestTransferStatistics:
     """Test TransferStatistics model."""
 
@@ -1013,6 +1025,7 @@ class TestTransferStatistics:
         assert stats.most_used_format == "csv"
 
 
+@pytest.mark.unit
 class TestModelSerialization:
     """Test model serialization and deserialization."""
 
@@ -1046,7 +1059,7 @@ class TestModelSerialization:
     def test_transfer_job_response_serialization(self):
         """Test TransferJobResponse serialization."""
         job_id = uuid4()
-        created_at = datetime.now(UTC)
+        created_at = datetime.now(timezone.utc)
 
         original = TransferJobResponse(
             job_id=job_id,
@@ -1078,6 +1091,7 @@ class TestModelSerialization:
         assert reconstructed.progress == original.progress
 
 
+@pytest.mark.unit
 class TestModelEdgeCases:
     """Test edge cases and error conditions."""
 

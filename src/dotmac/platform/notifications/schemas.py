@@ -139,9 +139,7 @@ class TeamNotificationRequest(BaseModel):  # BaseModel resolves to Any in isolat
 
     model_config = ConfigDict()
 
-    team_members: list[UUID] | None = Field(
-        None, description="Specific list of user IDs to notify"
-    )
+    team_members: list[UUID] | None = Field(None, description="Specific list of user IDs to notify")
     role_filter: str | None = Field(
         None, description="Role name to filter users (e.g., 'admin', 'support_agent')"
     )

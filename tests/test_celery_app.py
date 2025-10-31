@@ -1,4 +1,5 @@
 """Tests for the celery_app module."""
+import pytest
 
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from dotmac.platform.celery_app import (
 )
 
 
+@pytest.mark.integration
 class TestCeleryApp:
     """Test the Celery application configuration."""
 
@@ -26,7 +28,7 @@ class TestCeleryApp:
         assert celery_app.conf.task_serializer == "json"
         assert celery_app.conf.result_serializer == "json"
         assert "json" in celery_app.conf.accept_content
-        assert celery_app.conf.timezone == "UTC"
+        assert celery_app.conf.timezone == "timezone.utc"
         assert celery_app.conf.enable_utc is True
 
         # Test queue configuration
@@ -52,6 +54,7 @@ class TestCeleryApp:
         assert "dotmac.platform.tasks" in celery_app.conf.include
 
 
+@pytest.mark.integration
 class TestCeleryInstrumentationHooks:
     """Test Celery instrumentation setup hooks."""
 
@@ -84,8 +87,9 @@ class TestCeleryInstrumentationHooks:
         assert "celery.instrumentation.failed" in warning_call[0]
         assert warning_call[1]["error"] == "Instrumentation failed"
 
+    @patch("dotmac.platform.genieacs.tasks.replay_pending_operations")
     @patch("structlog.get_logger")
-    def test_setup_periodic_tasks(self, mock_get_logger):
+    def test_setup_periodic_tasks(self, mock_get_logger, mock_replay_operations):
         """Test periodic tasks setup logging."""
         mock_logger = Mock()
         mock_get_logger.return_value = mock_logger
@@ -99,7 +103,11 @@ class TestCeleryInstrumentationHooks:
         assert "celery.worker.configured" in info_call[0]
         assert "queues" in info_call[1]
 
+        # Verify replay_pending_operations was triggered on startup
+        mock_replay_operations.apply_async.assert_called_once_with(countdown=5)
 
+
+@pytest.mark.integration
 class TestCeleryAppIntegration:
     """Integration tests for Celery app."""
 

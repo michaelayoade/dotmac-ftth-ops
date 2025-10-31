@@ -25,6 +25,7 @@ from dotmac.platform.analytics.otel_collector import (
 from dotmac.platform.analytics.service import AnalyticsService, get_analytics_service
 
 
+@pytest.mark.unit
 class TestBaseModule:
     """Tests for base.py missing coverage."""
 
@@ -99,6 +100,7 @@ class TestBaseModule:
         assert ctx.trace_state == {"key": "value"}
 
 
+@pytest.mark.unit
 class TestOtelCollectorModule:
     """Tests for otel_collector.py missing coverage."""
 
@@ -233,6 +235,7 @@ class TestOtelCollectorModule:
         span.record_exception(ValueError("test"))  # Should not raise
 
 
+@pytest.mark.unit
 class TestServiceModule:
     """Tests for service.py missing coverage."""
 

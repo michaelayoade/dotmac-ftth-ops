@@ -1,18 +1,26 @@
+
 """
 Tests for service registry data models.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.service_registry.models import (
+
+
+
     ServiceHealth,
     ServiceInfo,
     ServiceStatus,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestServiceStatus:
     """Test ServiceStatus enum."""
@@ -74,16 +82,16 @@ class TestServiceHealth:
 
     def test_service_health_default_timestamp(self):
         """Test that checked_at is set automatically."""
-        before = datetime.now(UTC)
+        before = datetime.now(timezone.utc)
         health = ServiceHealth(status="passing")
-        after = datetime.now(UTC)
+        after = datetime.now(timezone.utc)
 
         assert before <= health.checked_at <= after
-        assert health.checked_at.tzinfo == UTC
+        assert health.checked_at.tzinfo == timezone.utc
 
     def test_service_health_custom_timestamp(self):
         """Test ServiceHealth with custom timestamp."""
-        custom_time = datetime(2023, 1, 1, 12, 0, 0, tzinfo=UTC)
+        custom_time = datetime(2023, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
         health = ServiceHealth(status="passing", checked_at=custom_time)
 
         assert health.checked_at == custom_time
@@ -118,8 +126,8 @@ class TestServiceInfo:
 
     def test_service_info_creation(self):
         """Test ServiceInfo creation with all fields."""
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
         health = ServiceHealth(status="passing")
 
         service = ServiceInfo(
@@ -159,8 +167,8 @@ class TestServiceInfo:
 
     def test_service_info_minimal_creation(self):
         """Test ServiceInfo creation with minimal required fields."""
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         service = ServiceInfo(
             id="service-001",
@@ -191,8 +199,8 @@ class TestServiceInfo:
 
     def test_service_info_default_values(self):
         """Test ServiceInfo default field values."""
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         service = ServiceInfo(
             id="service-001",
@@ -213,8 +221,8 @@ class TestServiceInfo:
 
     def test_service_info_list_factories(self):
         """Test that list and dict fields use factory defaults."""
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         service1 = ServiceInfo(
             id="service-001",
@@ -250,8 +258,8 @@ class TestServiceInfo:
 
     def test_service_info_validation_errors(self):
         """Test ServiceInfo validation errors."""
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         # Test missing required field
         with pytest.raises(ValidationError) as exc_info:
@@ -286,8 +294,8 @@ class TestServiceInfo:
             },
         )
 
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         service = ServiceInfo(
             id="service-001",
@@ -321,8 +329,8 @@ class TestServiceInfo:
     def test_service_info_json_serialization(self):
         """Test ServiceInfo JSON serialization/deserialization."""
         health = ServiceHealth(status="passing", latency_ms=30.0)
-        registered_time = datetime.now(UTC)
-        heartbeat_time = datetime.now(UTC)
+        registered_time = datetime.now(timezone.utc)
+        heartbeat_time = datetime.now(timezone.utc)
 
         original = ServiceInfo(
             id="service-001",

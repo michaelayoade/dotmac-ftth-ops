@@ -4,7 +4,10 @@ Billing reconciliation service.
 Orchestrates payment reconciliation, retry logic, circuit breaking, and recovery workflows.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 

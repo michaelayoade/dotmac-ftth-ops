@@ -33,6 +33,7 @@ def tenant_id():
     return "tenant-123"
 
 
+@pytest.mark.integration
 class TestGenerateWebhookSecret:
     def test_generate_secret(self):
         secret = generate_webhook_secret()
@@ -44,6 +45,7 @@ class TestGenerateWebhookSecret:
         assert len(secrets) == 100
 
 
+@pytest.mark.integration
 class TestCreateSubscription:
     @pytest.mark.asyncio
     async def test_create_subscription_basic(self, webhook_service, tenant_id):

@@ -1,3 +1,4 @@
+
 """
 Global error handling tests across all modules.
 
@@ -5,17 +6,21 @@ Tests error handling patterns, edge cases, and production hardening
 for Week 4 (Polish) improvements.
 """
 
-from datetime import UTC
+from datetime import timezone
 
 import pytest
 
+
 # Mark all tests as integration - they test real error scenarios with full app
-pytestmark = pytest.mark.integration
 
 # ============================================================================
 # Error Handling Pattern Tests
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.integration
 
 class TestGlobalErrorHandling:
     """Test error handling patterns across all endpoints."""
@@ -231,7 +236,7 @@ class TestEdgeCases:
         """Test handling of future dates where past/present expected."""
         from datetime import datetime, timedelta
 
-        future_date = (datetime.now(UTC) + timedelta(days=365)).isoformat()
+        future_date = (datetime.now(timezone.utc) + timedelta(days=365)).isoformat()
 
         response = test_client.post(
             "/api/v1/tenants",

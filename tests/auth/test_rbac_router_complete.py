@@ -10,7 +10,7 @@ Tests cover:
 - Request/Response models
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import UUID, uuid4
 
 import pytest
@@ -112,6 +112,7 @@ def app_with_router(async_db_session: AsyncSession, admin_user_id: UUID):
     return app
 
 
+@pytest.mark.integration
 class TestPermissionEndpoints:
     """Test permission management endpoints."""
 
@@ -200,6 +201,7 @@ class TestPermissionEndpoints:
         assert response.status_code == 404
 
 
+@pytest.mark.integration
 class TestRoleEndpoints:
     """Test role management endpoints."""
 
@@ -368,6 +370,7 @@ class TestRoleEndpoints:
         assert response.status_code == 403
 
 
+@pytest.mark.integration
 class TestUserPermissionManagement:
     """Test user permission management endpoints."""
 
@@ -435,7 +438,7 @@ class TestUserPermissionManagement:
             f"/api/v1/rbac/users/{user_id}/permissions",
             json={
                 "permission_name": "special.feature",
-                "expires_at": (datetime.now(UTC) + timedelta(days=30)).isoformat(),
+                "expires_at": (datetime.now(timezone.utc) + timedelta(days=30)).isoformat(),
                 "reason": "Temporary access",
             },
         )
@@ -468,6 +471,7 @@ class TestUserPermissionManagement:
         assert response.status_code in [204, 400, 500]
 
 
+@pytest.mark.integration
 class TestRoleUpdateEdgeCases:
     """Test role update edge cases for router coverage."""
 
@@ -515,6 +519,7 @@ class TestRoleUpdateEdgeCases:
         assert response.status_code == 200
 
 
+@pytest.mark.integration
 class TestAdditionalRouterCoverage:
     """Additional tests to improve router coverage."""
 

@@ -1,3 +1,4 @@
+
 """
 Regression test for CustomerContactLink ORM relationship.
 
@@ -7,25 +8,25 @@ works correctly with proper foreign keys and relationship mappings.
 This would have caught the NoForeignKeysError that occurred when contact_id
 was missing a ForeignKey constraint.
 
-NOTE: Integration test - requires full database schema with seeded test database.
+NOTE: Some tests require PostgreSQL for full foreign key constraint validation.
+SQLite limitations:
+- Foreign key constraints are not enforced by default
+- CASCADE behavior differs from PostgreSQL
+
+Tests marked with @requires_postgres will skip on SQLite.
+Run all tests with: DOTMAC_DATABASE_URL_ASYNC=postgresql://... pytest
 """
 
+import os
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
+from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 
-pytestmark = pytest.mark.asyncio
-
-# These tests require full database schema with all foreign key relationships properly set up.
-# SQLite in-memory tests fail due to schema validation issues between Contact and Customer models.
-# This test is now in the integration test suite for proper database testing.
-pytest.skip("Integration test - requires full database schema", allow_module_level=True)
-
-from sqlalchemy import select  # noqa: E402
-from sqlalchemy.exc import IntegrityError  # noqa: E402
-
-from dotmac.platform.contacts.models import Contact  # noqa: E402
-from dotmac.platform.customer_management.models import (  # noqa: E402
+from dotmac.platform.contacts.models import Contact
+from dotmac.platform.customer_management.models import (
     ContactRole,
     Customer,
     CustomerContactLink,
@@ -33,13 +34,43 @@ from dotmac.platform.customer_management.models import (  # noqa: E402
     CustomerTier,
     CustomerType,
 )
+from dotmac.platform.tenant.models import Tenant, TenantStatus
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.asyncio,
+]
+
+# Check if using PostgreSQL
+DB_URL = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "")
+IS_POSTGRES = "postgresql" in DB_URL
+
+requires_postgres = pytest.mark.skipif(
+    not IS_POSTGRES,
+    reason="Requires PostgreSQL - SQLite doesn't enforce FK constraints or CASCADE behavior"
+)
 
 
+@pytest_asyncio.fixture
+async def test_tenant(async_db_session):
+    """Create a test tenant for integration tests."""
+    tenant = Tenant(
+        id="test-tenant",
+        name="Test Tenant",
+        slug="test-tenant",
+        status=TenantStatus.ACTIVE,
+    )
+    async_db_session.add(tenant)
+    await async_db_session.flush()
+    return tenant
+
+
+@pytest.mark.serial_only
 @pytest.mark.asyncio
 class TestCustomerContactRelationship:
     """Test CustomerContactLink ORM relationship integrity."""
 
-    async def test_customer_contact_link_creation(self, async_db_session):
+    async def test_customer_contact_link_creation(self, async_db_session, test_tenant):
         """Test basic creation of customer-contact link."""
         # Create customer
         customer = Customer(
@@ -55,12 +86,12 @@ class TestCustomerContactRelationship:
         async_db_session.add(customer)
         await async_db_session.flush()
 
-        # Create contact
+        # Create contact (Contact model doesn't have email field - emails are in ContactMethod table)
         contact = Contact(
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.smith.{uuid4()}@example.com",
+            display_name="Jane Smith",  # Required field
         )
         async_db_session.add(contact)
         await async_db_session.flush()
@@ -84,8 +115,12 @@ class TestCustomerContactRelationship:
         assert loaded_link.contact_id == contact.id
         assert loaded_link.role == ContactRole.PRIMARY
 
-    async def test_foreign_key_constraint_enforced(self, async_db_session):
-        """Test that foreign key constraints are enforced."""
+    @requires_postgres
+    async def test_foreign_key_constraint_enforced(self, async_db_session, test_tenant):
+        """Test that foreign key constraints are enforced.
+
+        Requires PostgreSQL - SQLite doesn't enforce FK constraints by default.
+        """
         # Create customer
         customer = Customer(
             customer_number="TEST002",
@@ -114,8 +149,12 @@ class TestCustomerContactRelationship:
         with pytest.raises(IntegrityError):
             await async_db_session.flush()
 
-    async def test_cascade_delete_behavior(self, async_db_session):
-        """Test CASCADE delete when customer is deleted."""
+    @requires_postgres
+    async def test_cascade_delete_behavior(self, async_db_session, test_tenant):
+        """Test CASCADE delete when customer is deleted.
+
+        Requires PostgreSQL - SQLite CASCADE behavior differs from PostgreSQL.
+        """
         # Create customer and contact
         customer = Customer(
             customer_number="TEST003",
@@ -131,7 +170,7 @@ class TestCustomerContactRelationship:
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.{uuid4()}@example.com",
+            display_name="Jane Smith",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
@@ -158,7 +197,7 @@ class TestCustomerContactRelationship:
         )
         assert result.scalar_one_or_none() is None
 
-    async def test_multiple_roles_for_single_contact(self, async_db_session):
+    async def test_multiple_roles_for_single_contact(self, async_db_session, test_tenant):
         """Test that a contact can have multiple roles with same customer."""
         # Create customer and contact
         customer = Customer(
@@ -175,7 +214,7 @@ class TestCustomerContactRelationship:
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email=f"jane.{uuid4()}@example.com",
+            display_name="Jane Smith",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)

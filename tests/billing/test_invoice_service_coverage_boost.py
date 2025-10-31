@@ -10,7 +10,7 @@ This file focuses on covering the gaps left by existing tests, particularly:
 - Overdue invoice checking
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -52,6 +52,7 @@ def sample_line_items():
     ]
 
 
+@pytest.mark.integration
 class TestInvoiceCreation:
     """Test invoice creation with various scenarios."""
 
@@ -74,8 +75,8 @@ class TestInvoiceCreation:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -122,7 +123,7 @@ class TestInvoiceCreation:
             )
 
         # Due date should be 15 days from now
-        expected_due_date = datetime.now(UTC) + timedelta(days=15)
+        expected_due_date = datetime.now(timezone.utc) + timedelta(days=15)
         assert result.due_date.date() == expected_due_date.date()
 
     @pytest.mark.asyncio
@@ -142,10 +143,11 @@ class TestInvoiceCreation:
             )
 
         # Default should be 30 days
-        expected_due_date = datetime.now(UTC) + timedelta(days=30)
+        expected_due_date = datetime.now(timezone.utc) + timedelta(days=30)
         assert result.due_date.date() == expected_due_date.date()
 
 
+@pytest.mark.integration
 class TestInvoicePaymentStatus:
     """Test invoice payment status updates."""
 
@@ -176,8 +178,8 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -234,8 +236,8 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -260,10 +262,10 @@ class TestInvoicePaymentStatus:
         assert result.paid_at is not None
 
     @pytest.mark.asyncio
-    async def test_update_payment_status_to_partially_refunded(
+    async def test_update_payment_status_to_pending_partial(
         self, invoice_service, async_db_session
     ):
-        """Test PARTIALLY_REFUNDED payment status updates."""
+        """Test pending payment status updates for partial payments."""
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
@@ -274,18 +276,18 @@ class TestInvoicePaymentStatus:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
             discount_amount=0,
             total_amount=110,
             total_credits_applied=0,
-            remaining_balance=110,  # Required NOT NULL field
+            remaining_balance=60,
             credit_applications=[],
-            status=InvoiceStatus.PAID,
-            payment_status=PaymentStatus.SUCCEEDED,
+            status=InvoiceStatus.PARTIALLY_PAID,
+            payment_status=PaymentStatus.PENDING,
         )
         async_db_session.add(invoice)
         await async_db_session.commit()
@@ -293,13 +295,14 @@ class TestInvoicePaymentStatus:
         result = await invoice_service.update_invoice_payment_status(
             tenant_id=tenant_id,
             invoice_id=invoice.invoice_id,
-            payment_status=PaymentStatus.PARTIALLY_REFUNDED,
+            payment_status=PaymentStatus.PENDING,
         )
 
         assert result.status == InvoiceStatus.PARTIALLY_PAID
-        assert result.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert result.payment_status == PaymentStatus.PENDING
 
 
+@pytest.mark.integration
 class TestCreditApplication:
     """Test credit application to invoices."""
 
@@ -332,8 +335,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -363,10 +366,10 @@ class TestCreditApplication:
         assert "credit-123" in result.credit_applications
 
     @pytest.mark.asyncio
-    async def test_apply_partial_credit_marks_partially_refunded(
+    async def test_apply_partial_credit_marks_partially_paid(
         self, invoice_service, async_db_session
     ):
-        """Test that partial credit marks invoice as partially refunded."""
+        """Test that partial credit marks invoice as partially paid."""
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
@@ -377,8 +380,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -403,7 +406,8 @@ class TestCreditApplication:
 
         assert result.remaining_balance == 60
         assert result.total_credits_applied == 50
-        assert result.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert result.payment_status == PaymentStatus.PENDING
+        assert result.status == InvoiceStatus.PARTIALLY_PAID
         assert "credit-123" in result.credit_applications
 
     @pytest.mark.asyncio
@@ -421,8 +425,8 @@ class TestCreditApplication:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -455,6 +459,7 @@ class TestCreditApplication:
         assert transaction.customer_id == "cust-123"
 
 
+@pytest.mark.integration
 class TestOverdueInvoices:
     """Test overdue invoice detection and status updates."""
 
@@ -473,8 +478,8 @@ class TestOverdueInvoices:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC) - timedelta(days=40),
-            due_date=datetime.now(UTC) - timedelta(days=10),  # 10 days overdue
+            issue_date=datetime.now(timezone.utc) - timedelta(days=40),
+            due_date=datetime.now(timezone.utc) - timedelta(days=10),  # 10 days overdue
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -496,8 +501,8 @@ class TestOverdueInvoices:
             customer_id="cust-456",
             billing_email="test2@example.com",
             billing_address={"street": "456 Oak Ave"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=200,
             tax_amount=20,
@@ -536,8 +541,8 @@ class TestOverdueInvoices:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC) - timedelta(days=40),
-            due_date=datetime.now(UTC) - timedelta(days=10),
+            issue_date=datetime.now(timezone.utc) - timedelta(days=40),
+            due_date=datetime.now(timezone.utc) - timedelta(days=10),
             currency="USD",
             subtotal=100,
             tax_amount=10,
@@ -558,6 +563,7 @@ class TestOverdueInvoices:
         assert len(overdue_list) == 0
 
 
+@pytest.mark.integration
 class TestPrivateHelperMethods:
     """Test private helper methods."""
 
@@ -591,7 +597,7 @@ class TestPrivateHelperMethods:
         from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
 
         # Create first invoice (use 6-digit padding to match service format)
         invoice1 = InvoiceEntity(
@@ -601,8 +607,8 @@ class TestPrivateHelperMethods:
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=10,

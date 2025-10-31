@@ -13,6 +13,7 @@ NOTE: These are simplified integration tests focusing on:
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.commands.handlers import (
@@ -31,13 +32,13 @@ from dotmac.platform.billing.core.models import Invoice
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def invoice_handler(async_db_session: AsyncSession) -> InvoiceCommandHandler:
     """Create invoice command handler with real services."""
     return InvoiceCommandHandler(db_session=async_db_session)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def payment_handler(async_db_session: AsyncSession) -> PaymentCommandHandler:
     """Create payment command handler with real services."""
     return PaymentCommandHandler(db_session=async_db_session)
@@ -55,7 +56,7 @@ def customer_id() -> str:
     return str(uuid4())
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_invoice(async_db_session: AsyncSession, tenant_id: str, customer_id: str) -> Invoice:
     """Create a test invoice directly in database."""
     service = InvoiceService(db_session=async_db_session)

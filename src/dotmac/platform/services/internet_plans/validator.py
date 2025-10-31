@@ -64,8 +64,12 @@ class PlanValidator:
 
         # Calculate summary
         total_checks = len(self.validation_results)
-        passed_checks = sum(1 for r in self.validation_results if r.passed and r.severity != "warning")
-        failed_checks = sum(1 for r in self.validation_results if not r.passed and r.severity == "error")
+        passed_checks = sum(
+            1 for r in self.validation_results if r.passed and r.severity != "warning"
+        )
+        failed_checks = sum(
+            1 for r in self.validation_results if not r.passed and r.severity == "error"
+        )
         warning_checks = sum(1 for r in self.validation_results if r.severity == "warning")
 
         overall_status = "passed"
@@ -88,7 +92,12 @@ class PlanValidator:
         )
 
     def _add_result(
-        self, check_name: str, passed: bool, severity: str, message: str, details: dict[str, Any] | None = None
+        self,
+        check_name: str,
+        passed: bool,
+        severity: str,
+        message: str,
+        details: dict[str, Any] | None = None,
     ) -> None:
         """Add a validation result."""
         self.validation_results.append(
@@ -261,7 +270,9 @@ class PlanValidator:
                     "error",
                     "FUP threshold must be specified when FUP is enabled",
                 )
-            elif self.plan.has_data_cap and self.plan.fup_threshold >= (self.plan.data_cap_amount or 0):
+            elif self.plan.has_data_cap and self.plan.fup_threshold >= (
+                self.plan.data_cap_amount or 0
+            ):
                 self._add_result(
                     "fup_below_cap",
                     False,
@@ -373,7 +384,13 @@ class PlanValidator:
                 {"qos_priority": self.plan.qos_priority},
             )
         else:
-            priority_level = "high" if self.plan.qos_priority >= 70 else "medium" if self.plan.qos_priority >= 40 else "low"
+            priority_level = (
+                "high"
+                if self.plan.qos_priority >= 70
+                else "medium"
+                if self.plan.qos_priority >= 40
+                else "low"
+            )
             self._add_result(
                 "qos_configured",
                 True,
@@ -412,7 +429,9 @@ class PlanValidator:
                     estimated_overage_cost = (overage_gb / 1024) * self.plan.overage_price_per_unit
 
         # Calculate throttling
-        throttling_triggered = data_cap_exceeded and self.plan.throttle_policy == ThrottlePolicy.THROTTLE
+        throttling_triggered = (
+            data_cap_exceeded and self.plan.throttle_policy == ThrottlePolicy.THROTTLE
+        )
 
         # Estimate speeds
         average_download_speed = self.plan.get_speed_mbps(download=True)
@@ -420,10 +439,14 @@ class PlanValidator:
 
         if throttling_triggered:
             # Assume throttling for half the month after cap
-            average_download_speed = (average_download_speed + (self.plan.throttled_download_speed or Decimal("0"))) / 2
+            average_download_speed = (
+                average_download_speed + (self.plan.throttled_download_speed or Decimal("0"))
+            ) / 2
 
         # Peak speeds with burst
-        peak_download_speed = self.plan.burst_download_speed or self.plan.get_speed_mbps(download=True)
+        peak_download_speed = self.plan.burst_download_speed or self.plan.get_speed_mbps(
+            download=True
+        )
         peak_upload_speed = self.plan.burst_upload_speed or self.plan.get_speed_mbps(download=False)
 
         # Account for concurrent users

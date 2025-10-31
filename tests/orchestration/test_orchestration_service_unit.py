@@ -4,17 +4,19 @@ Tests for Orchestration Service - Unit Tests
 Simple unit tests focusing on testable service logic without complex workflows.
 """
 
-import pytest
 from unittest.mock import MagicMock, patch
 
-from dotmac.platform.orchestration.service import OrchestrationService
+import pytest
+
 from dotmac.platform.orchestration.models import (
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
 )
+from dotmac.platform.orchestration.service import OrchestrationService
 
 
+@pytest.mark.unit
 class TestOrchestrationServiceInitialization:
     """Test service initialization"""
 
@@ -35,11 +37,12 @@ class TestOrchestrationServiceInitialization:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers") as mock_register:
-            service = OrchestrationService(db, "tenant-1")
+            OrchestrationService(db, "tenant-1")
             mock_register.assert_called_once()
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowManagement:
     """Test workflow listing and retrieval"""
 
@@ -101,7 +104,9 @@ class TestWorkflowManagement:
         ]
 
         db.query.return_value.filter.return_value.count.return_value = 5
-        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_workflows[:3]
+        db.query.return_value.filter.return_value.order_by.return_value.limit.return_value.offset.return_value.all.return_value = mock_workflows[
+            :3
+        ]
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
             service = OrchestrationService(db, "tenant-1")
@@ -139,6 +144,7 @@ class TestWorkflowManagement:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowStatistics:
     """Test workflow statistics"""
 
@@ -203,6 +209,7 @@ class TestWorkflowStatistics:
 
 
 @pytest.mark.asyncio
+@pytest.mark.unit
 class TestWorkflowTypeMapping:
     """Test workflow type to definition mapping"""
 
@@ -211,7 +218,9 @@ class TestWorkflowTypeMapping:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_provision_subscriber_workflow") as mock_workflow:
+            with patch(
+                "dotmac.platform.orchestration.service.get_provision_subscriber_workflow"
+            ) as mock_workflow:
                 mock_workflow.return_value = {"name": "provision_subscriber"}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -226,7 +235,9 @@ class TestWorkflowTypeMapping:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_deprovision_subscriber_workflow") as mock_workflow:
+            with patch(
+                "dotmac.platform.orchestration.service.get_deprovision_subscriber_workflow"
+            ) as mock_workflow:
                 mock_workflow.return_value = {"name": "deprovision_subscriber"}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -240,7 +251,9 @@ class TestWorkflowTypeMapping:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_activate_service_workflow") as mock_workflow:
+            with patch(
+                "dotmac.platform.orchestration.service.get_activate_service_workflow"
+            ) as mock_workflow:
                 mock_workflow.return_value = {"name": "activate_service"}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -253,7 +266,9 @@ class TestWorkflowTypeMapping:
         db = MagicMock()
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_suspend_service_workflow") as mock_workflow:
+            with patch(
+                "dotmac.platform.orchestration.service.get_suspend_service_workflow"
+            ) as mock_workflow:
                 mock_workflow.return_value = {"name": "suspend_service"}
 
                 service = OrchestrationService(db, "tenant-1")

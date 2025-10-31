@@ -39,6 +39,7 @@ class JobUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     current_item: str | None = None
     error_message: str | None = None
     error_details: dict[str, Any] | None = None
+    error_traceback: str | None = None
     result: dict[str, Any] | None = None
 
 
@@ -64,6 +65,7 @@ class JobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     current_item: str | None
     error_message: str | None
     error_details: dict[str, Any] | None
+    error_traceback: str | None
     failed_items: list[Any] | None
     parameters: dict[str, Any] | None
     result: dict[str, Any] | None

@@ -28,6 +28,7 @@ from dotmac.platform.auth.exceptions import (  # Base exceptions; Token exceptio
 )
 
 
+@pytest.mark.integration
 class TestAuthError:
     """Test base AuthError exception."""
 
@@ -67,6 +68,7 @@ class TestAuthError:
         assert isinstance(error, Exception)
 
 
+@pytest.mark.integration
 class TestTokenError:
     """Test TokenError exception."""
 
@@ -87,6 +89,7 @@ class TestTokenError:
         assert error.message == "Token error"
 
 
+@pytest.mark.integration
 class TestTokenExpired:
     """Test TokenExpired exception."""
 
@@ -113,6 +116,7 @@ class TestTokenExpired:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestTokenNotFound:
     """Test TokenNotFound exception."""
 
@@ -133,6 +137,7 @@ class TestTokenNotFound:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInvalidToken:
     """Test InvalidToken exception."""
 
@@ -158,6 +163,7 @@ class TestInvalidToken:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInvalidSignature:
     """Test InvalidSignature exception."""
 
@@ -178,6 +184,7 @@ class TestInvalidSignature:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInvalidAlgorithm:
     """Test InvalidAlgorithm exception."""
 
@@ -203,6 +210,7 @@ class TestInvalidAlgorithm:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInvalidAudience:
     """Test InvalidAudience exception."""
 
@@ -229,6 +237,7 @@ class TestInvalidAudience:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInvalidIssuer:
     """Test InvalidIssuer exception."""
 
@@ -255,6 +264,7 @@ class TestInvalidIssuer:
         assert isinstance(error, TokenError)
 
 
+@pytest.mark.integration
 class TestInsufficientScope:
     """Test InsufficientScope exception."""
 
@@ -270,6 +280,7 @@ class TestInsufficientScope:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestInsufficientRole:
     """Test InsufficientRole exception."""
 
@@ -285,6 +296,7 @@ class TestInsufficientRole:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestTenantMismatch:
     """Test TenantMismatch exception."""
 
@@ -300,6 +312,7 @@ class TestTenantMismatch:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestServiceTokenError:
     """Test ServiceTokenError exception."""
 
@@ -315,6 +328,7 @@ class TestServiceTokenError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestUnauthorizedService:
     """Test UnauthorizedService exception."""
 
@@ -331,6 +345,7 @@ class TestUnauthorizedService:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestInvalidServiceToken:
     """Test InvalidServiceToken exception."""
 
@@ -361,6 +376,7 @@ class TestSecretsProviderError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestConfigurationError:
     """Test ConfigurationError exception."""
 
@@ -376,6 +392,7 @@ class TestConfigurationError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestAuthenticationError:
     """Test AuthenticationError exception."""
 
@@ -391,6 +408,7 @@ class TestAuthenticationError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestAuthorizationError:
     """Test AuthorizationError exception."""
 
@@ -406,6 +424,7 @@ class TestAuthorizationError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestRateLimitError:
     """Test RateLimitError exception."""
 
@@ -421,6 +440,7 @@ class TestRateLimitError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestConnectionError:
     """Test ConnectionError exception."""
 
@@ -436,6 +456,7 @@ class TestConnectionError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestTimeoutError:
     """Test TimeoutError exception."""
 
@@ -451,6 +472,7 @@ class TestTimeoutError:
         assert isinstance(error, AuthError)
 
 
+@pytest.mark.integration
 class TestExceptionHierarchy:
     """Test exception inheritance hierarchy."""
 
@@ -510,6 +532,7 @@ class TestExceptionHierarchy:
             assert isinstance(exc, ServiceTokenError)
 
 
+@pytest.mark.integration
 class TestExceptionUsage:
     """Test exception usage patterns."""
 

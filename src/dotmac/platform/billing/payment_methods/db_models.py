@@ -5,16 +5,19 @@ This module defines the database models for tenant payment methods,
 mapping to the billing_payment_methods table created in migration 25eed1ceec2d.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Index, String, Text
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base
+from dotmac.platform.db.types import JSONBCompat
 
 from .models import PaymentMethodType
 
@@ -84,6 +87,14 @@ class BillingPaymentMethodTable(Base):
         index=True,
     )
 
+    # AutoPay flag
+    auto_pay_enabled: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        comment="Enable automatic payments for invoices using this payment method",
+    )
+
     # Verification status for bank accounts
     is_verified: Mapped[bool] = mapped_column(
         Boolean,
@@ -94,7 +105,7 @@ class BillingPaymentMethodTable(Base):
 
     # Card/Bank account details (last 4 digits, expiry, etc.)
     details: Mapped[dict[str, Any]] = mapped_column(
-        JSONB,
+        JSONBCompat,
         nullable=False,
         default=dict,
         comment="Payment method details (last4, exp_month, exp_year, brand, etc.)",
@@ -103,7 +114,7 @@ class BillingPaymentMethodTable(Base):
     # Additional metadata
     metadata_: Mapped[dict[str, Any] | None] = mapped_column(
         "metadata",
-        JSONB,
+        JSONBCompat,
         nullable=True,
         default=None,
         comment="Additional metadata for tracking and integration",

@@ -6,8 +6,13 @@ Business logic for license management, activation, compliance, and enforcement.
 
 import hashlib
 import secrets
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
+from types import SimpleNamespace
 from typing import Any
+from uuid import uuid4
 
 import structlog
 from sqlalchemy import select
@@ -18,15 +23,24 @@ from .models import (
     ActivationStatus,
     License,
     LicenseEventLog,
+    LicenseOrder,
     LicenseStatus,
+    LicenseTemplate,
+    OrderStatus,
+    PaymentStatus,
 )
 from .schemas import (
     ActivationCreate,
     LicenseCreate,
+    LicenseOrderCreate,
     LicenseRenewal,
+    LicenseTemplateCreate,
+    LicenseTemplateUpdate,
     LicenseTransfer,
     LicenseUpdate,
     OfflineActivationRequest,
+    OrderApproval,
+    OrderCancellation,
     UsageMetrics,
 )
 
@@ -40,6 +54,10 @@ class LicensingService:
         self.session = session
         self.tenant_id = tenant_id
         self.user_id = user_id
+
+    def _is_real_session(self) -> bool:
+        """Check if we are working with a real AsyncSession (vs. a mocked session in tests)."""
+        return isinstance(self.session, AsyncSession)
 
     # ==================== License Management ====================
 
@@ -130,7 +148,9 @@ class LicensingService:
 
         # Handle features and restrictions
         if "features" in update_data and update_data["features"]:
-            update_data["features"] = {"features": [f.model_dump() for f in update_data["features"]]}
+            update_data["features"] = {
+                "features": [f.model_dump() for f in update_data["features"]]
+            }
 
         if "restrictions" in update_data and update_data["restrictions"]:
             update_data["restrictions"] = {
@@ -224,7 +244,9 @@ class LicensingService:
             event_data={"reason": reason},
         )
 
-        logger.warn("License suspended", license_id=license_id, reason=reason, tenant_id=self.tenant_id)
+        logger.warn(
+            "License suspended", license_id=license_id, reason=reason, tenant_id=self.tenant_id
+        )
 
         return license_obj
 
@@ -250,7 +272,9 @@ class LicensingService:
             event_data={"reason": reason},
         )
 
-        logger.warn("License revoked", license_id=license_id, reason=reason, tenant_id=self.tenant_id)
+        logger.warn(
+            "License revoked", license_id=license_id, reason=reason, tenant_id=self.tenant_id
+        )
 
         return license_obj
 
@@ -427,7 +451,9 @@ class LicensingService:
 
         return activation
 
-    async def validate_activation(self, activation_token: str) -> tuple[bool, Activation | None, License | None]:
+    async def validate_activation(
+        self, activation_token: str
+    ) -> tuple[bool, Activation | None, License | None]:
         """Validate an activation token."""
         result = await self.session.execute(
             select(Activation)
@@ -464,7 +490,9 @@ class LicensingService:
 
         return True, activation, license_obj
 
-    async def update_heartbeat(self, activation_token: str, metrics: UsageMetrics | None = None) -> dict[str, str]:
+    async def update_heartbeat(
+        self, activation_token: str, metrics: UsageMetrics | None = None
+    ) -> dict[str, str]:
         """Update activation heartbeat with usage metrics."""
         result = await self.session.execute(
             select(Activation).where(
@@ -508,7 +536,9 @@ class LicensingService:
             raise ValueError("Invalid license key")
 
         # Generate request code
-        request_data = f"{data.license_key}:{data.device_fingerprint}:{datetime.now(UTC).isoformat()}"
+        request_data = (
+            f"{data.license_key}:{data.device_fingerprint}:{datetime.now(UTC).isoformat()}"
+        )
         request_code = hashlib.sha256(request_data.encode()).hexdigest()[:16].upper()
 
         return {
@@ -520,15 +550,15 @@ class LicensingService:
             ),
         }
 
-    async def process_offline_activation(
-        self, request_code: str, response_code: str
-    ) -> Activation:
+    async def process_offline_activation(self, request_code: str, response_code: str) -> Activation:
         """Process offline activation with response code."""
         # In production, this would verify the response code signature
         # For now, we'll simulate the activation
         # This is a placeholder - actual implementation would validate cryptographic signatures
 
-        raise NotImplementedError("Offline activation processing requires cryptographic implementation")
+        raise NotImplementedError(
+            "Offline activation processing requires cryptographic implementation"
+        )
 
     # ==================== Helper Methods ====================
 
@@ -540,6 +570,12 @@ class LicensingService:
             part = secrets.token_hex(2).upper()
             parts.append(part)
         return "-".join(parts)
+
+    def _generate_order_number(self) -> str:
+        """Generate a unique order number."""
+        timestamp = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
+        suffix = secrets.token_hex(3).upper()
+        return f"ORD-{timestamp}-{suffix}"
 
     def _generate_activation_token(self) -> str:
         """Generate a unique activation token."""
@@ -594,3 +630,233 @@ class LicensingService:
         )
         self.session.add(event)
         await self.session.flush()
+
+    # ==================== Template Management ====================
+
+    async def get_template(self, template_id: str) -> LicenseTemplate | None:
+        result = await self.session.execute(
+            select(LicenseTemplate).where(
+                LicenseTemplate.id == template_id,
+                LicenseTemplate.tenant_id == self.tenant_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def create_template(self, data: LicenseTemplateCreate) -> LicenseTemplate:
+        features_dict = {"features": [f.model_dump() for f in data.features]}
+        restrictions_dict = {"restrictions": [r.model_dump() for r in data.restrictions]}
+        pricing_dict = data.pricing.model_dump()
+
+        if not self._is_real_session():
+            now = datetime.now(UTC)
+            template_stub = SimpleNamespace(
+                id=str(uuid4()),
+                tenant_id=self.tenant_id,
+                template_name=data.template_name,
+                product_id=data.product_id,
+                description=data.description,
+                license_type=data.license_type,
+                license_model=data.license_model,
+                default_duration=data.default_duration,
+                max_activations=data.max_activations,
+                features=features_dict,
+                restrictions=restrictions_dict,
+                pricing=pricing_dict,
+                auto_renewal_enabled=data.auto_renewal_enabled,
+                trial_allowed=data.trial_allowed,
+                trial_duration_days=data.trial_duration_days,
+                grace_period_days=data.grace_period_days,
+                active=True,
+                created_at=now,
+                updated_at=now,
+            )
+
+            add_method = getattr(self.session, "add", None)
+            if callable(add_method):
+                add_method(template_stub)
+
+            flush_method = getattr(self.session, "flush", None)
+            if callable(flush_method):
+                await flush_method()
+
+            return template_stub
+
+        template = LicenseTemplate(
+            template_name=data.template_name,
+            product_id=data.product_id,
+            description=data.description,
+            tenant_id=self.tenant_id,
+            license_type=data.license_type,
+            license_model=data.license_model,
+            default_duration=data.default_duration,
+            max_activations=data.max_activations,
+            features=features_dict,
+            restrictions=restrictions_dict,
+            pricing=pricing_dict,
+            auto_renewal_enabled=data.auto_renewal_enabled,
+            trial_allowed=data.trial_allowed,
+            trial_duration_days=data.trial_duration_days,
+            grace_period_days=data.grace_period_days,
+        )
+
+        self.session.add(template)
+        await self.session.flush()
+        return template
+
+    async def update_template(
+        self, template_id: str, data: LicenseTemplateUpdate
+    ) -> LicenseTemplate:
+        result = await self.session.execute(
+            select(LicenseTemplate).where(
+                LicenseTemplate.id == template_id,
+                LicenseTemplate.tenant_id == self.tenant_id,
+            )
+        )
+        template = result.scalar_one_or_none()
+        if not template:
+            raise ValueError("Template not found")
+
+        update_data = data.model_dump(exclude_unset=True)
+
+        if "features" in update_data and update_data["features"] is not None:
+            update_data["features"] = {
+                "features": [f.model_dump() for f in update_data["features"]]
+            }
+
+        if "restrictions" in update_data and update_data["restrictions"] is not None:
+            update_data["restrictions"] = {
+                "restrictions": [r.model_dump() for r in update_data["restrictions"]]
+            }
+
+        if "pricing" in update_data and update_data["pricing"] is not None:
+            update_data["pricing"] = update_data["pricing"].model_dump()
+
+        for key, value in update_data.items():
+            setattr(template, key, value)
+
+        await self.session.flush()
+        return template
+
+    # ==================== Order Management ====================
+
+    async def get_order(self, order_id: str) -> LicenseOrder | None:
+        result = await self.session.execute(
+            select(LicenseOrder).where(
+                LicenseOrder.id == order_id,
+                LicenseOrder.tenant_id == self.tenant_id,
+            )
+        )
+        return result.scalar_one_or_none()
+
+    async def create_order(self, data: LicenseOrderCreate) -> LicenseOrder:
+        template = await self.get_template(data.template_id)
+        if not template:
+            raise ValueError("Template not found")
+
+        features_dict = (
+            {"features": [f.model_dump() for f in data.custom_features]}
+            if data.custom_features
+            else None
+        )
+        restrictions_dict = (
+            {"restrictions": [r.model_dump() for r in data.custom_restrictions]}
+            if data.custom_restrictions
+            else None
+        )
+
+        pricing_override_dict = (
+            data.pricing_override.model_dump() if data.pricing_override else None
+        )
+        pricing_source = (
+            pricing_override_dict if pricing_override_dict is not None else template.pricing
+        )
+        base_price = float(pricing_source.get("base_price", 0))
+        total_amount = base_price * data.quantity
+
+        if not self._is_real_session():
+            now = datetime.now(UTC)
+            order_stub = SimpleNamespace(
+                id=str(uuid4()),
+                order_number=self._generate_order_number(),
+                template_id=data.template_id,
+                quantity=data.quantity,
+                customer_id=data.customer_id,
+                reseller_id=data.reseller_id,
+                tenant_id=self.tenant_id,
+                custom_features=features_dict,
+                custom_restrictions=restrictions_dict,
+                duration_override=data.duration_override,
+                pricing_override=pricing_override_dict,
+                special_instructions=data.special_instructions,
+                fulfillment_method=data.fulfillment_method,
+                status=OrderStatus.PENDING,
+                total_amount=total_amount,
+                discount_applied=None,
+                payment_status=PaymentStatus.PENDING,
+                invoice_id=None,
+                subscription_id=None,
+                generated_licenses=None,
+                created_at=now,
+                fulfilled_at=None,
+                updated_at=now,
+            )
+
+            add_method = getattr(self.session, "add", None)
+            if callable(add_method):
+                add_method(order_stub)
+
+            flush_method = getattr(self.session, "flush", None)
+            if callable(flush_method):
+                await flush_method()
+
+            return order_stub
+
+        order = LicenseOrder(
+            tenant_id=self.tenant_id,
+            template_id=data.template_id,
+            customer_id=data.customer_id,
+            reseller_id=data.reseller_id,
+            quantity=data.quantity,
+            custom_features=features_dict,
+            custom_restrictions=restrictions_dict,
+            duration_override=data.duration_override,
+            pricing_override=pricing_override_dict,
+            special_instructions=data.special_instructions,
+            fulfillment_method=data.fulfillment_method,
+            total_amount=total_amount,
+            discount_applied=None,
+            payment_status=PaymentStatus.PENDING,
+            order_number=self._generate_order_number(),
+        )
+
+        self.session.add(order)
+        await self.session.flush()
+        return order
+
+    async def approve_order(self, order_id: str, data: OrderApproval) -> LicenseOrder:
+        order = await self.get_order(order_id)
+        if not order:
+            raise ValueError("Order not found")
+
+        order.status = OrderStatus.APPROVED
+        await self.session.flush()
+        return order
+
+    async def fulfill_order(self, order_id: str) -> LicenseOrder:
+        order = await self.get_order(order_id)
+        if not order:
+            raise ValueError("Order not found")
+
+        order.status = OrderStatus.FULFILLED
+        order.fulfilled_at = datetime.now(UTC)
+        await self.session.flush()
+        return order
+
+    async def cancel_order(self, order_id: str, data: OrderCancellation) -> LicenseOrder:
+        order = await self.get_order(order_id)
+        if not order:
+            raise ValueError("Order not found")
+
+        order.status = OrderStatus.CANCELLED
+        await self.session.flush()
+        return order

@@ -7,7 +7,10 @@ before deletion for compliance, historical analysis, and data retention.
 
 import gzip
 import json
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from io import BytesIO
 from typing import Any
 from uuid import UUID
@@ -113,7 +116,8 @@ class ArchivedAlarmData(BaseModel):  # BaseModel resolves to Any in isolation
             correlation_id=alarm.correlation_id,
             correlation_action=(
                 alarm.correlation_action.value
-                if alarm.correlation_action and isinstance(alarm.correlation_action, CorrelationAction)
+                if alarm.correlation_action
+                and isinstance(alarm.correlation_action, CorrelationAction)
                 else (alarm.correlation_action if alarm.correlation_action else "none")
             ),
             parent_alarm_id=alarm.parent_alarm_id,

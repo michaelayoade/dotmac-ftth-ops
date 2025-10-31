@@ -2,7 +2,10 @@
 Audit service for tracking and retrieving activities across the platform.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -351,7 +354,9 @@ async def log_api_activity(
     request: Request, action: str, description: str, **kwargs: Any
 ) -> AuditActivity:
     """Helper to log API request activities."""
-    service = AuditService()
+    # Extract session from kwargs if provided
+    session = kwargs.pop("session", None)
+    service = AuditService(session=session)
     # Extract activity_type from kwargs if provided, otherwise use default
     activity_type = kwargs.pop("activity_type", ActivityType.API_REQUEST)
     return await service.log_request_activity(

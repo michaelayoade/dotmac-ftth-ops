@@ -4,8 +4,9 @@ Tests for NetBox Client Dual-Stack IP Allocation
 Test dual-stack and bulk IP allocation methods.
 """
 
-import pytest
 from unittest.mock import AsyncMock, patch
+
+import pytest
 
 from dotmac.platform.netbox.client import NetBoxClient
 
@@ -13,7 +14,7 @@ from dotmac.platform.netbox.client import NetBoxClient
 @pytest.fixture
 def netbox_client():
     """Create NetBox client with mocked dependencies"""
-    with patch('dotmac.platform.settings.settings') as mock_settings:
+    with patch("dotmac.platform.settings.settings") as mock_settings:
         mock_settings.external_services.netbox_url = "http://netbox.test"
         client = NetBoxClient(api_token="test_token")
         # Mock the request method
@@ -21,6 +22,7 @@ def netbox_client():
         return client
 
 
+@pytest.mark.unit
 class TestNetBoxDualStackAllocation:
     """Test dual-stack IP allocation."""
 
@@ -131,6 +133,7 @@ class TestNetBoxDualStackAllocation:
         assert ipv6["id"] == 200
 
 
+@pytest.mark.unit
 class TestNetBoxBulkAllocation:
     """Test bulk IP allocation."""
 
@@ -176,10 +179,7 @@ class TestNetBoxBulkAllocation:
     async def test_bulk_allocate_ips_partial_failure(self, netbox_client):
         """Test bulk allocation fails after partial allocation."""
         # Mock 5 successful responses, then failure
-        mock_responses = [
-            {"id": i, "address": f"192.168.1.{i}/24"}
-            for i in range(1, 6)
-        ]
+        mock_responses = [{"id": i, "address": f"192.168.1.{i}/24"} for i in range(1, 6)]
         mock_responses.append(Exception("Prefix exhausted"))
 
         netbox_client.request.side_effect = mock_responses
@@ -196,10 +196,7 @@ class TestNetBoxBulkAllocation:
     @pytest.mark.asyncio
     async def test_bulk_allocate_ips_minimal_params(self, netbox_client):
         """Test bulk allocation with minimal parameters."""
-        mock_responses = [
-            {"id": i, "address": f"10.1.1.{i}/24"}
-            for i in range(1, 4)
-        ]
+        mock_responses = [{"id": i, "address": f"10.1.1.{i}/24"} for i in range(1, 4)]
 
         netbox_client.request.side_effect = mock_responses
 
@@ -213,6 +210,7 @@ class TestNetBoxBulkAllocation:
         assert result[2]["id"] == 3
 
 
+@pytest.mark.unit
 class TestNetBoxAllocationScenarios:
     """Test real-world allocation scenarios."""
 
@@ -303,6 +301,7 @@ class TestNetBoxAllocationScenarios:
         assert "2001:db8:cafe::1" in result["address"]
 
 
+@pytest.mark.unit
 class TestNetBoxAllocationEdgeCases:
     """Test edge cases in IP allocation."""
 

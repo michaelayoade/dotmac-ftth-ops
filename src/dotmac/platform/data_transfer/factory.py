@@ -107,9 +107,8 @@ class DataTransferRegistry:
             enabled_exporters.extend(core_formats)
 
             # Check Excel support
-            if (
-                settings.features.data_transfer_excel
-                and DependencyChecker.check_feature_dependency("data_transfer_excel")
+            if settings.features.data_transfer_excel and DependencyChecker.check_feature_dependency(
+                "data_transfer_excel"
             ):
                 enabled_importers.append(DataFormat.EXCEL)
                 enabled_exporters.append(DataFormat.EXCEL)

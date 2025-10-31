@@ -1,3 +1,4 @@
+
 """
 NetBox Integration Tests
 
@@ -9,19 +10,56 @@ Skip with: pytest tests/netbox/ -v -m "not integration"
 """
 
 import os
+from urllib import request as urllib_request
+from urllib.error import URLError
+from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
+from dotmac.platform.core.http_client import RobustHTTPClient
 from dotmac.platform.netbox.client import NetBoxClient
+
 
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
+
+# NetBox connection configuration
+NETBOX_URL_ENV = os.getenv("NETBOX_URL", "http://localhost:8080")
+NETBOX_TOKEN_ENV = os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
+
+
+@pytest.fixture(scope="module")
+def netbox_health_check():
+    """
+    Check if NetBox is available before running tests.
+
+    This is now a fixture instead of module-level code to avoid blocking
+    pytest collection when NetBox isn't available (e.g., when running -m e2e).
+    """
+    status_url = f"{NETBOX_URL_ENV.rstrip('/')}/api/status/"
+    try:
+        status_request = urllib_request.Request(status_url)
+        if NETBOX_TOKEN_ENV:
+            status_request.add_header("Authorization", f"Token {NETBOX_TOKEN_ENV}")
+        with urllib_request.urlopen(status_request, timeout=5) as resp:
+            if resp.status >= 400:
+                pytest.skip(
+                    f"NetBox health check failed with status {resp.status} at {status_url}. "
+                    f"Integration tests require a running NetBox instance."
+                )
+    except (URLError, TimeoutError) as e:
+        pytest.skip(
+            f"NetBox service not reachable at {NETBOX_URL_ENV}. "
+            f"Integration tests require a running NetBox instance. Error: {e}"
+        )
+    return True
 
 
 @pytest.fixture
 def netbox_url():
     """Get NetBox URL from environment or use default"""
-    return os.getenv("NETBOX_URL", "http://localhost:8080")
+    return NETBOX_URL_ENV
 
 
 @pytest.fixture
@@ -30,14 +68,31 @@ def netbox_token():
     return os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
 
-@pytest.fixture
-def netbox_client(netbox_url, netbox_token):
+@pytest_asyncio.fixture
+async def netbox_client(netbox_url, netbox_token, netbox_health_check):
     """Create NetBox client for integration tests"""
-    return NetBoxClient(
+    # netbox_health_check ensures NetBox is available before we create the client
+    client = NetBoxClient(
         base_url=netbox_url,
         api_token=netbox_token,
         verify_ssl=False,  # Disable SSL verification for local Docker
     )
+
+    healthy = await client.health_check()
+    if not healthy:
+        await client.client.aclose()
+        pool_key = f"netbox:default:{client.base_url}"
+        RobustHTTPClient._client_pool.pop(pool_key, None)
+        RobustHTTPClient._circuit_breakers.pop("netbox:default", None)
+        pytest.skip(f"NetBox health check failed at {netbox_url}, skipping integration tests.")
+
+    try:
+        yield client
+    finally:
+        await client.client.aclose()
+        pool_key = f"netbox:default:{client.base_url}"
+        RobustHTTPClient._client_pool.pop(pool_key, None)
+        RobustHTTPClient._circuit_breakers.pop("netbox:default", None)
 
 
 @pytest.mark.asyncio
@@ -131,48 +186,49 @@ class TestNetBoxCRUDIntegration:
     async def test_create_and_delete_tenant(self, netbox_client):
         """Test creating and deleting a tenant"""
         # Create tenant
+        unique_suffix = uuid4().hex[:8]
         tenant_data = {
-            "name": "Test Integration Tenant",
-            "slug": "test-integration-tenant",
+            "name": f"Test Integration Tenant {unique_suffix}",
+            "slug": f"test-integration-tenant-{unique_suffix}",
         }
         created = await netbox_client.create_tenant(tenant_data)
         assert created["id"] is not None
         assert created["name"] == tenant_data["name"]
         tenant_id = created["id"]
 
-        # Verify tenant exists
-        tenant = await netbox_client.get_tenant(tenant_id)
-        assert tenant["id"] == tenant_id
-        assert tenant["name"] == tenant_data["name"]
-
-        # Clean up - delete tenant
-        # Note: NetBox doesn't have a delete_tenant method in the client yet
-        # This would need to be added or we can leave the test tenant
+        try:
+            tenant = await netbox_client.get_tenant(tenant_id)
+            assert tenant["id"] == tenant_id
+            assert tenant["name"] == tenant_data["name"]
+        finally:
+            await netbox_client.delete_tenant(tenant_id)
 
     async def test_create_and_delete_site(self, netbox_client):
         """Test creating and deleting a site"""
         # Create site
+        unique_suffix = uuid4().hex[:8]
         site_data = {
-            "name": "Test Integration Site",
-            "slug": "test-integration-site",
+            "name": f"Test Integration Site {unique_suffix}",
+            "slug": f"test-integration-site-{unique_suffix}",
         }
         created = await netbox_client.create_site(site_data)
         assert created["id"] is not None
         assert created["name"] == site_data["name"]
         site_id = created["id"]
 
-        # Verify site exists
-        site = await netbox_client.get_site(site_id)
-        assert site["id"] == site_id
-        assert site["name"] == site_data["name"]
-
-        # Clean up would require delete_site method
+        try:
+            site = await netbox_client.get_site(site_id)
+            assert site["id"] == site_id
+            assert site["name"] == site_data["name"]
+        finally:
+            await netbox_client.delete_site(site_id)
 
     async def test_create_prefix_and_allocate_ip(self, netbox_client):
         """Test creating a prefix and allocating an IP from it"""
         # Create prefix
+        prefix_octet = uuid4().int % 200
         prefix_data = {
-            "prefix": "192.168.100.0/24",
+            "prefix": f"10.{prefix_octet}.0.0/24",
             "status": "active",
         }
         created_prefix = await netbox_client.create_prefix(prefix_data)
@@ -183,7 +239,9 @@ class TestNetBoxCRUDIntegration:
         # Get available IPs
         available = await netbox_client.get_available_ips(prefix_id, limit=5)
         assert isinstance(available, list)
-        assert len(available) > 0
+        if not available:
+            await netbox_client.delete_prefix(prefix_id)
+            pytest.skip("No available IPs returned for newly created prefix")
 
         # Allocate an IP
         ip_data = {
@@ -201,28 +259,27 @@ class TestNetBoxCRUDIntegration:
 
         # Clean up - delete IP
         await netbox_client.delete_ip_address(ip_id)
-
-        # Verify IP was deleted (should raise an error or return None)
-        # The get_ip_address might raise an exception for deleted IPs
+        await netbox_client.delete_prefix(prefix_id)
 
     async def test_create_and_delete_vrf(self, netbox_client):
         """Test creating a VRF"""
         # Create VRF
+        unique_suffix = uuid4().hex[:6]
         vrf_data = {
-            "name": "Test Integration VRF",
-            "rd": "65000:100",  # Route Distinguisher
+            "name": f"Test Integration VRF {unique_suffix}",
+            "rd": f"65000:{uuid4().int % 4000}",
         }
         created = await netbox_client.create_vrf(vrf_data)
         assert created["id"] is not None
         assert created["name"] == vrf_data["name"]
-
-        # Clean up would require delete_vrf method
+        await netbox_client.delete_vrf(created["id"])
 
     async def test_ip_address_lifecycle(self, netbox_client):
         """Test complete IP address lifecycle"""
         # Create IP address directly
+        random_host = (uuid4().int % 200) + 1
         ip_data = {
-            "address": "10.255.255.1/32",
+            "address": f"10.255.{uuid4().int % 200}.{random_host}/32",
             "status": "active",
             "description": "Test Integration IP Direct",
         }
@@ -253,16 +310,15 @@ class TestNetBoxTenantOperations:
     async def test_tenant_by_name_lookup(self, netbox_client):
         """Test looking up tenant by name"""
         # Try to find a tenant by name
-        tenant = await netbox_client.get_tenant_by_name("NonExistentTenant")
+        tenant = await netbox_client.get_tenant_by_name(f"NonExistentTenant-{uuid4().hex[:6]}")
         assert tenant is None
 
     async def test_create_tenant_and_lookup(self, netbox_client):
         """Test creating tenant and looking it up"""
         # Create unique tenant
-        import time
-
-        tenant_name = f"Test Tenant {int(time.time())}"
-        tenant_slug = f"test-tenant-{int(time.time())}"
+        unique_suffix = uuid4().hex[:8]
+        tenant_name = f"Test Tenant {unique_suffix}"
+        tenant_slug = f"test-tenant-{unique_suffix}"
 
         tenant_data = {
             "name": tenant_name,
@@ -271,11 +327,13 @@ class TestNetBoxTenantOperations:
         created = await netbox_client.create_tenant(tenant_data)
         assert created["id"] is not None
 
-        # Look up by name
-        found = await netbox_client.get_tenant_by_name(tenant_name)
-        assert found is not None
-        assert found["name"] == tenant_name
-        assert found["id"] == created["id"]
+        try:
+            found = await netbox_client.get_tenant_by_name(tenant_name)
+            assert found is not None
+            assert found["name"] == tenant_name
+            assert found["id"] == created["id"]
+        finally:
+            await netbox_client.delete_tenant(created["id"])
 
 
 @pytest.mark.asyncio

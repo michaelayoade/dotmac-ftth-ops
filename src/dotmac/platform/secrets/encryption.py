@@ -7,7 +7,10 @@ from __future__ import annotations
 import base64
 import hashlib
 from dataclasses import dataclass, field
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 
@@ -81,9 +84,7 @@ class SymmetricEncryptionService:
         algorithm = (algorithm or "fernet").lower()
         metadata: dict[str, Any] = {
             "classification": classification.value,
-            "fingerprint": hashlib.sha1(
-                self._secret, usedforsecurity=False
-            ).hexdigest(),  # nosec B324 - SHA1 for fingerprint only,
+            "fingerprint": hashlib.sha1(self._secret, usedforsecurity=False).hexdigest(),  # nosec B324 - SHA1 for fingerprint only,
         }
 
         if algorithm == "fernet" and self._fernet is not None:

@@ -2,7 +2,7 @@
 Tests for Alarm Service
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -30,6 +30,7 @@ from dotmac.platform.fault_management.schemas import (
 from dotmac.platform.fault_management.service import AlarmService
 
 
+@pytest.mark.integration
 class TestAlarmServiceCreation:
     """Test alarm creation functionality"""
 
@@ -117,7 +118,7 @@ class TestAlarmServiceCreation:
         service = AlarmService(session, test_tenant)
 
         # Create maintenance window
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         maintenance = MaintenanceWindow(
             tenant_id=test_tenant,
             title="Test Maintenance",
@@ -139,6 +140,7 @@ class TestAlarmServiceCreation:
         assert alarm_response.status == AlarmStatus.SUPPRESSED
 
 
+@pytest.mark.integration
 class TestAlarmServiceQueries:
     """Test alarm query functionality"""
 
@@ -273,6 +275,7 @@ class TestAlarmServiceQueries:
         assert page1[0].id != page2[0].id
 
 
+@pytest.mark.integration
 class TestAlarmServiceUpdates:
     """Test alarm update functionality"""
 
@@ -346,8 +349,8 @@ class TestAlarmServiceUpdates:
             resource_id="ont-001",
             parent_alarm_id=sample_alarm.id,
             correlation_id=sample_alarm.correlation_id,
-            first_occurrence=datetime.now(UTC),
-            last_occurrence=datetime.now(UTC),
+            first_occurrence=datetime.now(timezone.utc),
+            last_occurrence=datetime.now(timezone.utc),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -436,6 +439,7 @@ class TestAlarmServiceUpdates:
         assert notes[0].created_by == user_id
 
 
+@pytest.mark.integration
 class TestAlarmServiceStatistics:
     """Test alarm statistics functionality"""
 
@@ -478,8 +482,8 @@ class TestAlarmServiceStatistics:
         service = AlarmService(session, test_tenant)
 
         # Last hour only (should get 1-2 alarms depending on timing)
-        from_date = datetime.now(UTC) - timedelta(hours=1)
-        to_date = datetime.now(UTC)
+        from_date = datetime.now(timezone.utc) - timedelta(hours=1)
+        to_date = datetime.now(timezone.utc)
 
         stats = await service.get_statistics(from_date, to_date)
 
@@ -488,6 +492,7 @@ class TestAlarmServiceStatistics:
         assert stats.total_alarms <= 2
 
 
+@pytest.mark.integration
 class TestAlarmRuleManagement:
     """Test alarm rule CRUD operations"""
 
@@ -583,6 +588,7 @@ class TestAlarmRuleManagement:
         assert result.scalar_one_or_none() is None
 
 
+@pytest.mark.integration
 class TestMaintenanceWindowManagement:
     """Test maintenance window CRUD operations"""
 
@@ -596,7 +602,7 @@ class TestMaintenanceWindowManagement:
         service = AlarmService(session, test_tenant)
         user_id = uuid4()
 
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         window_create = MaintenanceWindowCreate(
             title="Network Upgrade",
             description="Upgrading core switches",
@@ -624,7 +630,7 @@ class TestMaintenanceWindowManagement:
         service = AlarmService(session, test_tenant)
 
         # Create window first
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         window_create = MaintenanceWindowCreate(
             title="Test Maintenance",
             start_time=now + timedelta(days=1),

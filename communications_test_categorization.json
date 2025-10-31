@@ -1,0 +1,260 @@
+{
+  "results": [
+    {
+      "file": "tests/communications/test_communications.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": true,
+        "models": false,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 5
+    },
+    {
+      "file": "tests/communications/test_communications_metrics_router.py",
+      "suggested_marker": "e2e",
+      "confidence": "high",
+      "reasoning": [
+        "Filename pattern 'test_communications_metrics_router.py' suggests E2E test",
+        "Metrics router tests are E2E"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 3
+    },
+    {
+      "file": "tests/communications/test_email_plugins.py",
+      "suggested_marker": "unit",
+      "confidence": "high",
+      "reasoning": [
+        "Plugin tests without DB are unit tests"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": false,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": false
+      },
+      "test_classes": 0
+    },
+    {
+      "file": "tests/communications/test_email_service_comprehensive.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": false,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 4
+    },
+    {
+      "file": "tests/communications/test_event_listeners.py",
+      "suggested_marker": "integration",
+      "confidence": "high",
+      "reasoning": [
+        "Event listener tests require event bus"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 9
+    },
+    {
+      "file": "tests/communications/test_metrics_router_coverage.py",
+      "suggested_marker": "e2e",
+      "confidence": "high",
+      "reasoning": [
+        "Filename pattern 'test_metrics_router_coverage.py' suggests E2E test",
+        "Metrics router tests are E2E"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": true,
+        "services": false,
+        "has_mock": true
+      },
+      "test_classes": 2
+    },
+    {
+      "file": "tests/communications/test_metrics_service_comprehensive.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 2
+    },
+    {
+      "file": "tests/communications/test_metrics_service_extended.py",
+      "suggested_marker": "integration",
+      "confidence": "medium",
+      "reasoning": [],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 5
+    },
+    {
+      "file": "tests/communications/test_metrics_service_integration.py",
+      "suggested_marker": "integration",
+      "confidence": "high",
+      "reasoning": [
+        "Uses async_session, no HTTP client",
+        "Service test with database"
+      ],
+      "dependencies": {
+        "async_session": true,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": true,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": false
+      },
+      "test_classes": 2
+    },
+    {
+      "file": "tests/communications/test_router_direct.py",
+      "suggested_marker": "e2e",
+      "confidence": "medium",
+      "reasoning": [
+        "Filename pattern 'test_router_direct.py' suggests E2E test"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": false,
+        "schemas": false,
+        "routers": true,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 5
+    },
+    {
+      "file": "tests/communications/test_task_service_coverage.py",
+      "suggested_marker": "integration",
+      "confidence": "high",
+      "reasoning": [
+        "Task service with Celery is integration"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": true,
+        "models": false,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": true
+      },
+      "test_classes": 8
+    },
+    {
+      "file": "tests/communications/test_template_service_comprehensive.py",
+      "suggested_marker": "unit",
+      "confidence": "high",
+      "reasoning": [
+        "Template logic without DB is unit test"
+      ],
+      "dependencies": {
+        "async_session": false,
+        "test_client": false,
+        "redis": false,
+        "celery": false,
+        "models": false,
+        "schemas": false,
+        "routers": false,
+        "services": true,
+        "has_mock": false
+      },
+      "test_classes": 8
+    }
+  ],
+  "summary": {
+    "unit": [
+      "test_email_plugins.py",
+      "test_template_service_comprehensive.py"
+    ],
+    "integration": [
+      "test_communications.py",
+      "test_email_service_comprehensive.py",
+      "test_event_listeners.py",
+      "test_metrics_service_comprehensive.py",
+      "test_metrics_service_extended.py",
+      "test_metrics_service_integration.py",
+      "test_task_service_coverage.py"
+    ],
+    "e2e": [
+      "test_communications_metrics_router.py",
+      "test_metrics_router_coverage.py",
+      "test_router_direct.py"
+    ],
+    "unknown": []
+  }
+}

@@ -1,17 +1,19 @@
+
 """
 Notification Service Tests.
 
 Comprehensive tests for the notification service layer.
 """
 
-from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.notifications.models import (
+
+
     Notification,
     NotificationChannel,
     NotificationPreference,
@@ -21,6 +23,11 @@ from dotmac.platform.notifications.models import (
 )
 from dotmac.platform.notifications.service import NotificationService
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.fixture
 def tenant_id():
@@ -56,7 +63,9 @@ def mock_template_service():
 class TestNotificationService:
     """Tests for NotificationService class."""
 
-    async def test_create_notification_success(self, mock_session, tenant_id, user_id, mock_template_service):
+    async def test_create_notification_success(
+        self, mock_session, tenant_id, user_id, mock_template_service
+    ):
         """Test creating a notification successfully."""
         # Mock preferences with default settings
         mock_preferences = MagicMock(spec=NotificationPreference)
@@ -71,7 +80,7 @@ class TestNotificationService:
         service = NotificationService(mock_session, mock_template_service)
         with patch.object(service, "get_user_preferences", return_value=mock_preferences):
             with patch.object(service, "_send_notification", new_callable=AsyncMock) as mock_send:
-                notification = await service.create_notification(
+                await service.create_notification(
                     tenant_id=tenant_id,
                     user_id=user_id,
                     notification_type=NotificationType.INVOICE_GENERATED,
@@ -95,7 +104,9 @@ class TestNotificationService:
                 # Verify send_notification was called
                 assert mock_send.called
 
-    async def test_create_notification_no_auto_send(self, mock_session, tenant_id, user_id, mock_template_service):
+    async def test_create_notification_no_auto_send(
+        self, mock_session, tenant_id, user_id, mock_template_service
+    ):
         """Test creating notification without auto-send."""
         mock_preferences = MagicMock(spec=NotificationPreference)
         mock_preferences.enabled = True
@@ -427,7 +438,7 @@ class TestNotificationTemplates:
         with patch.object(service, "get_template", return_value=mock_template):
             with patch.object(service, "get_user_preferences", return_value=mock_preferences):
                 with patch.object(service, "_send_notification", new_callable=AsyncMock):
-                    notification = await service.create_from_template(
+                    await service.create_from_template(
                         tenant_id=tenant_id,
                         user_id=user_id,
                         notification_type=NotificationType.INVOICE_GENERATED,
@@ -451,7 +462,7 @@ class TestNotificationTemplates:
         if not hasattr(service, "create_template"):
             pytest.skip("create_template method not implemented yet")
 
-        template = await service.create_template(
+        await service.create_template(
             tenant_id=tenant_id,
             notification_type=NotificationType.PAYMENT_RECEIVED,
             name="Payment Received",
@@ -523,7 +534,9 @@ class TestNotificationChannels:
 
         service = NotificationService(mock_session)
 
-        with patch("dotmac.platform.notifications.service.queue_email", new_callable=AsyncMock) as mock_queue:
+        with patch(
+            "dotmac.platform.notifications.service.queue_email", new_callable=AsyncMock
+        ) as mock_queue:
             await service._send_email(mock_notification)
 
             # Verify email was queued (email_sent flag is set by _send_notification, not _send_email)
@@ -579,14 +592,14 @@ class TestNotificationFiltering:
         service = NotificationService(mock_session)
 
         # Low priority notification should be filtered
-        channels_low = await service._determine_channels(
+        await service._determine_channels(
             mock_preferences,
             NotificationType.SYSTEM_ANNOUNCEMENT,
             NotificationPriority.LOW,
         )
 
         # High priority notification should pass
-        channels_high = await service._determine_channels(
+        await service._determine_channels(
             mock_preferences,
             NotificationType.SERVICE_OUTAGE,
             NotificationPriority.HIGH,
@@ -605,7 +618,7 @@ class TestNotificationFiltering:
         mock_preferences.quiet_hours_end = "08:00"
         mock_preferences.quiet_hours_timezone = "America/New_York"
 
-        service = NotificationService(mock_session)
+        NotificationService(mock_session)
 
         # Test would check if notifications during quiet hours are suppressed
         # This is a placeholder for actual implementation
@@ -620,7 +633,7 @@ class TestNotificationFiltering:
             "payment_received": {"email": False, "sms": False, "push": True},
         }
 
-        service = NotificationService(mock_session)
+        NotificationService(mock_session)
 
         # Test would verify that type-specific preferences override defaults
         # This is a placeholder for actual implementation

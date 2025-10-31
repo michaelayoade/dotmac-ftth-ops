@@ -16,6 +16,7 @@ from dotmac.platform.api.routing import (
 )
 
 
+@pytest.mark.unit
 class TestRoute:
     """Test Route model and matching logic."""
 
@@ -151,6 +152,7 @@ class TestRoute:
         assert route.description == "Cached endpoint"
 
 
+@pytest.mark.unit
 class TestRouteRegistry:
     """Test RouteRegistry functionality."""
 
@@ -384,6 +386,7 @@ class TestRouteRegistry:
         assert routes_list[1]["requires_auth"] is False
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test convenience functions for route management."""
 
@@ -446,6 +449,7 @@ class TestConvenienceFunctions:
         assert "No route found" in exc_info.value.detail
 
 
+@pytest.mark.unit
 class TestRouteEnums:
     """Test Route enums."""
 

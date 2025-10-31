@@ -5,7 +5,10 @@ Provides efficient user queries with conditional loading of roles,
 permissions, teams, and profile history via DataLoaders.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 import strawberry
 from sqlalchemy import func, or_, select
@@ -417,7 +420,9 @@ class UserQueries:
         total_count = total_count_result.scalar() or 0
 
         # Apply sorting and pagination
-        stmt = stmt.order_by(RoleModel.priority.desc(), RoleModel.name).limit(page_size).offset(offset)
+        stmt = (
+            stmt.order_by(RoleModel.priority.desc(), RoleModel.name).limit(page_size).offset(offset)
+        )
 
         # Execute query
         result = await db.execute(stmt)

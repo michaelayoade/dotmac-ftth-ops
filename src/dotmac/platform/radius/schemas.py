@@ -35,14 +35,21 @@ class RADIUSSubscriberCreate(BaseModel):
 
     # IPv6 Support (NEW)
     framed_ipv6_address: str | None = Field(None, description="Static IPv6 address (optional)")
-    delegated_ipv6_prefix: str | None = Field(None, description="IPv6 prefix delegation (e.g., 2001:db8::/64)")
+    framed_ipv6_prefix: str | None = Field(
+        None, description="IPv6 prefix for subscriber interface (e.g., 2001:db8:100::/64)"
+    )
+    delegated_ipv6_prefix: str | None = Field(
+        None, description="IPv6 prefix delegation (e.g., 2001:db8::/64)"
+    )
 
     # Timeouts
-    session_timeout: int | None = Field(None, gt=0, description="Session timeout in seconds")
-    idle_timeout: int | None = Field(None, gt=0, description="Idle timeout in seconds")
+    session_timeout: int | None = Field(None, ge=0, description="Session timeout in seconds")
+    idle_timeout: int | None = Field(None, ge=0, description="Idle timeout in seconds")
 
     # Backward compatibility: map old field to new field
-    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
+    framed_ip_address: str | None = Field(
+        None, description="[DEPRECATED] Use framed_ipv4_address instead"
+    )
 
     @field_validator("username")
     @classmethod
@@ -63,6 +70,12 @@ class RADIUSSubscriberCreate(BaseModel):
     def validate_framed_ipv6(cls, v: str | None) -> str | None:
         """Validate IPv6 address"""
         return IPv6AddressValidator.validate(v)
+
+    @field_validator("framed_ipv6_prefix")
+    @classmethod
+    def validate_framed_ipv6_prefix(cls, v: str | None) -> str | None:
+        """Validate IPv6 prefix (CIDR notation)"""
+        return IPv6NetworkValidator.validate(v, strict=False)
 
     @field_validator("delegated_ipv6_prefix")
     @classmethod
@@ -89,15 +102,18 @@ class RADIUSSubscriberUpdate(BaseModel):
 
     # IPv6 Support (NEW)
     framed_ipv6_address: str | None = Field(None, description="Static IPv6 address")
+    framed_ipv6_prefix: str | None = Field(None, description="IPv6 prefix for subscriber interface")
     delegated_ipv6_prefix: str | None = Field(None, description="IPv6 prefix delegation")
 
     # Timeouts
-    session_timeout: int | None = Field(None, gt=0, description="Session timeout in seconds")
-    idle_timeout: int | None = Field(None, gt=0, description="Idle timeout in seconds")
+    session_timeout: int | None = Field(None, ge=0, description="Session timeout in seconds")
+    idle_timeout: int | None = Field(None, ge=0, description="Idle timeout in seconds")
     enabled: bool | None = Field(None, description="Enable/disable RADIUS access")
 
     # Backward compatibility
-    framed_ip_address: str | None = Field(None, description="[DEPRECATED] Use framed_ipv4_address instead")
+    framed_ip_address: str | None = Field(
+        None, description="[DEPRECATED] Use framed_ipv4_address instead"
+    )
 
     @field_validator("framed_ipv4_address")
     @classmethod
@@ -110,6 +126,12 @@ class RADIUSSubscriberUpdate(BaseModel):
     def validate_framed_ipv6(cls, v: str | None) -> str | None:
         """Validate IPv6 address"""
         return IPv6AddressValidator.validate(v)
+
+    @field_validator("framed_ipv6_prefix")
+    @classmethod
+    def validate_framed_ipv6_prefix(cls, v: str | None) -> str | None:
+        """Validate IPv6 prefix"""
+        return IPv6NetworkValidator.validate(v, strict=False)
 
     @field_validator("delegated_ipv6_prefix")
     @classmethod
@@ -137,6 +159,7 @@ class RADIUSSubscriberResponse(BaseModel):
 
     # IPv6 Support (NEW)
     framed_ipv6_address: str | None = None
+    framed_ipv6_prefix: str | None = None
     delegated_ipv6_prefix: str | None = None
 
     # Timeouts
@@ -151,6 +174,11 @@ class RADIUSSubscriberResponse(BaseModel):
     def framed_ip_address(self) -> str | None:
         """Backward compatibility: return IPv4 address"""
         return self.framed_ipv4_address
+
+    @property
+    def is_suspended(self) -> bool:
+        """Compatibility property indicating subscriber suspension state."""
+        return not self.enabled
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -169,6 +197,7 @@ class RADIUSSessionResponse(BaseModel):
     username: str
     acctsessionid: str
     nasipaddress: str
+    nasportid: str | None = None
 
     # IPv4 session info
     framedipaddress: str | None = None
@@ -185,8 +214,45 @@ class RADIUSSessionResponse(BaseModel):
     acctoutputoctets: int | None = None  # Bytes uploaded
     total_bytes: int = 0
     is_active: bool = True
+    callingstationid: str | None = None
+    acct_stop_time: datetime | None = None
+    acct_terminate_cause: str | None = None
+    last_update: datetime | None = None
 
     model_config = ConfigDict(from_attributes=True)
+
+    @property
+    def session_id(self) -> str:
+        """Alias for acctsessionid used in tests."""
+        return self.acctsessionid
+
+    @property
+    def nas_ip_address(self) -> str:
+        return self.nasipaddress
+
+    @property
+    def nas_port_id(self) -> str | None:
+        return self.nasportid
+
+    @property
+    def framed_ip_address(self) -> str | None:
+        return self.framedipaddress
+
+    @property
+    def calling_station_id(self) -> str | None:
+        return self.callingstationid
+
+    @property
+    def acct_session_time(self) -> int | None:
+        return self.acctsessiontime
+
+    @property
+    def acct_input_octets(self) -> int | None:
+        return self.acctinputoctets
+
+    @property
+    def acct_output_octets(self) -> int | None:
+        return self.acctoutputoctets
 
 
 class RADIUSSessionDisconnect(BaseModel):
@@ -251,12 +317,28 @@ class RADIUSUsageResponse(BaseModel):
     username: str
     total_sessions: int
     total_session_time: int  # Total seconds
-    total_input_octets: int  # Total bytes downloaded
-    total_output_octets: int  # Total bytes uploaded
+    total_download_bytes: int  # Total bytes downloaded
+    total_upload_bytes: int  # Total bytes uploaded
     total_bytes: int  # Total bytes transferred
     active_sessions: int
     last_session_start: datetime | None = None
     last_session_stop: datetime | None = None
+
+    @property
+    def total_input_octets(self) -> int:
+        """Backward compatibility alias for download bytes.
+
+        RADIUS traditionally uses 'input' from the NAS perspective (data sent TO user).
+        """
+        return self.total_download_bytes
+
+    @property
+    def total_output_octets(self) -> int:
+        """Backward compatibility alias for upload bytes.
+
+        RADIUS traditionally uses 'output' from the NAS perspective (data sent FROM user).
+        """
+        return self.total_upload_bytes
 
 
 class RADIUSUsageQuery(BaseModel):
@@ -279,15 +361,18 @@ class RADIUSUsageQuery(BaseModel):
 class NASCreate(BaseModel):
     """Create NAS device"""
 
-    model_config = ConfigDict()
+    model_config = ConfigDict(populate_by_name=True)
 
-    nasname: str = Field(..., description="IP address or hostname")
-    shortname: str = Field(..., min_length=1, max_length=32, description="Short identifier")
-    type: str = Field(default="other", description="NAS type (cisco, mikrotik, other)")
-    secret: str = Field(..., min_length=8, description="Shared secret")
+    nasname: str = Field(..., alias="nas_name", description="IP address or hostname")
+    shortname: str = Field(
+        ..., alias="short_name", min_length=1, max_length=32, description="Short identifier"
+    )
+    type: str = Field(default="other", alias="nas_type", description="NAS type")
+    secret: str = Field(..., min_length=6, description="Shared secret")
     ports: int | None = Field(None, gt=0, description="Number of ports")
     community: str | None = Field(None, description="SNMP community string")
     description: str | None = Field(None, max_length=200, description="Description")
+    server_ip: str | None = Field(None, alias="server_ip", description="Server IP address")
 
     @field_validator("type")
     @classmethod
@@ -313,20 +398,38 @@ class NASUpdate(BaseModel):
 
 
 class NASResponse(BaseModel):
-    """NAS device response"""
+    """NAS device response without exposing shared secrets"""
 
     id: int
     tenant_id: str
     nasname: str
     shortname: str
     type: str
+    secret_configured: bool = Field(
+        ...,
+        description="Indicates whether a shared secret has been configured. The secret value is never returned.",
+    )
+    secret: str | None = None
     ports: int | None = None
     community: str | None = None
     description: str | None = None
+    server_ip: str | None = None
     created_at: datetime
     updated_at: datetime
 
     model_config = ConfigDict(from_attributes=True)
+
+    @property
+    def nas_name(self) -> str:
+        return self.nasname
+
+    @property
+    def short_name(self) -> str:
+        return self.shortname
+
+    @property
+    def nas_type(self) -> str:
+        return self.type
 
 
 # ============================================================================

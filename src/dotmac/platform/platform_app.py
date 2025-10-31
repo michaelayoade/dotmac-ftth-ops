@@ -216,8 +216,7 @@ def create_platform_app() -> FastAPI:
         "\n" + "=" * 60 + "\n"
         f"🚀 Platform App Registration Complete\n"
         f"   ✅ Registered: {registered_count} routers\n"
-        f"   ⚠️  Skipped: {failed_count} routers\n"
-        + "=" * 60
+        f"   ⚠️  Skipped: {failed_count} routers\n" + "=" * 60
     )
 
     # Health check

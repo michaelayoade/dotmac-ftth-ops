@@ -43,8 +43,7 @@ class INET(TypeDecorator[str]):
 
 
 if TYPE_CHECKING:
-    from dotmac.platform.subscribers.models import Subscriber
-    from dotmac.platform.tenant.models import Tenant
+    pass
 
 
 class RadCheck(Base):  # type: ignore[misc]
@@ -188,7 +187,7 @@ class RadAcct(Base):  # type: ignore[misc]
             "idx_radacct_active_session",
             "tenant_id",
             "username",
-            postgresql_where=(acctstoptime is None),
+            postgresql_where=acctstoptime.is_(None),
         ),
     )
 
@@ -249,6 +248,8 @@ class NAS(Base):  # type: ignore[misc]
 
     Defines NAS clients (routers, OLTs, wireless APs) that can communicate with RADIUS.
     Each NAS has a shared secret for authentication.
+
+    Enhanced with vendor-specific metadata for multi-vendor RADIUS support.
     """
 
     __tablename__ = "nas"
@@ -260,6 +261,21 @@ class NAS(Base):  # type: ignore[misc]
     nasname = Column(String(128), nullable=False, index=True)  # IP address or hostname
     shortname = Column(String(32), nullable=False)  # Human-readable name
     type = Column(String(30), nullable=False, default="other")  # NAS type: cisco, mikrotik, other
+
+    # Vendor-specific fields for multi-vendor support
+    vendor = Column(
+        String(30),
+        nullable=False,
+        default="mikrotik",
+        comment="NAS vendor: mikrotik, cisco, huawei, juniper, generic",
+    )
+    model = Column(
+        String(64), nullable=True, comment="NAS model/hardware type for vendor-specific features"
+    )
+    firmware_version = Column(
+        String(32), nullable=True, comment="Firmware version for compatibility checks"
+    )
+
     ports = Column(Integer, nullable=True)
     secret = Column(String(60), nullable=False)  # Shared secret for RADIUS auth
     server = Column(String(64), nullable=True)
@@ -276,10 +292,11 @@ class NAS(Base):  # type: ignore[misc]
     __table_args__ = (
         Index("idx_nas_tenant", "tenant_id"),
         Index("idx_nas_name", "nasname"),
+        Index("idx_nas_vendor", "vendor"),  # Index for vendor lookups
     )
 
     def __repr__(self) -> str:
-        return f"<NAS(id={self.id}, name={self.shortname}, nasname={self.nasname})>"
+        return f"<NAS(id={self.id}, name={self.shortname}, vendor={self.vendor}, nasname={self.nasname})>"
 
 
 class RadiusBandwidthProfile(Base):  # type: ignore[misc]

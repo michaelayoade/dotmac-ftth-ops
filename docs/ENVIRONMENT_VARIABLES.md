@@ -135,14 +135,16 @@
 
 ## Frontend Environment Variables
 
-**File:** `frontend/apps/base-app/.env.local`
-**Config:** `frontend/apps/base-app/lib/config.ts`
+**Files:** `frontend/apps/isp-ops-app/.env.local`, `frontend/apps/platform-admin-app/.env.local` (legacy: `frontend/apps/base-app/.env.local`)
+**Config:** `frontend/apps/isp-ops-app/next.config.mjs`, `frontend/apps/platform-admin-app/next.config.mjs`
 
 ### API Configuration
 
 | Variable | Type | Default | Description |
 |----------|------|---------|-------------|
-| `NEXT_PUBLIC_API_URL` | string | `/api/v1` | Backend API base URL |
+| `NEXT_PUBLIC_API_BASE_URL` | string | `http://localhost:8000` | Full backend URL used for REST calls |
+| `NEXT_PUBLIC_API_URL` | string | `/api/v1` | Legacy relative API prefix (falls back to `NEXT_PUBLIC_API_BASE_URL`) |
+| `NEXT_PUBLIC_WS_URL` | string | `ws://localhost:8000` | WebSocket endpoint base |
 
 ### Application Metadata
 
@@ -208,7 +210,8 @@ These should NEVER be exposed to frontend:
 
 These are only used by Next.js:
 
-- `NEXT_PUBLIC_API_URL` - Backend API endpoint
+- `NEXT_PUBLIC_API_BASE_URL` / `NEXT_PUBLIC_API_URL` - Backend API endpoint
+- `NEXT_PUBLIC_WS_URL` - WebSocket endpoint
 - `NEXT_PUBLIC_LOGO_*` - Branding assets
 - `NEXT_PUBLIC_*_COLOR` - Theme colors
 

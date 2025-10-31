@@ -2,7 +2,10 @@
 Product catalog service - simple CRUD operations with business logic.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -105,13 +108,14 @@ class ProductService:
             BillingConfigurationError: If product configuration is invalid
             ProductError: For other product-related errors
         """
+        normalized_sku = product_data.sku.strip().upper()
         try:
             # Validate SKU uniqueness within tenant
-            existing = await self.get_product_by_sku(product_data.sku, tenant_id)
+            existing = await self.get_product_by_sku(normalized_sku, tenant_id)
             if existing:
                 raise DuplicateProductError(
-                    f"Product with SKU '{product_data.sku}' already exists in tenant {tenant_id}",
-                    sku=product_data.sku,
+                    f"Product with SKU '{normalized_sku}' already exists in tenant {tenant_id}",
+                    sku=normalized_sku,
                 )
 
             # Validate usage configuration
@@ -148,7 +152,7 @@ class ProductService:
         db_product = BillingProductTable(
             product_id=generate_product_id(),
             tenant_id=tenant_id,
-            sku=product_data.sku,
+            sku=normalized_sku,
             name=product_data.name,
             description=product_data.description,
             category=product_data.category,
@@ -159,6 +163,7 @@ class ProductService:
             usage_type=product_data.usage_type.value if product_data.usage_type else None,
             usage_unit_name=product_data.usage_unit_name,
             metadata_json=product_data.metadata,
+            is_active=True if product_data.is_active is None else product_data.is_active,
         )
 
         try:
@@ -239,8 +244,15 @@ class ProductService:
     async def get_product_by_sku(self, sku: str, tenant_id: str) -> Product | None:
         """Get product by SKU within tenant."""
 
+        normalized_sku = sku.strip().upper()
         stmt = select(BillingProductTable).where(
-            and_(BillingProductTable.sku == sku.upper(), BillingProductTable.tenant_id == tenant_id)
+            and_(
+                BillingProductTable.tenant_id == tenant_id,
+                or_(
+                    BillingProductTable.sku == normalized_sku,
+                    BillingProductTable.sku == sku.strip(),
+                ),
+            )
         )
         result = await self.db.execute(stmt)
         db_product = result.scalar_one_or_none()
@@ -327,6 +339,13 @@ class ProductService:
 
         for field, value in update_data.items():
             if field == "metadata":
+                if value is None:
+                    logger.debug(
+                        "Skipping metadata update because value is None",
+                        product_id=product_id,
+                        tenant_id=tenant_id,
+                    )
+                    continue
                 db_product.metadata_json = value
             elif field == "tax_class" and value:
                 setattr(db_product, field, value.value)

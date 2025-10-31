@@ -12,13 +12,16 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.data_transfer.router import data_transfer_router
 
 
+
+pytestmark = pytest.mark.integration
+
 def mock_current_user():
     """Mock current user for testing."""
     return UserInfo(
-        user_id="test-user",
+        user_id=str(uuid4()),  # Use valid UUID
         email="test@example.com",
-        tenant_id="test-tenant",
-        roles=["user"],
+        tenant_id=str(uuid4()),  # Use valid UUID
+        roles=["admin"],  # Use admin role to pass RBAC checks
         permissions=["data:read", "data:write"],
     )
 
@@ -26,8 +29,12 @@ def mock_current_user():
 @pytest.fixture
 def app_with_router():
     """Create test app with data_transfer router."""
+    from dotmac.platform.auth.rbac_dependencies import require_admin
+
     app = FastAPI()
     app.dependency_overrides[get_current_user] = mock_current_user
+    # Override RBAC dependency to avoid database queries
+    app.dependency_overrides[require_admin] = mock_current_user
     app.include_router(data_transfer_router)
     return app
 
@@ -42,7 +49,7 @@ class TestDataTransferRouterCoverage:
         # Send invalid request that will cause an exception
         with patch("dotmac.platform.data_transfer.router.logger"):
             response = client.post(
-                "/export",
+                "/data-transfer/export",
                 json={
                     "type": "invalid_export_type",  # Invalid type
                     "format": "csv",
@@ -60,7 +67,7 @@ class TestDataTransferRouterCoverage:
         with patch("dotmac.platform.data_transfer.router.UUID") as mock_uuid:
             mock_uuid.side_effect = Exception("Database error")
 
-            response = client.get(f"/jobs/{uuid4()}")
+            response = client.get(f"/data-transfer/jobs/{uuid4()}")
 
         # Should handle the exception
         assert response.status_code == 500
@@ -75,7 +82,7 @@ class TestDataTransferRouterCoverage:
 
         # Send malformed request
         response = client.post(
-            "/import",
+            "/data-transfer/import",
             json={
                 # Missing required fields
                 "format": "csv",
@@ -89,7 +96,7 @@ class TestDataTransferRouterCoverage:
         """Test get job status with invalid UUID format."""
         client = TestClient(app_with_router)
 
-        response = client.get("/jobs/not-a-valid-uuid")
+        response = client.get("/data-transfer/jobs/not-a-valid-uuid")
 
         # Should return 400 bad request
         assert response.status_code == 400
@@ -100,7 +107,7 @@ class TestDataTransferRouterCoverage:
         client = TestClient(app_with_router)
 
         valid_job_id = str(uuid4())
-        response = client.get(f"/jobs/{valid_job_id}")
+        response = client.get(f"/data-transfer/jobs/{valid_job_id}")
 
         # Should return 200
         assert response.status_code == 200
@@ -115,7 +122,7 @@ class TestDataTransferRouterCoverage:
         # Mock an exception in job listing
         with patch("dotmac.platform.data_transfer.router.logger"):
             # Trigger error by sending invalid parameters
-            response = client.get("/jobs", params={"page": -1, "page_size": 999999})
+            response = client.get("/data-transfer/jobs", params={"page": -1, "page_size": 999999})
 
         # Should still return success (endpoint is robust) or error
         assert response.status_code in [200, 422, 500]

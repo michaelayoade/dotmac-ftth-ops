@@ -86,6 +86,8 @@ class WireGuardService:
         max_peers: int = 1000,
         dns_servers: list[str] | None = None,
         allowed_ips: list[str] | None = None,
+        persistent_keepalive: int | None = 25,
+        metadata: dict[str, Any] | None = None,
     ) -> WireGuardServer:
         """
         Create a new WireGuard server with dual-stack support.
@@ -164,7 +166,7 @@ class WireGuardService:
 
             # Create server record
             server = WireGuardServer(
-                tenant_id=self.tenant_id,
+                tenant_id=str(self.tenant_id),
                 name=name,
                 description=description,
                 public_endpoint=public_endpoint,
@@ -178,6 +180,8 @@ class WireGuardService:
                 max_peers=max_peers,
                 dns_servers=dns_servers or ["1.1.1.1", "1.0.0.1"],
                 allowed_ips=allowed_ips or ["0.0.0.0/0", "::/0"],
+                persistent_keepalive=persistent_keepalive,
+                metadata_=metadata or {},
             )
 
             self.session.add(server)
@@ -343,6 +347,9 @@ class WireGuardService:
         peer_ipv4: str | None = None,
         peer_ipv6: str | None = None,
         allowed_ips: list[str] | None = None,
+        expires_at: datetime | None = None,
+        metadata: dict[str, Any] | None = None,
+        notes: str | None = None,
     ) -> WireGuardPeer:
         """
         Create a new WireGuard peer with dual-stack support.
@@ -384,6 +391,35 @@ class WireGuardService:
             else:
                 private_key = None
 
+            # Validate manual IPs don't conflict (check BEFORE auto-allocation)
+            if peer_ipv4:
+                # IPv4 manually provided - check not already in use
+                existing_ipv4_result = await self.session.execute(
+                    select(WireGuardPeer.id).where(
+                        WireGuardPeer.server_id == server_id,
+                        WireGuardPeer.peer_ipv4 == peer_ipv4,
+                        WireGuardPeer.deleted_at.is_(None),
+                    )
+                )
+                if existing_ipv4_result.first():
+                    raise WireGuardServiceError(
+                        f"IPv4 address {peer_ipv4} is already in use on server {server.name}"
+                    )
+
+            if peer_ipv6:
+                # IPv6 manually provided - check not already in use
+                existing_ipv6_result = await self.session.execute(
+                    select(WireGuardPeer.id).where(
+                        WireGuardPeer.server_id == server_id,
+                        WireGuardPeer.peer_ipv6 == peer_ipv6,
+                        WireGuardPeer.deleted_at.is_(None),
+                    )
+                )
+                if existing_ipv6_result.first():
+                    raise WireGuardServiceError(
+                        f"IPv6 address {peer_ipv6} is already in use on server {server.name}"
+                    )
+
             # Allocate IPv4 if not provided
             if not peer_ipv4:
                 # Get all used IPv4 addresses
@@ -421,10 +457,23 @@ class WireGuardService:
                 )
 
             # Create peer record
+            # Handle customer_id - must be a valid UUID or None
+            customer_id_uuid: UUID | None = None
+            if customer_id:
+                if isinstance(customer_id, UUID):
+                    customer_id_uuid = customer_id
+                elif isinstance(customer_id, str):
+                    try:
+                        customer_id_uuid = UUID(customer_id)
+                    except ValueError:
+                        # Not a valid UUID format - set to None
+                        # (customer_id should be a UUID from customers table)
+                        customer_id_uuid = None
+
             peer = WireGuardPeer(
-                tenant_id=self.tenant_id,
+                tenant_id=str(self.tenant_id),
                 server_id=server_id,
-                customer_id=customer_id,
+                customer_id=customer_id_uuid,
                 subscriber_id=subscriber_id,
                 name=name,
                 description=description,
@@ -433,6 +482,9 @@ class WireGuardService:
                 peer_ipv6=peer_ipv6,
                 allowed_ips=allowed_ips or server.allowed_ips,
                 status=WireGuardPeerStatus.ACTIVE,
+                expires_at=expires_at,
+                metadata_=metadata or {},
+                notes=notes,
             )
 
             # Generate config file
@@ -527,6 +579,7 @@ class WireGuardService:
             "status",
             "enabled",
             "allowed_ips",
+            "expires_at",
             "metadata_",
             "notes",
         }

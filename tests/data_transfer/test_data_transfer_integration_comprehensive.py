@@ -1,3 +1,4 @@
+
 """
 Comprehensive Data Transfer Module Integration Tests - Week 3 Priority 2
 
@@ -16,15 +17,15 @@ Marked as integration tests.
 
 import json
 import tempfile
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
+
 # Mark all tests in this module as integration tests
-pytestmark = pytest.mark.integration
 
 from dotmac.platform.data_transfer.core import (  # noqa: E402
     DataBatch,
@@ -44,6 +45,10 @@ from dotmac.platform.data_transfer.factory import (  # noqa: E402
 # Helper Functions
 # ============================================================================
 
+
+
+
+pytestmark = pytest.mark.unit
 
 async def dataframe_to_batches(df: pd.DataFrame, batch_size: int = 100):
     """Convert DataFrame to async generator of DataBatches for export."""
@@ -120,6 +125,7 @@ def temp_dir():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestImportWorkflowIntegration:
     """Test complete import workflows with real files."""
 
@@ -291,6 +297,7 @@ class TestImportWorkflowIntegration:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestExportWorkflowIntegration:
     """Test complete export workflows."""
 
@@ -400,6 +407,7 @@ class TestExportWorkflowIntegration:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestFormatConversionIntegration:
     """Test cross-format conversion workflows."""
 
@@ -544,6 +552,7 @@ class TestFormatConversionIntegration:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLargeDatasetHandling:
     """Test handling of large datasets with chunking and streaming."""
 
@@ -627,6 +636,7 @@ class TestLargeDatasetHandling:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestEndToEndWorkflows:
     """Test complete end-to-end data transfer workflows."""
 
@@ -732,7 +742,7 @@ class TestEndToEndWorkflows:
             df = pd.DataFrame(all_records)
 
             # Transform to new schema (add fields, rename, etc.)
-            df["migrated_at"] = datetime.now(UTC).isoformat()
+            df["migrated_at"] = datetime.now(timezone.utc).isoformat()
             df["status"] = "active"
             df = df.rename(columns={"id": "customer_id"})
 

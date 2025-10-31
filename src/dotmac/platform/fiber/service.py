@@ -6,13 +6,17 @@ Business logic for fiber optic network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
 import structlog
-from sqlalchemy import func
-from sqlalchemy.orm import Session, joinedload
+from sqlalchemy import Select, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from .models import (
     CableInstallationType,
@@ -34,9 +38,9 @@ logger = structlog.get_logger(__name__)
 
 
 class FiberService:
-    """Service for fiber infrastructure management"""
+    """Service for fiber infrastructure management."""
 
-    def __init__(self, db: Session, tenant_id: str):
+    def __init__(self, db: AsyncSession, tenant_id: str):
         self.db = db
         self.tenant_id = tenant_id
 
@@ -44,7 +48,7 @@ class FiberService:
     # Fiber Cable Methods
     # ========================================================================
 
-    def create_cable(
+    async def create_cable(
         self,
         cable_id: str,
         fiber_type: FiberType,
@@ -65,13 +69,23 @@ class FiberService:
         created_by: str | None = None,
     ) -> FiberCable:
         """Create a new fiber cable"""
+        existing_stmt = select(FiberCable).where(
+            FiberCable.tenant_id == self.tenant_id,
+            FiberCable.cable_id == cable_id,
+            FiberCable.deleted_at.is_(None),
+        )
+        existing_result = await self.db.execute(existing_stmt)
+        existing = existing_result.scalar_one_or_none()
+        if existing:
+            raise ValueError(f"Fiber cable '{cable_id}' already exists")
+
         cable = FiberCable(
             tenant_id=self.tenant_id,
             cable_id=cable_id,
             name=name,
             fiber_type=fiber_type,
             fiber_count=fiber_count,
-            status=FiberCableStatus.UNDER_CONSTRUCTION,
+            status=FiberCableStatus.ACTIVE,
             installation_type=installation_type,
             start_site_id=start_site_id,
             end_site_id=end_site_id,
@@ -88,8 +102,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(cable)
-        self.db.commit()
-        self.db.refresh(cable)
+        await self.db.commit()
+        await self.db.refresh(cable)
 
         logger.info(
             "fiber.cable.created",
@@ -102,27 +116,33 @@ class FiberService:
 
         return cable
 
-    def get_cable(self, cable_id: UUID | str, include_relations: bool = False) -> FiberCable | None:
+    async def get_cable(
+        self, cable_id: UUID | str, include_relations: bool = False
+    ) -> FiberCable | None:
         """Get fiber cable by ID or cable_id"""
-        query = self.db.query(FiberCable).filter(
+        filters = [
             FiberCable.tenant_id == self.tenant_id,
-        )
+            FiberCable.deleted_at.is_(None),
+        ]
 
         if isinstance(cable_id, UUID):
-            query = query.filter(FiberCable.id == cable_id)
+            filters.append(FiberCable.id == cable_id)
         else:
-            query = query.filter(FiberCable.cable_id == cable_id)
+            filters.append(FiberCable.cable_id == cable_id)
+
+        stmt: Select[tuple[FiberCable]] = select(FiberCable).where(*filters)
 
         if include_relations:
-            query = query.options(
-                joinedload(FiberCable.splice_points),
-                joinedload(FiberCable.health_metrics),
-                joinedload(FiberCable.otdr_test_results),
+            stmt = stmt.options(
+                selectinload(FiberCable.splice_points),
+                selectinload(FiberCable.health_metrics),
+                selectinload(FiberCable.otdr_test_results),
             )
 
-        return query.first()
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_cables(
+    async def list_cables(
         self,
         fiber_type: FiberType | None = None,
         status: FiberCableStatus | None = None,
@@ -133,36 +153,38 @@ class FiberService:
         offset: int = 0,
     ) -> list[FiberCable]:
         """List fiber cables with filters"""
-        query = self.db.query(FiberCable).filter(
+        filters = [
             FiberCable.tenant_id == self.tenant_id,
             FiberCable.deleted_at.is_(None),
-        )
+        ]
 
         if fiber_type:
-            query = query.filter(FiberCable.fiber_type == fiber_type)
+            filters.append(FiberCable.fiber_type == fiber_type)
 
         if status:
-            query = query.filter(FiberCable.status == status)
+            filters.append(FiberCable.status == status)
 
         if installation_type:
-            query = query.filter(FiberCable.installation_type == installation_type)
+            filters.append(FiberCable.installation_type == installation_type)
 
         if start_site_id:
-            query = query.filter(FiberCable.start_site_id == start_site_id)
+            filters.append(FiberCable.start_site_id == start_site_id)
 
         if end_site_id:
-            query = query.filter(FiberCable.end_site_id == end_site_id)
+            filters.append(FiberCable.end_site_id == end_site_id)
 
-        return query.offset(offset).limit(limit).all()
+        stmt = select(FiberCable).where(*filters).offset(offset).limit(limit)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
-    def update_cable(
+    async def update_cable(
         self,
         cable_id: UUID | str,
         updated_by: str | None = None,
         **kwargs: Any,
     ) -> FiberCable | None:
         """Update fiber cable"""
-        cable = self.get_cable(cable_id)
+        cable = await self.get_cable(cable_id)
         if not cable:
             return None
 
@@ -171,8 +193,8 @@ class FiberService:
                 setattr(cable, key, value)
 
         cable.updated_by = updated_by
-        self.db.commit()
-        self.db.refresh(cable)
+        await self.db.commit()
+        await self.db.refresh(cable)
 
         logger.info(
             "fiber.cable.updated",
@@ -183,16 +205,16 @@ class FiberService:
 
         return cable
 
-    def delete_cable(self, cable_id: UUID | str, deleted_by: str | None = None) -> bool:
+    async def delete_cable(self, cable_id: UUID | str, deleted_by: str | None = None) -> bool:
         """Soft delete fiber cable"""
-        cable = self.get_cable(cable_id)
+        cable = await self.get_cable(cable_id)
         if not cable:
             return False
 
-        cable.deleted_at = datetime.utcnow()
+        cable.deleted_at = datetime.now(UTC)
         cable.is_active = False
         cable.updated_by = deleted_by
-        self.db.commit()
+        await self.db.commit()
 
         logger.info(
             "fiber.cable.deleted",
@@ -202,16 +224,18 @@ class FiberService:
 
         return True
 
-    def activate_cable(self, cable_id: UUID | str, activated_by: str | None = None) -> FiberCable | None:
+    async def activate_cable(
+        self, cable_id: UUID | str, activated_by: str | None = None
+    ) -> FiberCable | None:
         """Activate a fiber cable (mark as active and operational)"""
-        cable = self.get_cable(cable_id)
+        cable = await self.get_cable(cable_id)
         if not cable:
             return None
 
         cable.status = FiberCableStatus.ACTIVE
         cable.updated_by = activated_by
-        self.db.commit()
-        self.db.refresh(cable)
+        await self.db.commit()
+        await self.db.refresh(cable)
 
         logger.info(
             "fiber.cable.activated",
@@ -225,7 +249,7 @@ class FiberService:
     # Distribution Point Methods
     # ========================================================================
 
-    def create_distribution_point(
+    async def create_distribution_point(
         self,
         point_id: str,
         point_type: DistributionPointType,
@@ -261,8 +285,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(point)
-        self.db.commit()
-        self.db.refresh(point)
+        await self.db.commit()
+        await self.db.refresh(point)
 
         logger.info(
             "fiber.distribution_point.created",
@@ -273,25 +297,29 @@ class FiberService:
 
         return point
 
-    def get_distribution_point(
+    async def get_distribution_point(
         self, point_id: UUID | str, include_splice_points: bool = False
     ) -> DistributionPoint | None:
         """Get distribution point by ID or point_id"""
-        query = self.db.query(DistributionPoint).filter(
+        filters = [
             DistributionPoint.tenant_id == self.tenant_id,
-        )
+            DistributionPoint.deleted_at.is_(None),
+        ]
 
         if isinstance(point_id, UUID):
-            query = query.filter(DistributionPoint.id == point_id)
+            filters.append(DistributionPoint.id == point_id)
         else:
-            query = query.filter(DistributionPoint.point_id == point_id)
+            filters.append(DistributionPoint.point_id == point_id)
+
+        stmt: Select[tuple[DistributionPoint]] = select(DistributionPoint).where(*filters)
 
         if include_splice_points:
-            query = query.options(joinedload(DistributionPoint.splice_points))
+            stmt = stmt.options(selectinload(DistributionPoint.splice_points))
 
-        return query.first()
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_distribution_points(
+    async def list_distribution_points(
         self,
         point_type: DistributionPointType | None = None,
         status: FiberCableStatus | None = None,
@@ -300,30 +328,32 @@ class FiberService:
         offset: int = 0,
     ) -> list[DistributionPoint]:
         """List distribution points with filters"""
-        query = self.db.query(DistributionPoint).filter(
+        filters = [
             DistributionPoint.tenant_id == self.tenant_id,
             DistributionPoint.deleted_at.is_(None),
-        )
+        ]
 
         if point_type:
-            query = query.filter(DistributionPoint.point_type == point_type)
+            filters.append(DistributionPoint.point_type == point_type)
 
         if status:
-            query = query.filter(DistributionPoint.status == status)
+            filters.append(DistributionPoint.status == status)
 
         if site_id:
-            query = query.filter(DistributionPoint.site_id == site_id)
+            filters.append(DistributionPoint.site_id == site_id)
 
-        return query.offset(offset).limit(limit).all()
+        stmt = select(DistributionPoint).where(*filters).offset(offset).limit(limit)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
-    def update_distribution_point(
+    async def update_distribution_point(
         self,
         point_id: UUID | str,
         updated_by: str | None = None,
         **kwargs: Any,
     ) -> DistributionPoint | None:
         """Update distribution point"""
-        point = self.get_distribution_point(point_id)
+        point = await self.get_distribution_point(point_id)
         if not point:
             return None
 
@@ -332,8 +362,8 @@ class FiberService:
                 setattr(point, key, value)
 
         point.updated_by = updated_by
-        self.db.commit()
-        self.db.refresh(point)
+        await self.db.commit()
+        await self.db.refresh(point)
 
         logger.info(
             "fiber.distribution_point.updated",
@@ -344,13 +374,15 @@ class FiberService:
 
         return point
 
-    def get_port_utilization(self, point_id: UUID | str) -> dict[str, Any]:
+    async def get_port_utilization(self, point_id: UUID | str) -> dict[str, Any]:
         """Get port utilization statistics for a distribution point"""
-        point = self.get_distribution_point(point_id)
+        point = await self.get_distribution_point(point_id)
         if not point or point.total_ports is None:
             return {}
 
-        utilization_pct = (point.used_ports / point.total_ports * 100) if point.total_ports > 0 else 0
+        utilization_pct = (
+            (point.used_ports / point.total_ports * 100) if point.total_ports > 0 else 0
+        )
         available_ports = point.total_ports - point.used_ports
 
         return {
@@ -367,7 +399,7 @@ class FiberService:
     # Service Area Methods
     # ========================================================================
 
-    def create_service_area(
+    async def create_service_area(
         self,
         area_id: str,
         name: str,
@@ -404,8 +436,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(area)
-        self.db.commit()
-        self.db.refresh(area)
+        await self.db.commit()
+        await self.db.refresh(area)
 
         logger.info(
             "fiber.service_area.created",
@@ -417,20 +449,23 @@ class FiberService:
 
         return area
 
-    def get_service_area(self, area_id: UUID | str) -> ServiceArea | None:
+    async def get_service_area(self, area_id: UUID | str) -> ServiceArea | None:
         """Get service area by ID or area_id"""
-        query = self.db.query(ServiceArea).filter(
+        filters = [
             ServiceArea.tenant_id == self.tenant_id,
-        )
+            ServiceArea.deleted_at.is_(None),
+        ]
 
         if isinstance(area_id, UUID):
-            query = query.filter(ServiceArea.id == area_id)
+            filters.append(ServiceArea.id == area_id)
         else:
-            query = query.filter(ServiceArea.area_id == area_id)
+            filters.append(ServiceArea.area_id == area_id)
 
-        return query.first()
+        stmt = select(ServiceArea).where(*filters)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_service_areas(
+    async def list_service_areas(
         self,
         area_type: ServiceAreaType | None = None,
         is_serviceable: bool | None = None,
@@ -439,30 +474,32 @@ class FiberService:
         offset: int = 0,
     ) -> list[ServiceArea]:
         """List service areas with filters"""
-        query = self.db.query(ServiceArea).filter(
+        filters = [
             ServiceArea.tenant_id == self.tenant_id,
             ServiceArea.deleted_at.is_(None),
-        )
+        ]
 
         if area_type:
-            query = query.filter(ServiceArea.area_type == area_type)
+            filters.append(ServiceArea.area_type == area_type)
 
         if is_serviceable is not None:
-            query = query.filter(ServiceArea.is_serviceable == is_serviceable)
+            filters.append(ServiceArea.is_serviceable == is_serviceable)
 
         if construction_status:
-            query = query.filter(ServiceArea.construction_status == construction_status)
+            filters.append(ServiceArea.construction_status == construction_status)
 
-        return query.offset(offset).limit(limit).all()
+        stmt = select(ServiceArea).where(*filters).offset(offset).limit(limit)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
-    def update_service_area(
+    async def update_service_area(
         self,
         area_id: UUID | str,
         updated_by: str | None = None,
         **kwargs: Any,
     ) -> ServiceArea | None:
         """Update service area"""
-        area = self.get_service_area(area_id)
+        area = await self.get_service_area(area_id)
         if not area:
             return None
 
@@ -471,8 +508,8 @@ class FiberService:
                 setattr(area, key, value)
 
         area.updated_by = updated_by
-        self.db.commit()
-        self.db.refresh(area)
+        await self.db.commit()
+        await self.db.refresh(area)
 
         logger.info(
             "fiber.service_area.updated",
@@ -483,9 +520,9 @@ class FiberService:
 
         return area
 
-    def get_coverage_statistics(self, area_id: UUID | str) -> dict[str, Any]:
+    async def get_coverage_statistics(self, area_id: UUID | str) -> dict[str, Any]:
         """Get coverage statistics for a service area"""
-        area = self.get_service_area(area_id)
+        area = await self.get_service_area(area_id)
         if not area:
             return {}
 
@@ -507,18 +544,18 @@ class FiberService:
             "area_type": area.area_type.value,
             "is_serviceable": area.is_serviceable,
             "residential": {
-                "homes_passed": area.homes_passed,
-                "homes_connected": area.homes_connected,
+                "passed": area.homes_passed,
+                "connected": area.homes_connected,
                 "penetration_percentage": round(residential_penetration, 2),
             },
             "commercial": {
-                "businesses_passed": area.businesses_passed,
-                "businesses_connected": area.businesses_connected,
+                "passed": area.businesses_passed,
+                "connected": area.businesses_connected,
                 "penetration_percentage": round(business_penetration, 2),
             },
             "total": {
-                "locations_passed": total_passed,
-                "locations_connected": total_connected,
+                "passed": total_passed,
+                "connected": total_connected,
                 "penetration_percentage": round(overall_penetration, 2),
             },
         }
@@ -527,7 +564,7 @@ class FiberService:
     # Splice Point Methods
     # ========================================================================
 
-    def create_splice_point(
+    async def create_splice_point(
         self,
         splice_id: str,
         cable_id: UUID,
@@ -559,8 +596,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(splice)
-        self.db.commit()
-        self.db.refresh(splice)
+        await self.db.commit()
+        await self.db.refresh(splice)
 
         logger.info(
             "fiber.splice_point.created",
@@ -571,20 +608,23 @@ class FiberService:
 
         return splice
 
-    def get_splice_point(self, splice_id: UUID | str) -> SplicePoint | None:
+    async def get_splice_point(self, splice_id: UUID | str) -> SplicePoint | None:
         """Get splice point by ID or splice_id"""
-        query = self.db.query(SplicePoint).filter(
+        filters = [
             SplicePoint.tenant_id == self.tenant_id,
-        )
+            SplicePoint.deleted_at.is_(None),
+        ]
 
         if isinstance(splice_id, UUID):
-            query = query.filter(SplicePoint.id == splice_id)
+            filters.append(SplicePoint.id == splice_id)
         else:
-            query = query.filter(SplicePoint.splice_id == splice_id)
+            filters.append(SplicePoint.splice_id == splice_id)
 
-        return query.first()
+        stmt = select(SplicePoint).where(*filters)
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_splice_points(
+    async def list_splice_points(
         self,
         cable_id: UUID | None = None,
         status: SpliceStatus | None = None,
@@ -593,30 +633,32 @@ class FiberService:
         offset: int = 0,
     ) -> list[SplicePoint]:
         """List splice points with filters"""
-        query = self.db.query(SplicePoint).filter(
+        filters = [
             SplicePoint.tenant_id == self.tenant_id,
             SplicePoint.deleted_at.is_(None),
-        )
+        ]
 
         if cable_id:
-            query = query.filter(SplicePoint.cable_id == cable_id)
+            filters.append(SplicePoint.cable_id == cable_id)
 
         if status:
-            query = query.filter(SplicePoint.status == status)
+            filters.append(SplicePoint.status == status)
 
         if distribution_point_id:
-            query = query.filter(SplicePoint.distribution_point_id == distribution_point_id)
+            filters.append(SplicePoint.distribution_point_id == distribution_point_id)
 
-        return query.offset(offset).limit(limit).all()
+        stmt = select(SplicePoint).where(*filters).offset(offset).limit(limit)
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
-    def update_splice_point(
+    async def update_splice_point(
         self,
         splice_id: UUID | str,
         updated_by: str | None = None,
         **kwargs: Any,
     ) -> SplicePoint | None:
         """Update splice point"""
-        splice = self.get_splice_point(splice_id)
+        splice = await self.get_splice_point(splice_id)
         if not splice:
             return None
 
@@ -625,8 +667,8 @@ class FiberService:
                 setattr(splice, key, value)
 
         splice.updated_by = updated_by
-        self.db.commit()
-        self.db.refresh(splice)
+        await self.db.commit()
+        await self.db.refresh(splice)
 
         logger.info(
             "fiber.splice_point.updated",
@@ -641,7 +683,7 @@ class FiberService:
     # Health Metrics Methods
     # ========================================================================
 
-    def record_health_metric(
+    async def record_health_metric(
         self,
         cable_id: UUID,
         health_status: FiberHealthStatus,
@@ -658,7 +700,7 @@ class FiberService:
         metric = FiberHealthMetric(
             tenant_id=self.tenant_id,
             cable_id=cable_id,
-            measured_at=measured_at or datetime.utcnow(),
+            measured_at=measured_at or datetime.now(UTC),
             health_status=health_status,
             health_score=health_score,
             total_loss_db=total_loss_db,
@@ -670,8 +712,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(metric)
-        self.db.commit()
-        self.db.refresh(metric)
+        await self.db.commit()
+        await self.db.refresh(metric)
 
         logger.info(
             "fiber.health_metric.recorded",
@@ -683,19 +725,21 @@ class FiberService:
 
         return metric
 
-    def get_latest_health_metric(self, cable_id: UUID) -> FiberHealthMetric | None:
+    async def get_latest_health_metric(self, cable_id: UUID) -> FiberHealthMetric | None:
         """Get the most recent health metric for a cable"""
-        return (
-            self.db.query(FiberHealthMetric)
-            .filter(
+        stmt = (
+            select(FiberHealthMetric)
+            .where(
                 FiberHealthMetric.cable_id == cable_id,
                 FiberHealthMetric.tenant_id == self.tenant_id,
             )
             .order_by(FiberHealthMetric.measured_at.desc())
-            .first()
+            .limit(1)
         )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_health_metrics(
+    async def list_health_metrics(
         self,
         cable_id: UUID | None = None,
         health_status: FiberHealthStatus | None = None,
@@ -705,29 +749,37 @@ class FiberService:
         offset: int = 0,
     ) -> list[FiberHealthMetric]:
         """List health metrics with filters"""
-        query = self.db.query(FiberHealthMetric).filter(
+        filters = [
             FiberHealthMetric.tenant_id == self.tenant_id,
-        )
+        ]
 
         if cable_id:
-            query = query.filter(FiberHealthMetric.cable_id == cable_id)
+            filters.append(FiberHealthMetric.cable_id == cable_id)
 
         if health_status:
-            query = query.filter(FiberHealthMetric.health_status == health_status)
+            filters.append(FiberHealthMetric.health_status == health_status)
 
         if start_date:
-            query = query.filter(FiberHealthMetric.measured_at >= start_date)
+            filters.append(FiberHealthMetric.measured_at >= start_date)
 
         if end_date:
-            query = query.filter(FiberHealthMetric.measured_at <= end_date)
+            filters.append(FiberHealthMetric.measured_at <= end_date)
 
-        return query.order_by(FiberHealthMetric.measured_at.desc()).offset(offset).limit(limit).all()
+        stmt = (
+            select(FiberHealthMetric)
+            .where(*filters)
+            .order_by(FiberHealthMetric.measured_at.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
     # ========================================================================
     # OTDR Test Result Methods
     # ========================================================================
 
-    def record_otdr_test(
+    async def record_otdr_test(
         self,
         cable_id: UUID,
         strand_id: int,
@@ -748,7 +800,7 @@ class FiberService:
             tenant_id=self.tenant_id,
             cable_id=cable_id,
             strand_id=strand_id,
-            test_date=test_date or datetime.utcnow(),
+            test_date=test_date or datetime.now(UTC),
             wavelength_nm=wavelength_nm,
             pulse_width_ns=pulse_width_ns,
             total_loss_db=total_loss_db,
@@ -762,8 +814,8 @@ class FiberService:
             updated_by=created_by,
         )
         self.db.add(test_result)
-        self.db.commit()
-        self.db.refresh(test_result)
+        await self.db.commit()
+        await self.db.refresh(test_result)
 
         logger.info(
             "fiber.otdr_test.recorded",
@@ -775,20 +827,22 @@ class FiberService:
 
         return test_result
 
-    def get_latest_otdr_test(self, cable_id: UUID, strand_id: int) -> OTDRTestResult | None:
+    async def get_latest_otdr_test(self, cable_id: UUID, strand_id: int) -> OTDRTestResult | None:
         """Get the most recent OTDR test for a cable strand"""
-        return (
-            self.db.query(OTDRTestResult)
-            .filter(
+        stmt = (
+            select(OTDRTestResult)
+            .where(
                 OTDRTestResult.cable_id == cable_id,
                 OTDRTestResult.strand_id == strand_id,
                 OTDRTestResult.tenant_id == self.tenant_id,
             )
             .order_by(OTDRTestResult.test_date.desc())
-            .first()
+            .limit(1)
         )
+        result = await self.db.execute(stmt)
+        return result.scalar_one_or_none()
 
-    def list_otdr_tests(
+    async def list_otdr_tests(
         self,
         cable_id: UUID | None = None,
         strand_id: int | None = None,
@@ -799,68 +853,75 @@ class FiberService:
         offset: int = 0,
     ) -> list[OTDRTestResult]:
         """List OTDR test results with filters"""
-        query = self.db.query(OTDRTestResult).filter(
+        filters = [
             OTDRTestResult.tenant_id == self.tenant_id,
-        )
+        ]
 
         if cable_id:
-            query = query.filter(OTDRTestResult.cable_id == cable_id)
+            filters.append(OTDRTestResult.cable_id == cable_id)
 
         if strand_id is not None:
-            query = query.filter(OTDRTestResult.strand_id == strand_id)
+            filters.append(OTDRTestResult.strand_id == strand_id)
 
         if pass_fail is not None:
-            query = query.filter(OTDRTestResult.pass_fail == pass_fail)
+            filters.append(OTDRTestResult.pass_fail == pass_fail)
 
         if start_date:
-            query = query.filter(OTDRTestResult.test_date >= start_date)
+            filters.append(OTDRTestResult.test_date >= start_date)
 
         if end_date:
-            query = query.filter(OTDRTestResult.test_date <= end_date)
+            filters.append(OTDRTestResult.test_date <= end_date)
 
-        return query.order_by(OTDRTestResult.test_date.desc()).offset(offset).limit(limit).all()
+        stmt = (
+            select(OTDRTestResult)
+            .where(*filters)
+            .order_by(OTDRTestResult.test_date.desc())
+            .offset(offset)
+            .limit(limit)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalars().all()
 
     # ========================================================================
     # Analytics & Reporting Methods
     # ========================================================================
 
-    def get_network_health_summary(self) -> dict[str, Any]:
+    async def get_network_health_summary(self) -> dict[str, Any]:
         """Get overall network health summary"""
-        total_cables = (
-            self.db.query(func.count(FiberCable.id))
-            .filter(
-                FiberCable.tenant_id == self.tenant_id,
-                FiberCable.deleted_at.is_(None),
-            )
-            .scalar()
+        total_cables_stmt = select(func.count(FiberCable.id)).where(
+            FiberCable.tenant_id == self.tenant_id,
+            FiberCable.deleted_at.is_(None),
         )
+        total_cables = (await self.db.execute(total_cables_stmt)).scalar_one()
 
-        cables_by_status = (
-            self.db.query(FiberCable.status, func.count(FiberCable.id))
-            .filter(
+        cables_by_status_stmt = (
+            select(FiberCable.status, func.count(FiberCable.id))
+            .where(
                 FiberCable.tenant_id == self.tenant_id,
                 FiberCable.deleted_at.is_(None),
             )
             .group_by(FiberCable.status)
-            .all()
         )
+        cables_by_status_result = await self.db.execute(cables_by_status_stmt)
+        cables_by_status = cables_by_status_result.all()
 
-        health_by_status = (
-            self.db.query(FiberHealthMetric.health_status, func.count(FiberHealthMetric.id))
-            .filter(FiberHealthMetric.tenant_id == self.tenant_id)
+        health_by_status_stmt = (
+            select(FiberHealthMetric.health_status, func.count(FiberHealthMetric.id))
+            .where(FiberHealthMetric.tenant_id == self.tenant_id)
             .group_by(FiberHealthMetric.health_status)
-            .all()
         )
+        health_by_status_result = await self.db.execute(health_by_status_stmt)
+        health_by_status = health_by_status_result.all()
 
         return {
             "total_cables": total_cables,
-            "cables_by_status": {status.value: count for status, count in cables_by_status},
-            "health_by_status": {status.value: count for status, count in health_by_status},
+            "cables_by_status": {status.name: count for status, count in cables_by_status},
+            "health_by_status": {status.name: count for status, count in health_by_status},
         }
 
-    def get_capacity_planning_data(self) -> dict[str, Any]:
+    async def get_capacity_planning_data(self) -> dict[str, Any]:
         """Get capacity planning data for distribution points"""
-        points = self.list_distribution_points(limit=1000)
+        points = await self.list_distribution_points(limit=1000)
 
         total_ports = sum(p.total_ports or 0 for p in points)
         used_ports = sum(p.used_ports for p in points)
@@ -890,9 +951,9 @@ class FiberService:
             ],
         }
 
-    def get_coverage_summary(self) -> dict[str, Any]:
+    async def get_coverage_summary(self) -> dict[str, Any]:
         """Get overall coverage summary across all service areas"""
-        areas = self.list_service_areas(limit=1000)
+        areas = await self.list_service_areas(limit=1000)
 
         total_homes_passed = sum(a.homes_passed for a in areas)
         total_homes_connected = sum(a.homes_connected for a in areas)
@@ -908,7 +969,9 @@ class FiberService:
                 "homes_passed": total_homes_passed,
                 "homes_connected": total_homes_connected,
                 "penetration_percentage": round(
-                    (total_homes_connected / total_homes_passed * 100) if total_homes_passed > 0 else 0,
+                    (total_homes_connected / total_homes_passed * 100)
+                    if total_homes_passed > 0
+                    else 0,
                     2,
                 ),
             },

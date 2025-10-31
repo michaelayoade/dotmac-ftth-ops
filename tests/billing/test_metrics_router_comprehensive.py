@@ -4,7 +4,7 @@ Comprehensive tests for billing and customer metrics router.
 Tests all three Phase 1 endpoints with mocked data, error handling, and edge cases.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -20,6 +20,9 @@ from dotmac.platform.billing.metrics_router import (
 )
 from dotmac.platform.customer_management.models import CustomerStatus
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_session():
@@ -276,8 +279,8 @@ class TestPaymentListEndpoint:
                 customer_id=f"cust_{i}",
                 payment_method_type=PaymentMethodType.CARD,
                 provider="stripe",
-                created_at=datetime.now(UTC) - timedelta(days=i),
-                processed_at=datetime.now(UTC) - timedelta(days=i, hours=1),
+                created_at=datetime.now(timezone.utc) - timedelta(days=i),
+                processed_at=datetime.now(timezone.utc) - timedelta(days=i, hours=1),
                 failure_reason=None,
             )
             for i in range(10)
@@ -321,7 +324,7 @@ class TestPaymentListEndpoint:
                 customer_id=f"cust_{i}",
                 payment_method_type=PaymentMethodType.CARD,
                 provider="stripe",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 processed_at=None,
                 failure_reason="Insufficient funds",
             )
@@ -365,8 +368,8 @@ class TestPaymentListEndpoint:
                 customer_id=f"cust_{i}",
                 payment_method_type=PaymentMethodType.CARD,
                 provider="stripe",
-                created_at=datetime.now(UTC),
-                processed_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                processed_at=datetime.now(timezone.utc),
                 failure_reason=None,
             )
             for i in range(50, 60)
@@ -456,7 +459,7 @@ class TestCustomerMetricsEndpoint:
             },
             "at_risk_customers": 40,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with patch(
@@ -534,7 +537,7 @@ class TestCustomerMetricsEndpoint:
             },
             "at_risk_customers": 0,
             "period": "30d",
-            "timestamp": datetime.now(UTC),
+            "timestamp": datetime.now(timezone.utc),
         }
 
         with patch(

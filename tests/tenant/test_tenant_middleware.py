@@ -2,6 +2,9 @@
 Test tenant middleware for both single and multi-tenant modes.
 """
 
+import os
+from unittest.mock import patch
+
 import pytest
 from fastapi import FastAPI, Request
 from fastapi.testclient import TestClient
@@ -53,6 +56,7 @@ def create_test_app(config: TenantConfiguration) -> TestClient:
     return TestClient(app)
 
 
+@pytest.mark.integration
 class TestSingleTenantMode:
     """Test middleware in single-tenant mode."""
 
@@ -84,6 +88,7 @@ class TestSingleTenantMode:
         assert response.json()["tenant_id"] == "single-tenant-org"
 
 
+@pytest.mark.integration
 class TestMultiTenantMode:
     """Test middleware in multi-tenant mode."""
 
@@ -130,6 +135,7 @@ class TestMultiTenantMode:
         assert response.json()["tenant_id"] is None
 
 
+@pytest.mark.integration
 class TestMultiTenantOptionalMode:
     """Test middleware in multi-tenant mode with optional header."""
 
@@ -150,33 +156,42 @@ class TestMultiTenantOptionalMode:
         assert response.json()["tenant_id"] == "custom-org"
 
 
+@pytest.mark.integration
 class TestCustomConfiguration:
     """Test custom configuration options."""
 
     def test_custom_header_name(self):
         """Test custom header name configuration."""
-        config = TenantConfiguration(mode=TenantMode.MULTI, tenant_header_name="X-Organization-ID")
-        client = create_test_app(config)
+        # Remove env vars so custom config is used
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("TENANT_HEADER_NAME", None)
+            os.environ.pop("TENANT_QUERY_PARAM", None)
+            config = TenantConfiguration(mode=TenantMode.MULTI, tenant_header_name="X-Organization-ID")
+            client = create_test_app(config)
 
-        # Old header name shouldn't work
-        response = client.get("/test", headers={"X-Tenant-ID": "org-123"})
-        assert response.status_code == 400
+            # Old header name shouldn't work
+            response = client.get("/test", headers={"X-Tenant-ID": "org-123"})
+            assert response.status_code == 400
 
-        # Custom header name should work
-        response = client.get("/test", headers={"X-Organization-ID": "org-123"})
-        assert response.status_code == 200
-        assert response.json()["tenant_id"] == "org-123"
+            # Custom header name should work
+            response = client.get("/test", headers={"X-Organization-ID": "org-123"})
+            assert response.status_code == 200
+            assert response.json()["tenant_id"] == "org-123"
 
     def test_custom_query_param(self):
         """Test custom query parameter name."""
-        config = TenantConfiguration(mode=TenantMode.MULTI, tenant_query_param="org_id")
-        client = create_test_app(config)
+        # Remove env vars so custom config is used
+        with patch.dict(os.environ, {}, clear=False):
+            os.environ.pop("TENANT_HEADER_NAME", None)
+            os.environ.pop("TENANT_QUERY_PARAM", None)
+            config = TenantConfiguration(mode=TenantMode.MULTI, tenant_query_param="org_id")
+            client = create_test_app(config)
 
-        # Old query param shouldn't work
-        response = client.get("/test?tenant_id=org-456")
-        assert response.status_code == 400
+            # Old query param shouldn't work
+            response = client.get("/test?tenant_id=org-456")
+            assert response.status_code == 400
 
-        # Custom query param should work
-        response = client.get("/test?org_id=org-456")
-        assert response.status_code == 200
-        assert response.json()["tenant_id"] == "org-456"
+            # Custom query param should work
+            response = client.get("/test?org_id=org-456")
+            assert response.status_code == 200
+            assert response.json()["tenant_id"] == "org-456"

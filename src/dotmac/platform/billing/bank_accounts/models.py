@@ -3,8 +3,10 @@ Bank account and manual payment models
 """
 
 from datetime import datetime
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from enum import Enum
 from typing import Any
+from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -152,7 +154,7 @@ class ManualPaymentBase(BaseModel):
     bank_account_id: int | None = Field(None, description="Deposit account")
 
     payment_method: PaymentMethodType = Field(..., description="Payment method")
-    amount: float = Field(..., gt=0, description="Payment amount")
+    amount: Decimal = Field(..., description="Payment amount")
     currency: str = Field("USD", min_length=3, max_length=3)
 
     payment_date: datetime = Field(..., description="When payment was made")
@@ -161,14 +163,29 @@ class ManualPaymentBase(BaseModel):
     external_reference: str | None = Field(None, max_length=255, description="External reference")
     notes: str | None = Field(None, description="Payment notes")
 
-    @field_validator("amount")
+    @field_validator("amount", mode="before")
     @classmethod
-    def validate_amount(cls, v: float) -> float:
-        """Validate payment amount"""
-        if v <= 0:
+    def validate_amount(cls, v: Any) -> Decimal:
+        """Validate and normalize payment amount with decimal precision."""
+        try:
+            amount = v if isinstance(v, Decimal) else Decimal(str(v))
+        except (InvalidOperation, ValueError, TypeError) as exc:
+            raise ValueError("Amount must be a valid decimal number") from exc
+
+        if amount <= Decimal("0"):
             raise ValueError("Amount must be positive")
-        # Round to 2 decimal places
-        return round(v, 2)
+
+        return amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+    @field_validator("customer_id")
+    @classmethod
+    def validate_customer_id(cls, v: str) -> str:
+        """Ensure customer_id is a valid UUID string."""
+        try:
+            UUID(str(v))
+        except (ValueError, TypeError) as exc:
+            raise ValueError("customer_id must be a valid UUID") from exc
+        return str(v)
 
 
 class CashPaymentCreate(ManualPaymentBase):

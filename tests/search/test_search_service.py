@@ -1,3 +1,4 @@
+
 """
 Tests for search service implementation.
 """
@@ -5,8 +6,11 @@ Tests for search service implementation.
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.search.interfaces import (
+
+
     SearchFilter,
     SearchQuery,
     SearchResponse,
@@ -19,9 +23,13 @@ from dotmac.platform.search.service import (
     SearchService,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestInMemorySearchBackend:
     """Test InMemorySearchBackend class."""
 
@@ -30,7 +38,7 @@ class TestInMemorySearchBackend:
         """Create in-memory search backend."""
         return InMemorySearchBackend()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def populated_backend(self, backend):
         """Create backend with test data."""
         await backend.create_index("test_index")
@@ -285,6 +293,7 @@ class TestInMemorySearchBackend:
             assert result.data["score"] >= 9
 
 
+@pytest.mark.integration
 class TestMeilisearchBackend:
     """Test MeilisearchBackend class."""
 
@@ -443,6 +452,7 @@ class TestMeilisearchBackend:
             assert expression is None
 
 
+@pytest.mark.integration
 class TestSearchService:
     """Test SearchService class."""
 
@@ -560,6 +570,7 @@ class TestSearchService:
         assert service.backend == mock_backend
 
 
+@pytest.mark.integration
 class TestSearchServiceIntegration:
     """Integration tests for search service with real backend."""
 
@@ -629,6 +640,7 @@ class TestSearchServiceIntegration:
         assert len(response.results) == 2
 
 
+@pytest.mark.integration
 class TestInMemorySearchBackendAdditional:
     """Additional tests for InMemorySearchBackend to reach 90% coverage."""
 
@@ -637,7 +649,7 @@ class TestInMemorySearchBackendAdditional:
         """Create in-memory search backend."""
         return InMemorySearchBackend()
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def populated_backend(self, backend):
         """Create backend with test data including various data types."""
         await backend.create_index("test_index")
@@ -715,6 +727,7 @@ class TestInMemorySearchBackendAdditional:
             assert "li" in result.data["name"]
 
 
+@pytest.mark.integration
 class TestMeilisearchBackendAdditional:
     """Additional tests for MeilisearchBackend to reach 90% coverage."""
 

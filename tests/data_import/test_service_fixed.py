@@ -1,7 +1,7 @@
 """Fixed comprehensive tests for DataImportService."""
 
 import io
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -11,9 +11,18 @@ from dotmac.platform.data_import.models import ImportJob, ImportJobStatus, Impor
 from dotmac.platform.data_import.service import DataImportService, ImportResult
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 @pytest.fixture
 def mock_session():
     """Mock database session."""
+
+
     session = AsyncMock()
     session.add = MagicMock()
     session.commit = AsyncMock()
@@ -349,7 +358,7 @@ class TestImportJobStatusHandling:
             file_name="test.csv",
             file_size=1024,
             file_format="csv",
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
         )
 
         await import_service._update_job_status(job, ImportJobStatus.COMPLETED)

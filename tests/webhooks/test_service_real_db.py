@@ -48,6 +48,7 @@ async def sample_subscription(
     return subscription
 
 
+@pytest.mark.integration
 class TestCreateSubscription:
     """Test subscription creation."""
 
@@ -92,6 +93,7 @@ class TestCreateSubscription:
         assert sub1.secret != sub2.secret
 
 
+@pytest.mark.integration
 class TestGetSubscription:
     """Test getting subscriptions."""
 
@@ -121,6 +123,7 @@ class TestGetSubscription:
         assert result is None
 
 
+@pytest.mark.integration
 class TestListSubscriptions:
     """Test listing subscriptions."""
 
@@ -206,6 +209,7 @@ class TestListSubscriptions:
         assert page1_ids.isdisjoint(page2_ids)
 
 
+@pytest.mark.integration
 class TestUpdateSubscription:
     """Test updating subscriptions."""
 
@@ -265,6 +269,7 @@ class TestUpdateSubscription:
         assert result.url == original_url  # URL unchanged
 
 
+@pytest.mark.integration
 class TestDeleteSubscription:
     """Test deleting subscriptions."""
 
@@ -292,6 +297,7 @@ class TestDeleteSubscription:
         assert result is False
 
 
+@pytest.mark.integration
 class TestGetSubscriptionsForEvent:
     """Test getting subscriptions for specific events."""
 
@@ -337,6 +343,7 @@ class TestGetSubscriptionsForEvent:
         assert sample_subscription.id not in [sub.id for sub in result]
 
 
+@pytest.mark.integration
 class TestUpdateStatistics:
     """Test updating subscription statistics."""
 
@@ -401,6 +408,7 @@ class TestUpdateStatistics:
         await webhook_service.update_statistics(str(uuid4()), success=True, tenant_id="test-tenant")
 
 
+@pytest.mark.integration
 class TestDisableSubscription:
     """Test disabling subscriptions."""
 
@@ -480,6 +488,7 @@ class TestSecretManagement:
         assert result is None
 
 
+@pytest.mark.integration
 class TestDeliveryLogs:
     """Test delivery log methods."""
 

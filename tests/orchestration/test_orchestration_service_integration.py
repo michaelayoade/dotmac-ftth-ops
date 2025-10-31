@@ -1,34 +1,41 @@
+
 """
 Integration Tests for Orchestration Service
 
 Tests orchestration service with real database and mocked external handlers.
 """
 
+from unittest.mock import patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
 from sqlalchemy import select
 
-from dotmac.platform.orchestration.service import OrchestrationService
 from dotmac.platform.orchestration.models import (
+
+
+
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
 )
 from dotmac.platform.orchestration.schemas import (
-    ProvisionSubscriberRequest,
-    DeprovisionSubscriberRequest,
     ActivateServiceRequest,
+    DeprovisionSubscriberRequest,
+    ProvisionSubscriberRequest,
     SuspendServiceRequest,
 )
+from dotmac.platform.orchestration.service import OrchestrationService
 
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestProvisionSubscriberIntegration:
     """Integration tests for subscriber provisioning"""
 
-    async def test_provision_subscriber_creates_workflow_in_db(
-        self, async_db_session, test_tenant
-    ):
+    async def test_provision_subscriber_creates_workflow_in_db(self, async_db_session, test_tenant):
         """Test that provision_subscriber creates and persists workflow"""
 
         # Mock the saga's execute_workflow to simulate successful completion
@@ -70,9 +77,7 @@ class TestProvisionSubscriberIntegration:
             )
 
             # Execute
-            result = await service.provision_subscriber(
-                request, initiator_id="test-user"
-            )
+            result = await service.provision_subscriber(request, initiator_id="test-user")
 
             # Verify result
             assert result is not None
@@ -92,9 +97,7 @@ class TestProvisionSubscriberIntegration:
             assert workflow.tenant_id == test_tenant.id
             assert workflow.initiator_id == "test-user"
 
-    async def test_provision_subscriber_with_ipv6(
-        self, async_db_session, test_tenant
-    ):
+    async def test_provision_subscriber_with_ipv6(self, async_db_session, test_tenant):
         """Test provisioning with IPv6 configuration"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -140,9 +143,7 @@ class TestProvisionSubscriberIntegration:
             assert workflow.input_data.get("ipv6_prefix") == "2001:db8::/56"
             assert workflow.context.get("ipv6_prefix") == "2001:db8::/56"
 
-    async def test_provision_subscriber_workflow_failure(
-        self, async_db_session, test_tenant
-    ):
+    async def test_provision_subscriber_workflow_failure(self, async_db_session, test_tenant):
         """Test that workflow failure is properly handled"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -176,10 +177,14 @@ class TestProvisionSubscriberIntegration:
                 await service.provision_subscriber(request)
 
             # Verify workflow still created with FAILED status
-            stmt = select(OrchestrationWorkflow).where(
-                OrchestrationWorkflow.tenant_id == test_tenant.id,
-                OrchestrationWorkflow.workflow_type == WorkflowType.PROVISION_SUBSCRIBER,
-            ).order_by(OrchestrationWorkflow.created_at.desc())
+            stmt = (
+                select(OrchestrationWorkflow)
+                .where(
+                    OrchestrationWorkflow.tenant_id == test_tenant.id,
+                    OrchestrationWorkflow.workflow_type == WorkflowType.PROVISION_SUBSCRIBER,
+                )
+                .order_by(OrchestrationWorkflow.created_at.desc())
+            )
 
             db_result = await async_db_session.execute(stmt)
             workflow = db_result.scalar()
@@ -193,9 +198,7 @@ class TestProvisionSubscriberIntegration:
 class TestDeprovisionSubscriberIntegration:
     """Integration tests for subscriber deprovisioning"""
 
-    async def test_deprovision_subscriber_success(
-        self, async_db_session, test_tenant
-    ):
+    async def test_deprovision_subscriber_success(self, async_db_session, test_tenant):
         """Test successful subscriber deprovisioning"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -221,9 +224,7 @@ class TestDeprovisionSubscriberIntegration:
                 reason="Customer requested cancellation",
             )
 
-            result = await service.deprovision_subscriber(
-                request, initiator_id="admin-user"
-            )
+            result = await service.deprovision_subscriber(request, initiator_id="admin-user")
 
             # Verify workflow created
             stmt = select(OrchestrationWorkflow).where(
@@ -241,9 +242,7 @@ class TestDeprovisionSubscriberIntegration:
 class TestActivateServiceIntegration:
     """Integration tests for service activation"""
 
-    async def test_activate_service_success(
-        self, async_db_session, test_tenant
-    ):
+    async def test_activate_service_success(self, async_db_session, test_tenant):
         """Test successful service activation"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -266,9 +265,7 @@ class TestActivateServiceIntegration:
                 service_plan_id="plan-premium",
             )
 
-            result = await service.activate_service(
-                request, initiator_id="system"
-            )
+            result = await service.activate_service(request, initiator_id="system")
 
             # Verify workflow
             stmt = select(OrchestrationWorkflow).where(
@@ -285,9 +282,7 @@ class TestActivateServiceIntegration:
 class TestSuspendServiceIntegration:
     """Integration tests for service suspension"""
 
-    async def test_suspend_service_success(
-        self, async_db_session, test_tenant
-    ):
+    async def test_suspend_service_success(self, async_db_session, test_tenant):
         """Test successful service suspension"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -310,9 +305,7 @@ class TestSuspendServiceIntegration:
                 reason="Non-payment",
             )
 
-            result = await service.suspend_service(
-                request, initiator_id="billing-system"
-            )
+            result = await service.suspend_service(request, initiator_id="billing-system")
 
             # Verify workflow
             stmt = select(OrchestrationWorkflow).where(
@@ -330,9 +323,7 @@ class TestSuspendServiceIntegration:
 class TestWorkflowRetryIntegration:
     """Integration tests for workflow retry"""
 
-    async def test_retry_failed_workflow(
-        self, async_db_session, test_tenant
-    ):
+    async def test_retry_failed_workflow(self, async_db_session, test_tenant):
         """Test retrying a failed workflow"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
@@ -387,9 +378,7 @@ class TestWorkflowRetryIntegration:
 class TestWorkflowCancellationIntegration:
     """Integration tests for workflow cancellation"""
 
-    async def test_cancel_running_workflow(
-        self, async_db_session, test_tenant
-    ):
+    async def test_cancel_running_workflow(self, async_db_session, test_tenant):
         """Test cancelling a running workflow"""
 
         with patch.object(OrchestrationService, "_register_all_handlers"):

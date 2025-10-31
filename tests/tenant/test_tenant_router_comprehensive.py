@@ -4,9 +4,10 @@ Comprehensive tests for tenant management API router.
 Tests all REST endpoints for tenant operations.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
+import pytest_asyncio
 from fastapi import status
 from httpx import AsyncClient
 
@@ -14,15 +15,20 @@ from src.dotmac.platform.tenant.models import (
     TenantPlanType,
 )
 
+pytestmark = pytest.mark.integration
 
-@pytest.fixture
+
+@pytest_asyncio.fixture
 async def auth_headers(async_client):
     """Get authentication headers for API requests."""
     # Mock authentication - in real tests this would use actual auth
-    return {"Authorization": "Bearer test-token"}
+    return {
+        "Authorization": "Bearer test-token",
+        "X-Tenant-ID": "test-tenant",
+    }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_tenant_id(async_client, auth_headers, tenant_service):
     """Create a sample tenant and return its ID."""
     from src.dotmac.platform.tenant.schemas import TenantCreate
@@ -295,7 +301,7 @@ class TestTenantUsageEndpoints:
 
     async def test_record_usage(self, async_client: AsyncClient, auth_headers, sample_tenant_id):
         """Test POST /api/v1/tenants/{id}/usage - Record usage."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         response = await async_client.post(
             f"/api/v1/tenants/{sample_tenant_id}/usage",
             headers=auth_headers,

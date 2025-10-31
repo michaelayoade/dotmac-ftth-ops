@@ -27,6 +27,7 @@ from dotmac.platform.billing.tax.calculator import (
 )
 
 
+@pytest.mark.unit
 class TestTaxRateModel:
     """Test TaxRate Pydantic model."""
 

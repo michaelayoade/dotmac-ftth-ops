@@ -8,7 +8,7 @@ import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.events.core import Event, event_bus
-from dotmac.platform.fault_management.models import AlarmSeverity, AlarmSource
+from dotmac.platform.fault_management.models import Alarm, AlarmSeverity, AlarmSource
 from dotmac.platform.fault_management.schemas import AlarmCreate
 from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.fault_management.sla_service import SLAMonitoringService
@@ -45,17 +45,19 @@ async def handle_device_down(event: Event, session: AsyncSession) -> None:
         recommended_action="Check device status, connectivity, and power supply",
     )
 
-    alarm = await service.create(alarm_data)
+    alarm_response = await service.create(alarm_data)
 
     logger.info(
         "event.device_down.alarm_created",
         device_id=data["device_id"],
-        alarm_id=alarm.id,
+        alarm_id=alarm_response.id,
     )
 
     # Check SLA impact
     sla_service = SLAMonitoringService(session, tenant_id)
-    await sla_service.check_alarm_impact(await session.get(type(alarm), alarm.id))
+    alarm_model = await session.get(Alarm, alarm_response.id)
+    if alarm_model:
+        await sla_service.check_alarm_impact(alarm_model)
 
 
 @event_bus.subscribe("device.up")  # type: ignore[misc]
@@ -150,12 +152,14 @@ async def handle_service_outage(event: Event, session: AsyncSession) -> None:
         metadata=data,
     )
 
-    alarm = await service.create(alarm_data)
+    alarm_response = await service.create(alarm_data)
 
     # Check SLA and record downtime
     if data.get("customer_id"):
         sla_service = SLAMonitoringService(session, tenant_id)
-        await sla_service.check_alarm_impact(await session.get(type(alarm), alarm.id))
+        alarm_model = await session.get(Alarm, alarm_response.id)
+        if alarm_model:
+            await sla_service.check_alarm_impact(alarm_model)
 
     logger.warning(
         "event.service_outage.alarm_created",

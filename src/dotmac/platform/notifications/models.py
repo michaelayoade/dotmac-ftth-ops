@@ -9,7 +9,7 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import Boolean, String, Text
+from sqlalchemy import Boolean, String, Text, UniqueConstraint
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
@@ -34,6 +34,9 @@ class NotificationType(str, Enum):
     SERVICE_RESTORED = "service_restored"
     BANDWIDTH_LIMIT_REACHED = "bandwidth_limit_reached"
     CONNECTION_QUALITY_DEGRADED = "connection_quality_degraded"
+
+    # Fault/Alarm events
+    ALARM = "alarm"
 
     # Billing events
     INVOICE_GENERATED = "invoice_generated"
@@ -160,6 +163,9 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):  # type: ignore
     """User preferences for notification delivery."""
 
     __tablename__ = "notification_preferences"
+    __table_args__ = (
+        UniqueConstraint("tenant_id", "user_id", name="uq_notification_pref_tenant_user"),
+    )
 
     # Primary key
     id: Mapped[UUID] = mapped_column(
@@ -167,9 +173,7 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):  # type: ignore
     )
 
     # User
-    user_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True), nullable=False, unique=True, index=True
-    )
+    user_id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), nullable=False, index=True)
 
     # Global preferences
     enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)

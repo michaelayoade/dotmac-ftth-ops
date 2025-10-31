@@ -1,4 +1,5 @@
 """Integration tests for router registration system."""
+import pytest
 
 from importlib import import_module
 from unittest.mock import Mock, patch
@@ -7,6 +8,9 @@ from fastapi import APIRouter, FastAPI
 
 from dotmac.platform.routers import ROUTER_CONFIGS, register_routers
 
+
+
+pytestmark = pytest.mark.integration
 
 class TestRouterRegistration:
     """Test router registration functionality."""
@@ -25,9 +29,9 @@ class TestRouterRegistration:
             try:
                 module = import_module(config.module_path)
                 router = getattr(module, config.router_name)
-                assert isinstance(
-                    router, APIRouter
-                ), f"{config.module_path}.{config.router_name} is not an APIRouter"
+                assert isinstance(router, APIRouter), (
+                    f"{config.module_path}.{config.router_name} is not an APIRouter"
+                )
             except (ImportError, AttributeError) as e:
                 failed_imports.append(
                     {"module": config.module_path, "router": config.router_name, "error": str(e)}
@@ -37,10 +41,9 @@ class TestRouterRegistration:
         if skipped_configs:
             print(f"Skipped {len(skipped_configs)} commented configs: {skipped_configs}")
 
-        assert (
-            len(failed_imports) == 0
-        ), f"Failed to import {len(failed_imports)} routers:\n" + "\n".join(
-            [f"  - {f['module']}.{f['router']}: {f['error']}" for f in failed_imports]
+        assert len(failed_imports) == 0, (
+            f"Failed to import {len(failed_imports)} routers:\n"
+            + "\n".join([f"  - {f['module']}.{f['router']}: {f['error']}" for f in failed_imports])
         )
 
     @patch("dotmac.platform.settings.settings")
@@ -78,7 +81,9 @@ class TestRouterRegistration:
             assert config.router_name, "router_name is required"
             # Allow empty prefix if description exists (router defines its own prefix)
             if not config.prefix:
-                assert config.description, f"{config.module_path}:{config.router_name} has empty prefix and no description"
+                assert config.description, (
+                    f"{config.module_path}:{config.router_name} has empty prefix and no description"
+                )
             assert config.tags, "tags should not be empty"
             assert isinstance(config.tags, list), "tags should be a list"
 
@@ -115,6 +120,7 @@ class TestRouterRegistration:
                 "dotmac.platform.tenant.domain_verification_router:router",
             },
             "/api/v1": {
+                "dotmac.platform.access.router:router",
                 "dotmac.platform.analytics.metrics_router:router",
                 "dotmac.platform.analytics.router:analytics_router",
                 "dotmac.platform.ansible.router:router",
@@ -122,9 +128,6 @@ class TestRouterRegistration:
                 "dotmac.platform.auth.api_keys_metrics_router:router",
                 "dotmac.platform.auth.api_keys_router:router",
                 "dotmac.platform.auth.metrics_router:router",
-                "dotmac.platform.auth.platform_admin_router:router",
-                "dotmac.platform.auth.rbac_read_router:router",
-                "dotmac.platform.auth.rbac_router:router",
                 "dotmac.platform.auth.router:auth_router",
                 "dotmac.platform.billing.bank_accounts.router:router",
                 "dotmac.platform.billing.dunning.router:router",
@@ -139,11 +142,12 @@ class TestRouterRegistration:
                 "dotmac.platform.config.router:router",
                 "dotmac.platform.contacts.router:router",
                 "dotmac.platform.crm.router:router",
-                "dotmac.platform.customer_management.router:router",
+                "dotmac.platform.customer_portal.router:router",
                 "dotmac.platform.data_import.router:router",
                 "dotmac.platform.data_transfer.router:data_transfer_router",
                 "dotmac.platform.deployment.router:router",
                 "dotmac.platform.diagnostics.router:router",
+                "dotmac.platform.fault_management.oncall_router:router",
                 "dotmac.platform.feature_flags.router:feature_flags_router",
                 "dotmac.platform.fiber.router:router",
                 "dotmac.platform.file_storage.metrics_router:router",
@@ -219,9 +223,9 @@ class TestRouterRegistration:
                 else:
                     unexpected_duplicates.append(f"{prefix}: {router_ids}")
 
-        assert (
-            len(unexpected_duplicates) == 0
-        ), f"Unexpected duplicate prefixes found: {unexpected_duplicates}"
+        assert len(unexpected_duplicates) == 0, (
+            f"Unexpected duplicate prefixes found: {unexpected_duplicates}"
+        )
 
     def test_router_requires_auth_flag(self):
         """Test routers that require authentication have the flag set."""
@@ -253,9 +257,9 @@ class TestRouterRegistration:
                             f"{config.module_path}:{config.router_name} has double prefix: {config.prefix}"
                         )
 
-        assert (
-            not double_prefixes
-        ), f"Double API prefixes detected (regression): {', '.join(double_prefixes)}"
+        assert not double_prefixes, (
+            f"Double API prefixes detected (regression): {', '.join(double_prefixes)}"
+        )
 
     def test_all_prefixes_start_with_slash(self):
         """Ensure all prefixes start with a forward slash or are empty."""
@@ -268,9 +272,9 @@ class TestRouterRegistration:
                     f"{config.module_path}:{config.router_name} has invalid prefix: {config.prefix}"
                 )
 
-        assert (
-            not invalid_prefixes
-        ), f"Invalid prefixes (must start with /): {', '.join(invalid_prefixes)}"
+        assert not invalid_prefixes, (
+            f"Invalid prefixes (must start with /): {', '.join(invalid_prefixes)}"
+        )
 
     def test_no_trailing_slashes_in_prefixes(self):
         """Ensure no prefix ends with a trailing slash (except root '/')."""
@@ -282,9 +286,9 @@ class TestRouterRegistration:
                     f"{config.module_path}:{config.router_name} has prefix with trailing slash: {config.prefix}"
                 )
 
-        assert (
-            not trailing_slashes
-        ), f"Prefixes with trailing slashes: {', '.join(trailing_slashes)}"
+        assert not trailing_slashes, (
+            f"Prefixes with trailing slashes: {', '.join(trailing_slashes)}"
+        )
 
     def test_public_routes_dont_require_auth(self):
         """Ensure routes with '/public' in their prefix don't require auth."""
@@ -296,9 +300,9 @@ class TestRouterRegistration:
                     f"{config.module_path}:{config.router_name} ({config.prefix})"
                 )
 
-        assert (
-            not auth_on_public
-        ), f"Public routes should not require auth: {', '.join(auth_on_public)}"
+        assert not auth_on_public, (
+            f"Public routes should not require auth: {', '.join(auth_on_public)}"
+        )
 
     def test_router_count_in_expected_range(self):
         """
@@ -311,9 +315,9 @@ class TestRouterRegistration:
 
         # Expected range: 85-100 routers (current is 87)
         # Adjust these thresholds as the platform grows
-        assert (
-            85 <= router_count <= 100
-        ), f"Unexpected router count: {router_count}. Expected 85-100. Verify no routers were accidentally removed or too many added."
+        assert 85 <= router_count <= 100, (
+            f"Unexpected router count: {router_count}. Expected 85-100. Verify no routers were accidentally removed or too many added."
+        )
 
     def test_router_prefixes_have_consistent_api_version(self):
         """Ensure API versioning is consistent across routers."""
@@ -341,9 +345,7 @@ class TestRouterRegistration:
                         f"{config.module_path}:{config.router_name} has non-standard API version: {config.prefix}"
                     )
 
-        assert (
-            not invalid_versions
-        ), f"Non-standard API versions: {', '.join(invalid_versions)}"
+        assert not invalid_versions, f"Non-standard API versions: {', '.join(invalid_versions)}"
 
 
 class TestRouterPrefixExplicitness:
@@ -358,9 +360,9 @@ class TestRouterPrefixExplicitness:
         sample_routers_to_check = [
             ("dotmac.platform.auth.router", "auth_router"),
             ("dotmac.platform.billing.router", "router"),
-            ("dotmac.platform.customer_management.router", "router"),
             ("dotmac.platform.tenant.router", "router"),
             ("dotmac.platform.webhooks.router", "router"),
+            ("dotmac.platform.customer_portal.router", "router"),  # Added in Phase 2
         ]
 
         missing_prefixes = []
@@ -371,9 +373,7 @@ class TestRouterPrefixExplicitness:
                 router_instance = getattr(module, router_name, None)
 
                 if router_instance is None:
-                    missing_prefixes.append(
-                        f"Router '{router_name}' not found in {module_path}"
-                    )
+                    missing_prefixes.append(f"Router '{router_name}' not found in {module_path}")
                     continue
 
                 # Check if router has a prefix attribute
@@ -396,10 +396,8 @@ class TestRouterPrefixExplicitness:
                 # Skip if module cannot be imported (separate test handles this)
                 continue
             except Exception as e:
-                missing_prefixes.append(
-                    f"Error checking {module_path}:{router_name} - {str(e)}"
-                )
+                missing_prefixes.append(f"Error checking {module_path}:{router_name} - {str(e)}")
 
-        assert (
-            not missing_prefixes
-        ), f"Routers missing explicit prefixes: {', '.join(missing_prefixes)}"
+        assert not missing_prefixes, (
+            f"Routers missing explicit prefixes: {', '.join(missing_prefixes)}"
+        )

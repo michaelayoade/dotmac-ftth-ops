@@ -8,19 +8,25 @@ Tests all audit activity endpoints including:
 - Get single activity by ID
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
-from dotmac.platform.audit.router import ensure_audit_access, router as audit_router
+from dotmac.platform.audit.router import ensure_audit_access
+from dotmac.platform.audit.router import router as audit_router
 from dotmac.platform.auth.core import UserInfo, get_current_user, get_current_user_optional
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
+
+
+pytestmark = pytest.mark.integration
 
 SampleActivities = tuple[list[AuditActivity], str]
 
@@ -57,7 +63,7 @@ def client(app: FastAPI, async_db_session: AsyncSession, test_user: UserInfo) ->
     return TestClient(app)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
     """Create sample audit activities."""
     user_id = str(uuid4())
@@ -75,7 +81,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             resource_type="user",
             resource_id=user_id,
             ip_address="192.168.1.1",
-            created_at=datetime.now(UTC) - timedelta(days=1),
+            timestamp=datetime.now(timezone.utc) - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         ),
         AuditActivity(
             id=uuid4(),
@@ -85,7 +92,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="logout",
             description="User logged out",
-            created_at=datetime.now(UTC) - timedelta(hours=12),
+            timestamp=datetime.now(timezone.utc) - timedelta(hours=12),
+            created_at=datetime.now(timezone.utc) - timedelta(hours=12),
         ),
         # Medium severity activity
         AuditActivity(
@@ -98,7 +106,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             description="Secret created",
             resource_type="secret",
             resource_id=str(uuid4()),
-            created_at=datetime.now(UTC) - timedelta(days=2),
+            timestamp=datetime.now(timezone.utc) - timedelta(days=2),
+            created_at=datetime.now(timezone.utc) - timedelta(days=2),
         ),
         # High severity activity
         AuditActivity(
@@ -109,7 +118,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="api_error",
             description="API error occurred",
-            created_at=datetime.now(UTC) - timedelta(days=5),
+            timestamp=datetime.now(timezone.utc) - timedelta(days=5),
+            created_at=datetime.now(timezone.utc) - timedelta(days=5),
         ),
         # Old activity (35 days ago)
         AuditActivity(
@@ -120,7 +130,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="test-tenant",
             action="create_user",
             description="User created",
-            created_at=datetime.now(UTC) - timedelta(days=35),
+            timestamp=datetime.now(timezone.utc) - timedelta(days=35),
+            created_at=datetime.now(timezone.utc) - timedelta(days=35),
         ),
         # Different tenant activity (should be filtered out)
         AuditActivity(
@@ -131,7 +142,8 @@ async def sample_activities(async_db_session: AsyncSession) -> SampleActivities:
             tenant_id="different-tenant",
             action="login",
             description="User logged in",
-            created_at=datetime.now(UTC) - timedelta(days=1),
+            timestamp=datetime.now(timezone.utc) - timedelta(days=1),
+            created_at=datetime.now(timezone.utc) - timedelta(days=1),
         ),
     ]
 
@@ -346,7 +358,7 @@ class TestRecentActivities:
         data = response.json()
 
         # Should only include activities from last 1 day
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         for activity in data:
             created_at = datetime.fromisoformat(activity["created_at"].replace("Z", "+00:00"))
             assert (now - created_at).days <= 1
@@ -368,7 +380,7 @@ class TestUserActivities:
 
     @pytest.mark.asyncio
     async def test_get_user_activities(
-        self, authenticated_client: TestClient, sample_activities: SampleActivities
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
     ) -> None:
         """Test getting activities for specific user."""
         activities, user_id = sample_activities
@@ -387,7 +399,7 @@ class TestUserActivities:
 
     @pytest.mark.asyncio
     async def test_get_user_activities_with_limit(
-        self, authenticated_client: TestClient, sample_activities: SampleActivities
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
     ) -> None:
         """Test getting user activities with limit."""
         activities, user_id = sample_activities
@@ -403,7 +415,7 @@ class TestUserActivities:
 
     @pytest.mark.asyncio
     async def test_get_user_activities_nonexistent_user(
-        self, authenticated_client: TestClient
+        self, authenticated_client: AsyncClient
     ) -> None:
         """Test getting activities for non-existent user."""
         fake_user_id = str(uuid4())
@@ -425,7 +437,7 @@ class TestActivitySummary:
 
     @pytest.mark.asyncio
     async def test_get_activity_summary_default(
-        self, authenticated_client: TestClient, sample_activities: SampleActivities
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
     ) -> None:
         """Test getting activity summary with default parameters."""
         response = await authenticated_client.get("/api/v1/audit/activities/summary")
@@ -442,7 +454,7 @@ class TestActivitySummary:
 
     @pytest.mark.asyncio
     async def test_get_activity_summary_with_days(
-        self, authenticated_client: TestClient, sample_activities: SampleActivities
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
     ) -> None:
         """Test getting activity summary for specific timeframe."""
         response = await authenticated_client.get("/api/v1/audit/activities/summary?days=7")
@@ -462,7 +474,7 @@ class TestSingleActivity:
 
     @pytest.mark.asyncio
     async def test_get_activity_by_id(
-        self, authenticated_client: TestClient, sample_activities: SampleActivities
+        self, authenticated_client: AsyncClient, sample_activities: SampleActivities
     ) -> None:
         """Test getting single activity by ID."""
         activities, user_id = sample_activities
@@ -478,7 +490,7 @@ class TestSingleActivity:
         assert "severity" in data
 
     @pytest.mark.asyncio
-    async def test_get_activity_nonexistent_id(self, authenticated_client: TestClient) -> None:
+    async def test_get_activity_nonexistent_id(self, authenticated_client: AsyncClient) -> None:
         """Test getting non-existent activity returns 404."""
         fake_id = str(uuid4())
 
@@ -487,7 +499,7 @@ class TestSingleActivity:
         assert response.status_code == 404
 
     @pytest.mark.asyncio
-    async def test_get_activity_invalid_uuid(self, authenticated_client: TestClient) -> None:
+    async def test_get_activity_invalid_uuid(self, authenticated_client: AsyncClient) -> None:
         """Test with invalid UUID format."""
         response = await authenticated_client.get("/api/v1/audit/activities/not-a-uuid")
 

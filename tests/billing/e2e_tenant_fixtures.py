@@ -7,10 +7,11 @@ Creates realistic billing data for testing the tenant portal UI:
 - Complete billing history for a tenant
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
@@ -22,7 +23,7 @@ from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentMethodType,
 from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def tenant_portal_billing_data(async_session: AsyncSession):
     """
     Create comprehensive billing data for tenant portal E2E testing.
@@ -52,7 +53,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
         current_users=15,
         current_api_calls=125000,
         current_storage_gb=45.5,
-        created_at=datetime.now(UTC) - timedelta(days=365),
+        created_at=datetime.now(timezone.utc) - timedelta(days=365),
     )
     async_session.add(tenant)
 
@@ -75,8 +76,8 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
                 "zip": "94105",
                 "country": "US",
             },
-            issue_date=datetime.now(UTC) - timedelta(days=45 + i * 10),
-            due_date=datetime.now(UTC) - timedelta(days=15 + i * 5),  # Past due
+            issue_date=datetime.now(timezone.utc) - timedelta(days=45 + i * 10),
+            due_date=datetime.now(timezone.utc) - timedelta(days=15 + i * 5),  # Past due
             currency="USD",
             subtotal=299900,  # $2,999.00
             tax_amount=24999,  # $249.99 (CA tax)
@@ -87,7 +88,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             credit_applications=[],
             status=InvoiceStatus.OPEN,
             payment_status=PaymentStatus.FAILED,
-            created_at=datetime.now(UTC) - timedelta(days=46 + i * 10),
+            created_at=datetime.now(timezone.utc) - timedelta(days=46 + i * 10),
         )
         invoices.append(invoice)
         async_session.add(invoice)
@@ -108,8 +109,8 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
                 "zip": "94105",
                 "country": "US",
             },
-            issue_date=datetime.now(UTC) - timedelta(days=5 + i * 2),
-            due_date=datetime.now(UTC) + timedelta(days=15 + i * 5),  # Due soon
+            issue_date=datetime.now(timezone.utc) - timedelta(days=5 + i * 2),
+            due_date=datetime.now(timezone.utc) + timedelta(days=15 + i * 5),  # Due soon
             currency="USD",
             subtotal=299900,  # $2,999.00
             tax_amount=24999,  # $249.99
@@ -120,7 +121,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             credit_applications=[],
             status=InvoiceStatus.OPEN,
             payment_status=PaymentStatus.PENDING,
-            created_at=datetime.now(UTC) - timedelta(days=6 + i * 2),
+            created_at=datetime.now(timezone.utc) - timedelta(days=6 + i * 2),
         )
         invoices.append(invoice)
         async_session.add(invoice)
@@ -141,8 +142,8 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
                 "zip": "94105",
                 "country": "US",
             },
-            issue_date=datetime.now(UTC) - timedelta(days=60 + i * 30),
-            due_date=datetime.now(UTC) - timedelta(days=30 + i * 30),
+            issue_date=datetime.now(timezone.utc) - timedelta(days=60 + i * 30),
+            due_date=datetime.now(timezone.utc) - timedelta(days=30 + i * 30),
             currency="USD",
             subtotal=299900,  # $2,999.00
             tax_amount=24999,  # $249.99
@@ -153,8 +154,8 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             credit_applications=[],
             status=InvoiceStatus.PAID,
             payment_status=PaymentStatus.SUCCEEDED,
-            paid_at=datetime.now(UTC) - timedelta(days=35 + i * 30),
-            created_at=datetime.now(UTC) - timedelta(days=61 + i * 30),
+            paid_at=datetime.now(timezone.utc) - timedelta(days=35 + i * 30),
+            created_at=datetime.now(timezone.utc) - timedelta(days=61 + i * 30),
         )
         invoices.append(invoice)
         async_session.add(invoice)
@@ -174,8 +175,8 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             "zip": "94105",
             "country": "US",
         },
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=299900,  # $2,999.00
         tax_amount=24999,  # $249.99
@@ -186,7 +187,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
         credit_applications=[],
         status=InvoiceStatus.DRAFT,
         payment_status=PaymentStatus.PENDING,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     invoices.append(draft_invoice)
     async_session.add(draft_invoice)
@@ -214,7 +215,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             provider="stripe",
             provider_payment_id=f"pi_test_success_{uuid4().hex[:8]}",
             provider_fee=972,  # 2.9% + $0.30 = $97.17
-            created_at=datetime.now(UTC) - timedelta(days=35 + i * 30),
+            created_at=datetime.now(timezone.utc) - timedelta(days=35 + i * 30),
         )
         payments.append(payment)
         async_session.add(payment)
@@ -248,7 +249,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             provider_fee=0,
             failure_reason="Your card was declined. Please use a different payment method.",
             retry_count=i + 1,
-            created_at=datetime.now(UTC) - timedelta(days=10 + i * 3),
+            created_at=datetime.now(timezone.utc) - timedelta(days=10 + i * 3),
         )
         payments.append(payment)
         async_session.add(payment)
@@ -280,7 +281,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             provider_payment_id=f"pi_test_{status.value.lower()}_{uuid4().hex[:8]}",
             provider_fee=0,  # ACH transfers have no fee
             retry_count=0,
-            created_at=datetime.now(UTC) - timedelta(days=2 + i),
+            created_at=datetime.now(timezone.utc) - timedelta(days=2 + i),
         )
         payments.append(payment)
         async_session.add(payment)
@@ -312,7 +313,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
             provider_payment_id=f"pi_test_addon_{uuid4().hex[:8]}",
             provider_fee=320,  # 2.9% + $0.30 = $29.27 + $0.30
             retry_count=0,
-            created_at=datetime.now(UTC) - timedelta(days=i * 7),
+            created_at=datetime.now(timezone.utc) - timedelta(days=i * 7),
         )
         payments.append(payment)
         async_session.add(payment)
@@ -332,7 +333,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
                 [
                     i
                     for i in invoices
-                    if i.status == InvoiceStatus.OPEN and i.due_date < datetime.now(UTC)
+                    if i.status == InvoiceStatus.OPEN and i.due_date < datetime.now(timezone.utc)
                 ]
             ),
             "paid_invoices": len([i for i in invoices if i.status == InvoiceStatus.PAID]),
@@ -352,7 +353,7 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
     }
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def minimal_tenant_billing_data(async_session: AsyncSession):
     """
     Create minimal billing data for smoke testing.
@@ -374,7 +375,7 @@ async def minimal_tenant_billing_data(async_session: AsyncSession):
         status=TenantStatus.ACTIVE,
         plan_type=TenantPlanType.STARTER,
         billing_cycle=BillingCycle.MONTHLY,
-        created_at=datetime.now(UTC) - timedelta(days=30),
+        created_at=datetime.now(timezone.utc) - timedelta(days=30),
     )
     async_session.add(tenant)
 
@@ -386,8 +387,8 @@ async def minimal_tenant_billing_data(async_session: AsyncSession):
         customer_id=customer_id,
         billing_email="test@minimal.com",
         billing_address={"street": "123 Main St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=9900,  # $99.00
         tax_amount=0,
@@ -398,7 +399,7 @@ async def minimal_tenant_billing_data(async_session: AsyncSession):
         credit_applications=[],
         status=InvoiceStatus.OPEN,
         payment_status=PaymentStatus.PENDING,
-        created_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
     )
     async_session.add(invoice)
 
@@ -415,7 +416,7 @@ async def minimal_tenant_billing_data(async_session: AsyncSession):
         provider="stripe",
         provider_payment_id=f"pi_minimal_{uuid4().hex[:8]}",
         provider_fee=320,
-        created_at=datetime.now(UTC) - timedelta(days=5),
+        created_at=datetime.now(timezone.utc) - timedelta(days=5),
     )
     async_session.add(payment)
 

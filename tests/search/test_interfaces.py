@@ -15,6 +15,7 @@ from dotmac.platform.search.interfaces import (
 )
 
 
+@pytest.mark.unit
 class TestSearchEnums:
     """Test search enumeration types."""
 
@@ -32,6 +33,7 @@ class TestSearchEnums:
         assert SortOrder.DESC == "desc"
 
 
+@pytest.mark.unit
 class TestSearchFilter:
     """Test SearchFilter dataclass."""
 
@@ -67,6 +69,7 @@ class TestSearchFilter:
         assert filter_obj.value == {"key": "value"}
 
 
+@pytest.mark.unit
 class TestSearchQuery:
     """Test SearchQuery dataclass."""
 
@@ -136,6 +139,7 @@ class TestSearchQuery:
             assert query.search_type == search_type
 
 
+@pytest.mark.unit
 class TestSearchResult:
     """Test SearchResult dataclass."""
 
@@ -182,6 +186,7 @@ class TestSearchResult:
         assert result.data["stats"]["views"] == 100
 
 
+@pytest.mark.unit
 class TestSearchResponse:
     """Test SearchResponse dataclass."""
 
@@ -223,6 +228,7 @@ class TestSearchResponse:
         assert response.took_ms == 5
 
 
+@pytest.mark.unit
 class TestSearchBackend:
     """Test SearchBackend abstract base class."""
 
@@ -285,6 +291,7 @@ class TestSearchBackend:
         assert isinstance(backend, SearchBackend)
 
 
+@pytest.mark.unit
 class TestDataclassImmutability:
     """Test that dataclasses are properly configured."""
 
@@ -307,6 +314,7 @@ class TestDataclassImmutability:
         assert len(query.fields) == 3
 
 
+@pytest.mark.unit
 class TestDataValidation:
     """Test implicit data validation through usage patterns."""
 

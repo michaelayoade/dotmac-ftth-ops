@@ -37,6 +37,10 @@ class ServiceEndpointSettings(BaseModel):  # BaseModel resolves to Any in isolat
     verify_ssl: bool = Field(True, description="Verify SSL certificates")
     timeout_seconds: float = Field(30.0, ge=1.0, description="HTTP timeout in seconds")
     max_retries: int = Field(2, ge=0, description="Number of automatic retries for requests")
+    extras: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Additional integration-specific configuration values",
+    )
 
 
 class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolation
@@ -90,6 +94,14 @@ class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolatio
     # Prometheus metrics endpoint
     prometheus_enabled: bool = Field(True, description="Enable Prometheus metrics")
     prometheus_port: int = Field(8001, description="Prometheus metrics port")
+    alertmanager_webhook_secret: str | None = Field(
+        default=None,
+        description="Shared secret/token required for Alertmanager webhook requests",
+    )
+    alertmanager_rate_limit: str = Field(
+        default="120/minute",
+        description="Rate limit applied to the Alertmanager webhook endpoint",
+    )
 
 
 def _default_observability_settings() -> ObservabilitySettings:
@@ -149,6 +161,50 @@ class OSSSettings(BaseModel):  # BaseModel resolves to Any in isolation
         ),
         description="Ansible AWX automation configuration",
     )
+    prometheus: ServiceEndpointSettings = Field(
+        default_factory=lambda: ServiceEndpointSettings(
+            url=os.getenv("PROMETHEUS_URL", "http://localhost:9090"),
+            api_token=os.getenv("PROMETHEUS_API_TOKEN"),
+            username=os.getenv("PROMETHEUS_USERNAME"),
+            password=os.getenv("PROMETHEUS_PASSWORD"),
+            verify_ssl=os.getenv("PROMETHEUS_VERIFY_SSL", "true").lower() not in {"false", "0"},
+            timeout_seconds=float(os.getenv("PROMETHEUS_TIMEOUT_SECONDS", "15")),
+            max_retries=int(os.getenv("PROMETHEUS_MAX_RETRIES", "2")),
+            extras={
+                "traffic_queries": {
+                    "rx_rate": os.getenv(
+                        "PROMETHEUS_RX_RATE_QUERY",
+                        'sum(rate(node_network_receive_bytes_total{instance="<<device_id>>"}[5m]))',
+                    ),
+                    "tx_rate": os.getenv(
+                        "PROMETHEUS_TX_RATE_QUERY",
+                        'sum(rate(node_network_transmit_bytes_total{instance="<<device_id>>"}[5m]))',
+                    ),
+                    "rx_bytes": os.getenv(
+                        "PROMETHEUS_RX_BYTES_QUERY",
+                        'sum(increase(node_network_receive_bytes_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "tx_bytes": os.getenv(
+                        "PROMETHEUS_TX_BYTES_QUERY",
+                        'sum(increase(node_network_transmit_bytes_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "rx_packets": os.getenv(
+                        "PROMETHEUS_RX_PACKETS_QUERY",
+                        'sum(increase(node_network_receive_packets_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                    "tx_packets": os.getenv(
+                        "PROMETHEUS_TX_PACKETS_QUERY",
+                        'sum(increase(node_network_transmit_packets_total{instance="<<device_id>>"}[1h]))',
+                    ),
+                },
+                "device_placeholder": os.getenv(
+                    "PROMETHEUS_DEVICE_PLACEHOLDER",
+                    "<<device_id>>",
+                ),
+            },
+        ),
+        description="Prometheus metrics API configuration",
+    )
 
 
 class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
@@ -186,6 +242,15 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
         "", description="HTTP API authentication key (load from Vault in production)"
     )
 
+    # Multi-vendor support
+    default_vendor: str = Field(
+        "mikrotik",
+        description="Default NAS vendor for new deployments (mikrotik, cisco, huawei, juniper, generic)",
+    )
+    vendor_aware: bool = Field(
+        True, description="Enable vendor-specific attribute generation and CoA handling"
+    )
+
     def __init__(self, **data: Any):
         """Initialize with environment variable overrides."""
         # Load from environment if not explicitly provided
@@ -208,6 +273,13 @@ class RADIUSSettings(BaseModel):  # BaseModel resolves to Any in isolation
             data["http_api_url"] = os.getenv("RADIUS_HTTP_API_URL")
         if "http_api_key" not in data:
             data["http_api_key"] = os.getenv("RADIUS_HTTP_API_KEY", "")
+        if "default_vendor" not in data:
+            data["default_vendor"] = os.getenv("RADIUS_DEFAULT_VENDOR", "mikrotik")
+        if "vendor_aware" not in data:
+            data["vendor_aware"] = os.getenv("RADIUS_VENDOR_AWARE", "true").lower() in {
+                "true",
+                "1",
+            }
 
         # Dictionary paths - try bundled first, then environment, then system
         if "dictionary_path" not in data:
@@ -475,9 +547,7 @@ class Settings(BaseSettings):
     )
 
     # Server configuration
-    host: str = Field(
-        "0.0.0.0", description="Server host"
-    )  # nosec B104 - Production deployments use proxy
+    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")
@@ -521,10 +591,22 @@ class Settings(BaseSettings):
         username: str = Field("dotmac", description="Database username")
         password: str = Field("", description="Database password")
 
-        # Connection pool
-        pool_size: int = Field(10, description="Connection pool size")
-        max_overflow: int = Field(20, description="Max overflow connections")
-        pool_timeout: int = Field(30, description="Pool timeout in seconds")
+        # Connection pool (environment variable overrides for test tuning)
+        pool_size: int = Field(
+            10,
+            description="Connection pool size (override with PG_POOL_SIZE env var)",
+            validation_alias="PG_POOL_SIZE"
+        )
+        max_overflow: int = Field(
+            20,
+            description="Max overflow connections (override with PG_MAX_OVERFLOW env var)",
+            validation_alias="PG_MAX_OVERFLOW"
+        )
+        pool_timeout: int = Field(
+            30,
+            description="Pool timeout in seconds (override with PG_POOL_TIMEOUT env var)",
+            validation_alias="PG_POOL_TIMEOUT"
+        )
         pool_recycle: int = Field(3600, description="Recycle connections after seconds")
         pool_pre_ping: bool = Field(True, description="Test connections before use")
 
@@ -589,6 +671,46 @@ class Settings(BaseSettings):
             return f"redis://{self.host}:{self.port}/{self.session_db}"
 
     redis: RedisSettings = RedisSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # TimescaleDB Configuration (Time-Series Metrics)
+    # ============================================================
+
+    class TimescaleDBSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """TimescaleDB configuration for time-series data."""
+
+        model_config = ConfigDict()
+
+        enabled: bool = Field(False, description="Enable TimescaleDB integration")
+        host: str = Field("timescaledb", description="TimescaleDB host")
+        port: int = Field(5432, description="TimescaleDB port")
+        database: str = Field("metrics", description="TimescaleDB database name")
+        username: str = Field("timescale_user", description="TimescaleDB username")
+        password: str = Field("", description="TimescaleDB password")
+
+        # Connection pool
+        pool_size: int = Field(5, description="Connection pool size")
+        max_overflow: int = Field(10, description="Max overflow connections")
+        pool_timeout: int = Field(30, description="Pool timeout in seconds")
+        pool_recycle: int = Field(3600, description="Recycle connections after seconds")
+        pool_pre_ping: bool = Field(True, description="Test connections before use")
+
+        # Time-series specific settings
+        chunk_time_interval: str = Field("1 day", description="Hypertable chunk interval")
+        retention_days: int = Field(730, description="Data retention period (days)")
+        compression_after_days: int = Field(90, description="Compress data older than N days")
+
+        @property
+        def sqlalchemy_url(self) -> str:
+            """Build SQLAlchemy database URL for TimescaleDB."""
+            return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
+
+        @property
+        def is_configured(self) -> bool:
+            """Check if TimescaleDB is properly configured."""
+            return self.enabled and bool(self.password)
+
+    timescaledb: TimescaleDBSettings = TimescaleDBSettings()  # type: ignore[call-arg]
 
     # ============================================================
     # JWT & Authentication
@@ -1017,7 +1139,7 @@ class Settings(BaseSettings):
         # Payment processing
         require_payment_plugin: bool = Field(
             True,
-            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing."
+            description="Require payment plugin (fail if unavailable). MUST be True in production to prevent mock payments. Set False ONLY in development/testing.",
         )
 
         # Payment gateway credentials (load from Vault in production)

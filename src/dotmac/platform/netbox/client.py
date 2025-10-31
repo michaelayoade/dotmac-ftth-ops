@@ -54,32 +54,43 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
             timeout_seconds: Default timeout in seconds
             max_retries: Maximum retry attempts
         """
-        # Load from centralized settings (Phase 2 implementation)
+        # Load from environment or centralized settings (Phase 2 implementation)
         if base_url is None:
-            try:
-                from dotmac.platform.settings import settings
+            env_base_url = os.getenv("NETBOX_URL")
+            if env_base_url:
+                base_url = env_base_url
+            else:
+                try:
+                    from dotmac.platform.settings import settings
 
-                base_url = settings.external_services.netbox_url
-            except (ImportError, AttributeError):
-                # Fallback to environment variable if settings not available
-                base_url = os.getenv("NETBOX_URL", "http://localhost:8080")
+                    base_url = settings.external_services.netbox_url
+                except (ImportError, AttributeError):
+                    base_url = "http://localhost:8080"
 
         api_token = api_token or os.getenv("NETBOX_API_TOKEN", "")
+
+        # Normalize base URL and ensure we don't double-append /api
+        normalized_base_url = base_url.rstrip("/")
+        if normalized_base_url.lower().endswith("/api"):
+            normalized_base_url = normalized_base_url[: -len("/api")]
 
         # Initialize robust HTTP client
         # NetBox uses "Token" prefix for auth, not "Bearer"
         super().__init__(
             service_name="netbox",
-            base_url=base_url,
+            base_url=normalized_base_url,
             tenant_id=tenant_id,
             verify_ssl=verify_ssl,
             default_timeout=timeout_seconds,
             max_retries=max_retries,
         )
 
-        # Override auth header for NetBox Token format
+        # Override auth header for NetBox Token format and apply to underlying HTTP client
         if api_token:
-            self.headers["Authorization"] = f"Token {api_token}"
+            auth_header = f"Token {api_token}"
+            self.headers["Authorization"] = auth_header
+            # Ensure the pooled httpx client sees the updated header
+            self.client.headers["Authorization"] = auth_header
 
         # API base path
         self.api_base = urljoin(self.base_url, "api/")
@@ -185,6 +196,10 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         response = await self._netbox_request("POST", "ipam/prefixes/", json=data)
         return cast(dict[str, Any], response)
 
+    async def delete_prefix(self, prefix_id: int) -> None:
+        """Delete prefix by ID"""
+        await self._netbox_request("DELETE", f"ipam/prefixes/{prefix_id}/")
+
     async def get_available_ips(self, prefix_id: int, limit: int = 10) -> list[dict[str, Any]]:
         """Get available IP addresses in a prefix"""
         response = await self._netbox_request(
@@ -192,7 +207,13 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
             f"ipam/prefixes/{prefix_id}/available-ips/",
             params={"limit": limit},
         )
-        return response if isinstance(response, list) else []
+        if isinstance(response, list):
+            return response
+        if isinstance(response, dict):
+            results = response.get("results")
+            if isinstance(results, list):
+                return results
+        return []
 
     async def allocate_ip(self, prefix_id: int, data: dict[str, Any]) -> dict[str, Any]:
         """Allocate next available IP from prefix"""
@@ -334,7 +355,9 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
                     target_count=count,
                     error=str(e),
                 )
-                raise ValueError(f"Bulk allocation failed after {len(allocated_ips)} IPs: {e}") from e
+                raise ValueError(
+                    f"Bulk allocation failed after {len(allocated_ips)} IPs: {e}"
+                ) from e
 
         logger.info(
             "bulk_allocation.success",
@@ -363,6 +386,10 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         response = await self._netbox_request("POST", "ipam/vrfs/", json=data)
         return cast(dict[str, Any], response)
 
+    async def delete_vrf(self, vrf_id: int) -> None:
+        """Delete VRF by ID"""
+        await self._netbox_request("DELETE", f"ipam/vrfs/{vrf_id}/")
+
     # =========================================================================
     # DCIM Operations (Devices, Sites, Racks)
     # =========================================================================
@@ -390,6 +417,10 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         """Create new site"""
         response = await self._netbox_request("POST", "dcim/sites/", json=data)
         return cast(dict[str, Any], response)
+
+    async def delete_site(self, site_id: int) -> None:
+        """Delete site by ID"""
+        await self._netbox_request("DELETE", f"dcim/sites/{site_id}/")
 
     async def get_devices(
         self,
@@ -653,9 +684,20 @@ class NetBoxClient(RobustHTTPClient):  # type: ignore[misc]
         response = await self._netbox_request("POST", "tenancy/tenants/", json=data)
         return cast(dict[str, Any], response)
 
+    async def delete_tenant(self, tenant_id: int) -> None:
+        """Delete tenant by ID"""
+        await self._netbox_request("DELETE", f"tenancy/tenants/{tenant_id}/")
+
     async def get_tenant_by_name(self, name: str) -> dict[str, Any] | None:
         """Get tenant by name"""
         response = await self._netbox_request("GET", "tenancy/tenants/", params={"name": name})
+        response_dict = cast(dict[str, Any], response)
+        results = response_dict.get("results", [])
+        return results[0] if results else None
+
+    async def get_tenant_by_slug(self, slug: str) -> dict[str, Any] | None:
+        """Get tenant by slug"""
+        response = await self._netbox_request("GET", "tenancy/tenants/", params={"slug": slug})
         response_dict = cast(dict[str, Any], response)
         results = response_dict.get("results", [])
         return results[0] if results else None

@@ -1,3 +1,4 @@
+
 """
 Invoice retrieval tests - Migrated to use shared helpers.
 
@@ -5,7 +6,7 @@ BEFORE: 237 lines with massive entity mocking boilerplate
 AFTER: ~150 lines using shared helpers (37% reduction)
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -16,9 +17,14 @@ from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestInvoiceServiceRetrieval:
     """Test invoice retrieval functionality"""
 
@@ -91,7 +97,7 @@ class TestInvoiceServiceRetrieval:
             inv.invoice_id = str(uuid4())
             inv.invoice_number = f"INV-2024-00000{i + 1}"
             inv.total_amount = 10000 * (i + 1)
-            inv.issue_date = datetime.now(UTC) - timedelta(days=i)
+            inv.issue_date = datetime.now(timezone.utc) - timedelta(days=i)
             return inv
 
         mock_invoices = [make_invoice(i) for i in range(3)]
@@ -102,8 +108,8 @@ class TestInvoiceServiceRetrieval:
         mock_db.execute = AsyncMock(return_value=mock_result)
 
         # List invoices with filters
-        start_date = datetime.now(UTC) - timedelta(days=7)
-        end_date = datetime.now(UTC)
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
 
         result = await service.list_invoices(
             tenant_id=sample_tenant_id,

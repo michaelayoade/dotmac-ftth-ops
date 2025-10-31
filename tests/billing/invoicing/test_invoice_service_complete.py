@@ -9,7 +9,7 @@ Focuses on:
 - All edge cases and error paths
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -31,6 +31,14 @@ def mock_db():
     db.refresh = AsyncMock()
     db.add = MagicMock()
     db.execute = AsyncMock()
+
+    # Mock bind and dialect for database-specific code
+    mock_dialect = MagicMock()
+    mock_dialect.name = "postgresql"
+    mock_bind = MagicMock()
+    mock_bind.dialect = mock_dialect
+    db.bind = mock_bind
+
     return db
 
 
@@ -51,8 +59,8 @@ def sample_invoice_entity():
         customer_id="cust_123",
         billing_email="customer@example.com",
         billing_address={"street": "123 Main St", "city": "Boston"},
-        issue_date=datetime.now(UTC),
-        due_date=datetime.now(UTC) + timedelta(days=30),
+        issue_date=datetime.now(timezone.utc),
+        due_date=datetime.now(timezone.utc) + timedelta(days=30),
         currency="USD",
         subtotal=100,
         tax_amount=0,
@@ -69,6 +77,7 @@ def sample_invoice_entity():
     )
 
 
+@pytest.mark.unit
 class TestInvoiceNumberGeneration:
     """Test invoice number generation logic."""
 
@@ -82,12 +91,12 @@ class TestInvoiceNumberGeneration:
         invoice_number = await invoice_service._generate_invoice_number("tenant-1")
 
         # Should generate INV-{year}-000001
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
         assert invoice_number == f"INV-{year}-000001"
 
     async def test_generate_sequential_invoice_number(self, invoice_service, mock_db):
         """Test generating sequential invoice number."""
-        year = datetime.now(UTC).year
+        year = datetime.now(timezone.utc).year
         # Mock existing invoice
         last_invoice = MagicMock()
         last_invoice.invoice_number = f"INV-{year}-000005"
@@ -103,7 +112,7 @@ class TestInvoiceNumberGeneration:
 
     async def test_generate_invoice_number_new_year(self, invoice_service, mock_db):
         """Test invoice number resets for new year."""
-        current_year = datetime.now(UTC).year
+        current_year = datetime.now(timezone.utc).year
         # Mock existing invoice from previous year
         last_invoice = MagicMock()
         last_invoice.invoice_number = f"INV-{current_year - 1}-000999"
@@ -118,6 +127,7 @@ class TestInvoiceNumberGeneration:
         assert invoice_number == f"INV-{current_year}-000001"
 
 
+@pytest.mark.unit
 class TestPaymentStatusUpdate:
     """Test invoice payment status updates."""
 
@@ -137,20 +147,22 @@ class TestPaymentStatusUpdate:
             assert sample_invoice_entity.paid_at is not None
             assert sample_invoice_entity.remaining_balance == 0
 
-    async def test_update_payment_status_to_partially_refunded(
+    async def test_update_payment_status_to_pending_partial(
         self, invoice_service, sample_invoice_entity
     ):
-        """Test updating payment status to partially refunded."""
+        """Test updating payment status to pending for partial payments."""
         with patch.object(
             invoice_service, "_get_invoice_entity", return_value=sample_invoice_entity
         ):
+            sample_invoice_entity.status = InvoiceStatus.OPEN
+            sample_invoice_entity.remaining_balance = sample_invoice_entity.total_amount - 10
             await invoice_service.update_invoice_payment_status(
                 tenant_id="tenant-1",
                 invoice_id="inv_123",
-                payment_status=PaymentStatus.PARTIALLY_REFUNDED,
+                payment_status=PaymentStatus.PENDING,
             )
 
-            assert sample_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+            assert sample_invoice_entity.payment_status == PaymentStatus.PENDING
             assert sample_invoice_entity.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_update_payment_status_not_found(self, invoice_service):
@@ -164,6 +176,7 @@ class TestPaymentStatusUpdate:
                 )
 
 
+@pytest.mark.unit
 class TestOverdueInvoiceCheck:
     """Test overdue invoice checking and status updates."""
 
@@ -177,8 +190,8 @@ class TestOverdueInvoiceCheck:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC) - timedelta(days=60),
-            due_date=datetime.now(UTC) - timedelta(days=30),  # 30 days past due
+            issue_date=datetime.now(timezone.utc) - timedelta(days=60),
+            due_date=datetime.now(timezone.utc) - timedelta(days=30),  # 30 days past due
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -212,6 +225,7 @@ class TestOverdueInvoiceCheck:
         assert len(invoices) == 0
 
 
+@pytest.mark.unit
 class TestInvoiceNotification:
     """Test invoice notification sending."""
 
@@ -307,8 +321,8 @@ class TestInvoiceNotification:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -378,6 +392,7 @@ class TestInvoiceNotification:
                 await invoice_service._send_invoice_notification(sample_invoice_entity)
 
 
+@pytest.mark.unit
 class TestTransactionCreation:
     """Test transaction record creation."""
 
@@ -407,6 +422,7 @@ class TestTransactionCreation:
         assert transaction.transaction_type.value == "adjustment"
 
 
+@pytest.mark.unit
 class TestGetInvoiceMethods:
     """Test invoice retrieval methods."""
 
@@ -462,6 +478,7 @@ class TestGetInvoiceMethods:
         assert invoice.idempotency_key == "idem_123"
 
 
+@pytest.mark.unit
 class TestListInvoicesFiltering:
     """Test invoice listing with various filters."""
 
@@ -471,8 +488,8 @@ class TestListInvoicesFiltering:
         mock_result.scalars.return_value.all.return_value = []
         mock_db.execute.return_value = mock_result
 
-        start_date = datetime.now(UTC) - timedelta(days=30)
-        end_date = datetime.now(UTC)
+        start_date = datetime.now(timezone.utc) - timedelta(days=30)
+        end_date = datetime.now(timezone.utc)
 
         invoices = await invoice_service.list_invoices(
             tenant_id="tenant-1",
@@ -498,6 +515,7 @@ class TestListInvoicesFiltering:
         assert isinstance(invoices, list)
 
 
+@pytest.mark.unit
 class TestWebhookPublishing:
     """Test webhook event publishing for invoice operations."""
 
@@ -562,6 +580,7 @@ class TestWebhookPublishing:
                     assert invoice.status == InvoiceStatus.VOID
 
 
+@pytest.mark.unit
 class TestCreditApplicationComplete:
     """Complete tests for credit application."""
 

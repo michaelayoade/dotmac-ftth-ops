@@ -51,16 +51,16 @@ def assert_entity_created(
         added_entity = mock_db_session.add.call_args_list[0][0][0]
 
         if entity_type:
-            assert isinstance(
-                added_entity, entity_type
-            ), f"Expected entity type {entity_type.__name__}, got {type(added_entity).__name__}"
+            assert isinstance(added_entity, entity_type), (
+                f"Expected entity type {entity_type.__name__}, got {type(added_entity).__name__}"
+            )
 
         if expected_attributes:
             for attr, expected_value in expected_attributes.items():
                 actual_value = getattr(added_entity, attr)
-                assert (
-                    actual_value == expected_value
-                ), f"Expected {attr}={expected_value}, got {actual_value}"
+                assert actual_value == expected_value, (
+                    f"Expected {attr}={expected_value}, got {actual_value}"
+                )
 
 
 def assert_entity_updated(
@@ -89,9 +89,9 @@ def assert_entity_updated(
     if updated_attributes:
         for attr, expected_value in updated_attributes.items():
             actual_value = getattr(entity, attr)
-            assert (
-                actual_value == expected_value
-            ), f"Expected {attr}={expected_value}, got {actual_value}"
+            assert actual_value == expected_value, (
+                f"Expected {attr}={expected_value}, got {actual_value}"
+            )
 
 
 def assert_entity_deleted(
@@ -139,9 +139,9 @@ def assert_entity_retrieved(
     assert result == expected_entity, f"Expected entity {expected_entity}, got {result}"
 
     if expected_type:
-        assert isinstance(
-            result, expected_type
-        ), f"Expected type {expected_type.__name__}, got {type(result).__name__}"
+        assert isinstance(result, expected_type), (
+            f"Expected type {expected_type.__name__}, got {type(result).__name__}"
+        )
 
 
 def assert_db_committed(
@@ -158,9 +158,9 @@ def assert_db_committed(
     Example:
         assert_db_committed(mock_db_session, times=2)
     """
-    assert (
-        mock_db_session.commit.call_count == times
-    ), f"Expected {times} commit(s), got {mock_db_session.commit.call_count}"
+    assert mock_db_session.commit.call_count == times, (
+        f"Expected {times} commit(s), got {mock_db_session.commit.call_count}"
+    )
 
 
 def assert_cache_invalidated(
@@ -183,9 +183,9 @@ def assert_cache_invalidated(
 
     if expected_key:
         call_args = mock_cache_delete.call_args[0]
-        assert expected_key in str(
-            call_args
-        ), f"Expected cache key containing '{expected_key}', got {call_args}"
+        assert expected_key in str(call_args), (
+            f"Expected cache key containing '{expected_key}', got {call_args}"
+        )
 
 
 def assert_not_found(result: Any) -> None:
@@ -234,6 +234,6 @@ def assert_service_called_with(
         actual_kwargs = method.call_args[1]
         for key, expected_value in expected_kwargs.items():
             assert key in actual_kwargs, f"Expected kwarg '{key}' not found"
-            assert (
-                actual_kwargs[key] == expected_value
-            ), f"Expected {key}={expected_value}, got {actual_kwargs[key]}"
+            assert actual_kwargs[key] == expected_value, (
+                f"Expected {key}={expected_value}, got {actual_kwargs[key]}"
+            )

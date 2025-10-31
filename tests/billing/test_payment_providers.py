@@ -12,6 +12,7 @@ from dotmac.platform.billing.payments.providers import (
 )
 
 
+@pytest.mark.unit
 class TestStripePaymentProvider:
     """Test StripePaymentProvider implementation"""
 

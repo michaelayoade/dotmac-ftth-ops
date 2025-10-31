@@ -1,9 +1,10 @@
 """Comprehensive tests for TeamService."""
 
 import uuid
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -29,7 +30,7 @@ def tenant_id():
     return "test-tenant-123"
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_team(async_db_session: AsyncSession, tenant_id: str):
     """Create a sample team for testing."""
     team = Team(
@@ -43,8 +44,8 @@ async def sample_team(async_db_session: AsyncSession, tenant_id: str):
         color="#FF5733",
         icon="code",
         metadata_={"department": "tech"},
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(team)
     await async_db_session.commit()
@@ -52,7 +53,7 @@ async def sample_team(async_db_session: AsyncSession, tenant_id: str):
     return team
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_user(async_db_session: AsyncSession, tenant_id: str):
     """Create a sample user for testing."""
     from dotmac.platform.user_management.models import User
@@ -63,8 +64,8 @@ async def sample_user(async_db_session: AsyncSession, tenant_id: str):
         email="test@example.com",
         password_hash="hash",
         tenant_id=tenant_id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -72,6 +73,7 @@ async def sample_user(async_db_session: AsyncSession, tenant_id: str):
     return user
 
 
+@pytest.mark.integration
 class TestTeamCreation:
     """Test team creation functionality."""
 
@@ -140,6 +142,7 @@ class TestTeamCreation:
         assert team.tenant_id != sample_team.tenant_id
 
 
+@pytest.mark.integration
 class TestTeamRetrieval:
     """Test team retrieval functionality."""
 
@@ -186,8 +189,8 @@ class TestTeamRetrieval:
                 name=f"Team {i}",
                 slug=f"team-{i}",
                 is_active=True,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             async_db_session.add(team)
         await async_db_session.commit()
@@ -212,8 +215,8 @@ class TestTeamRetrieval:
             name="Active Team",
             slug="active",
             is_active=True,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         inactive_team = Team(
             id=uuid.uuid4(),
@@ -221,8 +224,8 @@ class TestTeamRetrieval:
             name="Inactive Team",
             slug="inactive",
             is_active=False,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add_all([active_team, inactive_team])
         await async_db_session.commit()
@@ -244,8 +247,8 @@ class TestTeamRetrieval:
             name="Engineering Team",
             slug="eng",
             description="Software engineers",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         team2 = Team(
             id=uuid.uuid4(),
@@ -253,8 +256,8 @@ class TestTeamRetrieval:
             name="Sales Team",
             slug="sales",
             description="Sales department",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add_all([team1, team2])
         await async_db_session.commit()
@@ -267,6 +270,7 @@ class TestTeamRetrieval:
         assert team2.id not in [t.id for t in result.items]
 
 
+@pytest.mark.integration
 class TestTeamUpdate:
     """Test team update functionality."""
 
@@ -307,6 +311,7 @@ class TestTeamUpdate:
             await team_service.update_team(sample_team.id, update_data, wrong_tenant)
 
 
+@pytest.mark.integration
 class TestTeamDeletion:
     """Test team deletion functionality."""
 
@@ -337,6 +342,7 @@ class TestTeamDeletion:
         assert result is False
 
 
+@pytest.mark.integration
 class TestTeamMembers:
     """Test team member functionality."""
 
@@ -402,9 +408,9 @@ class TestTeamMembers:
                 role="member",
                 tenant_id=tenant_id,
                 is_active=True,
-                joined_at=datetime.now(UTC),
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                joined_at=datetime.now(timezone.utc),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             async_db_session.add(member)
         await async_db_session.commit()
@@ -481,8 +487,8 @@ class TestTeamMembers:
             tenant_id=tenant_id,
             name="Team 2",
             slug="team-2",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add(team2)
         await async_db_session.commit()
@@ -495,9 +501,9 @@ class TestTeamMembers:
             role="member",
             tenant_id=tenant_id,
             is_active=True,
-            joined_at=datetime.now(UTC),
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            joined_at=datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         member2 = TeamMember(
             id=uuid.uuid4(),
@@ -506,9 +512,9 @@ class TestTeamMembers:
             role="lead",
             tenant_id=tenant_id,
             is_active=True,
-            joined_at=datetime.now(UTC),
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            joined_at=datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add_all([member1, member2])
         await async_db_session.commit()
@@ -522,6 +528,7 @@ class TestTeamMembers:
         assert team2.id in team_ids
 
 
+@pytest.mark.integration
 class TestTenantIsolation:
     """Test tenant isolation for teams."""
 
@@ -539,16 +546,16 @@ class TestTenantIsolation:
             tenant_id=tenant1,
             name="Team 1",
             slug="team-1",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         team2 = Team(
             id=uuid.uuid4(),
             tenant_id=tenant2,
             name="Team 2",
             slug="team-2",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add_all([team1, team2])
         await async_db_session.commit()
@@ -574,8 +581,8 @@ class TestTenantIsolation:
             tenant_id=tenant1,
             name="Team",
             slug="team",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add(team)
         await async_db_session.commit()
@@ -588,9 +595,9 @@ class TestTenantIsolation:
             role="member",
             tenant_id=tenant1,
             is_active=True,
-            joined_at=datetime.now(UTC),
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            joined_at=datetime.now(timezone.utc),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
         async_db_session.add(member)
         await async_db_session.commit()

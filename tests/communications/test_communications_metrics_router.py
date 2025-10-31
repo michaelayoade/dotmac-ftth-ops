@@ -5,13 +5,17 @@ Tests caching, rate limiting, tenant isolation, and error handling
 for the communications statistics endpoint.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
 from httpx import AsyncClient
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.communications.models import (
+
+
     CommunicationStatus,
     CommunicationType,
 )
@@ -23,7 +27,7 @@ class TestCommunicationsStatsEndpoint:
     @pytest.fixture
     def mock_communication_logs(self):
         """Create mock communication logs."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         return [
             MagicMock(
                 id="1",
@@ -181,7 +185,7 @@ class TestCommunicationsStatsRateLimiting:
                 "open_rate": 0.0,
                 "click_rate": 0.0,
                 "period": "30d",
-                "timestamp": datetime.now(UTC),
+                "timestamp": datetime.now(timezone.utc),
             }
 
             # Note: Actual rate limit test would require 101 requests

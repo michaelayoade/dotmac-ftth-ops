@@ -11,13 +11,15 @@ import json
 import logging
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from ..auth.core import get_current_user
-from ..auth.rbac_dependencies import require_any_permission, require_permission
-from ..db import get_db
-from ..user_management.models import User
+from ..auth.core import UserInfo, get_current_user
+from ..auth.rbac_dependencies import require_any_permission, require_permissions
+from ..db import get_async_session, get_db
+from ..tenant import get_current_tenant_id
 from .models import WorkflowStatus, WorkflowType
 from .schemas import (
     ActivateServiceRequest,
@@ -37,11 +39,127 @@ router = APIRouter(prefix="/orchestration", tags=["orchestration"])
 
 
 def get_orchestration_service(
+    request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> OrchestrationService:
     """Dependency to get orchestration service."""
-    return OrchestrationService(db=db, tenant_id=current_user.tenant_id)
+    tenant_id = current_user.tenant_id
+
+    if not tenant_id:
+        tenant_id = getattr(request.state, "tenant_id", None)
+
+    if not tenant_id:
+        tenant_id = get_current_tenant_id()
+
+    if not tenant_id:
+        if current_user.is_platform_admin:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Platform administrators must specify X-Target-Tenant-ID when invoking orchestration APIs.",
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant context required for orchestration operations.",
+        )
+
+    return OrchestrationService(db=db, tenant_id=tenant_id)
+
+
+def _get_initiator_id(user: UserInfo) -> str | None:
+    """Extract initiator identifier from UserInfo or fallback attributes."""
+    if getattr(user, "user_id", None):
+        return str(user.user_id)
+    if getattr(user, "id", None) is not None:
+        return str(user.id)
+    return None
+
+
+def _permission_matches(user_permission: str, required: str) -> bool:
+    """Return True if user_permission grants the required permission."""
+
+    if user_permission == "*" or user_permission == "admin":
+        return True
+
+    if user_permission.endswith(".*") or user_permission.endswith(":*"):
+        prefix = user_permission[:-2]
+        return required.startswith(prefix)
+
+    return user_permission == required
+
+
+def _has_permissions_local(user: UserInfo, permissions: tuple[str, ...], mode: str) -> bool:
+    perms = set(user.permissions or [])
+
+    if getattr(user, "is_platform_admin", False) is True or "*" in perms or "admin" in perms:
+        return True
+
+    if mode == "all":
+        return all(
+            any(_permission_matches(user_perm, required) for user_perm in perms)
+            for required in permissions
+        )
+
+    return any(
+        any(_permission_matches(user_perm, required) for user_perm in perms)
+        for required in permissions
+    )
+
+
+def require_permissions_with_cache(*permissions: str):
+    base_checker = require_permissions(*permissions)
+
+    async def dependency(
+        current_user: UserInfo = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_session),
+    ) -> UserInfo:
+        if _has_permissions_local(current_user, permissions, mode="all"):
+            return current_user
+        try:
+            return await base_checker(current_user=current_user, db=db)
+        except HTTPException:
+            raise
+        except SQLAlchemyError as exc:
+            logger.warning(
+                "Permission fallback check failed due to database error",
+                exc_info=exc,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission denied. Required: {list(permissions)}",
+            )
+
+    return dependency
+
+
+def require_permission_with_cache(permission: str):
+    return require_permissions_with_cache(permission)
+
+
+def require_any_permission_with_cache(*permissions: str):
+    base_checker = require_any_permission(*permissions)
+
+    async def dependency(
+        current_user: UserInfo = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_session),
+    ) -> UserInfo:
+        if _has_permissions_local(current_user, permissions, mode="any"):
+            return current_user
+        try:
+            return await base_checker(current_user=current_user, db=db)
+        except HTTPException:
+            raise
+        except SQLAlchemyError as exc:
+            logger.warning(
+                "Permission fallback check failed due to database error",
+                exc_info=exc,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Permission denied. Required: {list(permissions)}",
+            )
+
+    return dependency
 
 
 # ============================================================================
@@ -79,7 +197,9 @@ def get_orchestration_service(
 async def provision_subscriber(
     request: ProvisionSubscriberRequest,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_permissions_with_cache("customers.create", "subscribers.create")
+    ),
 ) -> ProvisionSubscriberResponse:
     """
     Provision new subscriber with automatic multi-system orchestration.
@@ -89,7 +209,7 @@ async def provision_subscriber(
     try:
         result = await service.provision_subscriber(
             request=request,
-            initiator_id=current_user.id,
+            initiator_id=_get_initiator_id(current_user),
             initiator_type="user",
         )
         return result
@@ -127,7 +247,7 @@ async def provision_subscriber(
 async def deprovision_subscriber(
     request: DeprovisionSubscriberRequest,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission_with_cache("subscribers.delete")),
 ) -> WorkflowResponse:
     """
     Deprovision subscriber with automatic multi-system cleanup.
@@ -137,7 +257,7 @@ async def deprovision_subscriber(
     try:
         result = await service.deprovision_subscriber(
             request=request,
-            initiator_id=current_user.id,
+            initiator_id=_get_initiator_id(current_user),
             initiator_type="user",
         )
         return result
@@ -165,7 +285,7 @@ async def deprovision_subscriber(
 async def activate_service(
     request: ActivateServiceRequest,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission_with_cache("subscribers.update")),
 ) -> WorkflowResponse:
     """
     Activate subscriber service.
@@ -175,7 +295,7 @@ async def activate_service(
     try:
         result = await service.activate_service(
             request=request,
-            initiator_id=current_user.id,
+            initiator_id=_get_initiator_id(current_user),
             initiator_type="user",
         )
         return result
@@ -203,7 +323,7 @@ async def activate_service(
 async def suspend_service(
     request: SuspendServiceRequest,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission_with_cache("subscribers.update")),
 ) -> WorkflowResponse:
     """
     Suspend subscriber service.
@@ -213,7 +333,7 @@ async def suspend_service(
     try:
         result = await service.suspend_service(
             request=request,
-            initiator_id=current_user.id,
+            initiator_id=_get_initiator_id(current_user),
             initiator_type="user",
         )
         return result
@@ -245,11 +365,23 @@ async def suspend_service(
 )
 async def list_workflows(
     workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
-    status: WorkflowStatus | None = Query(None, description="Filter by status"),
+    status_filter: WorkflowStatus | None = Query(
+        None,
+        alias="status",
+        description="Filter by status",
+    ),
     limit: int = Query(50, ge=1, le=200, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Pagination offset"),
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> WorkflowListResponse:
     """
     List orchestration workflows.
@@ -257,11 +389,33 @@ async def list_workflows(
     **Required Permissions:** `orchestration.read`
     """
     try:
-        return await service.list_workflows(
+        result = await service.list_workflows(
             workflow_type=workflow_type,
-            status=status,
+            status=status_filter,
             limit=limit,
             offset=offset,
+        )
+
+        if isinstance(result, dict):
+            raw_workflows = result.get("workflows", [])
+            workflows = [
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
+                for item in raw_workflows
+            ]
+            total = result.get("total", len(workflows))
+            limit_value = result.get("limit", limit)
+            offset_value = result.get("offset", offset)
+        else:
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
+            total = getattr(result, "total", len(workflows))
+            limit_value = getattr(result, "limit", limit)
+            offset_value = getattr(result, "offset", offset)
+
+        return WorkflowListResponse(
+            workflows=workflows,
+            total=total,
+            limit=limit_value,
+            offset=offset_value,
         )
     except Exception as e:
         logger.exception(f"Error listing workflows: {e}")
@@ -280,7 +434,15 @@ async def list_workflows(
 async def get_workflow(
     workflow_id: str,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> WorkflowResponse:
     """
     Get workflow by ID.
@@ -307,7 +469,9 @@ async def get_workflow(
 async def retry_workflow(
     workflow_id: str,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache("orchestration.update", "admin")
+    ),
 ) -> WorkflowResponse:
     """
     Retry failed workflow.
@@ -338,7 +502,9 @@ async def retry_workflow(
 async def cancel_workflow(
     workflow_id: str,
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    _current_user: UserInfo = Depends(
+        require_any_permission_with_cache("orchestration.update", "admin")
+    ),
 ) -> WorkflowResponse:
     """
     Cancel running workflow.
@@ -368,7 +534,15 @@ async def cancel_workflow(
 )
 async def get_statistics(
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> WorkflowStatsResponse:
     """
     Get workflow statistics.
@@ -402,12 +576,20 @@ async def get_statistics(
 )
 async def export_workflows_csv(
     workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
-    status: WorkflowStatus | None = Query(None, description="Filter by status"),
+    status_filter: WorkflowStatus | None = Query(None, description="Filter by status"),
     date_from: datetime | None = Query(None, description="Start date filter"),
     date_to: datetime | None = Query(None, description="End date filter"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum records to export"),
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    _current_user: UserInfo = Depends(
+        require_any_permission_with_cache(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> Response:
     """
     Export workflows to CSV format.
@@ -418,62 +600,73 @@ async def export_workflows_csv(
         # Fetch workflows with filters
         result = await service.list_workflows(
             workflow_type=workflow_type,
-            status=status,
+            status=status_filter,
             limit=limit,
             offset=0,
         )
+        if isinstance(result, dict):
+            workflows = [
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
+                for item in result.get("workflows", [])
+            ]
+        else:
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
+        workflows = list(result)
+        workflows = list(result)
 
         # Create CSV in memory
         output = io.StringIO()
         writer = csv.writer(output)
 
         # Write header
-        writer.writerow([
-            'Workflow ID',
-            'Type',
-            'Status',
-            'Started At',
-            'Completed At',
-            'Duration (seconds)',
-            'Retry Count',
-            'Error Message',
-            'Steps Completed',
-            'Total Steps',
-        ])
+        writer.writerow(
+            [
+                "Workflow ID",
+                "Type",
+                "Status",
+                "Started At",
+                "Completed At",
+                "Duration (seconds)",
+                "Retry Count",
+                "Error Message",
+                "Steps Completed",
+                "Total Steps",
+            ]
+        )
 
         # Write data rows
-        for workflow in result.workflows:
+        for workflow in workflows:
             duration = None
             if workflow.started_at and workflow.completed_at:
                 duration = (workflow.completed_at - workflow.started_at).total_seconds()
 
-            steps_completed = sum(1 for step in workflow.steps if step.status == 'completed')
+            steps_completed = sum(1 for step in workflow.steps if step.status == "completed")
             total_steps = len(workflow.steps)
 
-            writer.writerow([
-                workflow.workflow_id,
-                workflow.workflow_type.value,
-                workflow.status.value,
-                workflow.started_at.isoformat() if workflow.started_at else '',
-                workflow.completed_at.isoformat() if workflow.completed_at else '',
-                f"{duration:.2f}" if duration else '',
-                workflow.retry_count,
-                workflow.error_message or '',
-                steps_completed,
-                total_steps,
-            ])
+            writer.writerow(
+                [
+                    workflow.workflow_id,
+                    workflow.workflow_type.value,
+                    workflow.status.value,
+                    workflow.started_at.isoformat() if workflow.started_at else "",
+                    workflow.completed_at.isoformat() if workflow.completed_at else "",
+                    f"{duration:.2f}" if duration else "",
+                    workflow.retry_count,
+                    workflow.error_message or "",
+                    steps_completed,
+                    total_steps,
+                ]
+            )
 
         # Create response with CSV content
         csv_content = output.getvalue()
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"workflows_export_{timestamp}.csv"
 
         return Response(
             content=csv_content,
             media_type="text/csv",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except Exception as e:
@@ -496,14 +689,22 @@ async def export_workflows_csv(
 )
 async def export_workflows_json(
     workflow_type: WorkflowType | None = Query(None, description="Filter by workflow type"),
-    status: WorkflowStatus | None = Query(None, description="Filter by status"),
+    status_filter: WorkflowStatus | None = Query(None, description="Filter by status"),
     date_from: datetime | None = Query(None, description="Start date filter"),
     date_to: datetime | None = Query(None, description="End date filter"),
     limit: int = Query(1000, ge=1, le=10000, description="Maximum records to export"),
     include_steps: bool = Query(True, description="Include workflow step details"),
     include_data: bool = Query(False, description="Include input/output data"),
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(
+        require_any_permission_with_cache(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> Response:
     """
     Export workflows to JSON format.
@@ -514,10 +715,17 @@ async def export_workflows_json(
         # Fetch workflows with filters
         result = await service.list_workflows(
             workflow_type=workflow_type,
-            status=status,
+            status=status_filter,
             limit=limit,
             offset=0,
         )
+        if isinstance(result, dict):
+            workflows = [
+                WorkflowResponse.model_validate(item) if isinstance(item, dict) else item
+                for item in result.get("workflows", [])
+            ]
+        else:
+            workflows = [wf if isinstance(wf, WorkflowResponse) else wf for wf in list(result)]
 
         # Get statistics for the export
         stats = await service.get_workflow_statistics()
@@ -529,27 +737,29 @@ async def export_workflows_json(
             "tenant_id": current_user.tenant_id,
             "filters": {
                 "workflow_type": workflow_type.value if workflow_type else None,
-                "status": status.value if status else None,
+                "status": status_filter.value if status_filter else None,
                 "date_from": date_from.isoformat() if date_from else None,
                 "date_to": date_to.isoformat() if date_to else None,
             },
             "summary": {
-                "total_workflows": result.total,
-                "exported_workflows": len(result.workflows),
+                "total_workflows": getattr(result, "total", len(workflows)),
+                "exported_workflows": len(workflows),
                 "success_rate": stats.success_rate,
                 "average_duration_seconds": stats.average_duration_seconds,
             },
-            "workflows": []
+            "workflows": [],
         }
 
         # Process each workflow
-        for workflow in result.workflows:
+        for workflow in workflows:
             workflow_data = {
                 "workflow_id": workflow.workflow_id,
                 "workflow_type": workflow.workflow_type.value,
                 "status": workflow.status.value,
                 "started_at": workflow.started_at.isoformat() if workflow.started_at else None,
-                "completed_at": workflow.completed_at.isoformat() if workflow.completed_at else None,
+                "completed_at": workflow.completed_at.isoformat()
+                if workflow.completed_at
+                else None,
                 "failed_at": workflow.failed_at.isoformat() if workflow.failed_at else None,
                 "retry_count": workflow.retry_count,
                 "error_message": workflow.error_message,
@@ -570,7 +780,9 @@ async def export_workflows_json(
                         "target_system": step.target_system,
                         "status": step.status.value,
                         "started_at": step.started_at.isoformat() if step.started_at else None,
-                        "completed_at": step.completed_at.isoformat() if step.completed_at else None,
+                        "completed_at": step.completed_at.isoformat()
+                        if step.completed_at
+                        else None,
                         "failed_at": step.failed_at.isoformat() if step.failed_at else None,
                         "error_message": step.error_message,
                         "retry_count": step.retry_count,
@@ -580,24 +792,22 @@ async def export_workflows_json(
 
                 workflow_data["steps_summary"] = {
                     "total": len(workflow.steps),
-                    "completed": sum(1 for s in workflow.steps if s.status == 'completed'),
-                    "failed": sum(1 for s in workflow.steps if s.status == 'failed'),
-                    "pending": sum(1 for s in workflow.steps if s.status == 'pending'),
+                    "completed": sum(1 for s in workflow.steps if s.status == "completed"),
+                    "failed": sum(1 for s in workflow.steps if s.status == "failed"),
+                    "pending": sum(1 for s in workflow.steps if s.status == "pending"),
                 }
 
             export_data["workflows"].append(workflow_data)
 
         # Create JSON response
         json_content = json.dumps(export_data, indent=2, default=str)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"workflows_export_{timestamp}.json"
 
         return Response(
             content=json_content,
             media_type="application/json",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}"
-            }
+            headers={"Content-Disposition": f"attachment; filename={filename}"},
         )
 
     except Exception as e:
@@ -620,11 +830,19 @@ async def export_workflows_json(
 )
 async def get_stats(
     service: OrchestrationService = Depends(get_orchestration_service),
-    current_user: User = Depends(get_current_user),
+    _current_user: UserInfo = Depends(
+        require_any_permission(
+            "orchestration.read",
+            "platform:orchestration.read",
+            "subscribers.read",
+            "customers.read",
+            "admin",
+        )
+    ),
 ) -> WorkflowStatsResponse:
     """
     Get workflow statistics (alias endpoint).
 
     **Required Permissions:** `orchestration.read`
     """
-    return await get_statistics(service=service, current_user=current_user)
+    return await get_statistics(service=service)

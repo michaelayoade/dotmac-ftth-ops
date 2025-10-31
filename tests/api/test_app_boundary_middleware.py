@@ -12,6 +12,7 @@ from dotmac.platform.api.app_boundary_middleware import (
 )
 
 
+@pytest.mark.unit
 class TestAppBoundaryMiddleware:
     """Test AppBoundaryMiddleware route boundary enforcement."""
 
@@ -112,9 +113,7 @@ class TestAppBoundaryMiddleware:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_platform_route_blocked_in_single_tenant_mode(
-        self, middleware, mock_request
-    ):
+    async def test_platform_route_blocked_in_single_tenant_mode(self, middleware, mock_request):
         """Test that platform routes are blocked in single-tenant mode."""
         with patch("dotmac.platform.api.app_boundary_middleware.settings") as mock_settings:
             mock_settings.DEPLOYMENT_MODE = "single_tenant"
@@ -354,6 +353,7 @@ class TestAppBoundaryMiddleware:
         assert not middleware._has_tenant_scope(user_no_scopes)
 
 
+@pytest.mark.unit
 class TestSingleTenantMiddleware:
     """Test SingleTenantMiddleware for single-tenant deployments."""
 
@@ -416,11 +416,10 @@ class TestSingleTenantMiddleware:
 
                 assert response.status_code == 200
                 mock_logger.warning.assert_called_once()
-                assert "single_tenant_mode_missing_tenant_id" in str(
-                    mock_logger.warning.call_args
-                )
+                assert "single_tenant_mode_missing_tenant_id" in str(mock_logger.warning.call_args)
 
 
+@pytest.mark.unit
 class TestMiddlewareIntegration:
     """Test middleware integration scenarios."""
 
@@ -490,9 +489,7 @@ class TestMiddlewareIntegration:
             assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_hybrid_mode_platform_support_tenant_access(
-        self, app_middleware, mock_request
-    ):
+    async def test_hybrid_mode_platform_support_tenant_access(self, app_middleware, mock_request):
         """Test hybrid mode: platform support accessing tenant routes."""
         with patch("dotmac.platform.api.app_boundary_middleware.settings") as mock_settings:
             mock_settings.DEPLOYMENT_MODE = "hybrid"

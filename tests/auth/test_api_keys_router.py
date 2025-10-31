@@ -5,7 +5,7 @@ Tests all API key management endpoints including create, list, get, update, dele
 """
 
 import json
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -29,6 +29,9 @@ from dotmac.platform.auth.api_keys_router import (
 from dotmac.platform.auth.core import UserInfo
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def mock_user():
     """Create mock user."""
@@ -49,7 +52,7 @@ def mock_api_key_data():
         "user_id": "test_user_123",
         "name": "Test API Key",
         "scopes": ["read", "write"],
-        "created_at": datetime.now(UTC).isoformat(),
+        "created_at": datetime.now(timezone.utc).isoformat(),
         "expires_at": None,
         "description": "Test description",
         "last_used_at": None,
@@ -119,7 +122,7 @@ class TestAPIKeyRouterFunctions:
                 "user_id": "test_user_123",
                 "name": f"Test Key {i}",
                 "scopes": ["read"],
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "is_active": True,
             }
             mock_keys.append(key_data)
@@ -715,7 +718,7 @@ class TestAPIKeyRouterExceptionCoverage:
             "user_id": "test_user_123",
             "name": "Test API Key",
             "scopes": ["read", "write"],
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "is_active": True,
         }
 
@@ -739,7 +742,7 @@ class TestAPIKeyRouterExceptionCoverage:
             "user_id": "test_user_123",
             "name": "Test API Key",
             "scopes": ["read", "write"],
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "is_active": True,
         }
 
@@ -771,7 +774,7 @@ class TestAPIKeyRouterExceptionCoverage:
             "user_id": "test_user_123",
             "name": "Test API Key",
             "scopes": ["read", "write"],
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "is_active": True,
         }
 

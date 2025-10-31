@@ -8,7 +8,10 @@ import hmac
 import json
 import logging
 from abc import ABC, abstractmethod
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import httpx
@@ -286,8 +289,8 @@ class StripeWebhookHandler(WebhookHandler):
 
         # Process refund notification
         if payment_id and tenant_id and amount_refunded:
-            # Convert cents to dollars
-            refund_amount = Decimal(str(amount_refunded)) / Decimal("100")
+            # Keep amount in minor units (cents) to match payment.amount storage
+            refund_amount = Decimal(str(amount_refunded))
 
             # Get the most recent refund for details
             refund_reason = None

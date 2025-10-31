@@ -5,7 +5,10 @@ Production-ready service with database persistence, Celery tasks,
 and Prometheus metrics.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -42,11 +45,12 @@ from dotmac.platform.genieacs.schemas import (
 )
 from dotmac.platform.genieacs.schemas import MassConfigJob as MassConfigJobSchema
 from dotmac.platform.genieacs.schemas import MassConfigResult as MassConfigResultSchema
+from dotmac.platform.genieacs.service import GenieACSService
 
 logger = structlog.get_logger(__name__)
 
 
-class GenieACSServiceDB:
+class GenieACSServiceDB(GenieACSService):
     """Production-ready GenieACS service with database persistence."""
 
     def __init__(
@@ -63,9 +67,9 @@ class GenieACSServiceDB:
             client: GenieACS client instance
             tenant_id: Tenant ID for multi-tenancy
         """
+        super().__init__(client=client, tenant_id=tenant_id)
+
         self.session = session
-        self.client = client or GenieACSClient(tenant_id=tenant_id)
-        self.tenant_id = tenant_id
 
     # =========================================================================
     # Scheduled Firmware Upgrades
@@ -257,7 +261,7 @@ class GenieACSServiceDB:
         if not schedule:
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
 
-        if schedule.status not in ("pending", "running"):
+        if schedule.status not in ("pending", "queued", "running"):
             raise ValueError(f"Cannot cancel schedule with status: {schedule.status}")
 
         schedule.status = "cancelled"
@@ -300,6 +304,13 @@ class GenieACSServiceDB:
         schedule = result.scalar_one_or_none()
         if not schedule:
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
+
+        # Mark as queued before handing off to Celery to ensure durable replay
+        schedule.status = "queued"
+        schedule.started_at = None
+        schedule.completed_at = None
+        await self.session.commit()
+        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "queued", 1.0)
 
         # Queue Celery task
         execute_firmware_upgrade.delay(schedule_id)
@@ -353,6 +364,7 @@ class GenieACSServiceDB:
             device_filter=request.device_filter.query,
             config_changes=config_changes,
             total_devices=total_devices,
+            pending_devices=total_devices,
             status="pending",
             dry_run="true" if request.dry_run else "false",
             max_concurrent=request.max_concurrent,
@@ -543,6 +555,15 @@ class GenieACSServiceDB:
 
         if job.dry_run == "true":
             raise ValueError("Cannot execute dry-run job")
+
+        job.status = "queued"
+        job.started_at = None
+        job.completed_at = None
+        job.completed_devices = 0
+        job.failed_devices = 0
+        job.pending_devices = job.total_devices
+        await self.session.commit()
+        set_mass_config_job_status(self.tenant_id, job_id, "queued", 1.0)
 
         # Queue Celery task
         execute_mass_config.delay(job_id)

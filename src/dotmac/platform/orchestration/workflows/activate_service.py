@@ -17,7 +17,10 @@ This workflow is used to activate a suspended or pending service.
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -177,9 +180,11 @@ async def activate_billing_service_handler(
         service = db.query(ServiceEntity).filter(ServiceEntity.service_id == service_id).first()
     else:
         # Find service by subscriber_id
-        service = db.query(ServiceEntity).filter(
-            ServiceEntity.subscriber_id == context["subscriber_id"]
-        ).first()
+        service = (
+            db.query(ServiceEntity)
+            .filter(ServiceEntity.subscriber_id == context["subscriber_id"])
+            .first()
+        )
 
     if service:
         service.status = "active"
@@ -223,11 +228,34 @@ async def enable_radius_handler(
     db: Session,
 ) -> dict[str, Any]:
     """Enable RADIUS authentication."""
-    subscriber_id = context["subscriber_id"]
+    from dotmac.platform.settings import settings
 
+    # Check if RADIUS is enabled
+    if not settings.features.radius_enabled:
+        logger.info("RADIUS is disabled, skipping RADIUS authentication enablement")
+        return {
+            "output_data": {"skipped": True, "reason": "RADIUS not enabled"},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
+    # Get tenant_id from context or input_data
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        # Try to get tenant_id from subscriber
+        from ...subscribers.models import Subscriber
+
+        subscriber = db.query(Subscriber).filter(Subscriber.id == context["subscriber_id"]).first()
+        if subscriber:
+            tenant_id = subscriber.tenant_id
+        else:
+            logger.error(f"Cannot determine tenant_id for subscriber: {context['subscriber_id']}")
+            raise ValueError("tenant_id is required for RADIUS operations")
+
+    subscriber_id = context["subscriber_id"]
     logger.info(f"Enabling RADIUS authentication for subscriber: {subscriber_id}")
 
-    radius_service = RADIUSService(db)
+    radius_service = RADIUSService(db, tenant_id)
 
     try:
         # Check if RADIUS account exists
@@ -246,7 +274,7 @@ async def enable_radius_handler(
 
     return {
         "output_data": {"radius_enabled": True},
-        "compensation_data": {"subscriber_id": subscriber_id},
+        "compensation_data": {"subscriber_id": subscriber_id, "tenant_id": tenant_id},
         "context_updates": {},
     }
 
@@ -421,10 +449,14 @@ def register_handlers(saga: Any) -> None:
     saga.register_step_handler("update_subscriber_status_handler", update_subscriber_status_handler)
 
     # Compensation handlers
-    saga.register_compensation_handler("suspend_billing_service_handler", suspend_billing_service_handler)
+    saga.register_compensation_handler(
+        "suspend_billing_service_handler", suspend_billing_service_handler
+    )
     saga.register_compensation_handler("disable_radius_handler", disable_radius_handler)
     saga.register_compensation_handler("deactivate_onu_handler", deactivate_onu_handler)
     saga.register_compensation_handler("disable_cpe_handler", disable_cpe_handler)
-    saga.register_compensation_handler("revert_subscriber_status_handler", revert_subscriber_status_handler)
+    saga.register_compensation_handler(
+        "revert_subscriber_status_handler", revert_subscriber_status_handler
+    )
 
     logger.info("Registered all activate_service workflow handlers")

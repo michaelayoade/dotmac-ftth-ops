@@ -86,9 +86,7 @@ class LicensingFrameworkService:
             existing = {m.module_code for m in result.scalars().all()}
             missing = set(dependencies) - existing
             if missing:
-                raise ModuleResolutionError(
-                    f"Module dependencies not found: {', '.join(missing)}"
-                )
+                raise ModuleResolutionError(f"Module dependencies not found: {', '.join(missing)}")
 
         module = FeatureModule(
             id=uuid4(),
@@ -138,9 +136,7 @@ class LicensingFrameworkService:
         self, module_id: UUID
     ) -> tuple[FeatureModule, list[FeatureModule]]:
         """Get module and resolve all its dependencies recursively."""
-        result = await self.db.execute(
-            select(FeatureModule).where(FeatureModule.id == module_id)
-        )
+        result = await self.db.execute(select(FeatureModule).where(FeatureModule.id == module_id))
         module = result.scalar_one_or_none()
         if not module:
             raise ValueError(f"Module {module_id} not found")
@@ -233,8 +229,12 @@ class LicensingFrameworkService:
         is_custom: bool,
         trial_days: int,
         trial_modules: list[str],
-        module_configs: list[dict[str, Any]],  # [{"module_id": UUID, "included": bool, "addon": bool, "price": float}]
-        quota_configs: list[dict[str, Any]],  # [{"quota_id": UUID, "quantity": int, "allow_overage": bool, "rate": float}]
+        module_configs: list[
+            dict[str, Any]
+        ],  # [{"module_id": UUID, "included": bool, "addon": bool, "price": float}]
+        quota_configs: list[
+            dict[str, Any]
+        ],  # [{"quota_id": UUID, "quantity": int, "allow_overage": bool, "rate": float}]
         metadata: dict[str, Any],
     ) -> ServicePlan:
         """
@@ -321,9 +321,7 @@ class LicensingFrameworkService:
         # Load source plan with relationships
         result = await self.db.execute(
             select(ServicePlan)
-            .options(
-                selectinload(ServicePlan.modules), selectinload(ServicePlan.quotas)
-            )
+            .options(selectinload(ServicePlan.modules), selectinload(ServicePlan.quotas))
             .where(ServicePlan.id == source_plan_id)
         )
         source = result.scalar_one_or_none()
@@ -391,9 +389,7 @@ class LicensingFrameworkService:
         # Load plan with modules
         result = await self.db.execute(
             select(ServicePlan)
-            .options(
-                selectinload(ServicePlan.modules).selectinload(PlanModule.module)
-            )
+            .options(selectinload(ServicePlan.modules).selectinload(PlanModule.module))
             .where(ServicePlan.id == plan_id)
         )
         plan = result.scalar_one_or_none()
@@ -504,7 +500,8 @@ class LicensingFrameworkService:
             trial_start=trial_start,
             trial_end=trial_end,
             current_period_start=now,
-            current_period_end=now + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365),
+            current_period_end=now
+            + timedelta(days=30 if billing_cycle == BillingCycle.MONTHLY else 365),
             stripe_customer_id=stripe_customer_id,
             stripe_subscription_id=stripe_subscription_id,
             custom_config=custom_config or {},
@@ -591,7 +588,9 @@ class LicensingFrameworkService:
         await self.db.refresh(subscription)
         return subscription
 
-    def _calculate_quota_period_end(self, start: datetime, reset_period: str | None) -> datetime | None:
+    def _calculate_quota_period_end(
+        self, start: datetime, reset_period: str | None
+    ) -> datetime | None:
         """Calculate when quota period ends based on reset period."""
         if not reset_period:
             return None  # No reset = lifetime quota
@@ -757,11 +756,13 @@ class LicensingFrameworkService:
             .where(
                 and_(
                     TenantSubscription.tenant_id == tenant_id,
-                    TenantSubscription.status.in_([
-                        SubscriptionStatus.TRIAL,
-                        SubscriptionStatus.ACTIVE,
-                        SubscriptionStatus.PAST_DUE,  # Grace period
-                    ]),
+                    TenantSubscription.status.in_(
+                        [
+                            SubscriptionStatus.TRIAL,
+                            SubscriptionStatus.ACTIVE,
+                            SubscriptionStatus.PAST_DUE,  # Grace period
+                        ]
+                    ),
                 )
             )
             .order_by(TenantSubscription.created_at.desc())
@@ -812,9 +813,7 @@ class LicensingFrameworkService:
 
         return True
 
-    async def get_entitled_capabilities(
-        self, tenant_id: UUID
-    ) -> dict[str, list[str]]:
+    async def get_entitled_capabilities(self, tenant_id: UUID) -> dict[str, list[str]]:
         """Get all capabilities tenant has access to, grouped by module."""
         # Get active subscription
         result = await self.db.execute(
@@ -827,11 +826,13 @@ class LicensingFrameworkService:
             .where(
                 and_(
                     TenantSubscription.tenant_id == tenant_id,
-                    TenantSubscription.status.in_([
-                        SubscriptionStatus.TRIAL,
-                        SubscriptionStatus.ACTIVE,
-                        SubscriptionStatus.PAST_DUE,
-                    ]),
+                    TenantSubscription.status.in_(
+                        [
+                            SubscriptionStatus.TRIAL,
+                            SubscriptionStatus.ACTIVE,
+                            SubscriptionStatus.PAST_DUE,
+                        ]
+                    ),
                 )
             )
             .order_by(TenantSubscription.created_at.desc())
@@ -851,9 +852,7 @@ class LicensingFrameworkService:
 
             module = sub_module.module
             module_capabilities = [
-                cap.capability_code
-                for cap in module.capabilities
-                if cap.is_active
+                cap.capability_code for cap in module.capabilities if cap.is_active
             ]
 
             if module_capabilities:
@@ -890,10 +889,12 @@ class LicensingFrameworkService:
             .where(
                 and_(
                     TenantSubscription.tenant_id == tenant_id,
-                    TenantSubscription.status.in_([
-                        SubscriptionStatus.TRIAL,
-                        SubscriptionStatus.ACTIVE,
-                    ]),
+                    TenantSubscription.status.in_(
+                        [
+                            SubscriptionStatus.TRIAL,
+                            SubscriptionStatus.ACTIVE,
+                        ]
+                    ),
                 )
             )
             .order_by(TenantSubscription.created_at.desc())
@@ -948,9 +949,7 @@ class LicensingFrameworkService:
                 subscription_id=subscription.id,
                 quota_id=quota.id,
                 period_start=datetime.utcnow(),
-                period_end=self._calculate_quota_period_end(
-                    datetime.utcnow(), quota.reset_period
-                ),
+                period_end=self._calculate_quota_period_end(datetime.utcnow(), quota.reset_period),
                 allocated_quantity=allocation.included_quantity,
                 current_usage=0,
                 overage_quantity=0,
@@ -1035,10 +1034,12 @@ class LicensingFrameworkService:
             .where(
                 and_(
                     TenantSubscription.tenant_id == tenant_id,
-                    TenantSubscription.status.in_([
-                        SubscriptionStatus.TRIAL,
-                        SubscriptionStatus.ACTIVE,
-                    ]),
+                    TenantSubscription.status.in_(
+                        [
+                            SubscriptionStatus.TRIAL,
+                            SubscriptionStatus.ACTIVE,
+                        ]
+                    ),
                 )
             )
             .order_by(TenantSubscription.created_at.desc())
@@ -1110,10 +1111,12 @@ class LicensingFrameworkService:
             .where(
                 and_(
                     TenantSubscription.tenant_id == tenant_id,
-                    TenantSubscription.status.in_([
-                        SubscriptionStatus.TRIAL,
-                        SubscriptionStatus.ACTIVE,
-                    ]),
+                    TenantSubscription.status.in_(
+                        [
+                            SubscriptionStatus.TRIAL,
+                            SubscriptionStatus.ACTIVE,
+                        ]
+                    ),
                 )
             )
             .order_by(TenantSubscription.created_at.desc())

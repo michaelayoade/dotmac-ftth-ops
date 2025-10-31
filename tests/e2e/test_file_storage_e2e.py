@@ -1,58 +1,70 @@
-"""
-End-to-End tests for File Storage API.
 
-Tests complete workflows through the API router, covering:
+"""
+Integration tests for File Storage API.
+
+Tests file storage router workflows with mocked storage backend, covering:
 - File upload/download
 - File deletion
 - File metadata management
 - File listing
 - Batch operations
-- Integration with storage backends
+- Error handling
 
-This E2E test suite covers the following modules:
+This integration test suite covers the following modules:
 - src/dotmac/platform/file_storage/router.py (router)
-- src/dotmac/platform/file_storage/service.py (service)
-- src/dotmac/platform/file_storage/minio_storage.py (storage backend)
+- src/dotmac/platform/file_storage/service.py (service - mocked)
+- src/dotmac/platform/file_storage/minio_storage.py (storage backend - mocked)
+
+Note: These are integration tests with mocked storage, not true e2e tests.
+For true e2e file storage tests, see tests/integration/test_file_storage_integration.py
 """
 
 import io
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock, patch
+from datetime import timezone, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 
-from dotmac.platform.auth.core import create_access_token
+# Pytest marker for integration tests
 
-# Pytest marker for E2E tests
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+# Note: auth_headers fixture is provided by tests/e2e/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
 
 
-@pytest.fixture
-def auth_headers(user_id, tenant_id):
-    """Create authentication headers with JWT token for API requests."""
-    token = create_access_token(
-        user_id=user_id,
-        username="testuser",
-        email="test@example.com",
-        tenant_id=tenant_id,
-        roles=["user"],
-        permissions=["read", "write"],
-    )
-    return {"Authorization": f"Bearer {token}"}
 
+
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 @pytest.fixture
 def mock_storage_service():
     """Mock storage service for testing."""
-    with patch("dotmac.platform.file_storage.router.storage_service") as mock_service:
-        # Configure mock service methods
-        mock_service.store_file = AsyncMock()
-        mock_service.retrieve_file = AsyncMock()
-        mock_service.delete_file = AsyncMock()
-        mock_service.list_files = AsyncMock()
-        mock_service.get_file_metadata = AsyncMock()
+    from dotmac.platform.file_storage.service import get_storage_service
+    from dotmac.platform.main import app
+    from dotmac.platform.file_storage import router as file_storage_router
+
+    class MockStorageService:
+        def __init__(self):
+            self.store_file = AsyncMock()
+            self.retrieve_file = AsyncMock()
+            self.delete_file = AsyncMock()
+            self.list_files = AsyncMock()
+            self.get_file_metadata = AsyncMock()
+            self.move_file = AsyncMock()
+            self.copy_file = AsyncMock()
+            self.update_file_metadata = AsyncMock()
+
+    mock_service = MockStorageService()
+
+    app.dependency_overrides[get_storage_service] = lambda: mock_service
+    original_storage_service = file_storage_router.storage_service
+    file_storage_router.storage_service = mock_service
+
+    try:
         yield mock_service
+    finally:
+        app.dependency_overrides.pop(get_storage_service, None)
+        file_storage_router.storage_service = original_storage_service
 
 
 # ============================================================================
@@ -64,7 +76,9 @@ class TestFileUploadE2E:
     """E2E tests for file upload workflows."""
 
     @pytest.mark.asyncio
-    async def test_upload_file_success(self, async_client, auth_headers, mock_storage_service):
+    async def test_upload_file_success(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test successful file upload."""
         # Setup mock
         file_id = str(uuid4())
@@ -104,10 +118,12 @@ class TestFileUploadE2E:
         assert call_args.kwargs["content_type"] == "text/plain"
         assert call_args.kwargs["path"] == "documents/test"
         assert call_args.kwargs["tenant_id"] == "e2e-test-tenant"
-        assert call_args.kwargs["metadata"]["uploaded_by"] == "e2e-test-user"
+        assert call_args.kwargs["metadata"]["uploaded_by"] == user_id
 
     @pytest.mark.asyncio
-    async def test_upload_file_without_path(self, async_client, auth_headers, mock_storage_service):
+    async def test_upload_file_without_path(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test upload without specifying path (auto-generated)."""
         file_id = str(uuid4())
         mock_storage_service.store_file.return_value = file_id
@@ -129,11 +145,11 @@ class TestFileUploadE2E:
         # Verify auto-generated path includes tenant, user_id and date
         call_args = mock_storage_service.store_file.call_args
         path = call_args.kwargs["path"]
-        assert "uploads/e2e-test-tenant/e2e-test-user" in path
-        assert datetime.now(UTC).strftime("%Y/%m/%d") in path
+        assert f"uploads/e2e-test-tenant/{user_id}" in path
+        assert datetime.now(timezone.utc).strftime("%Y/%m/%d") in path
 
     @pytest.mark.asyncio
-    async def test_upload_file_too_large(self, async_client, auth_headers, mock_storage_service):
+    async def test_upload_file_too_large(self, mock_storage_service, async_client, auth_headers):
         """Test upload fails for files exceeding size limit."""
         # Create file larger than 100MB
         large_content = b"x" * (101 * 1024 * 1024)  # 101MB
@@ -156,7 +172,7 @@ class TestFileUploadE2E:
 
     @pytest.mark.asyncio
     async def test_upload_file_storage_error(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test error handling when storage fails."""
         mock_storage_service.store_file.side_effect = Exception("Storage unavailable")
@@ -176,7 +192,7 @@ class TestFileUploadE2E:
         assert "File upload failed" in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_upload_binary_file(self, async_client, auth_headers, mock_storage_service):
+    async def test_upload_binary_file(self, mock_storage_service, async_client, auth_headers):
         """Test uploading binary files (images, etc.)."""
         file_id = str(uuid4())
         mock_storage_service.store_file.return_value = file_id
@@ -209,7 +225,7 @@ class TestFileDownloadE2E:
     """E2E tests for file download workflows."""
 
     @pytest.mark.asyncio
-    async def test_download_file_success(self, async_client, auth_headers, mock_storage_service):
+    async def test_download_file_success(self, mock_storage_service, async_client, auth_headers):
         """Test successful file download."""
         file_id = str(uuid4())
         file_content = b"Downloaded file content"
@@ -236,7 +252,7 @@ class TestFileDownloadE2E:
         mock_storage_service.retrieve_file.assert_called_once_with(file_id, "e2e-test-tenant")
 
     @pytest.mark.asyncio
-    async def test_download_file_not_found(self, async_client, auth_headers, mock_storage_service):
+    async def test_download_file_not_found(self, mock_storage_service, async_client, auth_headers):
         """Test download fails for non-existent file."""
         file_id = str(uuid4())
         mock_storage_service.retrieve_file.return_value = (None, None)
@@ -252,7 +268,7 @@ class TestFileDownloadE2E:
 
     @pytest.mark.asyncio
     async def test_download_file_storage_error(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test error handling when download fails."""
         file_id = str(uuid4())
@@ -267,7 +283,7 @@ class TestFileDownloadE2E:
         assert "File download failed" in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_download_binary_file(self, async_client, auth_headers, mock_storage_service):
+    async def test_download_binary_file(self, mock_storage_service, async_client, auth_headers):
         """Test downloading binary files."""
         file_id = str(uuid4())
         image_bytes = b"\xff\xd8\xff" + b"\x00" * 100  # JPEG header + data
@@ -286,6 +302,25 @@ class TestFileDownloadE2E:
         assert response.content == image_bytes
         assert response.headers["content-type"] == "image/jpeg"
 
+    @pytest.mark.asyncio
+    async def test_download_zero_byte_file(self, mock_storage_service, async_client, auth_headers):
+        """Ensure zero-byte files can be downloaded successfully."""
+        file_id = str(uuid4())
+        metadata = {
+            "file_name": "empty.txt",
+            "content_type": "text/plain",
+        }
+
+        mock_storage_service.retrieve_file.return_value = (b"", metadata)
+
+        response = await async_client.get(
+            f"/api/v1/files/storage/{file_id}/download", headers=auth_headers
+        )
+
+        assert response.status_code == 200
+        assert response.content == b""
+        assert response.headers["content-length"] == "0"
+
 
 # ============================================================================
 # File Deletion E2E Tests
@@ -296,7 +331,7 @@ class TestFileDeleteE2E:
     """E2E tests for file deletion workflows."""
 
     @pytest.mark.asyncio
-    async def test_delete_file_success(self, async_client, auth_headers, mock_storage_service):
+    async def test_delete_file_success(self, mock_storage_service, async_client, auth_headers):
         """Test successful file deletion."""
         file_id = str(uuid4())
         mock_storage_service.delete_file.return_value = True
@@ -315,7 +350,7 @@ class TestFileDeleteE2E:
         mock_storage_service.delete_file.assert_called_once_with(file_id, "e2e-test-tenant")
 
     @pytest.mark.asyncio
-    async def test_delete_file_not_found(self, async_client, auth_headers, mock_storage_service):
+    async def test_delete_file_not_found(self, mock_storage_service, async_client, auth_headers):
         """Test deletion fails for non-existent file."""
         file_id = str(uuid4())
         mock_storage_service.delete_file.return_value = False
@@ -331,7 +366,7 @@ class TestFileDeleteE2E:
 
     @pytest.mark.asyncio
     async def test_delete_file_storage_error(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test error handling when deletion fails."""
         file_id = str(uuid4())
@@ -355,7 +390,9 @@ class TestFileListE2E:
     """E2E tests for file listing workflows."""
 
     @pytest.mark.asyncio
-    async def test_list_files_success(self, async_client, auth_headers, mock_storage_service):
+    async def test_list_files_success(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test successful file listing."""
         from dotmac.platform.file_storage.service import FileMetadata
 
@@ -365,16 +402,16 @@ class TestFileListE2E:
                 file_name="file1.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
-                path="uploads/e2e-test-user/documents",
+                created_at=datetime.now(timezone.utc),
+                path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
             FileMetadata(
                 file_id=str(uuid4()),
                 file_name="file2.pdf",
                 file_size=200,
                 content_type="application/pdf",
-                created_at=datetime.now(UTC),
-                path="uploads/e2e-test-user/documents",
+                created_at=datetime.now(timezone.utc),
+                path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
         ]
 
@@ -395,7 +432,7 @@ class TestFileListE2E:
 
     @pytest.mark.asyncio
     async def test_list_files_with_pagination(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test file listing with pagination."""
         mock_storage_service.list_files.return_value = []
@@ -416,7 +453,7 @@ class TestFileListE2E:
 
     @pytest.mark.asyncio
     async def test_list_files_with_path_filter(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers, user_id
     ):
         """Test listing files with path filter."""
         mock_storage_service.list_files.return_value = []
@@ -430,11 +467,11 @@ class TestFileListE2E:
         # Verify path filter was applied (includes tenant prefix)
         call_args = mock_storage_service.list_files.call_args
         path = call_args.kwargs["path"]
-        assert "uploads/e2e-test-tenant/e2e-test-user" in path
+        assert f"uploads/e2e-test-tenant/{user_id}" in path
         assert "documents/2024" in path
 
     @pytest.mark.asyncio
-    async def test_list_files_empty(self, async_client, auth_headers, mock_storage_service):
+    async def test_list_files_empty(self, mock_storage_service, async_client, auth_headers):
         """Test listing when no files exist."""
         mock_storage_service.list_files.return_value = []
 
@@ -446,7 +483,7 @@ class TestFileListE2E:
         assert data["total"] == 0
 
     @pytest.mark.asyncio
-    async def test_list_files_error(self, async_client, auth_headers, mock_storage_service):
+    async def test_list_files_error(self, mock_storage_service, async_client, auth_headers):
         """Test error handling when listing fails."""
         mock_storage_service.list_files.side_effect = Exception("List error")
 
@@ -467,7 +504,7 @@ class TestFileMetadataE2E:
 
     @pytest.mark.asyncio
     async def test_get_metadata_success(
-        self, async_client, auth_headers, mock_storage_service, tenant_id
+        self, mock_storage_service, async_client, auth_headers, tenant_id
     ):
         """Test successful metadata retrieval."""
         file_id = str(uuid4())
@@ -476,7 +513,7 @@ class TestFileMetadataE2E:
             "file_name": "document.pdf",
             "file_size": 1024,
             "content_type": "application/pdf",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "checksum": "abc123def456",
             "custom_field": "custom_value",
             "tenant_id": tenant_id,  # Required for tenant validation
@@ -496,7 +533,7 @@ class TestFileMetadataE2E:
         assert data["custom_field"] == "custom_value"
 
     @pytest.mark.asyncio
-    async def test_get_metadata_not_found(self, async_client, auth_headers, mock_storage_service):
+    async def test_get_metadata_not_found(self, mock_storage_service, async_client, auth_headers):
         """Test metadata retrieval for non-existent file."""
         file_id = str(uuid4())
         mock_storage_service.get_file_metadata.return_value = None
@@ -510,7 +547,7 @@ class TestFileMetadataE2E:
         assert file_id in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_get_metadata_error(self, async_client, auth_headers, mock_storage_service):
+    async def test_get_metadata_error(self, mock_storage_service, async_client, auth_headers):
         """Test error handling when metadata retrieval fails."""
         file_id = str(uuid4())
         mock_storage_service.get_file_metadata.side_effect = Exception("Metadata error")
@@ -533,7 +570,7 @@ class TestBatchOperationsE2E:
     """E2E tests for batch file operations."""
 
     @pytest.mark.asyncio
-    async def test_batch_delete_success(self, async_client, auth_headers, mock_storage_service):
+    async def test_batch_delete_success(self, mock_storage_service, async_client, auth_headers):
         """Test batch deletion of multiple files."""
         file_ids = [str(uuid4()), str(uuid4()), str(uuid4())]
         mock_storage_service.delete_file.return_value = True
@@ -558,7 +595,7 @@ class TestBatchOperationsE2E:
 
     @pytest.mark.asyncio
     async def test_batch_delete_partial_failure(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test batch deletion with some failures."""
         file_ids = [str(uuid4()), str(uuid4())]
@@ -581,9 +618,10 @@ class TestBatchOperationsE2E:
         assert data["results"][1]["status"] == "failed"
 
     @pytest.mark.asyncio
-    async def test_batch_move_operation(self, async_client, auth_headers, mock_storage_service):
+    async def test_batch_move_operation(self, mock_storage_service, async_client, auth_headers):
         """Test batch move operation."""
         file_ids = [str(uuid4()), str(uuid4())]
+        mock_storage_service.move_file.return_value = True
 
         response = await async_client.post(
             "/api/v1/files/storage/batch",
@@ -599,10 +637,35 @@ class TestBatchOperationsE2E:
         data = response.json()
         assert data["operation"] == "move"
         assert all(r["status"] == "moved" for r in data["results"])
+        assert mock_storage_service.move_file.call_count == len(file_ids)
+
+    @pytest.mark.asyncio
+    async def test_batch_copy_operation(self, mock_storage_service, async_client, auth_headers):
+        """Test batch copy operation returns new file identifiers."""
+        file_ids = [str(uuid4()), str(uuid4())]
+        new_ids = [str(uuid4()), str(uuid4())]
+        mock_storage_service.copy_file.side_effect = new_ids
+
+        response = await async_client.post(
+            "/api/v1/files/storage/batch",
+            json={
+                "file_ids": file_ids,
+                "operation": "copy",
+                "destination": "archive/2024",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["operation"] == "copy"
+        assert all(r["status"] == "copied" for r in data["results"])
+        assert {r["new_file_id"] for r in data["results"]} == set(new_ids)
+        assert mock_storage_service.copy_file.call_count == len(file_ids)
 
     @pytest.mark.asyncio
     async def test_batch_unsupported_operation(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test batch operation with unsupported operation type."""
         file_ids = [str(uuid4())]
@@ -621,7 +684,27 @@ class TestBatchOperationsE2E:
         assert data["results"][0]["status"] == "unsupported_operation"
 
     @pytest.mark.asyncio
-    async def test_batch_operation_error(self, async_client, auth_headers, mock_storage_service):
+    async def test_batch_missing_destination(
+        self, mock_storage_service, async_client, auth_headers
+    ):
+        """Ensure missing destination reports informative status."""
+        file_id = str(uuid4())
+
+        response = await async_client.post(
+            "/api/v1/files/storage/batch",
+            json={
+                "file_ids": [file_id],
+                "operation": "move",
+            },
+            headers=auth_headers,
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["results"][0]["status"] == "missing_destination"
+
+    @pytest.mark.asyncio
+    async def test_batch_operation_error(self, mock_storage_service, async_client, auth_headers):
         """Test error handling in batch operations."""
         mock_storage_service.delete_file.side_effect = Exception("Batch error")
 
@@ -649,7 +732,7 @@ class TestCompleteWorkflowE2E:
 
     @pytest.mark.asyncio
     async def test_complete_file_lifecycle(
-        self, async_client, auth_headers, mock_storage_service, tenant_id
+        self, mock_storage_service, async_client, auth_headers, tenant_id
     ):
         """Test complete workflow: upload → metadata → download → delete."""
         file_id = str(uuid4())
@@ -699,7 +782,7 @@ class TestCompleteWorkflowE2E:
 
     @pytest.mark.asyncio
     async def test_multi_file_upload_and_list(
-        self, async_client, auth_headers, mock_storage_service
+        self, mock_storage_service, async_client, auth_headers
     ):
         """Test uploading multiple files and listing them."""
         from dotmac.platform.file_storage.service import FileMetadata
@@ -729,7 +812,7 @@ class TestCompleteWorkflowE2E:
                 file_name=f"file{i}.txt",
                 file_size=10,
                 content_type="text/plain",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             for i, fid in enumerate(file_ids)
         ]

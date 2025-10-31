@@ -1,3 +1,4 @@
+
 """
 Simple Unit Tests for Workflow Service
 
@@ -5,9 +6,17 @@ Tests the WorkflowService with mocked database operations.
 Avoids model instantiation to prevent SQLAlchemy configuration issues.
 """
 
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch, call
+from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+
+
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestWorkflowServiceInitialization:
@@ -100,7 +109,7 @@ class TestUpdateWorkflow:
 
         db.get = AsyncMock(return_value=mock_workflow)
 
-        result = await service.update_workflow(
+        await service.update_workflow(
             workflow_id=1,
             definition={"steps": [{"name": "new_step"}]},
         )
@@ -436,9 +445,7 @@ class TestListExecutions:
 
         from dotmac.platform.workflows.models import WorkflowStatus
 
-        result = await service.list_executions(
-            workflow_id=1, status=WorkflowStatus.COMPLETED
-        )
+        result = await service.list_executions(workflow_id=1, status=WorkflowStatus.COMPLETED)
 
         assert len(result) == 1
 
@@ -488,8 +495,8 @@ class TestGetExecutionStats:
 
     async def test_get_execution_stats(self):
         """Test getting execution statistics"""
-        from dotmac.platform.workflows.service import WorkflowService
         from dotmac.platform.workflows.models import WorkflowStatus
+        from dotmac.platform.workflows.service import WorkflowService
 
         db = AsyncMock()
         service = WorkflowService(db_session=db)
@@ -531,8 +538,8 @@ class TestGetExecutionStats:
 
     async def test_get_execution_stats_with_filters(self):
         """Test getting stats with filters"""
-        from dotmac.platform.workflows.service import WorkflowService
         from dotmac.platform.workflows.models import WorkflowStatus
+        from dotmac.platform.workflows.service import WorkflowService
 
         db = AsyncMock()
         service = WorkflowService(db_session=db)

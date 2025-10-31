@@ -5,7 +5,10 @@ Provides comprehensive customer data models with full audit trail,
 multi-tenant support, and rich metadata capabilities.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -21,9 +24,10 @@ from sqlalchemy import (
     String,
     Text,
     UniqueConstraint,
+    text,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
+from dotmac.platform.db import GUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import (
@@ -33,6 +37,12 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+
+# Ensure dependent tables (users) are registered when metadata is generated during tests
+try:  # pragma: no cover - import side-effect
+    from dotmac.platform.user_management.models import User  # noqa: F401
+except Exception:  # pragma: no cover - optional dependency
+    User = None  # type: ignore
 
 
 class CustomerStatus(str, Enum):
@@ -103,7 +113,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
 
     # Primary identifier
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
         nullable=False,
@@ -180,21 +190,21 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
 
     # Relationships
     user_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         comment="Link to auth user account",
     )
 
     assigned_to: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         comment="Assigned account manager or support agent",
     )
 
     segment_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customer_segments.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -213,6 +223,24 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
     average_order_value: Mapped[Decimal] = mapped_column(
         Numeric(15, 2), default=Decimal("0.00"), nullable=False
     )
+
+    # Compatibility helpers -------------------------------------------------
+
+    @property
+    def name(self) -> str:
+        """Backwards-compatible display name accessor."""
+        if self.display_name:
+            return self.display_name
+        return " ".join(filter(None, [self.first_name, self.last_name])).strip()
+
+    @name.setter
+    def name(self, value: str) -> None:
+        """Allow legacy code to set name directly."""
+        if value:
+            self.display_name = value
+            parts = value.strip().split(" ", 1)
+            self.first_name = parts[0]
+            self.last_name = parts[1] if len(parts) > 1 else parts[0]
 
     # Scoring and Risk
     credit_score: Mapped[int | None] = mapped_column(nullable=True)
@@ -263,7 +291,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
         DateTime(timezone=True), nullable=True, comment="Scheduled installation date"
     )
     installation_technician_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
         comment="Assigned field technician",
@@ -334,12 +362,26 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
     customer_tags = relationship("CustomerTag", back_populates="customer", lazy="dynamic")
     segment = relationship("CustomerSegment", back_populates="customers")
     # Contact relationships via join table
-    contact_links = relationship("CustomerContactLink", back_populates="customer", lazy="dynamic")
+    contact_links = relationship(
+        "CustomerContactLink",
+        back_populates="customer",
+        cascade="all, delete-orphan",
+        lazy="dynamic"
+    )
 
     # Indexes and constraints
     __table_args__ = (
         UniqueConstraint("tenant_id", "customer_number", name="uq_tenant_customer_number"),
-        UniqueConstraint("tenant_id", "email", name="uq_tenant_email"),
+        # Partial unique index for email - only applies to non-deleted rows
+        # This allows re-creating customers with same email after soft delete
+        Index(
+            "uq_tenant_email_active",
+            "tenant_id",
+            "email",
+            unique=True,
+            postgresql_where=text("deleted_at IS NULL"),
+            sqlite_where=text("deleted_at IS NULL"),
+        ),
         Index("ix_customer_status_tier", "status", "tier"),
         Index("ix_customer_search", "first_name", "last_name", "company_name"),
         Index("ix_customer_location", "country", "state_province", "city"),
@@ -379,7 +421,7 @@ class CustomerSegment(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # ty
     __tablename__ = "customer_segments"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
     )
@@ -413,13 +455,13 @@ class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     __tablename__ = "customer_activities"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
     )
 
     customer_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -440,7 +482,7 @@ class CustomerActivity(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     # User who performed the activity
     performed_by: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -463,13 +505,13 @@ class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type:
     __tablename__ = "customer_notes"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
     )
 
     customer_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -490,7 +532,7 @@ class CustomerNote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type:
 
     # Author
     created_by_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("users.id", ondelete="SET NULL"),
         nullable=True,
     )
@@ -510,13 +552,13 @@ class CustomerTag(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     __tablename__ = "customer_tags_association"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
     )
 
     customer_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
     )
@@ -557,13 +599,13 @@ class CustomerContactLink(Base, TimestampMixin, TenantMixin):  # type: ignore[mi
     __tablename__ = "customer_contacts"
 
     id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         primary_key=True,
         default=uuid4,
     )
 
     customer_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -571,7 +613,7 @@ class CustomerContactLink(Base, TimestampMixin, TenantMixin):  # type: ignore[mi
 
     # Contact reference
     contact_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("contacts.id", ondelete="CASCADE"),
         nullable=False,
         index=True,

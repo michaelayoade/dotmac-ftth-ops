@@ -17,6 +17,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
 import { CreditCard, Building2, Wallet, AlertCircle } from "lucide-react";
+import {
+  StripeCardElement,
+  useStripeCardToken,
+} from "@/components/billing/StripeCardElement";
 
 interface AddPaymentMethodModalProps {
   open: boolean;
@@ -35,11 +39,11 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
 }) => {
   const [methodType, setMethodType] = useState<"card" | "bank_account" | "wallet">("card");
   const [setAsDefault, setSetAsDefault] = useState(false);
+  const [cardReady, setCardReady] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
+  const [cardElementError, setCardElementError] = useState<string | null>(null);
 
-  // Card details (simulated - in production, use Stripe Elements)
-  const [cardNumber, setCardNumber] = useState("");
-  const [cardExpiry, setCardExpiry] = useState("");
-  const [cardCvc, setCvc] = useState("");
+  const { createToken } = useStripeCardToken();
 
   // Bank account details
   const [bankName, setBankName] = useState("");
@@ -57,9 +61,9 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
   const [billingCountry, setBillingCountry] = useState("US");
 
   const resetForm = () => {
-    setCardNumber("");
-    setCardExpiry("");
-    setCvc("");
+    setCardReady(false);
+    setCardComplete(false);
+    setCardElementError(null);
     setBankName("");
     setAccountNumber("");
     setRoutingNumber("");
@@ -78,15 +82,17 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
       let request: AddPaymentMethodRequest;
 
       if (methodType === "card") {
-        // In production: Use Stripe.js to tokenize card
-        // const { token } = await stripe.createToken(cardElement);
+        // Create Stripe token from card element
+        const { token, error: tokenError } = await createToken();
 
-        // Simulated token for demo purposes
-        const simulatedCardToken = `tok_${Math.random().toString(36).substring(7)}`;
+        if (tokenError || !token) {
+          setCardElementError(tokenError || "Failed to create payment token");
+          return;
+        }
 
         request = {
           method_type: "card",
-          card_token: simulatedCardToken,
+          card_token: token,
           billing_name: billingName,
           billing_email: billingEmail,
           billing_address_line1: billingAddressLine1,
@@ -129,7 +135,7 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
     if (!billingName || !billingEmail) return false;
 
     if (methodType === "card") {
-      return cardNumber.length >= 13 && cardExpiry.length >= 4 && cardCvc.length >= 3;
+      return cardReady && cardComplete && !cardElementError;
     }
 
     if (methodType === "bank_account") {
@@ -137,20 +143,6 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
     }
 
     return false;
-  };
-
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s/g, "");
-    const formatted = cleaned.match(/.{1,4}/g)?.join(" ") || cleaned;
-    return formatted;
-  };
-
-  const formatExpiry = (value: string) => {
-    const cleaned = value.replace(/\D/g, "");
-    if (cleaned.length >= 2) {
-      return `${cleaned.substring(0, 2)}/${cleaned.substring(2, 4)}`;
-    }
-    return cleaned;
   };
 
   return (
@@ -188,47 +180,13 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
 
           {/* Card Payment Tab */}
           <TabsContent value="card" className="space-y-4">
-            <div className="rounded-md bg-blue-500/10 border border-blue-500/20 p-3">
-              <p className="text-sm text-blue-600 dark:text-blue-400">
-                In production, this would use Stripe Elements for PCI-compliant card collection.
-                Card data is tokenized client-side and never touches your server.
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cardNumber">Card Number</Label>
-              <Input
-                id="cardNumber"
-                placeholder="1234 5678 9012 3456"
-                value={formatCardNumber(cardNumber)}
-                onChange={(e) => setCardNumber(e.target.value.replace(/\s/g, "").substring(0, 16))}
-                maxLength={19}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="cardExpiry">Expiration (MM/YY)</Label>
-                <Input
-                  id="cardExpiry"
-                  placeholder="12/25"
-                  value={formatExpiry(cardExpiry)}
-                  onChange={(e) => setCardExpiry(e.target.value.replace(/\D/g, "").substring(0, 4))}
-                  maxLength={5}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cardCvc">CVC</Label>
-                <Input
-                  id="cardCvc"
-                  type="password"
-                  placeholder="123"
-                  value={cardCvc}
-                  onChange={(e) => setCvc(e.target.value.replace(/\D/g, "").substring(0, 4))}
-                  maxLength={4}
-                />
-              </div>
-            </div>
+            <StripeCardElement
+              onCardReady={setCardReady}
+              onCardChange={(event) => {
+                setCardComplete(event.complete);
+                setCardElementError(event.error?.message || null);
+              }}
+            />
           </TabsContent>
 
           {/* Bank Account Tab */}

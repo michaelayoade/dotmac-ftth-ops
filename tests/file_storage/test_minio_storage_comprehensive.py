@@ -65,6 +65,7 @@ import dotmac.platform.file_storage.minio_storage as minio_storage_module  # noq
 minio_storage_module.S3Error = _NonFrozenS3Error
 
 
+@pytest.mark.unit
 class TestFileInfo:
     """Test FileInfo dataclass."""
 
@@ -86,6 +87,7 @@ class TestFileInfo:
         assert file_info.tenant_id == "tenant-123"
 
 
+@pytest.mark.unit
 class TestMinIOStorageInit:
     """Test MinIOStorage initialization."""
 
@@ -215,6 +217,7 @@ class TestMinIOStorageInit:
             MinIOStorage()
 
 
+@pytest.mark.unit
 class TestGetObjectName:
     """Test _get_object_name method."""
 
@@ -257,6 +260,7 @@ class TestGetObjectName:
         assert result == "tenant-123/uploads/file.txt"
 
 
+@pytest.mark.unit
 class TestSaveFile:
     """Test save_file method."""
 
@@ -313,6 +317,7 @@ class TestSaveFile:
             storage.save_file("uploads/test.txt", content, "tenant-123")
 
 
+@pytest.mark.unit
 class TestGetFile:
     """Test get_file method."""
 
@@ -395,6 +400,7 @@ class TestGetFile:
             storage.get_file("test.txt", "tenant-123")
 
 
+@pytest.mark.unit
 class TestDeleteFile:
     """Test delete_file method."""
 
@@ -470,6 +476,7 @@ class TestDeleteFile:
             storage.delete_file("test.txt", "tenant-123")
 
 
+@pytest.mark.unit
 class TestFileExists:
     """Test file_exists method."""
 
@@ -544,6 +551,7 @@ class TestFileExists:
             storage.file_exists("test.txt", "tenant-123")
 
 
+@pytest.mark.unit
 class TestListFiles:
     """Test list_files method."""
 
@@ -761,6 +769,7 @@ class TestListFiles:
             storage.list_files(tenant_id="tenant-123")
 
 
+@pytest.mark.unit
 class TestFilesystemOperations:
     """Test save_file_from_path and get_file_to_path methods."""
 
@@ -886,6 +895,7 @@ class TestFilesystemOperations:
             storage.get_file_to_path("remote.txt", "/tmp/out.txt", "tenant-123")
 
 
+@pytest.mark.unit
 class TestGlobalStorageInstance:
     """Test global storage instance management."""
 

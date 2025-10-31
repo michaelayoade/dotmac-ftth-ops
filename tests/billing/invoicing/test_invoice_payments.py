@@ -1,3 +1,4 @@
+
 """
 Invoice payment tests - Migrated to use shared helpers.
 
@@ -16,9 +17,14 @@ from dotmac.platform.billing.core.exceptions import InvoiceNotFoundError
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestInvoiceServicePaymentManagement:
     """Test invoice payment management functionality"""
 
@@ -85,7 +91,8 @@ class TestInvoiceServicePaymentManagement:
         assert mock_invoice_entity.total_credits_applied == 5000
         assert mock_invoice_entity.remaining_balance == 5000
         assert credit_application_id in mock_invoice_entity.credit_applications
-        assert mock_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert mock_invoice_entity.payment_status == PaymentStatus.PENDING
+        assert mock_invoice_entity.status == InvoiceStatus.PARTIALLY_PAID
 
         # Verify transaction creation
         assert mock_db.add.called
@@ -156,22 +163,25 @@ class TestInvoiceServicePaymentManagement:
         assert mock_invoice_entity.remaining_balance == 0
         mock_db.commit.assert_called()
 
-    async def test_update_invoice_payment_status_partially_refunded(
+    async def test_update_invoice_payment_status_partial_pending(
         self, sample_tenant_id, mock_invoice_entity
     ):
-        """Test updating invoice payment status to partially refunded"""
+        """Test updating invoice payment status to pending for partial payments"""
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)
 
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
+        mock_invoice_entity.status = InvoiceStatus.OPEN
+        mock_invoice_entity.remaining_balance = mock_invoice_entity.total_amount - 500
+
         # Update payment status
         await service.update_invoice_payment_status(
-            sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.PARTIALLY_REFUNDED
+            sample_tenant_id, mock_invoice_entity.invoice_id, PaymentStatus.PENDING
         )
 
         # Verify updates
-        assert mock_invoice_entity.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+        assert mock_invoice_entity.payment_status == PaymentStatus.PENDING
         assert mock_invoice_entity.status == InvoiceStatus.PARTIALLY_PAID
         mock_db.commit.assert_called()
 

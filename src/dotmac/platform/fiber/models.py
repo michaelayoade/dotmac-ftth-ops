@@ -12,7 +12,10 @@ Provides comprehensive database models for fiber optic network infrastructure ma
 Created: 2025-10-19
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4
@@ -279,7 +282,9 @@ class FiberCable(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         Index("ix_fiber_cables_tenant_fiber_type", "tenant_id", "fiber_type"),
         Index("ix_fiber_cables_route", "start_site_id", "end_site_id"),
         CheckConstraint("fiber_count > 0", name="ck_fiber_cables_fiber_count_positive"),
-        CheckConstraint("length_km IS NULL OR length_km > 0", name="ck_fiber_cables_length_positive"),
+        CheckConstraint(
+            "length_km IS NULL OR length_km > 0", name="ck_fiber_cables_length_positive"
+        ),
     )
 
 
@@ -515,7 +520,10 @@ class DistributionPoint(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, Audi
         Index("ix_fiber_distribution_points_tenant_type", "tenant_id", "point_type"),
         Index("ix_fiber_distribution_points_tenant_status", "tenant_id", "status"),
         Index("ix_fiber_distribution_points_site", "site_id"),
-        CheckConstraint("total_ports IS NULL OR total_ports > 0", name="ck_distribution_points_total_ports_positive"),
+        CheckConstraint(
+            "total_ports IS NULL OR total_ports > 0",
+            name="ck_distribution_points_total_ports_positive",
+        ),
         CheckConstraint("used_ports >= 0", name="ck_distribution_points_used_ports_non_negative"),
         CheckConstraint(
             "total_ports IS NULL OR used_ports <= total_ports",
@@ -641,13 +649,19 @@ class ServiceArea(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin
         Index("ix_fiber_service_areas_serviceable", "is_serviceable"),
         Index("ix_fiber_service_areas_construction", "construction_status"),
         CheckConstraint("homes_passed >= 0", name="ck_service_areas_homes_passed_non_negative"),
-        CheckConstraint("homes_connected >= 0", name="ck_service_areas_homes_connected_non_negative"),
+        CheckConstraint(
+            "homes_connected >= 0", name="ck_service_areas_homes_connected_non_negative"
+        ),
         CheckConstraint(
             "homes_connected <= homes_passed",
             name="ck_service_areas_homes_connected_not_exceeds_passed",
         ),
-        CheckConstraint("businesses_passed >= 0", name="ck_service_areas_businesses_passed_non_negative"),
-        CheckConstraint("businesses_connected >= 0", name="ck_service_areas_businesses_connected_non_negative"),
+        CheckConstraint(
+            "businesses_passed >= 0", name="ck_service_areas_businesses_passed_non_negative"
+        ),
+        CheckConstraint(
+            "businesses_connected >= 0", name="ck_service_areas_businesses_connected_non_negative"
+        ),
         CheckConstraint(
             "businesses_connected <= businesses_passed",
             name="ck_service_areas_businesses_connected_not_exceeds_passed",

@@ -1,3 +1,4 @@
+
 """
 Test database configuration for billing tests.
 
@@ -12,7 +13,14 @@ from sqlalchemy import MetaData, create_engine, event
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+
 # Set test environment to prevent accidental database operations
+
+
+
+
+pytestmark = pytest.mark.unit
+
 os.environ["TESTING"] = "1"
 os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 

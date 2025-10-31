@@ -1,3 +1,4 @@
+
 """
 Test webhook handlers for payment providers
 """
@@ -12,12 +13,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.billing.config import BillingConfig, StripeConfig
 from dotmac.platform.billing.core.enums import PaymentStatus
 from dotmac.platform.billing.webhooks.handlers import (
+
+
     PayPalWebhookHandler,
     StripeWebhookHandler,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db():
@@ -62,6 +68,7 @@ def paypal_handler(mock_db):
     return handler
 
 
+@pytest.mark.integration
 class TestStripeWebhookHandler:
     """Test Stripe webhook handler"""
 
@@ -241,6 +248,7 @@ class TestStripeWebhookHandler:
         assert result["event_type"] == "unknown.event.type"
 
 
+@pytest.mark.integration
 class TestPayPalWebhookHandler:
     """Test PayPal webhook handler"""
 

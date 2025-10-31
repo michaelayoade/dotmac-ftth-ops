@@ -27,6 +27,7 @@ import { useRouter } from "next/navigation";
 interface InvoiceListProps {
   tenantId: string;
   onInvoiceSelect?: (invoice: Invoice) => void;
+  refreshToken?: number;
 }
 
 const statusColors = {
@@ -45,7 +46,7 @@ const paymentStatusColors: Record<string, string> = {
   refunded: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
 };
 
-export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListProps) {
+export default function InvoiceList({ tenantId, onInvoiceSelect, refreshToken }: InvoiceListProps) {
   const router = useRouter();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -81,7 +82,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
 
   useEffect(() => {
     fetchInvoices();
-  }, [fetchInvoices]);
+  }, [fetchInvoices, refreshToken]);
 
   // Bulk operations
   const handleBulkSend = useCallback(

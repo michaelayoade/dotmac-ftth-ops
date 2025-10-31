@@ -4,7 +4,7 @@ Tests for customer management Pydantic schemas.
 Tests schema validation, serialization, and all Pydantic features.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import uuid4
 
@@ -35,6 +35,7 @@ from dotmac.platform.customer_management.schemas import (
 )
 
 
+@pytest.mark.unit
 class TestCustomerBaseSchema:
     """Test base customer schema."""
 
@@ -135,6 +136,7 @@ class TestCustomerBaseSchema:
         )
 
 
+@pytest.mark.unit
 class TestCustomerCreateSchema:
     """Test customer creation schema."""
 
@@ -251,6 +253,7 @@ class TestCustomerCreateSchema:
         assert any(error["loc"] == ("country",) for error in errors)
 
 
+@pytest.mark.unit
 class TestCustomerUpdateSchema:
     """Test customer update schema."""
 
@@ -279,13 +282,14 @@ class TestCustomerUpdateSchema:
         assert schema.email is None
 
 
+@pytest.mark.unit
 class TestCustomerResponseSchema:
     """Test customer response schema."""
 
     def test_customer_response_from_model(self):
         """Test CustomerResponse creation from model data."""
         # Simulate model data with all required fields
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         model_data = {
             "id": uuid4(),
             "customer_number": "CUST001",
@@ -324,6 +328,7 @@ class TestCustomerResponseSchema:
         assert schema.tags == ["customer", "active"]
 
 
+@pytest.mark.unit
 class TestCustomerSearchParamsSchema:
     """Test customer search parameters schema."""
 
@@ -377,6 +382,7 @@ class TestCustomerSearchParamsSchema:
         assert any(error["loc"] == ("page_size",) for error in errors)
 
 
+@pytest.mark.unit
 class TestCustomerActivitySchemas:
     """Test customer activity schemas."""
 
@@ -420,7 +426,7 @@ class TestCustomerActivitySchemas:
             "description": "Customer made a purchase",
             "metadata": {"amount": 100.50},
             "performed_by": uuid4(),
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         }
 
         schema = CustomerActivityResponse.model_validate(model_data)
@@ -432,6 +438,7 @@ class TestCustomerActivitySchemas:
         assert schema.metadata["amount"] == 100.50
 
 
+@pytest.mark.unit
 class TestCustomerNoteSchemas:
     """Test customer note schemas."""
 
@@ -469,8 +476,8 @@ class TestCustomerNoteSchemas:
             "content": "This is an important note about the customer",
             "is_internal": False,
             "created_by_id": uuid4(),
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         schema = CustomerNoteResponse.model_validate(model_data)
@@ -481,6 +488,7 @@ class TestCustomerNoteSchemas:
         assert schema.is_internal is False
 
 
+@pytest.mark.unit
 class TestCustomerSegmentSchemas:
     """Test customer segment schemas."""
 
@@ -523,8 +531,8 @@ class TestCustomerSegmentSchemas:
             "is_dynamic": True,
             "member_count": 25,
             "priority": 1,
-            "created_at": datetime.now(UTC),
-            "updated_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         schema = CustomerSegmentResponse.model_validate(model_data)
@@ -535,12 +543,13 @@ class TestCustomerSegmentSchemas:
         assert schema.member_count == 25
 
 
+@pytest.mark.unit
 class TestCustomerListResponseSchema:
     """Test customer list response schema."""
 
     def test_customer_list_response(self):
         """Test CustomerListResponse schema."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         customers_data = [
             {
                 "id": uuid4(),
@@ -589,6 +598,7 @@ class TestCustomerListResponseSchema:
         assert schema.has_prev is False
 
 
+@pytest.mark.unit
 class TestCustomerMetricsSchema:
     """Test customer metrics schema."""
 
@@ -633,6 +643,7 @@ class TestCustomerMetricsSchema:
         assert len(schema.top_segments) == 2
 
 
+@pytest.mark.unit
 class TestSchemaEdgeCases:
     """Test edge cases and error conditions."""
 

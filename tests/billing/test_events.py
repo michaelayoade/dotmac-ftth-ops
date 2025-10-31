@@ -19,6 +19,7 @@ from dotmac.platform.billing.events import (
 from dotmac.platform.events import EventPriority
 
 
+@pytest.mark.unit
 class TestBillingEvents:
     """Test BillingEvents constant class."""
 
@@ -66,6 +67,7 @@ class TestBillingEvents:
         assert BillingEvents.CREDIT_NOTE_ISSUED == "credit_note.issued"
 
 
+@pytest.mark.unit
 class TestInvoiceEventEmission:
     """Test invoice event emission functions."""
 
@@ -153,6 +155,7 @@ class TestInvoiceEventEmission:
         assert call_args.kwargs["priority"] == EventPriority.HIGH
 
 
+@pytest.mark.unit
 class TestPaymentEventEmission:
     """Test payment event emission functions."""
 
@@ -211,6 +214,7 @@ class TestPaymentEventEmission:
         assert payload["retry_count"] == 3
 
 
+@pytest.mark.unit
 class TestSubscriptionEventEmission:
     """Test subscription event emission functions."""
 
@@ -296,6 +300,7 @@ class TestSubscriptionEventEmission:
         assert payload["reason"] is None
 
 
+@pytest.mark.unit
 class TestEventBusIntegration:
     """Test event bus integration (using global event bus)."""
 

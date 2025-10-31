@@ -20,6 +20,7 @@ from dotmac.platform.monitoring.health_checks import (
 )
 
 
+@pytest.mark.integration
 class TestRedisProductionMandatory:
     """Test that Redis is mandatory in production."""
 
@@ -95,6 +96,7 @@ class TestRedisProductionMandatory:
                 assert "MANDATORY" in health.message
 
 
+@pytest.mark.integration
 class TestHealthCheckerProductionStartup:
     """Test that health checker blocks production startup when Redis unavailable."""
 
@@ -281,6 +283,7 @@ class TestHealthCheckerProductionStartup:
                                     assert "redis" in summary["failed_required"]
 
 
+@pytest.mark.integration
 class TestSettingsProductionValidation:
     """Test that Settings validation enforces Redis configuration in production."""
 
@@ -356,6 +359,7 @@ class TestSettingsProductionValidation:
             settings.validate_production_security()
 
 
+@pytest.mark.integration
 class TestProductionStartupIntegration:
     """Integration tests for production startup behavior."""
 

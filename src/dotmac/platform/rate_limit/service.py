@@ -6,7 +6,10 @@ Redis-backed rate limiting with sliding window algorithm.
 
 import hashlib
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 from uuid import UUID
 
@@ -96,9 +99,7 @@ class RateLimitService:
         """Generate Redis key for rate limit tracking."""
         # Use hash to keep key length reasonable
         # MD5 used for identifier hashing, not security
-        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[
-            :12
-        ]  # nosec B324
+        id_hash = hashlib.md5(identifier.encode(), usedforsecurity=False).hexdigest()[:12]  # nosec B324
         return f"ratelimit:{tenant_id}:{scope.value}:{id_hash}:{rule_id}"
 
     async def check_rate_limit(
@@ -128,7 +129,9 @@ class RateLimitService:
                 continue
 
             # Check rate limit for this rule
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue
@@ -184,7 +187,9 @@ class RateLimitService:
             if await self._is_exempt(rule, user_id, ip_address, api_key_id):
                 continue
 
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue
@@ -235,6 +240,7 @@ class RateLimitService:
     def _get_identifier(
         self,
         scope: RateLimitScope,
+        tenant_id: str,
         user_id: UUID | None,
         ip_address: str | None,
         api_key_id: str | None,
@@ -243,6 +249,8 @@ class RateLimitService:
         """Get identifier based on scope."""
         if scope == RateLimitScope.GLOBAL:
             return "global"
+        elif scope == RateLimitScope.PER_TENANT:
+            return tenant_id
         elif scope == RateLimitScope.PER_USER:
             return str(user_id) if user_id else None
         elif scope == RateLimitScope.PER_IP:
@@ -359,7 +367,9 @@ class RateLimitService:
             if await self._is_exempt(rule, user_id, ip_address, api_key_id):
                 continue
 
-            identifier = self._get_identifier(rule.scope, user_id, ip_address, api_key_id, endpoint)
+            identifier = self._get_identifier(
+                rule.scope, tenant_id, user_id, ip_address, api_key_id, endpoint
+            )
 
             if identifier is None:
                 continue

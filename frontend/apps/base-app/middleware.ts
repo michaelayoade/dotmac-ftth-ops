@@ -1,14 +1,21 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { ROUTES, API_ROUTES } from "./lib/routes";
 
 // Routes that don't require authentication
-const publicRoutes = ["/login", "/register", "/forgot-password", "/reset-password", "/"];
+const publicRoutes = [
+  ROUTES.LOGIN,
+  ROUTES.REGISTER,
+  ROUTES.FORGOT_PASSWORD,
+  ROUTES.RESET_PASSWORD,
+  ROUTES.HOME,
+];
 const apiAuthRoutes = [
   "/api/auth/",
-  "/api/v1/auth/login",
-  "/api/v1/auth/register",
-  "/api/v1/auth/refresh",
-  "/api/v1/auth/logout",
+  API_ROUTES.AUTH.LOGIN,
+  API_ROUTES.AUTH.REGISTER,
+  API_ROUTES.AUTH.REFRESH,
+  API_ROUTES.AUTH.LOGOUT,
 ];
 
 export function middleware(request: NextRequest) {
@@ -16,7 +23,7 @@ export function middleware(request: NextRequest) {
 
   // Skip middleware for public routes and API auth endpoints
   if (
-    publicRoutes.includes(pathname) ||
+    publicRoutes.includes(pathname as any) ||
     apiAuthRoutes.some((route) => pathname.startsWith(route))
   ) {
     return NextResponse.next();
@@ -53,15 +60,8 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("access_token");
   const refreshToken = request.cookies.get("refresh_token");
 
-  // Debug logging for protected routes
-  if (pathname.startsWith("/dashboard")) {
-    console.log("[Middleware] Dashboard access attempt:", {
-      pathname,
-      hasToken: !!token,
-      hasRefreshToken: !!refreshToken,
-      allCookies: Array.from(request.cookies.getAll().map((c) => c.name)),
-    });
-  }
+  // Note: Removed console.log to prevent credential exposure
+  // Use logger utility for production-safe logging if needed
 
   // Handle API routes - but skip auth-related endpoints
   // Auth endpoints need cookies to be forwarded as-is to backend
@@ -87,7 +87,7 @@ export function middleware(request: NextRequest) {
   // Handle protected routes
   if (!token && !refreshToken) {
     const url = request.nextUrl.clone();
-    url.pathname = "/login";
+    url.pathname = ROUTES.LOGIN;
     url.searchParams.set("from", pathname);
     return NextResponse.redirect(url);
   }

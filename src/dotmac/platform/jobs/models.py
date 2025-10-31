@@ -5,7 +5,10 @@ Generic job tracking for async operations (bulk imports, exports, campaigns, etc
 Enhanced with scheduling and job chain capabilities.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -152,6 +155,11 @@ class Job(Base):  # type: ignore[misc]
     error_details: Mapped[dict[str, Any] | None] = mapped_column(
         JSON,
         nullable=True,
+    )
+    error_traceback: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Full traceback for failed jobs",
     )
     failed_items: Mapped[list[Any] | None] = mapped_column(
         JSON,
@@ -306,9 +314,16 @@ class Job(Base):  # type: ignore[misc]
         if not self.started_at:
             return None
 
-        # Use UTC time consistently (timezone-aware)
-        end_time = self.completed_at or self.cancelled_at or datetime.now(UTC)
-        return int((end_time - self.started_at).total_seconds())
+        def _as_utc(dt: datetime) -> datetime:
+            """Normalize datetimes to UTC with timezone info."""
+            if dt.tzinfo is None:
+                return dt.replace(tzinfo=UTC)
+            return dt.astimezone(UTC)
+
+        start_time = _as_utc(self.started_at)
+        end_source = self.completed_at or self.cancelled_at or datetime.now(UTC)
+        end_time = _as_utc(end_source)
+        return int((end_time - start_time).total_seconds())
 
 
 class ScheduledJob(Base):  # type: ignore[misc]

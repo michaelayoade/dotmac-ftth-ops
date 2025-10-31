@@ -114,7 +114,9 @@ class KubernetesAdapter(DeploymentAdapter):
 
     async def upgrade(self, context: ExecutionContext) -> DeploymentResult:
         """Upgrade Kubernetes deployment"""
-        self._log_operation("upgrade", context, f"Upgrading from {context.from_version} to {context.to_version}")
+        self._log_operation(
+            "upgrade", context, f"Upgrading from {context.from_version} to {context.to_version}"
+        )
         started_at = datetime.utcnow()
 
         try:
@@ -319,13 +321,17 @@ class KubernetesAdapter(DeploymentAdapter):
         """Get Kubernetes deployment status"""
         try:
             # Get namespace status
-            namespace_info = await self._kubectl(["get", "namespace", context.namespace, "-o", "json"])
+            namespace_info = await self._kubectl(
+                ["get", "namespace", context.namespace, "-o", "json"]
+            )
 
             # Get pod status
             pods_info = await self._kubectl(["get", "pods", "-n", context.namespace, "-o", "json"])
 
             # Get service status
-            services_info = await self._kubectl(["get", "services", "-n", context.namespace, "-o", "json"])
+            services_info = await self._kubectl(
+                ["get", "services", "-n", context.namespace, "-o", "json"]
+            )
 
             pods = pods_info.get("items", [])
             total_pods = len(pods)
@@ -381,7 +387,9 @@ class KubernetesAdapter(DeploymentAdapter):
 
         # Validate Helm chart exists
         if not await self._helm_chart_exists(context.template_name, context.template_version):
-            errors.append(f"Helm chart {context.template_name}:{context.template_version} not found")
+            errors.append(
+                f"Helm chart {context.template_name}:{context.template_version} not found"
+            )
 
         return len(errors) == 0, errors
 
@@ -526,15 +534,20 @@ class KubernetesAdapter(DeploymentAdapter):
     async def _helm_chart_exists(self, chart_name: str, version: str) -> bool:
         """Check if Helm chart exists"""
         try:
-            cmd = ["helm", "search", "repo", f"{self.helm_repo_name}/{chart_name}", "--version", version]
+            cmd = [
+                "helm",
+                "search",
+                "repo",
+                f"{self.helm_repo_name}/{chart_name}",
+                "--version",
+                version,
+            ]
             result = await self._run_command(cmd)
             return bool(result.strip())
         except Exception:
             return False
 
-    async def _kubectl(
-        self, args: list[str], return_output: bool = False
-    ) -> dict[str, Any] | str:
+    async def _kubectl(self, args: list[str], return_output: bool = False) -> dict[str, Any] | str:
         """Run kubectl command"""
         cmd = ["kubectl"]
         if self.kubeconfig_path:
@@ -558,12 +571,28 @@ class KubernetesAdapter(DeploymentAdapter):
     async def _scale_deployments(self, context: ExecutionContext, replicas: int) -> None:
         """Scale all deployments in namespace"""
         deployments = await self._kubectl(
-            ["get", "deployments", "-n", context.namespace, "-o", "jsonpath={.items[*].metadata.name}"],
+            [
+                "get",
+                "deployments",
+                "-n",
+                context.namespace,
+                "-o",
+                "jsonpath={.items[*].metadata.name}",
+            ],
             return_output=True,
         )
 
         for deployment in deployments.split():
-            await self._kubectl(["scale", "deployment", deployment, "-n", context.namespace, f"--replicas={replicas}"])
+            await self._kubectl(
+                [
+                    "scale",
+                    "deployment",
+                    deployment,
+                    "-n",
+                    context.namespace,
+                    f"--replicas={replicas}",
+                ]
+            )
 
     async def _wait_for_ready(self, context: ExecutionContext, timeout_seconds: int = 600) -> None:
         """Wait for deployment to be ready"""
@@ -576,22 +605,33 @@ class KubernetesAdapter(DeploymentAdapter):
 
         raise TimeoutError("Deployment did not become ready within timeout")
 
-    async def _wait_for_rollout(self, context: ExecutionContext, timeout_seconds: int = 600) -> None:
+    async def _wait_for_rollout(
+        self, context: ExecutionContext, timeout_seconds: int = 600
+    ) -> None:
         """Wait for rollout to complete"""
         deployments = await self._kubectl(
-            ["get", "deployments", "-n", context.namespace, "-o", "jsonpath={.items[*].metadata.name}"],
+            [
+                "get",
+                "deployments",
+                "-n",
+                context.namespace,
+                "-o",
+                "jsonpath={.items[*].metadata.name}",
+            ],
             return_output=True,
         )
 
         for deployment in deployments.split():
-            await self._kubectl([
-                "rollout",
-                "status",
-                f"deployment/{deployment}",
-                "-n",
-                context.namespace,
-                f"--timeout={timeout_seconds}s",
-            ])
+            await self._kubectl(
+                [
+                    "rollout",
+                    "status",
+                    f"deployment/{deployment}",
+                    "-n",
+                    context.namespace,
+                    f"--timeout={timeout_seconds}s",
+                ]
+            )
 
     async def _get_service_endpoints(self, context: ExecutionContext) -> dict[str, str]:
         """Get service endpoints"""
@@ -628,7 +668,9 @@ class KubernetesAdapter(DeploymentAdapter):
             stderr=asyncio.subprocess.PIPE,
         )
 
-        stdout, stderr = await process.communicate(input=input_data.encode() if input_data else None)
+        stdout, stderr = await process.communicate(
+            input=input_data.encode() if input_data else None
+        )
 
         if process.returncode != 0:
             raise Exception(f"Command failed: {' '.join(cmd)}\n{stderr.decode()}")

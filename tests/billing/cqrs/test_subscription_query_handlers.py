@@ -1,6 +1,6 @@
 """Tests for Subscription Query Handlers (CQRS Pattern)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -16,6 +16,7 @@ from dotmac.platform.billing.read_models.subscription_read_models import (
 )
 
 
+@pytest.mark.unit
 class TestSubscriptionQueryHandler:
     """Test SubscriptionQueryHandler with mocked database"""
 
@@ -35,7 +36,7 @@ class TestSubscriptionQueryHandler:
         query = GetSubscriptionQuery(tenant_id="tenant-1", subscription_id="sub-123")
 
         # Mock database result
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         mock_subscription = MagicMock()
         mock_subscription.subscription_id = "sub-123"
         mock_subscription.tenant_id = "tenant-1"
@@ -132,6 +133,7 @@ class TestSubscriptionQueryHandler:
         assert len(result) == 0
 
 
+@pytest.mark.unit
 class TestSubscriptionQueryEdgeCases:
     """Test edge cases for subscription queries"""
 

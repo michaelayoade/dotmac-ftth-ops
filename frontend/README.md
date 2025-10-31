@@ -12,43 +12,33 @@
 
 ```bash
 # Install and run
-cd frontend/apps/base-app
+cd frontend
 pnpm install
-pnpm dev                # Development server (http://localhost:3000)
 
-# Build for production
+# ISP operations app
+pnpm dev:isp            # http://localhost:3001
+
+# Platform admin app
+pnpm dev:admin          # http://localhost:3002
+
+# Legacy base-app (optional comparison)
+pnpm dev:base-app       # http://localhost:3000
+
+# Build for production (all apps)
 pnpm build
-pnpm start              # Production server
 
-# Deploy - see DEPLOY.md for instructions
+# Start a specific app in production mode
+pnpm --filter @dotmac/isp-ops-app start
 ```
 
 ---
 
 ## 📚 **START HERE** - Documentation Index
 
-### 🎯 New Developer? Read These First
-
-1. **[FINAL_SUMMARY.md](./FINAL_SUMMARY.md)** ⭐ - Complete project summary, metrics, and celebration
-2. **[QUICK_START.md](./QUICK_START.md)** - Understand the codebase in 60 seconds
-3. **[PRODUCTION_READY.md](./PRODUCTION_READY.md)** - Detailed production readiness report (90/100 score)
-
-### 🚀 Ready to Deploy?
-
-4. **[DEPLOY.md](./DEPLOY.md)** - Complete deployment guide with multiple options (Vercel, Docker, PM2)
-
-### 📖 Implementation Guides
-
-5. **[BILLING_INTEGRATION_GUIDE.md](./BILLING_INTEGRATION_GUIDE.md)** - How billing pages were integrated (reference)
-6. **[FORM_VALIDATION_GUIDE.md](./FORM_VALIDATION_GUIDE.md)** - Complete form validation with Zod (NEW) ⭐
-7. **[VALIDATION_COMPLETE.md](./VALIDATION_COMPLETE.md)** - Validation implementation summary (NEW)
-8. **[PROGRESS_UPDATE.md](./PROGRESS_UPDATE.md)** - Page-by-page status tracking
-
-### 📝 Historical Context
-
-9. **[SESSION_SUMMARY.md](./SESSION_SUMMARY.md)** - Complete journey from broken build to production ready
-10. **[FIXES_COMPLETED.md](./FIXES_COMPLETED.md)** - Infrastructure fixes and improvements
-11. **[OBSERVABILITY_SETUP.md](./OBSERVABILITY_SETUP.md)** - Monitoring and telemetry
+- **Frontend multi-app architecture**: [MULTI-APP-ARCHITECTURE.md](./MULTI-APP-ARCHITECTURE.md)
+- **Developer quick start**: [QUICK-START-MULTI-APP.md](./QUICK-START-MULTI-APP.md)
+- **Deployment guidance**: [DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md)
+- **E2E testing reference**: [e2e/README.md](./e2e/README.md)
 
 ---
 
@@ -236,7 +226,7 @@ npm install -g pm2
 pm2 start npm --name "dotmac-frontend" -- start
 ```
 
-**Full instructions**: See [DEPLOY.md](./DEPLOY.md)
+**Full instructions**: See [DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md)
 
 ---
 
@@ -278,15 +268,15 @@ Production Score: 98/100 ⭐⭐⭐
 
 ### Implementation Questions
 
-1. Read **[QUICK_START.md](./QUICK_START.md)** - 60-second overview
-2. Check **[BILLING_INTEGRATION_GUIDE.md](./BILLING_INTEGRATION_GUIDE.md)** - Detailed examples
+1. Read **[QUICK-START-MULTI-APP.md](./QUICK-START-MULTI-APP.md)** - 60-second overview
+2. Check **[apps/base-app/DEVELOPMENT_GUIDE.md](./apps/base-app/DEVELOPMENT_GUIDE.md)** - Detailed examples
 3. Reference `contexts/RBACContext.tsx` - Gold standard pattern
 4. Check `hooks/useHealth.ts` - Simple hook example
 
 ### Deployment Questions
 
-1. Read **[DEPLOY.md](./DEPLOY.md)** - Complete guide
-2. Check **[PRODUCTION_READY.md](./PRODUCTION_READY.md)** - Readiness checklist
+1. Read **[DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md)** - Complete guide
+2. Check **[apps/base-app/README.md](./apps/base-app/README.md)** - Readiness checklist
 3. Review environment variable examples
 
 ### Troubleshooting
@@ -294,7 +284,7 @@ Production Score: 98/100 ⭐⭐⭐
 1. Check browser Network tab (F12)
 2. Verify backend is running: `curl http://localhost:8000/health/ready`
 3. Check environment variables are set
-4. Review [DEPLOY.md](./DEPLOY.md) common issues section
+4. Review [DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md) common issues section
 
 ---
 
@@ -338,40 +328,24 @@ Production Score: 98/100 ⭐⭐⭐
 
 ```
 frontend/
-├── README.md (this file)              ⭐ Start here
-├── FINAL_SUMMARY.md                   ⭐ Complete summary
-├── PRODUCTION_READY.md                ⭐ Production report
-├── DEPLOY.md                          ⭐ Deployment guide
-├── QUICK_START.md                     📖 Fast-track guide
-├── BILLING_INTEGRATION_GUIDE.md       📖 Billing reference
-├── PROGRESS_UPDATE.md                 📊 Status tracking
-├── SESSION_SUMMARY.md                 📝 Complete journey
-├── FIXES_COMPLETED.md                 📝 Historical fixes
-└── OBSERVABILITY_SETUP.md             📝 Monitoring setup
-
-shared/packages/                       🔧 Shared libraries
-├── ui/                                - Component library
-├── analytics/                         - Analytics widgets
-├── auth/                              - Auth utilities
-├── rbac/                              - RBAC helpers
-├── headless/                          - Headless logic
-├── hooks/                             - Shared React hooks
-└── [13 more packages...]
-
-apps/base-app/                         🚀 Main application
-├── app/dashboard/                     - Dashboard pages (13/13 connected ✅)
-├── hooks/                             - Custom hooks (11/11 real API ✅)
-│   ├── useHealth.ts                   ✅
-│   ├── useFeatureFlags.ts             ✅
-│   ├── useLogs.ts                     ✅ 🆕
-│   ├── useObservability.ts            ✅ 🆕
-│   └── useBillingPlans.ts             ✅
-├── contexts/
-│   └── RBACContext.tsx                ⭐ Gold standard
-├── lib/
-│   └── validations/                   - Zod schemas (4 files) ✅ 🆕
-├── components/                        - Reusable components
-└── public/                            - Static assets
+├── README.md                          ⭐ Start here
+├── MULTI-APP-ARCHITECTURE.md          📖 App separation overview
+├── QUICK-START-MULTI-APP.md           🚀 Developer onboarding
+├── DEPLOYMENT-ARCHITECTURE.md         🏗️ Hosting patterns
+├── e2e/README.md                      🧪 Frontend testing guide
+├── apps/
+│   ├── isp-ops-app/                   Tenant-facing Next.js app
+│   ├── platform-admin-app/            Platform admin Next.js app
+│   └── base-app/                      Legacy/compat Next.js app + docs
+│       ├── README.md
+│       ├── DEVELOPMENT_GUIDE.md
+│       ├── TESTING_QUICK_START.md
+│       └── ...
+└── shared/packages/                   🔧 Shared component & logic libraries
+    ├── ui/
+    ├── headless/
+    ├── primitives/
+    └── ...
 ```
 
 ---
@@ -403,9 +377,3 @@ Only minor improvements remain (type safety, expanded tests) which can be done p
 - ✅ 98/100 production score
 
 **Congratulations! Time to ship!** 🎊🚀✨
-
----
-
-## Original Workspace Documentation
-
-_For details on the shared packages workspace structure, see [README_OLD.md](./README_OLD.md)_

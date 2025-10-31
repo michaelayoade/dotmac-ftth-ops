@@ -215,6 +215,7 @@ def storage(fake_minio_client):
         yield storage
 
 
+@pytest.mark.integration
 class TestMinIOStorageInitialization:
     """Test MinIOStorage initialization logic."""
 
@@ -259,6 +260,7 @@ class TestMinIOStorageInitialization:
             assert call_kwargs["secure"]
 
 
+@pytest.mark.integration
 class TestMinIOStorageFileOperations:
     """Test file save, get, delete operations."""
 
@@ -345,6 +347,7 @@ class TestMinIOStorageFileOperations:
         assert storage.file_exists("does-not-exist.txt", "tenant-1") is False
 
 
+@pytest.mark.integration
 class TestMinIOStorageListOperations:
     """Test file listing and filtering."""
 
@@ -384,6 +387,7 @@ class TestMinIOStorageListOperations:
         assert files == []
 
 
+@pytest.mark.integration
 class TestMinIOStorageTenantIsolation:
     """Test tenant isolation in file operations."""
 
@@ -414,6 +418,7 @@ class TestMinIOStorageTenantIsolation:
         assert len(tenant3_files) == 1
 
 
+@pytest.mark.integration
 class TestMinIOStorageErrorHandling:
     """Test error handling in MinIO operations."""
 
@@ -555,6 +560,7 @@ class TestMinIOStorageErrorHandling:
             storage.list_files(tenant_id="tenant-1")
 
 
+@pytest.mark.integration
 class TestMinIOStorageFilePathOperations:
     """Test filesystem upload/download operations."""
 

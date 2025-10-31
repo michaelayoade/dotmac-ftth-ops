@@ -1,3 +1,4 @@
+
 """
 Invoice status tests - Migrated to use shared helpers.
 
@@ -15,9 +16,14 @@ from dotmac.platform.billing.core.exceptions import InvalidInvoiceStatusError, I
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
+
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestInvoiceServiceStatusManagement:
     """Test invoice status management functionality"""
 
@@ -122,20 +128,20 @@ class TestInvoiceServiceStatusManagement:
         with pytest.raises(InvalidInvoiceStatusError):
             await service.void_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
 
-    async def test_void_partially_refunded_invoice_fails(
-        self, sample_tenant_id, mock_invoice_entity
-    ):
-        """Test voiding a partially refunded invoice fails"""
+    async def test_void_partially_paid_invoice_fails(self, sample_tenant_id, mock_invoice_entity):
+        """Test voiding a partially paid invoice fails"""
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)
 
-        # Set invoice to partially refunded status
+        # Set invoice to partially paid status
         mock_invoice_entity.status = InvoiceStatus.OPEN
-        mock_invoice_entity.payment_status = PaymentStatus.PARTIALLY_REFUNDED
+        mock_invoice_entity.payment_status = PaymentStatus.PENDING
+        mock_invoice_entity.total_amount = 10000
+        mock_invoice_entity.remaining_balance = 5000
 
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice_entity))
 
-        # Try to void partially refunded invoice
+        # Try to void partially paid invoice
         with pytest.raises(InvalidInvoiceStatusError):
             await service.void_invoice(sample_tenant_id, mock_invoice_entity.invoice_id)
 

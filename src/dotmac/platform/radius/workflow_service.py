@@ -79,6 +79,7 @@ class RADIUSService:
         if not tenant_id:
             # Try to get from customer record
             from ..customer_management.models import Customer
+
             stmt = select(Customer).where(Customer.id == customer_id_str)
             result = await self.db.execute(stmt)
             customer = result.scalar_one_or_none()
@@ -89,21 +90,18 @@ class RADIUSService:
 
         # Check if username already exists
         stmt = select(RadCheck).where(
-            RadCheck.username == username,
-            RadCheck.tenant_id == tenant_id
+            RadCheck.username == username, RadCheck.tenant_id == tenant_id
         )
         result = await self.db.execute(stmt)
         existing = result.scalar_one_or_none()
 
         if existing:
-            raise ValueError(
-                f"RADIUS username '{username}' already exists for tenant {tenant_id}"
-            )
+            raise ValueError(f"RADIUS username '{username}' already exists for tenant {tenant_id}")
 
         # Fetch bandwidth profile
         stmt = select(RadiusBandwidthProfile).where(
             RadiusBandwidthProfile.name == bandwidth_profile,
-            RadiusBandwidthProfile.tenant_id == tenant_id
+            RadiusBandwidthProfile.tenant_id == tenant_id,
         )
         result = await self.db.execute(stmt)
         profile = result.scalar_one_or_none()
@@ -112,7 +110,7 @@ class RADIUSService:
             # Try to fetch by ID instead of name
             stmt = select(RadiusBandwidthProfile).where(
                 RadiusBandwidthProfile.id == bandwidth_profile,
-                RadiusBandwidthProfile.tenant_id == tenant_id
+                RadiusBandwidthProfile.tenant_id == tenant_id,
             )
             result = await self.db.execute(stmt)
             profile = result.scalar_one_or_none()
@@ -137,9 +135,7 @@ class RADIUSService:
         self.db.add(radcheck)
         await self.db.flush()  # Get the ID
 
-        logger.info(
-            f"Created RadCheck entry: id={radcheck.id}, username={username}"
-        )
+        logger.info(f"Created RadCheck entry: id={radcheck.id}, username={username}")
 
         # Create RadReply entries (authorization attributes)
         radreply_ids = []

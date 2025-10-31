@@ -4,8 +4,8 @@ Comprehensive tests for Audit Service.
 Focuses on filling coverage gaps in audit service functionality.
 """
 
-from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import timezone, datetime, timedelta
+from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import uuid4
 
 import pytest
@@ -57,7 +57,7 @@ def sample_activity():
     activity.severity = ActivitySeverity.LOW
     activity.user_id = "user_123"
     activity.tenant_id = "tenant_123"
-    activity.timestamp = datetime.now(UTC)
+    activity.timestamp = datetime.now(timezone.utc)
     activity.resource_type = "user"
     activity.resource_id = "user_123"
     activity.action = "login"
@@ -90,6 +90,7 @@ def mock_request():
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogActivity:
     """Test log_activity method."""
 
@@ -152,6 +153,7 @@ class TestLogActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestLogRequestActivity:
     """Test log_request_activity method."""
 
@@ -240,6 +242,7 @@ class TestLogRequestActivity:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetActivities:
     """Test get_activities method."""
 
@@ -388,8 +391,8 @@ class TestGetActivities:
 
         mock_session.execute.side_effect = [count_result, activities_result]
 
-        start_date = datetime.now(UTC) - timedelta(days=7)
-        end_date = datetime.now(UTC)
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
 
         filters = AuditFilterParams(
             tenant_id="tenant_123",
@@ -454,6 +457,7 @@ class TestGetActivities:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetRecentActivities:
     """Test get_recent_activities method."""
 
@@ -540,6 +544,7 @@ class TestGetRecentActivities:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestGetActivitySummary:
     """Test get_activity_summary method."""
 
@@ -621,6 +626,7 @@ class TestGetActivitySummary:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestHelperFunctions:
     """Test helper functions."""
 
@@ -682,6 +688,7 @@ class TestHelperFunctions:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestSessionManagement:
     """Test _get_session method."""
 
@@ -710,6 +717,7 @@ class TestSessionManagement:
 # ============================================================================
 
 
+@pytest.mark.integration
 class TestAdditionalCoverage:
     """Additional tests to reach 90% coverage."""
 

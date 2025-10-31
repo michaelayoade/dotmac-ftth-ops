@@ -1,3 +1,4 @@
+
 """
 Comprehensive tests for Ansible automation integration.
 
@@ -9,9 +10,13 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
 from dotmac.platform.ansible.client import AWXClient
 from dotmac.platform.ansible.device_provisioning import (
+
+
+
     DeviceProvisioningService,
     DeviceType,
     ProvisioningStatus,
@@ -25,6 +30,10 @@ from dotmac.platform.services.lifecycle.models import (
     ServiceType,
 )
 
+
+
+
+pytestmark = pytest.mark.integration
 
 class TestPlaybookLibrary:
     """Test Playbook Library functionality"""
@@ -132,7 +141,7 @@ class TestLifecycleIntegration:
         )
         return client
 
-    @pytest.fixture
+    @pytest_asyncio.fixture
     async def service_instance(self, async_session):
         """Create test service instance"""
         service = ServiceInstance(

@@ -12,7 +12,6 @@ from uuid import UUID
 from sqlalchemy import (
     JSON,
     Boolean,
-    Column,
     DateTime,
     Enum,
     ForeignKey,
@@ -90,8 +89,12 @@ class DeploymentTemplate(Base, TimestampMixin):
     max_users: Mapped[int | None] = mapped_column(Integer)  # Max concurrent users
 
     # Configuration
-    config_schema: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # JSON schema for template variables
-    default_config: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # Default configuration values
+    config_schema: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON
+    )  # JSON schema for template variables
+    default_config: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON
+    )  # Default configuration values
     required_secrets: Mapped[list[str] | None] = mapped_column(JSON)  # List of required secrets
     feature_flags: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # Default feature flags
 
@@ -104,8 +107,12 @@ class DeploymentTemplate(Base, TimestampMixin):
 
     # Metadata
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    requires_approval: Mapped[bool] = mapped_column(Boolean, default=False)  # Manual approval needed
-    estimated_provision_time_minutes: Mapped[int | None] = mapped_column(Integer)  # Expected provision time
+    requires_approval: Mapped[bool] = mapped_column(
+        Boolean, default=False
+    )  # Manual approval needed
+    estimated_provision_time_minutes: Mapped[int | None] = mapped_column(
+        Integer
+    )  # Expected provision time
     tags: Mapped[dict[str, str] | None] = mapped_column(JSON)  # Tags for categorization
 
     # Relationships
@@ -134,7 +141,9 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
 
     # Environment identification
     environment: Mapped[str] = mapped_column(String(50), index=True)  # prod, staging, dev
-    region: Mapped[str | None] = mapped_column(String(50))  # Geographic region (us-east-1, eu-west-1)
+    region: Mapped[str | None] = mapped_column(
+        String(50)
+    )  # Geographic region (us-east-1, eu-west-1)
     availability_zone: Mapped[str | None] = mapped_column(String(50))  # Availability zone
 
     # Deployment state
@@ -150,10 +159,14 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
     version: Mapped[str] = mapped_column(String(50))  # Deployed version
 
     # Topology metadata
-    endpoints: Mapped[dict[str, str] | None] = mapped_column(JSON)  # Service endpoints (API, UI, DB, etc.)
+    endpoints: Mapped[dict[str, str] | None] = mapped_column(
+        JSON
+    )  # Service endpoints (API, UI, DB, etc.)
     namespace: Mapped[str | None] = mapped_column(String(255))  # K8s namespace or resource group
     cluster_name: Mapped[str | None] = mapped_column(String(255))  # K8s cluster or datacenter name
-    backend_job_id: Mapped[str | None] = mapped_column(String(255))  # AWX job ID, Helm release name, etc.
+    backend_job_id: Mapped[str | None] = mapped_column(
+        String(255)
+    )  # AWX job ID, Helm release name, etc.
 
     # Resource allocation
     allocated_cpu: Mapped[int | None] = mapped_column(Integer)  # Allocated CPU cores
@@ -164,13 +177,19 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
     health_check_url: Mapped[str | None] = mapped_column(String(500))  # Health check endpoint
     last_health_check: Mapped[datetime | None] = mapped_column(DateTime)  # Last health check time
     health_status: Mapped[str | None] = mapped_column(String(50))  # healthy, degraded, unhealthy
-    health_details: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # Detailed health information
+    health_details: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON
+    )  # Detailed health information
 
     # Metadata
     tags: Mapped[dict[str, str] | None] = mapped_column(JSON)  # Instance tags
     notes: Mapped[str | None] = mapped_column(Text)  # Operator notes
-    deployed_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User who deployed
-    approved_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User who approved
+    deployed_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id")
+    )  # User who deployed
+    approved_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id")
+    )  # User who approved
 
     # Relationships
     executions: Mapped[list["DeploymentExecution"]] = relationship(
@@ -201,19 +220,27 @@ class DeploymentExecution(Base, TimestampMixin):
     instance: Mapped["DeploymentInstance"] = relationship(back_populates="executions")
 
     # Execution details
-    operation: Mapped[str] = mapped_column(String(50), index=True)  # provision, upgrade, suspend, destroy
-    state: Mapped[str] = mapped_column(String(50), default="running", index=True)  # running, succeeded, failed
+    operation: Mapped[str] = mapped_column(
+        String(50), index=True
+    )  # provision, upgrade, suspend, destroy
+    state: Mapped[str] = mapped_column(
+        String(50), default="running", index=True
+    )  # running, succeeded, failed
     started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     completed_at: Mapped[datetime | None] = mapped_column(DateTime)
     duration_seconds: Mapped[int | None] = mapped_column(Integer)
 
     # Backend execution
-    backend_job_id: Mapped[str | None] = mapped_column(String(255), index=True)  # AWX job ID, Helm release, etc.
+    backend_job_id: Mapped[str | None] = mapped_column(
+        String(255), index=True
+    )  # AWX job ID, Helm release, etc.
     backend_job_url: Mapped[str | None] = mapped_column(String(500))  # Link to backend job
     backend_logs: Mapped[str | None] = mapped_column(Text)  # Execution logs
 
     # Configuration
-    operation_config: Mapped[dict[str, Any] | None] = mapped_column(JSON)  # Operation-specific config
+    operation_config: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON
+    )  # Operation-specific config
     from_version: Mapped[str | None] = mapped_column(String(50))  # Source version (for upgrades)
     to_version: Mapped[str | None] = mapped_column(String(50))  # Target version (for upgrades)
 
@@ -225,11 +252,15 @@ class DeploymentExecution(Base, TimestampMixin):
     )  # Rollback reference
 
     # Audit
-    triggered_by: Mapped[UUID | None] = mapped_column(PGUUID(as_uuid=True), ForeignKey("users.id"))  # User or system
+    triggered_by: Mapped[UUID | None] = mapped_column(
+        PGUUID(as_uuid=True), ForeignKey("users.id")
+    )  # User or system
     trigger_type: Mapped[str | None] = mapped_column(String(50))  # manual, automated, scheduled
 
     def __repr__(self) -> str:
-        return f"<DeploymentExecution {self.operation} instance={self.instance_id} state={self.state}>"
+        return (
+            f"<DeploymentExecution {self.operation} instance={self.instance_id} state={self.state}>"
+        )
 
 
 class DeploymentHealth(Base, TimestampMixin):

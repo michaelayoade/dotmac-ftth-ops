@@ -1,16 +1,22 @@
-import asyncio
 import types
 from typing import Any
 
 import pytest
 
 from dotmac.platform.search.models_elasticsearch import (
+
+
+
     INDEX_MAPPINGS,
-    SearchQuery,
     SearchableEntity,
 )
 from dotmac.platform.search.service_elasticsearch import SearchService
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 class StubIndices:
     def __init__(self) -> None:
@@ -58,7 +64,7 @@ class StubClient:
         self.bulk_calls.append(operations)
         # Simulate success status for every index operation
         items = []
-        for entry in operations[::2]:
+        for _entry in operations[::2]:
             items.append({"index": {"status": 201}})
         return {"items": items}
 
@@ -105,11 +111,15 @@ async def test_create_index_uses_mapping(service: tuple[SearchService, StubClien
     assert created is True
     assert client.indices.created
     index_name = svc._get_index_name(SearchableEntity.CUSTOMER, "tenant-1")
-    assert client.indices.created[index_name]["mappings"] == INDEX_MAPPINGS[SearchableEntity.CUSTOMER]
+    assert (
+        client.indices.created[index_name]["mappings"] == INDEX_MAPPINGS[SearchableEntity.CUSTOMER]
+    )
 
 
 @pytest.mark.asyncio
-async def test_create_index_returns_false_when_exists(service: tuple[SearchService, StubClient]) -> None:
+async def test_create_index_returns_false_when_exists(
+    service: tuple[SearchService, StubClient],
+) -> None:
     svc, client = service
     client.indices.exists_result = True
     created = await svc.create_index(SearchableEntity.CUSTOMER, tenant_id="tenant-1")
@@ -133,7 +143,9 @@ async def test_index_document_sets_tenant(service: tuple[SearchService, StubClie
 
 
 @pytest.mark.asyncio
-async def test_bulk_index_documents_returns_counts(service: tuple[SearchService, StubClient]) -> None:
+async def test_bulk_index_documents_returns_counts(
+    service: tuple[SearchService, StubClient],
+) -> None:
     svc, client = service
     success, failed = await svc.bulk_index_documents(
         SearchableEntity.CUSTOMER,

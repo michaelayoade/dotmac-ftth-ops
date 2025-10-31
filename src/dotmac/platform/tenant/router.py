@@ -23,6 +23,12 @@ from ..auth.platform_admin import (
 )
 from ..database import get_async_session
 from .models import TenantInvitationStatus, TenantPlanType, TenantStatus
+from .provisioning_service import (
+    TenantProvisioningConflictError,
+    TenantProvisioningJobNotFoundError,
+    TenantProvisioningService,
+)
+from .provisioning_tasks import enqueue_tenant_provisioning
 from .schemas import (
     TenantBulkDeleteRequest,
     TenantBulkStatusUpdate,
@@ -33,6 +39,9 @@ from .schemas import (
     TenantInvitationResponse,
     TenantListResponse,
     TenantMetadataUpdate,
+    TenantProvisioningJobCreate,
+    TenantProvisioningJobListResponse,
+    TenantProvisioningJobResponse,
     TenantResponse,
     TenantSettingCreate,
     TenantSettingResponse,
@@ -57,6 +66,14 @@ router = APIRouter(prefix="/tenants", tags=["Tenant Management"])
 async def get_tenant_service(db: AsyncSession = Depends(get_async_session)) -> TenantService:
     """Get tenant service instance."""
     return TenantService(db)
+
+
+async def get_tenant_provisioning_service(
+    db: AsyncSession = Depends(get_async_session),
+) -> TenantProvisioningService:
+    """Get provisioning service instance."""
+    return TenantProvisioningService(db)
+
 
 TENANT_READ_PERMISSION = "platform:tenants:read"
 TENANT_WRITE_PERMISSION = "platform:tenants:write"
@@ -714,3 +731,78 @@ async def bulk_delete_tenants(
         "tenant_ids": delete_data.tenant_ids,
         "permanent": delete_data.permanent,
     }
+
+
+@router.post(
+    "/{tenant_id}/provisioning/jobs",
+    response_model=TenantProvisioningJobResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def schedule_tenant_provisioning_job(
+    tenant_id: str,
+    job_request: TenantProvisioningJobCreate,
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_WRITE_PERMISSION)),
+    service: TenantProvisioningService = Depends(get_tenant_provisioning_service),
+) -> TenantProvisioningJobResponse:
+    """
+    Queue a dedicated infrastructure provisioning job for a tenant.
+
+    Launches an asynchronous AWX job and transitions the tenant into the provisioning state.
+    """
+    _ensure_can_write_tenant(current_user, tenant_id)
+
+    try:
+        job = await service.create_job(
+            tenant_id,
+            job_request,
+            requested_by=current_user.user_id,
+        )
+    except TenantProvisioningJobNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except TenantProvisioningConflictError as exc:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(exc)) from exc
+
+    enqueue_tenant_provisioning(job.id)
+    return TenantProvisioningJobResponse.model_validate(job)
+
+
+@router.get(
+    "/{tenant_id}/provisioning/jobs",
+    response_model=TenantProvisioningJobListResponse,
+)
+async def list_tenant_provisioning_jobs(
+    tenant_id: str,
+    page: int = Query(1, ge=1, description="Page number"),
+    page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_READ_PERMISSION)),
+    service: TenantProvisioningService = Depends(get_tenant_provisioning_service),
+) -> TenantProvisioningJobListResponse:
+    """
+    List provisioning jobs for a tenant.
+    """
+    _ensure_can_read_tenant(current_user, tenant_id)
+    offset = (page - 1) * page_size
+    jobs, total = await service.list_jobs(tenant_id, limit=page_size, offset=offset)
+    items = [TenantProvisioningJobResponse.model_validate(job) for job in jobs]
+    return TenantProvisioningJobListResponse(items=items, total=total)
+
+
+@router.get(
+    "/{tenant_id}/provisioning/jobs/{job_id}",
+    response_model=TenantProvisioningJobResponse,
+)
+async def get_tenant_provisioning_job(
+    tenant_id: str,
+    job_id: str,
+    current_user: UserInfo = Depends(require_tenant_permission(TENANT_READ_PERMISSION)),
+    service: TenantProvisioningService = Depends(get_tenant_provisioning_service),
+) -> TenantProvisioningJobResponse:
+    """
+    Retrieve a specific provisioning job.
+    """
+    _ensure_can_read_tenant(current_user, tenant_id)
+    try:
+        job = await service.get_job(tenant_id, job_id)
+    except TenantProvisioningJobNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return TenantProvisioningJobResponse.model_validate(job)

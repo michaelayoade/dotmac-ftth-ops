@@ -9,6 +9,8 @@ from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.partner_management.models import (
+
+
     CommissionModel,
     CommissionStatus,
     Partner,
@@ -22,9 +24,15 @@ from dotmac.platform.partner_management.models import (
 )
 
 
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 class TestPartnerDashboardEndpoint:
     """Test GET /portal/dashboard endpoint."""
+
 
     async def test_get_dashboard_stats_success(self, db_session, test_tenant_id):
         """Test successful dashboard stats retrieval."""

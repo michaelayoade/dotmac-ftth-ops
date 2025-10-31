@@ -12,6 +12,7 @@ from dotmac.platform.core import (
 )
 
 
+@pytest.mark.unit
 class TestDomainEventDispatcher:
     """Test domain event dispatcher."""
 
@@ -231,6 +232,7 @@ class TestDomainEventDispatcher:
     async def test_dispatcher_with_aggregate(self):
         """Test dispatcher with aggregate root."""
 
+        @pytest.mark.unit
         class TestInvoice(AggregateRoot):
             invoice_number: str
             amount: float

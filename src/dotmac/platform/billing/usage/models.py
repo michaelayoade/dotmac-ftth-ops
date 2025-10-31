@@ -81,7 +81,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
 
     # Usage details
     usage_type: Mapped[UsageType] = mapped_column(
-        SQLEnum(UsageType),
+        SQLEnum(UsageType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
         comment="Type of metered usage",
@@ -101,7 +101,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
     unit_price: Mapped[Decimal] = mapped_column(
         Numeric(12, 6),
         nullable=False,
-        comment="Price per unit in cents (e.g., 10 cents/GB)",
+        comment="Price per unit in major currency units (e.g., 0.10 USD/GB), not cents",
     )
     total_amount: Mapped[int] = mapped_column(
         Integer,
@@ -131,7 +131,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
 
     # Billing status
     billed_status: Mapped[BilledStatus] = mapped_column(
-        SQLEnum(BilledStatus),
+        SQLEnum(BilledStatus, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         default=BilledStatus.PENDING,
         index=True,
@@ -229,7 +229,7 @@ class UsageAggregate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]  
     )
 
     usage_type: Mapped[UsageType] = mapped_column(
-        SQLEnum(UsageType),
+        SQLEnum(UsageType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
         index=True,
     )

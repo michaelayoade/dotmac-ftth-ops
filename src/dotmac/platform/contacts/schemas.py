@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 from dotmac.platform.contacts.models import (
     ContactFieldType,
@@ -31,7 +31,9 @@ class ContactMethodBase(BaseModel):  # BaseModel resolves to Any in isolation
     is_verified: bool = False
     is_public: bool = True
     display_order: int = 0
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
     # Address fields
     address_line1: str | None = Field(None, max_length=255)
@@ -59,7 +61,9 @@ class ContactMethodUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     is_verified: bool | None = None
     is_public: bool | None = None
     display_order: int | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
     # Address fields
     address_line1: str | None = Field(None, max_length=255)
@@ -114,7 +118,9 @@ class ContactBase(BaseModel):  # BaseModel resolves to Any in isolation
     notes: str | None = None
     tags: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
     # Important dates
     birthday: datetime | None = None
@@ -193,7 +199,9 @@ class ContactUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     notes: str | None = None
     tags: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
     # Important dates
     birthday: datetime | None = None
@@ -260,7 +268,9 @@ class ContactLabelDefinitionBase(BaseModel):  # BaseModel resolves to Any in iso
     is_visible: bool = True
     is_system: bool = False
     is_default: bool = False
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
 
 class ContactLabelDefinitionCreate(
@@ -284,7 +294,9 @@ class ContactLabelDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in i
     display_order: int | None = None
     is_visible: bool | None = None
     is_default: bool | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
 
 class ContactLabelDefinitionResponse(ContactLabelDefinitionBase):
@@ -324,7 +336,9 @@ class ContactFieldDefinitionBase(BaseModel):  # BaseModel resolves to Any in iso
     required_permission: str | None = Field(None, max_length=100)
     is_system: bool = False
     is_encrypted: bool = False
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
 
 class ContactFieldDefinitionCreate(
@@ -356,7 +370,9 @@ class ContactFieldDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in i
     is_editable: bool | None = None
     required_permission: str | None = Field(None, max_length=100)
     is_encrypted: bool | None = None
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
 
 class ContactFieldDefinitionResponse(
@@ -386,7 +402,9 @@ class ContactActivityBase(BaseModel):  # BaseModel resolves to Any in isolation
     duration_minutes: int | None = None
     status: str = Field(min_length=1, max_length=50)
     outcome: str | None = Field(None, max_length=100)
-    metadata: dict[str, Any] | None = None
+    metadata: dict[str, Any] | None = Field(
+        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+    )
 
 
 class ContactActivityCreate(

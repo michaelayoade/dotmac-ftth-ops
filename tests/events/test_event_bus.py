@@ -1,8 +1,12 @@
 """Tests for event bus functionality."""
 
+import asyncio
+
 import pytest
 
 from dotmac.platform.events import (
+
+
     Event,
     EventBus,
     EventPriority,
@@ -11,6 +15,52 @@ from dotmac.platform.events import (
     reset_event_bus,
 )
 from dotmac.platform.events.storage import EventStorage
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
+async def wait_for_event_status(
+    event_bus: EventBus, event_id: str, expected_status: EventStatus, timeout: float = 5.0
+) -> Event:
+    """
+
+
+    Wait for an event to reach a specific status.
+
+    This replaces non-deterministic asyncio.sleep() with a polling approach
+    that checks event storage directly.
+
+    Args:
+        event_bus: EventBus instance
+        event_id: Event ID to check
+        expected_status: Expected event status
+        timeout: Maximum time to wait in seconds
+
+    Returns:
+        The event once it reaches the expected status
+
+    Raises:
+        TimeoutError: If the event doesn't reach expected status within timeout
+    """
+    start_time = asyncio.get_event_loop().time()
+    while True:
+        stored_event = await event_bus.get_event(event_id)
+        if stored_event and stored_event.status == expected_status:
+            return stored_event
+
+        elapsed = asyncio.get_event_loop().time() - start_time
+        if elapsed > timeout:
+            current_status = stored_event.status if stored_event else "NOT_FOUND"
+            raise TimeoutError(
+                f"Event {event_id} did not reach status {expected_status} within {timeout}s "
+                f"(current status: {current_status})"
+            )
+
+        # Small sleep to avoid busy-waiting
+        await asyncio.sleep(0.01)
 
 
 class TestEventBus:
@@ -65,17 +115,13 @@ class TestEventBus:
         # Subscribe handler
         event_bus.subscribe("test.event", test_handler)
 
-        # Publish event
+        # Publish event - handlers execute synchronously via await in publish()
         event = await event_bus.publish(
             event_type="test.event",
             payload={"test": "data"},
         )
 
-        # Give handler time to execute
-        import asyncio
-
-        await asyncio.sleep(0.1)
-
+        # Handlers should have completed by now (no sleep needed!)
         assert handler_called
         assert received_event is not None
         assert received_event.event_id == event.event_id
@@ -98,12 +144,10 @@ class TestEventBus:
         event_bus.subscribe("test.event", handler1)
         event_bus.subscribe("test.event", handler2)
 
+        # Both handlers execute synchronously via gather() in publish()
         await event_bus.publish(event_type="test.event", payload={})
 
-        import asyncio
-
-        await asyncio.sleep(0.1)
-
+        # Both should have completed
         assert handler1_called
         assert handler2_called
 
@@ -122,12 +166,13 @@ class TestEventBus:
             payload={"test": "data"},
         )
 
-        import asyncio
-
-        await asyncio.sleep(0.1)
+        # Wait for event to reach DEAD_LETTER status after all retries
+        # (retries happen with exponential backoff, so this may take a few seconds)
+        stored_event = await wait_for_event_status(
+            event_bus, event.event_id, EventStatus.DEAD_LETTER, timeout=10.0
+        )
 
         # Event should be in dead letter queue after max retries
-        stored_event = await event_bus.get_event(event.event_id)
         assert stored_event.status == EventStatus.DEAD_LETTER
         assert "Handler error" in stored_event.error_message
         assert stored_event.retry_count == stored_event.max_retries
@@ -161,6 +206,29 @@ class TestEventBus:
         assert all(e.event_type == "type1.event" for e in events)
 
     @pytest.mark.asyncio
+    async def test_wildcard_subscription(self, event_bus):
+        """Wildcard handlers should receive matching events."""
+        wildcard_calls: list[str] = []
+        catch_all_calls: list[str] = []
+
+        async def wildcard_handler(event: Event):
+            wildcard_calls.append(event.event_type)
+
+        async def catch_all_handler(event: Event):
+            catch_all_calls.append(event.event_type)
+
+        event_bus.subscribe("billing.*", wildcard_handler)
+        event_bus.subscribe("*", catch_all_handler)
+
+        # Handlers execute synchronously
+        await event_bus.publish(event_type="billing.invoice.created", payload={})
+        await event_bus.publish(event_type="customer.created", payload={})
+
+        # Handlers should have completed
+        assert wildcard_calls == ["billing.invoice.created"]
+        assert catch_all_calls == ["billing.invoice.created", "customer.created"]
+
+    @pytest.mark.asyncio
     async def test_query_events_by_status(self, event_bus):
         """Test querying events by status."""
 
@@ -169,13 +237,11 @@ class TestEventBus:
 
         event_bus.subscribe("test.event", handler)
 
+        # Handlers complete synchronously, events marked as COMPLETED
         await event_bus.publish(event_type="test.event", payload={})
         await event_bus.publish(event_type="test.event", payload={})
 
-        import asyncio
-
-        await asyncio.sleep(0.1)
-
+        # Query for completed events
         completed_events = await event_bus.get_events(status=EventStatus.COMPLETED)
 
         assert len(completed_events) == 2
@@ -213,16 +279,16 @@ class TestEventBus:
 
         event_bus.subscribe("test.event", flaky_handler)
 
+        # Publish and wait for retries to complete
         event = await event_bus.publish(event_type="test.event", payload={})
 
-        import asyncio
+        # Wait for event to reach COMPLETED status (after retry with backoff)
+        stored_event = await wait_for_event_status(
+            event_bus, event.event_id, EventStatus.COMPLETED, timeout=5.0
+        )
 
-        await asyncio.sleep(0.5)
-
-        # Should have retried and succeeded
+        # Should have retried once and succeeded on second attempt
         assert attempt_count == 2
-
-        stored_event = await event_bus.get_event(event.event_id)
         assert stored_event.status == EventStatus.COMPLETED
 
     @pytest.mark.asyncio
@@ -239,11 +305,12 @@ class TestEventBus:
             payload={},
         )
 
-        import asyncio
+        # Wait for event to reach DEAD_LETTER after exhausting all retries
+        # This may take several seconds due to exponential backoff (2^0 + 2^1 + 2^2 + ... seconds)
+        stored_event = await wait_for_event_status(
+            event_bus, event.event_id, EventStatus.DEAD_LETTER, timeout=15.0
+        )
 
-        await asyncio.sleep(2)
-
-        stored_event = await event_bus.get_event(event.event_id)
         assert stored_event.status == EventStatus.DEAD_LETTER
         assert stored_event.retry_count >= event.max_retries
 
@@ -258,18 +325,12 @@ class TestEventBus:
 
         event_bus.subscribe("test.event", handler)
 
+        # First publish - handler executes synchronously
         event = await event_bus.publish(event_type="test.event", payload={})
-
-        import asyncio
-
-        await asyncio.sleep(0.1)
-
         assert handler_call_count == 1
 
-        # Replay the event
+        # Replay the event - handler executes synchronously again
         await event_bus.replay_event(event.event_id)
-        await asyncio.sleep(0.1)
-
         assert handler_call_count == 2
 
     @pytest.mark.asyncio
@@ -284,12 +345,10 @@ class TestEventBus:
         event_bus.subscribe("test.event", handler)
         event_bus.unsubscribe("test.event", handler)
 
+        # Publish event - no handlers should execute
         await event_bus.publish(event_type="test.event", payload={})
 
-        import asyncio
-
-        await asyncio.sleep(0.1)
-
+        # Handler should not have been called
         assert not handler_called
 
     def test_get_event_bus_singleton(self):

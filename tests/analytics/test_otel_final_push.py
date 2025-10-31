@@ -17,6 +17,7 @@ from dotmac.platform.analytics.otel_collector import (
 )
 
 
+@pytest.mark.unit
 class TestOtelCollectorAdvanced:
     """Advanced tests for OpenTelemetryCollector to boost coverage."""
 
@@ -232,12 +233,14 @@ class TestOtelCollectorAdvanced:
         assert collector._metrics_summary["gauges"]["cpu"]["value"] == 75.5
 
 
+@pytest.mark.unit
 class TestBaseModuleFinalGaps:
     """Fill remaining gaps in base.py for 90% coverage."""
 
     def test_base_collector_flush_empty_pending(self):
         """Test flush with no pending metrics."""
 
+        @pytest.mark.unit
         class TestCollector(BaseAnalyticsCollector):
             async def collect(self, metric):
                 pass
@@ -268,6 +271,7 @@ class TestBaseModuleFinalGaps:
     def test_base_collector_enrich_preserves_tenant(self):
         """Test _enrich_metric preserves existing tenant_id."""
 
+        @pytest.mark.unit
         class TestCollector(BaseAnalyticsCollector):
             async def collect(self, metric):
                 pass
@@ -296,6 +300,7 @@ class TestBaseModuleFinalGaps:
     def test_base_collector_enrich_adds_tenant(self):
         """Test _enrich_metric adds tenant_id when missing."""
 
+        @pytest.mark.unit
         class TestCollector(BaseAnalyticsCollector):
             async def collect(self, metric):
                 pass

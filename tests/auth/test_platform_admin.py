@@ -20,6 +20,7 @@ from dotmac.platform.auth.platform_admin import (
 )
 
 
+@pytest.mark.integration
 class TestPlatformAdminChecks:
     """Test platform admin permission checks."""
 
@@ -100,6 +101,7 @@ class TestPlatformAdminChecks:
         assert has_platform_permission(user, "platform:billing:read") is False
 
 
+@pytest.mark.integration
 class TestTenantImpersonation:
     """Test tenant impersonation for platform admins."""
 
@@ -161,6 +163,7 @@ class TestTenantImpersonation:
         assert tenant_id == "tenant-1"
 
 
+@pytest.mark.integration
 class TestPlatformAdminDependency:
     """Test FastAPI dependency for platform admin."""
 
@@ -191,6 +194,7 @@ class TestPlatformAdminDependency:
         assert "administrator access required" in exc_info.value.detail.lower()
 
 
+@pytest.mark.integration
 class TestPlatformAdminToken:
     """Test platform admin token creation."""
 
@@ -228,6 +232,7 @@ class TestPlatformAdminToken:
         assert "custom:permission" in claims["permissions"]
 
 
+@pytest.mark.integration
 class TestUserInfoModel:
     """Test UserInfo model with platform admin fields."""
 
@@ -263,6 +268,7 @@ class TestUserInfoModel:
         assert user.user_id == "admin-1"
 
 
+@pytest.mark.integration
 class TestCrossTenantScenarios:
     """Test cross-tenant operation scenarios."""
 

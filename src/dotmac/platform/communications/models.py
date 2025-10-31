@@ -246,9 +246,7 @@ class ExitSurveyResponse(Base, TimestampMixin, TenantMixin):  # type: ignore[mis
     )
 
     # Survey identification
-    survey_token: Mapped[str] = mapped_column(
-        String(255), nullable=False, unique=True, index=True
-    )
+    survey_token: Mapped[str] = mapped_column(String(255), nullable=False, unique=True, index=True)
 
     # Customer information
     customer_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
@@ -282,9 +280,7 @@ class ExitSurveyResponse(Base, TimestampMixin, TenantMixin):  # type: ignore[mis
     )
 
     # Additional structured data
-    survey_data: Mapped[dict[str, Any]] = mapped_column(
-        JSON, default=dict, nullable=False
-    )
+    survey_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     # Metadata
     metadata_: Mapped[dict[str, Any]] = mapped_column(

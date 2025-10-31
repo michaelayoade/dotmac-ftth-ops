@@ -1,3 +1,4 @@
+
 """
 Tests for RADIUS Repository Layer
 
@@ -8,6 +9,13 @@ import pytest
 
 from dotmac.platform.radius.repository import RADIUSRepository
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestRADIUSRepository:
@@ -30,7 +38,12 @@ class TestRADIUSRepository:
         assert radcheck.username == "testuser@isp"
         assert radcheck.attribute == "Cleartext-Password"
         assert radcheck.op == ":="
-        assert radcheck.value == "securepass123"
+        # Password is now bcrypt-hashed, verify it's a valid bcrypt hash
+        assert radcheck.value.startswith("bcrypt:$2b$")
+        # Verify we can validate the password
+        from dotmac.platform.auth.core import pwd_context
+        stored_hash = radcheck.value.replace("bcrypt:", "")
+        assert pwd_context.verify("securepass123", stored_hash)
 
     async def test_get_radcheck_by_username(self, async_db_session, test_tenant):
         """Test retrieving radcheck by username"""
@@ -49,7 +62,11 @@ class TestRADIUSRepository:
 
         assert radcheck is not None
         assert radcheck.username == "testuser@isp"
-        assert radcheck.value == "securepass123"
+        # Verify password is bcrypt-hashed
+        assert radcheck.value.startswith("bcrypt:$2b$")
+        from dotmac.platform.auth.core import pwd_context
+        stored_hash = radcheck.value.replace("bcrypt:", "")
+        assert pwd_context.verify("securepass123", stored_hash)
 
     async def test_get_radcheck_by_subscriber(self, async_db_session, test_tenant):
         """Test retrieving radcheck by subscriber ID"""
@@ -88,7 +105,11 @@ class TestRADIUSRepository:
         )
 
         assert updated is not None
-        assert updated.value == "newpassword123"
+        # Verify new password is bcrypt-hashed
+        assert updated.value.startswith("bcrypt:$2b$")
+        from dotmac.platform.auth.core import pwd_context
+        stored_hash = updated.value.replace("bcrypt:", "")
+        assert pwd_context.verify("newpassword123", stored_hash)
 
     async def test_delete_radcheck(self, async_db_session, test_tenant):
         """Test deleting radcheck entry"""
@@ -176,7 +197,7 @@ class TestRADIUSRepository:
 
         # Delete
         deleted = await repo.delete_radreply(test_tenant.id, "testuser@isp", "Framed-IP-Address")
-        assert deleted is True
+        assert deleted == 1  # Returns number of rows deleted
 
     async def test_delete_all_radreplies(self, async_db_session, test_tenant):
         """Test deleting all reply attributes for username"""
@@ -307,7 +328,7 @@ class TestRADIUSRepository:
         # Create multiple NAS devices
         for i in range(5):
             await repo.create_nas(
-                test_tenant.id, f"192.168.1.{i+1}", f"router{i:02d}", "mikrotik", "secret"
+                test_tenant.id, f"192.168.1.{i + 1}", f"router{i:02d}", "mikrotik", "secret"
             )
 
         # List with pagination
@@ -333,9 +354,7 @@ class TestRADIUSRepository:
         repo = RADIUSRepository(async_db_session)
 
         # Create NAS
-        nas = await repo.create_nas(
-            test_tenant.id, "192.168.1.1", "router01", "mikrotik", "secret"
-        )
+        nas = await repo.create_nas(test_tenant.id, "192.168.1.1", "router01", "mikrotik", "secret")
 
         # Delete
         deleted = await repo.delete_nas(test_tenant.id, nas.id)

@@ -6,7 +6,10 @@ monitoring, and maintenance capabilities.
 """
 
 import asyncio
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 
@@ -406,7 +409,9 @@ class BillingCacheManager:
             "status": (
                 "healthy"
                 if health_score >= 75
-                else "degraded" if health_score >= 50 else "unhealthy"
+                else "degraded"
+                if health_score >= 50
+                else "unhealthy"
             ),
         }
 

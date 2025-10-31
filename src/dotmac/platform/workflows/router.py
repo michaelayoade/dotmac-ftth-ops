@@ -116,7 +116,9 @@ async def list_builtin_workflows() -> list[dict]:
 )
 async def list_executions(
     workflow_id: int | None = Query(None, description="Filter by workflow ID"),
-    status_filter: WorkflowStatus | None = Query(None, alias="status", description="Filter by status"),
+    status_filter: WorkflowStatus | None = Query(
+        None, alias="status", description="Filter by status"
+    ),
     tenant_id: int | None = Query(None, description="Filter by tenant ID"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Results offset"),

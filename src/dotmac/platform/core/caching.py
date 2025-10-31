@@ -34,6 +34,9 @@ _redis_init_attempted = False
 memory_cache: TTLCache[str, Any] = TTLCache(maxsize=1000, ttl=300)  # 5 min TTL
 lru_cache: LRUCache[str, Any] = LRUCache(maxsize=500)
 
+# Track keys we manage so clear operations avoid nuking unrelated data
+_tracked_keys: set[str] = set()
+
 
 def get_redis() -> Any:
     """Get Redis client if available."""
@@ -135,6 +138,7 @@ def cache_set(key: str, value: Any, ttl: int | None = 300) -> bool:
                 client.set(key, payload)
             else:
                 client.setex(key, ttl, payload)
+            _tracked_keys.add(key)
             return True
         except (TypeError, ValueError) as e:
             # Value not JSON-serializable - raise error for caller to handle
@@ -143,6 +147,7 @@ def cache_set(key: str, value: Any, ttl: int | None = 300) -> bool:
             pass  # Fall back to memory cache
 
     memory_cache[key] = value
+    _tracked_keys.add(key)
     return True
 
 
@@ -169,20 +174,57 @@ def cache_delete(key: str) -> bool:
         del memory_cache[key]
         deleted = True
 
+    if deleted:
+        _tracked_keys.discard(key)
+
     return deleted
 
 
-def cache_clear() -> None:
-    """Clear all caches."""
+def cache_clear(namespace: str | None = None, *, flush_all: bool = False) -> None:
+    """
+    Clear cached entries managed by this module.
+
+    Args:
+        namespace: Optional key prefix to limit which entries are removed.
+                   When omitted, all tracked keys are cleared.
+        flush_all: Set to True to flush the entire Redis database. Use with care.
+    """
     client = get_redis()
     if client:
         try:
-            client.flushdb()
+            if flush_all:
+                client.flushdb()
+            else:
+                keys_to_clear = [
+                    key for key in _tracked_keys if namespace is None or key.startswith(namespace)
+                ]
+                for idx in range(0, len(keys_to_clear), 500):
+                    batch = keys_to_clear[idx : idx + 500]
+                    if batch:
+                        client.delete(*batch)
         except Exception:
             pass
 
-    memory_cache.clear()
-    lru_cache.clear()
+    if flush_all:
+        memory_cache.clear()
+        lru_cache.clear()
+        _tracked_keys.clear()
+        return
+
+    keys_for_removal = [
+        key for key in _tracked_keys if namespace is None or key.startswith(namespace)
+    ]
+
+    for key in keys_for_removal:
+        memory_cache.pop(key, None)
+        if key in lru_cache:
+            del lru_cache[key]
+
+    _tracked_keys.difference_update(keys_for_removal)
+
+    if namespace is None:
+        memory_cache.clear()
+        lru_cache.clear()
 
 
 def redis_cache(ttl: int = 300) -> Any:

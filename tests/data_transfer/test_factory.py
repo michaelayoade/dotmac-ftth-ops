@@ -26,6 +26,7 @@ from dotmac.platform.data_transfer.factory import (
 )
 
 
+@pytest.mark.unit
 class TestDataTransferRegistry:
     """Test DataTransferRegistry class."""
 
@@ -135,6 +136,7 @@ class TestDataTransferRegistry:
         assert DataFormat.EXCEL not in enabled["exporters"]
 
 
+@pytest.mark.unit
 class TestDataTransferFactory:
     """Test DataTransferFactory class."""
 
@@ -315,6 +317,7 @@ class TestDataTransferFactory:
         assert result is False
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test convenience functions."""
 
@@ -392,6 +395,7 @@ class TestConvenienceFunctions:
         assert result == mock_factory_method.return_value
 
 
+@pytest.mark.unit
 class TestOptionalFormatRegistration:
     """Test optional format registration."""
 

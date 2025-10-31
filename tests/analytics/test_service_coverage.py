@@ -1,6 +1,6 @@
 """Tests for analytics service to improve coverage."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -8,6 +8,7 @@ import pytest
 from dotmac.platform.analytics.service import AnalyticsService, get_analytics_service
 
 
+@pytest.mark.unit
 class TestAnalyticsService:
     """Test AnalyticsService class."""
 
@@ -17,7 +18,14 @@ class TestAnalyticsService:
         collector = AsyncMock()
         collector.record_metric = AsyncMock()
         collector.get_metrics_summary = MagicMock(
-            return_value={"api_request": {"count": 100}, "custom_metric": {"avg": 42.5}}
+            return_value={
+                "counters": {"api_request": {"count": 100}},
+                "gauges": {"custom_metric": {"avg": 42.5}},
+                "histograms": {},
+                "timestamp": None,
+                "service": None,
+                "tenant": None,
+            }
         )
         collector.flush = AsyncMock()
         collector.tracer = MagicMock()
@@ -56,13 +64,18 @@ class TestAnalyticsService:
     async def test_query_metrics(self, analytics_service, mock_collector):
         """Test querying metrics."""
         result = await analytics_service.query_metrics(
-            metric_name="api.latency",
-            start_time=datetime.now(UTC),
-            end_time=datetime.now(UTC),
+            metric_name="api",
+            start_time=datetime.now(timezone.utc),
+            end_time=datetime.now(timezone.utc),
         )
 
         assert result is not None
-        assert "api_request" in result
+        # Result should have expected keys from filtered summary
+        assert "counters" in result
+        assert "gauges" in result
+        assert "histograms" in result
+        # Check that filtering worked - "api_request" should be in counters since we filtered by "api"
+        assert "api_request" in result["counters"]
         mock_collector.get_metrics_summary.assert_called()
 
     @pytest.mark.asyncio
@@ -73,7 +86,9 @@ class TestAnalyticsService:
         )
 
         assert result is not None
-        assert "api_request" in result
+        # Result has the full structure with counters, gauges, histograms
+        assert "counters" in result
+        assert "api_request" in result["counters"]
         mock_collector.get_metrics_summary.assert_called_once()
 
     @pytest.mark.asyncio
@@ -106,6 +121,7 @@ class TestAnalyticsService:
         assert call_kwargs["value"] == 50
 
 
+@pytest.mark.unit
 class TestAnalyticsServiceEdgeCases:
     """Test edge cases and additional functionality."""
 
@@ -116,7 +132,12 @@ class TestAnalyticsServiceEdgeCases:
         collector.record_metric = AsyncMock()
         collector.get_metrics_summary = MagicMock(
             return_value={
-                "api_request": {"count": 100},
+                "counters": {"api_request": {"count": 100}},
+                "gauges": {},
+                "histograms": {},
+                "timestamp": None,
+                "service": None,
+                "tenant": None,
             }
         )
         collector.flush = AsyncMock()
@@ -212,6 +233,7 @@ class TestAnalyticsServiceEdgeCases:
         assert call_kwargs["attributes"] == attributes
 
 
+@pytest.mark.unit
 class TestGetAnalyticsService:
     """Test get_analytics_service factory function."""
 

@@ -18,6 +18,7 @@ from dotmac.platform.secrets.factory import (
 )
 
 
+@pytest.mark.unit
 class TestSecretsManagerProtocol:
     """Test the SecretsManager Protocol."""
 
@@ -39,6 +40,7 @@ class TestSecretsManagerProtocol:
         assert callable(manager.health_check)
 
 
+@pytest.mark.unit
 class TestLocalSecretsManager:
     """Test the LocalSecretsManager implementation."""
 
@@ -97,6 +99,7 @@ class TestLocalSecretsManager:
         assert manager.health_check() is True
 
 
+@pytest.mark.unit
 class TestSecretsManagerFactory:
     """Test the SecretsManagerFactory class."""
 
@@ -242,6 +245,7 @@ class TestSecretsManagerFactory:
             assert manager.secrets_file == "test.env"
 
 
+@pytest.mark.unit
 class TestConvenienceFunctions:
     """Test the convenience functions."""
 
@@ -307,6 +311,7 @@ class TestConvenienceFunctions:
         )
 
 
+@pytest.mark.unit
 class TestFactoryEdgeCases:
     """Test edge cases and error conditions."""
 

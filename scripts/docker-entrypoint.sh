@@ -48,8 +48,8 @@ wait_for_redis() {
         attempt=$((attempt + 1))
     done
 
-    echo "WARNING: Redis not available, continuing anyway..."
-    return 0
+    echo "ERROR: Redis failed to become ready after $max_attempts attempts"
+    exit 1
 }
 
 # Function to run database migrations
@@ -78,8 +78,8 @@ main() {
         api)
             echo "Starting API server..."
 
-            # Run migrations if AUTO_MIGRATE is enabled (default: true)
-            if [ "${AUTO_MIGRATE:-true}" = "true" ]; then
+            # Run migrations if AUTO_MIGRATE is explicitly enabled (default: false)
+            if [ "${AUTO_MIGRATE:-false}" = "true" ]; then
                 run_migrations
             fi
 

@@ -1,3 +1,4 @@
+
 """
 Integration tests for admin settings management router.
 
@@ -14,6 +15,13 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def mock_admin_user():
@@ -253,16 +261,17 @@ class TestSettingsRouterEndpoints:
         """Test POST /api/v1/admin/settings/backup."""
         response = test_client.post(
             "/api/v1/admin/settings/backup",
-            params={
+            json={
                 "name": "Test Backup",
                 "description": "Testing backup functionality",
+                "categories": ["email", "tenant"],  # Categories to backup
             },
-            json=["email", "tenant"],  # Categories to backup
         )
 
         assert response.status_code == 200
         data = response.json()
         assert data["name"] == "Test Backup"
+        assert data["description"] == "Testing backup functionality"
         assert "id" in data
         assert "created_at" in data
         assert "email" in data["categories"]
@@ -272,7 +281,8 @@ class TestSettingsRouterEndpoints:
         """Test POST /api/v1/admin/settings/restore/{backup_id}."""
         # First create a backup
         create_response = test_client.post(
-            "/api/v1/admin/settings/backup", params={"name": "Restore Test"}, json=["email"]
+            "/api/v1/admin/settings/backup",
+            json={"name": "Restore Test", "categories": ["email"]},
         )
         backup_id = create_response.json()["id"]
 
@@ -290,6 +300,39 @@ class TestSettingsRouterEndpoints:
         response = test_client.post(f"/api/v1/admin/settings/restore/{invalid_id}")
 
         assert response.status_code == 404
+
+    def test_restore_backup_after_service_restart(self, test_client):
+        """Test that backup can be restored after simulating service restart.
+
+        This test catches a critical bug where the backup ID returned by POST /backup
+        differs from the database ID, causing restore to fail after service restart.
+        """
+        from dotmac.platform.admin.settings.router import settings_service
+
+        # Create a backup
+        create_response = test_client.post(
+            "/api/v1/admin/settings/backup",
+            json={"name": "Restart Test", "description": "Test after restart", "categories": ["email"]},
+        )
+        assert create_response.status_code == 200
+        backup_data = create_response.json()
+        backup_id = backup_data["id"]
+
+        # Verify backup ID matches what's stored
+        assert backup_data["name"] == "Restart Test"
+        assert backup_data["description"] == "Test after restart"
+
+        # Simulate service restart by clearing in-memory cache
+        settings_service._backups.clear()
+
+        # Restore should still work by loading from database
+        restore_response = test_client.post(f"/api/v1/admin/settings/restore/{backup_id}")
+
+        # Should succeed (loads from DB when not in cache)
+        assert restore_response.status_code == 200
+        restore_data = restore_response.json()
+        assert restore_data["message"] == "Settings restored successfully"
+        assert "email" in restore_data["categories"]
 
     def test_get_audit_logs(self, test_client):
         """Test GET /api/v1/admin/settings/audit-logs."""
@@ -310,14 +353,16 @@ class TestSettingsRouterEndpoints:
         data = response.json()
         assert isinstance(data, list)
 
-        if len(data) > 0:
-            log = data[0]
-            assert "id" in log
-            assert "timestamp" in log
-            assert "user_id" in log
-            assert "category" in log
-            assert "action" in log
-            assert "changes" in log
+        # Audit logging must have created at least one entry
+        assert len(data) > 0, "Expected audit log entry after making settings change"
+
+        log = data[0]
+        assert "id" in log
+        assert "timestamp" in log
+        assert "user_id" in log
+        assert "category" in log
+        assert "action" in log
+        assert "changes" in log
 
     def test_export_settings_json(self, test_client):
         """Test POST /api/v1/admin/settings/export."""
@@ -449,11 +494,13 @@ class TestAuthorizationAndSecurity:
         response = test_client.get("/api/v1/admin/settings/audit-logs")
         logs = response.json()
 
-        if len(logs) > 0:
-            latest_log = logs[0]
-            assert latest_log["user_id"] == "admin-123"
-            assert latest_log["user_email"] == "admin@example.com"
-            assert latest_log["reason"] == "Testing audit"
+        # Must have at least one audit log entry
+        assert len(logs) > 0, "Expected audit log entry capturing user info"
+
+        latest_log = logs[0]
+        assert latest_log["user_id"] == "admin-123"
+        assert latest_log["user_email"] == "admin@example.com"
+        assert latest_log["reason"] == "Testing audit"
 
     def test_sensitive_fields_masked_by_default(self, test_client):
         """Test that sensitive fields are masked by default."""
@@ -489,9 +536,187 @@ class TestErrorHandling:
 
     def test_unsupported_export_format(self, test_client):
         """Test export with unsupported format."""
-        export_request = {"format": "xml"}  # Unsupported
+        export_request = {"format": "xml"}  # Unsupported format (only json, yaml, env are supported)
 
         response = test_client.post("/api/v1/admin/settings/export", json=export_request)
 
-        # Should work but treat as json
-        assert response.status_code in [200, 400]
+        # Should reject unsupported format with 400 error
+        assert response.status_code == 400
+        data = response.json()
+        assert "detail" in data
+        assert "Unsupported export format" in data["detail"]
+
+class TestAdminSettingsPermissions:
+    """Test that all endpoints properly enforce permission requirements."""
+
+    def setup_method(self):
+        """Create mock RBAC service that denies permissions."""
+        self.mock_rbac_deny = AsyncMock()
+        self.mock_rbac_deny.user_has_all_permissions = AsyncMock(return_value=False)
+        self.mock_rbac_deny.user_has_any_permission = AsyncMock(return_value=False)
+        self.mock_rbac_deny.user_has_permission = AsyncMock(return_value=False)
+
+    def test_categories_requires_read_permission(self, test_app):
+        """Test GET /categories requires settings.read permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.get("/api/v1/admin/settings/categories")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            self.mock_rbac_deny.user_has_all_permissions.assert_called()
+            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_get_category_requires_read_permission(self, test_app):
+        """Test GET /category/{category} requires settings.read permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.get("/api/v1/admin/settings/category/email")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_update_category_requires_update_permission(self, test_app):
+        """Test PUT /category/{category} requires settings.update permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.put(
+                "/api/v1/admin/settings/category/email",
+                json={"updates": {"smtp_host": "smtp.example.com"}},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.update"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_validate_requires_read_permission(self, test_app):
+        """Test POST /validate requires settings.read permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/admin/settings/validate",
+                params={"category": "email"},
+                json={"smtp_host": "test"},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_bulk_update_requires_update_permission(self, test_app):
+        """Test POST /bulk-update requires settings.update permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/admin/settings/bulk-update",
+                json={"updates": {"email": {"smtp_host": "test.example.com"}}},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.update"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_backup_requires_backup_permission(self, test_app):
+        """Test POST /backup requires settings.backup permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/admin/settings/backup",
+                json={"name": "test", "description": "test"},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.backup"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_restore_requires_restore_permission(self, test_app):
+        """Test POST /restore/{backup_id} requires settings.restore permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            backup_id = str(uuid4())
+            response = client.post(f"/api/v1/admin/settings/restore/{backup_id}")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.restore"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_audit_logs_requires_audit_read_permission(self, test_app):
+        """Test GET /audit-logs requires settings.audit.read permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.get("/api/v1/admin/settings/audit-logs")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.audit.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_export_requires_export_permission(self, test_app):
+        """Test POST /export requires settings.export permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/admin/settings/export",
+                json={"format": "json"},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.export"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_import_requires_import_permission(self, test_app):
+        """Test POST /import requires settings.import permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/admin/settings/import",
+                json={"data": {}},
+            )
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.import"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_reset_requires_reset_permission(self, test_app):
+        """Test POST /reset/{category} requires settings.reset permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.post("/api/v1/admin/settings/reset/email")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.reset"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+
+    def test_health_requires_read_permission(self, test_app):
+        """Test GET /health requires settings.read permission."""
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService", return_value=self.mock_rbac_deny
+        ):
+            client = TestClient(test_app)
+            response = client.get("/api/v1/admin/settings/health")
+            assert response.status_code == 403
+
+            # Verify the correct permission was checked
+            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]

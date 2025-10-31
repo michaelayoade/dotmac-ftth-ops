@@ -1,3 +1,4 @@
+
 """
 Basic API Endpoint Testing
 Simple tests for API functionality to build coverage quickly.
@@ -5,13 +6,22 @@ Simple tests for API functionality to build coverage quickly.
 
 import asyncio
 import hashlib
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import patch
 
 import pytest
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+
+
+
+pytestmark = [
+    pytest.mark.unit,
+    pytest.mark.asyncio,
+]
 
 class SimpleAPIKeyService:
     """
@@ -49,7 +59,7 @@ class SimpleAPIKeyService:
             "user_id": user_id,
             "name": name,
             "active": True,
-            "created_at": datetime.now(UTC),
+            "created_at": datetime.now(timezone.utc),
         }
 
         self.api_keys[api_key_hash] = key_data
@@ -108,7 +118,7 @@ class SimpleHealthCheck:
         return {
             "status": "healthy",
             "checks": {"database": db_check, "cache": cache_check},
-            "timestamp": datetime.now(UTC).isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
 

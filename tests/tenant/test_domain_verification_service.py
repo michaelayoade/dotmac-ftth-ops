@@ -51,6 +51,7 @@ def domain_verification_service(mock_db_session, mock_audit_service):
     )
 
 
+@pytest.mark.integration
 class TestTokenGeneration:
     """Test verification token generation."""
 
@@ -81,6 +82,7 @@ class TestTokenGeneration:
         assert token2 != token3
 
 
+@pytest.mark.integration
 class TestDomainValidation:
     """Test domain format validation."""
 
@@ -137,6 +139,7 @@ class TestDomainValidation:
         assert domain_verification_service._is_valid_domain(valid_domain) is True
 
 
+@pytest.mark.integration
 class TestInitiateVerification:
     """Test initiating domain verification."""
 
@@ -257,6 +260,7 @@ class TestInitiateVerification:
             )
 
 
+@pytest.mark.integration
 class TestDNSTXTVerification:
     """Test DNS TXT record verification."""
 
@@ -355,6 +359,7 @@ class TestDNSTXTVerification:
         assert result is False
 
 
+@pytest.mark.integration
 class TestDNSCNAMEVerification:
     """Test DNS CNAME record verification."""
 
@@ -427,6 +432,7 @@ class TestDNSCNAMEVerification:
         assert result is False
 
 
+@pytest.mark.integration
 class TestVerifyDomain:
     """Test complete domain verification workflow."""
 
@@ -537,6 +543,7 @@ class TestVerifyDomain:
             )
 
 
+@pytest.mark.integration
 class TestRemoveDomain:
     """Test domain removal."""
 
@@ -602,6 +609,7 @@ class TestRemoveDomain:
             )
 
 
+@pytest.mark.integration
 class TestVerificationInstructions:
     """Test verification instruction generation."""
 

@@ -8,7 +8,7 @@ Tests the RBAC-enhanced JWT token service including:
 - Token revocation and blacklisting
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
@@ -33,7 +33,7 @@ def jwt_service():
             "type": "access",
             "permissions": ["user.read", "user.write"],
             "roles": ["admin"],
-            "exp": (datetime.now(UTC) + timedelta(hours=1)).timestamp(),
+            "exp": (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp(),
         }
     )
     return service
@@ -104,6 +104,7 @@ def mock_settings():
 # ==================== Access Token Creation Tests ====================
 
 
+@pytest.mark.unit
 class TestAccessTokenCreation:
     """Test access token creation with RBAC."""
 
@@ -218,6 +219,7 @@ class TestAccessTokenCreation:
 # ==================== Refresh Token Creation Tests ====================
 
 
+@pytest.mark.unit
 class TestRefreshTokenCreation:
     """Test refresh token creation."""
 
@@ -278,6 +280,7 @@ class TestRefreshTokenCreation:
 # ==================== Token Verification Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenVerification:
     """Test token verification with permission checks."""
 
@@ -440,6 +443,7 @@ class TestTokenVerification:
 # ==================== Token Refresh Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenRefresh:
     """Test token refresh functionality."""
 
@@ -542,6 +546,7 @@ class TestTokenRefresh:
 # ==================== Token Revocation Tests ====================
 
 
+@pytest.mark.unit
 class TestTokenRevocation:
     """Test token revocation and blacklisting."""
 
@@ -549,7 +554,7 @@ class TestTokenRevocation:
     async def test_revoke_token_success(self, rbac_token_service, jwt_service, mock_cache):
         """Test successful token revocation."""
         token = "valid_token"
-        future_exp = (datetime.now(UTC) + timedelta(hours=1)).timestamp()
+        future_exp = (datetime.now(timezone.utc) + timedelta(hours=1)).timestamp()
 
         jwt_service.verify_token.return_value = {
             "sub": str(uuid4()),
@@ -568,7 +573,7 @@ class TestTokenRevocation:
     async def test_revoke_token_already_expired(self, rbac_token_service, jwt_service, mock_cache):
         """Test revoking already expired token does nothing."""
         token = "expired_token"
-        past_exp = (datetime.now(UTC) - timedelta(hours=1)).timestamp()
+        past_exp = (datetime.now(timezone.utc) - timedelta(hours=1)).timestamp()
 
         jwt_service.verify_token.return_value = {
             "sub": str(uuid4()),
@@ -618,6 +623,7 @@ class TestTokenRevocation:
 # ==================== Get User From Token Tests ====================
 
 
+@pytest.mark.unit
 class TestGetUserFromToken:
     """Test getting user from token."""
 
@@ -664,6 +670,7 @@ class TestGetUserFromToken:
 # ==================== Factory Function Test ====================
 
 
+@pytest.mark.unit
 class TestFactoryFunction:
     """Test factory function."""
 

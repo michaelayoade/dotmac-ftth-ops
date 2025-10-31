@@ -1,6 +1,6 @@
 """Tests for Invoice Commands (CQRS Pattern)"""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -15,6 +15,7 @@ from dotmac.platform.billing.commands.invoice_commands import (
 )
 
 
+@pytest.mark.unit
 class TestCreateInvoiceCommand:
     """Test CreateInvoiceCommand"""
 
@@ -59,7 +60,7 @@ class TestCreateInvoiceCommand:
 
     def test_create_invoice_command_with_optional_fields(self):
         """Test command with all optional fields"""
-        due_date = datetime.now(UTC) + timedelta(days=30)
+        due_date = datetime.now(timezone.utc) + timedelta(days=30)
 
         command = CreateInvoiceCommand(
             tenant_id="tenant-1",
@@ -98,6 +99,7 @@ class TestCreateInvoiceCommand:
             )
 
 
+@pytest.mark.unit
 class TestInvoiceCommandHandler:
     """Test InvoiceCommandHandler"""
 
@@ -148,8 +150,8 @@ class TestInvoiceCommandHandler:
                 total_amount=10000,
                 remaining_balance=10000,
                 status="draft",
-                issue_date=datetime.now(UTC),
-                due_date=datetime.now(UTC) + timedelta(days=30),
+                issue_date=datetime.now(timezone.utc),
+                due_date=datetime.now(timezone.utc) + timedelta(days=30),
             )
             mock_create.return_value = mock_invoice
 
@@ -171,6 +173,7 @@ class TestInvoiceCommandHandler:
                 assert invoice.invoice_id == "inv-123"
 
 
+@pytest.mark.unit
 class TestVoidInvoiceCommand:
     """Test VoidInvoiceCommand"""
 
@@ -196,6 +199,7 @@ class TestVoidInvoiceCommand:
         assert len(command.void_reason) >= 10
 
 
+@pytest.mark.unit
 class TestFinalizeInvoiceCommand:
     """Test FinalizeInvoiceCommand"""
 
@@ -219,6 +223,7 @@ class TestFinalizeInvoiceCommand:
         assert command.send_email is False
 
 
+@pytest.mark.unit
 class TestApplyPaymentToInvoiceCommand:
     """Test ApplyPaymentToInvoiceCommand"""
 
@@ -245,6 +250,7 @@ class TestApplyPaymentToInvoiceCommand:
         assert command.payment_id == "pay-456"
 
 
+@pytest.mark.unit
 class TestMarkInvoiceAsPaidCommand:
     """Test MarkInvoiceAsPaidCommand"""
 

@@ -1,17 +1,24 @@
+
 """
 Comprehensive tests for contacts router endpoints.
 
 Tests cover all API endpoints with proper mocking and isolation.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 
+pytestmark = pytest.mark.integration
+
 from dotmac.platform.contacts.schemas import (
+
+
+
+
     ContactActivityCreate,
     ContactActivityResponse,
     ContactBulkDelete,
@@ -29,10 +36,14 @@ from dotmac.platform.contacts.schemas import (
     ContactUpdate,
 )
 
-pytestmark = pytest.mark.asyncio
 
 
 # Test data fixtures
+
+
+
+pytestmark = pytest.mark.asyncio
+
 @pytest.fixture
 def sample_contact_id():
     return uuid4()
@@ -89,8 +100,8 @@ def mock_contact_response(sample_contact_id, sample_tenant_id):
         preferred_language=None,
         timezone=None,
         is_verified=False,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
         last_contacted_at=None,
         deleted_at=None,
         contact_methods=[],
@@ -113,8 +124,8 @@ def mock_contact_method_response(sample_contact_id):
         verified_by=None,
         notes=None,
         metadata={},
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -127,14 +138,14 @@ def mock_contact_activity_response(sample_contact_id, sample_user_id):
         activity_type="call",
         subject="Follow up call",
         description="Discussed next steps",
-        activity_date=datetime.now(UTC),
+        activity_date=datetime.now(timezone.utc),
         duration_minutes=30,
         status="completed",
         outcome="positive",
         metadata={},
         performed_by=sample_user_id,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -156,8 +167,8 @@ def mock_label_definition_response(sample_tenant_id):
         is_default=False,
         metadata={},
         created_by=None,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -185,8 +196,8 @@ def mock_field_definition_response(sample_tenant_id):
         field_group="custom",
         is_visible=True,
         created_by=None,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -948,3 +959,219 @@ class TestBulkOperations:
 
             assert result["deleted"] == 1
             assert len(result["errors"]) == 2
+
+
+@pytest.mark.asyncio
+class TestContactsPermissions:
+    """Test that contact endpoints properly enforce RBAC permissions."""
+
+    @pytest.fixture(autouse=True)
+    def setup_rbac_mocks(self):
+        """Set up RBAC service mocks for permission tests."""
+        from unittest.mock import AsyncMock, MagicMock
+
+        # Mock that always denies permissions
+        self.mock_rbac_deny = MagicMock()
+        # Use AsyncMock for async method so FastAPI can await it
+        self.mock_rbac_deny.user_has_all_permissions = AsyncMock(return_value=False)
+
+    async def test_create_contact_requires_create_permission(self, test_app):
+        """Test POST / requires contacts.create permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/",
+                json={
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "email": "john@example.com",
+                },
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.create"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_get_contact_requires_read_permission(self, test_app):
+        """Test GET /{contact_id} requires contacts.read permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.get(f"/api/v1/contacts/{uuid4()}")
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.read"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_update_contact_requires_update_permission(self, test_app):
+        """Test PATCH /{contact_id} requires contacts.update permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.patch(
+                f"/api/v1/contacts/{uuid4()}",
+                json={"first_name": "Updated"},
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.update"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_delete_contact_requires_delete_permission(self, test_app):
+        """Test DELETE /{contact_id} requires contacts.delete permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.delete(f"/api/v1/contacts/{uuid4()}")
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.delete"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_search_contacts_requires_read_permission(self, test_app):
+        """Test POST /search requires contacts.read permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/search",
+                json={"query": "test", "limit": 10},
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.read"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_add_contact_method_requires_update_permission(self, test_app):
+        """Test POST /methods requires contacts.update permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/methods",
+                json={
+                    "contact_id": str(uuid4()),
+                    "method_type": "email",
+                    "value": "test@example.com",
+                },
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.update"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_record_activity_requires_manage_permission(self, test_app):
+        """Test POST /activities requires contacts.manage permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/activities",
+                json={
+                    "contact_id": str(uuid4()),
+                    "activity_type": "note",
+                    "description": "Test note",
+                },
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.manage"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_bulk_update_requires_update_permission(self, test_app):
+        """Test POST /bulk/update requires contacts.update permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/bulk/update",
+                json={
+                    "contact_ids": [str(uuid4())],
+                    "updates": {"company": "Test Corp"},
+                },
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.update"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
+
+    async def test_bulk_delete_requires_delete_permission(self, test_app):
+        """Test POST /bulk/delete requires contacts.delete permission."""
+        from fastapi.testclient import TestClient
+
+        with patch(
+            "dotmac.platform.auth.rbac_dependencies.RBACService",
+            return_value=self.mock_rbac_deny,
+        ):
+            client = TestClient(test_app)
+            response = client.post(
+                "/api/v1/contacts/bulk/delete",
+                json={
+                    "contact_ids": [str(uuid4())],
+                    "hard_delete": False,
+                },
+            )
+            assert response.status_code == 403
+
+            # Verify correct permission was checked
+            assert ["contacts.delete"] in [
+                call[0][1]
+                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]

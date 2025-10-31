@@ -1,115 +1,95 @@
-# E2E Tests - Quick Start 🚀
+# E2E Tests - Quick Start
 
-## Run All E2E Tests (One Command)
+End-to-end coverage for the tenant billing and operations flows lives in the `@dotmac/base-app` workspace. Follow these steps to run the Playwright suites locally.
+
+## Prerequisites
+
+1. **Infrastructure**
+   ```bash
+   make start-platform          # postgres, redis, vault, minio
+   make start-platform-obs      # optional: otel collector, prometheus, grafana, jaeger
+   make start-isp               # optional: FreeRADIUS, NetBox, GenieACS, etc.
+   ```
+2. **Backend**
+   ```bash
+   poetry install --with dev
+   poetry run alembic upgrade head
+   poetry run uvicorn src.dotmac.platform.main:app --reload --port 8000
+   ```
+3. **Seed data (optional but recommended)**
+   ```bash
+   make db-seed
+   ```
+
+## Run All E2E Tests
 
 ```bash
-./scripts/run-e2e-tenant-billing.sh
+cd frontend
+pnpm --filter @dotmac/base-app test:e2e
 ```
 
-This automatically:
-- ✅ Checks infrastructure
-- ✅ Seeds test data (10 invoices, 15 payments)
-- ✅ Starts backend & frontend
-- ✅ Runs 23 Playwright tests
-- ✅ Cleans up on exit
-
----
-
-## Test Credentials
-
-**Username**: `superadmin`
-**Password**: `admin123`
-
----
-
-## Run Specific Tests
+## Targeted Runs
 
 ```bash
+# Specific spec
+pnpm --filter @dotmac/base-app exec \
+  playwright test e2e/tenant-portal.spec.ts
+
+# Focus on a test title
+pnpm --filter @dotmac/base-app exec \
+  playwright test e2e/tenant-portal.spec.ts \
+  -g "shows main page structure"
+
+# Interactive UI mode
+pnpm --filter @dotmac/base-app exec playwright test --ui
+
+# Headed browser
+pnpm --filter @dotmac/base-app exec playwright test --headed
+```
+
+## Manual Setup Workflow
+
+```bash
+# Backend (from repository root)
+poetry run uvicorn src.dotmac.platform.main:app --reload --port 8000 &
+
+# Frontend base app (separate terminal)
 cd frontend/apps/base-app
+pnpm install
+pnpm dev &
 
-# One test suite
-pnpm exec playwright test tenant-portal.spec.ts -g "Layout & Navigation"
-
-# One specific test
-pnpm exec playwright test tenant-portal.spec.ts -g "shows main page structure"
-
-# Debug mode (interactive)
-pnpm exec playwright test tenant-portal.spec.ts --ui
-
-# Headed mode (see browser)
-pnpm exec playwright test tenant-portal.spec.ts --headed
-```
-
----
-
-## Manual Setup
-
-```bash
-# 1. Start infrastructure
-make infra-up
-
-# 2. Start backend
-export DATABASE_URL="postgresql+asyncpg://dotmac_user:change-me-in-production@localhost:5432/dotmac_test"
-.venv/bin/uvicorn dotmac.platform.main:app --port 8000 --reload &
-
-# 3. Start frontend
-cd frontend/apps/base-app && pnpm dev &
-
-# 4. Run tests
+# Execute focused tests
 pnpm test:e2e tenant-portal.spec.ts
 ```
 
----
+Stop background servers with `Ctrl+C` when finished.
 
-## What Gets Tested (23 Tests)
+## Test Credentials
 
-### ✅ Layout & Navigation (3)
-- Page structure, summary cards, action buttons
+- **Username:** `superadmin`
+- **Password:** `admin123`
 
-### ✅ Metrics & Data (6)
-- Plan display, spend amounts, invoice counts, overdue detection
-
-### ✅ Invoice List (7)
-- Table rendering, search/filter, currency formatting, status badges, selection
-
-### ✅ Payment Table (7)
-- Amount formatting (cents→dollars), status badges, references, methods, dates
-
----
-
-## Test Data Created
-
-- **Tenant**: E2E Test Corporation (Professional plan)
-- **Invoices**: 10 (2 overdue, 3 due soon, 4 paid, 1 draft)
-- **Payments**: 15 (8 successful, 4 failed, 3 pending)
-- **Amounts**: Realistic ($3,248.99 invoices, $999 add-ons)
-
----
+These are created by the default seed data. If authentication fails, re-run `make db-seed` or update the user manually via psql.
 
 ## Troubleshooting
 
-**Tests timeout?**
-- Increase timeout in playwright.config.ts
-- Use only Desktop Chrome (comment out mobile browsers)
+- **Playwright times out**  
+  Increase timeout in `frontend/apps/base-app/playwright.config.ts` or disable mobile browsers before rerunning.
 
-**Login fails?**
-- Verify superadmin password: `docker exec dotmac-postgres psql -U dotmac_user -d dotmac_test -c "SELECT username FROM users WHERE username='superadmin';"`
-- Re-run password update script from docs/e2e-test-setup-complete.md
+- **No data appears in UI**  
+  Ensure the backend is running on `http://localhost:8000`, `make db-seed` has been executed, and the E2E app is pointing to the correct API via `NEXT_PUBLIC_API_BASE_URL`.
 
-**Infrastructure not running?**
-```bash
-make infra-status
-make infra-up
-```
+- **Infrastructure not running**  
+  ```bash
+  make status-platform
+  make status-isp
+  ```
 
----
+- **Need to clean state quickly**  
+  Use `./scripts/infra.sh platform restart --with-obs` and `./scripts/infra.sh isp restart` to bounce containers.
 
-## Documentation
+## Additional Resources
 
-- **Complete Guide**: `docs/e2e-testing-guide.md`
-- **Setup Details**: `docs/e2e-test-setup-complete.md`
-- **Partner Portal Plan**: `docs/partner-portal-revenue-share-plan.md`
-
----
-
-**Quick command**: `./scripts/run-e2e-tenant-billing.sh` ⚡
+- Frontend multi-app overview: `frontend/MULTI-APP-ARCHITECTURE.md`
+- Infrastructure quick reference: `README-INFRASTRUCTURE.md`
+- Platform documentation index: `docs/INDEX.md`

@@ -4,7 +4,10 @@ SLA Monitoring Service
 Real-time SLA tracking, breach detection, and compliance reporting.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 import structlog
@@ -401,7 +404,11 @@ class SLAMonitoringService:
 
         # Check for breach
         if actual_minutes > target_minutes:
-            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100 if target_minutes else actual_minutes
+            deviation = (
+                ((actual_minutes - target_minutes) / target_minutes) * 100
+                if target_minutes
+                else actual_minutes
+            )
             severity_label = {
                 AlarmSeverity.CRITICAL: "critical",
                 AlarmSeverity.MAJOR: "high",
@@ -436,7 +443,11 @@ class SLAMonitoringService:
 
         # Check for breach
         if actual_minutes > target_minutes:
-            deviation = ((actual_minutes - target_minutes) / target_minutes) * 100 if target_minutes else actual_minutes
+            deviation = (
+                ((actual_minutes - target_minutes) / target_minutes) * 100
+                if target_minutes
+                else actual_minutes
+            )
             severity_label = {
                 AlarmSeverity.CRITICAL: "critical",
                 AlarmSeverity.MAJOR: "high",
@@ -456,14 +467,16 @@ class SLAMonitoringService:
     async def _has_active_breach(self, instance: SLAInstance, breach_type: str) -> bool:
         """Check if there is an unresolved breach for the instance."""
         result = await self.session.execute(
-            select(SLABreach).where(
+            select(SLABreach)
+            .where(
                 and_(
                     SLABreach.tenant_id == self.tenant_id,
                     SLABreach.sla_instance_id == instance.id,
                     SLABreach.breach_type == breach_type,
                     SLABreach.resolved == False,  # noqa: E712
                 )
-            ).limit(1)
+            )
+            .limit(1)
         )
         return result.scalar_one_or_none() is not None
 
@@ -485,14 +498,16 @@ class SLAMonitoringService:
                 breach_type=breach_type,
             )
             result = await self.session.execute(
-                select(SLABreach).where(
+                select(SLABreach)
+                .where(
                     and_(
                         SLABreach.tenant_id == self.tenant_id,
                         SLABreach.sla_instance_id == instance.id,
                         SLABreach.breach_type == breach_type,
                         SLABreach.resolved == False,  # noqa: E712
                     )
-                ).limit(1)
+                )
+                .limit(1)
             )
             existing_breach = result.scalar_one()
             return existing_breach

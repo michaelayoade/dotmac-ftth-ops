@@ -6,7 +6,7 @@ export const dynamicParams = true;
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Wifi, Zap, TrendingUp, CheckCircle, Info, ArrowRight, Loader2 } from "lucide-react";
+import { Wifi, Zap, CheckCircle, Info, ArrowRight, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useCustomerService } from "@/hooks/useCustomerPortal";
 import { useToast } from "@/components/ui/use-toast";

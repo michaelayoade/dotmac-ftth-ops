@@ -1,39 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Building2,
   Plus,
-  Edit,
-  Trash2,
   CheckCircle,
   XCircle,
   Clock,
   AlertCircle,
-  DollarSign,
-  CreditCard,
   Banknote,
   Receipt,
   Smartphone,
   Link,
-  Hash,
-  Calendar,
   Search,
   Filter,
   Download,
   Upload,
   MoreVertical,
-  ChevronRight,
-  TrendingUp,
-  TrendingDown,
   Eye,
   EyeOff,
   Shield,
   FileText,
   CheckSquare,
-  Square,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
+import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
 
 // Types
 interface BankAccount {
@@ -94,6 +86,7 @@ const paymentMethods = [
 ];
 
 export default function BankingPage() {
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("accounts");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [selectedAccount, setSelectedAccount] = useState<BankAccountSummary | null>(null);
@@ -142,15 +135,7 @@ export default function BankingPage() {
     mobile_provider: "",
   });
 
-  useEffect(() => {
-    if (activeTab === "accounts") {
-      loadBankAccounts();
-    } else if (activeTab === "payments") {
-      loadManualPayments();
-    }
-  }, [activeTab]);
-
-  const loadBankAccounts = async () => {
+  const loadBankAccounts = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
@@ -164,11 +149,16 @@ export default function BankingPage() {
         window.location.href = "/login";
       }
     } catch (error) {
-      console.error("Failed to load bank accounts:", error);
+      logger.error("Failed to load bank accounts", error);
+      toast({
+        title: "Error",
+        description: "Failed to load bank accounts",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const loadAccountSummary = async (accountId: number) => {
     try {
@@ -186,11 +176,16 @@ export default function BankingPage() {
         window.location.href = "/login";
       }
     } catch (error) {
-      console.error("Failed to load account summary:", error);
+      logger.error("Failed to load account summary", error);
+      toast({
+        title: "Error",
+        description: "Failed to load account summary",
+        variant: "destructive",
+      });
     }
   };
 
-  const loadManualPayments = async () => {
+  const loadManualPayments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/search`, {
@@ -209,11 +204,24 @@ export default function BankingPage() {
         window.location.href = "/login";
       }
     } catch (error) {
-      console.error("Failed to load manual payments:", error);
+      logger.error("Failed to load manual payments", error);
+      toast({
+        title: "Error",
+        description: "Failed to load manual payments",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (activeTab === "accounts") {
+      loadBankAccounts();
+    } else if (activeTab === "payments") {
+      loadManualPayments();
+    }
+  }, [activeTab, loadBankAccounts, loadManualPayments]);
 
   const handleCreateAccount = async () => {
     try {
@@ -227,12 +235,25 @@ export default function BankingPage() {
       });
 
       if (response.ok) {
+        logger.info("Bank account created", {
+          bankName: accountForm.bank_name,
+          accountType: accountForm.account_type,
+        });
         await loadBankAccounts();
         setShowAddAccount(false);
         resetAccountForm();
+        toast({
+          title: "Success",
+          description: "Bank account added successfully",
+        });
       }
     } catch (error) {
-      console.error("Failed to create bank account:", error);
+      logger.error("Failed to create bank account", error);
+      toast({
+        title: "Error",
+        description: "Failed to create bank account. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -255,12 +276,26 @@ export default function BankingPage() {
       });
 
       if (response.ok) {
+        logger.info("Manual payment recorded", {
+          paymentMethod: selectedPaymentMethod,
+          amount: paymentForm.amount,
+          customerId: paymentForm.customer_id,
+        });
         await loadManualPayments();
         setShowRecordPayment(false);
         resetPaymentForm();
+        toast({
+          title: "Success",
+          description: "Payment recorded successfully",
+        });
       }
     } catch (error) {
-      console.error("Failed to record payment:", error);
+      logger.error("Failed to record payment", error);
+      toast({
+        title: "Error",
+        description: "Failed to record payment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -279,10 +314,20 @@ export default function BankingPage() {
       );
 
       if (response.ok) {
+        logger.info("Bank account verified", { accountId });
         await loadBankAccounts();
+        toast({
+          title: "Success",
+          description: "Bank account verified successfully",
+        });
       }
     } catch (error) {
-      console.error("Failed to verify account:", error);
+      logger.error("Failed to verify account", error);
+      toast({
+        title: "Error",
+        description: "Failed to verify bank account. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -300,10 +345,20 @@ export default function BankingPage() {
       );
 
       if (response.ok) {
+        logger.info("Payment verified", { paymentId });
         await loadManualPayments();
+        toast({
+          title: "Success",
+          description: "Payment verified successfully",
+        });
       }
     } catch (error) {
-      console.error("Failed to verify payment:", error);
+      logger.error("Failed to verify payment", error);
+      toast({
+        title: "Error",
+        description: "Failed to verify payment. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 

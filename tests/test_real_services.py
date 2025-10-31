@@ -1,3 +1,4 @@
+
 """
 Test real services connectivity.
 """
@@ -6,24 +7,28 @@ import os
 
 import hvac
 import pytest
-import redis
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 
+import redis
 from dotmac.platform.observability.manager import ObservabilityManager
 
-pytestmark = pytest.mark.asyncio
+
 
 
 # Mark all tests in this module as integration tests
+
+
+
+
 pytestmark = [
+    pytest.mark.asyncio,
     pytest.mark.integration,
     pytest.mark.skipif(
         os.getenv("DOTMAC_LIVE") != "1", reason="Live integration disabled (set DOTMAC_LIVE=1)"
     ),
 ]
-
 
 def test_postgres_connection():
     """Test PostgreSQL connection."""

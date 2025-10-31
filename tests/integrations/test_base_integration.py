@@ -14,6 +14,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.unit
 class TestBaseIntegration:
     """Test BaseIntegration base class."""
 
@@ -30,6 +31,7 @@ class TestBaseIntegration:
     def test_concrete_integration_can_be_created(self, basic_config):
         """Test concrete integration implementation."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -47,6 +49,7 @@ class TestBaseIntegration:
     async def test_integration_lifecycle(self, basic_config):
         """Test integration initialization and shutdown."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             def __init__(self, config):
                 super().__init__(config)
@@ -113,6 +116,7 @@ class TestBaseIntegration:
     def test_base_integration_status_property(self, basic_config):
         """Test status property."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 self._status = IntegrationStatus.READY
@@ -127,6 +131,7 @@ class TestBaseIntegration:
     async def test_base_integration_load_secrets_no_path(self, basic_config):
         """Test load_secrets when no secrets_path is configured."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -151,6 +156,7 @@ class TestBaseIntegration:
             secrets_path="test/path",
         )
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -180,6 +186,7 @@ class TestBaseIntegration:
             secrets_path="test/path",
         )
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -218,6 +225,7 @@ class TestBaseIntegration:
             secrets_path="test/path",
         )
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -236,6 +244,7 @@ class TestBaseIntegration:
     def test_base_integration_get_secret(self, basic_config):
         """Test get_secret method."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -254,6 +263,7 @@ class TestBaseIntegration:
     async def test_base_integration_cleanup(self, basic_config):
         """Test cleanup method."""
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass
@@ -275,6 +285,7 @@ class TestBaseIntegration:
             settings={},
         )
 
+        @pytest.mark.unit
         class TestIntegration(BaseIntegration):
             async def initialize(self):
                 pass

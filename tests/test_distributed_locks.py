@@ -15,6 +15,7 @@ from dotmac.platform.core.distributed_locks import (
 )
 
 
+@pytest.mark.integration
 class TestDistributedLocks:
     """Test distributed locks functionality."""
 
@@ -176,6 +177,7 @@ class TestDistributedLocks:
         assert result is True
 
 
+@pytest.mark.integration
 class TestDistributedLockClass:
     """Test DistributedLock class."""
 
@@ -289,6 +291,7 @@ class TestDistributedLockClass:
         assert lock.lock_value is None
 
 
+@pytest.mark.integration
 class TestDistributedLocksEdgeCases:
     """Test edge cases and error handling for distributed locks."""
 

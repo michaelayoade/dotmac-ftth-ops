@@ -1,6 +1,10 @@
 """Payment processing service with tenant support and idempotency."""
 
-from datetime import UTC, datetime, timedelta
+from collections.abc import Mapping
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -47,7 +51,11 @@ class PaymentService:
         self.providers = payment_providers or {}
 
     async def _validate_payment_request(
-        self, tenant_id: str, payment_method_id: str, idempotency_key: str | None
+        self,
+        tenant_id: str,
+        payment_method_id: str,
+        customer_id: str,
+        idempotency_key: str | None,
     ) -> tuple[PaymentEntity | None, Any]:
         """Validate payment request and return existing payment if idempotency key exists."""
         # Check for existing payment with same idempotency key
@@ -66,6 +74,12 @@ class PaymentService:
 
         if payment_method.status != PaymentMethodStatus.ACTIVE:
             raise PaymentError(f"Payment method {payment_method_id} is not active")
+
+        # SECURITY: Verify payment method belongs to the customer
+        if payment_method.customer_id != customer_id:
+            raise PaymentError(
+                f"Payment method {payment_method_id} does not belong to customer {customer_id}"
+            )
 
         return None, payment_method
 
@@ -97,10 +111,25 @@ class PaymentService:
                 payment_entity.failure_reason = result.error_message if not result.success else None
                 payment_entity.processed_at = datetime.now(UTC)
             else:
-                # Mock success for testing
-                payment_entity.status = PaymentStatus.SUCCEEDED
-                payment_entity.processed_at = datetime.now(UTC)
-                logger.warning(f"Payment provider {provider} not configured, mocking success")
+                # Check if payment plugin is required (production mode)
+                if settings.billing.require_payment_plugin:
+                    payment_entity.status = PaymentStatus.FAILED
+                    payment_entity.failure_reason = f"Payment provider '{provider}' not configured"
+                    payment_entity.processed_at = datetime.now(UTC)
+                    logger.error(
+                        f"Payment failed: provider '{provider}' not configured. "
+                        f"Set billing.require_payment_plugin=False in development/testing only.",
+                        payment_id=payment_entity.payment_id,
+                    )
+                else:
+                    # Mock success for testing/development ONLY
+                    payment_entity.status = PaymentStatus.SUCCEEDED
+                    payment_entity.processed_at = datetime.now(UTC)
+                    logger.warning(
+                        f"Payment provider {provider} not configured, mocking success. "
+                        "THIS SHOULD NEVER HAPPEN IN PRODUCTION!",
+                        payment_id=payment_entity.payment_id,
+                    )
 
         except Exception as e:
             payment_entity.status = PaymentStatus.FAILED
@@ -202,10 +231,16 @@ class PaymentService:
 
         # Validate request and check for existing payment
         existing_payment, payment_method = await self._validate_payment_request(
-            tenant_id, payment_method_id, idempotency_key
+            tenant_id, payment_method_id, customer_id, idempotency_key
         )
         if existing_payment:
-            return Payment.model_validate(existing_payment)
+            return self._payment_from_entity(existing_payment)
+
+        # FIXED: Store invoice_ids in extra_data so they're available for retries
+        # Without this, failed payments that succeed on retry never link to invoices
+        extra_data = metadata or {}
+        if invoice_ids:
+            extra_data["invoice_ids"] = invoice_ids
 
         # Create payment record
         payment_entity = PaymentEntity(
@@ -222,7 +257,8 @@ class PaymentService:
                 "last_four": payment_method.last_four,
                 "brand": payment_method.brand,
             },
-            extra_data=metadata or {},
+            provider_payment_data={},
+            extra_data=extra_data,
         )
 
         # Save to database first
@@ -261,7 +297,7 @@ class PaymentService:
                 provider,
             )
 
-        return Payment.model_validate(payment_entity)
+        return self._payment_from_entity(payment_entity)
 
     async def _validate_refund_request(
         self, tenant_id: str, payment_id: str, amount: int | None, idempotency_key: str | None
@@ -272,14 +308,29 @@ class PaymentService:
         if not original_payment:
             raise PaymentNotFoundError(f"Payment {payment_id} not found")
 
-        if original_payment.status != PaymentStatus.SUCCEEDED:
-            raise PaymentError("Can only refund successful payments")
+        # Allow refunds on successful or partially refunded payments
+        if original_payment.status not in (
+            PaymentStatus.SUCCEEDED,
+            PaymentStatus.PARTIALLY_REFUNDED,
+        ):
+            raise PaymentError(
+                f"Can only refund successful or partially refunded payments. "
+                f"Current status: {original_payment.status}"
+            )
 
-        # Determine refund amount
-        refund_amount = amount or original_payment.amount
+        # Calculate how much has already been refunded
+        already_refunded = int(original_payment.refund_amount or 0)
+        remaining_refundable = original_payment.amount - already_refunded
 
-        if refund_amount > original_payment.amount:
-            raise PaymentError("Refund amount cannot exceed original payment amount")
+        # Determine refund amount - default to remaining balance, not original amount
+        refund_amount = amount if amount is not None else remaining_refundable
+
+        if refund_amount > remaining_refundable:
+            raise PaymentError(
+                f"Refund amount ({refund_amount}) exceeds remaining refundable amount "
+                f"({remaining_refundable}). Original: {original_payment.amount}, "
+                f"Already refunded: {already_refunded}"
+            )
 
         # Check for existing refund with same idempotency key
         existing_refund = None
@@ -312,11 +363,26 @@ class PaymentService:
                 refund.status = PaymentStatus.REFUNDED if result.success else PaymentStatus.FAILED
                 refund.failure_reason = result.error_message if not result.success else None
             else:
-                # Mock success for testing
-                refund.status = PaymentStatus.REFUNDED
-                logger.warning(
-                    f"Payment provider {original_payment.provider} not configured, mocking refund"
-                )
+                # Check if payment plugin is required (production mode)
+                if settings.billing.require_payment_plugin:
+                    refund.status = PaymentStatus.FAILED
+                    refund.failure_reason = (
+                        f"Payment provider '{original_payment.provider}' not configured"
+                    )
+                    logger.error(
+                        f"Refund failed: provider '{original_payment.provider}' not configured. "
+                        f"Set billing.require_payment_plugin=False in development/testing only.",
+                        refund_id=refund.payment_id,
+                        original_payment_id=original_payment.payment_id,
+                    )
+                else:
+                    # Mock success for testing/development ONLY
+                    refund.status = PaymentStatus.REFUNDED
+                    logger.warning(
+                        f"Payment provider {original_payment.provider} not configured, mocking refund. "
+                        "THIS SHOULD NEVER HAPPEN IN PRODUCTION!",
+                        refund_id=refund.payment_id,
+                    )
 
             refund.processed_at = datetime.now(UTC)
 
@@ -339,11 +405,18 @@ class PaymentService:
         # Create transaction record
         await self._create_transaction(refund, TransactionType.REFUND)
 
-        # Update original payment status
-        if refund_amount == original_payment.amount:
+        # Update original payment refund tracking and status
+        # Track total refunded amount
+        current_refund_total = int(original_payment.refund_amount or 0)
+        new_refund_total = current_refund_total + refund_amount
+        original_payment.refund_amount = new_refund_total
+
+        # Update status based on total refunded
+        if new_refund_total >= original_payment.amount:
             original_payment.status = PaymentStatus.REFUNDED
         else:
             original_payment.status = PaymentStatus.PARTIALLY_REFUNDED
+
         await self.db.commit()
 
         # Publish webhook event
@@ -387,7 +460,7 @@ class PaymentService:
             tenant_id, payment_id, amount, idempotency_key
         )
         if existing_refund:
-            return Payment.model_validate(existing_refund)
+            return self._payment_from_entity(existing_refund)
 
         # Create refund payment record
         refund = PaymentEntity(
@@ -421,7 +494,7 @@ class PaymentService:
                 refund, original_payment, payment_id, refund_amount, reason, tenant_id
             )
 
-        return Payment.model_validate(refund)
+        return self._payment_from_entity(refund)
 
     async def add_payment_method(
         self,
@@ -564,9 +637,7 @@ class PaymentService:
 
         # Check retry limit (from settings)
         if payment.retry_count >= settings.billing.payment_retry_attempts:
-            raise PaymentError(
-                f"Maximum retry attempts ({settings.billing.payment_retry_attempts}) reached"
-            )
+            raise PaymentError("Maximum retry attempts reached")
 
         # Update retry count and schedule with exponential backoff (from settings)
         payment.retry_count += 1
@@ -577,15 +648,21 @@ class PaymentService:
 
         await self.db.commit()
 
+        # FIXED: Extract payment_method_id from payment_method_details for use in callbacks
+        # PaymentEntity doesn't have a payment_method_id attribute directly
+        payment_method_id = (
+            payment.payment_method_details.get("payment_method_id")
+            if payment.payment_method_details
+            else None
+        )
+
         # Attempt payment again
         try:
             if payment.provider in self.providers:
-                # Get payment method details
-                payment_method_reference = payment.payment_method_details.get("payment_method_id")
-                if not isinstance(payment_method_reference, str) or not payment_method_reference:
+                if not isinstance(payment_method_id, str) or not payment_method_id:
                     raise PaymentError("Payment method identifier missing for retry")
 
-                payment_method = await self._get_payment_method(tenant_id, payment_method_reference)
+                payment_method = await self._get_payment_method(tenant_id, payment_method_id)
 
                 if payment_method:
                     provider_instance = self.providers[payment.provider]
@@ -608,21 +685,116 @@ class PaymentService:
                     if result.success:
                         payment.provider_payment_id = result.provider_payment_id
                         payment.provider_fee = result.provider_fee
-                        await self._create_transaction(payment, TransactionType.PAYMENT)
+                        # FIXED: Use payment_method_id (from payment_method_details)
+                        await self._handle_payment_success(
+                            payment,  # payment_entity positional
+                            tenant_id,
+                            payment.customer_id,
+                            payment.amount,
+                            payment.currency,
+                            payment_method_id,  # From payment_method_details
+                            payment.provider,
+                            payment.extra_data.get("invoice_ids") if payment.extra_data else None,
+                        )
+                    else:
+                        # FIXED: Use payment_method_id (from payment_method_details)
+                        await self._handle_payment_failure(
+                            payment,  # payment_entity positional
+                            tenant_id,
+                            payment.customer_id,
+                            payment.amount,
+                            payment.currency,
+                            payment_method_id,  # From payment_method_details
+                            payment.provider,
+                        )
+                else:
+                    # CRITICAL FIX: Payment method was deleted during retry
+                    # Set payment to FAILED to prevent stuck PROCESSING state
+                    payment.status = PaymentStatus.FAILED
+                    payment.failure_reason = (
+                        f"Payment method {payment_method_id} no longer exists. "
+                        "Cannot retry payment."
+                    )
+                    payment.processed_at = datetime.now(UTC)
+
+                    logger.error(
+                        "Payment retry failed: payment method deleted",
+                        payment_id=payment.payment_id,
+                        payment_method_id=payment_method_id,
+                        tenant_id=tenant_id,
+                    )
+
+                    # Publish failure event so merchant can intervene
+                    await self._handle_payment_failure(
+                        payment,
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id,
+                        payment.provider,
+                    )
             else:
-                # Mock retry
-                payment.status = PaymentStatus.SUCCEEDED
-                payment.processed_at = datetime.now(UTC)
+                # Check if payment plugin is required (production mode)
+                if settings.billing.require_payment_plugin:
+                    payment.status = PaymentStatus.FAILED
+                    payment.failure_reason = f"Payment provider '{payment.provider}' not configured"
+                    payment.processed_at = datetime.now(UTC)
+                    logger.error(
+                        f"Payment retry failed: provider '{payment.provider}' not configured. "
+                        f"Set billing.require_payment_plugin=False in development/testing only.",
+                        payment_id=payment.payment_id,
+                    )
+                    # FIXED: Use payment_method_id (from payment_method_details)
+                    await self._handle_payment_failure(
+                        payment,  # payment_entity positional
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id or "unknown",  # Guard against None
+                        payment.provider,
+                    )
+                else:
+                    # Mock success for testing/development ONLY
+                    payment.status = PaymentStatus.SUCCEEDED
+                    payment.processed_at = datetime.now(UTC)
+                    logger.warning(
+                        f"Payment provider {payment.provider} not configured, mocking success on retry. "
+                        "THIS SHOULD NEVER HAPPEN IN PRODUCTION!",
+                        payment_id=payment.payment_id,
+                    )
+                    # FIXED: Use payment_method_id (from payment_method_details)
+                    await self._handle_payment_success(
+                        payment,  # payment_entity positional
+                        tenant_id,
+                        payment.customer_id,
+                        payment.amount,
+                        payment.currency,
+                        payment_method_id or "unknown",  # Guard against None
+                        payment.provider,
+                        payment.extra_data.get("invoice_ids") if payment.extra_data else None,
+                    )
 
         except Exception as e:
             payment.status = PaymentStatus.FAILED
             payment.failure_reason = str(e)
             logger.error(f"Payment retry error: {e}")
+            # FIXED: Use payment_method_id (from payment_method_details)
+            await self._handle_payment_failure(
+                payment,  # payment_entity positional
+                tenant_id,
+                payment.customer_id,
+                payment.amount,
+                payment.currency,
+                payment_method_id or "unknown",  # Guard against None
+                payment.provider,
+            )
 
         await self.db.commit()
         await self.db.refresh(payment)
 
-        return Payment.model_validate(payment)
+        return self._payment_from_entity(payment)
 
     async def get_payment(self, tenant_id: str, payment_id: str) -> Payment | None:
         """Get payment by ID with tenant isolation.
@@ -639,7 +811,7 @@ class PaymentService:
         payment_entity = await self._get_payment_entity(tenant_id, payment_id)
         if not payment_entity:
             return None
-        return Payment.model_validate(payment_entity)
+        return self._payment_from_entity(payment_entity)
 
     async def update_payment_status(
         self,
@@ -682,10 +854,9 @@ class PaymentService:
 
         # Store provider-specific data
         if provider_data:
-            if payment.provider_payment_data:
-                payment.provider_payment_data.update(provider_data)
-            else:
-                payment.provider_payment_data = provider_data
+            existing_provider_data = payment.provider_payment_data or {}
+            existing_provider_data.update(provider_data)
+            payment.provider_payment_data = existing_provider_data
 
         # Store error message for failures
         if error_message:
@@ -703,7 +874,7 @@ class PaymentService:
             tenant_id=tenant_id,
         )
 
-        return Payment.model_validate(payment)
+        return self._payment_from_entity(payment)
 
     async def process_refund_notification(
         self,
@@ -738,10 +909,13 @@ class PaymentService:
             raise PaymentNotFoundError(f"Payment {payment_id} not found")
 
         # Validate refund amount
-        current_refunded = payment.refund_amount or Decimal("0")
+        payment_amount = Decimal(payment.amount)
+        current_refunded = (
+            Decimal(payment.refund_amount) if payment.refund_amount is not None else Decimal("0")
+        )
         total_refunded = current_refunded + refund_amount
 
-        if total_refunded > payment.amount:
+        if total_refunded > payment_amount:
             raise PaymentError(
                 f"Refund amount {total_refunded} exceeds payment amount {payment.amount}"
             )
@@ -751,7 +925,7 @@ class PaymentService:
         payment.updated_at = datetime.now(UTC)
 
         # Set status based on refund amount
-        if total_refunded >= payment.amount:
+        if total_refunded >= payment_amount:
             payment.status = PaymentStatus.REFUNDED
             payment.refunded_at = datetime.now(UTC)
         elif total_refunded > 0:
@@ -766,18 +940,16 @@ class PaymentService:
         if provider_refund_id:
             refund_data["provider_refund_id"] = provider_refund_id
 
-        if payment.provider_payment_data:
-            if "refunds" not in payment.provider_payment_data:
-                payment.provider_payment_data["refunds"] = []
-            payment.provider_payment_data["refunds"].append(refund_data)
-        else:
-            payment.provider_payment_data = {"refunds": [refund_data]}
+        provider_data = payment.provider_payment_data or {}
+        refunds_list = provider_data.setdefault("refunds", [])
+        refunds_list.append(refund_data)
+        payment.provider_payment_data = provider_data
 
         await self.db.commit()
         await self.db.refresh(payment)
 
-        # Create refund transaction
-        await self._create_transaction(payment, TransactionType.REFUND)
+        # Create refund transaction with the actual refund amount (not the total payment amount)
+        await self._create_transaction(payment, TransactionType.REFUND, amount=int(refund_amount))
 
         logger.info(
             "Refund processed from webhook notification",
@@ -788,7 +960,7 @@ class PaymentService:
             tenant_id=tenant_id,
         )
 
-        return Payment.model_validate(payment)
+        return self._payment_from_entity(payment)
 
     async def cancel_payment(
         self, tenant_id: str, payment_id: str, cancellation_reason: str | None = None
@@ -834,7 +1006,7 @@ class PaymentService:
             reason=cancellation_reason,
         )
 
-        return Payment.model_validate(payment)
+        return self._payment_from_entity(payment)
 
     async def record_offline_payment(
         self,
@@ -887,17 +1059,33 @@ class PaymentService:
         payment_method_type = payment_method_mapping[payment_method_lower]
 
         # Create payment entity
+        # Convert amount to minor units (cents) - multiply by 100 instead of truncating
+        if isinstance(amount, Decimal):
+            # Multiply by 100 to convert dollars to cents, then convert to int
+            amount_minor = int((amount * Decimal("100")).quantize(Decimal("1")))
+        else:
+            # Assume integer is already in minor units, but if it's a float, convert properly
+            if isinstance(amount, float):
+                amount_minor = int(Decimal(str(amount)) * Decimal("100"))
+            else:
+                amount_minor = int(amount)
+
         payment_entity = PaymentEntity(
             payment_id=str(uuid4()),
             tenant_id=tenant_id,
             customer_id=customer_id,
-            amount=amount,
+            amount=amount_minor,
             currency=currency.upper(),
             status=PaymentStatus.SUCCEEDED,  # Offline payments are pre-verified
             payment_method_type=payment_method_type,
+            payment_method_details={
+                "payment_method": payment_method,
+                "reference_number": reference_number,
+            },
             provider="offline",
             provider_payment_id=reference_number,
-            metadata={
+            provider_payment_data={},
+            extra_data={
                 "payment_method": payment_method,
                 "reference_number": reference_number,
                 "notes": notes,
@@ -915,7 +1103,7 @@ class PaymentService:
             # 1. Verify the invoice exists and belongs to the customer
             # 2. Call invoice_service.apply_payment_to_invoice()
             # 3. Update invoice status if fully paid
-            payment_entity.metadata["invoice_id"] = invoice_id
+            payment_entity.extra_data["invoice_id"] = invoice_id
 
         await self.db.commit()
         await self.db.refresh(payment_entity)
@@ -930,7 +1118,7 @@ class PaymentService:
             reference=reference_number,
         )
 
-        return Payment.model_validate(payment_entity)
+        return self._payment_from_entity(payment_entity)
 
     # ============================================================================
     # Private helper methods
@@ -1014,13 +1202,25 @@ class PaymentService:
         await self.db.commit()
 
     async def _create_transaction(
-        self, payment: PaymentEntity, transaction_type: TransactionType
+        self,
+        payment: PaymentEntity,
+        transaction_type: TransactionType,
+        amount: int | None = None,
     ) -> None:
-        """Create transaction record for payment"""
+        """Create transaction record for payment.
+
+        Args:
+            payment: Payment entity
+            transaction_type: Type of transaction
+            amount: Optional amount to record (defaults to payment.amount if not provided)
+        """
+
+        # Use provided amount or fall back to payment amount
+        transaction_amount = abs(amount) if amount is not None else abs(payment.amount)
 
         transaction = TransactionEntity(
             tenant_id=payment.tenant_id,
-            amount=abs(payment.amount),
+            amount=transaction_amount,
             currency=payment.currency,
             transaction_type=transaction_type,
             description=f"{transaction_type.value.title()} - {payment.payment_id}",
@@ -1037,14 +1237,59 @@ class PaymentService:
     ) -> None:
         """Link payment to invoices"""
 
-        amount_per_invoice = payment.amount // len(invoice_ids)
+        if not invoice_ids:
+            return
 
-        for invoice_id in invoice_ids:
+        total_amount = abs(payment.amount)
+        base_allocation = total_amount // len(invoice_ids)
+        remainder = total_amount - base_allocation * len(invoice_ids)
+        sign = 1 if payment.amount >= 0 else -1
+
+        for index, invoice_id in enumerate(invoice_ids):
+            allocation = base_allocation + (1 if index < remainder else 0)
             link = PaymentInvoiceEntity(
                 payment_id=payment.payment_id,
                 invoice_id=invoice_id,
-                amount_applied=amount_per_invoice,
+                amount_applied=sign * allocation,
             )
             self.db.add(link)
 
         await self.db.commit()
+
+    def _normalize_payment_entity(self, payment: PaymentEntity) -> PaymentEntity:
+        """Ensure payment entity fields are normalized before Pydantic validation."""
+        data = payment.provider_payment_data
+        if not data:
+            payment.provider_payment_data = {}
+        elif not isinstance(data, dict):
+            if isinstance(data, Mapping):
+                payment.provider_payment_data = dict(data)
+            else:
+                payment.provider_payment_data = {}
+
+        if payment.refund_amount is not None and not isinstance(payment.refund_amount, Decimal):
+            payment.refund_amount = Decimal(str(payment.refund_amount))
+
+        # Normalize payment_method_details - ensure it's a dict
+        details = payment.payment_method_details
+        if not details:
+            payment.payment_method_details = {}
+        elif not isinstance(details, dict):
+            if isinstance(details, Mapping):
+                payment.payment_method_details = dict(details)
+            else:
+                payment.payment_method_details = {}
+
+        # Normalize payment_method_type - provide default if None
+        # This handles cases where old data or test mocks don't have this field
+        if payment.payment_method_type is None:
+            # Default to 'card' for backward compatibility
+            # In production, this should always be set by the caller
+            payment.payment_method_type = PaymentMethodType.CARD
+
+        return payment
+
+    def _payment_from_entity(self, payment: PaymentEntity) -> Payment:
+        """Convert a PaymentEntity to the Payment domain model with normalization."""
+        normalized = self._normalize_payment_entity(payment)
+        return Payment.model_validate(normalized)

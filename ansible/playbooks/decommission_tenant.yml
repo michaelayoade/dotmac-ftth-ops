@@ -1,0 +1,15 @@
+---
+- name: "Decommission DotMac tenant environment"
+  hosts: "{{ target_hosts | default('all') }}"
+  gather_facts: false
+  tasks:
+    - name: "Stop tenant systemd unit if present"
+      ansible.builtin.systemd:
+        name: "dotmac-tenant-{{ tenant_id }}"
+        state: stopped
+      ignore_errors: true
+
+    - name: "Remove tenant workspace"
+      ansible.builtin.file:
+        path: "{{ tenant_workspace_root }}/{{ tenant_id }}"
+        state: absent

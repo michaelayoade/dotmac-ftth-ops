@@ -5,7 +5,10 @@ Provides revenue tracking, commission calculation, and payout management
 for partner portal following project patterns.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from uuid import UUID, uuid4
 
@@ -303,7 +306,8 @@ class PartnerRevenueService:
         Returns:
             Calculated commission amount
         """
-        # Get partner
+        self._resolve_tenant_id()  # Ensure context evaluated (no-op for now)
+
         partner_result = await self.session.execute(select(Partner).where(Partner.id == partner_id))
         partner = partner_result.scalar_one_or_none()
         if not partner:

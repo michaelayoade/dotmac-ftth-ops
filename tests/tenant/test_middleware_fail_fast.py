@@ -55,6 +55,7 @@ def single_tenant_config():
     )
 
 
+@pytest.mark.integration
 class TestTenantMiddlewareFailFast:
     """Test that tenant middleware fails fast when tenant_id is required but missing."""
 
@@ -208,6 +209,7 @@ class TestTenantMiddlewareFailFast:
         assert mock_request.state.tenant_id == "default-tenant"
 
 
+@pytest.mark.integration
 class TestTenantMiddlewareOptionalMode:
     """Test tenant middleware behavior when require_tenant=False."""
 
@@ -267,6 +269,7 @@ class TestTenantMiddlewareOptionalMode:
         assert mock_request.state.tenant_id == "tenant-999"
 
 
+@pytest.mark.integration
 class TestTenantMiddlewarePlatformAdmin:
     """Test tenant middleware behavior for platform admins."""
 
@@ -329,6 +332,7 @@ class TestTenantMiddlewarePlatformAdmin:
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.integration
 class TestTenantMiddlewareSingleTenant:
     """Test tenant middleware behavior in single-tenant mode."""
 
@@ -382,6 +386,7 @@ class TestTenantMiddlewareSingleTenant:
         assert mock_request.state.tenant_id == "single-tenant"
 
 
+@pytest.mark.integration
 class TestTenantMiddlewareSecurityRegression:
     """
     REGRESSION TESTS: Verify the security fix prevents tenant isolation bypass.

@@ -1,14 +1,18 @@
+
 """
 Comprehensive router tests for customer management to achieve 90% coverage.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
 
 from dotmac.platform.customer_management.models import (
+
+
     ActivityType,
     CustomerActivity,
     CustomerNote,
@@ -16,6 +20,7 @@ from dotmac.platform.customer_management.models import (
     CustomerStatus,
 )
 from dotmac.platform.customer_management.router import (
+    _handle_status_lifecycle_events,
     add_customer_activity,
     add_customer_note,
     create_customer,
@@ -47,10 +52,16 @@ from dotmac.platform.customer_management.schemas import (
 )
 from dotmac.platform.customer_management.service import CustomerService
 
-pytestmark = pytest.mark.asyncio
+
+
+pytestmark = pytest.mark.integration
 
 # Fixtures are now in conftest.py
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 class TestRouterDependencies:
     """Test router dependencies."""
@@ -232,7 +243,7 @@ class TestCustomerList:
         result = await search_customers(
             params=search_params,
             service=mock_service,
-            current_user=mock_user,
+            _current_user=mock_user,
         )
 
         assert result.total == 2
@@ -277,7 +288,7 @@ class TestCustomerActivities:
             title="Profile Updated",
             description="Customer updated their profile",
             metadata_={},  # Add required metadata field
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         mock_service.add_activity.return_value = mock_activity
@@ -310,7 +321,7 @@ class TestCustomerActivities:
                 activity_type=ActivityType.CREATED,
                 title=f"Activity {i}",
                 metadata_={},  # Add required metadata field
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
             )
             for i in range(3)
         ]
@@ -351,8 +362,8 @@ class TestCustomerNotes:
             tenant_id="test-tenant",
             subject="Support Request",
             content="Customer needs help with billing",
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_service.add_note.return_value = mock_note
@@ -384,8 +395,8 @@ class TestCustomerNotes:
                 subject=f"Note {i}",
                 content=f"Content {i}",
                 is_internal=i % 2 == 0,
-                created_at=datetime.now(UTC),
-                updated_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
+                updated_at=datetime.now(timezone.utc),
             )
             for i in range(3)
         ]
@@ -504,8 +515,8 @@ class TestCustomerSegments:
             is_dynamic=False,
             priority=0,
             member_count=0,
-            created_at=datetime.now(UTC),
-            updated_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc),
         )
 
         mock_service.create_segment.return_value = mock_segment
@@ -539,3 +550,48 @@ class TestCustomerSegments:
             "member_count": 10,
         }
         mock_service.recalculate_segment.assert_called_once_with(segment_id)
+
+
+class TestStatusLifecycleEvents:
+    """Tests for customer status lifecycle helper."""
+
+    @pytest.mark.asyncio
+    async def test_status_lifecycle_events_publish_payload(self, monkeypatch):
+        """Verify lifecycle events emit payload instead of data."""
+
+        class EmptyResult:
+            """Stub scalar result returning no rows."""
+
+            def scalars(self):
+                return self
+
+            def all(self):
+                return []
+
+        fake_session = AsyncMock()
+        fake_session.execute.return_value = EmptyResult()
+        fake_session.commit = AsyncMock()
+
+        event_bus = AsyncMock()
+        monkeypatch.setattr(
+            "dotmac.platform.events.bus.get_event_bus",
+            lambda *_, **__: event_bus,
+        )
+        from dotmac.platform.events.bus import reset_event_bus
+
+        reset_event_bus()
+
+        customer_id = uuid4()
+
+        await _handle_status_lifecycle_events(
+            customer_id=customer_id,
+            old_status=CustomerStatus.ACTIVE.value,
+            new_status=CustomerStatus.SUSPENDED.value,
+            customer_email="payload-test@example.com",
+            session=fake_session,
+        )
+
+        event_bus.publish.assert_awaited()
+        publish_kwargs = event_bus.publish.await_args.kwargs
+        assert "payload" in publish_kwargs
+        assert publish_kwargs["payload"]["customer_id"] == str(customer_id)

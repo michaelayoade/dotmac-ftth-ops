@@ -1,3 +1,4 @@
+
 """
 End-to-End tests for Data Transfer API.
 
@@ -18,14 +19,18 @@ This E2E test suite covers the following modules:
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 # Pytest marker for E2E tests
+
+
+
+
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
 
-
-@pytest.fixture
+@pytest_asyncio.fixture
 async def data_transfer_app():
     """Create FastAPI app with data transfer router for E2E testing."""
     from dotmac.platform.auth.core import UserInfo
@@ -33,25 +38,45 @@ async def data_transfer_app():
     from dotmac.platform.data_transfer.router import data_transfer_router
 
     app = FastAPI(title="Data Transfer E2E Test App")
-    app.include_router(data_transfer_router, prefix="/api/v1/data-transfer", tags=["Data Transfer"])
+    # Router already has prefix="/data-transfer", so we only add "/api/v1"
+    app.include_router(data_transfer_router, prefix="/api/v1", tags=["Data Transfer"])
+
+    # Fixed UUIDs for consistent testing
+    test_user_id = str(uuid4())
+    test_tenant_id = str(uuid4())
 
     # Override auth dependency
     async def override_get_current_user():
         return UserInfo(
-            user_id="test-user-123",
+            user_id=test_user_id,  # Valid UUID format
             username="testuser",
             email="test@example.com",
             permissions=["read", "write", "admin"],
             roles=["user", "admin"],
-            tenant_id="test-tenant",
+            tenant_id=test_tenant_id,  # Valid UUID format
         )
 
     app.dependency_overrides[get_current_user] = override_get_current_user
 
+    # Override RBAC checks to avoid database lookups
+    from dotmac.platform.auth.rbac_dependencies import require_admin
+
+    async def override_require_admin():
+        return UserInfo(
+            user_id=test_user_id,
+            username="testuser",
+            email="test@example.com",
+            permissions=["read", "write", "admin"],
+            roles=["user", "admin"],
+            tenant_id=test_tenant_id,
+        )
+
+    app.dependency_overrides[require_admin] = override_require_admin
+
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(data_transfer_app):
     """Async HTTP client for E2E testing."""
     transport = ASGITransport(app=data_transfer_app)

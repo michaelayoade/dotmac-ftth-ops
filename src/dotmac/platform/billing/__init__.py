@@ -57,6 +57,7 @@ from dotmac.platform.billing.models import (
     BillingProductCategoryTable,
     BillingProductTable,
     BillingRuleUsageTable,
+    BillingSettingsTable,
     BillingSQLModel,
     BillingSubscriptionEventTable,
     BillingSubscriptionPlanTable,
@@ -107,6 +108,7 @@ __all__ = [
     "BillingSubscriptionEventTable",
     "BillingPricingRuleTable",
     "BillingRuleUsageTable",
+    "BillingSettingsTable",
     # Money-aware models and utilities
     "MoneyInvoice",
     "MoneyInvoiceLineItem",

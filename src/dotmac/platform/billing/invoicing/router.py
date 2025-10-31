@@ -11,6 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.core.exceptions import (
     InvalidInvoiceStatusError,
@@ -78,7 +79,9 @@ class SendInvoiceEmailRequest(BaseModel):
 
     model_config = ConfigDict()
 
-    email: str | None = Field(None, description="Override recipient email (uses invoice billing_email if not provided)")
+    email: str | None = Field(
+        None, description="Override recipient email (uses invoice billing_email if not provided)"
+    )
 
 
 class SendPaymentReminderRequest(BaseModel):
@@ -143,14 +146,19 @@ def get_tenant_id_from_request(request: Request) -> str:
 # ============================================================================
 
 
-@router.post("", response_model=Invoice, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "",
+    response_model=Invoice,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_permission("billing:invoices:write"))],
+)
 async def create_invoice(
     invoice_data: CreateInvoiceRequest,
     tenant_id: str = Depends(get_tenant_id),
     db: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
 ) -> Invoice:
-    """Create a new invoice with tenant isolation"""
+    """Create a new invoice with tenant isolation. Requires billing:invoices:write permission."""
 
     invoice_service = InvoiceService(db)
 
@@ -238,7 +246,11 @@ async def get_invoice(
     return invoice
 
 
-@router.post("/{invoice_id}/finalize", response_model=Invoice)
+@router.post(
+    "/{invoice_id}/finalize",
+    response_model=Invoice,
+    dependencies=[Depends(require_permission("billing:invoices:write"))],
+)
 async def finalize_invoice(
     invoice_id: str,
     finalize_data: FinalizeInvoiceRequest,
@@ -246,7 +258,7 @@ async def finalize_invoice(
     db: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
 ) -> Invoice:
-    """Finalize a draft invoice to open status"""
+    """Finalize a draft invoice to open status. Requires billing:invoices:write permission."""
 
     tenant_id = get_tenant_id_from_request(request)
     invoice_service = InvoiceService(db)
@@ -260,7 +272,11 @@ async def finalize_invoice(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
-@router.post("/{invoice_id}/void", response_model=Invoice)
+@router.post(
+    "/{invoice_id}/void",
+    response_model=Invoice,
+    dependencies=[Depends(require_permission("billing:invoices:write"))],
+)
 async def void_invoice(
     invoice_id: str,
     void_data: VoidInvoiceRequest,
@@ -268,7 +284,7 @@ async def void_invoice(
     db: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(get_current_user),
 ) -> Invoice:
-    """Void an invoice"""
+    """Void an invoice. Requires billing:invoices:write permission."""
 
     tenant_id = get_tenant_id_from_request(request)
     invoice_service = InvoiceService(db)
@@ -305,7 +321,7 @@ async def send_invoice_email(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send invoice email"
+                detail="Failed to send invoice email",
             )
 
         # Get invoice to return details
@@ -342,7 +358,7 @@ async def send_payment_reminder(
         if not success:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to send payment reminder"
+                detail="Failed to send payment reminder",
             )
 
         # Get invoice to return details

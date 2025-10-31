@@ -268,7 +268,9 @@ class PlanValidationRequest(BaseModel):
     model_config = ConfigDict()
 
     # Test scenarios
-    test_download_usage_gb: Decimal = Field(100, gt=0, description="Download usage to simulate (GB)")
+    test_download_usage_gb: Decimal = Field(
+        100, gt=0, description="Download usage to simulate (GB)"
+    )
     test_upload_usage_gb: Decimal = Field(10, gt=0, description="Upload usage to simulate (GB)")
     test_duration_hours: int = Field(24, gt=0, le=720, description="Test duration (hours)")
     test_concurrent_users: int = Field(1, gt=0, le=1000, description="Concurrent users")
@@ -329,9 +331,7 @@ class PlanComparison(BaseModel):
     model_config = ConfigDict()
 
     plans: list[InternetServicePlanResponse]
-    comparison_matrix: dict[str, list[Any]] = Field(
-        description="Feature comparison matrix"
-    )
+    comparison_matrix: dict[str, list[Any]] = Field(description="Feature comparison matrix")
     recommendations: list[str]
 
 
@@ -347,6 +347,7 @@ class PlanSubscriptionCreate(BaseModel):
 
     plan_id: UUID
     customer_id: UUID
+    subscriber_id: str = Field(..., min_length=1, description="RADIUS subscriber ID (required for usage tracking)")
     start_date: datetime = Field(default_factory=datetime.utcnow)
 
     # Custom overrides
@@ -365,6 +366,7 @@ class PlanSubscriptionResponse(BaseModel):
     tenant_id: UUID
     plan_id: UUID
     customer_id: UUID
+    subscriber_id: str | None
     subscription_id: UUID | None
 
     start_date: datetime

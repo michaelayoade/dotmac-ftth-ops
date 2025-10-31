@@ -1,6 +1,6 @@
 """Tests for Invoice domain aggregate."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
 
@@ -152,7 +152,7 @@ class TestInvoiceCreation:
             due_days=15,
         )
 
-        expected_due_date = datetime.now(UTC) + timedelta(days=15)
+        expected_due_date = datetime.now(timezone.utc) + timedelta(days=15)
         assert invoice.due_date.date() == expected_due_date.date()
 
 
@@ -446,7 +446,7 @@ class TestInvoiceOverdue:
             due_days=0,  # Due immediately
         )
         # Manually set due_date to past
-        invoice.due_date = datetime.now(UTC) - timedelta(days=5)
+        invoice.due_date = datetime.now(timezone.utc) - timedelta(days=5)
         invoice.clear_domain_events()
 
         invoice.mark_overdue()
@@ -471,7 +471,7 @@ class TestInvoiceOverdue:
             billing_email="customer@example.com",
             line_items=line_items,
         )
-        invoice.due_date = datetime.now(UTC) - timedelta(days=10)
+        invoice.due_date = datetime.now(timezone.utc) - timedelta(days=10)
         invoice.clear_domain_events()
 
         invoice.mark_overdue()

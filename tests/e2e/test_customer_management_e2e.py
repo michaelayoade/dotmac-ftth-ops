@@ -1,3 +1,4 @@
+
 """
 End-to-End tests for Customer Management API.
 
@@ -9,24 +10,14 @@ from uuid import uuid4
 
 import pytest
 
-from dotmac.platform.auth.core import create_access_token
+
+# Note: auth_headers fixture is provided by tests/e2e/conftest.py
+# It includes both Authorization and X-Tenant-ID headers
+
+
+
 
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
-
-
-@pytest.fixture
-def auth_headers(user_id, tenant_id):
-    """Create authentication headers with JWT token for API requests."""
-    token = create_access_token(
-        user_id=user_id,
-        username="e2e-test-user",
-        email=f"{user_id}@test.com",
-        tenant_id=tenant_id,
-        roles=["admin"],
-        permissions=["customers:read", "customers:write"],
-    )
-    return {"Authorization": f"Bearer {token}"}
-
 
 class TestCustomerCreationE2E:
     """Test customer creation workflows."""
@@ -360,7 +351,7 @@ class TestCustomerActivitiesE2E:
             "activity_type": "purchase",
             "title": "Purchased Premium Plan",
             "description": "Customer upgraded to premium tier",
-            "metadata": {"plan_id": "premium-monthly", "amount": 99.99},
+            "metadata": {"plan_id": "premium-monthly", "amount": "99.99"},
         }
 
         response = await async_client.post(

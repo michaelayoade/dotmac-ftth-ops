@@ -5,7 +5,10 @@ Dynamic, flexible licensing system built from reusable building blocks.
 Allows creating custom plans without hardcoded tiers.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
@@ -21,6 +24,8 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
+)
+from sqlalchemy import (
     UUID as SQLUUID,
 )
 from sqlalchemy import (
@@ -235,7 +240,9 @@ class ModuleCapability(Base):
     module: Mapped["FeatureModule"] = relationship("FeatureModule", back_populates="capabilities")
 
     __table_args__ = (
-        Index("ix_module_capabilities_module_capability", "module_id", "capability_code", unique=True),
+        Index(
+            "ix_module_capabilities_module_capability", "module_id", "capability_code", unique=True
+        ),
         {"extend_existing": True},
     )
 
@@ -272,9 +279,7 @@ class QuotaDefinition(Base):
     overage_rate: Mapped[float | None] = mapped_column(Numeric(15, 4), nullable=True)
 
     # Tracking
-    is_metered: Mapped[bool] = mapped_column(
-        Boolean, nullable=False, default=True
-    )  # Track usage?
+    is_metered: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)  # Track usage?
     reset_period: Mapped[str | None] = mapped_column(
         String(20), nullable=True
     )  # MONTHLY, QUARTERLY, ANNUALLY, null=never
@@ -547,8 +552,12 @@ class TenantSubscription(Base):
     payment_method_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
 
     # Payment provider integration
-    stripe_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
-    paypal_subscription_id: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
+    stripe_subscription_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
+    paypal_subscription_id: Mapped[str | None] = mapped_column(
+        String(100), nullable=True, index=True
+    )
 
     # Extra metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
     extra_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
@@ -634,7 +643,12 @@ class SubscriptionModule(Base):
     module: Mapped["FeatureModule"] = relationship("FeatureModule")
 
     __table_args__ = (
-        Index("ix_subscription_modules_subscription_module", "subscription_id", "module_id", unique=True),
+        Index(
+            "ix_subscription_modules_subscription_module",
+            "subscription_id",
+            "module_id",
+            unique=True,
+        ),
         {"extend_existing": True},
     )
 
@@ -689,7 +703,12 @@ class SubscriptionQuotaUsage(Base):
     quota: Mapped["QuotaDefinition"] = relationship("QuotaDefinition")
 
     __table_args__ = (
-        Index("ix_subscription_quota_usage_subscription_quota", "subscription_id", "quota_id", unique=True),
+        Index(
+            "ix_subscription_quota_usage_subscription_quota",
+            "subscription_id",
+            "quota_id",
+            unique=True,
+        ),
         {"extend_existing": True},
     )
 
@@ -709,7 +728,7 @@ class FeatureUsageLog(Base):
     tenant_id: Mapped[str] = mapped_column(String(255), nullable=False, index=True)
 
     # Module/Capability
-    module_id: Mapped[UUID] = mapped_column( nullable=False, index=True)
+    module_id: Mapped[UUID] = mapped_column(nullable=False, index=True)
     capability_code: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
 
     # User

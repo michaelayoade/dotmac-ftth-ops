@@ -17,6 +17,7 @@ from dotmac.platform.communications.template_service import (
 )
 
 
+@pytest.mark.unit
 class TestTemplateServiceBasic:
     """Test basic template service operations."""
 
@@ -57,6 +58,7 @@ class TestTemplateServiceBasic:
         assert "today" in service.dict_env.globals
 
 
+@pytest.mark.unit
 class TestTemplateCreation:
     """Test template creation operations."""
 
@@ -123,6 +125,7 @@ class TestTemplateCreation:
         assert result.variables == []
 
 
+@pytest.mark.unit
 class TestTemplateRetrieval:
     """Test template retrieval operations."""
 
@@ -193,6 +196,7 @@ class TestTemplateRetrieval:
         assert result is False
 
 
+@pytest.mark.unit
 class TestTemplateRendering:
     """Test template rendering operations."""
 
@@ -283,6 +287,7 @@ class TestTemplateRendering:
         assert result.html_body == "<p>HTML body</p>"
 
 
+@pytest.mark.unit
 class TestStringTemplateRendering:
     """Test rendering templates from strings."""
 
@@ -335,6 +340,7 @@ class TestStringTemplateRendering:
         assert "Template rendering error" in str(exc_info.value)
 
 
+@pytest.mark.unit
 class TestFileTemplateLoading:
     """Test file-based template loading."""
 
@@ -364,6 +370,7 @@ class TestFileTemplateLoading:
             assert "Hello Eve" in rendered
 
 
+@pytest.mark.unit
 class TestTemplateServiceFactory:
     """Test factory and convenience functions."""
 
@@ -444,6 +451,7 @@ class TestTemplateServiceFactory:
         assert result["text_body"] == "Static body"
 
 
+@pytest.mark.unit
 class TestTemplateErrorHandling:
     """Test error handling in template operations."""
 

@@ -5,11 +5,14 @@ Provides analytics activity endpoints for monitoring
 user events, API calls, and system activity patterns.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.analytics.service import AnalyticsService, get_analytics_service
@@ -23,6 +26,32 @@ logger = structlog.get_logger(__name__)
 ACTIVITY_CACHE_TTL = 300  # 5 minutes
 
 router = APIRouter(prefix="", tags=["Analytics Activity"])
+
+
+# ============================================================================
+# Helpers
+# ============================================================================
+
+
+def _resolve_tenant_id(request: Request, current_user: UserInfo) -> str:
+    """Resolve tenant identifier, supporting platform admin impersonation."""
+    tenant_id: str | None = getattr(current_user, "tenant_id", None)
+
+    if getattr(current_user, "is_platform_admin", False):
+        try:
+            from dotmac.platform.auth.platform_admin import get_target_tenant_id
+
+            target_tenant = get_target_tenant_id(request, current_user)
+        except Exception:  # pragma: no cover - defensive
+            target_tenant = None
+
+        if target_tenant:
+            tenant_id = target_tenant
+
+    if tenant_id is None:
+        tenant_id = "default"
+
+    return str(tenant_id)
 
 
 # ============================================================================
@@ -114,13 +143,27 @@ async def _get_activity_stats_cached(
     avg_api_latency_ms = 0.0
 
     if isinstance(metrics, dict):
-        # Extract API request metrics
-        for metric_name, metric_data in metrics.items():
-            if "api_request" in metric_name.lower():
-                if isinstance(metric_data, dict):
-                    api_requests_count += metric_data.get("count", 0)
-                    if "avg" in metric_data:
-                        avg_api_latency_ms = metric_data.get("avg", 0.0)
+        # Fixed: Extract API request metrics from nested structure
+        # Metrics are organized as {"counters": {...}, "histograms": {...}, ...}
+        # We need to look inside these nested dicts, not at the top level
+
+        # Check counters for API request count
+        counters = metrics.get("counters", {})
+        if isinstance(counters, dict):
+            for metric_name, count_value in counters.items():
+                if "api_request" in metric_name.lower():
+                    # Counters are simple numeric values
+                    if isinstance(count_value, (int, float)):
+                        api_requests_count += int(count_value)
+
+        # Check histograms for API request latency
+        histograms = metrics.get("histograms", {})
+        if isinstance(histograms, dict):
+            for metric_name, histogram_data in histograms.items():
+                if "api_request" in metric_name.lower() and isinstance(histogram_data, dict):
+                    # Histograms have count, avg, min, max, sum
+                    if histogram_data.get("count", 0) > 0:
+                        avg_api_latency_ms = histogram_data.get("avg", 0.0)
 
     # Calculate top events
     event_counts: dict[str, int] = {}
@@ -156,6 +199,7 @@ async def _get_activity_stats_cached(
 
 @router.get("/activity", response_model=ActivityStatsResponse)
 async def get_analytics_activity_stats(
+    request: Request,
     period_days: int = Query(default=30, ge=1, le=365, description="Time period in days"),
     current_user: UserInfo = Depends(get_current_user),
 ) -> ActivityStatsResponse:
@@ -170,18 +214,18 @@ async def get_analytics_activity_stats(
     **Required Permission**: analytics:activity:read (enforced by get_current_user)
     """
     try:
-        tenant_id = getattr(current_user, "tenant_id", None)
+        resolved_tenant = _resolve_tenant_id(request, current_user)
 
         # Get analytics service for the tenant
         analytics_service = get_analytics_service(
-            tenant_id=tenant_id or "default",
+            tenant_id=resolved_tenant,
             service_name="platform",
         )
 
         # Use cached helper function
         stats_data = await _get_activity_stats_cached(
             period_days=period_days,
-            tenant_id=tenant_id,
+            tenant_id=resolved_tenant,
             analytics_service=analytics_service,
         )
 

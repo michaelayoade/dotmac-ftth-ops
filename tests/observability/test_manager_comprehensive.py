@@ -6,14 +6,26 @@ import pytest
 from fastapi import FastAPI
 
 from dotmac.platform.observability.manager import (
+
+
     ObservabilityManager,
     ObservabilityMetricsRegistry,
 )
+from dotmac.platform.version import get_version
+
+
+
+pytestmark = pytest.mark.unit
+
+CURRENT_VERSION = get_version()
+
 
 
 @pytest.fixture
 def mock_app():
     """Mock FastAPI application."""
+
+
     return FastAPI(title="Test App")
 
 
@@ -464,9 +476,9 @@ class TestObservabilityManagerHelpers:
 
         manager = ObservabilityManager()
 
-        meter = manager.get_meter(name="test-meter", version="1.0.0")
+        meter = manager.get_meter(name="test-meter", version=CURRENT_VERSION)
 
-        mock_get_meter.assert_called_once_with("test-meter", "1.0.0")
+        mock_get_meter.assert_called_once_with("test-meter", CURRENT_VERSION)
         assert meter == mock_meter
 
     @patch("dotmac.platform.observability.manager.get_meter")

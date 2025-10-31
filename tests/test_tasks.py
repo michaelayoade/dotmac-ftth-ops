@@ -13,6 +13,7 @@ from dotmac.platform.core.tasks import (
 )
 
 
+@pytest.mark.integration
 class TestEnhancedCeleryInstrumentation:
     """Test enhanced Celery instrumentation functionality."""
 
@@ -103,6 +104,7 @@ class TestEnhancedCeleryInstrumentation:
             init_celery_instrumentation()
 
 
+@pytest.mark.integration
 class TestCeleryTasks:
     """Test Celery tasks functionality."""
 
@@ -177,8 +179,9 @@ class TestCeleryTasks:
         assert result is None
 
     @patch("dotmac.platform.core.tasks.redis_client", None)
+    @patch("dotmac.platform.core.tasks.get_redis", return_value=None)
     @patch("dotmac.platform.core.tasks.logger")
-    def test_idempotent_task_no_redis(self, mock_logger):
+    def test_idempotent_task_no_redis(self, mock_logger, _mock_get_redis):
         """Test idempotent task without Redis."""
 
         @idempotent_task(ttl=300)
@@ -268,6 +271,7 @@ class TestCeleryTasks:
         assert result == {"test": "value"}
 
 
+@pytest.mark.integration
 class TestCeleryInstrumentation:
     """Test Celery instrumentation functionality."""
 

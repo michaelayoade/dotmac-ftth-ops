@@ -11,14 +11,13 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
-import { Settings, User, Bell, Lock, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
+import { User, Bell, Lock, Mail, Phone, MapPin, Save, Loader2 } from "lucide-react";
 import { useCustomerProfile, useCustomerSettings } from "@/hooks/useCustomerPortal";
 
 export default function CustomerSettingsPage() {
   const { toast } = useToast();
   const { profile: customerProfile, loading: profileLoading, updateProfile } = useCustomerProfile();
   const {
-    settings: customerSettings,
     loading: settingsLoading,
     updateSettings,
     changePassword,

@@ -10,6 +10,14 @@ from dotmac.platform.integrations import IntegrationStatus
 from dotmac.platform.settings import settings
 
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 class DummyCurrencyIntegration:
     def __init__(self, rates: dict[str, float]) -> None:
         self._rates = rates
@@ -82,3 +90,55 @@ async def test_currency_rate_service_force_refresh(async_db_session, monkeypatch
 
     refreshed_rate = await service.get_rate("USD", "EUR", force_refresh=True)
     assert refreshed_rate == Decimal("0.8")
+
+
+@pytest.mark.asyncio
+async def test_refresh_rates_skips_invalid_values(async_db_session, monkeypatch):
+    monkeypatch.setattr(settings.billing, "enable_multi_currency", True)
+    monkeypatch.setattr(settings.billing, "default_currency", "USD")
+    monkeypatch.setattr(settings.billing, "supported_currencies", ["USD", "EUR"])
+
+    integration = DummyCurrencyIntegration({"EUR": 0.0})
+
+    async def fake_get_integration(name: str):
+        return integration
+
+    monkeypatch.setattr(
+        "dotmac.platform.billing.currency.service.get_integration_async",
+        fake_get_integration,
+    )
+
+    service = CurrencyRateService(async_db_session)
+
+    with pytest.raises(RuntimeError, match="Exchange rate not available"):
+        await service.get_rate("USD", "EUR")
+
+    result = await async_db_session.execute(select(ExchangeRate))
+    assert result.scalars().all() == []
+
+
+@pytest.mark.asyncio
+async def test_refresh_rates_skips_inverse_when_precision_exceeded(async_db_session, monkeypatch):
+    monkeypatch.setattr(settings.billing, "enable_multi_currency", True)
+    monkeypatch.setattr(settings.billing, "default_currency", "USD")
+    monkeypatch.setattr(settings.billing, "supported_currencies", ["USD", "VND"])
+
+    integration = DummyCurrencyIntegration({"VND": 1e-9})
+
+    async def fake_get_integration(name: str):
+        return integration
+
+    monkeypatch.setattr(
+        "dotmac.platform.billing.currency.service.get_integration_async",
+        fake_get_integration,
+    )
+
+    service = CurrencyRateService(async_db_session)
+    await service.refresh_rates(base_currency="USD", target_currencies=["VND"])
+
+    result = await async_db_session.execute(select(ExchangeRate))
+    records = result.scalars().all()
+    assert any(rate.base_currency == "USD" and rate.target_currency == "VND" for rate in records)
+    assert not any(
+        rate.base_currency == "VND" and rate.target_currency == "USD" for rate in records
+    )

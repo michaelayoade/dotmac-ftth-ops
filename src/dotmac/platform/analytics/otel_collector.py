@@ -2,8 +2,12 @@
 OpenTelemetry collector implementation for SigNoz integration.
 """
 
+import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -11,6 +15,7 @@ import structlog
 # Optional OpenTelemetry imports
 from ..dependencies import safe_import
 from ..settings import settings
+from ..version import get_version
 from .base import (
     BaseAnalyticsCollector,
     CounterMetric,
@@ -175,6 +180,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         self.config = config
         self.meter: Any | None = None
         self._tracer: Any = None  # Will be set during initialization
+        self._version = get_version()
 
         # Initialize resource attributes
         if Resource:
@@ -182,7 +188,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
                 {
                     "service.name": service_name,
                     "service.namespace": "dotmac",
-                    "service.version": "1.0.0",
+                    "service.version": self._version,
                     "deployment.environment": config.environment,
                     "tenant.id": tenant_id,
                 }
@@ -272,7 +278,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         # Get meter for this service
         self.meter = metrics.get_meter(
             name=self.service_name,
-            version="1.0.0",
+            version=self._version,
         )
 
     def _init_tracing(self, resource: Any) -> None:
@@ -328,7 +334,7 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         # Get tracer for this service
         self._tracer = trace.get_tracer(
             instrumenting_module_name=self.service_name,
-            instrumenting_library_version="1.0.0",
+            instrumenting_library_version=self._version,
         )
 
     def _get_or_create_counter(self, metric: CounterMetric) -> Any:
@@ -585,12 +591,37 @@ class OpenTelemetryCollector(BaseAnalyticsCollector):
         """Close the collector and flush pending data."""
         await self.flush()
 
-        # Shutdown providers
-        if hasattr(self, "meter"):
-            metrics.get_meter_provider().shutdown()
+        meter_provider = None
+        if metrics and hasattr(metrics, "get_meter_provider"):
+            try:
+                meter_provider = metrics.get_meter_provider()
+            except Exception:  # pragma: no cover - defensive guard
+                meter_provider = None
 
-        if hasattr(self, "tracer"):
-            trace.get_tracer_provider().shutdown()
+        tracer_provider = None
+        if trace and hasattr(trace, "get_tracer_provider"):
+            try:
+                tracer_provider = trace.get_tracer_provider()
+            except Exception:  # pragma: no cover - defensive guard
+                tracer_provider = None
+
+        in_test_mode = (
+            os.environ.get("PYTEST_CURRENT_TEST")
+            or getattr(self.config, "environment", "") == "test"
+            or os.environ.get("OTEL_ENABLED") == "false"
+        )
+
+        if not in_test_mode:
+            if meter_provider and hasattr(meter_provider, "shutdown"):
+                meter_provider.shutdown()
+            if tracer_provider and hasattr(tracer_provider, "shutdown"):
+                tracer_provider.shutdown()
+        else:
+            # Avoid shutting down global providers during tests; just flush buffers.
+            if meter_provider and hasattr(meter_provider, "force_flush"):
+                meter_provider.force_flush()
+            if tracer_provider and hasattr(tracer_provider, "force_flush"):
+                tracer_provider.force_flush()
 
 
 class SimpleAnalyticsCollector(BaseAnalyticsCollector):

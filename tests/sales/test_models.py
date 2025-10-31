@@ -1,14 +1,20 @@
+
 """
 Unit tests for Sales order models
 """
 
-import pytest
 from datetime import datetime
 from decimal import Decimal
+from uuid import uuid4
+
+import pytest
 
 from sqlalchemy.orm import Session
 
 from dotmac.platform.sales.models import (
+
+
+
     ActivationStatus,
     ActivationWorkflow,
     Order,
@@ -17,12 +23,17 @@ from dotmac.platform.sales.models import (
     OrderType,
     ServiceActivation,
 )
+
 from .conftest import (
     create_order,
     create_order_item,
     create_service_activation,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestOrderModel:
     """Tests for Order model"""
@@ -55,9 +66,7 @@ class TestOrderModel:
         assert order.created_at is not None
         assert order.updated_at is not None
 
-    def test_order_relationships(
-        self, db: Session, sample_order, sample_order_items
-    ):
+    def test_order_relationships(self, db: Session, sample_order, sample_order_items):
         """Test order relationships"""
         # Test items relationship
         assert len(sample_order.items) == 2
@@ -190,9 +199,10 @@ class TestServiceActivationModel:
 
     def test_create_service_activation(self, db: Session, sample_order):
         """Test creating a service activation"""
+        tenant_id = str(uuid4())
         activation = ServiceActivation(
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             service_code="test-service",
             service_name="Test Service",
             activation_status=ActivationStatus.PENDING,
@@ -205,7 +215,7 @@ class TestServiceActivationModel:
 
         assert activation.id is not None
         assert activation.order_id == sample_order.id
-        assert activation.tenant_id == 1
+        assert activation.tenant_id == tenant_id
         assert activation.service_code == "test-service"
         assert activation.activation_status == ActivationStatus.PENDING
         assert activation.success is False
@@ -213,10 +223,11 @@ class TestServiceActivationModel:
 
     def test_service_activation_lifecycle(self, db: Session, sample_order):
         """Test service activation status lifecycle"""
+        tenant_id = str(uuid4())
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             activation_status=ActivationStatus.PENDING,
         )
 
@@ -240,10 +251,11 @@ class TestServiceActivationModel:
 
     def test_service_activation_failure(self, db: Session, sample_order):
         """Test service activation failure tracking"""
+        tenant_id = str(uuid4())
         activation = create_service_activation(
             db,
             order_id=sample_order.id,
-            tenant_id=1,
+            tenant_id=tenant_id,
             activation_status=ActivationStatus.IN_PROGRESS,
             started_at=datetime.utcnow(),
         )
@@ -303,9 +315,7 @@ class TestServiceActivationModel:
 
     def test_service_activation_repr(self, db: Session, sample_order):
         """Test service activation string representation"""
-        activation = create_service_activation(
-            db, order_id=sample_order.id, tenant_id=1
-        )
+        activation = create_service_activation(db, order_id=sample_order.id, tenant_id=1)
         repr_str = repr(activation)
         assert "ServiceActivation" in repr_str
         assert activation.service_code in repr_str
@@ -462,7 +472,9 @@ class TestOrderQueryFiltering:
         assert len(orders) >= 1
         assert order in orders
 
-    def test_order_with_activations_query(self, db: Session, sample_order, sample_service_activations):
+    def test_order_with_activations_query(
+        self, db: Session, sample_order, sample_service_activations
+    ):
         """Test querying orders with activations"""
         # Query order with activations
         order = db.query(Order).filter(Order.id == sample_order.id).first()

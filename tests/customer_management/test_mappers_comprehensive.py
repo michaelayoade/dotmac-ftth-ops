@@ -4,7 +4,7 @@ Comprehensive tests for customer management mappers.
 Tests data transformation between import, model, and export formats.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -25,6 +25,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
+@pytest.mark.unit
 class TestCustomerImportSchema:
     """Test customer import schema validation."""
 
@@ -172,6 +173,7 @@ class TestCustomerImportSchema:
             CustomerImportSchema(**data)
 
 
+@pytest.mark.unit
 class TestCustomerExportSchema:
     """Test customer export schema."""
 
@@ -189,7 +191,7 @@ class TestCustomerExportSchema:
             lifetime_value=1000.50,
             total_purchases=10,
             average_order_value=100.05,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         assert export_data.id == "123e4567-e89b-12d3-a456-426614174000"
@@ -197,6 +199,7 @@ class TestCustomerExportSchema:
         assert export_data.lifetime_value == 1000.50
 
 
+@pytest.mark.unit
 class TestCustomerMapper:
     """Test customer mapper transformations."""
 
@@ -300,7 +303,7 @@ class TestCustomerMapper:
 
     def test_from_model_to_export(self):
         """Test mapping model to export format."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         # Create a mock customer model
         customer = Customer(
@@ -369,7 +372,7 @@ class TestCustomerMapper:
 
     def test_from_model_to_export_with_none_values(self):
         """Test mapping model with None values to export."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
 
         customer = Customer(
             id=UUID("123e4567-e89b-12d3-a456-426614174000"),

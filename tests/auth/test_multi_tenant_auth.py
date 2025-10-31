@@ -1,3 +1,4 @@
+
 """
 Test multi-tenant authentication isolation.
 
@@ -16,6 +17,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.mark.asyncio
 class TestMultiTenantPasswordReset:
@@ -36,7 +44,7 @@ class TestMultiTenantPasswordReset:
         user_service = UserService(async_session)
 
         # Create two users with same email in different tenants
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="john_a",
             email="john@example.com",
             password="SecurePass123!",
@@ -44,7 +52,7 @@ class TestMultiTenantPasswordReset:
             tenant_id="tenant-a",
         )
 
-        user_b = await user_service.create_user(
+        await user_service.create_user(
             username="john_b",
             email="john@example.com",
             password="SecurePass123!",
@@ -71,7 +79,7 @@ class TestMultiTenantPasswordReset:
         user_service = UserService(async_session)
 
         # Create two users with same email in different tenants
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="jane_a",
             email="jane@example.com",
             password="SecurePass123!",
@@ -79,7 +87,7 @@ class TestMultiTenantPasswordReset:
             tenant_id="tenant-a",
         )
 
-        user_b = await user_service.create_user(
+        await user_service.create_user(
             username="jane_b",
             email="jane@example.com",
             password="SecurePass123!",
@@ -107,7 +115,7 @@ class TestMultiTenantPasswordReset:
         user_service = UserService(async_session)
 
         # Create two users with same email in different tenants
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="bob_a",
             email="bob@example.com",
             password="SecurePass123!",
@@ -115,7 +123,7 @@ class TestMultiTenantPasswordReset:
             tenant_id="tenant-a",
         )
 
-        user_b = await user_service.create_user(
+        await user_service.create_user(
             username="bob_b",
             email="bob@example.com",
             password="SecurePass123!",
@@ -128,7 +136,7 @@ class TestMultiTenantPasswordReset:
         # Generate a reset token for the email (this would normally come from email)
         from dotmac.platform.auth.router import get_auth_email_service
 
-        email_service = get_auth_email_service()
+        get_auth_email_service()
         # Mock token generation - in real scenario this would be from email link
         # For testing, we'll simulate the token
 
@@ -168,7 +176,7 @@ class TestMultiTenantRegistration:
         user_service = UserService(async_session)
 
         # Create user 'admin' in Tenant A
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="admin",
             email="admin@tenant-a.com",
             password="SecurePass123!",
@@ -195,9 +203,7 @@ class TestMultiTenantRegistration:
         )
 
         # Verify both users exist with same username, different tenants
-        result = await async_session.execute(
-            select(User).where(User.username == "admin")
-        )
+        result = await async_session.execute(select(User).where(User.username == "admin"))
         users = result.scalars().all()
 
         assert len(users) == 2
@@ -211,7 +217,7 @@ class TestMultiTenantRegistration:
         user_service = UserService(async_session)
 
         # Create user with email@example.com in Tenant A
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="user_a",
             email="shared@example.com",
             password="SecurePass123!",
@@ -238,9 +244,7 @@ class TestMultiTenantRegistration:
         )
 
         # Verify both users exist with same email, different tenants
-        result = await async_session.execute(
-            select(User).where(User.email == "shared@example.com")
-        )
+        result = await async_session.execute(select(User).where(User.email == "shared@example.com"))
         users = result.scalars().all()
 
         assert len(users) == 2
@@ -254,7 +258,7 @@ class TestMultiTenantRegistration:
         user_service = UserService(async_session)
 
         # Create user 'john' in Tenant A
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="john",
             email="john1@example.com",
             password="SecurePass123!",
@@ -277,7 +281,10 @@ class TestMultiTenantRegistration:
         )
 
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "already exists" in response.json()["detail"].lower() or "failed" in response.json()["detail"].lower()
+        assert (
+            "already exists" in response.json()["detail"].lower()
+            or "failed" in response.json()["detail"].lower()
+        )
 
 
 @pytest.mark.asyncio
@@ -298,7 +305,7 @@ class TestMultiTenantProfileUpdate:
         user_service = UserService(async_session)
 
         # Create user 'superadmin' in Tenant A
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="superadmin",
             email="super@tenant-a.com",
             password="SecurePass123!",
@@ -307,7 +314,7 @@ class TestMultiTenantProfileUpdate:
         )
 
         # Create user 'regularuser' in Tenant B
-        user_b = await user_service.create_user(
+        await user_service.create_user(
             username="regularuser",
             email="user@tenant-b.com",
             password="SecurePass123!",
@@ -327,12 +334,16 @@ class TestMultiTenantProfileUpdate:
         )
 
         assert login_response.status_code == status.HTTP_200_OK
+        access_token = login_response.json()["access_token"]
 
         # Update user_b's username to 'superadmin' (exists in Tenant A, but should work for Tenant B)
         update_response = await test_client.patch(
             "/api/v1/auth/me",
             json={"username": "superadmin"},
-            headers={"X-Tenant-ID": "tenant-b"},
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "X-Tenant-ID": "tenant-b",
+            },
         )
 
         # Should succeed because different tenant
@@ -341,9 +352,7 @@ class TestMultiTenantProfileUpdate:
         )
 
         # Verify both users now have username 'superadmin' in different tenants
-        result = await async_session.execute(
-            select(User).where(User.username == "superadmin")
-        )
+        result = await async_session.execute(select(User).where(User.username == "superadmin"))
         users = result.scalars().all()
 
         assert len(users) == 2
@@ -357,7 +366,7 @@ class TestMultiTenantProfileUpdate:
         user_service = UserService(async_session)
 
         # Create two users in Tenant A
-        user_a = await user_service.create_user(
+        await user_service.create_user(
             username="alice",
             email="alice@tenant-a.com",
             password="SecurePass123!",
@@ -365,7 +374,7 @@ class TestMultiTenantProfileUpdate:
             tenant_id="tenant-a",
         )
 
-        user_b = await user_service.create_user(
+        await user_service.create_user(
             username="bob",
             email="bob@tenant-a.com",
             password="SecurePass123!",
@@ -385,12 +394,16 @@ class TestMultiTenantProfileUpdate:
         )
 
         assert login_response.status_code == status.HTTP_200_OK
+        access_token = login_response.json()["access_token"]
 
         # Try to update bob's username to 'alice' (should fail - same tenant)
         update_response = await test_client.patch(
             "/api/v1/auth/me",
             json={"username": "alice"},
-            headers={"X-Tenant-ID": "tenant-a"},
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "X-Tenant-ID": "tenant-a",
+            },
         )
 
         assert update_response.status_code == status.HTTP_400_BAD_REQUEST
@@ -408,21 +421,21 @@ class TestDatabaseConstraints:
         user_service = UserService(async_session)
 
         # Create 'test_user' in multiple tenants
-        user_1 = await user_service.create_user(
+        await user_service.create_user(
             username="test_user",
             email="test1@example.com",
             password="SecurePass123!",
             tenant_id="tenant-1",
         )
 
-        user_2 = await user_service.create_user(
+        await user_service.create_user(
             username="test_user",
             email="test2@example.com",
             password="SecurePass123!",
             tenant_id="tenant-2",
         )
 
-        user_3 = await user_service.create_user(
+        await user_service.create_user(
             username="test_user",
             email="test3@example.com",
             password="SecurePass123!",
@@ -432,9 +445,7 @@ class TestDatabaseConstraints:
         await async_session.commit()
 
         # Should succeed - all three users created
-        result = await async_session.execute(
-            select(User).where(User.username == "test_user")
-        )
+        result = await async_session.execute(select(User).where(User.username == "test_user"))
         users = result.scalars().all()
 
         assert len(users) == 3
@@ -450,7 +461,7 @@ class TestDatabaseConstraints:
         user_service = UserService(async_session)
 
         # Create first user
-        user_1 = await user_service.create_user(
+        await user_service.create_user(
             username="duplicate",
             email="user1@example.com",
             password="SecurePass123!",
@@ -461,7 +472,7 @@ class TestDatabaseConstraints:
 
         # Try to create second user with same username and tenant
         with pytest.raises(IntegrityError):
-            user_2 = await user_service.create_user(
+            await user_service.create_user(
                 username="duplicate",
                 email="user2@example.com",
                 password="SecurePass123!",

@@ -102,7 +102,11 @@ class DeploymentResult:
 
     def is_failure(self) -> bool:
         """Check if execution failed"""
-        return self.status in (ExecutionStatus.FAILED, ExecutionStatus.TIMEOUT, ExecutionStatus.CANCELLED)
+        return self.status in (
+            ExecutionStatus.FAILED,
+            ExecutionStatus.TIMEOUT,
+            ExecutionStatus.CANCELLED,
+        )
 
 
 class DeploymentAdapter(ABC):

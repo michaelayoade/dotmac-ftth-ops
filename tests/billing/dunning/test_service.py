@@ -1,9 +1,11 @@
 """Comprehensive tests for dunning service layer."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from uuid import uuid4
 
 import pytest
+
+from pydantic import ValidationError as PydanticValidationError
 
 from dotmac.platform.billing.dunning.models import DunningExecutionStatus
 from dotmac.platform.billing.dunning.schemas import (
@@ -13,9 +15,16 @@ from dotmac.platform.billing.dunning.schemas import (
 from dotmac.platform.billing.dunning.service import DunningService
 
 
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.mark.asyncio
 class TestDunningCampaignCRUD:
     """Test campaign CRUD operations."""
+
 
     async def test_create_campaign_success(
         self, async_session, test_tenant_id, test_user_id, sample_campaign_data
@@ -47,16 +56,14 @@ class TestDunningCampaignCRUD:
         """Test campaign creation fails without actions."""
         service = DunningService(async_session)
 
-        invalid_data = DunningCampaignCreate(
-            name="Invalid Campaign",
-            trigger_after_days=7,
-            actions=[],  # Empty actions
-        )
-
-        with pytest.raises(ValueError, match="at least one action"):
+        with pytest.raises(PydanticValidationError, match="at least 1 item"):
             await service.create_campaign(
                 tenant_id=test_tenant_id,
-                data=invalid_data,
+                data=DunningCampaignCreate(
+                    name="Invalid Campaign",
+                    trigger_after_days=7,
+                    actions=[],  # Empty actions
+                ),
                 created_by_user_id=test_user_id,
             )
 
@@ -272,7 +279,7 @@ class TestDunningExecutions:
         )
 
         # Set next_action_at to past
-        execution.next_action_at = datetime.now(UTC) - timedelta(hours=1)
+        execution.next_action_at = datetime.now(timezone.utc) - timedelta(hours=1)
         await async_session.commit()
 
         # Get pending actions

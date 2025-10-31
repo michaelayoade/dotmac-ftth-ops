@@ -1,3 +1,4 @@
+
 """
 Tests for Network Monitoring Schemas with IPv6 Support
 
@@ -8,12 +9,19 @@ import pytest
 from pydantic import ValidationError
 
 from dotmac.platform.network_monitoring.schemas import (
-    DeviceHealthResponse,
+
+
+
     CPEMetrics,
+    DeviceHealthResponse,
     DeviceStatus,
     DeviceType,
 )
 
+
+
+
+pytestmark = pytest.mark.unit
 
 class TestDeviceHealthResponseIPv6:
     """Test device health response with dual-stack IP support."""

@@ -1,6 +1,7 @@
 """
 Test tenant configuration for single and multi-tenant modes.
 """
+import pytest
 
 import os
 from unittest.mock import patch
@@ -13,9 +14,11 @@ from dotmac.platform.tenant import (
 )
 
 
+@pytest.mark.unit
 class TestTenantConfiguration:
     """Test tenant configuration behavior."""
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_default_configuration(self):
         """Test default configuration is single-tenant."""
         config = TenantConfiguration()
@@ -25,6 +28,7 @@ class TestTenantConfiguration:
         assert config.is_single_tenant
         assert not config.is_multi_tenant
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_single_tenant_configuration(self):
         """Test explicit single-tenant configuration."""
         config = TenantConfiguration(mode=TenantMode.SINGLE)
@@ -34,6 +38,7 @@ class TestTenantConfiguration:
         assert config.get_tenant_id_for_request(None) == "default"
         assert config.get_tenant_id_for_request("custom") == "default"  # Always default
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_multi_tenant_configuration(self):
         """Test explicit multi-tenant configuration."""
         config = TenantConfiguration(mode=TenantMode.MULTI)
@@ -57,14 +62,14 @@ class TestTenantConfiguration:
         assert config.default_tenant_id == "my-company"
         assert config.get_tenant_id_for_request(None) == "my-company"
 
-    @patch.dict(os.environ, {"TENANT_MODE": "multi"})
+    @patch.dict(os.environ, {"TENANT_MODE": "multi"}, clear=True)
     def test_environment_multi_tenant(self):
         """Test configuration from environment variables."""
         config = TenantConfiguration()
         assert config.mode == TenantMode.MULTI
         assert config.require_tenant_header
 
-    @patch.dict(os.environ, {"TENANT_MODE": "single", "DEFAULT_TENANT_ID": "acme-corp"})
+    @patch.dict(os.environ, {"TENANT_MODE": "single", "DEFAULT_TENANT_ID": "acme-corp"}, clear=True)
     def test_environment_single_tenant(self):
         """Test single-tenant configuration from environment."""
         config = TenantConfiguration()
@@ -118,6 +123,7 @@ class TestTenantConfiguration:
         # Restore original
         set_tenant_config(original_config)
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_configuration_repr(self):
         """Test configuration string representation."""
         config = TenantConfiguration(mode=TenantMode.MULTI)

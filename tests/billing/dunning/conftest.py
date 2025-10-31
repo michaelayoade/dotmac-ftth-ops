@@ -1,15 +1,20 @@
 """Test fixtures for dunning module."""
 
-import os
+from typing import Any
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-# Set test environment
-os.environ["TESTING"] = "1"
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def dunning_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
 
 from dotmac.platform.billing.dunning.models import (
     DunningActionType,
@@ -22,7 +27,60 @@ from dotmac.platform.billing.dunning.schemas import (
 from dotmac.platform.db import Base
 
 
-@pytest.fixture(scope="function")
+@pytest_asyncio.fixture
+async def async_client(test_app, async_session):
+    """Async HTTP client for dunning API tests.
+
+    Creates an httpx AsyncClient for testing async endpoints.
+    Includes authentication headers and tenant ID.
+    """
+    from httpx import ASGITransport, AsyncClient
+
+    try:
+        from dotmac.platform.db import get_async_session, get_session_dependency
+    except ImportError:  # pragma: no cover
+        get_async_session = None  # type: ignore[assignment]
+        get_session_dependency = None  # type: ignore[assignment]
+
+    overrides: dict[Any, Any] = {}
+
+    async def override_session():
+        yield async_session
+
+    if get_async_session is not None:
+        overrides[get_async_session] = override_session
+    if get_session_dependency is not None:
+        overrides[get_session_dependency] = override_session
+
+    try:
+        from dotmac.platform.database import get_async_session as database_get_async_session
+
+        overrides[database_get_async_session] = override_session
+    except ImportError:  # pragma: no cover
+        pass
+
+    try:
+        from dotmac.platform.tenant import get_current_tenant_id
+
+        def override_get_current_tenant_id() -> str:
+            return "test-tenant-001"
+
+        overrides[get_current_tenant_id] = override_get_current_tenant_id
+    except ImportError:  # pragma: no cover
+        pass
+
+    for dependency, override in overrides.items():
+        test_app.dependency_overrides[dependency] = override
+
+    transport = ASGITransport(app=test_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        yield client
+
+    for dependency in overrides:
+        test_app.dependency_overrides.pop(dependency, None)
+
+
+@pytest_asyncio.fixture(scope="function")
 async def async_session():
     """Create an async database session for testing."""
     engine = create_async_engine(
@@ -96,7 +154,7 @@ def sample_campaign_data():
     )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_campaign(async_session, test_tenant_id, test_user_id, sample_campaign_data):
     """Create a sample dunning campaign."""
     from dotmac.platform.billing.dunning.service import DunningService
@@ -112,7 +170,7 @@ async def sample_campaign(async_session, test_tenant_id, test_user_id, sample_ca
     return campaign
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_execution(async_session, sample_campaign, test_tenant_id, test_customer_id):
     """Create a sample dunning execution."""
     from dotmac.platform.billing.dunning.service import DunningService

@@ -1,4 +1,5 @@
 """Tests for integration enums."""
+import pytest
 
 from dotmac.platform.integrations import (
     IntegrationStatus,
@@ -6,6 +7,7 @@ from dotmac.platform.integrations import (
 )
 
 
+@pytest.mark.unit
 class TestIntegrationStatus:
     """Test IntegrationStatus enum."""
 
@@ -24,6 +26,7 @@ class TestIntegrationStatus:
         assert IntegrationStatus.READY in statuses
 
 
+@pytest.mark.unit
 class TestIntegrationType:
     """Test IntegrationType enum."""
 

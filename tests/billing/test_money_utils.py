@@ -19,6 +19,7 @@ from dotmac.platform.billing.money_utils import (
 )
 
 
+@pytest.mark.unit
 class TestMoneyHandler:
     """Test MoneyHandler class."""
 

@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -24,8 +24,15 @@ from dotmac.platform.resilience.service_mesh import (
 )
 
 
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class TestCircuitBreakerStateProperties:
     """Test CircuitBreakerState is_open property."""
+
 
     def test_is_open_when_state_open(self):
         """Test is_open property returns True when state is OPEN."""
@@ -160,19 +167,29 @@ class TestLoadBalancerPolicies:
             assert result in [endpoint1, endpoint2]
 
     @pytest.mark.asyncio
-    async def test_select_endpoint_default_policy(self):
-        """Test selection with unknown/default policy."""
+    async def test_select_endpoint_sticky_session(self):
+        """Test sticky session selection stays consistent for same context."""
         registry = ServiceRegistry()
         lb = LoadBalancer(registry)
 
-        endpoint = ServiceEndpoint(service_name="test", host="host1", port=8080)
+        endpoint1 = ServiceEndpoint(service_name="test", host="host1", port=8080)
+        endpoint2 = ServiceEndpoint(service_name="test", host="host2", port=8080)
 
-        registry.register_endpoint(endpoint)
+        registry.register_endpoint(endpoint1)
+        registry.register_endpoint(endpoint2)
 
         with patch.object(lb, "_is_healthy", return_value=True):
-            # Use STICKY_SESSION which falls to default case
-            result = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION)
-            assert result == endpoint
+            context = {"session_id": "session-123"}
+            result1 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, context)
+            result2 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, context)
+
+            assert result1 == result2
+            assert result1 in (endpoint1, endpoint2)
+
+            # Different sessions may be routed elsewhere
+            other_context = {"session_id": "session-456"}
+            result3 = await lb.select_endpoint("test", TrafficPolicy.STICKY_SESSION, other_context)
+            assert result3 in (endpoint1, endpoint2)
 
     @pytest.mark.asyncio
     async def test_select_endpoint_all_unhealthy_fallback(self):
@@ -472,7 +489,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Open circuit breaker
@@ -511,7 +533,7 @@ class TestServiceMeshCallService:
                 path="/test",
             )
 
-        assert "No endpoints available" in str(exc_info.value)
+        assert "ServiceEndpoint not found" in str(exc_info.value)
 
     @pytest.mark.asyncio
     async def test_call_service_success(self):
@@ -522,7 +544,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Mock _make_http_call
@@ -556,7 +583,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="dest-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="dest-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Add traffic rule
@@ -595,7 +627,12 @@ class TestServiceMeshCallService:
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
         # Register endpoint
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.registry.register_endpoint(endpoint)
 
         # Mock _make_http_call to fail
@@ -648,6 +685,7 @@ class TestServiceMeshHttpCall:
             headers={"X-Custom": "value"},
             body=None,
             timeout=30,
+            ssl_context=None,
         )
 
         assert result["status_code"] == 200
@@ -676,6 +714,7 @@ class TestServiceMeshHttpCall:
                 headers=None,
                 body=b"test",
                 timeout=10,
+                ssl_context=None,
             )
 
 
@@ -697,7 +736,7 @@ class TestServiceMeshMetrics:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -739,7 +778,7 @@ class TestServiceMeshMetrics:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -786,7 +825,12 @@ class TestServiceMeshHelperMethods:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
 
         mesh.register_service_endpoint(endpoint)
 
@@ -811,7 +855,7 @@ class TestServiceMeshHelperMethods:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(UTC),
+            timestamp=datetime.now(timezone.utc),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -887,7 +931,12 @@ class TestServiceMeshRetryLogic:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.register_service_endpoint(endpoint)
 
         # Add traffic rule with NONE retry policy
@@ -902,17 +951,25 @@ class TestServiceMeshRetryLogic:
 
         # Mock endpoint selection and failed HTTP call
         with patch.object(mesh.load_balancer, "select_endpoint", return_value=endpoint):
-            with patch.object(mesh, "_make_http_call", side_effect=Exception("Network error")):
-                with pytest.raises(HTTPException) as exc_info:
-                    await mesh.call_service(
-                        source_service="source",
-                        destination_service="test-service",
-                        method="GET",
-                        path="/test",
-                    )
+            with patch.object(
+                mesh, "_make_http_call", side_effect=Exception("Network error")
+            ) as mock_call:
+                with patch(
+                    "dotmac.platform.resilience.service_mesh.asyncio.sleep",
+                    new_callable=AsyncMock,
+                ) as mock_sleep:
+                    with pytest.raises(HTTPException) as exc_info:
+                        await mesh.call_service(
+                            source_service="source",
+                            destination_service="test-service",
+                            method="GET",
+                            path="/test",
+                        )
 
         assert exc_info.value.status_code == 500
         assert "Service call failed" in exc_info.value.detail
+        assert mock_call.await_count == 1
+        mock_sleep.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_call_service_with_retry_policy_enabled_still_raises(self):
@@ -922,7 +979,12 @@ class TestServiceMeshRetryLogic:
 
         mesh = ServiceMesh(db_session=mock_db, tenant_id="test-tenant", marketplace=marketplace)
 
-        endpoint = ServiceEndpoint(service_name="test-service", host="localhost", port=8080)
+        endpoint = ServiceEndpoint(
+            service_name="test-service",
+            host="localhost",
+            port=8080,
+            protocol="https",
+        )
         mesh.register_service_endpoint(endpoint)
 
         # Add traffic rule with retry policy enabled
@@ -937,17 +999,26 @@ class TestServiceMeshRetryLogic:
 
         # Mock endpoint selection and failed HTTP call
         with patch.object(mesh.load_balancer, "select_endpoint", return_value=endpoint):
-            with patch.object(mesh, "_make_http_call", side_effect=Exception("Network error")):
-                with pytest.raises(HTTPException) as exc_info:
-                    await mesh.call_service(
-                        source_service="source",
-                        destination_service="test-service",
-                        method="GET",
-                        path="/test",
-                    )
+            with patch.object(
+                mesh, "_make_http_call", side_effect=Exception("Network error")
+            ) as mock_call:
+                with patch(
+                    "dotmac.platform.resilience.service_mesh.asyncio.sleep",
+                    new_callable=AsyncMock,
+                ) as mock_sleep:
+                    with pytest.raises(HTTPException) as exc_info:
+                        await mesh.call_service(
+                            source_service="source",
+                            destination_service="test-service",
+                            method="GET",
+                            path="/test",
+                        )
 
-        # Should still fail since retry is not implemented
+        # Should still fail after exhausting retries
         assert exc_info.value.status_code == 500
+        assert mock_call.await_count == rule.max_retries + 1
+        assert mock_sleep.await_count == rule.max_retries
+        assert mesh.call_metrics["active_connections"] == 0
 
 
 class TestServiceMeshHealthMonitoring:
@@ -1169,7 +1240,7 @@ class TestServiceCallModel:
             path="/test",
             headers={"X-Custom": "value"},
             body=b"test",
-            timestamp=datetime(2025, 10, 3, 12, 0, 0, tzinfo=UTC),
+            timestamp=datetime(2025, 10, 3, 12, 0, 0, tzinfo=timezone.utc),
             trace_id="trace-123",
             span_id="span-456",
         )

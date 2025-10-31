@@ -4,7 +4,7 @@ Advanced tests for customer management service to reach 90% coverage.
 Tests batch processing, segments, metrics, and filtering methods.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -42,6 +42,7 @@ def service(mock_db_session):
     return CustomerService(mock_db_session)
 
 
+@pytest.mark.unit
 class TestBatchProcessing:
     """Test batch processing methods."""
 
@@ -109,6 +110,7 @@ class TestBatchProcessing:
         assert len(results["failed"]) > 0
 
 
+@pytest.mark.unit
 class TestCustomerFiltering:
     """Test customer filtering and sorting methods."""
 
@@ -190,7 +192,7 @@ class TestCustomerFiltering:
 
     def test_sort_customers_by_created_at(self, service):
         """Test sorting customers by created_at."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         customers = [
             Customer(id=uuid4(), created_at=now - timedelta(days=1)),
             Customer(id=uuid4(), created_at=now - timedelta(days=5)),
@@ -230,7 +232,7 @@ class TestCustomerFiltering:
 
     def test_sort_customers_invalid_key(self, service):
         """Test sorting with invalid key falls back to created_at."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         customers = [
             Customer(id=uuid4(), created_at=now - timedelta(days=1)),
             Customer(id=uuid4(), created_at=now),
@@ -242,6 +244,7 @@ class TestCustomerFiltering:
         assert sorted_customers[0].created_at > sorted_customers[1].created_at
 
 
+@pytest.mark.unit
 class TestUpdateMetrics:
     """Test update_metrics wrapper method."""
 
@@ -269,6 +272,7 @@ class TestUpdateMetrics:
             mock_record.assert_not_called()
 
 
+@pytest.mark.unit
 class TestSegmentManagement:
     """Test customer segment management."""
 
@@ -383,6 +387,7 @@ class TestSegmentManagement:
             await service.recalculate_segment(segment_id)
 
 
+@pytest.mark.unit
 class TestCustomerMetrics:
     """Test customer metrics aggregation."""
 
@@ -516,6 +521,7 @@ class TestCustomerMetrics:
         assert metrics["average_lifetime_value"] == 0.0
 
 
+@pytest.mark.unit
 class TestCalculateSegmentMembers:
     """Test segment member calculation."""
 

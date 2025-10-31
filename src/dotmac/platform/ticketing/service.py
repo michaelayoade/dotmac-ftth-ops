@@ -10,7 +10,10 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from uuid import UUID
 
 import structlog
@@ -119,6 +122,13 @@ class TicketService:
             partner_id=partner_id,
             customer_id=customer_id,
             context=data.metadata or {},
+            # ISP-specific fields
+            ticket_type=data.ticket_type,
+            service_address=data.service_address,
+            affected_services=list(data.affected_services) if data.affected_services else [],
+            device_serial_numbers=list(data.device_serial_numbers)
+            if data.device_serial_numbers
+            else [],
         )
         ticket.created_by = current_user.user_id
         ticket.last_response_at = datetime.now(UTC)
@@ -332,6 +342,7 @@ class TicketService:
         old_status = ticket.status
         old_assigned = ticket.assigned_to_user_id
 
+        # Standard fields (allowed for all non-customer actors)
         if data.status and data.status != ticket.status:
             ticket.status = data.status
             updated = True
@@ -349,6 +360,64 @@ class TicketService:
 
         if data.metadata:
             ticket.context.update(data.metadata)
+            updated = True
+
+        # ISP-specific fields
+        # Role-based validation: Only tenant/platform actors can update operational metadata
+        # Partners can view but not modify service details
+        can_update_service_metadata = context.actor_type in {
+            TicketActorType.TENANT,
+            TicketActorType.PLATFORM,
+        }
+
+        if data.ticket_type is not None and data.ticket_type != ticket.ticket_type:
+            if not can_update_service_metadata:
+                raise TicketAccessDeniedError(
+                    "Only tenant and platform actors can update ticket type."
+                )
+            ticket.ticket_type = data.ticket_type
+            updated = True
+
+        if data.service_address is not None and data.service_address != ticket.service_address:
+            if not can_update_service_metadata:
+                raise TicketAccessDeniedError(
+                    "Only tenant and platform actors can update service address."
+                )
+            ticket.service_address = data.service_address
+            updated = True
+
+        if data.affected_services is not None:
+            # Replace entire list (not merge)
+            if not can_update_service_metadata:
+                raise TicketAccessDeniedError(
+                    "Only tenant and platform actors can update affected services."
+                )
+            ticket.affected_services = list(data.affected_services)
+            updated = True
+
+        if data.device_serial_numbers is not None:
+            # Replace entire list (not merge)
+            if not can_update_service_metadata:
+                raise TicketAccessDeniedError(
+                    "Only tenant and platform actors can update device serial numbers."
+                )
+            ticket.device_serial_numbers = list(data.device_serial_numbers)
+            updated = True
+
+        # Escalation fields (allowed for all non-customer actors)
+        if data.escalation_level is not None and data.escalation_level != ticket.escalation_level:
+            ticket.escalation_level = data.escalation_level
+            if data.escalation_level > 0 and not ticket.escalated_at:
+                ticket.escalated_at = datetime.now(UTC)
+            updated = True
+
+        if (
+            data.escalated_to_user_id is not None
+            and data.escalated_to_user_id != ticket.escalated_to_user_id
+        ):
+            ticket.escalated_to_user_id = data.escalated_to_user_id
+            if not ticket.escalated_at:
+                ticket.escalated_at = datetime.now(UTC)
             updated = True
 
         if updated:

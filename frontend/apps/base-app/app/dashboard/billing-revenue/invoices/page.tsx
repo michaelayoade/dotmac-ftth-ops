@@ -1,14 +1,21 @@
 "use client";
 
 import { useState } from "react";
-import { CreditCard, FileDown } from "lucide-react";
+import { CreditCard, FileDown, Plus } from "lucide-react";
 import InvoiceList from "@/components/billing/InvoiceList";
+import { CreateInvoiceModal } from "@/components/billing/CreateInvoiceModal";
 import { useTenant } from "@/lib/contexts/tenant-context";
 import { Invoice } from "@/types/billing";
+import { Button } from "@/components/ui/button";
 
 export default function BillingPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [refreshToken, setRefreshToken] = useState(0);
   const { currentTenant, tenantId } = useTenant();
+  const handleInvoiceCreated = () => {
+    setRefreshToken((prev) => prev + 1);
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -27,18 +34,32 @@ export default function BillingPage() {
               {currentTenant?.name || "Unknown"}
             </span>
           </div>
-          <button
+          <Button
             type="button"
+            variant="outline"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            New Invoice
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
             onClick={() => console.log("Export invoices clicked")}
-            className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors"
+            className="flex items-center gap-2"
           >
             <FileDown className="h-4 w-4" />
             Export
-          </button>
+          </Button>
         </div>
       </div>
 
-      <InvoiceList tenantId={tenantId || "default-tenant"} onInvoiceSelect={setSelectedInvoice} />
+      <InvoiceList
+        tenantId={tenantId || "default-tenant"}
+        onInvoiceSelect={setSelectedInvoice}
+        refreshToken={refreshToken}
+      />
 
       {selectedInvoice && (
         <div className="rounded-lg border border-border bg-card p-4">
@@ -50,6 +71,13 @@ export default function BillingPage() {
           </div>
         </div>
       )}
+
+      <CreateInvoiceModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        tenantId={tenantId}
+        onSuccess={handleInvoiceCreated}
+      />
     </div>
   );
 }

@@ -5,6 +5,7 @@ Provides interface to VOLTHA REST API for PON network management.
 Note: VOLTHA primarily uses gRPC, but also provides REST API for common operations.
 """
 
+import base64
 import os
 from typing import Any, cast
 from urllib.parse import urljoin
@@ -35,6 +36,10 @@ class VOLTHAClient(RobustHTTPClient):  # type: ignore[misc]
         "delete": 30.0,
         "reboot": 60.0,
         "provision": 60.0,
+        "alarms": 10.0,
+        "events": 10.0,
+        "backup": 45.0,
+        "restore": 60.0,
     }
 
     def __init__(
@@ -226,6 +231,162 @@ class VOLTHAClient(RobustHTTPClient):  # type: ignore[misc]
         )
         items = response.get("items", []) if isinstance(response, dict) else response
         return items if isinstance(items, list) else []
+
+    async def backup_device_configuration(self, device_id: str) -> Any:
+        """Download device configuration snapshot."""
+        return await self._voltha_request(
+            "GET",
+            f"devices/{device_id}/config",
+            timeout=self.TIMEOUTS["backup"],
+        )
+
+    async def restore_device_configuration(self, device_id: str, payload: bytes) -> Any:
+        """Restore device configuration from snapshot bytes."""
+        encoded = base64.b64encode(payload).decode("ascii")
+        body = {"content": encoded, "encoding": "base64"}
+        return await self._voltha_request(
+            "POST",
+            f"devices/{device_id}/config",
+            json=body,
+            timeout=self.TIMEOUTS["restore"],
+        )
+
+    # =========================================================================
+    # Alarm and Event Operations
+    # =========================================================================
+
+    async def get_alarms(
+        self,
+        device_id: str | None = None,
+        severity: str | None = None,
+        state: str | None = None,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Get alarms from VOLTHA"""
+        params: dict[str, Any] = {}
+        if device_id:
+            params["device_id"] = device_id
+        if severity:
+            params["severity"] = severity
+        if state:
+            params["state"] = state
+
+        return await self._voltha_request(
+            "GET",
+            "alarms",
+            params=params or None,
+            timeout=self.TIMEOUTS["alarms"],
+        )
+
+    async def get_alarm(self, alarm_id: str) -> dict[str, Any]:
+        """
+        Get a specific alarm by ID from VOLTHA.
+
+        Args:
+            alarm_id: The alarm ID to retrieve
+
+        Returns:
+            Alarm details
+
+        Raises:
+            VOLTHAError: If alarm not found or VOLTHA API error
+        """
+        return await self._voltha_request(
+            "GET",
+            f"alarms/{alarm_id}",
+            timeout=self.TIMEOUTS["alarms"],
+        )
+
+    async def acknowledge_alarm(
+        self,
+        alarm_id: str,
+        acknowledged_by: str,
+        note: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Acknowledge an alarm in VOLTHA.
+
+        Note: This requires VOLTHA API support for alarm acknowledgement.
+        If not supported, this will raise VOLTHAError with status 404/501.
+
+        Args:
+            alarm_id: The alarm ID to acknowledge
+            acknowledged_by: User who is acknowledging the alarm
+            note: Optional note about the acknowledgement
+
+        Returns:
+            Acknowledgement response from VOLTHA
+
+        Raises:
+            VOLTHAError: If VOLTHA API doesn't support this operation or other error
+        """
+        payload = {
+            "acknowledged_by": acknowledged_by,
+        }
+        if note:
+            payload["note"] = note
+
+        return await self._voltha_request(
+            "POST",
+            f"alarms/{alarm_id}/acknowledge",
+            json=payload,
+            timeout=self.TIMEOUTS["alarms"],
+        )
+
+    async def clear_alarm(
+        self,
+        alarm_id: str,
+        cleared_by: str,
+        note: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Clear an alarm in VOLTHA.
+
+        Note: This requires VOLTHA API support for alarm clearing.
+        If not supported, this will raise VOLTHAError with status 404/501.
+
+        Args:
+            alarm_id: The alarm ID to clear
+            cleared_by: User who is clearing the alarm
+            note: Optional note about the clearing
+
+        Returns:
+            Clear response from VOLTHA
+
+        Raises:
+            VOLTHAError: If VOLTHA API doesn't support this operation or other error
+        """
+        payload = {
+            "cleared_by": cleared_by,
+        }
+        if note:
+            payload["note"] = note
+
+        return await self._voltha_request(
+            "POST",
+            f"alarms/{alarm_id}/clear",
+            json=payload,
+            timeout=self.TIMEOUTS["alarms"],
+        )
+
+    async def get_events(
+        self,
+        device_id: str | None = None,
+        event_type: str | None = None,
+        limit: int = 100,
+    ) -> dict[str, Any] | list[dict[str, Any]]:
+        """Get events from VOLTHA"""
+        params: dict[str, Any] = {"limit": limit}
+        if device_id:
+            params["device_id"] = device_id
+        if event_type:
+            params["event_type"] = event_type
+
+        return await self._voltha_request(
+            "GET",
+            "events",
+            params=params,
+            timeout=self.TIMEOUTS["events"],
+        )
 
     # =========================================================================
     # Adapter Operations

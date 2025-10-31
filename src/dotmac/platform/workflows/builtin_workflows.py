@@ -4,7 +4,6 @@ Built-in Workflow Definitions
 Pre-configured workflows for common business processes.
 """
 
-
 # Workflow: Lead to Customer Onboarding
 LEAD_TO_CUSTOMER_WORKFLOW = {
     "name": "lead_to_customer_onboarding",

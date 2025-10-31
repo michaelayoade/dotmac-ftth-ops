@@ -1,3 +1,4 @@
+
 """
 Tests for Two-Factor Authentication (2FA) Login Flow.
 
@@ -12,6 +13,7 @@ Tests the complete 2FA login integration including:
 import uuid
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -22,7 +24,14 @@ from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import BackupCode, User
 
 
-@pytest.fixture(autouse=True)
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
+@pytest_asyncio.fixture(autouse=True)
 async def cleanup_session_state():
     """Clean up Redis session state before each test."""
     from dotmac.platform.auth.core import session_manager
@@ -64,7 +73,7 @@ def app():
     return app
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_with_2fa(async_db_session):
     """Create a test user with 2FA enabled."""
     secret = mfa_service.generate_secret()
@@ -93,7 +102,7 @@ async def test_user_with_2fa(async_db_session):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_user_without_2fa(async_db_session):
     """Create a test user without 2FA."""
     user = User(
@@ -120,7 +129,7 @@ async def test_user_without_2fa(async_db_session):
     return user
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def fake_redis():
     """Create a fake Redis client for testing."""
     import fakeredis.aioredis
@@ -131,7 +140,7 @@ async def fake_redis():
     await redis.aclose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def client(app, async_db_session, fake_redis):
     """Create async test client."""
     from unittest.mock import AsyncMock, patch

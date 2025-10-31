@@ -4,7 +4,10 @@ Contact Management Service Layer
 Provides business logic for contact operations with caching and validation.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any, cast
 from uuid import UUID
 
@@ -31,8 +34,10 @@ from dotmac.platform.contacts.schemas import (
     ContactMethodCreate,
     ContactMethodUpdate,
     ContactUpdate,
+    ContactResponse,
 )
-from dotmac.platform.core.caching import cache_delete, cache_get
+from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
+from pydantic import ValidationError
 
 logger = structlog.get_logger(__name__)
 
@@ -146,15 +151,27 @@ class ContactService:
         tenant_id: UUID,
         include_methods: bool = True,
         include_labels: bool = True,
-    ) -> Contact | None:
+        *,
+        use_cache: bool = True,
+    ) -> Contact | ContactResponse | None:
         """Get a contact by ID."""
         cache_key = f"contact:{tenant_id}:{contact_id}"
 
         # Check cache
-        if not include_methods and not include_labels:
+        if use_cache and not include_methods and not include_labels:
             cached = cache_get(cache_key)
             if cached:
-                return cast(Contact, cached)
+                # If the cached payload is already a model or ORM instance, return as-is
+                if isinstance(cached, (Contact, ContactResponse)):
+                    return cached
+                if isinstance(cached, dict):
+                    try:
+                        return ContactResponse.model_validate(cached)
+                    except ValidationError:
+                        cache_delete(cache_key)
+                else:
+                    # Unexpected payload type – return it directly for backward compatibility
+                    return cached
 
         # Build query
         query = select(Contact).where(
@@ -175,10 +192,13 @@ class ContactService:
         contact = result.scalar_one_or_none()
 
         # Cache if not including relationships
-        # Note: Cannot cache SQLAlchemy models directly (not JSON-serializable)
-        # Caching disabled for now - would need to convert to dict/Pydantic model first
-        # if contact and not include_methods and not include_labels:
-        #     cache_set(cache_key, contact, ttl=300)
+        if contact and use_cache and not include_methods and not include_labels:
+            try:
+                serialized = ContactResponse.model_validate(contact).model_dump(mode="json")
+                cache_set(cache_key, serialized, ttl=300)
+            except (ValidationError, TypeError, ValueError):
+                # Ignore serialization issues; cache is best-effort
+                pass
 
         return contact
 
@@ -187,16 +207,28 @@ class ContactService:
     ) -> Contact | None:
         """Update a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None
 
         # Update fields if provided
         update_fields = contact_data.model_dump(exclude_unset=True)
+
+        # Map schema field names to ORM column names
+        field_mapping = {
+            "metadata": "metadata_",  # Schema uses 'metadata', ORM uses 'metadata_'
+        }
+
         for field, value in update_fields.items():
-            if hasattr(contact, field):
-                setattr(contact, field, value)
+            # Use mapped field name if it exists, otherwise use original
+            orm_field = field_mapping.get(field, field)
+            if hasattr(contact, orm_field):
+                setattr(contact, orm_field, value)
 
         contact.updated_at = datetime.now(UTC)
         await self.db.commit()
@@ -217,7 +249,11 @@ class ContactService:
     ) -> bool:
         """Delete a contact (soft or hard)."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return False
@@ -322,14 +358,34 @@ class ContactService:
         # Add label filtering if specified
         if label_ids:
             stmt = stmt.join(Contact.labels).where(ContactLabelDefinition.id.in_(label_ids))
+            # Use distinct to avoid duplicates when contacts have multiple matching labels
+            stmt = stmt.distinct(Contact.id)
 
-        # Get total count
-        count_stmt = select(func.count()).select_from(stmt.subquery())
+        # Get total count (use distinct subquery if labels were filtered)
+        if label_ids:
+            # Count distinct contacts from the filtered query
+            # Build subquery that selects only distinct contact IDs
+            subq = (
+                select(Contact.id)
+                .where(and_(*conditions))
+                .join(Contact.labels)
+                .where(ContactLabelDefinition.id.in_(label_ids))
+                .distinct()
+                .subquery()
+            )
+            # Count rows in the subquery (each row is a unique contact)
+            count_stmt = select(func.count()).select_from(subq)
+        else:
+            count_stmt = select(func.count()).select_from(stmt.subquery())
         raw_total = await self.db.scalar(count_stmt)
         total = int(raw_total or 0)
 
         # Add ordering and pagination
-        stmt = stmt.order_by(Contact.display_name).limit(limit).offset(offset)
+        if label_ids:
+            stmt = stmt.order_by(Contact.id, Contact.display_name)
+        else:
+            stmt = stmt.order_by(Contact.display_name)
+        stmt = stmt.limit(limit).offset(offset)
 
         # Execute query
         result = await self.db.execute(stmt)
@@ -342,7 +398,11 @@ class ContactService:
     ) -> ContactMethod | None:
         """Add a contact method to a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None
@@ -402,9 +462,17 @@ class ContactService:
 
         # Update fields
         update_fields = method_data.model_dump(exclude_unset=True)
+
+        # Map schema field names to ORM column names
+        field_mapping = {
+            "metadata": "metadata_",  # Schema uses 'metadata', ORM uses 'metadata_'
+        }
+
         for field, value in update_fields.items():
-            if hasattr(method, field):
-                setattr(method, field, value)
+            # Use mapped field name if it exists, otherwise use original
+            orm_field = field_mapping.get(field, field)
+            if hasattr(method, orm_field):
+                setattr(method, orm_field, value)
 
         method.updated_at = datetime.now(UTC)
         await self.db.commit()
@@ -455,7 +523,11 @@ class ContactService:
     ) -> ContactActivity | None:
         """Add an activity to a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None

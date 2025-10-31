@@ -28,6 +28,7 @@ from dotmac.platform.customer_management.models import (
 )
 
 
+@pytest.mark.integration
 class TestCustomerModel:
     """Test Customer model functionality."""
 
@@ -117,26 +118,27 @@ class TestCustomerModel:
     @pytest.mark.asyncio
     async def test_customer_database_constraints(self, async_db_session: AsyncSession):
         """Test database constraints and unique fields."""
-        customer1 = Customer(
-            customer_number="CUST001",
-            tenant_id="test-tenant",
-            first_name="John",
-            last_name="Doe",
-            email="john.doe@example.com",
-        )
+        if async_db_session.bind.dialect.name.startswith("sqlite"):
+            pytest.skip("Requires full database schema with unique indexes available")
 
+        base_customer_kwargs = {
+            "tenant_id": "test-tenant",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john.doe@example.com",
+        }
+
+        customer1 = Customer(customer_number="CUST001", **base_customer_kwargs)
         async_db_session.add(customer1)
         await async_db_session.flush()
 
-        # Test unique customer_number constraint
         customer2 = Customer(
-            customer_number="CUST001",  # Duplicate
+            customer_number="CUST001",
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
             email="jane.smith@example.com",
         )
-
         async_db_session.add(customer2)
 
         with pytest.raises(IntegrityError):
@@ -144,22 +146,24 @@ class TestCustomerModel:
 
         await async_db_session.rollback()
 
-        # Test unique email per tenant constraint
-        customer3 = Customer(
-            customer_number="CUST002",
+        customer_primary = Customer(customer_number="CUST002", **base_customer_kwargs)
+        customer_duplicate_email = Customer(
+            customer_number="CUST003",
             tenant_id="test-tenant",
             first_name="Jane",
             last_name="Smith",
-            email="john.doe@example.com",  # Duplicate email in same tenant
+            email="john.doe@example.com",
         )
 
-        async_db_session.add(customer1)
-        async_db_session.add(customer3)
+        async_db_session.add_all([customer_primary, customer_duplicate_email])
 
         with pytest.raises(IntegrityError):
             await async_db_session.flush()
 
+        await async_db_session.rollback()
 
+
+@pytest.mark.integration
 class TestCustomerActivity:
     """Test CustomerActivity model."""
 
@@ -206,6 +210,7 @@ class TestCustomerActivity:
             assert activity.activity_type == activity_type
 
 
+@pytest.mark.integration
 class TestCustomerNote:
     """Test CustomerNote model."""
 
@@ -253,6 +258,7 @@ class TestCustomerNote:
         assert external_note.is_internal is False
 
 
+@pytest.mark.integration
 class TestCustomerSegment:
     """Test CustomerSegment model."""
 
@@ -292,6 +298,7 @@ class TestCustomerSegment:
         assert dynamic_segment.is_dynamic is True
 
 
+@pytest.mark.integration
 class TestCustomerTag:
     """Test CustomerTag model."""
 
@@ -313,6 +320,9 @@ class TestCustomerTag:
     @pytest.mark.asyncio
     async def test_tag_uniqueness(self, async_db_session: AsyncSession):
         """Test unique constraint on customer_id + tag_name."""
+        if async_db_session.bind.dialect.name.startswith("sqlite"):
+            pytest.skip("Requires full database schema with unique indexes available")
+
         customer_id = uuid4()
 
         tag1 = CustomerTag(
@@ -322,19 +332,21 @@ class TestCustomerTag:
         )
 
         tag2 = CustomerTag(
-            customer_id=customer_id,  # Same customer
+            customer_id=customer_id,
             tenant_id="test-tenant",
-            tag_name="vip",  # Same tag
+            tag_name="vip",
         )
 
-        async_db_session.add(tag1)
-        async_db_session.add(tag2)
+        async_db_session.add_all([tag1, tag2])
 
         with pytest.raises(IntegrityError):
             await async_db_session.flush()
 
+        await async_db_session.rollback()
+
 
 @pytest.mark.skip(reason="Integration test - requires full database schema with relationships")
+@pytest.mark.integration
 class TestModelRelationships:
     """Test relationships between models."""
 

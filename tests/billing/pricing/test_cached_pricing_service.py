@@ -4,7 +4,7 @@ Tests for CachedPricingEngine.
 Tests caching behavior for pricing rules and calculations.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -48,10 +48,10 @@ def sample_pricing_rule():
                 {"min_quantity": 50, "discount_percentage": 20},
             ]
         },
-        valid_from=datetime.now(UTC),
+        valid_from=datetime.now(timezone.utc),
         valid_until=None,
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 
@@ -68,6 +68,7 @@ def cached_pricing_engine(mock_cache):
         return engine
 
 
+@pytest.mark.unit
 class TestGetPricingRule:
     """Test cached pricing rule retrieval."""
 
@@ -116,6 +117,7 @@ class TestGetPricingRule:
             assert "pricing_rule:rule-123" in cache_call[1]["tags"]
 
 
+@pytest.mark.unit
 class TestListPricingRules:
     """Test cached pricing rules listing."""
 
@@ -161,6 +163,7 @@ class TestListPricingRules:
             assert "active" in cache_key
 
 
+@pytest.mark.unit
 class TestCreatePricingRule:
     """Test pricing rule creation with cache invalidation."""
 
@@ -196,6 +199,7 @@ class TestCreatePricingRule:
             assert any("pric" in pattern.lower() for pattern in all_calls)
 
 
+@pytest.mark.unit
 class TestUpdatePricingRule:
     """Test pricing rule updates with cache invalidation."""
 
@@ -223,6 +227,7 @@ class TestUpdatePricingRule:
             assert mock_cache.invalidate_pattern.called
 
 
+@pytest.mark.unit
 class TestCalculatePrice:
     """Test price calculation with caching."""
 
@@ -239,7 +244,7 @@ class TestCalculatePrice:
             "total_discount_amount": 100.00,
             "final_price": 900.00,
             "applied_adjustments": [],
-            "calculation_timestamp": datetime.now(UTC).isoformat(),
+            "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
         }
         mock_cache.get.return_value = cached_result
 
@@ -290,6 +295,7 @@ class TestCalculatePrice:
             mock_cache.set.assert_called_once()
 
 
+@pytest.mark.unit
 class TestDeletePricingRule:
     """Test pricing rule deletion with cache cleanup."""
 
@@ -317,14 +323,15 @@ class TestDeletePricingRule:
 
             # Verify multiple invalidation patterns were called
             invalidate_calls = [call[0][0] for call in mock_cache.invalidate_pattern.call_args_list]
-            assert any(
-                "pricing:rules" in pattern for pattern in invalidate_calls
-            ), "Should invalidate pricing rules list cache"
-            assert any(
-                "applicable" in pattern for pattern in invalidate_calls
-            ), "Should invalidate applicable rules cache"
+            assert any("pricing:rules" in pattern for pattern in invalidate_calls), (
+                "Should invalidate pricing rules list cache"
+            )
+            assert any("applicable" in pattern for pattern in invalidate_calls), (
+                "Should invalidate applicable rules cache"
+            )
 
 
+@pytest.mark.unit
 class TestCacheKeyGeneration:
     """Test cache key generation for different operations."""
 
@@ -339,6 +346,7 @@ class TestCacheKeyGeneration:
         assert "rule-123" in key
 
 
+@pytest.mark.unit
 class TestCacheTTL:
     """Test cache TTL configuration."""
 
@@ -363,6 +371,7 @@ class TestCacheTTL:
             assert ttl_arg > 0
 
 
+@pytest.mark.unit
 class TestBatchOperations:
     """Test batch pricing operations with cache optimization."""
 
@@ -380,7 +389,7 @@ class TestBatchOperations:
                 "total_discount_amount": 100.00,
                 "final_price": 900.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(UTC).isoformat(),
+                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
             },
             None,  # Miss
             {  # Hit
@@ -392,7 +401,7 @@ class TestBatchOperations:
                 "total_discount_amount": 200.00,
                 "final_price": 1800.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(UTC).isoformat(),
+                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
             },
         ]
         mock_cache.get.side_effect = cache_responses
@@ -431,6 +440,7 @@ class TestBatchOperations:
             assert mock_calc.call_count == 1
 
 
+@pytest.mark.unit
 class TestErrorHandling:
     """Test error handling in cached operations."""
 

@@ -1,0 +1,8 @@
+---
+all:
+  hosts:
+    customer-edge-01:
+      ansible_host: "{{ lookup('env', 'TENANT_TARGET_HOST') | default('192.0.2.10') }}"
+      ansible_user: "{{ lookup('env', 'TENANT_TARGET_USER') | default('root') }}"
+      ansible_port: "{{ lookup('env', 'TENANT_TARGET_PORT') | default(22) }}"
+      tenant_id: "{{ tenant_id | default('unknown-tenant') }}"

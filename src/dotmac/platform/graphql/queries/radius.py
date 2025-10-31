@@ -4,7 +4,6 @@ RADIUS subscriber and session GraphQL queries.
 Provides optimized queries for ISP subscriber management with batched session loading.
 """
 
-
 import strawberry
 import structlog
 from sqlalchemy import func, select
@@ -38,20 +37,18 @@ class RadiusQueries:
         Returns:
             List of subscribers with their sessions
         """
-        if not info.context.current_user:
-            raise Exception("Authentication required")
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
 
         # Import here to avoid circular imports
         from dotmac.platform.radius.models import RadCheck
 
         # Build query
-        stmt = select(RadCheck).where(RadCheck.attribute == "Cleartext-Password")
-
-        # Apply tenant filter if not platform admin
-        if info.context.current_user.tenant_id:
-            # Assuming username format: tenant_id:username or just username
-            # Adjust based on your actual schema
-            pass
+        stmt = select(RadCheck).where(
+            RadCheck.attribute == "Cleartext-Password",
+            RadCheck.tenant_id == tenant_id,
+        )
 
         # Apply search filter
         if search:
@@ -61,7 +58,7 @@ class RadiusQueries:
         # This is placeholder - adjust based on your schema
         stmt = stmt.limit(limit)
 
-        result = await info.context.db.execute(stmt)
+        result = await context.db.execute(stmt)
         rad_checks = result.scalars().all()
 
         # Convert to GraphQL Subscriber type
@@ -83,8 +80,9 @@ class RadiusQueries:
         # Batch load sessions for all subscribers
         if subscribers:
             usernames = [s.username for s in subscribers]
-            sessions_by_username = await info.context.loaders.get_session_loader().load_many(
-                usernames
+            sessions_by_username = await context.loaders.get_session_loader().load_many(
+                usernames,
+                tenant_id=tenant_id,
             )
 
             # Attach sessions to subscribers
@@ -108,7 +106,7 @@ class RadiusQueries:
             "Fetched subscribers",
             count=len(subscribers),
             limit=limit,
-            tenant_id=info.context.current_user.tenant_id,
+            tenant_id=tenant_id,
         )
 
         return subscribers
@@ -130,8 +128,9 @@ class RadiusQueries:
         Returns:
             List of active sessions
         """
-        if not info.context.current_user:
-            raise Exception("Authentication required")
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
 
         # Import here to avoid circular imports
         from dotmac.platform.radius.models import RadAcct
@@ -139,7 +138,10 @@ class RadiusQueries:
         # Build query for active sessions
         stmt = (
             select(RadAcct)
-            .where(RadAcct.acctstoptime.is_(None))
+            .where(
+                RadAcct.acctstoptime.is_(None),
+                RadAcct.tenant_id == tenant_id,
+            )
             .order_by(RadAcct.acctstarttime.desc())
         )
 
@@ -149,7 +151,7 @@ class RadiusQueries:
 
         stmt = stmt.limit(limit)
 
-        result = await info.context.db.execute(stmt)
+        result = await context.db.execute(stmt)
         rad_sessions = result.scalars().all()
 
         # Convert to GraphQL Session type
@@ -172,7 +174,7 @@ class RadiusQueries:
             "Fetched active sessions",
             count=len(sessions),
             username=username,
-            tenant_id=info.context.current_user.tenant_id,
+            tenant_id=tenant_id,
         )
 
         return sessions
@@ -188,29 +190,35 @@ class RadiusQueries:
         Returns:
             Subscriber metrics with counts and usage stats
         """
-        if not info.context.current_user:
-            raise Exception("Authentication required")
+        context = info.context
+        context.require_authenticated_user()
+        tenant_id = context.get_active_tenant_id()
 
         # Import here to avoid circular imports
         from dotmac.platform.radius.models import RadAcct, RadCheck
 
         # Count total subscribers
         stmt_total = select(func.count(RadCheck.id)).where(
-            RadCheck.attribute == "Cleartext-Password"
+            RadCheck.attribute == "Cleartext-Password",
+            RadCheck.tenant_id == tenant_id,
         )
-        result_total = await info.context.db.execute(stmt_total)
+        result_total = await context.db.execute(stmt_total)
         total_count = result_total.scalar() or 0
 
         # Count active sessions
-        stmt_sessions = select(func.count(RadAcct.radacctid)).where(RadAcct.acctstoptime.is_(None))
-        result_sessions = await info.context.db.execute(stmt_sessions)
+        stmt_sessions = select(func.count(RadAcct.radacctid)).where(
+            RadAcct.acctstoptime.is_(None),
+            RadAcct.tenant_id == tenant_id,
+        )
+        result_sessions = await context.db.execute(stmt_sessions)
         active_sessions = result_sessions.scalar() or 0
 
         # Calculate total data usage (in MB)
-        stmt_usage = select(
-            func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets)
-        ).where(RadAcct.acctstoptime.is_(None))
-        result_usage = await info.context.db.execute(stmt_usage)
+        stmt_usage = select(func.sum(RadAcct.acctinputoctets + RadAcct.acctoutputoctets)).where(
+            RadAcct.acctstoptime.is_(None),
+            RadAcct.tenant_id == tenant_id,
+        )
+        result_usage = await context.db.execute(stmt_usage)
         total_bytes = result_usage.scalar() or 0
         total_usage_mb = float(total_bytes) / (1024 * 1024) if total_bytes else 0.0
 

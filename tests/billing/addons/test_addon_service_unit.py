@@ -8,22 +8,21 @@ Tests all business logic for add-on management including:
 - Cancellation and reactivation
 """
 
-import pytest
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
-from uuid import uuid4
 
-from dotmac.platform.billing.addons.service import AddonService
+import pytest
+
 from dotmac.platform.billing.addons.models import (
     Addon,
+    AddonBillingType,
     AddonResponse,
     AddonStatus,
     AddonType,
-    AddonBillingType,
-    TenantAddon,
     TenantAddonResponse,
 )
+from dotmac.platform.billing.addons.service import AddonService
 from dotmac.platform.billing.exceptions import AddonNotFoundError
 
 
@@ -70,8 +69,8 @@ def sample_addon_data():
         "metadata": {},
         "icon": "test-icon",
         "features": ["Feature 1", "Feature 2"],
-        "created_at": datetime.now(UTC),
-        "updated_at": datetime.now(UTC),
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
     }
 
 
@@ -81,6 +80,7 @@ def sample_addon(sample_addon_data):
     return Addon(**sample_addon_data)
 
 
+@pytest.mark.unit
 class TestGetAvailableAddons:
     """Test suite for get_available_addons method."""
 
@@ -122,9 +122,7 @@ class TestGetAvailableAddons:
         assert addons[0].name == "Test Add-on"
 
     @pytest.mark.asyncio
-    async def test_get_available_addons_with_plan_filter(
-        self, addon_service, mock_db_session
-    ):
+    async def test_get_available_addons_with_plan_filter(self, addon_service, mock_db_session):
         """Test filtering add-ons by plan compatibility."""
         mock_result = AsyncMock()
         mock_result.scalars.return_value.all.return_value = []
@@ -138,9 +136,7 @@ class TestGetAvailableAddons:
         mock_db_session.execute.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_get_available_addons_empty_result(
-        self, addon_service, mock_db_session
-    ):
+    async def test_get_available_addons_empty_result(self, addon_service, mock_db_session):
         """Test when no add-ons are available."""
         mock_result = AsyncMock()
         mock_result.scalars.return_value.all.return_value = []
@@ -153,6 +149,7 @@ class TestGetAvailableAddons:
         assert len(addons) == 0
 
 
+@pytest.mark.unit
 class TestGetAddon:
     """Test suite for get_addon method."""
 
@@ -182,8 +179,8 @@ class TestGetAddon:
         mock_row.metadata_json = {}
         mock_row.icon = "icon"
         mock_row.features = ["Feature 1"]
-        mock_row.created_at = datetime.now(UTC)
-        mock_row.updated_at = datetime.now(UTC)
+        mock_row.created_at = datetime.now(timezone.utc)
+        mock_row.updated_at = datetime.now(timezone.utc)
 
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none.return_value = mock_row
@@ -211,6 +208,7 @@ class TestGetAddon:
         assert addon is None
 
 
+@pytest.mark.unit
 class TestPurchaseAddon:
     """Test suite for purchase_addon method."""
 
@@ -218,7 +216,7 @@ class TestPurchaseAddon:
     async def test_purchase_addon_success(self, addon_service, mock_db_session, sample_addon):
         """Test successful add-on purchase."""
         # Mock get_addon to return sample addon
-        with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_addon", return_value=sample_addon):
             # Mock database insert and commit
             mock_row = MagicMock()
             mock_row.tenant_addon_id = "taddon_123"
@@ -227,7 +225,7 @@ class TestPurchaseAddon:
             mock_row.subscription_id = None
             mock_row.status = "active"
             mock_row.quantity = 1
-            mock_row.started_at = datetime.now(UTC)
+            mock_row.started_at = datetime.now(timezone.utc)
             mock_row.current_period_start = None
             mock_row.current_period_end = None
             mock_row.canceled_at = None
@@ -266,7 +264,7 @@ class TestPurchaseAddon:
                 addon_id="addon_test_123",
                 quantity=2,
                 subscription_id=None,
-                purchased_by_user_id="user_123"
+                purchased_by_user_id="user_123",
             )
 
             # Assert
@@ -278,14 +276,14 @@ class TestPurchaseAddon:
     @pytest.mark.asyncio
     async def test_purchase_addon_not_found(self, addon_service):
         """Test purchasing non-existent add-on."""
-        with patch.object(addon_service, 'get_addon', return_value=None):
+        with patch.object(addon_service, "get_addon", return_value=None):
             with pytest.raises(AddonNotFoundError):
                 await addon_service.purchase_addon(
                     tenant_id="test_tenant",
                     addon_id="nonexistent",
                     quantity=1,
                     subscription_id=None,
-                    purchased_by_user_id="user_123"
+                    purchased_by_user_id="user_123",
                 )
 
     @pytest.mark.asyncio
@@ -293,54 +291,49 @@ class TestPurchaseAddon:
         """Test purchasing inactive add-on raises error."""
         sample_addon.is_active = False
 
-        with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_addon", return_value=sample_addon):
             with pytest.raises(ValueError, match="not available for purchase"):
                 await addon_service.purchase_addon(
                     tenant_id="test_tenant",
                     addon_id="addon_test_123",
                     quantity=1,
                     subscription_id=None,
-                    purchased_by_user_id="user_123"
+                    purchased_by_user_id="user_123",
                 )
 
     @pytest.mark.asyncio
-    async def test_purchase_addon_quantity_below_minimum(
-        self, addon_service, sample_addon
-    ):
+    async def test_purchase_addon_quantity_below_minimum(self, addon_service, sample_addon):
         """Test purchasing with quantity below minimum."""
-        with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_addon", return_value=sample_addon):
             with pytest.raises(ValueError, match="must be at least"):
                 await addon_service.purchase_addon(
                     tenant_id="test_tenant",
                     addon_id="addon_test_123",
                     quantity=0,
                     subscription_id=None,
-                    purchased_by_user_id="user_123"
+                    purchased_by_user_id="user_123",
                 )
 
     @pytest.mark.asyncio
-    async def test_purchase_addon_quantity_above_maximum(
-        self, addon_service, sample_addon
-    ):
+    async def test_purchase_addon_quantity_above_maximum(self, addon_service, sample_addon):
         """Test purchasing with quantity above maximum."""
-        with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_addon", return_value=sample_addon):
             with pytest.raises(ValueError, match="cannot exceed"):
                 await addon_service.purchase_addon(
                     tenant_id="test_tenant",
                     addon_id="addon_test_123",
                     quantity=20,
                     subscription_id=None,
-                    purchased_by_user_id="user_123"
+                    purchased_by_user_id="user_123",
                 )
 
 
+@pytest.mark.unit
 class TestUpdateAddonQuantity:
     """Test suite for update_addon_quantity method."""
 
     @pytest.mark.asyncio
-    async def test_update_quantity_success(
-        self, addon_service, mock_db_session, sample_addon
-    ):
+    async def test_update_quantity_success(self, addon_service, mock_db_session, sample_addon):
         """Test successful quantity update."""
         # Mock get_tenant_addon
         tenant_addon = TenantAddonResponse(
@@ -350,9 +343,9 @@ class TestUpdateAddonQuantity:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=2,
-            started_at=datetime.now(UTC),
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime.now(UTC) + timedelta(days=30),
+            started_at=datetime.now(timezone.utc),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
             canceled_at=None,
             ended_at=None,
             current_usage=0,
@@ -374,12 +367,12 @@ class TestUpdateAddonQuantity:
                 is_featured=True,
                 compatible_with_all_plans=True,
                 icon="icon",
-                features=[]
-            )
+                features=[],
+            ),
         )
 
-        with patch.object(addon_service, 'get_tenant_addon', return_value=tenant_addon):
-            with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_tenant_addon", return_value=tenant_addon):
+            with patch.object(addon_service, "get_addon", return_value=sample_addon):
                 # Mock database query for fetching metadata
                 mock_tenant_addon_row = MagicMock()
                 mock_tenant_addon_row.metadata_json = {}
@@ -389,11 +382,11 @@ class TestUpdateAddonQuantity:
                 mock_db_session.execute.return_value = mock_result
 
                 # Execute
-                result = await addon_service.update_addon_quantity(
+                await addon_service.update_addon_quantity(
                     tenant_addon_id="taddon_123",
                     tenant_id="test_tenant",
                     new_quantity=5,
-                    updated_by_user_id="user_123"
+                    updated_by_user_id="user_123",
                 )
 
                 # Assert
@@ -401,13 +394,12 @@ class TestUpdateAddonQuantity:
                 mock_db_session.commit.assert_called()
 
 
+@pytest.mark.unit
 class TestCancelAddon:
     """Test suite for cancel_addon method."""
 
     @pytest.mark.asyncio
-    async def test_cancel_addon_immediate(
-        self, addon_service, mock_db_session, sample_addon
-    ):
+    async def test_cancel_addon_immediate(self, addon_service, mock_db_session, sample_addon):
         """Test immediate add-on cancellation."""
         # Mock get_tenant_addon
         tenant_addon = TenantAddonResponse(
@@ -417,9 +409,9 @@ class TestCancelAddon:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=1,
-            started_at=datetime.now(UTC),
-            current_period_start=datetime.now(UTC),
-            current_period_end=datetime.now(UTC) + timedelta(days=30),
+            started_at=datetime.now(timezone.utc),
+            current_period_start=datetime.now(timezone.utc),
+            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
             canceled_at=None,
             ended_at=None,
             current_usage=0,
@@ -441,12 +433,12 @@ class TestCancelAddon:
                 is_featured=True,
                 compatible_with_all_plans=True,
                 icon="icon",
-                features=[]
-            )
+                features=[],
+            ),
         )
 
-        with patch.object(addon_service, 'get_tenant_addon', return_value=tenant_addon):
-            with patch.object(addon_service, 'get_addon', return_value=sample_addon):
+        with patch.object(addon_service, "get_tenant_addon", return_value=tenant_addon):
+            with patch.object(addon_service, "get_addon", return_value=sample_addon):
                 # Mock database query for fetching metadata
                 mock_tenant_addon_row = MagicMock()
                 mock_tenant_addon_row.metadata_json = {}
@@ -456,12 +448,12 @@ class TestCancelAddon:
                 mock_db_session.execute.return_value = mock_result
 
                 # Execute
-                result = await addon_service.cancel_addon(
+                await addon_service.cancel_addon(
                     tenant_addon_id="taddon_123",
                     tenant_id="test_tenant",
                     cancel_immediately=True,
                     reason="Testing",
-                    canceled_by_user_id="user_123"
+                    canceled_by_user_id="user_123",
                 )
 
                 # Assert
@@ -478,10 +470,10 @@ class TestCancelAddon:
             subscription_id=None,
             status=AddonStatus.CANCELED,
             quantity=1,
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
             current_period_start=None,
             current_period_end=None,
-            canceled_at=datetime.now(UTC),
+            canceled_at=datetime.now(timezone.utc),
             ended_at=None,
             current_usage=0,
             addon=AddonResponse(
@@ -502,28 +494,27 @@ class TestCancelAddon:
                 is_featured=True,
                 compatible_with_all_plans=True,
                 icon="icon",
-                features=[]
-            )
+                features=[],
+            ),
         )
 
-        with patch.object(addon_service, 'get_tenant_addon', return_value=tenant_addon):
+        with patch.object(addon_service, "get_tenant_addon", return_value=tenant_addon):
             with pytest.raises(ValueError, match="already canceled or ended"):
                 await addon_service.cancel_addon(
                     tenant_addon_id="taddon_123",
                     tenant_id="test_tenant",
                     cancel_immediately=False,
                     reason="Testing",
-                    canceled_by_user_id="user_123"
+                    canceled_by_user_id="user_123",
                 )
 
 
+@pytest.mark.unit
 class TestReactivateAddon:
     """Test suite for reactivate_addon method."""
 
     @pytest.mark.asyncio
-    async def test_reactivate_addon_success(
-        self, addon_service, mock_db_session
-    ):
+    async def test_reactivate_addon_success(self, addon_service, mock_db_session):
         """Test successful add-on reactivation."""
         # Mock get_tenant_addon
         tenant_addon = TenantAddonResponse(
@@ -533,11 +524,11 @@ class TestReactivateAddon:
             subscription_id=None,
             status=AddonStatus.CANCELED,
             quantity=1,
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
             current_period_start=None,
-            current_period_end=datetime.now(UTC) + timedelta(days=30),
-            canceled_at=datetime.now(UTC),
-            ended_at=datetime.now(UTC) + timedelta(days=30),
+            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
+            canceled_at=datetime.now(timezone.utc),
+            ended_at=datetime.now(timezone.utc) + timedelta(days=30),
             current_usage=0,
             addon=AddonResponse(
                 addon_id="addon_test_123",
@@ -557,11 +548,11 @@ class TestReactivateAddon:
                 is_featured=True,
                 compatible_with_all_plans=True,
                 icon="icon",
-                features=[]
-            )
+                features=[],
+            ),
         )
 
-        with patch.object(addon_service, 'get_tenant_addon', return_value=tenant_addon):
+        with patch.object(addon_service, "get_tenant_addon", return_value=tenant_addon):
             # Mock database query for fetching metadata
             mock_tenant_addon_row = MagicMock()
             mock_tenant_addon_row.metadata_json = {}
@@ -571,10 +562,10 @@ class TestReactivateAddon:
             mock_db_session.execute.return_value = mock_result
 
             # Execute
-            result = await addon_service.reactivate_addon(
+            await addon_service.reactivate_addon(
                 tenant_addon_id="taddon_123",
                 tenant_id="test_tenant",
-                reactivated_by_user_id="user_123"
+                reactivated_by_user_id="user_123",
             )
 
             # Assert
@@ -591,7 +582,7 @@ class TestReactivateAddon:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=1,
-            started_at=datetime.now(UTC),
+            started_at=datetime.now(timezone.utc),
             current_period_start=None,
             current_period_end=None,
             canceled_at=None,
@@ -615,14 +606,14 @@ class TestReactivateAddon:
                 is_featured=True,
                 compatible_with_all_plans=True,
                 icon="icon",
-                features=[]
-            )
+                features=[],
+            ),
         )
 
-        with patch.object(addon_service, 'get_tenant_addon', return_value=tenant_addon):
+        with patch.object(addon_service, "get_tenant_addon", return_value=tenant_addon):
             with pytest.raises(ValueError, match="Only canceled add-ons can be reactivated"):
                 await addon_service.reactivate_addon(
                     tenant_addon_id="taddon_123",
                     tenant_id="test_tenant",
-                    reactivated_by_user_id="user_123"
+                    reactivated_by_user_id="user_123",
                 )

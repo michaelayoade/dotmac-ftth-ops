@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, Search, Filter, Download, AlertCircle, RefreshCw } from "lucide-react";
 import { CustomersList } from "@/components/customers/CustomersList";
 import { CustomersMetrics } from "@/components/customers/CustomersMetrics";
@@ -10,7 +10,7 @@ import { CustomerEditModal } from "@/components/customers/CustomerEditModal";
 import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from "@/hooks/useCustomersGraphQL";
 import { CustomerStatusEnum } from "@/lib/graphql/generated";
 import { apiClient } from "@/lib/api/client";
-import { Customer } from "@/types";
+import { Customer, type CustomerMetrics } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -59,27 +59,66 @@ export default function TenantCustomersView() {
   });
 
   // Transform GraphQL customers to match expected Customer type
-  const customers: Customer[] = graphqlCustomers.map(
-    (c) =>
-      ({
-        id: c.id,
-        name: c.displayName || `${c.firstName} ${c.lastName}`,
-        display_name: c.displayName || `${c.firstName} ${c.lastName}`,
-        email: c.email,
-        status: c.status.toLowerCase() as Customer["status"],
-        created_at: c.createdAt,
-        updated_at: c.updatedAt || c.createdAt,
-      }) as unknown as Customer,
+  const customers: Customer[] = useMemo(
+    () =>
+      graphqlCustomers.map((c) => {
+        const fallbackName = [c.firstName, c.lastName].filter(Boolean).join(" ").trim();
+        return {
+          id: c.id,
+          customer_number: c.customerNumber ?? c.id,
+          first_name: c.firstName ?? "",
+          last_name: c.lastName ?? "",
+          middle_name: c.middleName ?? undefined,
+          display_name: c.displayName ?? (fallbackName || c.email || c.id),
+          company_name: c.companyName ?? undefined,
+          customer_type: (c.customerType?.toLowerCase() as Customer["customer_type"]) ?? "individual",
+          tier: (c.tier?.toLowerCase() as Customer["tier"]) ?? "free",
+          status: (c.status?.toLowerCase() as Customer["status"]) ?? "prospect",
+          email: c.email ?? "",
+          phone: c.phone ?? undefined,
+          mobile: c.mobile ?? undefined,
+          website: c.website ?? undefined,
+          address_line_1: c.addressLine1 ?? undefined,
+          address_line_2: c.addressLine2 ?? undefined,
+          city: c.city ?? undefined,
+          state_province: c.stateProvince ?? undefined,
+          postal_code: c.postalCode ?? undefined,
+          country: c.country ?? undefined,
+          tax_id: c.taxId ?? undefined,
+          lifetime_value: c.lifetimeValue ?? 0,
+          total_purchases: c.totalPurchases ?? 0,
+          average_order_value: c.averageOrderValue ?? 0,
+          last_purchase_date: c.lastPurchaseDate ?? undefined,
+          first_purchase_date: c.firstPurchaseDate ?? undefined,
+          last_interaction: c.lastContactDate ?? undefined,
+          created_at: c.createdAt,
+          updated_at: c.updatedAt ?? c.createdAt,
+          metadata: undefined,
+          custom_fields: undefined,
+          tags: undefined,
+        } satisfies Customer;
+      }),
+    [graphqlCustomers],
   );
 
-  // Transform GraphQL metrics to match expected format
-  const metrics = {
-    total_customers: graphqlMetrics?.totalCustomers || 0,
-    active_customers: graphqlMetrics?.activeCustomers || 0,
-    new_customers_this_month: graphqlMetrics?.newCustomers || 0,
-    average_lifetime_value: 0,
-    total_revenue: 0,
-  };
+  const metrics: CustomerMetrics | null = useMemo(() => {
+    if (!graphqlMetrics) {
+      return null;
+    }
+
+    const totalCustomers = graphqlMetrics.totalCustomers ?? 0;
+    const churnedCustomers = graphqlMetrics.churnedCustomers ?? 0;
+
+    return {
+      total_customers: totalCustomers,
+      active_customers: graphqlMetrics.activeCustomers ?? 0,
+      new_customers_this_month: graphqlMetrics.newCustomers ?? 0,
+      churned_this_month: churnedCustomers,
+      average_lifetime_value: graphqlMetrics.averageCustomerValue ?? 0,
+      total_revenue: graphqlMetrics.totalCustomerValue ?? 0,
+      churn_rate: totalCustomers > 0 ? (churnedCustomers / totalCustomers) * 100 : 0,
+    };
+  }, [graphqlMetrics]);
 
   const loading = customersLoading || metricsLoading;
 

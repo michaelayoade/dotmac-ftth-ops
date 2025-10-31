@@ -544,7 +544,31 @@ function JobMonitor({ jobId }: { jobId: string }) {
 
 ### 4. Rate Limiting
 
-⚠️ **TODO**: Implement rate limiting for control commands to prevent abuse
+✅ **IMPLEMENTED**: Rate limiting for control commands to prevent abuse
+
+**Implementation Details:**
+- **Limit**: 30 control commands per user per minute
+- **Window**: 60-second sliding window
+- **Scope**: Per user (user_id)
+- **Tracked Commands**:
+  - Job controls: `cancel_job`, `pause_job`
+  - Campaign controls: `pause_campaign`, `resume_campaign`, `cancel_campaign`
+- **Algorithm**: Sliding window with in-memory history tracking
+- **Error Response**: Returns rate limit error with `retry_after` value
+
+**Location**: `src/dotmac/platform/realtime/websocket_authenticated.py:40-79`
+
+**Rate Limit Error Format**:
+```json
+{
+  "type": "error",
+  "error": "rate_limit_exceeded",
+  "message": "Rate limit exceeded: 30/30 commands per minute",
+  "retry_after": 60
+}
+```
+
+**Logging**: All rate limit violations are logged with structured logging including user_id, command_type, and current count
 
 ---
 

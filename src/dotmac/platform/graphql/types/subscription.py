@@ -5,7 +5,10 @@ Provides types for subscriptions with customer, plan, and invoice batching
 via DataLoaders to prevent N+1 queries.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -13,9 +16,7 @@ from typing import TYPE_CHECKING, Any
 import strawberry
 
 if TYPE_CHECKING:
-    from typing import TypeAlias
-
-    JSONScalar: TypeAlias = Any
+    type JSONScalar = Any
 else:
     from strawberry.scalars import JSON as JSONScalar
 
@@ -78,7 +79,7 @@ class SubscriptionPlan:
         has_setup_fee = plan.setup_fee is not None and plan.setup_fee > 0
 
         return cls(
-            id=strawberry.ID(str(getattr(plan, 'id', plan.plan_id))),
+            id=strawberry.ID(str(getattr(plan, "id", plan.plan_id))),
             plan_id=plan.plan_id,
             product_id=plan.product_id,
             name=plan.name,
@@ -147,7 +148,7 @@ class SubscriptionInvoice:
             currency=invoice.currency,
             status=invoice.status,
             due_date=invoice.due_date,
-            paid_at=invoice.paid_at if hasattr(invoice, 'paid_at') else None,
+            paid_at=invoice.paid_at if hasattr(invoice, "paid_at") else None,
             created_at=invoice.created_at,
         )
 
@@ -208,30 +209,36 @@ class Subscription:
     def from_model(cls, subscription: Any) -> "Subscription":
         """Convert Subscription model to GraphQL type."""
         # Compute properties
-        is_active_status = subscription.status in ['active', 'trialing']
+        is_active_status = subscription.status in ["active", "trialing"]
 
         is_in_trial = False
         if subscription.trial_end:
-            from datetime import UTC, datetime
+            from datetime import datetime, timezone
+
             is_in_trial = datetime.now(UTC) < subscription.trial_end
 
         days_until_renewal = 0
         if is_active_status:
-            from datetime import UTC, datetime
+            from datetime import datetime, timezone
+
             delta = subscription.current_period_end - datetime.now(UTC)
             days_until_renewal = max(0, delta.days)
 
-        is_past_due_status = subscription.status == 'past_due'
+        is_past_due_status = subscription.status == "past_due"
 
         return cls(
-            id=strawberry.ID(str(getattr(subscription, 'id', subscription.subscription_id))),
+            id=strawberry.ID(str(getattr(subscription, "id", subscription.subscription_id))),
             subscription_id=subscription.subscription_id,
             customer_id=subscription.customer_id,
             plan_id=subscription.plan_id,
             tenant_id=subscription.tenant_id,
             current_period_start=subscription.current_period_start,
             current_period_end=subscription.current_period_end,
-            status=SubscriptionStatusEnum(subscription.status.value if hasattr(subscription.status, 'value') else subscription.status),
+            status=SubscriptionStatusEnum(
+                subscription.status.value
+                if hasattr(subscription.status, "value")
+                else subscription.status
+            ),
             trial_end=subscription.trial_end,
             is_in_trial=is_in_trial,
             cancel_at_period_end=subscription.cancel_at_period_end,
@@ -328,7 +335,7 @@ class Product:
     def from_model(cls, product: Any) -> "Product":
         """Convert Product model to GraphQL type."""
         return cls(
-            id=strawberry.ID(str(getattr(product, 'id', product.product_id))),
+            id=strawberry.ID(str(getattr(product, "id", product.product_id))),
             product_id=product.product_id,
             sku=product.sku,
             name=product.name,

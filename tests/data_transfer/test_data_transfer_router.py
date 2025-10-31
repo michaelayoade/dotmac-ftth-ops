@@ -21,29 +21,34 @@ from fastapi.testclient import TestClient
 from dotmac.platform.data_transfer.router import data_transfer_router
 
 
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def client():
     """Create test client with mocked authentication."""
+    from uuid import uuid4
+
     from fastapi import FastAPI
 
     from dotmac.platform.auth.core import UserInfo
-    from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.auth.rbac_dependencies import require_admin
 
     app = FastAPI()
 
-    # Override authentication dependency
-    def override_get_current_user():
+    # Override RBAC dependency to return authenticated user
+    def override_require_admin():
         return UserInfo(
-            user_id="test-user-123",
+            user_id=str(uuid4()),
             email="test@example.com",
             username="testuser",
-            tenant_id="test-tenant",
-            roles=["user"],
+            tenant_id=str(uuid4()),
+            roles=["admin"],
             permissions=["read", "write"],
         )
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.include_router(data_transfer_router, prefix="/data-transfer")
+    app.dependency_overrides[require_admin] = override_require_admin
+    app.include_router(data_transfer_router)  # Router already has prefix="/data-transfer"
     return TestClient(app)
 
 
@@ -52,16 +57,16 @@ def anonymous_client():
     """Create test client for anonymous access."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.auth.rbac_dependencies import require_admin
 
     app = FastAPI()
 
-    # Override authentication dependency to return None
-    def override_get_current_user():
+    # Override RBAC dependency to allow anonymous access
+    def override_require_admin():
         return None
 
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.include_router(data_transfer_router, prefix="/data-transfer")
+    app.dependency_overrides[require_admin] = override_require_admin
+    app.include_router(data_transfer_router)  # Router already has prefix="/data-transfer"
     return TestClient(app)
 
 
@@ -376,7 +381,7 @@ class TestRouterIntegration:
 
     def test_router_is_configured(self):
         """Test that the router is properly configured."""
-        assert data_transfer_router.prefix == ""
+        assert data_transfer_router.prefix == "/data-transfer"
         assert len(data_transfer_router.routes) > 0
 
     def test_router_response_models(self):
@@ -385,13 +390,13 @@ class TestRouterIntegration:
             route.path: route for route in data_transfer_router.routes if hasattr(route, "path")
         }
 
-        # Check import endpoint
-        import_route = routes.get("/import")
+        # Check import endpoint (path includes prefix)
+        import_route = routes.get("/data-transfer/import")
         assert import_route is not None
         assert import_route.methods == {"POST"}
 
-        # Check export endpoint
-        export_route = routes.get("/export")
+        # Check export endpoint (path includes prefix)
+        export_route = routes.get("/data-transfer/export")
         assert export_route is not None
         assert export_route.methods == {"POST"}
 
@@ -400,7 +405,7 @@ class TestRouterIntegration:
         from fastapi import FastAPI
 
         app = FastAPI()
-        app.include_router(data_transfer_router, prefix="/data-transfer")
+        app.include_router(data_transfer_router)  # Router already has prefix="/data-transfer"
 
         routes = {
             f"{route.path}:{list(route.methods)[0]}"

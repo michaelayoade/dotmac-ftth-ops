@@ -6,12 +6,8 @@ import {
   Activity,
   Plus,
   Search,
-  Filter,
   RefreshCw,
-  Wifi,
-  WifiOff,
   CheckCircle,
-  XCircle,
   Clock,
   PlayCircle,
   PauseCircle,
@@ -20,7 +16,6 @@ import {
   Trash2,
   Heart,
   MoreVertical,
-  TrendingUp,
   Users,
   Server,
   AlertTriangle,
@@ -45,6 +40,26 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
   useServiceStatistics,
   useServiceInstances,
   useSuspendService,
@@ -57,6 +72,8 @@ import {
 } from "@/hooks/useServiceLifecycle";
 import type { ServiceInstanceSummary, ServiceStatusValue } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
+import { logger } from "@/lib/logger";
+import { Loader2 } from "lucide-react";
 
 function ServiceStatisticsCards() {
   const { data: statistics, isLoading } = useServiceStatistics();
@@ -256,7 +273,18 @@ export default function ServicesPage() {
   const [serviceTypeFilter, setServiceTypeFilter] = useState<string>("all");
   const [showModifyModal, setShowModifyModal] = useState(false);
   const [showProvisionModal, setShowProvisionModal] = useState(false);
+  const [showTerminateDialog, setShowTerminateDialog] = useState(false);
   const [selectedService, setSelectedService] = useState<ServiceInstanceSummary | null>(null);
+  const [provisionForm, setProvisionForm] = useState({
+    customerId: "",
+    serviceType: "internet",
+    configuration: "",
+  });
+  const [modifyForm, setModifyForm] = useState({
+    configuration: "",
+    notes: "",
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   // API Hooks
@@ -277,6 +305,7 @@ export default function ServicesPage() {
   const terminateMutation = useTerminateService();
   const modifyMutation = useModifyService();
   const healthCheckMutation = useHealthCheckService();
+  const provisionMutation = useProvisionService();
 
   // Filter services by search query
   const filteredServices = useMemo(() => {
@@ -306,10 +335,12 @@ export default function ServicesPage() {
           await activateMutation.mutateAsync({
             serviceId: service.id,
           });
+          logger.info("Service activated", { serviceId: service.id });
           toast({
             title: "Service Activated",
             description: `Service ${service.id} has been activated successfully.`,
           });
+          await refetch();
           break;
 
         case "suspend":
@@ -317,44 +348,37 @@ export default function ServicesPage() {
             serviceId: service.id,
             payload: { reason: "Manual suspension via UI" },
           });
+          logger.info("Service suspended", { serviceId: service.id });
           toast({
             title: "Service Suspended",
             description: `Service ${service.id} has been suspended.`,
           });
+          await refetch();
           break;
 
         case "resume":
           await resumeMutation.mutateAsync({
             serviceId: service.id,
           });
+          logger.info("Service resumed", { serviceId: service.id });
           toast({
             title: "Service Resumed",
             description: `Service ${service.id} has been resumed.`,
           });
+          await refetch();
           break;
 
         case "terminate":
-          if (
-            confirm(
-              "Are you sure you want to terminate this service? This action cannot be undone.",
-            )
-          ) {
-            await terminateMutation.mutateAsync({
-              serviceId: service.id,
-              payload: { reason: "Manual termination via UI" },
-            });
-            toast({
-              title: "Service Terminated",
-              description: `Service ${service.id} has been terminated.`,
-              variant: "destructive",
-            });
-          }
+          // Open terminate confirmation dialog
+          setSelectedService(service);
+          setShowTerminateDialog(true);
           break;
 
         case "health-check":
           await healthCheckMutation.mutateAsync({
             serviceId: service.id,
           });
+          logger.info("Health check completed", { serviceId: service.id });
           toast({
             title: "Health Check Completed",
             description: `Health check for service ${service.id} completed successfully.`,
@@ -369,6 +393,10 @@ export default function ServicesPage() {
         case "modify":
           // Open modify modal
           setSelectedService(service);
+          setModifyForm({
+            configuration: "",
+            notes: "",
+          });
           setShowModifyModal(true);
           break;
 
@@ -376,6 +404,7 @@ export default function ServicesPage() {
           break;
       }
     } catch (error) {
+      logger.error("Service action failed", error, { action, serviceId: service.id });
       toast({
         title: "Operation Failed",
         description: error instanceof Error ? error.message : "An error occurred.",
@@ -385,8 +414,120 @@ export default function ServicesPage() {
   };
 
   const handleProvisionNew = () => {
-    // Open provision service modal
+    // Reset form and open provision service modal
+    setProvisionForm({
+      customerId: "",
+      serviceType: "internet",
+      configuration: "",
+    });
     setShowProvisionModal(true);
+  };
+
+  const handleProvisionService = async () => {
+    if (!provisionForm.customerId.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Customer ID is required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await provisionMutation.mutateAsync({
+        payload: {
+          customer_id: provisionForm.customerId,
+          service_type: provisionForm.serviceType,
+          configuration: provisionForm.configuration
+            ? JSON.parse(provisionForm.configuration)
+            : {},
+        },
+      });
+      logger.info("Service provisioned", {
+        customerId: provisionForm.customerId,
+        serviceType: provisionForm.serviceType,
+      });
+      toast({
+        title: "Service Provisioned",
+        description: "Service has been provisioned successfully and is now activating.",
+      });
+      setShowProvisionModal(false);
+      await refetch();
+    } catch (error) {
+      logger.error("Failed to provision service", error);
+      toast({
+        title: "Provisioning Failed",
+        description: error instanceof Error ? error.message : "Failed to provision service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleModifyService = async () => {
+    if (!selectedService) return;
+
+    setIsSubmitting(true);
+    try {
+      await modifyMutation.mutateAsync({
+        serviceId: selectedService.id,
+        payload: {
+          configuration: modifyForm.configuration
+            ? JSON.parse(modifyForm.configuration)
+            : undefined,
+          notes: modifyForm.notes || undefined,
+        },
+      });
+      logger.info("Service modified", { serviceId: selectedService.id });
+      toast({
+        title: "Service Modified",
+        description: `Service ${selectedService.id} has been modified successfully.`,
+      });
+      setShowModifyModal(false);
+      setSelectedService(null);
+      await refetch();
+    } catch (error) {
+      logger.error("Failed to modify service", error);
+      toast({
+        title: "Modification Failed",
+        description: error instanceof Error ? error.message : "Failed to modify service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmTerminate = async () => {
+    if (!selectedService) return;
+
+    setIsSubmitting(true);
+    try {
+      await terminateMutation.mutateAsync({
+        serviceId: selectedService.id,
+        payload: { reason: "Manual termination via UI" },
+      });
+      logger.info("Service terminated", { serviceId: selectedService.id });
+      toast({
+        title: "Service Terminated",
+        description: `Service ${selectedService.id} has been terminated.`,
+        variant: "destructive",
+      });
+      setShowTerminateDialog(false);
+      setSelectedService(null);
+      await refetch();
+    } catch (error) {
+      logger.error("Failed to terminate service", error);
+      toast({
+        title: "Termination Failed",
+        description: error instanceof Error ? error.message : "Failed to terminate service.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -550,6 +691,173 @@ export default function ServicesPage() {
           </ScrollArea>
         </CardContent>
       </Card>
+
+      {/* Provision Service Modal */}
+      <Dialog open={showProvisionModal} onOpenChange={setShowProvisionModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Provision New Service</DialogTitle>
+            <DialogDescription>
+              Create a new service instance for a customer
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="customerId">Customer ID *</Label>
+              <Input
+                id="customerId"
+                value={provisionForm.customerId}
+                onChange={(e) =>
+                  setProvisionForm({ ...provisionForm, customerId: e.target.value })
+                }
+                placeholder="Enter customer ID"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="serviceType">Service Type *</Label>
+              <Select
+                value={provisionForm.serviceType}
+                onValueChange={(value) =>
+                  setProvisionForm({ ...provisionForm, serviceType: value })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="internet">Internet</SelectItem>
+                  <SelectItem value="voip">VoIP</SelectItem>
+                  <SelectItem value="iptv">IPTV</SelectItem>
+                  <SelectItem value="bundle">Bundle</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="configuration">
+                Configuration (JSON, optional)
+              </Label>
+              <Textarea
+                id="configuration"
+                value={provisionForm.configuration}
+                onChange={(e) =>
+                  setProvisionForm({ ...provisionForm, configuration: e.target.value })
+                }
+                placeholder='{"bandwidth": "100mbps", "plan": "premium"}'
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowProvisionModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleProvisionService} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Provisioning...
+                </>
+              ) : (
+                "Provision Service"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modify Service Modal */}
+      <Dialog open={showModifyModal} onOpenChange={setShowModifyModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modify Service</DialogTitle>
+            <DialogDescription>
+              Update service configuration for {selectedService?.id}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="modifyConfiguration">
+                Configuration (JSON, optional)
+              </Label>
+              <Textarea
+                id="modifyConfiguration"
+                value={modifyForm.configuration}
+                onChange={(e) =>
+                  setModifyForm({ ...modifyForm, configuration: e.target.value })
+                }
+                placeholder='{"bandwidth": "200mbps"}'
+                rows={4}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="modifyNotes">Notes (optional)</Label>
+              <Textarea
+                id="modifyNotes"
+                value={modifyForm.notes}
+                onChange={(e) =>
+                  setModifyForm({ ...modifyForm, notes: e.target.value })
+                }
+                placeholder="Add notes about this modification"
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowModifyModal(false)}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleModifyService} disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Modifying...
+                </>
+              ) : (
+                "Modify Service"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Terminate Confirmation Dialog */}
+      <AlertDialog open={showTerminateDialog} onOpenChange={setShowTerminateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Terminate Service?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to terminate service{" "}
+              <span className="font-mono font-semibold">{selectedService?.id}</span>?
+              This action cannot be undone and will permanently deactivate the service.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmTerminate}
+              disabled={isSubmitting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Terminating...
+                </>
+              ) : (
+                "Terminate Service"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

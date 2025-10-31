@@ -7,10 +7,11 @@ Pydantic schemas for fiber API requests and responses.
 from __future__ import annotations
 
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from .models import (
     CableInstallationType,
@@ -27,6 +28,24 @@ from .models import (
 # ============================================================================
 
 
+def _coerce_enum(value: Any, enum_cls: type[Enum], field_name: str) -> Enum | None:
+    """Coerce incoming values (str/Enum) into the expected Enum type."""
+    if value is None or isinstance(value, enum_cls):
+        return value
+
+    if isinstance(value, str):
+        candidate = value.strip()
+        try:
+            return enum_cls[candidate.upper()]
+        except KeyError:
+            try:
+                return enum_cls(candidate.lower())
+            except ValueError as exc:
+                raise ValueError(f"Invalid value for {field_name}: {value}") from exc
+
+    raise ValueError(f"Invalid value for {field_name}: {value}")
+
+
 class FiberCableCreate(BaseModel):
     """Create fiber cable request"""
 
@@ -40,7 +59,9 @@ class FiberCableCreate(BaseModel):
     start_site_id: str | None = Field(None, max_length=50)
     end_site_id: str | None = Field(None, max_length=50)
     length_km: float | None = Field(None, gt=0, description="Cable length in kilometers")
-    route_geojson: dict[str, Any] | None = Field(None, description="GeoJSON LineString of cable route")
+    route_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON LineString of cable route"
+    )
 
     # Hardware
     manufacturer: str | None = Field(None, max_length=100)
@@ -54,6 +75,17 @@ class FiberCableCreate(BaseModel):
 
     # Metadata
     notes: str | None = None
+
+    @field_validator("fiber_type", mode="before")
+    @classmethod
+    def _normalize_fiber_type(cls, value: Any) -> FiberType:
+        return _coerce_enum(value, FiberType, "fiber_type")  # type: ignore[return-value]
+
+    @field_validator("installation_type", mode="before")
+    @classmethod
+    def _normalize_installation_type(cls, value: Any) -> CableInstallationType | None:
+        coerced = _coerce_enum(value, CableInstallationType, "installation_type")
+        return coerced  # type: ignore[return-value]
 
 
 class FiberCableUpdate(BaseModel):
@@ -76,6 +108,18 @@ class FiberCableUpdate(BaseModel):
     max_capacity: int | None = Field(None, gt=0)
 
     notes: str | None = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value: Any) -> FiberCableStatus | None:
+        coerced = _coerce_enum(value, FiberCableStatus, "status")
+        return coerced  # type: ignore[return-value]
+
+    @field_validator("installation_type", mode="before")
+    @classmethod
+    def _normalize_installation_type(cls, value: Any) -> CableInstallationType | None:
+        coerced = _coerce_enum(value, CableInstallationType, "installation_type")
+        return coerced  # type: ignore[return-value]
 
 
 class FiberCableResponse(BaseModel):
@@ -113,6 +157,18 @@ class FiberCableResponse(BaseModel):
     updated_by: str | None
     tenant_id: str
 
+    @field_serializer("fiber_type")
+    def _serialize_fiber_type(self, value: FiberType) -> str:
+        return value.name
+
+    @field_serializer("status")
+    def _serialize_status(self, value: FiberCableStatus) -> str:
+        return value.name
+
+    @field_serializer("installation_type")
+    def _serialize_installation_type(self, value: CableInstallationType | None) -> str | None:
+        return value.name if value is not None else None
+
 
 # ============================================================================
 # Distribution Point Schemas
@@ -143,6 +199,11 @@ class DistributionPointCreate(BaseModel):
     # Metadata
     notes: str | None = None
 
+    @field_validator("point_type", mode="before")
+    @classmethod
+    def _normalize_point_type(cls, value: Any) -> DistributionPointType:
+        return _coerce_enum(value, DistributionPointType, "point_type")  # type: ignore[return-value]
+
 
 class DistributionPointUpdate(BaseModel):
     """Update distribution point request"""
@@ -162,6 +223,12 @@ class DistributionPointUpdate(BaseModel):
     installation_date: datetime | None = None
 
     notes: str | None = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value: Any) -> FiberCableStatus | None:
+        coerced = _coerce_enum(value, FiberCableStatus, "status")
+        return coerced  # type: ignore[return-value]
 
 
 class DistributionPointResponse(BaseModel):
@@ -194,6 +261,14 @@ class DistributionPointResponse(BaseModel):
     updated_by: str | None
     tenant_id: str
 
+    @field_serializer("point_type")
+    def _serialize_point_type(self, value: DistributionPointType) -> str:
+        return value.name
+
+    @field_serializer("status")
+    def _serialize_dp_status(self, value: FiberCableStatus) -> str:
+        return value.name
+
 
 class PortUtilizationResponse(BaseModel):
     """Port utilization statistics response"""
@@ -221,7 +296,9 @@ class ServiceAreaCreate(BaseModel):
 
     # Coverage
     is_serviceable: bool = False
-    coverage_geojson: dict[str, Any] | None = Field(None, description="GeoJSON Polygon of coverage area")
+    coverage_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON Polygon of coverage area"
+    )
     postal_codes: list[str] | None = None
 
     # Construction
@@ -236,6 +313,11 @@ class ServiceAreaCreate(BaseModel):
 
     # Metadata
     notes: str | None = None
+
+    @field_validator("area_type", mode="before")
+    @classmethod
+    def _normalize_area_type(cls, value: Any) -> ServiceAreaType:
+        return _coerce_enum(value, ServiceAreaType, "area_type")  # type: ignore[return-value]
 
 
 class ServiceAreaUpdate(BaseModel):
@@ -257,6 +339,12 @@ class ServiceAreaUpdate(BaseModel):
     businesses_connected: int | None = Field(None, ge=0)
 
     notes: str | None = None
+
+    @field_validator("area_type", mode="before")
+    @classmethod
+    def _normalize_area_type(cls, value: Any) -> ServiceAreaType | None:
+        coerced = _coerce_enum(value, ServiceAreaType, "area_type")
+        return coerced  # type: ignore[return-value]
 
 
 class ServiceAreaResponse(BaseModel):
@@ -289,6 +377,10 @@ class ServiceAreaResponse(BaseModel):
     updated_by: str | None
     tenant_id: str
 
+    @field_serializer("area_type")
+    def _serialize_area_type(self, value: ServiceAreaType) -> str:
+        return value.name
+
 
 class CoverageStatisticsResponse(BaseModel):
     """Coverage statistics response"""
@@ -316,7 +408,9 @@ class SplicePointCreate(BaseModel):
 
     # Type and location
     splice_type: str | None = Field(None, max_length=50)
-    location_geojson: dict[str, Any] | None = Field(None, description="GeoJSON Point of splice location")
+    location_geojson: dict[str, Any] | None = Field(
+        None, description="GeoJSON Point of splice location"
+    )
     enclosure_type: str | None = Field(None, max_length=50)
 
     # Quality metrics
@@ -343,6 +437,12 @@ class SplicePointUpdate(BaseModel):
     last_test_date: datetime | None = None
 
     notes: str | None = None
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def _normalize_status(cls, value: Any) -> SpliceStatus | None:
+        coerced = _coerce_enum(value, SpliceStatus, "status")
+        return coerced  # type: ignore[return-value]
 
 
 class SplicePointResponse(BaseModel):
@@ -372,6 +472,10 @@ class SplicePointResponse(BaseModel):
     updated_by: str | None
     tenant_id: str
 
+    @field_serializer("status")
+    def _serialize_splice_status(self, value: SpliceStatus) -> str:
+        return value.name
+
 
 # ============================================================================
 # Health Metric Schemas
@@ -394,6 +498,11 @@ class HealthMetricCreate(BaseModel):
     # Analysis
     detected_issues: list[dict[str, Any]] | None = None
     recommendations: list[str] | None = None
+
+    @field_validator("health_status", mode="before")
+    @classmethod
+    def _normalize_health_status(cls, value: Any) -> FiberHealthStatus:
+        return _coerce_enum(value, FiberHealthStatus, "health_status")  # type: ignore[return-value]
 
 
 class HealthMetricResponse(BaseModel):
@@ -418,6 +527,10 @@ class HealthMetricResponse(BaseModel):
     created_by: str | None
     tenant_id: str
 
+    @field_serializer("health_status")
+    def _serialize_health_status(self, value: FiberHealthStatus) -> str:
+        return value.name
+
 
 # ============================================================================
 # OTDR Test Result Schemas
@@ -439,7 +552,9 @@ class OTDRTestCreate(BaseModel):
     total_loss_db: float | None = Field(None, ge=0)
     length_km: float | None = Field(None, ge=0)
     events_detected: int = Field(0, ge=0)
-    events: list[dict[str, Any]] | None = Field(None, description="Detected splice/connector events")
+    events: list[dict[str, Any]] | None = Field(
+        None, description="Detected splice/connector events"
+    )
 
     # Test quality
     pass_fail: bool | None = None

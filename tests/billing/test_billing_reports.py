@@ -2,7 +2,7 @@
 Tests for billing reports functionality
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,6 +39,7 @@ def billing_report_service(mock_db):
     return service
 
 
+@pytest.mark.integration
 class TestBillingReportService:
     """Test billing report service functionality"""
 
@@ -253,23 +254,23 @@ class TestBillingReportService:
         """Test date range calculation for this month"""
 
         with patch("dotmac.platform.billing.reports.service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
+            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
 
             start, end = billing_report_service._calculate_date_range(ReportPeriod.THIS_MONTH)
 
-            assert start == datetime(2024, 3, 1, 0, 0, 0, tzinfo=UTC)
-            assert end == datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
+            assert start == datetime(2024, 3, 1, 0, 0, 0, tzinfo=timezone.utc)
+            assert end == datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
 
     def test_calculate_date_range_last_month(self, billing_report_service):
         """Test date range calculation for last month"""
 
         with patch("dotmac.platform.billing.reports.service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
+            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
 
             start, end = billing_report_service._calculate_date_range(ReportPeriod.LAST_MONTH)
 
-            assert start == datetime(2024, 2, 1, 0, 0, 0, tzinfo=UTC)
-            assert end == datetime(2024, 3, 1, 0, 0, 0, tzinfo=UTC)
+            assert start == datetime(2024, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
+            assert end == datetime(2024, 3, 1, 0, 0, 0, tzinfo=timezone.utc)
 
     def test_calculate_date_range_custom(self, billing_report_service):
         """Test date range calculation for custom period"""
@@ -347,6 +348,7 @@ class TestBillingReportService:
         assert pct == 0.0
 
 
+@pytest.mark.integration
 class TestRevenueReportGenerator:
     """Test revenue report generator"""
 
@@ -420,6 +422,7 @@ class TestRevenueReportGenerator:
         assert result[1]["total_amount"] == 30000
 
 
+@pytest.mark.integration
 class TestCustomerReportGenerator:
     """Test customer report generator"""
 
@@ -450,6 +453,7 @@ class TestCustomerReportGenerator:
         assert result["new_customers"] == 150  # Placeholder in current implementation
 
 
+@pytest.mark.integration
 class TestAgingReportGenerator:
     """Test aging report generator"""
 

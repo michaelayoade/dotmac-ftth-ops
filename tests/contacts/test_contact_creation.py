@@ -1,3 +1,4 @@
+
 """
 Contact service tests - Migrated to use shared helpers.
 
@@ -10,6 +11,8 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from dotmac.platform.contacts.models import (
+
+
     Contact,
     ContactMethodType,
 )
@@ -24,9 +27,13 @@ from tests.helpers import (
     create_entity_test_helper,
 )
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.unit
 class TestContactCreation:
     """Test contact creation using shared helpers."""
 

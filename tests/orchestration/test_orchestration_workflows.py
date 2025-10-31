@@ -1,26 +1,35 @@
+
 """
 Unit Tests for Orchestration Workflow Execution Methods
 
 Tests the main workflow execution methods with mocked dependencies.
 """
 
-import pytest
-from unittest.mock import MagicMock, patch, AsyncMock
 from datetime import datetime
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from dotmac.platform.orchestration.service import OrchestrationService
+import pytest
+
 from dotmac.platform.orchestration.models import (
+
+
+
     OrchestrationWorkflow,
     WorkflowStatus,
     WorkflowType,
 )
 from dotmac.platform.orchestration.schemas import (
-    ProvisionSubscriberRequest,
-    DeprovisionSubscriberRequest,
     ActivateServiceRequest,
+    DeprovisionSubscriberRequest,
+    ProvisionSubscriberRequest,
     SuspendServiceRequest,
 )
+from dotmac.platform.orchestration.service import OrchestrationService
 
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestProvisionSubscriberExecution:
@@ -45,7 +54,9 @@ class TestProvisionSubscriberExecution:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_provision_subscriber_workflow") as mock_get_wf:
+            with patch(
+                "dotmac.platform.orchestration.service.get_provision_subscriber_workflow"
+            ) as mock_get_wf:
                 mock_get_wf.return_value = {"name": "provision_subscriber", "steps": []}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -104,7 +115,9 @@ class TestProvisionSubscriberExecution:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_provision_subscriber_workflow") as mock_get_wf:
+            with patch(
+                "dotmac.platform.orchestration.service.get_provision_subscriber_workflow"
+            ) as mock_get_wf:
                 mock_get_wf.return_value = {"name": "provision_subscriber", "steps": []}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -137,7 +150,9 @@ class TestDeprovisionSubscriberExecution:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_deprovision_subscriber_workflow") as mock_get_wf:
+            with patch(
+                "dotmac.platform.orchestration.service.get_deprovision_subscriber_workflow"
+            ) as mock_get_wf:
                 mock_get_wf.return_value = {"name": "deprovision_subscriber", "steps": []}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -159,7 +174,7 @@ class TestDeprovisionSubscriberExecution:
                 service.saga.execute_workflow = AsyncMock(return_value=completed_wf)
 
                 # Execute
-                result = await service.deprovision_subscriber(request, initiator_id="admin-1")
+                await service.deprovision_subscriber(request, initiator_id="admin-1")
 
                 # Verify
                 assert db.add.called
@@ -181,7 +196,9 @@ class TestActivateServiceExecution:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_activate_service_workflow") as mock_get_wf:
+            with patch(
+                "dotmac.platform.orchestration.service.get_activate_service_workflow"
+            ) as mock_get_wf:
                 mock_get_wf.return_value = {"name": "activate_service", "steps": []}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -203,7 +220,7 @@ class TestActivateServiceExecution:
                 service.saga.execute_workflow = AsyncMock(return_value=completed_wf)
 
                 # Execute
-                result = await service.activate_service(request, initiator_id="system")
+                await service.activate_service(request, initiator_id="system")
 
                 # Verify
                 assert db.add.called
@@ -226,7 +243,9 @@ class TestSuspendServiceExecution:
         )
 
         with patch.object(OrchestrationService, "_register_all_handlers"):
-            with patch("dotmac.platform.orchestration.service.get_suspend_service_workflow") as mock_get_wf:
+            with patch(
+                "dotmac.platform.orchestration.service.get_suspend_service_workflow"
+            ) as mock_get_wf:
                 mock_get_wf.return_value = {"name": "suspend_service", "steps": []}
 
                 service = OrchestrationService(db, "tenant-1")
@@ -248,7 +267,7 @@ class TestSuspendServiceExecution:
                 service.saga.execute_workflow = AsyncMock(return_value=completed_wf)
 
                 # Execute
-                result = await service.suspend_service(request, initiator_id="billing")
+                await service.suspend_service(request, initiator_id="billing")
 
                 # Verify
                 assert db.add.called

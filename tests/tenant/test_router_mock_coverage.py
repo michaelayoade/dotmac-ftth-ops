@@ -4,8 +4,9 @@ Mock-based tests for tenant router to achieve 90%+ coverage.
 Following Dev B's successful approach with dependency overrides and mocks.
 Targets uncovered error handlers and edge cases.
 """
+import pytest
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 from fastapi import FastAPI
@@ -22,6 +23,7 @@ from dotmac.platform.tenant.service import (
 )
 
 
+@pytest.mark.unit
 class TestTenantRouterPropertyAssignments:
     """Test routes that assign response properties (lines 67-77, 108-121, etc)."""
 
@@ -44,8 +46,8 @@ class TestTenantRouterPropertyAssignments:
         mock_tenant.current_users = 5
         mock_tenant.current_api_calls = 500
         mock_tenant.current_storage_gb = 5.0
-        mock_tenant.created_at = datetime.now(UTC)
-        mock_tenant.updated_at = datetime.now(UTC)
+        mock_tenant.created_at = datetime.now(timezone.utc)
+        mock_tenant.updated_at = datetime.now(timezone.utc)
         mock_tenant.deleted_at = None
         mock_tenant.trial_ends_at = None
         mock_tenant.subscription_starts_at = None
@@ -56,7 +58,7 @@ class TestTenantRouterPropertyAssignments:
         mock_tenant.company_size = None
         mock_tenant.industry = None
         mock_tenant.country = None
-        mock_tenant.timezone = "UTC"
+        mock_tenant.timezone = "timezone.utc"
         mock_tenant.logo_url = None
         mock_tenant.primary_color = None
         mock_tenant.features = {}
@@ -101,7 +103,7 @@ class TestTenantRouterPropertyAssignments:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -129,6 +131,7 @@ class TestTenantRouterPropertyAssignments:
             app.dependency_overrides.clear()
 
 
+@pytest.mark.unit
 class TestTenantRouterErrorHandlers:
     """Test error handling paths (lines 77, 154, 283, etc)."""
 
@@ -163,7 +166,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -215,7 +218,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -259,7 +262,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)
@@ -305,7 +308,7 @@ class TestTenantRouterErrorHandlers:
         app.dependency_overrides[get_current_user] = override_user
         app.dependency_overrides[get_async_session] = override_db
         app.dependency_overrides[get_tenant_service] = override_service
-        app.include_router(tenant_router, prefix="/api/v1/tenants", tags=["tenants"])
+        app.include_router(tenant_router, prefix="/api/v1", tags=["tenants"])
 
         try:
             transport = ASGITransport(app=app)

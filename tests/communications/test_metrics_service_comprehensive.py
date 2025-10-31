@@ -1,14 +1,17 @@
+
 """
 Comprehensive tests for communications metrics service.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
 import pytest
 
 from dotmac.platform.communications.metrics_service import (
+
+
     CommunicationMetricsService,
     get_metrics_service,
 )
@@ -17,8 +20,11 @@ from dotmac.platform.communications.models import (
     CommunicationType,
 )
 
-pytestmark = pytest.mark.asyncio
 
+
+
+
+pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def mock_db_session():
@@ -37,6 +43,7 @@ def metrics_service(mock_db_session):
     return CommunicationMetricsService(mock_db_session)
 
 
+@pytest.mark.integration
 class TestCommunicationMetricsService:
     """Test CommunicationMetricsService class."""
 
@@ -46,7 +53,7 @@ class TestCommunicationMetricsService:
         # Mock refresh to set attributes
         async def mock_refresh(obj):
             obj.id = uuid4()
-            obj.created_at = datetime.now(UTC)
+            obj.created_at = datetime.now(timezone.utc)
 
         mock_db_session.refresh.side_effect = mock_refresh
 
@@ -67,7 +74,7 @@ class TestCommunicationMetricsService:
 
         async def mock_refresh(obj):
             obj.id = uuid4()
-            obj.created_at = datetime.now(UTC)
+            obj.created_at = datetime.now(timezone.utc)
 
         mock_db_session.refresh.side_effect = mock_refresh
 
@@ -151,8 +158,8 @@ class TestCommunicationMetricsService:
 
     async def test_get_stats_with_filters(self, metrics_service, mock_db_session):
         """Test stats with tenant and date filters."""
-        start_date = datetime.now(UTC) - timedelta(days=7)
-        end_date = datetime.now(UTC)
+        start_date = datetime.now(timezone.utc) - timedelta(days=7)
+        end_date = datetime.now(timezone.utc)
 
         mock_result = Mock()
         mock_result.__iter__ = Mock(return_value=iter([]))
@@ -174,7 +181,7 @@ class TestCommunicationMetricsService:
                 type=CommunicationType.EMAIL,
                 recipient=f"user{i}@example.com",
                 status=CommunicationStatus.SENT,
-                created_at=datetime.now(UTC) - timedelta(minutes=i),
+                created_at=datetime.now(timezone.utc) - timedelta(minutes=i),
             )
             for i in range(3)
         ]
@@ -245,6 +252,7 @@ class TestCommunicationMetricsService:
         assert mock_db_session.add.called  # Should add stats entries
 
 
+@pytest.mark.integration
 class TestGetMetricsService:
     """Test the get_metrics_service factory function."""
 

@@ -1,10 +1,11 @@
+
 """
 Tests for billing pricing service.
 
 Covers pricing rule management and price calculations.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,6 +13,8 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PricingError
 from dotmac.platform.billing.pricing.models import (
+
+
     DiscountType,
     PriceCalculationContext,
     PricingRule,
@@ -19,9 +22,13 @@ from dotmac.platform.billing.pricing.models import (
 )
 from dotmac.platform.billing.pricing.service import PricingEngine
 
+
+
+
+
 pytestmark = pytest.mark.asyncio
 
-
+@pytest.mark.integration
 class TestPricingEngineRules:
     """Test pricing rule management in service."""
 
@@ -40,7 +47,7 @@ class TestPricingEngineRules:
 
         # Mock refresh to populate database-generated fields
         def mock_refresh_side_effect(obj):
-            obj.created_at = datetime.now(UTC)
+            obj.created_at = datetime.now(timezone.utc)
             obj.updated_at = None
             obj.current_uses = 0
             obj.is_active = True
@@ -82,7 +89,7 @@ class TestPricingEngineRules:
         mock_rule.priority = 100
         mock_rule.is_active = True
         mock_rule.metadata_json = {}
-        mock_rule.created_at = datetime.now(UTC)
+        mock_rule.created_at = datetime.now(timezone.utc)
         mock_rule.updated_at = None
 
         mock_result = MagicMock()
@@ -128,7 +135,7 @@ class TestPricingEngineRules:
                 priority=100,
                 is_active=True,
                 metadata_json={},
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 updated_at=None,
             ),
         ]
@@ -164,7 +171,7 @@ class TestPricingEngineRules:
         mock_rule.priority = 100
         mock_rule.is_active = True
         mock_rule.metadata_json = {}
-        mock_rule.created_at = datetime.now(UTC)
+        mock_rule.created_at = datetime.now(timezone.utc)
         mock_rule.updated_at = None
 
         mock_result = MagicMock()
@@ -200,6 +207,7 @@ class TestPricingEngineRules:
         service.db.commit.assert_called_once()
 
 
+@pytest.mark.integration
 class TestPricingEngineCalculations:
     """Test price calculation functionality."""
 
@@ -276,7 +284,7 @@ class TestPricingEngineCalculations:
             discount_type=DiscountType.PERCENTAGE,
             discount_value=Decimal("10"),
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -303,7 +311,7 @@ class TestPricingEngineCalculations:
             discount_type=DiscountType.FIXED_AMOUNT,
             discount_value=Decimal("5.00"),
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -327,7 +335,7 @@ class TestPricingEngineCalculations:
             discount_type=DiscountType.FIXED_PRICE,
             discount_value=Decimal("20.00"),
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -351,7 +359,7 @@ class TestPricingEngineCalculations:
             discount_type=DiscountType.FIXED_AMOUNT,
             discount_value=Decimal("100.00"),  # Larger than price
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -377,7 +385,7 @@ class TestPricingEngineCalculations:
             discount_value=Decimal("10"),
             min_quantity=5,  # Requires 5+ items
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context_low_qty = PriceCalculationContext(
@@ -413,7 +421,7 @@ class TestPricingEngineCalculations:
             discount_value=Decimal("10"),
             customer_segments=["premium", "vip"],  # Only for these segments
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context_no_segment = PriceCalculationContext(
@@ -463,7 +471,7 @@ class TestPricingEngineCalculations:
             max_uses=5,
             current_uses=5,  # At limit
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -478,6 +486,7 @@ class TestPricingEngineCalculations:
         assert applies is False
 
 
+@pytest.mark.integration
 class TestPricingEngineHelpers:
     """Test helper methods in pricing service."""
 
@@ -507,7 +516,7 @@ class TestPricingEngineHelpers:
             discount_value=Decimal("10"),
             current_uses=5,
             is_active=True,
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         )
 
         context = PriceCalculationContext(
@@ -537,6 +546,7 @@ class TestPricingEngineHelpers:
             service.db.commit.assert_called_once()
 
 
+@pytest.mark.integration
 class TestPricingEngineAdvanced:
     """Test advanced pricing service features."""
 
@@ -617,7 +627,7 @@ class TestPricingEngineAdvanced:
                 min_quantity=1,
                 is_active=True,
                 metadata_json={},
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 updated_at=None,
             ),
             MagicMock(
@@ -638,7 +648,7 @@ class TestPricingEngineAdvanced:
                 min_quantity=1,
                 is_active=True,
                 metadata_json={},
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 updated_at=None,
             ),
         ]
@@ -688,6 +698,7 @@ class TestPricingEngineAdvanced:
             assert mock_deactivate.call_count == 2
 
 
+@pytest.mark.integration
 class TestPricingEngineErrorHandling:
     """Test error handling in pricing service."""
 
@@ -706,7 +717,7 @@ class TestPricingEngineErrorHandling:
 
         # Mock refresh to set required fields before commit fails
         def mock_refresh_side_effect(obj):
-            obj.created_at = datetime.now(UTC)
+            obj.created_at = datetime.now(timezone.utc)
             obj.updated_at = None
             obj.current_uses = 0
             obj.is_active = True

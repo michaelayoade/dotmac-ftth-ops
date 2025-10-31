@@ -453,7 +453,8 @@ async def send_exit_survey_email(event: Event) -> None:
     Args:
         event: Customer churned event
     """
-    from datetime import UTC
+    from datetime import timezone
+
     from dotmac.platform.communications.models import ExitSurveyResponse
     from dotmac.platform.db import get_session_dependency
 
@@ -486,7 +487,7 @@ async def send_exit_survey_email(event: Event) -> None:
         churned_at = None
         if churned_at_str:
             try:
-                churned_at = datetime.fromisoformat(churned_at_str.replace('Z', '+00:00'))
+                churned_at = datetime.fromisoformat(churned_at_str.replace("Z", "+00:00"))
             except (ValueError, AttributeError):
                 churned_at = datetime.now(UTC)
 
@@ -527,8 +528,9 @@ async def send_exit_survey_email(event: Event) -> None:
                     error=str(db_error),
                 )
                 # Continue with email sending even if DB insert fails
-            finally:
-                break  # Exit the async generator after first iteration
+
+            # Exit the async generator after first iteration
+            break
 
         email_service = EmailService()
 

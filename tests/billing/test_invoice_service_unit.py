@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, metrics, event bus)
 Focus: Test invoice lifecycle, validation, status transitions in isolation
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,6 +20,7 @@ from dotmac.platform.billing.core.exceptions import (
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
 
+@pytest.mark.unit
 class TestInvoiceCreation:
     """Test invoice creation with idempotency."""
 
@@ -108,8 +109,8 @@ class TestInvoiceCreation:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -179,6 +180,7 @@ class TestInvoiceCreation:
                         assert created_invoice.total_amount == 10500  # $105.00
 
 
+@pytest.mark.unit
 class TestInvoiceFinalization:
     """Test invoice finalization (draft -> open)."""
 
@@ -198,8 +200,8 @@ class TestInvoiceFinalization:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -240,6 +242,7 @@ class TestInvoiceFinalization:
                 )
 
 
+@pytest.mark.unit
 class TestInvoiceVoiding:
     """Test invoice voiding logic."""
 
@@ -259,8 +262,8 @@ class TestInvoiceVoiding:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -317,6 +320,7 @@ class TestInvoiceVoiding:
             assert invoice.status == InvoiceStatus.VOID
 
 
+@pytest.mark.unit
 class TestInvoicePayment:
     """Test invoice payment marking."""
 
@@ -336,8 +340,8 @@ class TestInvoicePayment:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -387,6 +391,7 @@ class TestInvoicePayment:
                 assert call_args["event_data"]["payment_id"] == "pay_123"
 
 
+@pytest.mark.unit
 class TestCreditApplication:
     """Test credit application to invoices."""
 
@@ -406,8 +411,8 @@ class TestCreditApplication:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(UTC),
-            due_date=datetime.now(UTC) + timedelta(days=30),
+            issue_date=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -435,7 +440,8 @@ class TestCreditApplication:
             # Balance should be reduced
             assert open_invoice.total_credits_applied == 30
             assert open_invoice.remaining_balance == 70  # 100 - 30
-            assert open_invoice.payment_status == PaymentStatus.PARTIALLY_REFUNDED
+            assert open_invoice.payment_status == PaymentStatus.PENDING
+            assert open_invoice.status == InvoiceStatus.PARTIALLY_PAID
 
     async def test_apply_full_credit(self, invoice_service, open_invoice, mock_db_session):
         """Test applying full credit marks invoice as paid."""
@@ -472,6 +478,7 @@ class TestCreditApplication:
             assert transaction.transaction_type.value == "credit"
 
 
+@pytest.mark.unit
 class TestInvoiceListing:
     """Test invoice listing and filtering."""
 

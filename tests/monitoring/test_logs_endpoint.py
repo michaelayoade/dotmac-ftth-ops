@@ -1,11 +1,12 @@
 """Test logs endpoint to reproduce and fix 500 error."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.audit.models import ActivitySeverity, AuditActivity
@@ -13,6 +14,9 @@ from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.monitoring.logs_router import logs_router
 
+
+
+pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def app():
@@ -22,9 +26,9 @@ def app():
     return app
 
 
-@pytest.fixture
-def client(app, async_db_session):
-    """Create test client with database dependency."""
+@pytest_asyncio.fixture
+async def client(app, async_db_session):
+    """Create async test client with database dependency."""
     # Use a platform admin to see all logs across tenants
     # (for backward compatibility with existing tests)
     mock_user = UserInfo(
@@ -39,10 +43,13 @@ def client(app, async_db_session):
 
     app.dependency_overrides[get_session_dependency] = lambda: async_db_session
     app.dependency_overrides[get_current_user] = lambda: mock_user
-    return TestClient(app)
+
+    # Use AsyncClient with ASGITransport for async tests
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        yield ac
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_audit_logs(async_db_session: AsyncSession):
     """Create sample audit activities for testing."""
     activities = [
@@ -55,7 +62,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),  # Convert to string for SQLite compatibility
             action="login",  # Required field
             ip_address="192.168.1.1",  # Use the correct ip_address field
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         ),
         AuditActivity(
             id=uuid4(),
@@ -66,7 +73,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),
             action="payment_process",
             ip_address="10.0.0.1",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         ),
         AuditActivity(
             id=uuid4(),
@@ -77,7 +84,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),
             action="api_request",
             ip_address="172.16.0.1",
-            created_at=datetime.now(UTC),
+            created_at=datetime.now(timezone.utc),
         ),
     ]
 
@@ -94,12 +101,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_logs_basic(self, client, sample_audit_logs):
         """Test basic logs retrieval."""
-        response = client.get("/api/v1/monitoring/logs")
+        response = await client.get("/api/v1/monitoring/logs")
 
-        print(f"Response status: {response.status_code}")
-        print(f"Response body: {response.text}")
-
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         assert "logs" in data
@@ -114,9 +118,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_logs_with_level_filter(self, client, sample_audit_logs):
         """Test logs filtering by level."""
-        response = client.get("/api/v1/monitoring/logs?level=ERROR")
+        response = await client.get("/api/v1/monitoring/logs?level=ERROR")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         # Should return only HIGH severity (ERROR level)
@@ -126,9 +130,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_logs_with_search(self, client, sample_audit_logs):
         """Test logs search functionality."""
-        response = client.get("/api/v1/monitoring/logs?search=payment")
+        response = await client.get("/api/v1/monitoring/logs?search=payment")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         assert len(data["logs"]) == 1
@@ -137,9 +141,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_logs_pagination(self, client, sample_audit_logs):
         """Test logs pagination."""
-        response = client.get("/api/v1/monitoring/logs?page=1&page_size=2")
+        response = await client.get("/api/v1/monitoring/logs?page=1&page_size=2")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         assert len(data["logs"]) == 2
@@ -150,9 +154,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_logs_empty(self, client):
         """Test logs retrieval when no logs exist."""
-        response = client.get("/api/v1/monitoring/logs")
+        response = await client.get("/api/v1/monitoring/logs")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         assert data["logs"] == []
@@ -161,9 +165,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_log_stats(self, client, sample_audit_logs):
         """Test log statistics endpoint."""
-        response = client.get("/api/v1/monitoring/logs/stats")
+        response = await client.get("/api/v1/monitoring/logs/stats")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         data = response.json()
 
         assert "total" in data
@@ -179,9 +183,9 @@ class TestLogsEndpoint:
     @pytest.mark.asyncio
     async def test_get_available_services(self, client, sample_audit_logs):
         """Test available services endpoint."""
-        response = client.get("/api/v1/monitoring/logs/services")
+        response = await client.get("/api/v1/monitoring/logs/services")
 
-        assert response.status_code == 200
+        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
         services = response.json()
 
         assert isinstance(services, list)
@@ -191,28 +195,28 @@ class TestLogsEndpoint:
 
 
 class TestLogsEndpointErrors:
-    """Test error scenarios."""
+    """Test error scenarios with proper async/await patterns."""
 
     @pytest.mark.asyncio
     async def test_invalid_log_level(self, client):
         """Test with invalid log level."""
-        response = client.get("/api/v1/monitoring/logs?level=INVALID")
+        response = await client.get("/api/v1/monitoring/logs?level=INVALID")
 
         # Should return 422 validation error
-        assert response.status_code == 422
+        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
 
     @pytest.mark.asyncio
     async def test_invalid_page_number(self, client):
         """Test with invalid page number."""
-        response = client.get("/api/v1/monitoring/logs?page=0")
+        response = await client.get("/api/v1/monitoring/logs?page=0")
 
         # Should return 422 validation error
-        assert response.status_code == 422
+        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
 
     @pytest.mark.asyncio
     async def test_page_size_too_large(self, client):
         """Test with page size exceeding maximum."""
-        response = client.get("/api/v1/monitoring/logs?page_size=2000")
+        response = await client.get("/api/v1/monitoring/logs?page_size=2000")
 
         # Should return 422 validation error
-        assert response.status_code == 422
+        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"

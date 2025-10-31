@@ -1,3 +1,4 @@
+
 """
 Tests for email verification integration with communications module.
 
@@ -13,11 +14,18 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.auth.email_service import (
+
+
     AuthEmailServiceFacade,
     get_auth_email_service,
     send_verification_email,
 )
 
+
+
+
+
+pytestmark = pytest.mark.unit
 
 @pytest.mark.asyncio
 class TestSendVerificationEmailFunction:

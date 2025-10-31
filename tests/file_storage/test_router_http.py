@@ -1,3 +1,4 @@
+
 """
 HTTP-based integration tests for file storage router.
 
@@ -6,7 +7,7 @@ Targets router.py coverage (currently 24.35%).
 """
 
 import io
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -18,11 +19,20 @@ from dotmac.platform.file_storage.router import file_storage_router
 from dotmac.platform.file_storage.service import FileMetadata
 
 
+
+
+
+
+pytestmark = pytest.mark.integration
+
+BASE_STORAGE_PATH = "/files/storage"
+
+
 @pytest.fixture
 def file_storage_app():
     """Create test app with file storage router."""
     app = FastAPI()
-    app.include_router(file_storage_router, prefix="/files")
+    app.include_router(file_storage_router)
     return app
 
 
@@ -45,7 +55,7 @@ def mock_storage_service():
                 "file_size": 17,
                 "path": "uploads/test",
                 "tenant_id": "tenant-123",
-                "created_at": datetime.now(UTC).isoformat(),
+                "created_at": datetime.now(timezone.utc).isoformat(),
                 "uploaded_by": "user-123",
             },
         )
@@ -61,7 +71,7 @@ def mock_storage_service():
                 file_size=100,
                 path="uploads/test",
                 tenant_id="tenant-123",
-                created_at=datetime.now(UTC),
+                created_at=datetime.now(timezone.utc),
                 metadata={},
             )
         ]
@@ -69,6 +79,10 @@ def mock_storage_service():
 
     # Mock delete_file
     service.delete_file = AsyncMock(return_value=True)
+
+    # Mock move/copy helpers
+    service.move_file = AsyncMock(return_value=True)
+    service.copy_file = AsyncMock(return_value="file-456")
 
     # Mock get_file_metadata - returns dict | None
     service.get_file_metadata = AsyncMock(
@@ -79,7 +93,7 @@ def mock_storage_service():
             "file_size": 17,
             "path": "uploads/test",
             "tenant_id": "tenant-123",
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "metadata": {},
         }
     )
@@ -125,7 +139,7 @@ async def test_upload_file_success(file_storage_app: FastAPI, mock_storage_servi
             data = {"description": "Test upload"}
 
             response = await client.post(
-                "/files/upload",
+                f"{BASE_STORAGE_PATH}/upload",
                 files=files,
                 data=data,
                 headers={"Authorization": f"Bearer {token}"},
@@ -160,7 +174,7 @@ async def test_upload_file_with_path(file_storage_app: FastAPI, mock_storage_ser
             data = {"path": "custom/path", "description": "Custom path upload"}
 
             response = await client.post(
-                "/files/upload",
+                f"{BASE_STORAGE_PATH}/upload",
                 files=files,
                 data=data,
                 headers={"Authorization": f"Bearer {token}"},
@@ -192,7 +206,7 @@ async def test_upload_file_too_large(file_storage_app: FastAPI, mock_storage_ser
             files = {"file": ("large.txt", io.BytesIO(large_content), "text/plain")}
 
             response = await client.post(
-                "/files/upload",
+                f"{BASE_STORAGE_PATH}/upload",
                 files=files,
                 headers={"Authorization": f"Bearer {token}"},
             )
@@ -219,7 +233,7 @@ async def test_download_file_success(file_storage_app: FastAPI, mock_storage_ser
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files/file-123/download",
+                f"{BASE_STORAGE_PATH}/file-123/download",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -250,7 +264,7 @@ async def test_download_file_not_found(file_storage_app: FastAPI, mock_storage_s
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files/nonexistent/download",
+                f"{BASE_STORAGE_PATH}/nonexistent/download",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -276,7 +290,7 @@ async def test_list_files(file_storage_app: FastAPI, mock_storage_service, test_
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files",
+                f"{BASE_STORAGE_PATH}",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -307,7 +321,8 @@ async def test_list_files_with_path_filter(
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files?path=uploads/test",
+                f"{BASE_STORAGE_PATH}",
+                params={"path": "uploads/test"},
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -333,7 +348,7 @@ async def test_delete_file_success(file_storage_app: FastAPI, mock_storage_servi
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.delete(
-                "/files/file-123",
+                f"{BASE_STORAGE_PATH}/file-123",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -365,7 +380,7 @@ async def test_delete_file_not_found(file_storage_app: FastAPI, mock_storage_ser
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.delete(
-                "/files/nonexistent",
+                f"{BASE_STORAGE_PATH}/nonexistent",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -392,7 +407,7 @@ async def test_get_file_metadata(file_storage_app: FastAPI, mock_storage_service
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files/file-123/metadata",
+                f"{BASE_STORAGE_PATH}/file-123/metadata",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -428,7 +443,7 @@ async def test_get_file_metadata_not_found(
         transport = ASGITransport(app=file_storage_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
             response = await client.get(
-                "/files/nonexistent/metadata",
+                f"{BASE_STORAGE_PATH}/nonexistent/metadata",
                 headers={"Authorization": f"Bearer {token}"},
             )
 
@@ -441,7 +456,7 @@ async def test_upload_without_auth(file_storage_app: FastAPI):
     transport = ASGITransport(app=file_storage_app)
     async with AsyncClient(transport=transport, base_url="http://testserver") as client:
         files = {"file": ("test.txt", io.BytesIO(b"test"), "text/plain")}
-        response = await client.post("/files/upload", files=files)
+        response = await client.post(f"{BASE_STORAGE_PATH}/upload", files=files)
 
     # Should return 401 or 403 without auth
     assert response.status_code in [401, 403, 422]
@@ -469,7 +484,7 @@ async def test_upload_unnamed_file(file_storage_app: FastAPI, mock_storage_servi
             files = {"file": (None, io.BytesIO(b"test content"), "application/octet-stream")}
 
             response = await client.post(
-                "/files/upload",
+                f"{BASE_STORAGE_PATH}/upload",
                 files=files,
                 headers={"Authorization": f"Bearer {token}"},
             )

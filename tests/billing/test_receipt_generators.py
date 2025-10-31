@@ -4,7 +4,7 @@ Comprehensive tests for receipt generators.
 Achieves 90%+ coverage for receipt generation functionality.
 """
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 
 import pytest
 
@@ -17,6 +17,7 @@ from dotmac.platform.billing.receipts.generators import (
 from dotmac.platform.billing.receipts.models import Receipt, ReceiptLineItem
 
 
+@pytest.mark.unit
 class TestReceiptModels:
     """Tests for Receipt and ReceiptLineItem models."""
 
@@ -143,6 +144,7 @@ class TestReceiptModels:
         assert receipt.html_content is None
 
 
+@pytest.mark.unit
 class TestReceiptGeneratorBase:
     """Tests for base ReceiptGenerator class."""
 
@@ -162,6 +164,7 @@ class TestReceiptGeneratorBase:
             IncompleteGenerator()
 
 
+@pytest.mark.unit
 class TestHTMLReceiptGenerator:
     """Tests for HTML receipt generation."""
 
@@ -373,6 +376,7 @@ class TestHTMLReceiptGenerator:
         assert ".payment-info" in html
 
 
+@pytest.mark.unit
 class TestPDFReceiptGenerator:
     """Tests for PDF receipt generation."""
 
@@ -610,6 +614,7 @@ class TestPDFReceiptGenerator:
         assert "Thank you for your business!" in content
 
 
+@pytest.mark.unit
 class TestTextReceiptGenerator:
     """Tests for plain text receipt generation."""
 
@@ -693,7 +698,7 @@ class TestTextReceiptGenerator:
     @pytest.mark.asyncio
     async def test_generate_text_date_format(self):
         """Test text receipt date formatting."""
-        specific_date = datetime(2024, 3, 15, 10, 30, 45, tzinfo=UTC)
+        specific_date = datetime(2024, 3, 15, 10, 30, 45, tzinfo=timezone.utc)
         receipt = Receipt(
             tenant_id="tenant_123",
             receipt_number="REC-2024-000003",
@@ -748,6 +753,7 @@ class TestTextReceiptGenerator:
         assert "$100.00 EUR" in text
 
 
+@pytest.mark.unit
 class TestGeneratorIntegration:
     """Integration tests for receipt generators."""
 

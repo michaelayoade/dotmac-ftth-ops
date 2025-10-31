@@ -25,7 +25,10 @@ IPv6 Support:
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg,misc,no-untyped-call"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import uuid4
 
@@ -285,6 +288,17 @@ async def create_radius_account_handler(
     db: Session,
 ) -> dict[str, Any]:
     """Create RADIUS authentication account with dual-stack IP support."""
+    from dotmac.platform.settings import settings
+
+    # Check if RADIUS is enabled
+    if not settings.features.radius_enabled:
+        logger.info("RADIUS is disabled, skipping RADIUS account creation")
+        return {
+            "output_data": {"skipped": True, "reason": "RADIUS not enabled"},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
     if not input_data.get("create_radius_account", True):
         logger.info("Skipping RADIUS account creation (disabled)")
         return {
@@ -293,9 +307,15 @@ async def create_radius_account_handler(
             "context_updates": {},
         }
 
+    # Get tenant_id from context or input_data
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        logger.error("tenant_id is required for RADIUS account creation")
+        raise ValueError("tenant_id is required for RADIUS operations")
+
     logger.info("Creating RADIUS account")
 
-    radius_service = RADIUSService(db)
+    radius_service = RADIUSService(db, tenant_id)
 
     # Generate username (typically email or subscriber ID)
     username = input_data.get("email", context["subscriber_number"])
@@ -337,6 +357,7 @@ async def create_radius_account_handler(
         "compensation_data": {
             "radius_username": username,
             "radius_user_id": radius_user.id,
+            "tenant_id": tenant_id,
         },
         "context_updates": {
             "radius_username": username,
@@ -350,13 +371,25 @@ async def delete_radius_account_handler(
     db: Session,
 ) -> None:
     """Compensate RADIUS account creation."""
+    from dotmac.platform.settings import settings
+
     if compensation_data.get("skipped"):
         return
 
+    # Check if RADIUS is enabled
+    if not settings.features.radius_enabled:
+        logger.info("RADIUS is disabled, skipping RADIUS account deletion")
+        return
+
     username = compensation_data["radius_username"]
+    tenant_id = compensation_data.get("tenant_id")
+    if not tenant_id:
+        logger.warning(f"No tenant_id in compensation data for RADIUS deletion: {username}")
+        return
+
     logger.info(f"Deleting RADIUS account: {username}")
 
-    radius_service = RADIUSService(db)
+    radius_service = RADIUSService(db, tenant_id)
     await radius_service.delete_subscriber(username)
 
 
@@ -769,10 +802,14 @@ def register_handlers(saga: Any) -> None:
     # Compensation handlers
     saga.register_compensation_handler("delete_customer_handler", delete_customer_handler)
     saga.register_compensation_handler("delete_subscriber_handler", delete_subscriber_handler)
-    saga.register_compensation_handler("delete_radius_account_handler", delete_radius_account_handler)
+    saga.register_compensation_handler(
+        "delete_radius_account_handler", delete_radius_account_handler
+    )
     saga.register_compensation_handler("release_ip_handler", release_ip_handler)
     saga.register_compensation_handler("deactivate_onu_handler", deactivate_onu_handler)
     saga.register_compensation_handler("unconfigure_cpe_handler", unconfigure_cpe_handler)
-    saga.register_compensation_handler("delete_billing_service_handler", delete_billing_service_handler)
+    saga.register_compensation_handler(
+        "delete_billing_service_handler", delete_billing_service_handler
+    )
 
     logger.info("Registered all provision_subscriber workflow handlers")

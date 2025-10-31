@@ -31,6 +31,7 @@ from dotmac.platform.secrets.vault_config import (
 )
 
 
+@pytest.mark.unit
 class TestVaultConnectionConfig:
     """Test VaultConnectionConfig Pydantic model."""
 
@@ -82,6 +83,7 @@ class TestVaultConnectionConfig:
         assert config.verify_ssl is True
 
 
+@pytest.mark.unit
 class TestGetVaultConfigFromEnv:
     """Test get_vault_config_from_env function."""
 
@@ -152,6 +154,7 @@ class TestGetVaultConfigFromEnv:
         assert config.kubernetes_role == "k8s-auth-role"
 
 
+@pytest.mark.unit
 class TestGetVaultConfigFromSettings:
     """Test get_vault_config_from_settings function."""
 
@@ -186,6 +189,7 @@ class TestGetVaultConfigFromSettings:
             get_vault_config_from_settings()
 
 
+@pytest.mark.unit
 class TestGetVaultConfig:
     """Test get_vault_config function (priority resolution)."""
 
@@ -238,6 +242,7 @@ class TestGetVaultConfig:
         assert config.kv_version == 2
 
 
+@pytest.mark.unit
 class TestVaultConnectionManager:
     """Test VaultConnectionManager class."""
 
@@ -386,6 +391,7 @@ class TestVaultConnectionManager:
         assert manager._async_client is None
 
 
+@pytest.mark.unit
 class TestGlobalFunctions:
     """Test global helper functions."""
 
@@ -428,6 +434,7 @@ class TestGlobalFunctions:
         mock_manager.get_async_client.assert_called_once()
 
 
+@pytest.mark.unit
 class TestVaultConnectionManagerEdgeCases:
     """Test edge cases and error paths for VaultConnectionManager."""
 
@@ -493,6 +500,7 @@ class TestVaultConnectionManagerEdgeCases:
             manager.get_sync_client()
 
 
+@pytest.mark.unit
 class TestCheckVaultHealth:
     """Test check_vault_health function."""
 

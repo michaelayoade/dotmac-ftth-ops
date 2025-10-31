@@ -6,8 +6,11 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-from datetime import UTC, datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 import structlog
@@ -24,6 +27,9 @@ logger = structlog.get_logger(__name__)
 
 class CurrencyRateService:
     """Service for fetching, caching, and converting currency amounts."""
+
+    _MAX_RATE = Decimal("999999999.999999999")
+    _RATE_QUANTIZE = Decimal("0.000000001")
 
     def __init__(self, session: AsyncSession, cache_ttl: int = 3600) -> None:
         self.session = session
@@ -143,22 +149,46 @@ class CurrencyRateService:
         rates = await integration.fetch_rates(base_currency, targets)
         now = datetime.now(UTC)
 
+        updated_pairs: set[tuple[str, str]] = set()
+
         for target_currency, rate_value in rates.items():
+            target_upper = target_currency.upper()
             try:
                 rate_decimal = Decimal(str(rate_value))
-            except Exception:
+            except (InvalidOperation, TypeError, ValueError):
                 logger.warning(
                     "Invalid rate value from provider",
                     provider=provider,
                     base_currency=base_currency,
-                    target_currency=target_currency,
+                    target_currency=target_upper,
                     value=rate_value,
+                )
+                continue
+
+            if not rate_decimal.is_finite() or rate_decimal <= 0:
+                logger.warning(
+                    "Discarding non-positive or non-finite rate from provider",
+                    provider=provider,
+                    base_currency=base_currency,
+                    target_currency=target_upper,
+                    value=str(rate_decimal),
+                )
+                continue
+
+            rate_decimal = rate_decimal.quantize(self._RATE_QUANTIZE, rounding=ROUND_HALF_UP)
+            if rate_decimal > self._MAX_RATE:
+                logger.warning(
+                    "Rate exceeds supported precision; skipping",
+                    provider=provider,
+                    base_currency=base_currency,
+                    target_currency=target_upper,
+                    value=str(rate_decimal),
                 )
                 continue
 
             exchange_rate = ExchangeRate(
                 base_currency=base_currency,
-                target_currency=target_currency.upper(),
+                target_currency=target_upper,
                 provider=provider,
                 rate=rate_decimal,
                 fetched_at=now,
@@ -168,25 +198,63 @@ class CurrencyRateService:
             )
 
             self.session.add(exchange_rate)
+            updated_pairs.add((base_currency, target_upper))
+            updated_pairs.add((target_upper, base_currency))
 
-            inverse_rate = ExchangeRate(
-                base_currency=target_currency.upper(),
-                target_currency=base_currency,
-                provider=provider,
-                rate=(Decimal("1") / rate_decimal) if rate_decimal != 0 else Decimal("0"),
-                fetched_at=now,
-                effective_at=now,
-                expires_at=now + timedelta(seconds=self.cache_ttl * 4),
-                metadata_json={"provider": provider, "inverse_of": base_currency},
+            inverse_rate_decimal = (Decimal("1") / rate_decimal).quantize(
+                self._RATE_QUANTIZE, rounding=ROUND_HALF_UP
             )
-            self.session.add(inverse_rate)
+            if (
+                not inverse_rate_decimal.is_finite()
+                or inverse_rate_decimal <= 0
+                or inverse_rate_decimal > self._MAX_RATE
+            ):
+                logger.warning(
+                    "Skipping inverse rate due to precision limits",
+                    provider=provider,
+                    base_currency=base_currency,
+                    target_currency=target_upper,
+                    inverse_value=str(inverse_rate_decimal),
+                )
+            else:
+                inverse_rate = ExchangeRate(
+                    base_currency=target_upper,
+                    target_currency=base_currency,
+                    provider=provider,
+                    rate=inverse_rate_decimal,
+                    fetched_at=now,
+                    effective_at=now,
+                    expires_at=now + timedelta(seconds=self.cache_ttl * 4),
+                    metadata_json={"provider": provider, "inverse_of": base_currency},
+                )
+                self.session.add(inverse_rate)
+                updated_pairs.add((target_upper, base_currency))
 
-        await self.session.commit()
+        if not updated_pairs:
+            logger.debug(
+                "No exchange rates persisted after validation",
+                provider=provider,
+                base_currency=base_currency,
+                targets=targets,
+            )
+            return
+
+        try:
+            await self.session.commit()
+        except Exception as exc:
+            await self.session.rollback()
+            logger.error(
+                "Failed to persist exchange rates",
+                provider=provider,
+                base_currency=base_currency,
+                targets=targets,
+                error=str(exc),
+            )
+            raise
 
         # Clear in-memory cache entries for updated pairs
-        for target in targets:
-            self._memory_cache.pop((base_currency, target), None)
-            self._memory_cache.pop((target, base_currency), None)
+        for pair in updated_pairs:
+            self._memory_cache.pop(pair, None)
 
     async def _get_latest_rate(
         self,

@@ -1,6 +1,6 @@
 """Tests for billing money_models module."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -14,6 +14,7 @@ from dotmac.platform.billing.money_models import (
 from dotmac.platform.billing.money_utils import create_money
 
 
+@pytest.mark.unit
 class TestMoneyField:
     """Test MoneyField Pydantic model."""
 
@@ -67,6 +68,7 @@ class TestMoneyField:
             assert field.currency == currency
 
 
+@pytest.mark.unit
 class TestMoneyInvoiceLineItem:
     """Test MoneyInvoiceLineItem model."""
 
@@ -212,6 +214,7 @@ class TestMoneyInvoiceLineItem:
         assert item.extra_data["another"] == 123
 
 
+@pytest.mark.unit
 class TestMoneyInvoice:
     """Test MoneyInvoice model."""
 
@@ -338,6 +341,29 @@ class TestMoneyInvoice:
         assert invoice.tax_amount.amount == "10.00"
         assert invoice.total_amount.amount == "110.00"
 
+    def test_invoice_calculate_totals_with_discount_and_tax(self):
+        """Discounted invoices should apply tax after discounts."""
+        invoice = MoneyInvoice.create_invoice(
+            tenant_id="tenant_1",
+            customer_id="cust_123",
+            billing_email="test@example.com",
+            line_items=[
+                {
+                    "description": "Discounted Item",
+                    "quantity": 1,
+                    "unit_price": "100.00",
+                    "tax_rate": Decimal("0.10"),
+                    "discount_percentage": Decimal("0.20"),
+                }
+            ],
+        )
+
+        assert invoice.discount_amount.amount == "20.00"
+        assert invoice.tax_amount.amount == "8.00"
+        assert invoice.subtotal.amount == "80.00"
+        assert invoice.total_amount.amount == "88.00"
+        assert invoice.remaining_balance.amount == "88.00"
+
     def test_invoice_net_amount_due_no_credits(self):
         """Test net_amount_due computed field without credits."""
         invoice = MoneyInvoice.create_invoice(
@@ -380,6 +406,29 @@ class TestMoneyInvoice:
         net = invoice.net_amount_due
         assert net.amount == "0"  # Can't be negative
 
+    def test_invoice_remaining_balance_respects_credits(self):
+        """Remaining balance should subtract credits when recalculated."""
+        invoice = MoneyInvoice.create_invoice(
+            tenant_id="tenant_1",
+            customer_id="cust_123",
+            billing_email="test@example.com",
+            line_items=[
+                {
+                    "description": "Discounted Item",
+                    "quantity": 1,
+                    "unit_price": "100.00",
+                    "tax_rate": Decimal("0.10"),
+                    "discount_percentage": Decimal("0.20"),
+                }
+            ],
+        )
+
+        invoice.total_credits_applied = MoneyField.from_money(Money("30.00", "USD"))
+        invoice.calculate_totals()
+
+        assert invoice.remaining_balance.amount == "58.00"
+        assert invoice.net_amount_due.amount == "58.00"
+
     def test_invoice_format_total(self):
         """Test format_total method."""
         invoice = MoneyInvoice.create_invoice(
@@ -406,7 +455,7 @@ class TestMoneyInvoice:
 
     def test_invoice_with_dates(self):
         """Test invoice with issue and due dates."""
-        now = datetime.now(UTC)
+        now = datetime.now(timezone.utc)
         due = now + timedelta(days=30)
 
         invoice = MoneyInvoice.create_invoice(

@@ -17,7 +17,10 @@ Cleanup Order: Reverse of provisioning to ensure proper cleanup.
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg"
 
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 from sqlalchemy.orm import Session
@@ -132,22 +135,22 @@ async def verify_subscriber_handler(
 ) -> dict[str, Any]:
     """
     Verify subscriber exists and get current configuration.
-    
+
     This step collects information needed for cleanup.
     """
     logger.info("Verifying subscriber for deprovisioning")
-    
+
     subscriber_id = input_data["subscriber_id"]
-    
+
     subscriber = db.query(Subscriber).filter(Subscriber.id == subscriber_id).first()
     if not subscriber:
         raise ValueError(f"Subscriber not found: {subscriber_id}")
-    
+
     if subscriber.status == "archived":
         raise ValueError(f"Subscriber already archived: {subscriber_id}")
-    
+
     logger.info(f"Verified subscriber: {subscriber.id} ({subscriber.subscriber_id})")
-    
+
     # Store configuration for cleanup
     return {
         "output_data": {
@@ -177,9 +180,11 @@ async def suspend_billing_service_handler(
     logger.info("Suspending billing service")
 
     # Find and suspend service by subscriber_id
-    service = db.query(ServiceEntity).filter(
-        ServiceEntity.subscriber_id == context["subscriber_id"]
-    ).first()
+    service = (
+        db.query(ServiceEntity)
+        .filter(ServiceEntity.subscriber_id == context["subscriber_id"])
+        .first()
+    )
 
     if service:
         service.status = "suspended"
@@ -230,17 +235,17 @@ async def deactivate_onu_handler(
             "compensation_data": {},
             "context_updates": {},
         }
-    
+
     logger.info(f"Deactivating ONU: {onu_serial}")
-    
+
     voltha_service = VOLTHAService()
-    
+
     try:
         await voltha_service.deactivate_onu_by_serial(onu_serial)
         logger.info(f"ONU deactivated: {onu_serial}")
     except Exception as e:
         logger.warning(f"Failed to deactivate ONU (continuing anyway): {e}")
-    
+
     return {
         "output_data": {"onu_deactivated": True},
         "compensation_data": {"onu_serial": onu_serial},
@@ -273,17 +278,17 @@ async def unconfigure_cpe_handler(
             "compensation_data": {},
             "context_updates": {},
         }
-    
+
     logger.info(f"Unconfiguring CPE: {cpe_mac}")
-    
+
     genieacs_service = GenieACSService()
-    
+
     try:
         await genieacs_service.delete_device(cpe_mac)
         logger.info(f"CPE unconfigured: {cpe_mac}")
     except Exception as e:
         logger.warning(f"Failed to unconfigure CPE (continuing anyway): {e}")
-    
+
     return {
         "output_data": {"cpe_unconfigured": True},
         "compensation_data": {"cpe_mac": cpe_mac},
@@ -309,17 +314,17 @@ async def release_ip_handler(
 ) -> dict[str, Any]:
     """Release IP address in NetBox."""
     subscriber_id = context["subscriber_id"]
-    
+
     logger.info(f"Releasing IP for subscriber: {subscriber_id}")
-    
+
     netbox_service = NetBoxService()
-    
+
     try:
         released = await netbox_service.release_subscriber_ip(subscriber_id)
         logger.info(f"IP released: {released}")
     except Exception as e:
         logger.warning(f"Failed to release IP (continuing anyway): {e}")
-    
+
     return {
         "output_data": {"ip_released": True},
         "compensation_data": {"subscriber_id": subscriber_id},
@@ -344,21 +349,44 @@ async def delete_radius_account_handler(
     db: Session,
 ) -> dict[str, Any]:
     """Delete RADIUS authentication account."""
+    from dotmac.platform.settings import settings
+
+    # Check if RADIUS is enabled
+    if not settings.features.radius_enabled:
+        logger.info("RADIUS is disabled, skipping RADIUS account deletion")
+        return {
+            "output_data": {"skipped": True, "reason": "RADIUS not enabled"},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
+    # Get tenant_id from context or input_data
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        # Try to get tenant_id from subscriber
+        from ...subscribers.models import Subscriber
+
+        subscriber = db.query(Subscriber).filter(Subscriber.id == context["subscriber_id"]).first()
+        if subscriber:
+            tenant_id = subscriber.tenant_id
+        else:
+            logger.error(f"Cannot determine tenant_id for subscriber: {context['subscriber_id']}")
+            raise ValueError("tenant_id is required for RADIUS operations")
+
     subscriber_id = context["subscriber_id"]
-    
     logger.info(f"Deleting RADIUS account for subscriber: {subscriber_id}")
-    
-    radius_service = RADIUSService(db)
-    
+
+    radius_service = RADIUSService(db, tenant_id)
+
     try:
         deleted = await radius_service.delete_subscriber_by_id(subscriber_id)
         logger.info(f"RADIUS account deleted: {deleted}")
     except Exception as e:
         logger.warning(f"Failed to delete RADIUS account (continuing anyway): {e}")
-    
+
     return {
         "output_data": {"radius_deleted": True},
-        "compensation_data": {"subscriber_id": subscriber_id},
+        "compensation_data": {"subscriber_id": subscriber_id, "tenant_id": tenant_id},
         "context_updates": {},
     }
 
@@ -381,21 +409,21 @@ async def archive_subscriber_handler(
 ) -> dict[str, Any]:
     """Archive subscriber record (soft delete)."""
     subscriber_id = context["subscriber_id"]
-    
+
     logger.info(f"Archiving subscriber: {subscriber_id}")
-    
+
     subscriber = db.query(Subscriber).filter(Subscriber.id == subscriber_id).first()
     if not subscriber:
         raise ValueError(f"Subscriber not found: {subscriber_id}")
-    
+
     # Soft delete - change status to archived
     subscriber.status = "archived"
     subscriber.archived_at = datetime.now()
     subscriber.archived_reason = input_data.get("reason", "Deprovisioned")
     db.flush()
-    
+
     logger.info(f"Subscriber archived: {subscriber_id}")
-    
+
     return {
         "output_data": {
             "subscriber_archived": True,
@@ -417,9 +445,9 @@ async def restore_subscriber_handler(
     """Compensate subscriber archival."""
     subscriber_id = compensation_data["subscriber_id"]
     previous_status = compensation_data["previous_status"]
-    
+
     logger.info(f"Restoring subscriber: {subscriber_id}")
-    
+
     subscriber = db.query(Subscriber).filter(Subscriber.id == subscriber_id).first()
     if subscriber:
         subscriber.status = previous_status
@@ -443,13 +471,17 @@ def register_handlers(saga: Any) -> None:
     saga.register_step_handler("release_ip_handler", release_ip_handler)
     saga.register_step_handler("delete_radius_account_handler", delete_radius_account_handler)
     saga.register_step_handler("archive_subscriber_handler", archive_subscriber_handler)
-    
+
     # Compensation handlers
-    saga.register_compensation_handler("reactivate_billing_service_handler", reactivate_billing_service_handler)
+    saga.register_compensation_handler(
+        "reactivate_billing_service_handler", reactivate_billing_service_handler
+    )
     saga.register_compensation_handler("reactivate_onu_handler", reactivate_onu_handler)
     saga.register_compensation_handler("reconfigure_cpe_handler", reconfigure_cpe_handler)
     saga.register_compensation_handler("reallocate_ip_handler", reallocate_ip_handler)
-    saga.register_compensation_handler("recreate_radius_account_handler", recreate_radius_account_handler)
+    saga.register_compensation_handler(
+        "recreate_radius_account_handler", recreate_radius_account_handler
+    )
     saga.register_compensation_handler("restore_subscriber_handler", restore_subscriber_handler)
-    
+
     logger.info("Registered all deprovision_subscriber workflow handlers")

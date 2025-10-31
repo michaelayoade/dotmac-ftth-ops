@@ -4,9 +4,10 @@ Comprehensive tests for tenant/service.py to reach 90%+ coverage.
 This test suite specifically targets uncovered lines identified in the coverage report.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -31,7 +32,7 @@ from dotmac.platform.tenant.service import (
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def async_db():
     """Create async in-memory database for testing."""
     engine = create_async_engine("sqlite+aiosqlite:///:memory:", echo=False)
@@ -47,13 +48,13 @@ async def async_db():
     await engine.dispose()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def tenant_service(async_db: AsyncSession):
     """Create tenant service instance."""
     return TenantService(db=async_db)
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def sample_tenant(tenant_service: TenantService) -> Tenant:
     """Create a sample tenant for testing."""
     tenant_data = TenantCreate(
@@ -66,6 +67,7 @@ async def sample_tenant(tenant_service: TenantService) -> Tenant:
     return await tenant_service.create_tenant(tenant_data, created_by="test-user")
 
 
+@pytest.mark.unit
 class TestTenantCRUDCoverage:
     """Tests for CRUD operations - targeting uncovered lines."""
 
@@ -140,9 +142,9 @@ class TestTenantCRUDCoverage:
         """Test getting tenant with include_deleted=True."""
         # Lines 157-158: include_deleted branch
         # Manually set deleted_at to avoid soft_delete() is_active issue
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
-        sample_tenant.deleted_at = datetime.now(UTC)
+        sample_tenant.deleted_at = datetime.now(timezone.utc)
         await tenant_service.db.commit()
 
         # Should find with include_deleted=True
@@ -155,9 +157,9 @@ class TestTenantCRUDCoverage:
     ):
         """Test getting tenant by slug with include_deleted=True."""
         # Lines 184-185: include_deleted branch in get_tenant_by_slug
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
-        sample_tenant.deleted_at = datetime.now(UTC)
+        sample_tenant.deleted_at = datetime.now(timezone.utc)
         await tenant_service.db.commit()
 
         found = await tenant_service.get_tenant_by_slug(sample_tenant.slug, include_deleted=True)
@@ -197,9 +199,9 @@ class TestTenantCRUDCoverage:
         """Test restoring soft-deleted tenant."""
         # Lines 342-349: restore_tenant method calling tenant.restore()
         # First soft-delete the tenant
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
-        sample_tenant.deleted_at = datetime.now(UTC)
+        sample_tenant.deleted_at = datetime.now(timezone.utc)
         await tenant_service.db.commit()
 
         # Now restore it
@@ -219,6 +221,7 @@ class TestTenantCRUDCoverage:
         assert restored.deleted_at is None
 
 
+@pytest.mark.unit
 class TestListTenantsCoverage:
     """Tests for list_tenants - targeting uncovered lines."""
 
@@ -279,9 +282,9 @@ class TestListTenantsCoverage:
         """Test listing tenants including deleted ones."""
         # Lines 222-223: include_deleted filter
         # Manually mark as deleted
-        from datetime import UTC, datetime
+        from datetime import timezone, datetime
 
-        sample_tenant.deleted_at = datetime.now(UTC)
+        sample_tenant.deleted_at = datetime.now(timezone.utc)
         await tenant_service.db.commit()
 
         # Without include_deleted
@@ -309,6 +312,7 @@ class TestListTenantsCoverage:
         assert total == 0
 
 
+@pytest.mark.unit
 class TestSettingsManagement:
     """Tests for tenant settings - targeting uncovered lines."""
 
@@ -364,6 +368,7 @@ class TestSettingsManagement:
         assert result is None
 
 
+@pytest.mark.unit
 class TestUsageTracking:
     """Tests for usage tracking - targeting uncovered lines."""
 
@@ -372,7 +377,7 @@ class TestUsageTracking:
     ):
         """Test getting usage records with date filters."""
         # Lines 428-439: get_tenant_usage with date filters
-        start = datetime.now(UTC)
+        start = datetime.now(timezone.utc)
         end = start + timedelta(days=30)
 
         # Record usage
@@ -412,6 +417,7 @@ class TestUsageTracking:
         assert updated.current_users == 5
 
 
+@pytest.mark.unit
 class TestInvitationManagement:
     """Tests for tenant invitations - targeting uncovered lines."""
 
@@ -470,7 +476,7 @@ class TestInvitationManagement:
     ):
         """Test accepting already processed invitation fails."""
         # Lines 517-518: Already processed check
-        from datetime import UTC
+        from datetime import timezone
 
         invitation_data = TenantInvitationCreate(
             email="processed@example.com",
@@ -482,7 +488,7 @@ class TestInvitationManagement:
 
         # Ensure expires_at is timezone-aware
         if created.expires_at.tzinfo is None:
-            created.expires_at = created.expires_at.replace(tzinfo=UTC)
+            created.expires_at = created.expires_at.replace(tzinfo=timezone.utc)
             await tenant_service.db.commit()
 
         # Accept once
@@ -514,7 +520,7 @@ class TestInvitationManagement:
     ):
         """Test revoking an accepted invitation fails."""
         # Lines 537-538: Cannot revoke accepted
-        from datetime import UTC
+        from datetime import timezone
 
         invitation_data = TenantInvitationCreate(
             email="accepted@example.com",
@@ -526,7 +532,7 @@ class TestInvitationManagement:
 
         # Ensure expires_at is timezone-aware
         if created.expires_at.tzinfo is None:
-            created.expires_at = created.expires_at.replace(tzinfo=UTC)
+            created.expires_at = created.expires_at.replace(tzinfo=timezone.utc)
             await tenant_service.db.commit()
 
         await tenant_service.accept_invitation(created.token)
@@ -568,6 +574,7 @@ class TestInvitationManagement:
         assert revoked[0].email == "inv2@example.com"
 
 
+@pytest.mark.unit
 class TestFeatureManagement:
     """Tests for feature and metadata management - targeting uncovered lines."""
 
@@ -622,6 +629,7 @@ class TestFeatureManagement:
         assert updated.custom_metadata is not None
 
 
+@pytest.mark.unit
 class TestStatistics:
     """Tests for tenant statistics - targeting uncovered lines."""
 
@@ -651,6 +659,7 @@ class TestStatistics:
         assert stats.api_usage_percent > 0
 
 
+@pytest.mark.unit
 class TestBulkOperations:
     """Tests for bulk operations - targeting uncovered lines."""
 
@@ -742,6 +751,7 @@ class TestBulkOperations:
                 await tenant_service.get_tenant(tenant_id, include_deleted=True)
 
 
+@pytest.mark.unit
 class TestEdgeCaseCoverage:
     """Additional tests for edge cases to reach 90%."""
 
@@ -810,10 +820,10 @@ class TestEdgeCaseCoverage:
     ):
         """Test getting stats when subscription has end date."""
         # Lines 639-642: Days until expiry calculation
-        from datetime import UTC, datetime, timedelta
+        from datetime import timezone, datetime, timedelta
 
         # Set subscription end date
-        sample_tenant.subscription_ends_at = datetime.now(UTC) + timedelta(days=30)
+        sample_tenant.subscription_ends_at = datetime.now(timezone.utc) + timedelta(days=30)
         await tenant_service.db.commit()
 
         stats = await tenant_service.get_tenant_stats(sample_tenant.id)
@@ -886,10 +896,10 @@ class TestEdgeCaseCoverage:
     ):
         """Test getting usage with both start and end date filters."""
         # Lines 430-436: Both date filters
-        from datetime import UTC, datetime, timedelta
+        from datetime import timezone, datetime, timedelta
 
-        start = datetime.now(UTC) - timedelta(days=30)
-        end = datetime.now(UTC)
+        start = datetime.now(timezone.utc) - timedelta(days=30)
+        end = datetime.now(timezone.utc)
 
         # Record some usage
         usage_data = TenantUsageCreate(

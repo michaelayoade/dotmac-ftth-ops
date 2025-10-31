@@ -1,3 +1,4 @@
+
 """
 Tests for Sales Router
 
@@ -5,19 +6,27 @@ Tests HTTP endpoints, request validation, response formatting, and error handlin
 for the sales order API.
 """
 
-import pytest
-from fastapi import status
-from fastapi.testclient import TestClient
-from fastapi import FastAPI
-from typing import Any
-from uuid import uuid4
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import MagicMock
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
+
+
+
+
+
+
+
+pytestmark = pytest.mark.integration
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
+
     def __init__(self, **kwargs: Any):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -51,7 +60,7 @@ def sample_order_dict() -> dict[str, Any]:
         "submitted_at": None,
         "processed_at": None,
         "items": [],
-        "selected_services": []
+        "selected_services": [],
     }
 
 
@@ -59,12 +68,11 @@ def sample_order_dict() -> dict[str, Any]:
 def test_client(monkeypatch):
     """Test client with sales router (handles both sync and async endpoints)."""
     # Import auth and dependencies first
-    from dotmac.platform.auth.core import get_current_user, UserInfo
-    from dotmac.platform.dependencies import get_db
-    import dotmac.platform.auth.rbac_dependencies
-
     # Create mocks fresh for each test
-    from unittest.mock import AsyncMock
+    import dotmac.platform.auth.rbac_dependencies
+    from dotmac.platform.auth.core import UserInfo, get_current_user
+    from dotmac.platform.dependencies import get_db
+
     mock_order_service = MagicMock()
     mock_order_service.create_order = MagicMock()
     mock_order_service.create_quick_order = MagicMock()
@@ -97,11 +105,12 @@ def test_client(monkeypatch):
             "order.update",
             "order.delete",
         ],
-        is_platform_admin=False
+        is_platform_admin=False,
     )
 
     # Mock RBAC service to prevent database access
     from dotmac.platform.auth.rbac_service import RBACService
+
     mock_rbac_service = MagicMock(spec=RBACService)
     mock_rbac_service.user_has_all_permissions = AsyncMock(return_value=True)
     mock_rbac_service.user_has_any_permission = AsyncMock(return_value=True)
@@ -110,19 +119,18 @@ def test_client(monkeypatch):
 
     # Monkeypatch RBACService class to return our mock instance
     monkeypatch.setattr(
-        dotmac.platform.auth.rbac_dependencies,
-        'RBACService',
-        lambda db: mock_rbac_service
+        dotmac.platform.auth.rbac_dependencies, "RBACService", lambda db: mock_rbac_service
     )
 
     # Mock SQLAlchemy models BEFORE importing router to prevent mapper configuration
-    from unittest.mock import Mock
-    from enum import Enum
     import sys
+    from enum import Enum
+    from unittest.mock import Mock
 
     # Create a proper OrderStatus enum mock
     class MockOrderStatus(str, Enum):
         """Mock OrderStatus enum for testing."""
+
         DRAFT = "draft"
         SUBMITTED = "submitted"
         VALIDATING = "validating"
@@ -142,20 +150,23 @@ def test_client(monkeypatch):
     mock_sales_models.ServiceActivation = Mock()
 
     # Inject mock into sys.modules before router import
-    monkeypatch.setitem(sys.modules, 'dotmac.platform.sales.models', mock_sales_models)
+    monkeypatch.setitem(sys.modules, "dotmac.platform.sales.models", mock_sales_models)
 
     # NOW import the router (it will use our mocked models)
-    from dotmac.platform.sales.router import router as sales_router, public_router
-    from dotmac.platform.sales.router import get_order_service, get_activation_orchestrator
-
     # Import additional dependencies to override
     from dotmac.platform.dependencies import (
-        get_tenant_service,
         get_deployment_service,
-        get_notification_service,
         get_email_service,
         get_event_bus,
+        get_notification_service,
+        get_tenant_service,
     )
+    from dotmac.platform.sales.router import (
+        get_activation_orchestrator,
+        get_order_service,
+        public_router,
+    )
+    from dotmac.platform.sales.router import router as sales_router
 
     app = FastAPI()
 
@@ -171,8 +182,8 @@ def test_client(monkeypatch):
     app.dependency_overrides[get_event_bus] = lambda: MagicMock()
 
     # Include both public and authenticated routers
-    app.include_router(public_router, prefix="/api/v1/sales/public", tags=["Sales Public"])
-    app.include_router(sales_router, prefix="/api/v1/sales", tags=["Sales"])
+    app.include_router(public_router, tags=["Sales Public"])
+    app.include_router(sales_router, prefix="/api/v1", tags=["Sales"])
 
     with TestClient(app) as client:
         # Store mocks on client for tests to access
@@ -185,9 +196,7 @@ class TestPublicAPI:
     """Test public API endpoints (no authentication)."""
 
     def test_create_public_order_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test creating order via public API."""
         # Arrange
@@ -196,19 +205,15 @@ class TestPublicAPI:
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/public",
+            "/api/public/orders",
             json={
                 "customer_email": "customer@example.com",
                 "customer_name": "John Doe",
                 "company_name": "Test Corp",
                 "selected_services": [
-                    {
-                        "service_code": "basic-plan",
-                        "name": "Basic Plan",
-                        "quantity": 1
-                    }
-                ]
-            }
+                    {"service_code": "basic-plan", "name": "Basic Plan", "quantity": 1}
+                ],
+            },
         )
 
         # Assert
@@ -218,9 +223,7 @@ class TestPublicAPI:
         assert data["status"] == "draft"
 
     def test_create_quick_order_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test creating quick order."""
         # Arrange
@@ -230,14 +233,14 @@ class TestPublicAPI:
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/public/quick",
+            "/api/public/orders/quick",
             json={
                 "email": "customer@example.com",
                 "name": "John Doe",
                 "company": "Test Corp",
                 "package_code": "starter",
-                "phone": "+1-555-0100"
-            }
+                "phone": "+1-555-0100",
+            },
         )
 
         # Assert
@@ -260,12 +263,12 @@ class TestPublicAPI:
             created_at=datetime.utcnow(),
             submitted_at=datetime.utcnow(),
             estimated_completion=None,
-            organization_slug="test-corp"
+            organization_slug="test-corp",
         )
         test_client.mock_order_service.get_order_by_number.return_value = order_status  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/public/ORD-2025-001/status")
+        response = test_client.get("/api/public/orders/ORD-2025-001/status")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -282,7 +285,7 @@ class TestPublicAPI:
         test_client.mock_order_service.get_order_by_number.return_value = None  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/public/ORD-NOTFOUND/status")
+        response = test_client.get("/api/public/orders/ORD-NOTFOUND/status")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -291,11 +294,7 @@ class TestPublicAPI:
 class TestOrderCRUD:
     """Test order CRUD endpoints (authenticated)."""
 
-    def test_list_orders_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
-    ):
+    def test_list_orders_success(self, test_client: TestClient, sample_order_dict: dict[str, Any]):
         """Test listing orders."""
         # Arrange
         order1 = MockObject(**sample_order_dict)
@@ -304,7 +303,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.list_orders.return_value = [order1, order2]  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales")
+        response = test_client.get("/api/v1/orders")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -313,9 +312,7 @@ class TestOrderCRUD:
         assert data[0]["order_number"] == "ORD-2025-001"
 
     def test_get_order_by_id_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test getting order by ID."""
         # Arrange
@@ -323,7 +320,7 @@ class TestOrderCRUD:
         test_client.mock_order_service.get_order.return_value = order_obj  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/1")
+        response = test_client.get("/api/v1/orders/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -340,23 +337,21 @@ class TestOrderCRUD:
         test_client.mock_order_service.get_order.return_value = None  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/999")
+        response = test_client.get("/api/v1/orders/999")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
-    def test_delete_order_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
-    ):
+    def test_delete_order_success(self, test_client: TestClient, sample_order_dict: dict[str, Any]):
         """Test deleting order."""
         # Arrange
-        cancelled_order = MockObject(**{**sample_order_dict, "status": "cancelled", "order_number": "ORD-2025-001"})
+        cancelled_order = MockObject(
+            **{**sample_order_dict, "status": "cancelled", "order_number": "ORD-2025-001"}
+        )
         test_client.mock_order_service.cancel_order.return_value = cancelled_order  # type: ignore
 
         # Act
-        response = test_client.delete("/api/v1/sales/1")
+        response = test_client.delete("/api/v1/orders/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -368,21 +363,20 @@ class TestOrderCRUD:
 class TestOrderWorkflow:
     """Test order workflow endpoints."""
 
-    def test_submit_order_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
-    ):
+    def test_submit_order_success(self, test_client: TestClient, sample_order_dict: dict[str, Any]):
         """Test submitting order."""
         # Arrange
-        submitted_order = {**sample_order_dict, "status": "submitted", "submitted_at": datetime.utcnow().isoformat()}
+        submitted_order = {
+            **sample_order_dict,
+            "status": "submitted",
+            "submitted_at": datetime.utcnow().isoformat(),
+        }
         order_obj = MockObject(**submitted_order)
         test_client.mock_order_service.submit_order.return_value = order_obj  # type: ignore
 
         # Act
         response = test_client.post(
-            "/api/v1/sales/1/submit",
-            json={"payment_method": "credit_card"}
+            "/api/v1/orders/1/submit", json={"payment_method": "credit_card"}
         )
 
         # Assert
@@ -391,18 +385,20 @@ class TestOrderWorkflow:
         assert data["status"] == "submitted"
 
     def test_process_order_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test processing order."""
         # Arrange
-        processed_order_dict = {**sample_order_dict, "status": "provisioning", "processed_at": datetime.utcnow().isoformat()}
+        processed_order_dict = {
+            **sample_order_dict,
+            "status": "provisioning",
+            "processed_at": datetime.utcnow().isoformat(),
+        }
         order_obj = MockObject(**processed_order_dict)
         test_client.mock_order_service.process_order.return_value = order_obj  # type: ignore
 
         # Act
-        response = test_client.post("/api/v1/sales/1/process")
+        response = test_client.post("/api/v1/orders/1/process")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -410,9 +406,7 @@ class TestOrderWorkflow:
         assert data["status"] == "provisioning"
 
     def test_update_order_status_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test updating order status."""
         # Arrange
@@ -422,8 +416,8 @@ class TestOrderWorkflow:
 
         # Act
         response = test_client.patch(
-            "/api/v1/sales/1/status",
-            json={"status": "active", "status_message": "All services activated"}
+            "/api/v1/orders/1/status",
+            json={"status": "active", "status_message": "All services activated"},
         )
 
         # Assert
@@ -436,9 +430,7 @@ class TestServiceActivations:
     """Test service activation endpoints."""
 
     def test_get_service_activations_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test getting service activations."""
         # Arrange
@@ -460,12 +452,12 @@ class TestServiceActivations:
             success=True,
             retry_count=0,
             created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            updated_at=datetime.utcnow(),
         )
         test_client.mock_activation_orchestrator.get_service_activations.return_value = [activation]  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/1/activations")
+        response = test_client.get("/api/v1/orders/1/activations")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -475,9 +467,7 @@ class TestServiceActivations:
         assert data[0]["activation_status"] == "completed"
 
     def test_get_activation_progress_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test getting activation progress."""
         # Arrange
@@ -494,12 +484,14 @@ class TestServiceActivations:
             "pending": 0,
             "overall_status": "in_progress",
             "progress_percent": 66,
-            "activations": []
+            "activations": [],
         }
-        test_client.mock_activation_orchestrator.get_activation_progress.return_value = progress_data  # type: ignore
+        test_client.mock_activation_orchestrator.get_activation_progress.return_value = (
+            progress_data  # type: ignore
+        )
 
         # Act
-        response = test_client.get("/api/v1/sales/1/activations/progress")
+        response = test_client.get("/api/v1/orders/1/activations/progress")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -509,9 +501,7 @@ class TestServiceActivations:
         assert data["progress_percent"] == 66
 
     def test_retry_failed_activations_success(
-        self,
-        test_client: TestClient,
-        sample_order_dict: dict[str, Any]
+        self, test_client: TestClient, sample_order_dict: dict[str, Any]
     ):
         """Test retrying failed activations."""
         # Arrange
@@ -519,11 +509,15 @@ class TestServiceActivations:
         order_obj = MockObject(**sample_order_dict)
         test_client.mock_order_service.get_order.return_value = order_obj  # type: ignore
 
-        result = {"success": True, "message": "Retrying 1 failed activations", "services": ["basic-plan"]}
+        result = {
+            "success": True,
+            "message": "Retrying 1 failed activations",
+            "services": ["basic-plan"],
+        }
         test_client.mock_activation_orchestrator.retry_failed_activations.return_value = result  # type: ignore
 
         # Act
-        response = test_client.post("/api/v1/sales/1/activations/retry")
+        response = test_client.post("/api/v1/orders/1/activations/retry")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -542,24 +536,16 @@ class TestOrderStatistics:
         """Test getting order statistics."""
         # Arrange
         stats = {
-            "orders_by_status": {
-                "draft": 20,
-                "submitted": 15,
-                "active": 50,
-                "failed": 5
-            },
-            "revenue": {
-                "total": 50000.00,
-                "average": 500.00
-            },
+            "orders_by_status": {"draft": 20, "submitted": 15, "active": 50, "failed": 5},
+            "revenue": {"total": 50000.00, "average": 500.00},
             "success_rate": 90.91,
             "total_processed": 55,
-            "successful": 50
+            "successful": 50,
         }
         test_client.mock_order_service.get_order_statistics.return_value = stats  # type: ignore
 
         # Act
-        response = test_client.get("/api/v1/sales/stats/summary")
+        response = test_client.get("/api/v1/orders/stats/summary")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -567,3 +553,58 @@ class TestOrderStatistics:
         assert data["successful"] == 50
         assert data["total_processed"] == 55
         assert data["success_rate"] == 90.91
+
+
+@pytest.mark.asyncio
+class TestSalesOrderPermissions:
+    """Ensure internal sales API endpoints enforce RBAC permissions."""
+
+    @staticmethod
+    def _deny_permissions(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+        """Force RBAC permission checks to fail during the request."""
+        denied_all = AsyncMock(return_value=False)
+        monkeypatch.setattr(
+            "dotmac.platform.auth.rbac_dependencies.RBACService.user_has_all_permissions",
+            denied_all,
+        )
+        monkeypatch.setattr(
+            "dotmac.platform.auth.rbac_dependencies.RBACService.user_has_any_permission",
+            AsyncMock(return_value=False),
+        )
+        return denied_all
+
+    @pytest.mark.parametrize(
+        ("method", "path", "payload"),
+        [
+            ("get", "/api/v1/orders/{order_id}", None),
+            ("post", "/api/v1/orders/{order_id}/submit", {}),
+            ("post", "/api/v1/orders/{order_id}/process", None),
+            ("patch", "/api/v1/orders/{order_id}/status", {"status": "active"}),
+            ("delete", "/api/v1/orders/{order_id}", None),
+            ("get", "/api/v1/orders", None),
+            ("get", "/api/v1/orders/stats/summary", None),
+        ],
+    )
+    def test_endpoints_require_permissions(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None,
+        test_app: FastAPI,
+        auth_headers: dict[str, str],
+        sample_order,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """All internal sales endpoints return 403 when RBAC denies access."""
+        deny_mock = self._deny_permissions(monkeypatch)
+
+        with TestClient(test_app) as client:
+            url = path.format(order_id=sample_order.id)
+            request_kwargs: dict[str, Any] = {"headers": auth_headers}
+            if payload is not None:
+                request_kwargs["json"] = payload
+
+            response = getattr(client, method)(url, **request_kwargs)
+
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        deny_mock.assert_awaited()

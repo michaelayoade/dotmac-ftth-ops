@@ -8,8 +8,16 @@ from fastapi import FastAPI
 from dotmac.platform.observability.manager import ObservabilityManager, ObservabilityMetricsRegistry
 
 
+
+
+
+
+
+pytestmark = pytest.mark.unit
+
 class TestObservabilityMetricsRegistry:
     """Test ObservabilityMetricsRegistry."""
+
 
     @pytest.fixture
     def mock_meter(self):

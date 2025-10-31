@@ -13,6 +13,7 @@ Usage:
 
 See CACHE_BYPASS_PATTERN.md for detailed documentation.
 """
+import pytest
 
 import sys
 from contextlib import contextmanager

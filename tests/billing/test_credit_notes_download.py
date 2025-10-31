@@ -1,6 +1,6 @@
 """Tests for credit note download endpoint."""
 
-from datetime import UTC, datetime
+from datetime import timezone, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -12,9 +12,18 @@ from dotmac.platform.billing.core.models import CreditNote, CreditNoteLineItem
 from dotmac.platform.billing.credit_notes.router import router
 
 
+
+
+
+
+
+pytestmark = pytest.mark.integration
+
 @pytest.fixture
 def app():
     """Create FastAPI app with dependency overrides."""
+
+
     app = FastAPI()
     app.include_router(router, prefix="/billing")
 
@@ -63,7 +72,7 @@ def _sample_credit_note() -> CreditNote:
         created_by="accounting@dotmac.io",
         customer_id="cust-123",
         invoice_id="inv-456",
-        issue_date=datetime.now(UTC),
+        issue_date=datetime.now(timezone.utc),
         currency="USD",
         subtotal=5000,
         tax_amount=0,
@@ -77,8 +86,8 @@ def _sample_credit_note() -> CreditNote:
         remaining_credit_amount=2500,
         notes="Applied due to overcharge",
         internal_notes="Verified by finance",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc),
     )
 
 

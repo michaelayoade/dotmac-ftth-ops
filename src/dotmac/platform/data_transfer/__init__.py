@@ -5,6 +5,8 @@ This module replaces the custom data transfer implementation with
 pandas-based functionality and Python standard libraries.
 """
 
+# Version info
+from ..version import get_version
 from .core import (  # Core classes and enums; Exceptions; Base classes; Protocols
     BaseDataProcessor,
     BaseExporter,
@@ -82,8 +84,7 @@ from .utils import (
     validate_and_clean_file,
 )
 
-# Version info
-__version__ = "2.0.0"
+__version__ = get_version()
 __author__ = "DotMac Team"
 
 __all__ = [

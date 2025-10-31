@@ -33,9 +33,7 @@ class NotifyTeamInput(BaseModel):
         """Validate notification channel"""
         valid_channels = {"email", "in_app", "sms", "push", "webhook"}
         if v.lower() not in valid_channels:
-            raise ValueError(
-                f"Invalid channel: {v}. Valid channels: {', '.join(valid_channels)}"
-            )
+            raise ValueError(f"Invalid channel: {v}. Valid channels: {', '.join(valid_channels)}")
         return v.lower()
 
     @field_validator("priority")
@@ -64,9 +62,7 @@ class IssueLicenseInput(BaseModel):
     issued_to: str | None = Field(None, description="Name of licensee")
     issued_via: str | None = Field("workflow", description="Source of issuance")
     reseller_id: str | None = Field(None, description="Reseller/partner ID")
-    additional_metadata: dict[str, Any] | None = Field(
-        None, description="Additional metadata"
-    )
+    additional_metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
 
 
 class AllocateFromPartnerInput(BaseModel):
@@ -92,9 +88,7 @@ class CreateQuoteInput(BaseModel):
     tenant_id: str = Field(..., description="Tenant ID")
     items: list[dict[str, Any]] = Field(..., min_length=1, description="Quote line items")
     valid_until: datetime | None = Field(None, description="Quote expiration date")
-    discount_percent: float | None = Field(
-        None, ge=0, le=100, description="Discount percentage"
-    )
+    discount_percent: float | None = Field(None, ge=0, le=100, description="Discount percentage")
     notes: str | None = Field(None, description="Additional notes")
 
     @field_validator("items")
@@ -137,9 +131,7 @@ class GenerateInvoiceInput(BaseModel):
 
     customer_id: str = Field(..., description="Customer ID")
     tenant_id: str = Field(..., description="Tenant ID")
-    line_items: list[dict[str, Any]] = Field(
-        ..., min_length=1, description="Invoice line items"
-    )
+    line_items: list[dict[str, Any]] = Field(..., min_length=1, description="Invoice line items")
     due_date: datetime | None = Field(None, description="Invoice due date")
     notes: str | None = Field(None, description="Additional notes")
 

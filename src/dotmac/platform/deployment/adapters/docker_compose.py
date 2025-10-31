@@ -106,14 +106,18 @@ class DockerComposeAdapter(DeploymentAdapter):
                 duration_seconds=(completed_at - started_at).total_seconds(),
             )
         except Exception as e:
-            return DeploymentResult(status=ExecutionStatus.FAILED, message=str(e), error_code="COMPOSE_UPGRADE_FAILED")
+            return DeploymentResult(
+                status=ExecutionStatus.FAILED, message=str(e), error_code="COMPOSE_UPGRADE_FAILED"
+            )
 
     async def suspend(self, context: ExecutionContext) -> DeploymentResult:
         """Suspend deployment"""
         try:
             project_name = self._get_project_name(context)
             await self._compose_stop(project_name)
-            return DeploymentResult(status=ExecutionStatus.SUCCEEDED, message="Deployment suspended")
+            return DeploymentResult(
+                status=ExecutionStatus.SUCCEEDED, message="Deployment suspended"
+            )
         except Exception as e:
             return DeploymentResult(status=ExecutionStatus.FAILED, message=str(e))
 
@@ -132,7 +136,9 @@ class DockerComposeAdapter(DeploymentAdapter):
         try:
             project_name = self._get_project_name(context)
             await self._compose_down(project_name, remove_volumes=True)
-            return DeploymentResult(status=ExecutionStatus.SUCCEEDED, message="Deployment destroyed")
+            return DeploymentResult(
+                status=ExecutionStatus.SUCCEEDED, message="Deployment destroyed"
+            )
         except Exception as e:
             return DeploymentResult(status=ExecutionStatus.FAILED, message=str(e))
 
@@ -156,7 +162,11 @@ class DockerComposeAdapter(DeploymentAdapter):
             output = await self._run_compose_command(project_name, ["ps", "--format", "json"])
             services = yaml.safe_load(output) if output else []
             running = sum(1 for s in services if s.get("State") == "running")
-            return {"ready": running > 0, "running_services": running, "total_services": len(services)}
+            return {
+                "ready": running > 0,
+                "running_services": running,
+                "total_services": len(services),
+            }
         except Exception as e:
             return {"ready": False, "error": str(e)}
 
@@ -192,7 +202,9 @@ class DockerComposeAdapter(DeploymentAdapter):
                 "api": {
                     "image": f"dotmac/platform-api:{context.to_version or context.template_version}",
                     "environment": self._build_environment(context),
-                    "deploy": {"resources": {"limits": {"cpus": str(cpu_limit), "memory": memory_limit}}},
+                    "deploy": {
+                        "resources": {"limits": {"cpus": str(cpu_limit), "memory": memory_limit}}
+                    },
                     "ports": ["8000:8000"],
                     "depends_on": ["db", "redis"],
                 },
@@ -223,7 +235,9 @@ class DockerComposeAdapter(DeploymentAdapter):
         env.update({k: str(v) for k, v in context.config.items()})
         return env
 
-    async def _compose_up(self, project_name: str, compose_path: Path, force_recreate: bool = False) -> None:
+    async def _compose_up(
+        self, project_name: str, compose_path: Path, force_recreate: bool = False
+    ) -> None:
         """Run docker-compose up"""
         cmd = ["up", "-d"]
         if force_recreate:

@@ -11,7 +11,7 @@ Tests integration between subscriptions and invoice generation:
 - Invoice PDF generation
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import timezone, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -20,8 +20,10 @@ import pytest
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
     SubscriptionCreateRequest,
+    SubscriptionPlanChangeRequest,
     SubscriptionPlanCreateRequest,
     SubscriptionStatus,
+    UsageRecordRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
@@ -37,6 +39,7 @@ def invoice_config():
     }
 
 
+@pytest.mark.integration
 class TestSubscriptionInvoiceCreation:
     """Test invoice creation for subscriptions."""
 
@@ -67,8 +70,7 @@ class TestSubscriptionInvoiceCreation:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Expected invoice structure
@@ -80,7 +82,7 @@ class TestSubscriptionInvoiceCreation:
             "subtotal": plan.price,
             "tax": plan.price * invoice_config["tax_rate"],
             "total": plan.price * (1 + invoice_config["tax_rate"]),
-            "due_date": datetime.now(UTC) + timedelta(days=invoice_config["due_days"]),
+            "due_date": datetime.now(timezone.utc) + timedelta(days=invoice_config["due_days"]),
             "status": "pending",
             "line_items": [
                 {
@@ -89,10 +91,10 @@ class TestSubscriptionInvoiceCreation:
                     "unit_price": plan.price,
                     "amount": plan.price,
                 }
-            ]
+            ],
         }
 
-        print(f"\n🧾 Invoice would be created:")
+        print("\n🧾 Invoice would be created:")
         print(f"   Invoice #: {expected_invoice['invoice_number']}")
         print(f"   Subtotal: ${expected_invoice['subtotal']}")
         print(f"   Tax (10%): ${expected_invoice['tax']:.2f}")
@@ -101,9 +103,7 @@ class TestSubscriptionInvoiceCreation:
         assert subscription.status == SubscriptionStatus.ACTIVE
 
     @pytest.mark.asyncio
-    async def test_invoice_with_setup_fee(
-        self, async_db_session, invoice_config
-    ):
+    async def test_invoice_with_setup_fee(self, async_db_session, invoice_config):
         """Test invoice includes setup fee on first billing."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -127,8 +127,7 @@ class TestSubscriptionInvoiceCreation:
             plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
-            subscription_data=subscription_data,
-            tenant_id=tenant_id
+            subscription_data=subscription_data, tenant_id=tenant_id
         )
 
         # Expected invoice with setup fee
@@ -136,22 +135,7 @@ class TestSubscriptionInvoiceCreation:
         tax = subtotal * invoice_config["tax_rate"]
         total = subtotal + tax
 
-        expected_line_items = [
-            {
-                "description": f"{plan.name} - Monthly subscription",
-                "quantity": 1,
-                "unit_price": plan.price,
-                "amount": plan.price,
-            },
-            {
-                "description": "One-time setup fee",
-                "quantity": 1,
-                "unit_price": plan.setup_fee,
-                "amount": plan.setup_fee,
-            }
-        ]
-
-        print(f"\n🧾 Invoice with setup fee:")
+        print("\n🧾 Invoice with setup fee:")
         print(f"   Subscription: ${plan.price}")
         print(f"   Setup fee: ${plan.setup_fee}")
         print(f"   Subtotal: ${subtotal}")
@@ -161,13 +145,12 @@ class TestSubscriptionInvoiceCreation:
         assert subscription.subscription_id is not None
 
 
+@pytest.mark.integration
 class TestRenewalInvoices:
     """Test invoice generation for subscription renewals."""
 
     @pytest.mark.asyncio
-    async def test_renewal_invoice_generation(
-        self, async_db_session, invoice_config
-    ):
+    async def test_renewal_invoice_generation(self, async_db_session, invoice_config):
         """Test invoice generation for subscription renewal."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -183,7 +166,7 @@ class TestRenewalInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         subscription = await service.create_subscription(
@@ -191,7 +174,7 @@ class TestRenewalInvoices:
                 customer_id=str(uuid4()),
                 plan_id=plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Simulate renewal (would be triggered by scheduled job)
@@ -199,8 +182,8 @@ class TestRenewalInvoices:
             "invoice_number": f"{invoice_config['invoice_prefix']}-002",
             "subscription_id": subscription.subscription_id,
             "billing_reason": "subscription_renewal",
-            "period_start": datetime.now(UTC),
-            "period_end": datetime.now(UTC) + timedelta(days=30),
+            "period_start": datetime.now(timezone.utc),
+            "period_end": datetime.now(timezone.utc) + timedelta(days=30),
             "subtotal": plan.price,
             "tax": plan.price * invoice_config["tax_rate"],
             "total": plan.price * (1 + invoice_config["tax_rate"]),
@@ -212,10 +195,10 @@ class TestRenewalInvoices:
                     "unit_price": plan.price,
                     "amount": plan.price,
                 }
-            ]
+            ],
         }
 
-        print(f"\n🔄 Renewal invoice:")
+        print("\n🔄 Renewal invoice:")
         print(f"   Invoice #: {renewal_invoice['invoice_number']}")
         print(f"   Billing reason: {renewal_invoice['billing_reason']}")
         print(f"   Total: ${renewal_invoice['total']:.2f}")
@@ -223,9 +206,7 @@ class TestRenewalInvoices:
         assert subscription.status == SubscriptionStatus.ACTIVE
 
     @pytest.mark.asyncio
-    async def test_renewal_invoice_with_usage_charges(
-        self, async_db_session, invoice_config
-    ):
+    async def test_renewal_invoice_with_usage_charges(self, async_db_session, invoice_config):
         """Test renewal invoice includes usage-based charges."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -241,7 +222,7 @@ class TestRenewalInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Create subscription
@@ -250,19 +231,28 @@ class TestRenewalInvoices:
                 customer_id=str(uuid4()),
                 plan_id=plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
-        # Record usage
-        usage_data = {
-            "api_calls": 15000,  # Over 10,000 included
-            "storage_gb": 150,   # Over 100 included
-        }
-
+        # Record usage - need to record each usage type separately
+        # Record API calls usage
         await service.record_usage(
-            subscription_id=subscription.subscription_id,
+            usage_request=UsageRecordRequest(
+                subscription_id=subscription.subscription_id,
+                usage_type="api_calls",
+                quantity=15000,  # Over 10,000 included
+            ),
             tenant_id=tenant_id,
-            usage_data=usage_data,
+        )
+
+        # Record storage usage
+        await service.record_usage(
+            usage_request=UsageRecordRequest(
+                subscription_id=subscription.subscription_id,
+                usage_type="storage_gb",
+                quantity=150,  # Over 100 included
+            ),
+            tenant_id=tenant_id,
         )
 
         # Calculate overage charges
@@ -280,22 +270,7 @@ class TestRenewalInvoices:
         tax = subtotal * invoice_config["tax_rate"]
         total = subtotal + tax
 
-        expected_line_items = [
-            {
-                "description": f"{plan.name} - Monthly subscription",
-                "amount": plan.price,
-            },
-            {
-                "description": "API calls overage (5,000 calls @ $0.01)",
-                "amount": api_charge,
-            },
-            {
-                "description": "Storage overage (50 GB @ $0.10)",
-                "amount": storage_charge,
-            }
-        ]
-
-        print(f"\n📊 Renewal invoice with usage:")
+        print("\n📊 Renewal invoice with usage:")
         print(f"   Base subscription: ${plan.price}")
         print(f"   API overage: ${api_charge}")
         print(f"   Storage overage: ${storage_charge}")
@@ -304,13 +279,12 @@ class TestRenewalInvoices:
         print(f"   Total: ${total:.2f}")
 
 
+@pytest.mark.integration
 class TestProratedInvoices:
     """Test prorated invoice generation for plan changes."""
 
     @pytest.mark.asyncio
-    async def test_prorated_invoice_for_upgrade(
-        self, async_db_session, invoice_config
-    ):
+    async def test_prorated_invoice_for_upgrade(self, async_db_session, invoice_config):
         """Test prorated invoice when upgrading mid-cycle."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -327,7 +301,7 @@ class TestProratedInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         premium_plan = await service.create_plan(
@@ -340,7 +314,7 @@ class TestProratedInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Create subscription on basic plan
@@ -349,14 +323,14 @@ class TestProratedInvoices:
                 customer_id=str(uuid4()),
                 plan_id=basic_plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Upgrade to premium (simulate mid-cycle - 15 days remaining)
-        upgraded = await service.change_plan(
+        upgraded, proration = await service.change_plan(
             subscription_id=subscription.subscription_id,
+            change_request=SubscriptionPlanChangeRequest(new_plan_id=premium_plan.plan_id),
             tenant_id=tenant_id,
-            new_plan_id=premium_plan.plan_id
         )
 
         # Calculate proration
@@ -371,7 +345,7 @@ class TestProratedInvoices:
         tax = prorated_amount * invoice_config["tax_rate"]
         total = prorated_amount + tax
 
-        print(f"\n⬆️  Prorated upgrade invoice:")
+        print("\n⬆️  Prorated upgrade invoice:")
         print(f"   Old plan: {basic_plan.name} (${basic_plan.price})")
         print(f"   New plan: {premium_plan.name} (${premium_plan.price})")
         print(f"   Days remaining: {days_remaining}/{days_in_month}")
@@ -383,9 +357,7 @@ class TestProratedInvoices:
         assert upgraded.plan_id == premium_plan.plan_id
 
     @pytest.mark.asyncio
-    async def test_credit_note_for_downgrade(
-        self, async_db_session, invoice_config
-    ):
+    async def test_credit_note_for_downgrade(self, async_db_session, invoice_config):
         """Test credit note generation when downgrading mid-cycle."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -402,7 +374,7 @@ class TestProratedInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         basic_plan = await service.create_plan(
@@ -415,7 +387,7 @@ class TestProratedInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Create subscription on premium plan
@@ -424,14 +396,14 @@ class TestProratedInvoices:
                 customer_id=str(uuid4()),
                 plan_id=premium_plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Downgrade to basic (simulate mid-cycle - 20 days remaining)
-        downgraded = await service.change_plan(
+        downgraded, proration_downgrade = await service.change_plan(
             subscription_id=subscription.subscription_id,
+            change_request=SubscriptionPlanChangeRequest(new_plan_id=basic_plan.plan_id),
             tenant_id=tenant_id,
-            new_plan_id=basic_plan.plan_id
         )
 
         # Calculate credit
@@ -452,7 +424,7 @@ class TestProratedInvoices:
             "status": "issued",
         }
 
-        print(f"\n⬇️  Credit note for downgrade:")
+        print("\n⬇️  Credit note for downgrade:")
         print(f"   Old plan: {premium_plan.name} (${premium_plan.price})")
         print(f"   New plan: {basic_plan.name} (${basic_plan.price})")
         print(f"   Days remaining: {days_remaining}/{days_in_month}")
@@ -464,13 +436,12 @@ class TestProratedInvoices:
         assert downgraded.plan_id == basic_plan.plan_id
 
 
+@pytest.mark.integration
 class TestRefundInvoices:
     """Test invoice adjustments and refunds."""
 
     @pytest.mark.asyncio
-    async def test_refund_invoice_on_cancellation(
-        self, async_db_session, invoice_config
-    ):
+    async def test_refund_invoice_on_cancellation(self, async_db_session, invoice_config):
         """Test refund calculation when subscription is canceled mid-cycle."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -486,7 +457,7 @@ class TestRefundInvoices:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         subscription = await service.create_subscription(
@@ -494,14 +465,14 @@ class TestRefundInvoices:
                 customer_id=str(uuid4()),
                 plan_id=plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Cancel immediately (simulate mid-cycle - 18 days remaining)
         canceled = await service.cancel_subscription(
             subscription_id=subscription.subscription_id,
             tenant_id=tenant_id,
-            immediately=True
+            at_period_end=False  # Cancel immediately
         )
 
         # Calculate refund
@@ -512,23 +483,23 @@ class TestRefundInvoices:
         refund_amount = plan.price * refund_factor
         refund_with_tax = refund_amount * (1 + invoice_config["tax_rate"])
 
-        print(f"\n💰 Refund calculation:")
+        print("\n💰 Refund calculation:")
         print(f"   Plan price: ${plan.price}")
         print(f"   Days remaining: {days_remaining}/{days_in_month}")
         print(f"   Refund percentage: {refund_factor * 100:.1f}%")
         print(f"   Refund amount: ${refund_amount:.2f}")
         print(f"   Refund with tax: ${refund_with_tax:.2f}")
 
-        assert canceled.status == SubscriptionStatus.CANCELED
+        # Immediate cancellation sets status to ENDED
+        assert canceled.status == SubscriptionStatus.ENDED
 
 
+@pytest.mark.integration
 class TestInvoicePDFGeneration:
     """Test PDF generation for invoices."""
 
     @pytest.mark.asyncio
-    async def test_invoice_pdf_generation(
-        self, async_db_session, invoice_config
-    ):
+    async def test_invoice_pdf_generation(self, async_db_session, invoice_config):
         """Test PDF generation for subscription invoice."""
         service = SubscriptionService(db_session=async_db_session)
         tenant_id = str(uuid4())
@@ -545,7 +516,7 @@ class TestInvoicePDFGeneration:
                 trial_days=0,
                 is_active=True,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         subscription = await service.create_subscription(
@@ -553,14 +524,14 @@ class TestInvoicePDFGeneration:
                 customer_id=customer_id,
                 plan_id=plan.plan_id,
             ),
-            tenant_id=tenant_id
+            tenant_id=tenant_id,
         )
 
         # Mock invoice data for PDF
         invoice_data = {
             "invoice_number": f"{invoice_config['invoice_prefix']}-001",
-            "date": datetime.now(UTC).strftime("%Y-%m-%d"),
-            "due_date": (datetime.now(UTC) + timedelta(days=30)).strftime("%Y-%m-%d"),
+            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "due_date": (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d"),
             "customer": {
                 "id": customer_id,
                 "name": "Test Customer",
@@ -589,10 +560,10 @@ class TestInvoicePDFGeneration:
             "filename": f"invoice_{invoice_data['invoice_number']}.pdf",
             "size_kb": 42,
             "pages": 1,
-            "generated_at": datetime.now(UTC).isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
         }
 
-        print(f"\n📄 Invoice PDF generated:")
+        print("\n📄 Invoice PDF generated:")
         print(f"   Filename: {pdf_metadata['filename']}")
         print(f"   Size: {pdf_metadata['size_kb']} KB")
         print(f"   Pages: {pdf_metadata['pages']}")
@@ -616,9 +587,9 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
     tenant_id = str(uuid4())
     customer_id = str(uuid4())
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("🧾 COMPLETE INVOICE WORKFLOW TEST")
-    print("="*70)
+    print("=" * 70)
 
     # Step 1: Create subscription (initial invoice)
     print("\n📋 Step 1: Creating subscription with initial invoice...")
@@ -633,7 +604,7 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
             setup_fee=Decimal("25.00"),
             is_active=True,
         ),
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
 
     subscription = await service.create_subscription(
@@ -641,14 +612,14 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
             customer_id=customer_id,
             plan_id=plan.plan_id,
         ),
-        tenant_id=tenant_id
+        tenant_id=tenant_id,
     )
 
     initial_subtotal = plan.price + plan.setup_fee
     initial_tax = initial_subtotal * invoice_config["tax_rate"]
     initial_total = initial_subtotal + initial_tax
 
-    print(f"✅ Initial invoice:")
+    print("✅ Initial invoice:")
     print(f"   Subscription: ${plan.price}")
     print(f"   Setup fee: ${plan.setup_fee}")
     print(f"   Tax: ${initial_tax:.2f}")
@@ -656,13 +627,25 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
 
     # Step 2: Record usage
     print("\n📊 Step 2: Recording usage...")
-    usage_data = {"api_calls": 12500, "storage_gb": 125}
+    # Record API calls usage
     await service.record_usage(
-        subscription_id=subscription.subscription_id,
+        usage_request=UsageRecordRequest(
+            subscription_id=subscription.subscription_id,
+            usage_type="api_calls",
+            quantity=12500,
+        ),
         tenant_id=tenant_id,
-        usage_data=usage_data,
     )
-    print(f"✅ Usage recorded: {usage_data}")
+    # Record storage usage
+    await service.record_usage(
+        usage_request=UsageRecordRequest(
+            subscription_id=subscription.subscription_id,
+            usage_type="storage_gb",
+            quantity=125,
+        ),
+        tenant_id=tenant_id,
+    )
+    print(f"✅ Usage recorded: api_calls=12500, storage_gb=125")
 
     # Step 3: Simulate renewal invoice with usage
     print("\n🔄 Step 3: Renewal invoice with usage...")
@@ -672,7 +655,7 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
     renewal_tax = renewal_subtotal * invoice_config["tax_rate"]
     renewal_total = renewal_subtotal + renewal_tax
 
-    print(f"✅ Renewal invoice:")
+    print("✅ Renewal invoice:")
     print(f"   Subscription: ${plan.price}")
     print(f"   API overage: ${api_overage}")
     print(f"   Storage overage: ${storage_overage}")
@@ -681,23 +664,23 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
 
     # Step 4: Cancel and refund
     print("\n❌ Step 4: Cancel subscription with refund...")
-    canceled = await service.cancel_subscription(
+    await service.cancel_subscription(
         subscription_id=subscription.subscription_id,
         tenant_id=tenant_id,
-        immediately=True
+        at_period_end=False  # Cancel immediately
     )
 
     refund_amount = plan.price * Decimal("0.60")  # 60% refund (18 days remaining)
     refund_with_tax = refund_amount * (1 + invoice_config["tax_rate"])
 
-    print(f"✅ Refund processed:")
+    print("✅ Refund processed:")
     print(f"   Refund amount: ${refund_amount:.2f}")
     print(f"   Refund with tax: ${refund_with_tax:.2f}")
 
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("✅ COMPLETE INVOICE WORKFLOW SUCCESSFUL")
-    print("="*70)
-    print(f"\nInvoices generated:")
+    print("=" * 70)
+    print("\nInvoices generated:")
     print(f"  1. Initial invoice: ${initial_total:.2f}")
     print(f"  2. Renewal with usage: ${renewal_total:.2f}")
     print(f"  3. Refund: ${refund_with_tax:.2f}")

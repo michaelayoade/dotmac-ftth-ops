@@ -5,7 +5,10 @@ Handles payment method management including adding, verifying,
 and removing payment methods with payment gateway integration.
 """
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -37,6 +40,17 @@ class PaymentMethodService:
     # Payment Method Operations
     # ============================================================================
 
+    async def list_payment_methods_for_customer(
+        self, tenant_id: str, customer_id: str
+    ) -> list[PaymentMethodResponse]:
+        """
+        List all payment methods for a customer.
+
+        Currently payment methods are tenant-scoped, so this filters by tenant_id.
+        The customer_id parameter is accepted for future extensibility.
+        """
+        return await self.list_payment_methods(tenant_id)
+
     async def list_payment_methods(self, tenant_id: str) -> list[PaymentMethodResponse]:
         """
         List all payment methods for a tenant.
@@ -63,10 +77,7 @@ class PaymentMethodService:
         payment_methods = result.scalars().all()
 
         # Convert ORM models to response schemas
-        return [
-            self._orm_to_response(pm)
-            for pm in payment_methods
-        ]
+        return [self._orm_to_response(pm) for pm in payment_methods]
 
     async def get_payment_method(
         self, payment_method_id: str, tenant_id: str
@@ -279,9 +290,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         # Convert to UUID
         pm_uuid = UUID(payment_method_id)
@@ -299,11 +308,19 @@ class PaymentMethodService:
 
         # Update only billing details in the details JSON
         updated_details = pm_orm.details.copy() if pm_orm.details else {}
-        updated_details.update({
-            "billing_name": billing_details.get("billing_name", updated_details.get("billing_name")),
-            "billing_email": billing_details.get("billing_email", updated_details.get("billing_email")),
-            "billing_country": billing_details.get("billing_country", updated_details.get("billing_country")),
-        })
+        updated_details.update(
+            {
+                "billing_name": billing_details.get(
+                    "billing_name", updated_details.get("billing_name")
+                ),
+                "billing_email": billing_details.get(
+                    "billing_email", updated_details.get("billing_email")
+                ),
+                "billing_country": billing_details.get(
+                    "billing_country", updated_details.get("billing_country")
+                ),
+            }
+        )
 
         # Update metadata to track change
         metadata = pm_orm.metadata_ or {}
@@ -347,9 +364,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         if payment_method.status != PaymentMethodStatus.ACTIVE:
             raise ValueError("Cannot set inactive payment method as default")
@@ -400,23 +415,23 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         # Check if default and has active subscriptions
         if payment_method.is_default:
             # Check for active subscriptions
-            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
             from dotmac.platform.billing.models import BillingSubscriptionTable
+            from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 
             active_subs_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.tenant_id == tenant_id,
-                BillingSubscriptionTable.status.in_([
-                    SubscriptionStatus.ACTIVE,
-                    SubscriptionStatus.TRIALING,
-                    SubscriptionStatus.PAST_DUE,
-                ]),
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE,
+                        SubscriptionStatus.TRIALING,
+                        SubscriptionStatus.PAST_DUE,
+                    ]
+                ),
             )
             result = await self.db.execute(active_subs_stmt)
             active_subscriptions = result.scalars().all()
@@ -472,9 +487,7 @@ class PaymentMethodService:
         # Get payment method
         payment_method = await self.get_payment_method(payment_method_id, tenant_id)
         if not payment_method:
-            raise PaymentMethodError(
-                f"Payment method {payment_method_id} not found for tenant"
-            )
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
 
         if payment_method.method_type != PaymentMethodType.BANK_ACCOUNT:
             raise ValueError("Only bank accounts require verification")
@@ -514,6 +527,67 @@ class PaymentMethodService:
         # Return updated payment method
         return await self.get_payment_method(payment_method_id, tenant_id)  # type: ignore
 
+    async def toggle_autopay(
+        self,
+        payment_method_id: str,
+        tenant_id: str,
+        updated_by_user_id: str,
+    ) -> PaymentMethodResponse:
+        """
+        Toggle AutoPay for a payment method.
+
+        When enabled, this payment method will be used for automatic payments.
+        Only one payment method should have AutoPay enabled at a time (per tenant).
+        """
+        logger.info(
+            "Toggling AutoPay",
+            payment_method_id=payment_method_id,
+            tenant_id=tenant_id,
+            user_id=updated_by_user_id,
+        )
+
+        # Get current payment method
+        payment_method = await self.get_payment_method(payment_method_id, tenant_id)
+        if not payment_method:
+            raise PaymentMethodError(f"Payment method {payment_method_id} not found for tenant")
+
+        pm_uuid = UUID(payment_method_id)
+
+        # Toggle the autopay flag
+        new_autopay_state = not payment_method.auto_pay_enabled
+
+        # If enabling autopay, disable it on all other payment methods first
+        if new_autopay_state:
+            await self.db.execute(
+                update(BillingPaymentMethodTable)
+                .where(
+                    BillingPaymentMethodTable.tenant_id == tenant_id,
+                    BillingPaymentMethodTable.auto_pay_enabled == True,  # noqa: E712
+                )
+                .values(auto_pay_enabled=False, updated_at=datetime.now(UTC))
+            )
+
+        # Update the target payment method
+        await self.db.execute(
+            update(BillingPaymentMethodTable)
+            .where(BillingPaymentMethodTable.id == pm_uuid)
+            .values(
+                auto_pay_enabled=new_autopay_state,
+                updated_at=datetime.now(UTC),
+            )
+        )
+
+        await self.db.commit()
+
+        logger.info(
+            "AutoPay toggled successfully",
+            payment_method_id=payment_method_id,
+            autopay_enabled=new_autopay_state,
+        )
+
+        # Return updated payment method
+        return await self.get_payment_method(payment_method_id, tenant_id)  # type: ignore
+
     # ============================================================================
     # Helper Methods
     # ============================================================================
@@ -529,14 +603,17 @@ class PaymentMethodService:
         details = pm.details or {}
 
         # Build response
+        card_brand = self._parse_card_brand(details.get("brand"))
+
         return PaymentMethodResponse(
             payment_method_id=str(pm.id),
             tenant_id=pm.tenant_id,
             method_type=pm.payment_method_type,
             status=status,
             is_default=pm.is_default,
+            auto_pay_enabled=pm.auto_pay_enabled,
             # Card details
-            card_brand=CardBrand(details.get("brand", "unknown")) if details.get("brand") else None,
+            card_brand=card_brand,
             card_last4=details.get("last4"),
             card_exp_month=details.get("exp_month"),
             card_exp_year=details.get("exp_year"),
@@ -571,6 +648,40 @@ class PaymentMethodService:
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none()
 
+    def _parse_card_brand(self, brand: Any) -> CardBrand | None:
+        """Normalize brand strings from providers into CardBrand enum values."""
+        if not brand:
+            return None
+
+        raw = str(brand).strip()
+        if not raw:
+            return None
+
+        candidate = raw.lower()
+        if candidate in CardBrand._value2member_map_:
+            return CardBrand(candidate)
+
+        compact = candidate.replace(" ", "").replace("-", "")
+        if compact in CardBrand._value2member_map_:
+            return CardBrand(compact)
+
+        alias_map = {
+            "americanexpress": CardBrand.AMEX,
+            "american express": CardBrand.AMEX,
+            "dinersclub": CardBrand.DINERS,
+            "diners club": CardBrand.DINERS,
+            "mastercard": CardBrand.MASTERCARD,
+            "master card": CardBrand.MASTERCARD,
+        }
+
+        if candidate in alias_map:
+            return alias_map[candidate]
+        if compact in alias_map:
+            return alias_map[compact]
+
+        # Unknown brand - map explicitly rather than raising.
+        return CardBrand.UNKNOWN
+
     def _get_paystack_plugin(self) -> Any:
         """
         Get Paystack payment plugin instance.
@@ -589,10 +700,7 @@ class PaymentMethodService:
             paystack_plugin = None
 
             # Look for active Paystack plugin instance
-            instances = plugin_registry.list_instances(
-                provider_type="payment",
-                is_active=True
-            )
+            instances = plugin_registry.list_instances(provider_type="payment", is_active=True)
 
             for instance in instances:
                 if instance.plugin_name == "paystack" and instance.status == "active":
@@ -612,6 +720,5 @@ class PaymentMethodService:
 
         except ImportError as e:
             raise PaymentMethodError(
-                f"Plugin system not available: {e}. "
-                "Ensure plugin system is properly initialized."
+                f"Plugin system not available: {e}. Ensure plugin system is properly initialized."
             ) from e

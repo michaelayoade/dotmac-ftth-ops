@@ -5,7 +5,10 @@ Provides API key usage statistics endpoints for monitoring
 key creation, usage patterns, and security metrics.
 """
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 from typing import Any
 
 import structlog
@@ -13,7 +16,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, ConfigDict, Field
 
 from dotmac.platform.auth.core import UserInfo, api_key_service
-from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.core.cache_decorators import CacheTier, cached_result
 
 logger = structlog.get_logger(__name__)
@@ -204,6 +207,9 @@ async def _get_api_key_metrics_cached(
 ) -> dict[str, Any]:
     """
     Cached helper function for API key metrics calculation.
+
+    SECURITY: Filters keys by tenant_id to prevent cross-tenant data leaks.
+    If tenant_id is None, returns zero metrics (no tenant = no data).
     """
     now = datetime.now(UTC)
     period_start = now - timedelta(days=period_days)
@@ -213,15 +219,27 @@ async def _get_api_key_metrics_cached(
     client = await api_key_service._get_redis()
     all_keys_meta = await _fetch_all_api_keys_metadata(client)
 
+    # CRITICAL FIX: Filter by tenant_id to prevent cross-tenant data leak
+    # Only include keys that belong to the requesting tenant
+    if tenant_id:
+        tenant_keys_meta = [
+            key_data for key_data in all_keys_meta if key_data.get("tenant_id") == tenant_id
+        ]
+    else:
+        # No tenant_id = no data (return empty metrics)
+        # This prevents platform-wide aggregation for unauthenticated/invalid requests
+        tenant_keys_meta = []
+        logger.warning("API key metrics requested without tenant_id, returning empty metrics")
+
     # Initialize counters
-    total_keys = len(all_keys_meta)
+    total_keys = len(tenant_keys_meta)
     active_keys = inactive_keys = expired_keys = 0
     keys_created_last_30d = keys_used_last_7d = keys_expiring_soon = 0
     never_used_keys = keys_without_expiry = total_api_requests = 0
     scope_counts: dict[str, int] = {}
 
-    # Process each key
-    for key_data in all_keys_meta:
+    # Process each key (now scoped to tenant)
+    for key_data in tenant_keys_meta:
         # Parse dates
         created_at, expires_at, last_used_at = _parse_api_key_dates(key_data)
 
@@ -275,7 +293,7 @@ async def _get_api_key_metrics_cached(
 @router.get("/metrics", response_model=APIKeyMetricsResponse)
 async def get_api_key_metrics(
     period_days: int = Query(default=30, ge=1, le=365, description="Time period in days"),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo = Depends(require_permission("api-keys:metrics:read")),
 ) -> APIKeyMetricsResponse:
     """
     Get API key usage metrics with Redis caching.
@@ -285,7 +303,7 @@ async def get_api_key_metrics(
 
     **Caching**: Results cached for 5 minutes per tenant/period combination.
     **Rate Limit**: 100 requests per hour per IP.
-    **Required Permission**: api-keys:metrics:read (enforced by get_current_user)
+    **Required Permission**: api-keys:metrics:read (enforced by require_permission)
     """
     try:
         tenant_id = getattr(current_user, "tenant_id", None)
