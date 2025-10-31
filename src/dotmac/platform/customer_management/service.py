@@ -6,6 +6,7 @@ Advanced features moved to optional extensions.
 """
 
 import collections
+import json
 import itertools
 import operator
 import secrets
@@ -20,7 +21,7 @@ from uuid import UUID
 
 import sqlalchemy as sa
 import structlog
-from sqlalchemy import Select, and_, func, or_, select, update
+from sqlalchemy import Select, and_, func, or_, select, text, update
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,10 +53,14 @@ def validate_uuid(value: UUID | str, field_name: str = "id") -> UUID:
     """Validate and convert string to UUID with standard library validation."""
     if value is None:
         raise ValueError(f"Invalid UUID for {field_name}: {value}")
-    try:
-        return UUID(value) if isinstance(value, str) else value
-    except (ValueError, AttributeError) as e:
-        raise ValueError(f"Invalid UUID for {field_name}: {value}") from e
+    if isinstance(value, UUID):
+        return value
+    if isinstance(value, str):
+        try:
+            return UUID(value)
+        except (ValueError, AttributeError) as e:
+            raise ValueError(f"Invalid UUID for {field_name}: {value}") from e
+    raise ValueError(f"Invalid UUID for {field_name}: {value}")
 
 
 logger = structlog.get_logger(__name__)
@@ -629,6 +634,11 @@ class CustomerService:
         # Verify customer exists
         customer = await self.get_customer(customer_id)
         if not customer:
+            logger.warning(
+                "Customer not found when adding activity",
+                customer_id=str(customer_id),
+                tenant_id=tenant_id,
+            )
             raise ValueError(f"Customer not found: {customer_id}")
 
         # Convert performed_by to UUID if it's a string
@@ -655,7 +665,6 @@ class CustomerService:
 
         self.session.add(activity)
         await self.session.commit()
-        await self.session.refresh(activity)
 
         return activity
 
@@ -665,25 +674,77 @@ class CustomerService:
         activity_type: ActivityType | None = None,
         limit: int = 50,
         offset: int = 0,
-    ) -> list[CustomerActivity]:
+    ) -> list[dict[str, Any]]:
         """Get customer activities using standard queries."""
         customer_id = validate_uuid(customer_id, "customer_id")
         tenant_id = self._resolve_tenant_id()
 
-        query = select(CustomerActivity).where(
-            and_(
-                CustomerActivity.customer_id == customer_id,
-                CustomerActivity.tenant_id == tenant_id,
-            )
+        stmt = text(
+            """
+            SELECT
+                id,
+                customer_id,
+                activity_type,
+                title,
+                description,
+                metadata,
+                performed_by,
+                ip_address,
+                user_agent,
+                created_at
+            FROM customer_activities
+            WHERE customer_id = :customer_id
+              AND tenant_id = :tenant_id
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+            """
         )
 
-        if activity_type:
-            query = query.where(CustomerActivity.activity_type == activity_type)
+        params = {
+            "customer_id": str(customer_id),
+            "tenant_id": tenant_id,
+            "limit": limit,
+            "offset": offset,
+        }
 
-        query = query.order_by(CustomerActivity.created_at.desc()).limit(limit).offset(offset)
+        result = await self.session.execute(stmt, params)
+        rows = result.mappings().all()
 
-        result = await self.session.execute(query)
-        return list(result.scalars().all())
+        activities: list[dict[str, Any]] = []
+        def _normalize_uuid(value: Any) -> str | None:
+            """Normalize UUID to standard string format with hyphens."""
+            if isinstance(value, str):
+                # If it's already a valid UUID string (with or without hyphens), ensure proper format
+                cleaned = value.replace("-", "")
+                if len(cleaned) == 32:
+                    # Format as standard UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                    return f"{cleaned[0:8]}-{cleaned[8:12]}-{cleaned[12:16]}-{cleaned[16:20]}-{cleaned[20:32]}"
+                return value
+            if isinstance(value, (bytes, bytearray)):
+                # Convert bytes to hex and format as UUID
+                hex_str = value.hex()
+                return f"{hex_str[0:8]}-{hex_str[8:12]}-{hex_str[12:16]}-{hex_str[16:20]}-{hex_str[20:32]}"
+            return None
+
+        for row in rows:
+            data = dict(row)
+            data["id"] = _normalize_uuid(data.get("id")) or ""
+            data["customer_id"] = _normalize_uuid(data.get("customer_id")) or ""
+            data["performed_by"] = _normalize_uuid(data.get("performed_by"))
+            activity_type = data.get("activity_type")
+            if isinstance(activity_type, str):
+                data["activity_type"] = activity_type.lower()
+            metadata_value = data.get("metadata")
+            if isinstance(metadata_value, str):
+                try:
+                    data["metadata"] = json.loads(metadata_value)
+                except json.JSONDecodeError:
+                    data["metadata"] = {}
+            elif metadata_value is None:
+                data["metadata"] = {}
+            activities.append(data)
+
+        return activities
 
     # NOTE MANAGEMENT (core functionality)
 
@@ -732,7 +793,6 @@ class CustomerService:
         self.session.add(activity)
 
         await self.session.commit()
-        await self.session.refresh(note)
 
         return note
 

@@ -12,7 +12,6 @@ Targets uncovered lines in router.py focusing on:
 """
 
 from datetime import timezone, datetime
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -32,6 +31,26 @@ from dotmac.platform.user_management.models import User
 
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def _patch_tenant_context(monkeypatch):
+    """Ensure auth router sees the test tenant without relying on headers."""
+
+    monkeypatch.setattr(
+        "dotmac.platform.tenant.get_current_tenant_id",
+        lambda: "test-tenant",
+        raising=False,
+    )
+
+    class _TenantConfig:
+        default_tenant_id = "test-tenant"
+
+    monkeypatch.setattr(
+        "dotmac.platform.tenant.get_tenant_config",
+        lambda: _TenantConfig(),
+        raising=False,
+    )
 
 @pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):
@@ -75,19 +94,15 @@ async def test_successful_login(router_app: FastAPI, test_user: User, async_db_s
     router_app.dependency_overrides[get_auth_session] = override_session
 
     # Mock tenant context to match test user's tenant
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": "testuser",
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": "testuser",
+                "password": "TestPassword123!",
+            },
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -106,19 +121,15 @@ async def test_login_with_email(router_app: FastAPI, test_user: User, async_db_s
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": "test@example.com",  # Using email as username
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": "test@example.com",  # Using email as username
+                "password": "TestPassword123!",
+            },
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -150,19 +161,15 @@ async def test_login_inactive_user(router_app: FastAPI, async_db_session):
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": "inactive",
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": "inactive",
+                "password": "TestPassword123!",
+            },
+        )
 
     assert response.status_code == 403
     assert "disabled" in response.json()["detail"].lower()
@@ -358,19 +365,15 @@ async def test_cookie_based_login(router_app: FastAPI, test_user: User, async_db
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login/cookie",
-                json={
-                    "username": "testuser",
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login/cookie",
+            json={
+                "username": "testuser",
+                "password": "TestPassword123!",
+            },
+        )
 
     assert response.status_code == 200
     data = response.json()
@@ -392,16 +395,12 @@ async def test_cookie_login_requires_2fa(router_app: FastAPI, test_user: User, a
     test_user.mfa_secret = "JBSWY3DPEHPK3PXP"  # dummy secret
     await async_db_session.commit()
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login/cookie",
-                json={"username": "testuser", "password": "TestPassword123!"},
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login/cookie",
+            json={"username": "testuser", "password": "TestPassword123!"},
+        )
 
     assert response.status_code == 403
     assert response.headers.get("X-2FA-Required") == "true"
@@ -417,20 +416,16 @@ async def test_oauth2_token_endpoint(router_app: FastAPI, test_user: User, async
 
     router_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/token",
-                data={  # OAuth2 uses form data, not JSON
-                    "username": "testuser",
-                    "password": "TestPassword123!",
-                    "grant_type": "password",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/token",
+            data={  # OAuth2 uses form data, not JSON
+                "username": "testuser",
+                "password": "TestPassword123!",
+                "grant_type": "password",
+            },
+        )
 
     assert response.status_code == 200
     data = response.json()

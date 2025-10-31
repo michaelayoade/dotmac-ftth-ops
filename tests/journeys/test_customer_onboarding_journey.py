@@ -145,7 +145,7 @@ class TestCustomerOnboardingJourney:
         assert subscription.status == SubscriptionStatus.ACTIVE.value
 
         # Step 7: Verify complete onboarding
-        await async_session.commit()
+        await async_session.flush()
 
         # Verify final state
         assert user.is_active
@@ -241,7 +241,7 @@ class TestCustomerOnboardingJourney:
         # Verify billing cycle starts after trial
         assert subscription.current_period_end == subscription.trial_end
 
-        await async_session.commit()
+        await async_session.flush()
 
         print(f"""
         ✅ Trial Onboarding Complete:
@@ -272,7 +272,7 @@ class TestCustomerOnboardingJourneyFailures:
             email=email,
         )
         customer1 = await customer_service.create_customer(customer_data)
-        await async_session.commit()
+        await async_session.flush()
 
         assert customer1.email == email
 

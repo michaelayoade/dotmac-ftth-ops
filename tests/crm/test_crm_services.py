@@ -9,7 +9,7 @@ Tests for Lead, Quote, and Site Survey services including:
 - Tenant isolation
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -354,7 +354,7 @@ class TestQuoteService:
         mock_quote.accepted_at = None
         mock_quote.signature_data = None
         # Set valid_until to future date to pass validation
-        mock_quote.valid_until = datetime.utcnow() + timedelta(days=30)
+        mock_quote.valid_until = datetime.now(timezone.utc) + timedelta(days=30)
 
         # Mock the lead relationship to avoid SQLAlchemy attribute issues
         mock_lead = MagicMock(spec=Lead)
@@ -368,7 +368,7 @@ class TestQuoteService:
         service = QuoteService(mock_session)
         signature_data = {
             "signed_by": "John Doe",
-            "signed_at": datetime.utcnow().isoformat(),
+            "signed_at": datetime.now(timezone.utc).isoformat(),
             "ip_address": "1.2.3.4",
         }
         await service.accept_quote(tenant_id, quote_id, signature_data)
@@ -394,7 +394,7 @@ class TestQuoteService:
             activation_fee=Decimal("0.00"),
             total_upfront_cost=Decimal("0.00"),
             contract_term_months=12,
-            valid_until=datetime.utcnow() + timedelta(days=30),
+            valid_until=datetime.now(timezone.utc) + timedelta(days=30),
             status=QuoteStatus.SENT,
         )
 
@@ -443,7 +443,7 @@ class TestSiteSurveyService:
         mock_session.execute.side_effect = [mock_lead_result, mock_count_result]
 
         service = SiteSurveyService(mock_session)
-        scheduled_date = datetime.utcnow() + timedelta(days=7)
+        scheduled_date = datetime.now(timezone.utc) + timedelta(days=7)
         await service.schedule_survey(
             tenant_id=tenant_id,
             lead_id=lead_id,
@@ -479,7 +479,7 @@ class TestSiteSurveyService:
             tenant_id=tenant_id,
             survey_number="SURV-2025-000001",
             lead_id=lead_id,
-            scheduled_date=datetime.utcnow(),
+            scheduled_date=datetime.now(timezone.utc),
             status=SiteSurveyStatus.IN_PROGRESS,
         )
         mock_survey.lead = mock_lead

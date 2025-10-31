@@ -19,6 +19,7 @@ import pytest
 pytestmark = [
     pytest.mark.asyncio,
     pytest.mark.integration,
+    pytest.mark.parallel_safe,
     pytest.mark.slow,  # These tests may be slower due to module loading
 ]
 

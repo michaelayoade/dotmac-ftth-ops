@@ -21,7 +21,7 @@ from moneyed import Money, Currency
 
 
 
-pytestmark = pytest.mark.integration
+pytestmark = pytest.mark.unit
 
 def create_test_money(amount: Decimal | int | float = 100, currency: str = "USD") -> Money:
     """Create test Money instance with defaults."""

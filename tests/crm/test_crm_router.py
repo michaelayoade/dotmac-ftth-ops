@@ -5,14 +5,14 @@ CRM Router Integration Tests
 Tests for BSS Phase 1 CRM endpoints including leads, quotes, and site surveys.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from uuid import uuid4
 
 import pytest
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.crm.models import Lead, LeadStatus, Quote, SiteSurvey
+from dotmac.platform.crm.models import Lead, LeadStatus, Quote, SiteSurvey, SiteSurveyStatus
 from dotmac.platform.tenant.models import Tenant
 
 
@@ -39,14 +39,11 @@ class TestLeadEndpoints:
             "last_name": "Doe",
             "email": "john.doe@example.com",
             "phone": "+1234567890",
-            "address": {
-                "street": "123 Main St",
-                "city": "Test City",
-                "state": "TS",
-                "postal_code": "12345",
-                "country": "US",
-            },
-            "service_type": "fiber_internet",
+            "service_address_line1": "123 Main St",
+            "service_city": "Test City",
+            "service_state_province": "TS",
+            "service_postal_code": "12345",
+            "service_country": "US",
             "source": "website",
         }
 
@@ -56,6 +53,9 @@ class TestLeadEndpoints:
             headers=auth_headers,
         )
 
+        if response.status_code != 201:
+            print(f"Error response: {response.status_code}")
+            print(f"Error body: {response.text}")
         assert response.status_code == 201
         data = response.json()
         assert data["first_name"] == "John"
@@ -96,24 +96,32 @@ class TestLeadEndpoints:
         """Test listing leads."""
         # Create test leads
         lead1 = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0001",
             first_name="Alice",
             last_name="Smith",
             email="alice@example.com",
             phone="+1111111111",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.NEW,
         )
         lead2 = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0002",
             first_name="Bob",
             last_name="Jones",
             email="bob@example.com",
             phone="+2222222222",
-            service_type="business_fiber",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="referral",
             status=LeadStatus.QUALIFIED,
         )
@@ -141,13 +149,17 @@ class TestLeadEndpoints:
     ):
         """Test getting a specific lead by ID."""
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0003",
             first_name="Test",
             last_name="Lead",
             email="test@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -161,7 +173,7 @@ class TestLeadEndpoints:
 
         assert response.status_code == 200
         data = response.json()
-        assert data["id"] == lead.id
+        assert data["id"] == str(lead.id)
         assert data["email"] == "test@example.com"
 
     async def test_update_lead_status(
@@ -173,13 +185,17 @@ class TestLeadEndpoints:
     ):
         """Test updating lead status."""
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0004",
             first_name="Update",
             last_name="Test",
             email="update@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -188,8 +204,8 @@ class TestLeadEndpoints:
 
         update_data = {"status": LeadStatus.QUALIFIED.value}
 
-        response = await async_client.patch(
-            f"/api/v1/crm/crm/leads/{lead.id}",
+        response = await async_client.post(
+            f"/api/v1/crm/crm/leads/{lead.id}/status",
             json=update_data,
             headers=auth_headers,
         )
@@ -207,15 +223,19 @@ class TestLeadEndpoints:
     ):
         """Test filtering leads by status."""
         # Create leads with different statuses
-        for i, status in enumerate([LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.CONVERTED]):
+        for i, status in enumerate([LeadStatus.NEW, LeadStatus.QUALIFIED, LeadStatus.WON]):
             lead = Lead(
-                id=str(uuid4()),
+                id=uuid4(),
                 tenant_id=str(test_tenant.id),
+                lead_number=f"LEAD-TEST-000{i+5}",
                 first_name=f"Lead{i}",
                 last_name="Test",
                 email=f"lead{i}@example.com",
                 phone=f"+123456789{i}",
-                service_type="fiber_internet",
+                service_address_line1="123 Test St",
+                service_city="Test City",
+                service_state_province="TS",
+                service_postal_code="12345",
                 source="website",
                 status=status,
             )
@@ -246,13 +266,17 @@ class TestQuoteEndpoints:
         """Test creating a new quote."""
         # Create a lead first
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0006",
             first_name="Quote",
             last_name="Customer",
             email="quote@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -260,13 +284,14 @@ class TestQuoteEndpoints:
         await db_session.commit()
 
         quote_data = {
-            "lead_id": lead.id,
-            "service_type": "fiber_internet",
-            "monthly_price": 79.99,
+            "lead_id": str(lead.id),
+            "service_plan_name": "Fiber 100Mbps",
+            "bandwidth": "100Mbps",
+            "monthly_recurring_charge": 79.99,
             "installation_fee": 99.99,
-            "equipment_cost": 150.00,
+            "equipment_fee": 150.00,
             "contract_term_months": 12,
-            "valid_until": "2025-12-31T23:59:59Z",
+            "valid_days": 30,
         }
 
         response = await async_client.post(
@@ -275,10 +300,13 @@ class TestQuoteEndpoints:
             headers=auth_headers,
         )
 
+        if response.status_code != 201:
+            print(f"Error response: {response.status_code}")
+            print(f"Error body: {response.text}")
         assert response.status_code == 201
         data = response.json()
-        assert data["lead_id"] == lead.id
-        assert data["monthly_price"] == 79.99
+        assert data["lead_id"] == str(lead.id)
+        assert float(data["monthly_recurring_charge"]) == 79.99
         assert "quote_number" in data
         assert "id" in data
 
@@ -292,13 +320,17 @@ class TestQuoteEndpoints:
         """Test listing all quotes."""
         # Create test lead and quote
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0007",
             first_name="Quote",
             last_name="List",
             email="quotelist@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -306,13 +338,16 @@ class TestQuoteEndpoints:
         await db_session.commit()
 
         quote = Quote(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
             quote_number="Q-TEST-001",
-            service_type="fiber_internet",
-            monthly_price=79.99,
+            service_plan_name="Fiber 100Mbps",
+            bandwidth="100Mbps",
+            monthly_recurring_charge=79.99,
             installation_fee=99.99,
+            total_upfront_cost=99.99,  # installation + equipment (0) + activation (0)
+            valid_until=datetime(2025, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
         )
         db_session.add(quote)
         await db_session.commit()
@@ -343,13 +378,17 @@ class TestSiteSurveyEndpoints:
         """Test creating a new site survey."""
         # Create a lead first
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0009",
             first_name="Survey",
             last_name="Customer",
             email="survey@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -357,15 +396,8 @@ class TestSiteSurveyEndpoints:
         await db_session.commit()
 
         survey_data = {
-            "lead_id": lead.id,
-            "scheduled_at": "2025-11-01T10:00:00Z",
-            "site_address": {
-                "street": "123 Survey St",
-                "city": "Test City",
-                "state": "TS",
-                "postal_code": "12345",
-                "country": "US",
-            },
+            "lead_id": str(lead.id),
+            "scheduled_date": "2025-11-01T10:00:00Z",
         }
 
         response = await async_client.post(
@@ -374,9 +406,12 @@ class TestSiteSurveyEndpoints:
             headers=auth_headers,
         )
 
+        if response.status_code != 201:
+            print(f"Error response: {response.status_code}")
+            print(f"Error body: {response.text}")
         assert response.status_code == 201
         data = response.json()
-        assert data["lead_id"] == lead.id
+        assert data["lead_id"] == str(lead.id)
         assert "id" in data
         assert "status" in data
 
@@ -390,13 +425,17 @@ class TestSiteSurveyEndpoints:
         """Test listing all site surveys."""
         # Create test lead and survey
         lead = Lead(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
+            lead_number="LEAD-TEST-0010",
             first_name="Survey",
             last_name="List",
             email="surveylist@example.com",
             phone="+1234567890",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.QUALIFIED,
         )
@@ -404,11 +443,12 @@ class TestSiteSurveyEndpoints:
         await db_session.commit()
 
         survey = SiteSurvey(
-            id=str(uuid4()),
+            id=uuid4(),
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
-            scheduled_at=datetime.fromisoformat("2025-11-01T10:00:00"),
-            status="scheduled",
+            survey_number="SURVEY-TEST-001",
+            scheduled_date=datetime(2025, 11, 1, 10, 0, 0, tzinfo=timezone.utc),
+            status=SiteSurveyStatus.SCHEDULED,
         )
         db_session.add(survey)
         await db_session.commit()
@@ -435,16 +475,34 @@ class TestCRMTenantIsolation:
         db_session: AsyncSession,
     ):
         """Test that leads are isolated by tenant."""
-        # Create lead for a different tenant
-        other_tenant_id = str(uuid4())
+        # Create a second tenant for isolation testing
+        from dotmac.platform.tenant.models import BillingCycle, TenantPlanType, TenantStatus
+
+        other_tenant = Tenant(
+            id=f"tenant-{uuid4().hex}",
+            name="Other Tenant for Isolation Test",
+            slug=f"test-other-{uuid4().hex[:8]}",
+            status=TenantStatus.ACTIVE,
+            plan_type=TenantPlanType.PROFESSIONAL,
+            billing_cycle=BillingCycle.MONTHLY,
+            email="other-tenant@example.com",
+        )
+        db_session.add(other_tenant)
+        await db_session.commit()
+
+        # Create lead for the other tenant
         other_lead = Lead(
-            id=str(uuid4()),
-            tenant_id=other_tenant_id,
+            id=uuid4(),
+            tenant_id=other_tenant.id,
+            lead_number="LEAD-TEST-0012",
             first_name="Other",
             last_name="Tenant",
             email="other@example.com",
             phone="+9999999999",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.NEW,
         )
@@ -470,16 +528,34 @@ class TestCRMTenantIsolation:
         db_session: AsyncSession,
     ):
         """Test that users cannot access leads from other tenants."""
-        # Create lead for a different tenant
-        other_tenant_id = str(uuid4())
+        # Create a second tenant for isolation testing
+        from dotmac.platform.tenant.models import BillingCycle, TenantPlanType, TenantStatus
+
+        other_tenant = Tenant(
+            id=f"tenant-{uuid4().hex}",
+            name="Other Tenant for Access Test",
+            slug=f"test-other-{uuid4().hex[:8]}",
+            status=TenantStatus.ACTIVE,
+            plan_type=TenantPlanType.PROFESSIONAL,
+            billing_cycle=BillingCycle.MONTHLY,
+            email="other-tenant2@example.com",
+        )
+        db_session.add(other_tenant)
+        await db_session.commit()
+
+        # Create lead for the other tenant
         other_lead = Lead(
-            id=str(uuid4()),
-            tenant_id=other_tenant_id,
+            id=uuid4(),
+            tenant_id=other_tenant.id,
+            lead_number="LEAD-TEST-0013",
             first_name="Other",
             last_name="Tenant",
             email="other@example.com",
             phone="+9999999999",
-            service_type="fiber_internet",
+            service_address_line1="123 Test St",
+            service_city="Test City",
+            service_state_province="TS",
+            service_postal_code="12345",
             source="website",
             status=LeadStatus.NEW,
         )

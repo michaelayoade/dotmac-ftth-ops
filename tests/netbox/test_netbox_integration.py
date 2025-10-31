@@ -28,23 +28,32 @@ pytestmark = pytest.mark.integration
 NETBOX_URL_ENV = os.getenv("NETBOX_URL", "http://localhost:8080")
 NETBOX_TOKEN_ENV = os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
-# Health check - fail fast if NetBox is not available
-# Integration tests should run against real services
-status_url = f"{NETBOX_URL_ENV.rstrip('/')}/api/status/"
-try:
-    with urllib_request.urlopen(status_url, timeout=2) as resp:
-        if resp.status >= 400:
-            pytest.skip(
-                f"NetBox health check failed with status {resp.status} at {status_url}. "
-                f"Integration tests require a running NetBox instance.",
-                allow_module_level=True,
-            )
-except URLError as e:
-    pytest.skip(
-        f"NetBox service not reachable at {NETBOX_URL_ENV}. "
-        f"Integration tests require a running NetBox instance. Error: {e}",
-        allow_module_level=True,
-    )
+
+@pytest.fixture(scope="module")
+def netbox_health_check():
+    """
+    Check if NetBox is available before running tests.
+
+    This is now a fixture instead of module-level code to avoid blocking
+    pytest collection when NetBox isn't available (e.g., when running -m e2e).
+    """
+    status_url = f"{NETBOX_URL_ENV.rstrip('/')}/api/status/"
+    try:
+        status_request = urllib_request.Request(status_url)
+        if NETBOX_TOKEN_ENV:
+            status_request.add_header("Authorization", f"Token {NETBOX_TOKEN_ENV}")
+        with urllib_request.urlopen(status_request, timeout=5) as resp:
+            if resp.status >= 400:
+                pytest.skip(
+                    f"NetBox health check failed with status {resp.status} at {status_url}. "
+                    f"Integration tests require a running NetBox instance."
+                )
+    except (URLError, TimeoutError) as e:
+        pytest.skip(
+            f"NetBox service not reachable at {NETBOX_URL_ENV}. "
+            f"Integration tests require a running NetBox instance. Error: {e}"
+        )
+    return True
 
 
 @pytest.fixture
@@ -60,8 +69,9 @@ def netbox_token():
 
 
 @pytest_asyncio.fixture
-async def netbox_client(netbox_url, netbox_token):
+async def netbox_client(netbox_url, netbox_token, netbox_health_check):
     """Create NetBox client for integration tests"""
+    # netbox_health_check ensures NetBox is available before we create the client
     client = NetBoxClient(
         base_url=netbox_url,
         api_token=netbox_token,

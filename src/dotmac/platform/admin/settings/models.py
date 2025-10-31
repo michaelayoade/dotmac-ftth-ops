@@ -184,6 +184,8 @@ class AdminSettingsAuditEntry(Base, TimestampMixin, TenantMixin):  # type: ignor
     id: Mapped[UUID] = mapped_column(
         PostgresUUID(as_uuid=True), primary_key=True, default=uuid4, index=True
     )
+    # Override TenantMixin's tenant_id to use UUID type instead of String
+    tenant_id: Mapped[UUID] = mapped_column(PostgresUUID(as_uuid=True), nullable=False, index=True)
     category: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     action: Mapped[str] = mapped_column(String(50), nullable=False)
     user_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)

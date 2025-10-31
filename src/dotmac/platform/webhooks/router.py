@@ -75,9 +75,6 @@ async def create_webhook_subscription(
             subscription_data=subscription_data,
         )
 
-        # Convert to response model
-        response = WebhookSubscriptionResponse.model_validate(subscription)
-
         logger.info(
             "Webhook subscription created via API",
             subscription_id=str(subscription.id),
@@ -85,7 +82,11 @@ async def create_webhook_subscription(
             user_id=current_user.user_id,
         )
 
-        return WebhookSubscriptionCreateResponse(subscription=response, secret=subscription.secret)
+        response = WebhookSubscriptionResponse.model_validate(subscription)
+        return WebhookSubscriptionCreateResponse(
+            **response.model_dump(),
+            secret=subscription.secret,
+        )
 
     except Exception as e:
         logger.error("Failed to create webhook subscription", error=str(e))

@@ -179,8 +179,9 @@ class TestCeleryTasks:
         assert result is None
 
     @patch("dotmac.platform.core.tasks.redis_client", None)
+    @patch("dotmac.platform.core.tasks.get_redis", return_value=None)
     @patch("dotmac.platform.core.tasks.logger")
-    def test_idempotent_task_no_redis(self, mock_logger):
+    def test_idempotent_task_no_redis(self, mock_logger, _mock_get_redis):
         """Test idempotent task without Redis."""
 
         @idempotent_task(ttl=300)

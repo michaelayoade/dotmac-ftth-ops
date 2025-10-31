@@ -433,7 +433,7 @@ class LicenseOrder(BaseModel):
     total_amount: Mapped[float] = mapped_column(Numeric(15, 2), nullable=False)
     discount_applied: Mapped[float | None] = mapped_column(Numeric(15, 2), nullable=True)
     payment_status: Mapped[PaymentStatus] = mapped_column(
-        SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING, index=True
+        SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.PENDING
     )
 
     # Billing integration

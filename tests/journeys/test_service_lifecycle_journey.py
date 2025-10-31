@@ -157,7 +157,7 @@ class TestServiceLifecycleJourney:
         assert subscription.cancelled_at is not None
         print(f"✅ Step 7: Service cancelled - {subscription.cancellation_reason}")
 
-        await async_session.commit()
+        await async_session.flush()
 
         print(f"""
         ✅ Complete Service Lifecycle Journey Tested:
@@ -229,7 +229,7 @@ class TestServiceLifecycleJourney:
         )
         async_session.add(subscription)
         await async_session.flush()
-        await async_session.commit()
+        await async_session.flush()
 
         print(f"✅ Initial: {basic_plan.name} - ${basic_plan.price}/month")
 
@@ -315,7 +315,7 @@ class TestServiceLifecycleJourney:
         )
         async_session.add(subscription)
         await async_session.flush()
-        await async_session.commit()
+        await async_session.flush()
 
         print(f"✅ Service active: {subscription.status}")
 
@@ -341,7 +341,7 @@ class TestServiceLifecycleJourney:
         # Pause subscription
         db_subscription.status = SubscriptionStatus.PAUSED.value
         await async_session.flush()
-        await async_session.commit()
+        await async_session.flush()
 
         # Assertions on pause side effects
         assert db_subscription.status == SubscriptionStatus.PAUSED.value, "Status should be PAUSED"
@@ -365,7 +365,7 @@ class TestServiceLifecycleJourney:
         # In real implementation, extend period_end by pause duration
         pause_duration = (resume_date - pause_date).days
         await async_session.flush()
-        await async_session.commit()
+        await async_session.flush()
 
         # Assertions on resume side effects
         assert db_subscription.status == SubscriptionStatus.ACTIVE.value, "Status should be ACTIVE"
@@ -442,7 +442,7 @@ class TestServiceLifecycleEdgeCases:
         )
         async_session.add(subscription)
         await async_session.flush()
-        await async_session.commit()
+        await async_session.flush()
 
         activation_time = now
 

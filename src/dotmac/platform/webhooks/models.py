@@ -272,10 +272,11 @@ class WebhookSubscriptionResponse(BaseModel):  # BaseModel resolves to Any in is
         return str(v) if v else None
 
 
-class WebhookSubscriptionCreateResponse(BaseModel):
+class WebhookSubscriptionCreateResponse(WebhookSubscriptionResponse):
     """Response returned when creating a webhook subscription."""
 
-    subscription: WebhookSubscriptionResponse
+    model_config = ConfigDict(from_attributes=True)
+
     secret: str
 
 

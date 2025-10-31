@@ -36,14 +36,15 @@ def session(async_db_session):
     return async_db_session
 
 
-@pytest_asyncio.fixture(autouse=True)
+@pytest_asyncio.fixture
 async def override_db_session_for_services(async_db_engine):
     """Override the global AsyncSessionLocal to use test database.
 
     This ensures that all services, tasks, and other code that creates their own
     database sessions will use the test database instead of production database.
 
-    IMPORTANT: autouse=True means this runs for ALL tests automatically.
+    NOTE: This fixture is now explicit (not autouse) to avoid unintended side effects.
+    Tests that need this behavior should explicitly request this fixture.
     """
     from sqlalchemy.ext.asyncio import async_sessionmaker
 

@@ -19,7 +19,30 @@ from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
+import pytest_asyncio
 from httpx import AsyncClient
+
+from dotmac.platform.monitoring import alert_router
+
+
+@pytest.fixture(autouse=True)
+def disable_alertmanager_rate_limit(monkeypatch):
+    """Prevent external Redis dependency during webhook tests."""
+    monkeypatch.setattr(alert_router, "get_redis", lambda: None)
+    alert_router._local_rate_counters.clear()
+    yield
+    alert_router._local_rate_counters.clear()
+
+
+@pytest_asyncio.fixture
+async def async_client():
+    """Provide ASGI test client for Alertmanager E2E tests."""
+    from httpx import ASGITransport, AsyncClient as HttpxAsyncClient
+    from dotmac.platform.main import app
+
+    transport = ASGITransport(app=app)
+    async with HttpxAsyncClient(transport=transport, base_url="http://testserver") as client:
+        yield client
 
 
 pytestmark = [pytest.mark.e2e, pytest.mark.asyncio]
@@ -100,8 +123,9 @@ class TestAlertmanagerWebhookE2E:
             assert response.status_code == 202, f"Expected 202, got {response.status_code}: {response.text}"
 
             data = response.json()
-            assert data["status"] == "accepted"
-            assert "message" in data
+            assert "alerts_processed" in data
+            assert "results" in data
+            assert isinstance(data["results"], dict)
 
     async def test_webhook_rejects_invalid_token(
         self,
@@ -127,7 +151,7 @@ class TestAlertmanagerWebhookE2E:
             # Should reject with 401
             assert response.status_code == 401
             data = response.json()
-            assert "Invalid or missing" in data["detail"]
+            assert data["detail"] == "Invalid Alertmanager webhook token"
 
     async def test_webhook_rejects_missing_token(
         self,
@@ -280,7 +304,8 @@ class TestAlertmanagerWebhookE2E:
 
             assert response.status_code == 202
             data = response.json()
-            assert data["status"] == "accepted"
+            assert "alerts_processed" in data
+            assert "results" in data
 
     async def test_webhook_validates_payload_schema(
         self,
@@ -388,7 +413,8 @@ class TestAlertmanagerWebhookE2E:
 
             assert response.status_code == 202
             data = response.json()
-            assert data["status"] == "accepted"
+            assert "alerts_processed" in data
+            assert "results" in data
 
     async def test_webhook_timing_safe_comparison(
         self,

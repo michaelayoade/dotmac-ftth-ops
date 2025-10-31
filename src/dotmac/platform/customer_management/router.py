@@ -609,14 +609,22 @@ async def add_customer_activity(
             detail=str(e),
         )
     except SQLAlchemyError as exc:
-        logger.error("Failed to add activity", customer_id=str(customer_id), error=str(exc))
+        logger.error(
+            "Failed to add activity",
+            customer_id=str(customer_id),
+            error=str(exc),
+            exc_info=True,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to add activity",
         ) from exc
     except Exception as exc:
         logger.error(
-            "Unexpected error adding activity", customer_id=str(customer_id), error=str(exc)
+            "Unexpected error adding activity",
+            customer_id=str(customer_id),
+            error=str(exc),
+            exc_info=True,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -627,12 +635,29 @@ async def add_customer_activity(
 def _convert_activity_to_response(activity: Any) -> CustomerActivityResponse:
     """Convert CustomerActivity model to CustomerActivityResponse, handling metadata_ field."""
     activity_dict: dict[str, Any] = {}
+    source: dict[str, Any]
+
+    if isinstance(activity, dict):
+        source = activity
+    else:
+        source = {}
+        for key in CustomerActivityResponse.model_fields:
+            if key == "metadata":
+                if hasattr(activity, "metadata_"):
+                    source["metadata"] = getattr(activity, "metadata_")
+                continue
+            if hasattr(activity, key):
+                source[key] = getattr(activity, key)
+        if "metadata" not in source:
+            source["metadata"] = getattr(activity, "metadata_") if hasattr(activity, "metadata_") else {}
+
     for key in CustomerActivityResponse.model_fields:
         if key == "metadata":
-            # Map metadata_ to metadata
-            activity_dict["metadata"] = activity.metadata_ if hasattr(activity, "metadata_") else {}
-        elif hasattr(activity, key):
-            activity_dict[key] = getattr(activity, key)
+            value = source.get("metadata") or {}
+        else:
+            value = source.get(key)
+        activity_dict[key] = value
+
     return CustomerActivityResponse.model_validate(activity_dict)
 
 

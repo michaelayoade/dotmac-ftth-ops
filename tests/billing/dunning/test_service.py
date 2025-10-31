@@ -5,6 +5,8 @@ from uuid import uuid4
 
 import pytest
 
+from pydantic import ValidationError as PydanticValidationError
+
 from dotmac.platform.billing.dunning.models import DunningExecutionStatus
 from dotmac.platform.billing.dunning.schemas import (
     DunningCampaignCreate,
@@ -54,16 +56,14 @@ class TestDunningCampaignCRUD:
         """Test campaign creation fails without actions."""
         service = DunningService(async_session)
 
-        invalid_data = DunningCampaignCreate(
-            name="Invalid Campaign",
-            trigger_after_days=7,
-            actions=[],  # Empty actions
-        )
-
-        with pytest.raises(ValueError, match="at least one action"):
+        with pytest.raises(PydanticValidationError, match="at least 1 item"):
             await service.create_campaign(
                 tenant_id=test_tenant_id,
-                data=invalid_data,
+                data=DunningCampaignCreate(
+                    name="Invalid Campaign",
+                    trigger_after_days=7,
+                    actions=[],  # Empty actions
+                ),
                 created_by_user_id=test_user_id,
             )
 

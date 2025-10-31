@@ -78,4 +78,4 @@ async def test_workflow_provision_uses_async_session(
     result = await async_db_session.execute(select(DeploymentInstance))
     instances = result.scalars().all()
     assert len(instances) == 1
-    assert instances[0].tenant_id == 42
+    assert str(instances[0].tenant_id) == "42"

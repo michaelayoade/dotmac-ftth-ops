@@ -1,20 +1,17 @@
 """Test fixtures for partner management tests."""
 
-import os
-
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-# Set test environment
-
-
-
 pytestmark = pytest.mark.integration
 
-os.environ["TESTING"] = "1"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+
+@pytest.fixture(autouse=True)
+def partner_management_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from dotmac.platform.auth.models import user_roles  # noqa: F401
 from dotmac.platform.billing.core.entities import InvoiceEntity  # noqa: F401

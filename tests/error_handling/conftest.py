@@ -4,22 +4,19 @@ Fixtures for error handling integration tests.
 Sets up a test FastAPI app with auth routers and properly configured dependencies.
 """
 
-import os
-
-# Disable rate limiting BEFORE importing any modules that use it
-# This must be done before any rate_limit decorators are applied
-
-
-
-os.environ["RATE_LIMIT__ENABLED"] = "false"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["TESTING"] = "1"
-
 from unittest.mock import patch
 
 import pytest
 
 pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def error_handling_test_environment(monkeypatch):
+    """Ensure error-handling tests run with the expected test configuration."""
+    monkeypatch.setenv("RATE_LIMIT__ENABLED", "false")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    monkeypatch.setenv("TESTING", "1")
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient

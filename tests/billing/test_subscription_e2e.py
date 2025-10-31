@@ -251,8 +251,10 @@ class TestSubscriptionLifecycle:
 
         assert canceled is not None
         assert canceled.cancel_at_period_end is True
-        # When canceled at period end, status becomes CANCELED but subscription continues until period end
-        assert canceled.status == SubscriptionStatus.CANCELED
+        # When canceled at period end, status REMAINS as current status (TRIALING or ACTIVE)
+        # The subscription continues to work until the period/trial ends
+        # In this case, subscription is still in trial, so status remains TRIALING
+        assert canceled.status == SubscriptionStatus.TRIALING
         assert canceled.canceled_at is not None
 
     @pytest.mark.asyncio

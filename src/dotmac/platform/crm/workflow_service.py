@@ -258,20 +258,30 @@ class CRMService:
         # We need to find the lead associated with this customer
 
         from sqlalchemy import select
+        from uuid import UUID
 
         from ..customer_management.models import Customer
         from .models import Lead, SiteSurvey, SiteSurveyStatus
 
         # Find customer's associated lead (via email or other identifier)
-        customer_stmt = select(Customer).where(Customer.id == int(customer_id))
+        # Convert customer_id to UUID safely
+        try:
+            customer_uuid = UUID(str(customer_id))
+        except (ValueError, AttributeError) as e:
+            raise ValueError(f"Invalid customer ID format: {customer_id}") from e
+
+        customer_stmt = select(Customer).where(Customer.id == customer_uuid)
         customer_result = await self.db.execute(customer_stmt)
         customer = customer_result.scalar_one_or_none()
 
         if not customer:
             raise ValueError(f"Customer {customer_id} not found")
 
-        # Find lead by email
-        lead_stmt = select(Lead).where(Lead.email == customer.email)
+        # Find lead by email with tenant isolation
+        lead_stmt = select(Lead).where(
+            Lead.email == customer.email,
+            Lead.tenant_id == customer.tenant_id
+        )
         lead_result = await self.db.execute(lead_stmt)
         lead = lead_result.scalar_one_or_none()
 
@@ -288,7 +298,7 @@ class CRMService:
         survey_stmt = (
             select(SiteSurvey)
             .where(SiteSurvey.lead_id == lead.id, SiteSurvey.status == SiteSurveyStatus.COMPLETED)
-            .order_by(SiteSurvey.completed_at.desc())
+            .order_by(SiteSurvey.completed_date.desc())
         )
         survey_result = await self.db.execute(survey_stmt)
         survey = survey_result.scalar_one_or_none()
@@ -306,7 +316,7 @@ class CRMService:
             "status": survey.status.value,
             "completed": True,
             "scheduled_date": survey.scheduled_date.isoformat() if survey.scheduled_date else None,
-            "completed_at": survey.completed_at.isoformat() if survey.completed_at else None,
+            "completed_at": survey.completed_date.isoformat() if survey.completed_date else None,
             "data": survey.survey_data or {},
             "serviceability": survey.serviceability.value if survey.serviceability else None,
             "notes": survey.notes,

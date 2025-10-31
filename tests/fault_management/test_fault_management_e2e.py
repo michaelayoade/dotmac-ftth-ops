@@ -40,6 +40,7 @@ class TestDeviceFailureWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Device goes down
@@ -232,6 +233,7 @@ class TestSLABreachWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: SLA breach detection
@@ -352,6 +354,7 @@ class TestMaintenanceWindowWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Scheduled maintenance
@@ -451,6 +454,7 @@ class TestAlarmEscalationWorkflow:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Critical alarm escalation
@@ -530,6 +534,7 @@ class TestCompleteNetworkOutageScenario:
         self,
         session: AsyncSession,
         test_tenant: str,
+        override_db_session_for_services,  # Explicitly request session override
     ):
         """
         E2E Test: Fiber cut scenario

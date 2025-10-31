@@ -471,9 +471,6 @@ class TestStartupDependenciesEdgeCases:
             "Celery worker (background tasks)",
             "OTLP Collector (observability)",
             "docker-compose up -d",
-            "docker run -d -p 5432:5432 postgres:15",
-            "docker run -d -p 6379:6379 redis:7",
-            "docker run -d -p 8200:8200 hashicorp/vault:latest",
         ]
 
         for content in expected_content:

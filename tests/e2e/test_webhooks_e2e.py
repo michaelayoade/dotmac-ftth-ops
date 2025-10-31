@@ -87,70 +87,17 @@ async def db_session(db_engine):
         await session.close()
 
 
-@pytest.fixture
-def tenant_id():
-    """Test tenant ID."""
-    return "webhook-test-tenant"
-
-
-@pytest.fixture
-def user_id():
-    """Test user ID."""
-    return "webhook-test-user"
-
-
-@pytest.fixture
-def mock_current_user(tenant_id, user_id):
-    """Mock current user for authentication."""
-    return UserInfo(
-        user_id=user_id,
-        tenant_id=tenant_id,
-        email="webhookuser@example.com",
-        roles=["admin"],
-        permissions=["*"],
-    )
+# Note: Use shared fixtures from tests/e2e/conftest.py
+# - tenant_id, user_id, async_client, auth_headers
+# This file only defines webhook-specific fixtures below
 
 
 @pytest_asyncio.fixture
-async def async_client(db_session, tenant_id, mock_current_user):
-    """Create async HTTP client with dependency overrides."""
-    from fastapi.security import HTTPAuthorizationCredentials
-
-    from dotmac.platform.auth.dependencies import get_current_user
-    from dotmac.platform.db import get_async_db
-    from dotmac.platform.routers import security
-    from dotmac.platform.tenant import get_current_tenant_id
-
-    # Create a function that returns the session
-    async def override_get_db():
-        yield db_session
-
-    # Override security to bypass Bearer token requirement
-    def override_security():
-        return HTTPAuthorizationCredentials(scheme="Bearer", credentials="test-token")
-
-    # Override dependencies
-    app.dependency_overrides[get_async_db] = override_get_db
-    app.dependency_overrides[get_current_tenant_id] = lambda: tenant_id
-    app.dependency_overrides[get_current_user] = lambda: mock_current_user
-    app.dependency_overrides[security] = override_security
-
-    async with AsyncClient(
-        transport=ASGITransport(app=app),
-        base_url="http://testserver",
-        follow_redirects=True,
-    ) as client:
-        yield client
-
-    # Clear overrides
-    app.dependency_overrides.clear()
-
-
-@pytest_asyncio.fixture
-async def webhook_subscription(db_session, tenant_id):
+async def webhook_subscription(db_session):
     """Create a test webhook subscription."""
+    # Use e2e-test-tenant from shared fixture
     subscription = WebhookSubscription(
-        tenant_id=tenant_id,
+        tenant_id="e2e-test-tenant",
         url="https://example.com/webhook",
         description="Test webhook subscription",
         events=["invoice.created", "invoice.paid", "customer.created"],
@@ -185,7 +132,7 @@ def mock_webhook_endpoint():
 class TestWebhookSubscriptionCRUD:
     """Test webhook subscription create, read, update, delete via API."""
 
-    async def test_create_webhook_subscription_success(self, async_client):
+    async def test_create_webhook_subscription_success(self, async_client, auth_headers):
         """Test creating a new webhook subscription via API."""
         payload = {
             "url": "https://api.example.com/webhooks",
@@ -201,6 +148,7 @@ class TestWebhookSubscriptionCRUD:
         response = await async_client.post(
             "/api/v1/webhooks/subscriptions",
             json=payload,
+            headers=auth_headers,
         )
 
         assert response.status_code == 201
@@ -216,7 +164,7 @@ class TestWebhookSubscriptionCRUD:
         assert "id" in data
         assert "created_at" in data
 
-    async def test_create_webhook_subscription_invalid_events(self, async_client):
+    async def test_create_webhook_subscription_invalid_events(self, async_client, auth_headers):
         """Test creating subscription with invalid event types."""
         payload = {
             "url": "https://api.example.com/webhooks",
@@ -226,13 +174,14 @@ class TestWebhookSubscriptionCRUD:
         response = await async_client.post(
             "/api/v1/webhooks/subscriptions",
             json=payload,
+            headers=auth_headers,
         )
 
         assert response.status_code == 422  # Validation error
 
-    async def test_list_webhook_subscriptions(self, async_client, webhook_subscription):
+    async def test_list_webhook_subscriptions(self, async_client, webhook_subscription, auth_headers):
         """Test listing webhook subscriptions."""
-        response = await async_client.get("/api/v1/webhooks/subscriptions")
+        response = await async_client.get("/api/v1/webhooks/subscriptions", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -242,11 +191,11 @@ class TestWebhookSubscriptionCRUD:
         assert any(sub["id"] == str(webhook_subscription.id) for sub in data)
 
     async def test_list_webhook_subscriptions_with_filters(
-        self, async_client, webhook_subscription
+        self, async_client, webhook_subscription, auth_headers
     ):
         """Test listing subscriptions with filters."""
         # Filter by active status
-        response = await async_client.get("/api/v1/webhooks/subscriptions?is_active=true")
+        response = await async_client.get("/api/v1/webhooks/subscriptions?is_active=true", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -261,10 +210,11 @@ class TestWebhookSubscriptionCRUD:
         # data = response.json()
         # assert all("invoice.created" in sub["events"] for sub in data)
 
-    async def test_get_webhook_subscription_by_id(self, async_client, webhook_subscription):
+    async def test_get_webhook_subscription_by_id(self, async_client, webhook_subscription, auth_headers):
         """Test retrieving a specific webhook subscription."""
         response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -274,14 +224,14 @@ class TestWebhookSubscriptionCRUD:
         assert data["url"] == webhook_subscription.url
         assert data["description"] == webhook_subscription.description
 
-    async def test_get_webhook_subscription_not_found(self, async_client):
+    async def test_get_webhook_subscription_not_found(self, async_client, auth_headers):
         """Test retrieving non-existent subscription."""
         fake_id = str(uuid.uuid4())
-        response = await async_client.get(f"/api/v1/webhooks/subscriptions/{fake_id}")
+        response = await async_client.get(f"/api/v1/webhooks/subscriptions/{fake_id}", headers=auth_headers)
 
         assert response.status_code == 404
 
-    async def test_update_webhook_subscription(self, async_client, webhook_subscription):
+    async def test_update_webhook_subscription(self, async_client, webhook_subscription, auth_headers):
         """Test updating a webhook subscription."""
         update_data = {
             "description": "Updated description",
@@ -292,6 +242,7 @@ class TestWebhookSubscriptionCRUD:
         response = await async_client.patch(
             f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}",
             json=update_data,
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -301,21 +252,23 @@ class TestWebhookSubscriptionCRUD:
         assert data["is_active"] is False
         assert data["max_retries"] == 5
 
-    async def test_delete_webhook_subscription(self, async_client, webhook_subscription):
+    async def test_delete_webhook_subscription(self, async_client, webhook_subscription, auth_headers):
         """Test deleting a webhook subscription."""
         response = await async_client.delete(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}",
+            headers=auth_headers,
         )
 
         assert response.status_code == 204
 
         # Verify deletion
         get_response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}",
+            headers=auth_headers,
         )
         assert get_response.status_code == 404
 
-    async def test_rotate_webhook_secret(self, async_client, webhook_subscription, db_session):
+    async def test_rotate_webhook_secret(self, async_client, webhook_subscription, db_session, auth_headers):
         """Test rotating webhook signing secret."""
         # Store the original secret before rotation
         original_secret = webhook_subscription.secret
@@ -330,7 +283,8 @@ class TestWebhookSubscriptionCRUD:
             await db_session.refresh(webhook_subscription)
 
         response = await async_client.post(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/rotate-secret"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/rotate-secret",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -461,7 +415,7 @@ class TestWebhookDelivery:
             assert webhook_subscription.is_active is False
 
     async def test_manual_retry_delivery(
-        self, async_client, db_session, webhook_subscription, tenant_id
+        self, async_client, db_session, webhook_subscription, tenant_id, auth_headers
     ):
         """Test manually retrying a failed delivery."""
         # Create a failed delivery
@@ -492,7 +446,7 @@ class TestWebhookDelivery:
             mock_response.text = "OK"
             mock_client_instance.post.return_value = mock_response
 
-            response = await async_client.post(f"/api/v1/webhooks/deliveries/{delivery.id}/retry")
+            response = await async_client.post(f"/api/v1/webhooks/deliveries/{delivery.id}/retry", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -571,9 +525,9 @@ class TestWebhookEventBus:
 
         assert delivered_count == 0
 
-    async def test_list_available_events(self, async_client):
+    async def test_list_available_events(self, async_client, auth_headers):
         """Test listing available webhook event types."""
-        response = await async_client.get("/api/v1/webhooks/events")
+        response = await async_client.get("/api/v1/webhooks/events", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -588,9 +542,9 @@ class TestWebhookEventBus:
         assert "invoice.paid" in event_types
         assert "customer.created" in event_types
 
-    async def test_get_event_details(self, async_client):
+    async def test_get_event_details(self, async_client, auth_headers):
         """Test getting details for a specific event type."""
-        response = await async_client.get("/api/v1/webhooks/events/invoice.created")
+        response = await async_client.get("/api/v1/webhooks/events/invoice.created", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -606,7 +560,7 @@ class TestWebhookDeliveryHistory:
     """Test webhook delivery history and logging."""
 
     async def test_list_deliveries_for_subscription(
-        self, async_client, db_session, webhook_subscription, tenant_id
+        self, async_client, db_session, webhook_subscription, tenant_id, auth_headers
     ):
         """Test listing delivery history for a subscription."""
         # Create some deliveries
@@ -624,7 +578,8 @@ class TestWebhookDeliveryHistory:
         await db_session.commit()
 
         response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -634,7 +589,7 @@ class TestWebhookDeliveryHistory:
         assert len(data) == 3
 
     async def test_list_deliveries_with_status_filter(
-        self, async_client, db_session, webhook_subscription, tenant_id
+        self, async_client, db_session, webhook_subscription, tenant_id, auth_headers
     ):
         """Test filtering deliveries by status."""
         # Create deliveries with different statuses
@@ -660,7 +615,8 @@ class TestWebhookDeliveryHistory:
         await db_session.commit()
 
         response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries?status=failed"
+            f"/api/v1/webhooks/subscriptions/{webhook_subscription.id}/deliveries?status=failed",
+            headers=auth_headers,
         )
 
         assert response.status_code == 200
@@ -669,7 +625,7 @@ class TestWebhookDeliveryHistory:
         assert all(d["status"] == "failed" for d in data)
 
     async def test_list_all_recent_deliveries(
-        self, async_client, db_session, webhook_subscription, tenant_id
+        self, async_client, db_session, webhook_subscription, tenant_id, auth_headers
     ):
         """Test listing recent deliveries across all subscriptions."""
         # Create deliveries
@@ -686,7 +642,7 @@ class TestWebhookDeliveryHistory:
             db_session.add(delivery)
         await db_session.commit()
 
-        response = await async_client.get("/api/v1/webhooks/deliveries?limit=10")
+        response = await async_client.get("/api/v1/webhooks/deliveries?limit=10", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -695,7 +651,7 @@ class TestWebhookDeliveryHistory:
         assert len(data) <= 10
 
     async def test_get_delivery_by_id(
-        self, async_client, db_session, webhook_subscription, tenant_id
+        self, async_client, db_session, webhook_subscription, tenant_id, auth_headers
     ):
         """Test retrieving specific delivery details."""
         delivery = WebhookDelivery(
@@ -713,7 +669,7 @@ class TestWebhookDeliveryHistory:
         await db_session.commit()
         await db_session.refresh(delivery)
 
-        response = await async_client.get(f"/api/v1/webhooks/deliveries/{delivery.id}")
+        response = await async_client.get(f"/api/v1/webhooks/deliveries/{delivery.id}", headers=auth_headers)
 
         assert response.status_code == 200
         data = response.json()
@@ -731,7 +687,7 @@ class TestWebhookDeliveryHistory:
 class TestWebhookLifecycleE2E:
     """Test complete webhook lifecycle from creation to delivery and retry."""
 
-    async def test_complete_webhook_lifecycle(self, async_client, db_session, tenant_id):
+    async def test_complete_webhook_lifecycle(self, async_client, db_session, tenant_id, auth_headers):
         """
         Test full webhook lifecycle:
         1. Create subscription
@@ -753,6 +709,7 @@ class TestWebhookLifecycleE2E:
         create_response = await async_client.post(
             "/api/v1/webhooks/subscriptions",
             json=create_payload,
+            headers=auth_headers,
         )
         assert create_response.status_code == 201
         subscription_data = create_response.json()
@@ -775,7 +732,8 @@ class TestWebhookLifecycleE2E:
 
         # Step 3: Verify delivery was logged
         deliveries_response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{subscription_id}/deliveries"
+            f"/api/v1/webhooks/subscriptions/{subscription_id}/deliveries",
+            headers=auth_headers,
         )
         assert deliveries_response.status_code == 200
         deliveries = deliveries_response.json()
@@ -784,7 +742,8 @@ class TestWebhookLifecycleE2E:
 
         # Step 4: Check subscription statistics
         subscription_response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{subscription_id}"
+            f"/api/v1/webhooks/subscriptions/{subscription_id}",
+            headers=auth_headers,
         )
         assert subscription_response.status_code == 200
         updated_subscription = subscription_response.json()
@@ -807,7 +766,8 @@ class TestWebhookLifecycleE2E:
 
         # Step 6: Verify failed delivery is in retry state
         deliveries_response = await async_client.get(
-            f"/api/v1/webhooks/subscriptions/{subscription_id}/deliveries"
+            f"/api/v1/webhooks/subscriptions/{subscription_id}/deliveries",
+            headers=auth_headers,
         )
         deliveries = deliveries_response.json()
         failed_deliveries = [d for d in deliveries if d["status"] == "retrying"]
@@ -824,7 +784,8 @@ class TestWebhookLifecycleE2E:
                 mock_post.return_value = mock_response
 
                 retry_response = await async_client.post(
-                    f"/api/v1/webhooks/deliveries/{failed_delivery_id}/retry"
+                    f"/api/v1/webhooks/deliveries/{failed_delivery_id}/retry",
+                    headers=auth_headers,
                 )
                 assert retry_response.status_code == 200
 
@@ -832,6 +793,7 @@ class TestWebhookLifecycleE2E:
         update_response = await async_client.patch(
             f"/api/v1/webhooks/subscriptions/{subscription_id}",
             json={"is_active": False},
+            headers=auth_headers,
         )
         assert update_response.status_code == 200
         assert update_response.json()["is_active"] is False
@@ -850,7 +812,8 @@ class TestWebhookLifecycleE2E:
 
         # Step 10: Delete subscription
         delete_response = await async_client.delete(
-            f"/api/v1/webhooks/subscriptions/{subscription_id}"
+            f"/api/v1/webhooks/subscriptions/{subscription_id}",
+            headers=auth_headers,
         )
         assert delete_response.status_code == 204
 

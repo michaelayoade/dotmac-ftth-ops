@@ -81,6 +81,7 @@ PersistentKeepalive = 25
 
 
 @pytest.mark.integration
+@pytest.mark.serial_only
 @pytest.mark.asyncio
 class TestWireGuardDualStackIntegration:
     """Integration tests for WireGuard dual-stack operations."""
@@ -299,7 +300,6 @@ class TestWireGuardDualStackIntegration:
             assert peer.peer_ipv4 == "10.40.0.100"
             assert peer.peer_ipv6 == "fd00:40::100"
 
-    @pytest.mark.xfail(reason="IP conflict detection not yet implemented in service")
     async def test_peer_ip_conflict_detection(self, async_db_session, mock_wireguard_client):
         """
         Test detection of IP conflicts when manually specifying peer IPs.

@@ -203,9 +203,8 @@ class TestCreateSubscription:
             assert response.status_code == 201
             data = response.json()
             assert data["secret"] == "whsec_test123"
-            subscription = data["subscription"]
-            assert subscription["id"] == "sub-123"
-            assert subscription["url"] == "https://example.com/webhook"
+            assert data["id"] == "sub-123"
+            assert data["url"] == "https://example.com/webhook"
 
     async def test_create_subscription_with_description(self, setup_dependencies):
         """Test creating subscription with description."""

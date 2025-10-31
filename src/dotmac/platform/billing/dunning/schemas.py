@@ -102,7 +102,7 @@ class DunningCampaignResponse(BaseModel):
 class DunningExecutionResponse(BaseModel):
     """Response schema for dunning execution."""
 
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
 
     id: UUID
     tenant_id: str
@@ -134,7 +134,7 @@ class DunningExecutionResponse(BaseModel):
     canceled_by_user_id: UUID | None
 
     # Metadata
-    metadata_: dict[str, Any] = Field(alias="metadata")
+    metadata: dict[str, Any] = Field(alias="metadata", validation_alias="metadata_")
 
     # Timestamps
     created_at: datetime
@@ -202,12 +202,14 @@ class DunningCampaignStats(BaseModel):
     total_executions: int
     active_executions: int
     completed_executions: int
+    successful_executions: int
     failed_executions: int
     canceled_executions: int
     total_recovered_amount: int  # in cents
     total_outstanding_amount: int  # in cents
     success_rate: float  # percentage
     recovery_rate: float  # percentage
+    average_recovery_amount: float  # currency in cents
     average_completion_time_hours: float
 
 
@@ -221,9 +223,11 @@ class DunningStats(BaseModel):
     total_executions: int
     active_executions: int
     completed_executions: int
+    successful_recoveries: int
     failed_executions: int
     canceled_executions: int
     total_recovered_amount: int  # in cents
+    average_recovery_amount: float  # in cents
     average_recovery_rate: float  # percentage
     average_completion_time_hours: float
 

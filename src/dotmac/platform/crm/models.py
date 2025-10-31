@@ -122,13 +122,13 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
         comment="Human-readable lead identifier",
     )
     status: Mapped[LeadStatus] = mapped_column(
-        SQLEnum(LeadStatus),
+        SQLEnum(LeadStatus, values_callable=lambda x: [e.value for e in x]),
         default=LeadStatus.NEW,
         nullable=False,
         index=True,
     )
     source: Mapped[LeadSource] = mapped_column(
-        SQLEnum(LeadSource),
+        SQLEnum(LeadSource, values_callable=lambda x: [e.value for e in x]),
         default=LeadSource.WEBSITE,
         nullable=False,
         index=True,
@@ -167,7 +167,7 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
 
     # Serviceability Check
     is_serviceable: Mapped[Serviceability | None] = mapped_column(
-        SQLEnum(Serviceability),
+        SQLEnum(Serviceability, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
         comment="Service availability at location",
     )
@@ -276,6 +276,15 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
         return f"<Lead(id={self.id}, number={self.lead_number}, status={self.status})>"
 
     @property
+    def metadata(self) -> dict[str, Any]:
+        """Expose JSON metadata via legacy attribute name."""
+        return self.metadata_
+
+    @metadata.setter
+    def metadata(self, value: dict[str, Any] | None) -> None:
+        self.metadata_ = value or {}
+
+    @property
     def full_name(self) -> str:
         """Get lead's full name."""
         return f"{self.first_name} {self.last_name}"
@@ -317,7 +326,7 @@ class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # 
         comment="Human-readable quote identifier",
     )
     status: Mapped[QuoteStatus] = mapped_column(
-        SQLEnum(QuoteStatus),
+        SQLEnum(QuoteStatus, values_callable=lambda x: [e.value for e in x]),
         default=QuoteStatus.DRAFT,
         nullable=False,
         index=True,
@@ -450,6 +459,15 @@ class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # 
         return f"<Quote(id={self.id}, number={self.quote_number}, status={self.status})>"
 
     @property
+    def metadata(self) -> dict[str, Any]:
+        """Expose JSON metadata via legacy attribute name."""
+        return self.metadata_
+
+    @metadata.setter
+    def metadata(self, value: dict[str, Any] | None) -> None:
+        self.metadata_ = value or {}
+
+    @property
     def is_expired(self) -> bool:
         """Check if quote has expired."""
         return datetime.now(UTC) > self.valid_until
@@ -484,7 +502,7 @@ class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         index=True,
     )
     status: Mapped[SiteSurveyStatus] = mapped_column(
-        SQLEnum(SiteSurveyStatus),
+        SQLEnum(SiteSurveyStatus, values_callable=lambda x: [e.value for e in x]),
         default=SiteSurveyStatus.SCHEDULED,
         nullable=False,
         index=True,
@@ -517,7 +535,7 @@ class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
 
     # Technical Assessment
     serviceability: Mapped[Serviceability] = mapped_column(
-        SQLEnum(Serviceability),
+        SQLEnum(Serviceability, values_callable=lambda x: [e.value for e in x]),
         nullable=True,
     )
     nearest_fiber_distance_meters: Mapped[int | None] = mapped_column(
@@ -598,3 +616,12 @@ class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
 
     def __repr__(self) -> str:
         return f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
+
+    @property
+    def metadata(self) -> dict[str, Any]:
+        """Expose JSON metadata via legacy attribute name."""
+        return self.metadata_
+
+    @metadata.setter
+    def metadata(self, value: dict[str, Any] | None) -> None:
+        self.metadata_ = value or {}

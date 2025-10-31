@@ -376,7 +376,7 @@ async def delete_lead(
         from datetime import datetime
 
         lead.deleted_at = datetime.utcnow()
-        lead.updated_by_id = current_user.id
+        lead.updated_by = current_user.id
         await db.commit()
     except EntityNotFoundError as e:
         await db.rollback()
@@ -573,7 +573,7 @@ async def delete_quote(
         from datetime import datetime
 
         quote.deleted_at = datetime.utcnow()
-        quote.updated_by_id = current_user.id
+        quote.updated_by = current_user.id
         await db.commit()
     except EntityNotFoundError as e:
         await db.rollback()
@@ -755,7 +755,7 @@ async def delete_site_survey(
         from datetime import datetime
 
         survey.deleted_at = datetime.utcnow()
-        survey.updated_by_id = current_user.id
+        survey.updated_by = current_user.id
         await db.commit()
     except EntityNotFoundError as e:
         await db.rollback()

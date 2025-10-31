@@ -32,6 +32,13 @@ def radius_service(mock_session):
         mock_settings.is_production = False
         service = RADIUSService(session=mock_session, tenant_id="test_tenant")
         service.repository = AsyncMock()
+        # Ensure session.execute returns an object with scalar_one_or_none()
+        async def _execute(*args, **kwargs):
+            result = MagicMock()
+            result.scalar_one_or_none.return_value = None
+            return result
+
+        service.session.execute = AsyncMock(side_effect=_execute)
         return service
 
 

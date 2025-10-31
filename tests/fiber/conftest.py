@@ -4,8 +4,8 @@ Fixtures for fiber infrastructure tests.
 
 import pytest
 import pytest_asyncio
-from fastapi import HTTPException, Request, status
-from httpx import AsyncClient
+from fastapi import FastAPI, HTTPException, Request, status
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import JWTService, UserInfo
@@ -66,7 +66,7 @@ def db_session(async_db_session: AsyncSession) -> AsyncSession:
 
 @pytest_asyncio.fixture
 async def client(
-    authenticated_client,
+    test_app: FastAPI,
     async_db_session: AsyncSession,
     redis_client,
     test_tenant: Tenant,
@@ -77,7 +77,7 @@ async def client(
     This ensures that the FastAPI app uses the same database session
     as the tests, allowing test data to be visible to API endpoints.
     """
-    app = authenticated_client._transport.app  # type: ignore[attr-defined]
+    app = test_app
 
     # Override database session dependency
     async def override_get_session_dependency():
@@ -107,19 +107,16 @@ async def client(
     app.dependency_overrides[get_redis_client] = override_get_redis_client
     app.dependency_overrides[get_current_user] = override_get_current_user
 
-    # Attach tenant header and auth token per request by reusing authenticated_client
-    # Update Authorization header to tenant-scoped token
-    authenticated_client.headers["X-Tenant-ID"] = test_tenant.id
+    transport = ASGITransport(app=app)
 
     try:
-        yield authenticated_client
+        async with AsyncClient(transport=transport, base_url="http://testserver") as async_client:
+            async_client.headers["X-Tenant-ID"] = test_tenant.id
+            yield async_client
     finally:
-        authenticated_client.headers.pop("X-Tenant-ID", None)
-
-    # Cleanup overrides
-    app.dependency_overrides.pop(get_session_dependency, None)
-    app.dependency_overrides.pop(get_redis_client, None)
-    app.dependency_overrides.pop(get_current_user, None)
+        app.dependency_overrides.pop(get_session_dependency, None)
+        app.dependency_overrides.pop(get_redis_client, None)
+        app.dependency_overrides.pop(get_current_user, None)
 
 
 @pytest_asyncio.fixture

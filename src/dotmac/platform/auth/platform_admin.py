@@ -61,16 +61,14 @@ def is_platform_admin(user: UserInfo) -> bool:
         >>>     # User can access all tenants
         >>>     pass
     """
+    permissions = set(user.permissions or [])
+
     # Check explicit flag
     if user.is_platform_admin:
         return True
 
     # Check for platform admin permission
-    if PLATFORM_ADMIN_PERMISSION in user.permissions:
-        return True
-
-    # Check for wildcard permission
-    if "*" in user.permissions:
+    if PLATFORM_ADMIN_PERMISSION in permissions:
         return True
 
     return False
@@ -94,15 +92,25 @@ def has_platform_permission(user: UserInfo, permission: str) -> bool:
     if is_platform_admin(user):
         return True
 
+    permissions = set(user.permissions or [])
+
     # Check specific permission
-    if permission in user.permissions:
+    if permission in permissions:
         return True
 
-    # Check wildcard permissions
+    # Check wildcard permission granting all scopes (platform scopes require admin)
+    if "*" in permissions:
+        if permission.startswith("platform:"):
+            return False
+        return True
+
+    # Check hierarchical wildcard permissions (e.g., platform:tenants:*)
     parts = permission.split(":")
     for i in range(len(parts)):
         wildcard = ":".join(parts[: i + 1]) + ":*"
         if wildcard in user.permissions:
+            if permission.startswith("platform:") and not is_platform_admin(user):
+                continue
             return True
 
     return False

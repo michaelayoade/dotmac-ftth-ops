@@ -55,17 +55,12 @@ def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = None,
 ) -> Any:
     """
-    Patch hook for tests to supply a mock authenticated user.
+    Adapter around the core authentication dependency.
 
-    The router looks up this callable at request time. In production the
-    default implementation returns ``None`` so the standard authentication
-    flow runs. Tests can patch this function to return a user-like object or
-    ``UserInfo`` instance without needing real auth tokens.
+    Tests may monkeypatch this function to supply a stub user, but the default
+    behaviour simply delegates to the shared auth stack.
     """
-    return None
-
-
-_ORIGINAL_GET_CURRENT_USER_HOOK = get_current_user
+    return _auth_get_current_user(request, token, api_key, credentials)
 
 
 def _coerce_str_list(value: Any) -> list[str]:
@@ -85,6 +80,27 @@ def _coerce_optional_str(value: Any) -> str | None:
     if isinstance(value, str) and value:
         return value
     return None
+
+
+_ROLE_DEFAULT_PERMISSIONS: dict[str, set[str]] = {
+    "tenant_admin": {"billing.addons.view", "billing.addons.purchase"},
+    "tenant_billing_manager": {"billing.addons.view", "billing.addons.purchase"},
+    "admin": {"billing.addons.view", "billing.addons.purchase"},
+    "platform_admin": {"billing.addons.view", "billing.addons.purchase"},
+    "tenant_user": {"billing.addons.view"},
+}
+
+
+def _derive_permissions(roles: list[str], permissions: list[str]) -> list[str]:
+    """Return permissions, deriving defaults from roles when none supplied."""
+    if permissions:
+        return permissions
+
+    derived: set[str] = set()
+    for role in roles:
+        derived.update(_ROLE_DEFAULT_PERMISSIONS.get(role, set()))
+
+    return list(derived)
 
 
 def _normalize_user(candidate: Any) -> UserInfo | None:
@@ -111,22 +127,12 @@ def _normalize_user(candidate: Any) -> UserInfo | None:
     if isinstance(raw_user_id, (str, int)):
         user_id = str(raw_user_id)
     else:
-        user_id = "test-user"
+        return None
 
     roles = _coerce_str_list(data.get("roles"))
-    if not roles:
-        roles = ["tenant_admin"]
-
-    permissions = _coerce_str_list(data.get("permissions"))
-    if "billing.addons.view" not in permissions:
-        permissions.append("billing.addons.view")
-    if "billing.addons.purchase" not in permissions:
-        permissions.append("billing.addons.purchase")
+    permissions = _derive_permissions(roles, _coerce_str_list(data.get("permissions")))
 
     tenant_id = _coerce_optional_str(data.get("tenant_id") or data.get("tenant"))
-    if not tenant_id:
-        tenant_id = "test_tenant"
-
     email = _coerce_optional_str(data.get("email"))
     username = _coerce_optional_str(data.get("username"))
     is_platform_admin = data.get("is_platform_admin", False)
@@ -144,12 +150,7 @@ def _normalize_user(candidate: Any) -> UserInfo | None:
     )
 
 
-async def _get_authenticated_user(
-    request: Request,
-    token: str | None = Depends(oauth2_scheme),
-    api_key: str | None = Depends(api_key_header),
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-) -> UserInfo:
+async def _get_authenticated_user(request: Request) -> UserInfo:
     """
     Resolve the current user for add-on routes.
 
@@ -157,21 +158,24 @@ async def _get_authenticated_user(
     Tests can patch ``get_current_user`` in this module to bypass token
     validation and supply a stub user.
     """
+    token = await oauth2_scheme(request)
+    api_key = await api_key_header(request)
+    credentials = await bearer_scheme(request)
+
     override = get_current_user
-    if override is not _ORIGINAL_GET_CURRENT_USER_HOOK:
-        try:
-            candidate = override(
-                request=request,
-                token=token,
-                api_key=api_key,
-                credentials=credentials,
-            )
-        except TypeError:
-            candidate = override(request=request)
-        resolved = await _resolve(candidate)
-        normalized = _normalize_user(resolved)
-        if normalized:
-            return normalized
+    try:
+        candidate = override(
+            request=request,
+            token=token,
+            api_key=api_key,
+            credentials=credentials,
+        )
+    except TypeError:
+        candidate = override()
+    resolved = await _resolve(candidate)
+    normalized = _normalize_user(resolved)
+    if normalized:
+        return normalized
 
     return await _auth_get_current_user(request, token, api_key, credentials)
 

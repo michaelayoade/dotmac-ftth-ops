@@ -591,10 +591,22 @@ class Settings(BaseSettings):
         username: str = Field("dotmac", description="Database username")
         password: str = Field("", description="Database password")
 
-        # Connection pool
-        pool_size: int = Field(10, description="Connection pool size")
-        max_overflow: int = Field(20, description="Max overflow connections")
-        pool_timeout: int = Field(30, description="Pool timeout in seconds")
+        # Connection pool (environment variable overrides for test tuning)
+        pool_size: int = Field(
+            10,
+            description="Connection pool size (override with PG_POOL_SIZE env var)",
+            validation_alias="PG_POOL_SIZE"
+        )
+        max_overflow: int = Field(
+            20,
+            description="Max overflow connections (override with PG_MAX_OVERFLOW env var)",
+            validation_alias="PG_MAX_OVERFLOW"
+        )
+        pool_timeout: int = Field(
+            30,
+            description="Pool timeout in seconds (override with PG_POOL_TIMEOUT env var)",
+            validation_alias="PG_POOL_TIMEOUT"
+        )
         pool_recycle: int = Field(3600, description="Recycle connections after seconds")
         pool_pre_ping: bool = Field(True, description="Test connections before use")
 

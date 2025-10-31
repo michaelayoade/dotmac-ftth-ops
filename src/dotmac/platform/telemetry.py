@@ -137,7 +137,11 @@ def setup_telemetry(app: FastAPI | None = None) -> None:
     logger = structlog.get_logger(__name__)
 
     # Skip telemetry setup in test environment to prevent export warnings
-    if os.environ.get("PYTEST_CURRENT_TEST") or os.environ.get("OTEL_ENABLED") == "false":
+    if (
+        os.environ.get("PYTEST_CURRENT_TEST")
+        or os.environ.get("OTEL_ENABLED") == "false"
+        or os.environ.get("DOTMAC_DISABLE_OTEL") == "1"
+    ):
         logger.debug("Skipping OpenTelemetry setup in test environment")
         return
 

@@ -12,6 +12,8 @@ from uuid import UUID
 from sqlalchemy import and_, desc, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.subscribers.models import Subscriber
+
 from .models import InternetServicePlan, PlanStatus, PlanSubscription, PlanType
 from .schemas import (
     InternetServicePlanCreate,
@@ -337,10 +339,29 @@ class InternetPlanService:
 
     async def create_subscription(self, data: PlanSubscriptionCreate) -> PlanSubscriptionResponse:
         """Subscribe customer to a plan."""
+        # Validate subscriber exists and belongs to customer
+        subscriber_stmt = select(Subscriber).where(
+            and_(
+                Subscriber.id == data.subscriber_id,
+                Subscriber.customer_id == data.customer_id,
+                Subscriber.tenant_id == self.tenant_id,
+                Subscriber.deleted_at.is_(None),
+            )
+        )
+        subscriber_result = await self.session.execute(subscriber_stmt)
+        subscriber = subscriber_result.scalar_one_or_none()
+
+        if not subscriber:
+            raise ValueError(
+                f"Subscriber {data.subscriber_id} not found for customer {data.customer_id} "
+                f"in tenant {self.tenant_id}"
+            )
+
         subscription = PlanSubscription(
             tenant_id=self.tenant_id,
             plan_id=data.plan_id,
             customer_id=data.customer_id,
+            subscriber_id=data.subscriber_id,  # Set the FK
             start_date=data.start_date,
             custom_download_speed=data.custom_download_speed,
             custom_upload_speed=data.custom_upload_speed,

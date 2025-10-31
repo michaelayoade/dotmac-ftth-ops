@@ -83,6 +83,12 @@ async def client(secrets_app):
         yield client
 
 
+@pytest.fixture
+def auth_headers():
+    """Provide authorization headers for E2E tests."""
+    return {"Authorization": "Bearer test-token"}
+
+
 # ============================================================================
 # Health Check E2E Tests
 # ============================================================================
@@ -92,7 +98,7 @@ class TestHealthCheckE2E:
     """E2E tests for Vault health check endpoint."""
 
     @pytest.mark.asyncio
-    async def test_health_check_healthy(self, client, mock_vault_settings):
+    async def test_health_check_healthy(self, client, mock_vault_settings, auth_headers):
         """Test health check endpoint when Vault is healthy."""
         # Mock AsyncVaultClient context manager and health_check method
         mock_vault = AsyncMock()
@@ -101,7 +107,7 @@ class TestHealthCheckE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/health")
+            response = await client.get("/api/v1/secrets/health", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -110,7 +116,7 @@ class TestHealthCheckE2E:
             assert data["mount_path"] == "secret"
 
     @pytest.mark.asyncio
-    async def test_health_check_unhealthy(self, client, mock_vault_settings):
+    async def test_health_check_unhealthy(self, client, mock_vault_settings, auth_headers):
         """Test health check endpoint when Vault is unhealthy."""
         # Mock AsyncVaultClient that raises exception
         mock_vault = AsyncMock()
@@ -119,19 +125,19 @@ class TestHealthCheckE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/health")
+            response = await client.get("/api/v1/secrets/health", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
             assert data["healthy"] is False
 
     @pytest.mark.asyncio
-    async def test_health_check_vault_disabled(self, client):
+    async def test_health_check_vault_disabled(self, client, auth_headers):
         """Test health check when Vault is disabled."""
         with patch("dotmac.platform.secrets.api.settings") as mock_settings:
             mock_settings.vault.enabled = False
 
-            response = await client.get("/api/v1/secrets/health")
+            response = await client.get("/api/v1/secrets/health", headers=auth_headers)
 
             assert response.status_code == 503
             data = response.json()
@@ -147,7 +153,7 @@ class TestCreateUpdateSecretE2E:
     """E2E tests for creating and updating secrets."""
 
     @pytest.mark.asyncio
-    async def test_create_secret_success(self, client, mock_vault_settings, mock_audit_log):
+    async def test_create_secret_success(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test successful secret creation."""
         # Mock AsyncVaultClient
         mock_vault = AsyncMock()
@@ -167,6 +173,7 @@ class TestCreateUpdateSecretE2E:
                     },
                     "metadata": {"environment": "production"},
                 },
+                headers=auth_headers,
             )
 
             assert response.status_code == 200
@@ -189,7 +196,7 @@ class TestCreateUpdateSecretE2E:
             assert call_args[0][1]["username"] == "admin"
 
     @pytest.mark.asyncio
-    async def test_update_existing_secret(self, client, mock_vault_settings, mock_audit_log):
+    async def test_update_existing_secret(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test updating an existing secret."""
         mock_vault = AsyncMock()
         mock_vault.set_secret = AsyncMock(return_value=None)
@@ -204,6 +211,7 @@ class TestCreateUpdateSecretE2E:
                     "data": {"api_key": "new-key-456", "api_url": "https://api.example.com"},
                     "metadata": None,
                 },
+                headers=auth_headers,
             )
 
             assert response.status_code == 200
@@ -212,7 +220,7 @@ class TestCreateUpdateSecretE2E:
             assert data["data"]["api_key"] == "new-key-456"
 
     @pytest.mark.asyncio
-    async def test_create_secret_vault_error(self, client, mock_vault_settings, mock_audit_log):
+    async def test_create_secret_vault_error(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test error handling when Vault fails to store secret."""
         from dotmac.platform.secrets.vault_client import VaultError
 
@@ -225,6 +233,7 @@ class TestCreateUpdateSecretE2E:
             response = await client.post(
                 "/api/v1/secrets/secrets/app/restricted",
                 json={"data": {"key": "value"}},
+                headers=auth_headers,
             )
 
             assert response.status_code == 500
@@ -249,7 +258,7 @@ class TestGetSecretE2E:
     """E2E tests for retrieving secrets."""
 
     @pytest.mark.asyncio
-    async def test_get_secret_success(self, client, mock_vault_settings, mock_audit_log):
+    async def test_get_secret_success(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test successful secret retrieval."""
         mock_vault = AsyncMock()
         mock_vault.get_secret = AsyncMock(
@@ -263,7 +272,7 @@ class TestGetSecretE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets/app/database/credentials")
+            response = await client.get("/api/v1/secrets/secrets/app/database/credentials", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -279,7 +288,7 @@ class TestGetSecretE2E:
             assert len(success_call) > 0
 
     @pytest.mark.asyncio
-    async def test_get_secret_not_found(self, client, mock_vault_settings, mock_audit_log):
+    async def test_get_secret_not_found(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test retrieving non-existent secret."""
         mock_vault = AsyncMock()
         mock_vault.get_secret = AsyncMock(return_value=None)  # Secret not found
@@ -287,7 +296,7 @@ class TestGetSecretE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets/nonexistent/secret")
+            response = await client.get("/api/v1/secrets/secrets/nonexistent/secret", headers=auth_headers)
 
             assert response.status_code == 404
             data = response.json()
@@ -302,7 +311,7 @@ class TestGetSecretE2E:
             assert len(failed_call) > 0
 
     @pytest.mark.asyncio
-    async def test_get_secret_vault_error(self, client, mock_vault_settings, mock_audit_log):
+    async def test_get_secret_vault_error(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test error handling when Vault fails."""
         from dotmac.platform.secrets.vault_client import VaultError
 
@@ -312,7 +321,7 @@ class TestGetSecretE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets/app/config")
+            response = await client.get("/api/v1/secrets/secrets/app/config", headers=auth_headers)
 
             assert response.status_code == 500
             data = response.json()
@@ -335,7 +344,7 @@ class TestListSecretsE2E:
     """E2E tests for listing secrets."""
 
     @pytest.mark.asyncio
-    async def test_list_secrets_success(self, client, mock_vault_settings):
+    async def test_list_secrets_success(self, client, mock_vault_settings, auth_headers):
         """Test successful secret listing."""
         mock_vault = AsyncMock()
         mock_vault.list_secrets_with_metadata = AsyncMock(
@@ -358,7 +367,7 @@ class TestListSecretsE2E:
         )
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets")
+            response = await client.get("/api/v1/secrets/secrets", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -377,7 +386,7 @@ class TestListSecretsE2E:
             assert secret2["version"] == 1
 
     @pytest.mark.asyncio
-    async def test_list_secrets_with_prefix(self, client, mock_vault_settings):
+    async def test_list_secrets_with_prefix(self, client, mock_vault_settings, auth_headers):
         """Test listing secrets with prefix filter."""
         mock_vault = AsyncMock()
         mock_vault.list_secrets_with_metadata = AsyncMock(
@@ -393,7 +402,7 @@ class TestListSecretsE2E:
         )
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets?prefix=app/database")
+            response = await client.get("/api/v1/secrets/secrets?prefix=app/database", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -404,20 +413,20 @@ class TestListSecretsE2E:
             mock_vault.list_secrets_with_metadata.assert_called_once_with("app/database")
 
     @pytest.mark.asyncio
-    async def test_list_secrets_empty(self, client, mock_vault_settings):
+    async def test_list_secrets_empty(self, client, mock_vault_settings, auth_headers):
         """Test listing when no secrets exist."""
         mock_vault = AsyncMock()
         mock_vault.list_secrets_with_metadata = AsyncMock(return_value=[])
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets")
+            response = await client.get("/api/v1/secrets/secrets", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
             assert data["secrets"] == []
 
     @pytest.mark.asyncio
-    async def test_list_secrets_vault_error(self, client, mock_vault_settings):
+    async def test_list_secrets_vault_error(self, client, mock_vault_settings, auth_headers):
         """Test error handling when listing fails."""
         from dotmac.platform.secrets.vault_client import VaultError
 
@@ -427,14 +436,14 @@ class TestListSecretsE2E:
         )
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets")
+            response = await client.get("/api/v1/secrets/secrets", headers=auth_headers)
 
             assert response.status_code == 500
             data = response.json()
             assert "Failed to list secrets" in data["detail"]
 
     @pytest.mark.asyncio
-    async def test_list_secrets_parsing_error(self, client, mock_vault_settings):
+    async def test_list_secrets_parsing_error(self, client, mock_vault_settings, auth_headers):
         """Test handling of secrets with invalid metadata."""
         mock_vault = AsyncMock()
         mock_vault.list_secrets_with_metadata = AsyncMock(
@@ -454,7 +463,7 @@ class TestListSecretsE2E:
         )
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.get("/api/v1/secrets/secrets")
+            response = await client.get("/api/v1/secrets/secrets", headers=auth_headers)
 
             assert response.status_code == 200
             data = response.json()
@@ -471,7 +480,7 @@ class TestDeleteSecretE2E:
     """E2E tests for deleting secrets."""
 
     @pytest.mark.asyncio
-    async def test_delete_secret_success(self, client, mock_vault_settings, mock_audit_log):
+    async def test_delete_secret_success(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test successful secret deletion."""
         mock_vault = AsyncMock()
         mock_vault.delete_secret = AsyncMock(return_value=None)
@@ -479,7 +488,7 @@ class TestDeleteSecretE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.delete("/api/v1/secrets/secrets/app/old-config")
+            response = await client.delete("/api/v1/secrets/secrets/app/old-config", headers=auth_headers)
 
             assert response.status_code == 204
             assert response.content == b""  # No content for 204
@@ -496,7 +505,7 @@ class TestDeleteSecretE2E:
             assert delete_call[0][1]["resource_id"] == "app/old-config"
 
     @pytest.mark.asyncio
-    async def test_delete_secret_vault_error(self, client, mock_vault_settings, mock_audit_log):
+    async def test_delete_secret_vault_error(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test error handling when deletion fails."""
         from dotmac.platform.secrets.vault_client import VaultError
 
@@ -506,7 +515,7 @@ class TestDeleteSecretE2E:
         mock_vault.__aexit__ = AsyncMock(return_value=None)
 
         with patch("dotmac.platform.secrets.api.AsyncVaultClient", return_value=mock_vault):
-            response = await client.delete("/api/v1/secrets/secrets/app/config")
+            response = await client.delete("/api/v1/secrets/secrets/app/config", headers=auth_headers)
 
             assert response.status_code == 500
             data = response.json()
@@ -529,7 +538,7 @@ class TestCompleteWorkflowE2E:
     """E2E tests for complete secret lifecycle workflows."""
 
     @pytest.mark.asyncio
-    async def test_complete_secret_lifecycle(self, client, mock_vault_settings, mock_audit_log):
+    async def test_complete_secret_lifecycle(self, client, mock_vault_settings, mock_audit_log, auth_headers):
         """Test complete workflow: create → get → update → delete."""
         mock_vault = AsyncMock()
 
@@ -550,11 +559,12 @@ class TestCompleteWorkflowE2E:
                     "data": {"api_key": "key-123", "api_url": "https://api.example.com"},
                     "metadata": {"created_by": "admin"},
                 },
+                headers=auth_headers,
             )
             assert create_response.status_code == 200
 
             # 2. Get secret
-            get_response = await client.get("/api/v1/secrets/secrets/app/api-config")
+            get_response = await client.get("/api/v1/secrets/secrets/app/api-config", headers=auth_headers)
             assert get_response.status_code == 200
             assert get_response.json()["data"]["api_key"] == "key-123"
 
@@ -568,18 +578,19 @@ class TestCompleteWorkflowE2E:
                 json={
                     "data": {"api_key": "key-456", "api_url": "https://api.example.com"},
                 },
+                headers=auth_headers,
             )
             assert update_response.status_code == 200
 
             # 4. Delete secret
-            delete_response = await client.delete("/api/v1/secrets/secrets/app/api-config")
+            delete_response = await client.delete("/api/v1/secrets/secrets/app/api-config", headers=auth_headers)
             assert delete_response.status_code == 204
 
             # Verify all audit events were logged
             assert mock_audit_log.call_count >= 4  # create, get, update, delete
 
     @pytest.mark.asyncio
-    async def test_multi_secret_management(self, client, mock_vault_settings):
+    async def test_multi_secret_management(self, client, mock_vault_settings, auth_headers):
         """Test managing multiple secrets in different paths."""
         mock_vault = AsyncMock()
         mock_vault.set_secret = AsyncMock(return_value=None)
@@ -598,26 +609,29 @@ class TestCompleteWorkflowE2E:
             await client.post(
                 "/api/v1/secrets/secrets/app/database/prod",
                 json={"data": {"host": "prod.db.com", "password": "prod-pass"}},
+                headers=auth_headers,
             )
 
             await client.post(
                 "/api/v1/secrets/secrets/app/database/staging",
                 json={"data": {"host": "staging.db.com", "password": "staging-pass"}},
+                headers=auth_headers,
             )
 
             await client.post(
                 "/api/v1/secrets/secrets/app/api/keys",
                 json={"data": {"key": "api-key-123"}},
+                headers=auth_headers,
             )
 
             # List all secrets
-            list_response = await client.get("/api/v1/secrets/secrets")
+            list_response = await client.get("/api/v1/secrets/secrets", headers=auth_headers)
             assert list_response.status_code == 200
             data = list_response.json()
             assert len(data["secrets"]) == 3
 
             # List with prefix filter
-            list_db_response = await client.get("/api/v1/secrets/secrets?prefix=app/database")
+            list_db_response = await client.get("/api/v1/secrets/secrets?prefix=app/database", headers=auth_headers)
             assert list_db_response.status_code == 200
             # Note: In real scenario, mock would be called with prefix
             # For this test, we're just verifying the endpoint works

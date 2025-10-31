@@ -25,9 +25,6 @@ pytestmark = pytest.mark.asyncio
 class TestContactCaching:
     """Test contact caching behavior."""
 
-    @pytest.mark.skip(
-        reason="Caching disabled - cache_set uses JSON serialization which doesn't support SQLAlchemy models"
-    )
     @pytest.mark.asyncio
     async def test_cache_set_on_get(self, tenant_id, sample_contact):
         """Test that cache is set when getting contact."""
@@ -49,6 +46,10 @@ class TestContactCaching:
                 )
 
                 mock_cache_set.assert_called_once()
+                cache_key, payload, *_ = mock_cache_set.call_args[0]
+                assert cache_key.startswith(f"contact:{tenant_id}:")
+                assert isinstance(payload, dict)
+                assert payload.get("id") == str(sample_contact.id)
 
     @pytest.mark.asyncio
     async def test_cache_cleared_on_update(self, tenant_id, sample_contact):

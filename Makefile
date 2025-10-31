@@ -157,7 +157,7 @@ dev: dev-backend
 dev-backend:
 	@echo "$(CYAN)Starting backend on http://localhost:8000$(NC)"
 	@echo "$(CYAN)API docs: http://localhost:8000/docs$(NC)"
-	@ENVIRONMENT=development poetry run uvicorn src.dotmac.platform.main:app --reload --host 0.0.0.0 --port 8000
+	@env -u __PYVENV_LAUNCHER__ ENVIRONMENT=development poetry run uvicorn src.dotmac.platform.main:app --reload --host 0.0.0.0 --port 8000
 
 dev-frontend:
 	@echo "$(CYAN)Starting frontend on http://localhost:3000$(NC)"

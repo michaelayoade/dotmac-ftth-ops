@@ -5,18 +5,29 @@ Shared fixtures and configuration for integration tests.
 """
 
 import asyncio
-import os
-
 import pytest
 import pytest_asyncio
 
-# Override production .env settings for integration tests
-# The .env file has TENANT_MODE=multi, but integration tests should not require tenant headers
-os.environ["REQUIRE_TENANT_HEADER"] = "false"
+@pytest.fixture(scope="session", autouse=True)
+def integration_test_environment():
+    """Ensure tenant headers are optional during integration tests."""
+    import os
 
-# Reinitialize tenant configuration to pick up the new environment variable
-from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
-set_tenant_config(TenantConfiguration())
+    from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
+
+    original_value = os.environ.get("REQUIRE_TENANT_HEADER")
+    os.environ["REQUIRE_TENANT_HEADER"] = "false"
+
+    set_tenant_config(TenantConfiguration())
+
+    yield
+
+    if original_value is None:
+        os.environ.pop("REQUIRE_TENANT_HEADER", None)
+    else:
+        os.environ["REQUIRE_TENANT_HEADER"] = original_value
+
+    set_tenant_config(TenantConfiguration())
 
 
 # Mark all tests in this directory as integration tests

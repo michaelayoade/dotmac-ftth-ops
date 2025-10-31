@@ -10,7 +10,7 @@ from datetime import datetime, timezone
 UTC = timezone.utc
 from typing import Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -309,7 +309,7 @@ async def detect_rule_conflicts(
 
 @router.post("/rules/bulk-activate")
 async def bulk_activate_rules(
-    rule_ids: list[str],
+    rule_ids: list[str] = Body(...),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),
@@ -330,7 +330,7 @@ async def bulk_activate_rules(
 
 @router.post("/rules/bulk-deactivate")
 async def bulk_deactivate_rules(
-    rule_ids: list[str],
+    rule_ids: list[str] = Body(...),
     current_user: UserInfo = Depends(get_current_user),
     tenant_id: str = Depends(get_current_tenant_id),
     db_session: AsyncSession = Depends(get_async_session),

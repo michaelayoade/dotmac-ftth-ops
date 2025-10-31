@@ -10,6 +10,7 @@ Tests performance and scalability with large volumes:
 """
 
 import asyncio
+import os
 import time
 from decimal import Decimal
 from uuid import uuid4
@@ -27,6 +28,17 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
+
+RUN_SUBSCRIPTION_LOAD_TESTS = os.getenv("RUN_SUBSCRIPTION_LOAD_TESTS") == "1"
+
+# Mark these as integration tests and skip unless explicitly enabled.
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.skipif(
+        not RUN_SUBSCRIPTION_LOAD_TESTS,
+        reason="Set RUN_SUBSCRIPTION_LOAD_TESTS=1 to enable subscription load tests.",
+    ),
+]
 
 @pytest_asyncio.fixture
 async def load_test_plans(async_db_session):

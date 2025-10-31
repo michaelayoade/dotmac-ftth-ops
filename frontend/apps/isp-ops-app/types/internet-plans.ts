@@ -170,6 +170,7 @@ export interface PlanSubscription {
   // References
   plan_id: string;
   customer_id: string;
+  subscriber_id: string | null;
   subscription_id: string | null;
 
   // Subscription details
@@ -284,6 +285,7 @@ export type InternetServicePlanUpdate = Partial<InternetServicePlanCreate>;
 export interface PlanSubscriptionCreate {
   plan_id: string;
   customer_id: string;
+  subscriber_id: string;
   start_date: string;
   custom_download_speed?: number | null;
   custom_upload_speed?: number | null;

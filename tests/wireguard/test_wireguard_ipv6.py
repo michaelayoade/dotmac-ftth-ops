@@ -245,7 +245,10 @@ class TestWireGuardPeerDualStack:
         self, wireguard_service, mock_session, mock_client
     ):
         """Test creating peer with static dual-stack IPs."""
-        with patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer:
+        with (
+            patch("dotmac.platform.wireguard.service.WireGuardPeer") as MockPeer,
+            patch("dotmac.platform.wireguard.service.select") as mock_select,
+        ):
             server_id = uuid4()
 
             mock_server = MagicMock()
@@ -260,6 +263,17 @@ class TestWireGuardPeerDualStack:
             mock_server.current_peers = 0
 
             wireguard_service.get_server = AsyncMock(return_value=mock_server)
+
+            # Mock select to avoid building real SQLAlchemy queries with patched model
+            mock_query = MagicMock()
+            mock_select.return_value = mock_query
+            mock_query.where.return_value = mock_query
+
+            existing_ipv4_result = MagicMock()
+            existing_ipv4_result.first.return_value = None
+            existing_ipv6_result = MagicMock()
+            existing_ipv6_result.first.return_value = None
+            mock_session.execute.side_effect = [existing_ipv4_result, existing_ipv6_result]
 
             mock_peer_instance = MagicMock()
             MockPeer.return_value = mock_peer_instance
@@ -491,10 +505,12 @@ class TestWireGuardIPAllocationEdgeCases:
             mock_select.return_value = mock_query
             mock_query.where.return_value = mock_query
 
+            existing_ipv4_result = MagicMock()
+            existing_ipv4_result.first.return_value = None
             # Mock database query
             mock_ipv6_result = MagicMock()
             mock_ipv6_result.all.return_value = []
-            mock_session.execute.return_value = mock_ipv6_result
+            mock_session.execute.side_effect = [existing_ipv4_result, mock_ipv6_result]
 
             # Mock IPv6 allocation (IPv4 already provided)
             mock_client.allocate_peer_ip.return_value = "fd00:8::2/128"

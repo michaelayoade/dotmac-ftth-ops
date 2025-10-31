@@ -64,7 +64,7 @@ class LifecycleOrchestrationService:
         tenant_id: str,
         data: ServiceProvisionRequest,
         created_by_user_id: UUID | None = None,
-        auto_activate: bool = False,
+        auto_activate: bool = True,
     ) -> ServiceProvisioningResponse:
         """
         Initiate service provisioning workflow.
@@ -85,8 +85,8 @@ class LifecycleOrchestrationService:
         """
         if not data.service_name or len(data.service_name.strip()) < 3:
             raise ValidationError("Service name must be at least 3 characters")
-        if not data.equipment_assigned:
-            raise ValueError("At least one piece of equipment must be assigned")
+        # Allow provisioning to proceed even if equipment will be assigned later.
+        equipment_assigned = list(data.equipment_assigned or [])
 
         # Generate unique service identifier
         service_identifier = await self._generate_service_identifier(tenant_id, data.service_type)
@@ -106,7 +106,7 @@ class LifecycleOrchestrationService:
             installation_address=data.installation_address,
             installation_scheduled_date=data.installation_scheduled_date,
             installation_technician_id=data.installation_technician_id,
-            equipment_assigned=data.equipment_assigned,
+            equipment_assigned=equipment_assigned,
             vlan_id=data.vlan_id,
             external_service_id=data.external_service_id,
             network_element_id=data.network_element_id,
@@ -130,7 +130,7 @@ class LifecycleOrchestrationService:
             workflow_config={
                 "service_type": data.service_type.value,
                 "installation_required": bool(data.installation_scheduled_date),
-                "equipment_count": len(data.equipment_assigned),
+                "equipment_count": len(equipment_assigned),
             },
         )
 
@@ -166,25 +166,8 @@ class LifecycleOrchestrationService:
                 workflow=workflow,
                 triggered_by_user_id=created_by_user_id,
             )
-        else:
-            await self.start_provisioning_workflow(
-                service_instance_id=service_instance.id,
-                tenant_id=tenant_id,
-            )
-            refreshed_service = await self.get_service_instance(service_instance.id, tenant_id)
-            if refreshed_service is not None:
-                service_instance = refreshed_service
-            workflow_result = await self.session.execute(
-                select(ProvisioningWorkflow).where(
-                    and_(
-                        ProvisioningWorkflow.service_instance_id == service_instance.id,
-                        ProvisioningWorkflow.workflow_type == "provision",
-                    )
-                )
-            )
-            refreshed_workflow = workflow_result.scalar_one_or_none()
-            if refreshed_workflow is not None:
-                workflow = refreshed_workflow
+            await self.session.refresh(service_instance)
+            await self.session.refresh(workflow)
 
         return ServiceProvisioningResponse(
             service_instance_id=service_instance.id,
@@ -430,6 +413,8 @@ class LifecycleOrchestrationService:
             event_id=event.id,
         )
         await self.session.refresh(service)
+        if legacy_mode:
+            return service
         return result
 
     # ==========================================
@@ -504,6 +489,8 @@ class LifecycleOrchestrationService:
                 message=f"Cannot suspend service in {service.status.value} status",
                 error="INVALID_STATUS",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
             return result
 
         # Update service status
@@ -554,6 +541,9 @@ class LifecycleOrchestrationService:
             message="Service suspended successfully",
             event_id=event.id,
         )
+        await self.session.refresh(service)
+        if legacy_mode:
+            return service
         return result
 
     # ==========================================
@@ -585,6 +575,7 @@ class LifecycleOrchestrationService:
         Returns:
             ServiceOperationResult with resumption details
         """
+        legacy_mode = data is None
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
@@ -622,6 +613,8 @@ class LifecycleOrchestrationService:
                 message=f"Cannot resume service in {service.status.value} status",
                 error="INVALID_STATUS",
             )
+            if legacy_mode:
+                raise BusinessRuleError(result.message)
             return result
 
         # Update service status
@@ -657,6 +650,8 @@ class LifecycleOrchestrationService:
             event_id=event.id,
         )
         await self.session.refresh(service)
+        if legacy_mode:
+            return service
         return result
 
     # ==========================================
@@ -795,6 +790,8 @@ class LifecycleOrchestrationService:
             event_id=event.id,
         )
         await self.session.refresh(service)
+        if legacy_mode:
+            return service
         return result
 
     # ==========================================
@@ -1012,6 +1009,14 @@ class LifecycleOrchestrationService:
             message=f"Health check completed: {health_status}",
             event_id=event.id,
         )
+        await self.session.refresh(service)
+        if legacy_mode:
+            return SimpleNamespace(
+                is_healthy=health_status == "healthy",
+                checks_performed=1,
+                status=service.status,
+                details=health_data,
+            )
         return result
 
     # ==========================================
@@ -1049,15 +1054,56 @@ class LifecycleOrchestrationService:
                 raise ValueError("service_ids and operation are required when data is not provided")
             params = dict(operation_params or {})
             params.update(legacy_kwargs)
-            if operation == "suspend" and "reason" in params:
-                params.setdefault("suspension_reason", params.pop("reason"))
-            if operation == "terminate" and "reason" in params:
-                params.setdefault("termination_reason", params.pop("reason"))
-            data = BulkServiceOperationRequest.model_construct(
-                service_instance_ids=service_ids,
-                operation=operation,
-                operation_params=params,
-            )
+            results: list[Any] = []
+            for service_id in service_ids:
+                try:
+                    if operation == "suspend":
+                        svc = await self.suspend_service(
+                            tenant_id,
+                            service_instance_id=service_id,
+                            reason=params.get("reason"),
+                            suspension_type=params.get("suspension_type"),
+                            auto_resume_at=params.get("auto_resume_at"),
+                            send_notification=params.get("send_notification"),
+                            metadata=params.get("metadata"),
+                            fraud_suspension=params.get("fraud_suspension"),
+                            suspended_by_user_id=user_id,
+                        )
+                    elif operation == "resume":
+                        svc = await self.resume_service(
+                            tenant_id,
+                            service_instance_id=service_id,
+                            resumption_note=params.get("resumption_note"),
+                            send_notification=params.get("send_notification"),
+                            metadata=params.get("metadata"),
+                            resumed_by_user_id=user_id,
+                        )
+                    elif operation == "terminate":
+                        svc = await self.terminate_service(
+                            tenant_id,
+                            service_instance_id=service_id,
+                            reason=params.get("reason"),
+                            termination_type=params.get("termination_type"),
+                            termination_date=params.get("termination_date"),
+                            send_notification=params.get("send_notification"),
+                            return_equipment=params.get("return_equipment"),
+                            metadata=params.get("metadata"),
+                            terminated_by_user_id=user_id,
+                        )
+                    elif operation == "health_check":
+                        svc = await self.perform_health_check(
+                            tenant_id,
+                            service_instance_id=service_id,
+                            check_type=params.get("check_type"),
+                        )
+                    else:
+                        raise ValueError("Unknown operation")
+                    results.append(svc)
+                except BusinessRuleError:
+                    raise
+                except Exception as exc:
+                    raise BusinessRuleError(f"Operation failed: {exc}") from exc
+            return results
         elif legacy_kwargs:
             raise ValueError("Unexpected keyword arguments for bulk operation")
 
@@ -1120,19 +1166,6 @@ class LifecycleOrchestrationService:
             results=results,
             execution_time_seconds=execution_time,
         )
-        if legacy_mode:
-            if failed:
-                failed_message = next(
-                    (r.message for r in results if not r.success), "Bulk operation failed"
-                )
-                raise BusinessRuleError(failed_message)
-            services: list[ServiceInstance] = []
-            for result in results:
-                service = await self.get_service_instance(result.service_instance_id, tenant_id)
-                if service:
-                    await self.session.refresh(service)
-                    services.append(service)
-            return services
         return bulk_result
 
     # ==========================================

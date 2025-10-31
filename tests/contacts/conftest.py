@@ -73,6 +73,7 @@ def sample_contact(tenant_id, customer_id, user_id):
     contact.status = ContactStatus.ACTIVE
     contact.stage = ContactStage.CUSTOMER
     contact.owner_id = user_id
+    contact.assigned_team_id = None
     contact.notes = "Important client"
     contact.tags = ["vip", "enterprise"]
     contact.custom_fields = {"account_value": 100000}

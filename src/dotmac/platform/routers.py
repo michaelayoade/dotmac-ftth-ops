@@ -83,10 +83,19 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.auth.platform_admin_router",
         router_name="router",
-        prefix="/api/v1/platform-admin",
+        prefix="/api/v1/admin/platform",
         tags=["Platform Administration"],
         requires_auth=True,  # Uses require_platform_admin internally
         description="Cross-tenant platform administration (super admin only)",
+    ),
+    # Backwards compatibility path for legacy clients hitting /api/v1/platform-admin/*
+    RouterConfig(
+        module_path="dotmac.platform.auth.platform_admin_router",
+        router_name="router",
+        prefix="/api/v1/platform-admin",
+        tags=["Platform Administration"],
+        requires_auth=True,
+        description="Legacy platform administration path (deprecated)",
     ),
     RouterConfig(
         module_path="dotmac.platform.access.router",

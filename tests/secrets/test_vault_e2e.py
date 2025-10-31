@@ -26,13 +26,20 @@ import pytest
 # Custom marker for Vault tests
 pytestmark = [pytest.mark.e2e, pytest.mark.slow]
 
+if os.getenv("RUN_VAULT_E2E") != "1":
+    pytest.skip(
+        "Vault E2E tests require Docker and are disabled by default. "
+        "Set RUN_VAULT_E2E=1 to enable them.",
+        allow_module_level=True,
+    )
+
 
 class TestVaultContainerE2E:
     """End-to-end tests using containerized Vault instance."""
 
     @pytest.fixture(scope="class")
     def vault_container(self):
-        """Start dev Vault container for testing."""
+        """Use existing Vault container or start a new dev container for testing."""
         try:
             # Check if docker is available
             subprocess.run(
@@ -44,10 +51,39 @@ class TestVaultContainerE2E:
         except (subprocess.CalledProcessError, FileNotFoundError, subprocess.TimeoutExpired):
             pytest.skip("Docker not available for Vault e2e tests")
 
+        # Check if there's already a Vault container running on port 8200
+        try:
+            result = subprocess.run(
+                ["docker", "ps", "--filter", "publish=8200", "--format", "{{.Names}}"],
+                check=True,
+                capture_output=True,
+                timeout=5,
+                text=True,
+            )
+            existing_containers = result.stdout.strip().split('\n')
+            existing_vault = [c for c in existing_containers if c and 'vault' in c.lower()]
+
+            if existing_vault:
+                # Use existing Vault container
+                container_name = existing_vault[0]
+
+                # Get Vault token from environment or use dev default for dotmac-ftth-ops
+                vault_token = os.getenv("VAULT_TOKEN", "dev-token-12345")
+
+                yield {
+                    "url": "http://localhost:8200",
+                    "token": vault_token,
+                    "container": container_name,
+                    "existing": True,  # Mark as existing so we don't clean it up
+                }
+                return
+        except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+            pass  # Fall through to create new container
+
         # Start Vault dev server in Docker
         container_name = "dotmac-test-vault"
 
-        # Stop and remove existing container if present
+        # Stop and remove existing test container if present
         subprocess.run(
             ["docker", "rm", "-f", container_name],
             capture_output=True,
@@ -59,7 +95,7 @@ class TestVaultContainerE2E:
                 [
                     "docker", "run", "-d",
                     "--name", container_name,
-                    "-p", "8200:8200",
+                    "-p", "8201:8200",  # Use different port to avoid conflict
                     "-e", "VAULT_DEV_ROOT_TOKEN_ID=test-root-token",
                     "hashicorp/vault:latest",
                 ],
@@ -73,13 +109,14 @@ class TestVaultContainerE2E:
             time.sleep(3)
 
             yield {
-                "url": "http://localhost:8200",
+                "url": "http://localhost:8201",  # Updated port
                 "token": "test-root-token",
                 "container": container_name,
+                "existing": False,
             }
 
         finally:
-            # Cleanup: stop and remove container
+            # Cleanup: stop and remove container only if we created it
             subprocess.run(
                 ["docker", "rm", "-f", container_name],
                 capture_output=True,
@@ -100,6 +137,10 @@ class TestVaultContainerE2E:
 
     def test_vault_write_and_read_secret(self, vault_container):
         """Test writing and reading secret from real Vault."""
+        # Skip write tests when using existing production Vault
+        if vault_container.get("existing", False):
+            pytest.skip("Write tests skipped for existing Vault container (may lack permissions)")
+
         from dotmac.platform.secrets.vault_client import VaultClient
 
         client = VaultClient(
@@ -111,10 +152,10 @@ class TestVaultContainerE2E:
         test_secret_path = "secret/test/alertmanager/webhook_secret"
         test_secret_value = "test-webhook-secret-12345"
 
-        client.write_secret(test_secret_path, {"value": test_secret_value})
+        client.set_secret(test_secret_path, {"value": test_secret_value})
 
         # Read the secret back
-        secret = client.read_secret(test_secret_path)
+        secret = client.get_secret(test_secret_path)
 
         assert secret is not None, "Secret should be readable"
         assert "value" in secret, "Secret should contain 'value' key"
@@ -122,6 +163,10 @@ class TestVaultContainerE2E:
 
     def test_alertmanager_webhook_secret_loading(self, vault_container):
         """Test loading Alertmanager webhook secret from Vault (real flow)."""
+        # Skip write tests when using existing production Vault
+        if vault_container.get("existing", False):
+            pytest.skip("Write tests skipped for existing Vault container (may lack permissions)")
+
         from dotmac.platform.secrets.vault_client import VaultClient
         from dotmac.platform.secrets.secrets_loader import load_secrets_from_vault
 
@@ -134,7 +179,7 @@ class TestVaultContainerE2E:
         webhook_secret_path = "secret/observability/alertmanager/webhook_secret"
         webhook_secret_value = "production-webhook-secret-abc123"
 
-        client.write_secret(webhook_secret_path, {"value": webhook_secret_value})
+        client.set_secret(webhook_secret_path, {"value": webhook_secret_value})
 
         # Mock settings to use test Vault
         with patch("dotmac.platform.secrets.secrets_loader.settings") as mock_settings:
@@ -158,6 +203,10 @@ class TestVaultContainerE2E:
 
     def test_vault_secret_not_found_handling(self, vault_container):
         """Test Vault client handles missing secrets gracefully."""
+        # Skip for existing Vault as it may return permission denied instead of not found
+        if vault_container.get("existing", False):
+            pytest.skip("Secret not found test skipped for existing Vault (may have different permissions)")
+
         from dotmac.platform.secrets.vault_client import VaultClient
 
         client = VaultClient(
@@ -166,7 +215,7 @@ class TestVaultContainerE2E:
         )
 
         # Try to read non-existent secret
-        secret = client.read_secret("secret/nonexistent/path")
+        secret = client.get_secret("secret/nonexistent/path")
 
         # Should return None or empty dict (not crash)
         assert secret is None or secret == {}, (

@@ -12,8 +12,8 @@ import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
 
-from dotmac.platform.auth.dependencies import get_current_user_info
-from dotmac.platform.auth.models import UserInfo
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.radius.analytics_schemas import (
     DailyBandwidthPoint,
     DailyBandwidthResponse,
@@ -59,7 +59,7 @@ async def get_subscriber_usage(
     subscriber_id: str,
     start_date: Annotated[datetime, Query(description="Start date (ISO 8601)")],
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
-    user_info: UserInfo = Depends(get_current_user_info),
+    user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
 ):
     """
@@ -129,7 +129,7 @@ async def get_subscriber_usage(
 async def get_tenant_usage(
     start_date: Annotated[datetime, Query(description="Start date (ISO 8601)")],
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
-    user_info: UserInfo = Depends(get_current_user_info),
+    user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
 ):
     """
@@ -196,7 +196,7 @@ async def get_hourly_bandwidth(
     subscriber_id: str,
     start_date: Annotated[datetime, Query(description="Start date (ISO 8601)")],
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
-    user_info: UserInfo = Depends(get_current_user_info),
+    user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
 ):
     """
@@ -267,7 +267,7 @@ async def get_daily_bandwidth(
     subscriber_id: str,
     start_date: Annotated[datetime, Query(description="Start date (ISO 8601)")],
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
-    user_info: UserInfo = Depends(get_current_user_info),
+    user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
 ):
     """
@@ -339,7 +339,7 @@ async def get_top_subscribers(
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
     limit: Annotated[int, Query(ge=1, le=100, description="Number of top subscribers (1-100)")] = 10,
     metric: Annotated[str, Query(description="Sort metric: 'bandwidth' or 'duration'")] = "bandwidth",
-    user_info: UserInfo = Depends(get_current_user_info),
+    user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
 ):
     """

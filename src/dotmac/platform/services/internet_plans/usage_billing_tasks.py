@@ -304,19 +304,31 @@ async def process_subscription_overage(
             "reason": "customer_not_found",
         }
 
-    # Get subscriber (RADIUS entity) for the customer
-    # Note: One customer can have multiple subscribers (multiple services).
-    # We take the first active one for billing purposes.
+    # Get subscriber (RADIUS entity) linked to this subscription
+    # Use the subscription.subscriber_id FK for deterministic mapping
+    if not subscription.subscriber_id:
+        logger.warning(
+            "usage_billing.missing_subscriber_link",
+            subscription_id=str(subscription.id),
+            customer_id=str(customer.id),
+            hint="PlanSubscription.subscriber_id is NULL - data integrity issue",
+        )
+        return {
+            "subscription_id": str(subscription.id),
+            "skipped": True,
+            "reason": "subscriber_id_not_set",
+        }
+
     subscriber_result = await session.execute(
         select(Subscriber).where(
             and_(
-                Subscriber.customer_id == customer.id,
+                Subscriber.id == subscription.subscriber_id,
                 Subscriber.tenant_id == subscription.tenant_id,
                 Subscriber.deleted_at.is_(None),  # Not soft-deleted
             )
         )
     )
-    subscriber = subscriber_result.scalars().first()
+    subscriber = subscriber_result.scalar_one_or_none()
 
     if not subscriber:
         logger.warning(

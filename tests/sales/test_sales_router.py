@@ -9,7 +9,7 @@ for the sales order API.
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -69,8 +69,6 @@ def test_client(monkeypatch):
     """Test client with sales router (handles both sync and async endpoints)."""
     # Import auth and dependencies first
     # Create mocks fresh for each test
-    from unittest.mock import AsyncMock
-
     import dotmac.platform.auth.rbac_dependencies
     from dotmac.platform.auth.core import UserInfo, get_current_user
     from dotmac.platform.dependencies import get_db
@@ -558,216 +556,55 @@ class TestOrderStatistics:
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Permission tests need refactoring - sales routes not properly registered on test_app. See TEST_FIXING_SESSION_SUMMARY.md for details.")
 class TestSalesOrderPermissions:
-    """Test that sales order endpoints properly enforce RBAC permissions.
+    """Ensure internal sales API endpoints enforce RBAC permissions."""
 
-    NOTE: These tests are currently skipped because they have architectural issues:
-    1. Sales routes return 404 on test_app (not properly mounted)
-    2. Tests should verify business logic, not middleware behavior
-    3. Should be rewritten as service-layer tests or integration tests
+    @staticmethod
+    def _deny_permissions(monkeypatch: pytest.MonkeyPatch) -> AsyncMock:
+        """Force RBAC permission checks to fail during the request."""
+        denied_all = AsyncMock(return_value=False)
+        monkeypatch.setattr(
+            "dotmac.platform.auth.rbac_dependencies.RBACService.user_has_all_permissions",
+            denied_all,
+        )
+        monkeypatch.setattr(
+            "dotmac.platform.auth.rbac_dependencies.RBACService.user_has_any_permission",
+            AsyncMock(return_value=False),
+        )
+        return denied_all
 
-    TODO: Rewrite as functional tests that verify sales operations work correctly
-    """
+    @pytest.mark.parametrize(
+        ("method", "path", "payload"),
+        [
+            ("get", "/api/v1/orders/{order_id}", None),
+            ("post", "/api/v1/orders/{order_id}/submit", {}),
+            ("post", "/api/v1/orders/{order_id}/process", None),
+            ("patch", "/api/v1/orders/{order_id}/status", {"status": "active"}),
+            ("delete", "/api/v1/orders/{order_id}", None),
+            ("get", "/api/v1/orders", None),
+            ("get", "/api/v1/orders/stats/summary", None),
+        ],
+    )
+    def test_endpoints_require_permissions(
+        self,
+        method: str,
+        path: str,
+        payload: dict[str, Any] | None,
+        test_app: FastAPI,
+        auth_headers: dict[str, str],
+        sample_order,
+        monkeypatch: pytest.MonkeyPatch,
+    ):
+        """All internal sales endpoints return 403 when RBAC denies access."""
+        deny_mock = self._deny_permissions(monkeypatch)
 
-    def test_get_order_requires_read_permission(self, test_app, auth_headers, sample_order, db):
-        """Test GET /orders/{order_id} requires order.read permission."""
-        from fastapi.testclient import TestClient
-        from unittest.mock import AsyncMock
+        with TestClient(test_app) as client:
+            url = path.format(order_id=sample_order.id)
+            request_kwargs: dict[str, Any] = {"headers": auth_headers}
+            if payload is not None:
+                request_kwargs["json"] = payload
 
-        from dotmac.platform.auth.rbac_service import get_rbac_service
+            response = getattr(client, method)(url, **request_kwargs)
 
-        # Create a mock RBAC service that denies all permissions
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        # Override the RBAC service dependency
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.get(
-                f"/api/v1/sales/orders/{sample_order.id}",
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            # Clean up dependency override
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_submit_order_requires_submit_permission(self, test_app, auth_headers, sample_order, db):
-        """Test POST /orders/{order_id}/submit requires order.submit permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.post(
-                f"/api/v1/sales/orders/{sample_order.id}/submit",
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_process_order_requires_process_permission(self, test_app, auth_headers, sample_order, db):
-        """Test POST /orders/{order_id}/process requires order.process permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.post(
-                f"/api/v1/sales/orders/{sample_order.id}/process",
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_update_order_requires_update_permission(self, test_app, auth_headers, sample_order, db):
-        """Test PUT /orders/{order_id} requires order.update permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.put(
-                f"/api/v1/sales/orders/{sample_order.id}",
-                json={"status": "processing"},
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_delete_order_requires_delete_permission(self, test_app, auth_headers, sample_order, db):
-        """Test DELETE /orders/{order_id} requires order.delete permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.delete(
-                f"/api/v1/sales/orders/{sample_order.id}",
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_list_orders_requires_read_permission(self, test_app, auth_headers, db):
-        """Test GET /orders requires order.read permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.get(
-                "/api/v1/sales/orders",
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
-
-    def test_search_orders_requires_read_permission(self, test_app, auth_headers, db):
-        """Test POST /orders/search requires order.read permission."""
-        from fastapi.testclient import TestClient
-
-        from dotmac.platform.auth.rbac_service import get_rbac_service
-
-        class DenyAllRBACService:
-            async def user_has_all_permissions(self, user_id, permissions):
-                return False
-
-            async def user_has_permission(self, user_id, permission):
-                return False
-
-            async def get_user_permissions(self, user_id):
-                return set()
-
-        test_app.dependency_overrides[get_rbac_service] = lambda: DenyAllRBACService()
-
-        try:
-            client = TestClient(test_app)
-            response = client.post(
-                "/api/v1/sales/orders/search",
-                json={"status": "pending"},
-                headers=auth_headers
-            )
-            assert response.status_code == 403
-        finally:
-            test_app.dependency_overrides.pop(get_rbac_service, None)
+        assert response.status_code == status.HTTP_403_FORBIDDEN
+        deny_mock.assert_awaited()

@@ -1,19 +1,11 @@
-"""
-Fixtures for E2E tests.
+"""Fixtures for E2E tests.
 
-Provides database, HTTP client, and authentication fixtures for end-to-end testing.
-"""
+Provides database, HTTP client, and authentication fixtures for end-to-end testing."""
 
 import os
 
 import pytest
 import pytest_asyncio
-
-# Set test environment variables (NOT DEFAULT_TENANT_ID - see fixture below)
-os.environ["TESTING"] = "1"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["JWT_SECRET_KEY"] = "test-secret-key-for-e2e-tests"
-os.environ["REDIS_URL"] = "redis://localhost:6379/15"  # Test database
 
 from httpx import ASGITransport, AsyncClient
 
@@ -22,8 +14,15 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.pool import StaticPool
 
 from dotmac.platform.db import Base
-from dotmac.platform.main import app
-from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
+
+
+@pytest.fixture(autouse=True)
+def e2e_test_environment(monkeypatch):
+    """Ensure E2E tests run with consistent environment configuration."""
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
+    monkeypatch.setenv("JWT_SECRET_KEY", "test-secret-key-for-e2e-tests")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/15")
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -39,6 +38,8 @@ def e2e_tenant_config(request):
         return
 
     original_tenant_id = os.environ.get("DEFAULT_TENANT_ID")
+
+    from dotmac.platform.tenant.config import TenantConfiguration, set_tenant_config
 
     # Set e2e tenant ID
     os.environ["DEFAULT_TENANT_ID"] = "e2e-test-tenant"
@@ -122,6 +123,7 @@ async def async_client(db_engine, tenant_id, user_id):
     from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.db import get_async_session
     from dotmac.platform.tenant import get_current_tenant_id
+    from dotmac.platform.main import app
 
     # Create a session maker for the test engine
     test_session_maker = async_sessionmaker(
@@ -131,8 +133,8 @@ async def async_client(db_engine, tenant_id, user_id):
     )
 
     # Create mock user with admin permissions for e2e tests
-    def mock_get_current_user(request):
-        """Mock get_current_user for E2E tests - accepts request parameter for compatibility."""
+    async def mock_get_current_user(request=None, token=None, api_key=None):
+        """Mock get_current_user for E2E tests - matches actual dependency signature."""
         return UserInfo(
             user_id=user_id,
             tenant_id=tenant_id,

@@ -1,19 +1,22 @@
 
 """
-End-to-End tests for File Storage API.
+Integration tests for File Storage API.
 
-Tests complete workflows through the API router, covering:
+Tests file storage router workflows with mocked storage backend, covering:
 - File upload/download
 - File deletion
 - File metadata management
 - File listing
 - Batch operations
-- Integration with storage backends
+- Error handling
 
-This E2E test suite covers the following modules:
+This integration test suite covers the following modules:
 - src/dotmac/platform/file_storage/router.py (router)
-- src/dotmac/platform/file_storage/service.py (service)
-- src/dotmac/platform/file_storage/minio_storage.py (storage backend)
+- src/dotmac/platform/file_storage/service.py (service - mocked)
+- src/dotmac/platform/file_storage/minio_storage.py (storage backend - mocked)
+
+Note: These are integration tests with mocked storage, not true e2e tests.
+For true e2e file storage tests, see tests/integration/test_file_storage_integration.py
 """
 
 import io
@@ -23,7 +26,7 @@ from uuid import uuid4
 
 import pytest
 
-# Pytest marker for E2E tests
+# Pytest marker for integration tests
 
 # Note: auth_headers fixture is provided by tests/e2e/conftest.py
 # It includes both Authorization and X-Tenant-ID headers
@@ -31,13 +34,14 @@ import pytest
 
 
 
-pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
 
 @pytest.fixture
 def mock_storage_service():
     """Mock storage service for testing."""
     from dotmac.platform.file_storage.service import get_storage_service
     from dotmac.platform.main import app
+    from dotmac.platform.file_storage import router as file_storage_router
 
     class MockStorageService:
         def __init__(self):
@@ -53,11 +57,14 @@ def mock_storage_service():
     mock_service = MockStorageService()
 
     app.dependency_overrides[get_storage_service] = lambda: mock_service
+    original_storage_service = file_storage_router.storage_service
+    file_storage_router.storage_service = mock_service
 
     try:
         yield mock_service
     finally:
         app.dependency_overrides.pop(get_storage_service, None)
+        file_storage_router.storage_service = original_storage_service
 
 
 # ============================================================================
@@ -69,7 +76,9 @@ class TestFileUploadE2E:
     """E2E tests for file upload workflows."""
 
     @pytest.mark.asyncio
-    async def test_upload_file_success(self, mock_storage_service, async_client, auth_headers):
+    async def test_upload_file_success(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test successful file upload."""
         # Setup mock
         file_id = str(uuid4())
@@ -109,10 +118,12 @@ class TestFileUploadE2E:
         assert call_args.kwargs["content_type"] == "text/plain"
         assert call_args.kwargs["path"] == "documents/test"
         assert call_args.kwargs["tenant_id"] == "e2e-test-tenant"
-        assert call_args.kwargs["metadata"]["uploaded_by"] == "e2e-test-user"
+        assert call_args.kwargs["metadata"]["uploaded_by"] == user_id
 
     @pytest.mark.asyncio
-    async def test_upload_file_without_path(self, mock_storage_service, async_client, auth_headers):
+    async def test_upload_file_without_path(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test upload without specifying path (auto-generated)."""
         file_id = str(uuid4())
         mock_storage_service.store_file.return_value = file_id
@@ -134,7 +145,7 @@ class TestFileUploadE2E:
         # Verify auto-generated path includes tenant, user_id and date
         call_args = mock_storage_service.store_file.call_args
         path = call_args.kwargs["path"]
-        assert "uploads/e2e-test-tenant/e2e-test-user" in path
+        assert f"uploads/e2e-test-tenant/{user_id}" in path
         assert datetime.now(timezone.utc).strftime("%Y/%m/%d") in path
 
     @pytest.mark.asyncio
@@ -379,7 +390,9 @@ class TestFileListE2E:
     """E2E tests for file listing workflows."""
 
     @pytest.mark.asyncio
-    async def test_list_files_success(self, mock_storage_service, async_client, auth_headers):
+    async def test_list_files_success(
+        self, mock_storage_service, async_client, auth_headers, user_id
+    ):
         """Test successful file listing."""
         from dotmac.platform.file_storage.service import FileMetadata
 
@@ -390,7 +403,7 @@ class TestFileListE2E:
                 file_size=100,
                 content_type="text/plain",
                 created_at=datetime.now(timezone.utc),
-                path="uploads/e2e-test-user/documents",
+                path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
             FileMetadata(
                 file_id=str(uuid4()),
@@ -398,7 +411,7 @@ class TestFileListE2E:
                 file_size=200,
                 content_type="application/pdf",
                 created_at=datetime.now(timezone.utc),
-                path="uploads/e2e-test-user/documents",
+                path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
         ]
 
@@ -440,7 +453,7 @@ class TestFileListE2E:
 
     @pytest.mark.asyncio
     async def test_list_files_with_path_filter(
-        self, mock_storage_service, async_client, auth_headers
+        self, mock_storage_service, async_client, auth_headers, user_id
     ):
         """Test listing files with path filter."""
         mock_storage_service.list_files.return_value = []
@@ -454,7 +467,7 @@ class TestFileListE2E:
         # Verify path filter was applied (includes tenant prefix)
         call_args = mock_storage_service.list_files.call_args
         path = call_args.kwargs["path"]
-        assert "uploads/e2e-test-tenant/e2e-test-user" in path
+        assert f"uploads/e2e-test-tenant/{user_id}" in path
         assert "documents/2024" in path
 
     @pytest.mark.asyncio

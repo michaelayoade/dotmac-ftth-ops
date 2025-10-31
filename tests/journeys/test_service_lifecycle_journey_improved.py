@@ -257,7 +257,7 @@ class TestServiceLifecycleJourneyImproved:
         print("✅ Step 6: Service cancelled via SubscriptionService.cancel_subscription()")
 
         # Commit all changes
-        await async_session.commit()
+        await async_session.flush()
 
         print("""
         ✅ Complete Service Lifecycle Journey Tested (Using Services!):
@@ -354,7 +354,7 @@ class TestServiceLifecycleJourneyImproved:
         assert upgraded_subscription.plan_id == premium_plan.plan_id
         print(f"✅ Upgraded via SubscriptionService.change_plan(): {premium_plan.name}")
 
-        await async_session.commit()
+        await async_session.flush()
 
         print(f"""
         ✅ Plan Upgrade Journey Complete (Using Services):
@@ -454,7 +454,7 @@ class TestServiceLifecycleBestPractices:
         assert cancelled.status == SubscriptionStatus.ENDED
         assert cancelled.canceled_at is not None
 
-        await async_session.commit()
+        await async_session.flush()
 
         print("""
         ✅ Service Layer Testing Best Practices Demonstrated:

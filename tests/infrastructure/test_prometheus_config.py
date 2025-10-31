@@ -10,6 +10,7 @@ Tests Prometheus scrape configuration to prevent:
 Uses promtool (if available) for validation, falls back to YAML parsing.
 """
 
+import shutil
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -54,15 +55,19 @@ class TestPrometheusConfiguration:
     @pytest.fixture(scope="class")
     def has_promtool(self) -> bool:
         """Check if promtool is available."""
+        promtool_path = shutil.which("promtool")
+        if not promtool_path:
+            return False
+
         try:
             result = subprocess.run(
-                ["promtool", "--version"],
+                [promtool_path, "--version"],
                 capture_output=True,
                 text=True,
                 timeout=5,
             )
             return result.returncode == 0
-        except (FileNotFoundError, subprocess.TimeoutExpired):
+        except subprocess.TimeoutExpired:
             return False
 
     def test_prometheus_config_valid_yaml(self, prometheus_config_path: Path):
@@ -351,10 +356,9 @@ class TestPrometheusAlertmanagerConfig:
 class TestPrometheusMetricsEndpoint:
     """Test Prometheus metrics endpoint accessibility."""
 
-    @pytest.mark.asyncio
-    async def test_metrics_endpoint_format(self, async_client):
+    def test_metrics_endpoint_format(self, test_client):
         """Test /metrics endpoint returns Prometheus exposition format."""
-        response = await async_client.get("/metrics")
+        response = test_client.get("/metrics")
 
         # Endpoint should exist
         assert response.status_code in [200, 404], (

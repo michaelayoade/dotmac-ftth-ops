@@ -14,7 +14,7 @@ Focuses on:
 
 from datetime import timezone, datetime
 from io import BytesIO
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import pytest
@@ -542,20 +542,15 @@ async def test_login_with_2fa_required(router_app: FastAPI, mfa_user: User, asyn
     mock_redis.aclose = AsyncMock()
     mock_redis.ping = AsyncMock()
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-        patch("redis.asyncio.from_url", return_value=mock_redis),
-    ):
-        transport = ASGITransport(app=router_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": mfa_user.username,  # Use the actual username from fixture
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=router_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": mfa_user.username,  # Use the actual username from fixture
+                "password": "TestPassword123!",
+            },
+        )
 
     # Should return 403 with 2FA challenge, or 401/500 on error
     assert response.status_code in [401, 403, 500]

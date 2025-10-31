@@ -6,7 +6,6 @@ Tests all product catalog router endpoints following the Two-Tier Testing Strate
 Coverage Target: 85%+ for router endpoints
 """
 
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest

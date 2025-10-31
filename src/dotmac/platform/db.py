@@ -13,11 +13,11 @@ from dataclasses import dataclass
 from typing import Any, Callable
 from unittest.mock import AsyncMock
 from urllib.parse import quote_plus
-from uuid import uuid4
+from uuid import uuid4, UUID
 
 import structlog
-from sqlalchemy import Boolean, DateTime, String, create_engine
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, DateTime, String, create_engine, TypeDecorator, CHAR
+from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.engine import make_url
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
@@ -26,6 +26,48 @@ from sqlalchemy.pool import StaticPool
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
+
+
+# ==========================================
+# Cross-Database UUID Type
+# ==========================================
+
+
+class GUID(TypeDecorator):
+    """Platform-independent GUID type.
+
+    Uses PostgreSQL's UUID type when available, otherwise uses CHAR(36)
+    storing as stringified hex values for SQLite compatibility.
+    """
+    impl = CHAR
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == 'postgresql':
+            return dialect.type_descriptor(PostgresUUID(as_uuid=True))
+        else:
+            return dialect.type_descriptor(CHAR(36))
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == 'postgresql':
+            return str(value)
+        else:
+            if not isinstance(value, uuid4.__class__):
+                from uuid import UUID as PyUUID
+                return str(PyUUID(str(value)))
+            else:
+                return str(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        else:
+            from uuid import UUID as PyUUID
+            if not isinstance(value, PyUUID):
+                return PyUUID(str(value))
+            return value
 
 # ==========================================
 # Database URLs from settings
@@ -166,7 +208,7 @@ class BaseModel(Base):
 
     __abstract__ = True
 
-    id: Mapped[UUID[Any]] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id: Mapped[UUID] = mapped_column(GUID, primary_key=True, default=uuid4)
     tenant_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False

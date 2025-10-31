@@ -67,7 +67,7 @@ class TestEmailSendingE2E:
             assert "id" in data  # EmailResponse has 'id' field, not 'message_id'
             assert mock_send.called
 
-    async def test_send_email_without_auth(self, client: AsyncClient):
+    async def test_send_email_without_auth(self, client: AsyncClient, auth_headers):
         """Test email sending without authentication (should still work with optional auth)."""
         email_data = {
             "to": ["recipient@example.com"],
@@ -143,7 +143,7 @@ class TestEmailQueueingE2E:
             "text_body": "This email will be processed in background",
         }
 
-        with patch("dotmac.platform.communications.task_service.queue_email") as mock_queue:
+        with patch("dotmac.platform.communications.router.queue_email") as mock_queue:
             mock_queue.return_value = "task_abc123"
 
             response = await client.post(
@@ -529,9 +529,25 @@ class TestBulkEmailWorkflowE2E:
             ],
         }
 
-        with patch("dotmac.platform.communications.router.queue_bulk_emails") as mock_queue:
+        with patch("dotmac.platform.communications.router.queue_bulk_emails") as mock_queue, patch(
+            "dotmac.platform.communications.router.get_task_service"
+        ) as mock_get_task_service:
             job_id = "bulk_job_789"
             mock_queue.return_value = job_id
+
+            class _DummyTaskService:
+                def get_task_status(self, task_id):
+                    return {
+                        "task_id": task_id,
+                        "status": "processing",
+                        "result": None,
+                        "info": None,
+                    }
+
+                def cancel_task(self, task_id):
+                    return True
+
+            mock_get_task_service.return_value = _DummyTaskService()
 
             queue_response = await client.post(
                 "/api/v1/communications/bulk-email/queue",
@@ -545,19 +561,19 @@ class TestBulkEmailWorkflowE2E:
             returned_job_id = job_response_data["job_id"]
             assert returned_job_id == job_id
 
-        # Step 2: Check job status (may not exist in test environment)
-        status_response = await client.get(
-            f"/api/v1/communications/bulk-email/status/{job_id}",
-            headers=auth_headers,
-        )
-        # Status endpoint may return 404 if job not tracked, or 200 with status
-        assert status_response.status_code in [200, 404, 500]
+            # Step 2: Check job status (may not exist in test environment)
+            status_response = await client.get(
+                f"/api/v1/communications/bulk-email/status/{job_id}",
+                headers=auth_headers,
+            )
+            # Status endpoint may return 404 if job not tracked, or 200 with status
+            assert status_response.status_code in [200, 404, 500]
 
-        # Step 3: Cancel endpoint (may not be fully implemented)
-        cancel_response = await client.post(
-            f"/api/v1/communications/bulk-email/cancel/{job_id}",
-            headers=auth_headers,
-        )
+            # Step 3: Cancel endpoint (may not be fully implemented)
+            cancel_response = await client.post(
+                f"/api/v1/communications/bulk-email/cancel/{job_id}",
+                headers=auth_headers,
+            )
         # Cancel may not be fully implemented in test environment
         assert cancel_response.status_code in [200, 404, 500]
 

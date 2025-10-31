@@ -21,6 +21,7 @@ import os
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
@@ -37,7 +38,6 @@ from dotmac.platform.tenant.models import Tenant, TenantStatus
 
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.parallel_safe,
     pytest.mark.asyncio,
 ]
 
@@ -51,7 +51,7 @@ requires_postgres = pytest.mark.skipif(
 )
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def test_tenant(async_db_session):
     """Create a test tenant for integration tests."""
     tenant = Tenant(

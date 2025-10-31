@@ -28,6 +28,7 @@ from dotmac.platform.contacts.schemas import (
     ContactMethodCreate,
     ContactMethodResponse,
     ContactMethodUpdate,
+    ContactMethodType,
     ContactResponse,
     ContactSearchRequest,
     ContactUpdate,
@@ -39,11 +40,25 @@ from dotmac.platform.contacts.service import (
 )
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
+from pydantic import Field
 
 logger = structlog.get_logger(__name__)
 
 
 router = APIRouter(prefix="/contacts", tags=["Contacts"])
+
+
+class ContactMethodCreatePayload(ContactMethodCreate):
+    """Payload for contact method creation with contact_id."""
+
+    contact_id: UUID
+    type: ContactMethodType = Field(..., alias="method_type")
+
+
+class ContactActivityCreatePayload(ContactActivityCreate):
+    """Payload for activity creation with contact_id."""
+
+    contact_id: UUID
 
 
 # Contact endpoints
@@ -208,6 +223,29 @@ async def update_contact_method(
     return ContactMethodResponse.model_validate(method)
 
 
+@router.post(
+    "/methods",
+    response_model=ContactMethodResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_contact_method_global(
+    method_data: ContactMethodCreatePayload,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(require_permission("contacts.update")),
+    tenant_id: UUID = Depends(get_current_tenant_id),
+) -> ContactMethodResponse:
+    """Add a contact method using payload-provided contact ID."""
+    service = ContactService(db)
+    method = await service.add_contact_method(
+        contact_id=method_data.contact_id,
+        method_data=method_data,
+        tenant_id=tenant_id,
+    )
+    if not method:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return ContactMethodResponse.model_validate(method)
+
+
 @router.delete("/methods/{method_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_contact_method(
     method_id: UUID,
@@ -239,6 +277,30 @@ async def add_contact_activity(
     service = ContactService(db)
     activity = await service.add_contact_activity(
         contact_id=contact_id,
+        activity_data=activity_data,
+        tenant_id=tenant_id,
+        performed_by=ensure_uuid(current_user.user_id),
+    )
+    if not activity:
+        raise HTTPException(status_code=404, detail="Contact not found")
+    return ContactActivityResponse.model_validate(activity)
+
+
+@router.post(
+    "/activities",
+    response_model=ContactActivityResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def add_contact_activity_global(
+    activity_data: ContactActivityCreatePayload,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: UserInfo = Depends(require_permission("contacts.manage")),
+    tenant_id: UUID = Depends(get_current_tenant_id),
+) -> ContactActivityResponse:
+    """Add contact activity with contact ID in payload."""
+    service = ContactService(db)
+    activity = await service.add_contact_activity(
+        contact_id=activity_data.contact_id,
         activity_data=activity_data,
         tenant_id=tenant_id,
         performed_by=ensure_uuid(current_user.user_id),

@@ -4,17 +4,16 @@ Fixtures for billing catalog tests.
 Provides database session, authentication, and test data fixtures.
 """
 
-import os
-
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-# Set test environment
-os.environ["TESTING"] = "1"
-os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
+@pytest.fixture(autouse=True)
+def billing_catalog_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.billing import models as billing_models  # noqa: F401

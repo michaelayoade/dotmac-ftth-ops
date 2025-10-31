@@ -12,7 +12,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 
 
-pytestmark = pytest.mark.integration
+pytestmark = [pytest.mark.integration, pytest.mark.parallel_safe]
 
 class TestUserManagementEndpoints:
     """Test user management endpoints used by admin UI."""

@@ -347,6 +347,7 @@ class PlanSubscriptionCreate(BaseModel):
 
     plan_id: UUID
     customer_id: UUID
+    subscriber_id: str = Field(..., min_length=1, description="RADIUS subscriber ID (required for usage tracking)")
     start_date: datetime = Field(default_factory=datetime.utcnow)
 
     # Custom overrides
@@ -365,6 +366,7 @@ class PlanSubscriptionResponse(BaseModel):
     tenant_id: UUID
     plan_id: UUID
     customer_id: UUID
+    subscriber_id: str | None
     subscription_id: UUID | None
 
     start_date: datetime

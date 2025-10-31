@@ -38,6 +38,7 @@ class TestTenantConfiguration:
         assert config.get_tenant_id_for_request(None) == "default"
         assert config.get_tenant_id_for_request("custom") == "default"  # Always default
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_multi_tenant_configuration(self):
         """Test explicit multi-tenant configuration."""
         config = TenantConfiguration(mode=TenantMode.MULTI)
@@ -61,7 +62,7 @@ class TestTenantConfiguration:
         assert config.default_tenant_id == "my-company"
         assert config.get_tenant_id_for_request(None) == "my-company"
 
-    @patch.dict(os.environ, {"TENANT_MODE": "multi"})
+    @patch.dict(os.environ, {"TENANT_MODE": "multi"}, clear=True)
     def test_environment_multi_tenant(self):
         """Test configuration from environment variables."""
         config = TenantConfiguration()
@@ -122,6 +123,7 @@ class TestTenantConfiguration:
         # Restore original
         set_tenant_config(original_config)
 
+    @patch.dict(os.environ, {}, clear=True)
     def test_configuration_repr(self):
         """Test configuration string representation."""
         config = TenantConfiguration(mode=TenantMode.MULTI)

@@ -351,7 +351,7 @@ class TestCustomerActivitiesE2E:
             "activity_type": "purchase",
             "title": "Purchased Premium Plan",
             "description": "Customer upgraded to premium tier",
-            "metadata": {"plan_id": "premium-monthly", "amount": 99.99},
+            "metadata": {"plan_id": "premium-monthly", "amount": "99.99"},
         }
 
         response = await async_client.post(

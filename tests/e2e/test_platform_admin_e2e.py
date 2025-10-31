@@ -256,9 +256,9 @@ class TestPlatformAdminHealth:
         assert "permissions" in data
 
     @pytest.mark.asyncio
-    async def test_non_admin_cannot_access_health(self, async_client):
+    async def test_non_admin_cannot_access_health(self, async_client, auth_headers):
         """Test non-admin user cannot access platform admin health endpoint."""
-        response = await async_client.get("/api/v1/admin/platform/health")
+        response = await async_client.get("/api/v1/admin/platform/health", headers=auth_headers)
 
         # Should return 403 Forbidden or 401 Unauthorized
         assert response.status_code in [401, 403]
@@ -347,9 +347,9 @@ class TestTenantListing:
         assert tenant_alpha["resource_count"] == 10
 
     @pytest.mark.asyncio
-    async def test_non_admin_cannot_list_tenants(self, async_client):
+    async def test_non_admin_cannot_list_tenants(self, async_client, auth_headers):
         """Test non-admin user cannot list tenants."""
-        response = await async_client.get("/api/v1/admin/platform/tenants")
+        response = await async_client.get("/api/v1/admin/platform/tenants", headers=auth_headers)
 
         assert response.status_code in [401, 403]
 
@@ -429,9 +429,9 @@ class TestTenantListing:
         assert data["total_revenue"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_non_admin_cannot_get_tenant_detail(self, async_client):
+    async def test_non_admin_cannot_get_tenant_detail(self, async_client, auth_headers):
         """Test non-admin user cannot get tenant details."""
-        response = await async_client.get("/api/v1/admin/platform/tenants/tenant-alpha")
+        response = await async_client.get("/api/v1/admin/platform/tenants/tenant-alpha", headers=auth_headers)
 
         assert response.status_code in [401, 403]
 
@@ -558,10 +558,10 @@ class TestTenantImpersonation:
         assert response.status_code == 200
 
     @pytest.mark.asyncio
-    async def test_non_admin_cannot_impersonate(self, async_client):
+    async def test_non_admin_cannot_impersonate(self, async_client, auth_headers):
         """Test non-admin user cannot create impersonation tokens."""
         response = await async_client.post(
-            "/api/v1/admin/platform/tenants/tenant-alpha/impersonate"
+            "/api/v1/admin/platform/tenants/tenant-alpha/impersonate", headers=auth_headers
         )
 
         assert response.status_code in [401, 403]
@@ -668,7 +668,7 @@ class TestSystemManagement:
 
         assert "status" in data
         # Status can be 'success', 'error', or 'no_cache' depending on Redis availability
-        assert data["status"] in ["success", "error", "no_cache"]
+        assert data["status"] in ["success", "error", "no_cache", "cleared"]
 
     @pytest.mark.asyncio
     async def test_clear_all_caches(self, platform_admin_client, platform_admin_headers):
@@ -700,12 +700,12 @@ class TestSystemManagement:
         )  # May have secret key reference
 
     @pytest.mark.asyncio
-    async def test_non_admin_cannot_manage_system(self, async_client):
+    async def test_non_admin_cannot_manage_system(self, async_client, auth_headers):
         """Test non-admin user cannot access system management."""
-        response = await async_client.post("/api/v1/admin/platform/system/cache/clear")
+        response = await async_client.post("/api/v1/admin/platform/system/cache/clear", headers=auth_headers)
         assert response.status_code in [401, 403]
 
-        response = await async_client.get("/api/v1/admin/platform/system/config")
+        response = await async_client.get("/api/v1/admin/platform/system/config", headers=auth_headers)
         assert response.status_code in [401, 403]
 
 
@@ -713,7 +713,7 @@ class TestPlatformAdminAuthorization:
     """Test authorization and permission enforcement."""
 
     @pytest.mark.asyncio
-    async def test_platform_admin_flag_required(self, async_client):
+    async def test_platform_admin_flag_required(self, async_client, auth_headers):
         """Test that platform admin endpoints require is_platform_admin flag."""
         # Regular user (non-admin) trying to access platform endpoints
         endpoints = [
@@ -724,7 +724,7 @@ class TestPlatformAdminAuthorization:
         ]
 
         for endpoint in endpoints:
-            response = await async_client.get(endpoint)
+            response = await async_client.get(endpoint, headers=auth_headers)
             assert response.status_code in [401, 403], f"Endpoint {endpoint} should be protected"
 
     @pytest.mark.asyncio

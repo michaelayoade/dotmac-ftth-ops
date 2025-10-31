@@ -145,26 +145,34 @@ class SettingsManagementService:
         data = settings_obj.model_dump()
 
         async with self._get_session(session) as db_session:
-            result = await db_session.execute(
-                select(AdminSettingsStore).where(AdminSettingsStore.category == category.value)
-            )
-            entry = result.scalar_one_or_none()
-
-            if entry:
-                entry.settings_data = data
-                entry.updated_by = user_email
-            else:
-                entry = AdminSettingsStore(
-                    category=category.value,
-                    settings_data=data,
-                    updated_by=user_email,
+            try:
+                result = await db_session.execute(
+                    select(AdminSettingsStore).where(AdminSettingsStore.category == category.value)
                 )
-                db_session.add(entry)
+                entry = result.scalar_one_or_none()
 
-            if commit:
-                await db_session.commit()
-            else:
-                await db_session.flush()
+                if entry:
+                    entry.settings_data = data
+                    entry.updated_by = user_email
+                else:
+                    entry = AdminSettingsStore(
+                        category=category.value,
+                        settings_data=data,
+                        updated_by=user_email,
+                    )
+                    db_session.add(entry)
+
+                if commit:
+                    await db_session.commit()
+                else:
+                    await db_session.flush()
+            except OperationalError:
+                await db_session.rollback()
+                logger.debug(
+                    "settings.store.unavailable",
+                    category=category.value,
+                    message="Settings store table not available; skipping persist",
+                )
 
     async def get_category_settings(
         self,
@@ -263,8 +271,18 @@ class SettingsManagementService:
         async with self._get_session(session) as db_session:
             if not update_request.validate_only and changes:
                 try:
+                    # Convert tenant_id from string to UUID for database
+                    try:
+                        tenant_uuid = UUID(str(tenant_id)) if tenant_id else uuid4()
+                    except (TypeError, ValueError):
+                        logger.debug(
+                            "settings.audit.invalid_tenant_id",
+                            tenant_id=tenant_id,
+                            message="Using generated UUID for audit entry",
+                        )
+                        tenant_uuid = uuid4()
                     audit_entry = AdminSettingsAuditEntry(
-                        tenant_id=tenant_id,
+                        tenant_id=tenant_uuid,
                         category=category.value,
                         action="update",
                         user_id=user_id,
@@ -290,6 +308,7 @@ class SettingsManagementService:
                     }
                 except OperationalError:
                     # Audit table doesn't exist (e.g., test environment)
+                    await db_session.rollback()
                     logger.debug(
                         "settings.audit.unavailable",
                         category=category.value,
@@ -508,6 +527,7 @@ class SettingsManagementService:
                     categories=[c.value for c in categories],
                 )
             except OperationalError:
+                await db_session.rollback()
                 # Backup table doesn't exist (e.g., test environment)
                 logger.debug(
                     "settings.backup.unavailable",
@@ -647,6 +667,17 @@ class SettingsManagementService:
             audit_entries: list[AdminSettingsAuditEntry] = []
             restored_categories: list[SettingsCategory] = []
 
+            # Convert tenant_id from string to UUID for database
+            try:
+                tenant_uuid = UUID(str(tenant_id)) if tenant_id else uuid4()
+            except (TypeError, ValueError):
+                logger.debug(
+                    "settings.audit.invalid_tenant_id",
+                    tenant_id=tenant_id,
+                    message="Using generated UUID for audit restore entry",
+                )
+                tenant_uuid = uuid4()
+
             for category_str, data in backup_data.items():
                 category = SettingsCategory(category_str)
                 attr_name = self.CATEGORY_MAPPING.get(category)
@@ -665,7 +696,7 @@ class SettingsManagementService:
                     if changes:
                         audit_entries.append(
                             AdminSettingsAuditEntry(
-                                tenant_id=tenant_id,
+                                tenant_id=tenant_uuid,
                                 category=category.value,
                                 action="restore",
                                 user_id=user_id,
@@ -689,7 +720,14 @@ class SettingsManagementService:
                 for entry in audit_entries:
                     db_session.add(entry)
 
-            await db_session.commit()
+            try:
+                await db_session.commit()
+            except OperationalError:
+                await db_session.rollback()
+                logger.debug(
+                    "settings.audit.unavailable",
+                    message="Audit table not available during restore; skipping audit log",
+                )
 
             for category in restored_categories:
                 restored[category] = await self.get_category_settings(

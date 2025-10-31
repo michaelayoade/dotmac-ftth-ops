@@ -77,7 +77,7 @@ async def _create_subscription(client: AsyncClient):
     response = await client.post("/api/v1/webhooks/subscriptions", json=payload)
     assert response.status_code == 201
     data = response.json()
-    return data["subscription"]["id"], data["secret"]
+    return data["id"], data["secret"]
 
 
 @pytest.mark.asyncio

@@ -9,7 +9,9 @@ check logic independently.
 """
 
 import socket
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 from fastapi import FastAPI, status
@@ -113,12 +115,15 @@ class TestRADIUSHealthCheckEndpoint:
         # Import and register only the health endpoint
         from dotmac.platform.auth.core import UserInfo
         from dotmac.platform.auth.dependencies import get_current_user
-        from dotmac.platform.radius.router import router as radius_router
+        from dotmac.platform.auth.rbac_dependencies import PermissionChecker
+        from dotmac.platform.db import get_async_session
+        from dotmac.platform.radius.router import get_radius_service, router as radius_router
+        from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
         # Override auth to allow access
         async def mock_get_current_user():
             return UserInfo(
-                user_id="test-user-id",
+                user_id=str(uuid4()),
                 email="test@example.com",
                 username="testuser",
                 roles=["admin"],
@@ -128,27 +133,108 @@ class TestRADIUSHealthCheckEndpoint:
 
         app.dependency_overrides[get_current_user] = mock_get_current_user
 
+        # Provide stubbed tenant access and radius service
+        class _MockRadiusService:
+            def __init__(self):
+                execution_result = MagicMock()
+                execution_result.scalar.return_value = 0
+
+                self.tenant_id = "test-tenant"
+                self.session = AsyncMock()
+                self.session.execute = AsyncMock(return_value=execution_result)
+
+            async def get_active_sessions(self):
+                return [{"id": "session-1"}]
+
+            async def list_nas_devices(self):
+                return [{"id": "nas-1"}]
+
+        mock_service = _MockRadiusService()
+
+        async def override_tenant_access():
+            user = await mock_get_current_user()
+            tenant = SimpleNamespace(id="test-tenant")
+            return (user, tenant)
+
+        async def override_radius_service():
+            return mock_service
+
+        app.dependency_overrides[TenantAdminAccess] = override_tenant_access
+        app.dependency_overrides[get_radius_service] = override_radius_service
+
+        async def override_get_async_session():
+            session = AsyncMock()
+            yield session
+
+        app.dependency_overrides[get_async_session] = override_get_async_session
+
         # Register router (it has prefix /api/v1/radius)
         app.include_router(radius_router)
 
+        async def override_permission_checker():
+            return await mock_get_current_user()
+
+        for route in app.routes:
+            if getattr(route, "path", "") == "/api/v1/radius/health":
+                for dependency in route.dependant.dependencies:
+                    if isinstance(dependency.call, PermissionChecker):
+                        app.dependency_overrides[dependency.call] = override_permission_checker
+
         return app
 
-    @pytest.mark.skip(reason="Complex dependency wiring - service layer tests cover health check logic")
     @pytest.mark.asyncio
     async def test_health_endpoint_accessible(self, minimal_radius_app):
         """Test health endpoint is accessible and returns proper structure."""
-        # NOTE: This test is skipped due to complex FastAPI dependency wiring issues
-        # The health check logic is fully tested at the service layer
-        # See: test_health_check_freeradius_socket_probe, test_health_check_database_connectivity
-        pass
+        transport = ASGITransport(app=minimal_radius_app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            with patch("socket.socket") as mock_socket_class, patch(
+                "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
+                new_callable=AsyncMock,
+                return_value=None,
+            ):
+                mock_socket_cm = MagicMock()
+                mock_socket_instance = MagicMock()
+                mock_socket_instance.settimeout.return_value = None
+                mock_socket_instance.connect.return_value = None
+                mock_socket_cm.__enter__.return_value = mock_socket_instance
+                mock_socket_cm.__exit__.return_value = None
+                mock_socket_class.return_value = mock_socket_cm
 
-    @pytest.mark.skip(reason="Complex dependency wiring - service layer tests cover health check logic")
+                response = await client.get("/api/v1/radius/health")
+
+        assert response.status_code == 200
+        payload = response.json()
+        assert payload["status"] in {"healthy", "degraded"}
+        assert "checks" in payload
+
     @pytest.mark.asyncio
     async def test_health_endpoint_returns_json(self, minimal_radius_app):
         """Test health endpoint returns JSON structure."""
-        # NOTE: This test is skipped due to complex FastAPI dependency wiring issues
-        # The health check logic is fully tested at the service layer
-        pass
+        transport = ASGITransport(app=minimal_radius_app)
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            with patch("socket.socket") as mock_socket_class, patch(
+                "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
+                new_callable=AsyncMock,
+                return_value=None,
+            ):
+                mock_socket_cm = MagicMock()
+                mock_socket_instance = MagicMock()
+                mock_socket_instance.settimeout.return_value = None
+                mock_socket_instance.connect.return_value = None
+                mock_socket_cm.__enter__.return_value = mock_socket_instance
+                mock_socket_cm.__exit__.return_value = None
+                mock_socket_class.return_value = mock_socket_cm
+
+                response = await client.get("/api/v1/radius/health")
+
+        data = response.json()
+        assert isinstance(data, dict)
+        assert set(data["checks"].keys()) >= {
+            "radius_connectivity",
+            "database",
+            "nas_devices",
+            "authentication",
+        }
 
 
 class TestRADIUSHealthCheckComponents:

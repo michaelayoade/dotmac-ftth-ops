@@ -64,7 +64,11 @@ async def ensure_audit_access(
     return await require_security_audit_read(current_user=current_user, db=db)
 
 
-def resolve_tenant_for_audit(request: Request, current_user: UserInfo) -> str | None:
+def resolve_tenant_for_audit(
+    request: Request,
+    current_user: UserInfo,
+    tenant_id: str | None,
+) -> str | None:
     """
     Resolve tenant ID for audit operations, with platform admin support.
 
@@ -78,6 +82,7 @@ def resolve_tenant_for_audit(request: Request, current_user: UserInfo) -> str | 
     Args:
         request: FastAPI Request
         current_user: Current authenticated user
+        tenant_id: Current tenant ID (pass from dependency injection)
 
     Returns:
         Tenant ID to use for the query, or None if platform admin didn't specify one
@@ -85,7 +90,6 @@ def resolve_tenant_for_audit(request: Request, current_user: UserInfo) -> str | 
     Raises:
         HTTPException: If required tenant context is missing for non-platform users
     """
-    tenant_id = get_current_tenant_id()
 
     # If tenant_id is None, check if user is platform admin
     if tenant_id is None and is_platform_admin(current_user):
@@ -173,6 +177,7 @@ async def list_activities(
     per_page: int = Query(50, ge=1, le=1000, description="Items per page"),
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
 ) -> AuditActivityList:
     """
     Get paginated list of audit activities.
@@ -185,7 +190,8 @@ async def list_activities(
 
         start_date = datetime.now(UTC) - timedelta(days=days) if days else None
 
-        tenant_id = resolve_tenant_for_audit(request, current_user)
+        # Resolve tenant ID with platform admin support
+        tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
 
         filters = AuditFilterParams(
             user_id=user_id,
@@ -373,6 +379,7 @@ async def get_user_activities(
     days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
 ) -> list[AuditActivityResponse]:
     """
     Get audit activities for a specific user.
@@ -390,8 +397,8 @@ async def get_user_activities(
         #
         # Therefore, anyone who reaches this endpoint can view any user's activities.
 
-        # Resolve tenant ID (platform admins default to PLATFORM_ADMIN_TENANT_ID if unspecified)
-        tenant_id = resolve_tenant_for_audit(request, current_user)
+        # Resolve tenant ID with platform admin support
+        tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
 
         service = AuditService(session)
 
@@ -482,6 +489,7 @@ async def get_activity_details(
     request: Request,
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
 ) -> AuditActivityResponse:
     """
     Get details for a specific audit activity.
@@ -494,8 +502,8 @@ async def get_activity_details(
 
         from .models import AuditActivity
 
-        # Resolve tenant ID (platform admins default to PLATFORM_ADMIN_TENANT_ID if unspecified)
-        tenant_id = resolve_tenant_for_audit(request, current_user)
+        # Resolve tenant ID with platform admin support
+        tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
 
         # Query for the specific activity with resolved tenant_id
         query = select(AuditActivity).where(

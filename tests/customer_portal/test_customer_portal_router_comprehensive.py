@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for Customer Portal Router.
 
@@ -6,7 +5,9 @@ Tests customer-facing endpoints with focus on auth boundaries, data isolation,
 and proper error handling. Critical for customer data security.
 """
 
-from datetime import datetime, timedelta
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -14,7 +15,9 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.billing.domain.aggregates import Invoice, InvoiceLineItem
+from dotmac.platform.core.aggregate_root import Money
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
 
@@ -26,15 +29,30 @@ from dotmac.platform.database import get_async_session
 
 pytestmark = pytest.mark.integration
 
+
+@dataclass
+class FakeUser:
+    """Lightweight stand-in for UserInfo to avoid pulling heavy auth deps."""
+
+    user_id: str
+    tenant_id: str | None
+    email: str | None
+    username: str | None = None
+    roles: list[str] = field(default_factory=list)
+    permissions: list[str] = field(default_factory=list)
+    is_platform_admin: bool = False
+
 @pytest.fixture
 def test_user():
     """Create a test user."""
-    return UserInfo(
+    return FakeUser(
         user_id=str(uuid4()),
         tenant_id=f"test_tenant_{uuid4()}",
         email="customer@example.com",
         is_platform_admin=False,
         username="customer",
+        roles=["customer"],
+        permissions=["customer:read", "customer:write"],
     )
 
 
@@ -50,7 +68,7 @@ def mock_db():
 
 
 @pytest.fixture
-def sample_customer(test_user: UserInfo):
+def sample_customer(test_user: FakeUser):
     """Create a sample customer."""
     return Customer(
         id=uuid4(),
@@ -79,7 +97,7 @@ def fastapi_app():
 @pytest.fixture
 def client(
     fastapi_app: FastAPI,
-    test_user: UserInfo,
+    test_user: FakeUser,
     mock_db: AsyncMock,
 ):
     """Create test client with mocked dependencies."""
@@ -93,9 +111,63 @@ def client(
     fastapi_app.dependency_overrides[get_async_session] = get_mock_db
 
     client = TestClient(fastapi_app)
+    client.headers.update({"Authorization": "Bearer test-token"})
     yield client
 
     fastapi_app.dependency_overrides.clear()
+
+
+def _build_invoice(
+    *,
+    invoice_id: str,
+    tenant_id: str,
+    customer_id: str,
+    amount: float,
+    invoice_number: str,
+    billing_email: str,
+    status: str = "paid",
+    currency: str = "USD",
+) -> Invoice:
+    """
+    Create an invoice aggregate with realistic defaults for tests.
+
+    Ensures all required monetary fields are populated with Money values
+    to satisfy domain validation introduced in the billing aggregates.
+    """
+    line_item = InvoiceLineItem(
+        description="Test service charge",
+        quantity=1,
+        unit_price=Money(amount=amount, currency=currency),
+        total_price=Money(amount=amount, currency=currency),
+    )
+
+    invoice = Invoice.create(
+        tenant_id=tenant_id,
+        customer_id=customer_id,
+        billing_email=billing_email,
+        line_items=[line_item],
+    )
+
+    # Override identifiers to match test expectations
+    invoice.id = invoice_id
+    invoice.invoice_number = invoice_number
+    invoice.customer_id = customer_id
+
+    if status == "paid":
+        invoice.status = "paid"
+        invoice.payment_status = "paid"
+        invoice.remaining_balance = Money(amount=0.0, currency=currency)
+        invoice.paid_at = datetime.now(timezone.utc)
+    else:
+        invoice.status = status
+
+    return invoice
+
+
+def _url(client: TestClient, route_name: str, **path_params: Any) -> str:
+    """Helper to resolve route URLs from the FastAPI app."""
+    resolved_params = {key: str(value) for key, value in path_params.items()}
+    return client.app.url_path_for(route_name, **resolved_params)
 
 
 class TestAuthenticationBoundaries:
@@ -104,7 +176,7 @@ class TestAuthenticationBoundaries:
     def test_usage_history_requires_auth(self, fastapi_app: FastAPI):
         """Test that usage history requires authentication."""
         client = TestClient(fastapi_app)
-        response = client.get("/api/v1/customer/usage/history")
+        response = client.get(_url(client, "get_usage_history"))
 
         # Should be unauthorized
         assert response.status_code in [401, 403]
@@ -112,14 +184,14 @@ class TestAuthenticationBoundaries:
     def test_payment_methods_require_auth(self, fastapi_app: FastAPI):
         """Test that payment methods require authentication."""
         client = TestClient(fastapi_app)
-        response = client.get("/api/v1/customer/payment-methods")
+        response = client.get(_url(client, "list_payment_methods"))
 
         assert response.status_code in [401, 403]
 
     def test_invoice_download_requires_auth(self, fastapi_app: FastAPI):
         """Test that invoice download requires authentication."""
         client = TestClient(fastapi_app)
-        response = client.get("/api/v1/customer/invoices/test-id/download")
+        response = client.get(_url(client, "download_invoice_pdf", invoice_id="test-id"))
 
         assert response.status_code in [401, 403]
 
@@ -130,7 +202,7 @@ class TestCustomerDataIsolation:
     def test_customer_cannot_access_other_customer_invoice(
         self,
         client: TestClient,
-        test_user: UserInfo,
+        test_user: FakeUser,
         mock_db: AsyncMock,
         sample_customer: Customer,
     ):
@@ -144,12 +216,13 @@ class TestCustomerDataIsolation:
 
         # Create invoice for a different customer
         other_customer_id = uuid4()
-        invoice = Invoice(
-            id=str(uuid4()),
+        invoice = _build_invoice(
+            invoice_id=str(uuid4()),
             tenant_id=test_user.tenant_id,
             customer_id=str(other_customer_id),  # Different customer!
             invoice_number="INV-001",
-            total_amount=100.00,
+            amount=100.00,
+            billing_email=test_user.email,
             status="paid",
         )
 
@@ -159,7 +232,9 @@ class TestCustomerDataIsolation:
             mock_service.get_invoice = AsyncMock(return_value=invoice)
             mock_service_class.return_value = mock_service
 
-            response = client.get(f"/api/v1/customer/invoices/{invoice.id}/download")
+            response = client.get(
+                _url(client, "download_invoice_pdf", invoice_id=str(invoice.id))
+            )
 
             # Should be forbidden
             assert response.status_code == 403
@@ -176,7 +251,7 @@ class TestCustomerDataIsolation:
         mock_result.scalar_one_or_none = Mock(return_value=None)
         mock_db.execute.return_value = mock_result
 
-        response = client.get("/api/v1/customer/usage/history")
+        response = client.get(_url(client, "get_usage_history"))
 
         assert response.status_code == 404
         assert "not found" in response.json()["detail"].lower()
@@ -218,7 +293,10 @@ class TestUsageHistoryEndpoint:
             mock_hourly_result,  # Hourly breakdown
         ]
 
-        response = client.get("/api/v1/customer/usage/history?time_range=30d")
+        response = client.get(
+            _url(client, "get_usage_history"),
+            params={"time_range": "30d"},
+        )
 
         assert response.status_code == 200
         data = response.json()
@@ -262,7 +340,10 @@ class TestUsageHistoryEndpoint:
                 mock_hourly_result,
             ]
 
-            response = client.get(f"/api/v1/customer/usage/history?time_range={time_range}")
+            response = client.get(
+                _url(client, "get_usage_history"),
+                params={"time_range": time_range},
+            )
 
             assert response.status_code == 200
 
@@ -303,7 +384,7 @@ class TestUsageReportGeneration:
             "time_range": "30d",
         }
 
-        response = client.post("/api/v1/customer/usage/report", json=report_data)
+        response = client.post(_url(client, "generate_usage_report"), json=report_data)
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "application/pdf"
@@ -332,7 +413,7 @@ class TestUsageReportGeneration:
             "hourly_usage": [],
         }
 
-        response = client.post("/api/v1/customer/usage/report", json=report_data)
+        response = client.post(_url(client, "generate_usage_report"), json=report_data)
 
         assert response.status_code == 200
         # PDF signature
@@ -352,14 +433,15 @@ class TestInvoiceDownload:
         from dotmac.platform.billing.domain.aggregates import Invoice
 
         invoice_id = uuid4()
-        invoice = Invoice(
-            id=str(invoice_id),
+        invoice = _build_invoice(
+            invoice_id=str(invoice_id),
             tenant_id=sample_customer.tenant_id,
             customer_id=str(sample_customer.id),
             invoice_number="INV-2025-001",
-            total_amount=150.00,
-            currency="USD",
+            amount=150.00,
+            billing_email=sample_customer.email,
             status="paid",
+            currency="USD",
         )
 
         # Mock customer lookup
@@ -379,7 +461,9 @@ class TestInvoiceDownload:
                 mock_pdf.generate_invoice_pdf = Mock(return_value=b"%PDF-1.4\ntest content")
                 mock_pdf_class.return_value = mock_pdf
 
-                response = client.get(f"/api/v1/customer/invoices/{invoice_id}/download")
+                response = client.get(
+                    _url(client, "download_invoice_pdf", invoice_id=str(invoice_id))
+                )
 
                 assert response.status_code == 200
                 assert response.headers["content-type"] == "application/pdf"
@@ -401,7 +485,9 @@ class TestInvoiceDownload:
             mock_service.get_invoice = AsyncMock(return_value=None)
             mock_service_class.return_value = mock_service
 
-            response = client.get(f"/api/v1/customer/invoices/{uuid4()}/download")
+            response = client.get(
+                _url(client, "download_invoice_pdf", invoice_id=str(uuid4()))
+            )
 
             assert response.status_code == 404
 
@@ -415,8 +501,13 @@ class TestInvoiceDownload:
         mock_result = Mock()
         mock_result.scalar_one_or_none = Mock(return_value=sample_customer)
         mock_db.execute.return_value = mock_result
+        with patch("dotmac.platform.customer_portal.router.MoneyInvoiceService") as mock_service_class:
+            mock_service = AsyncMock()
+            mock_service_class.return_value = mock_service
 
-        response = client.get("/api/v1/customer/invoices/invalid-uuid/download")
+            response = client.get(
+                _url(client, "download_invoice_pdf", invoice_id="invalid-uuid")
+            )
 
         assert response.status_code == 400
 
@@ -460,13 +551,14 @@ class TestPaymentMethods:
                         billing_email=None,
                         billing_country=None,
                         is_verified=True,
-                        created_at=datetime.utcnow(),
+                        created_at=datetime.now(timezone.utc),
+                        expires_at=datetime.now(timezone.utc) + timedelta(days=365),
                     )
                 ]
             )
             mock_service_class.return_value = mock_service
 
-            response = client.get("/api/v1/customer/payment-methods")
+            response = client.get(_url(client, "list_payment_methods"))
 
             assert response.status_code == 200
             data = response.json()
@@ -508,7 +600,8 @@ class TestPaymentMethods:
                 billing_email=None,
                 billing_country=None,
                 is_verified=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
+                expires_at=datetime.now(timezone.utc) + timedelta(days=365),
             )
             mock_service.add_payment_method = AsyncMock(return_value=new_method)
             mock_service_class.return_value = mock_service
@@ -520,12 +613,12 @@ class TestPaymentMethods:
                 "billing_name": "John Doe",
             }
 
-            response = client.post("/api/v1/customer/payment-methods", json=payload)
+            response = client.post(_url(client, "add_payment_method"), json=payload)
 
             assert response.status_code == 201
             data = response.json()
             assert data["payment_method_id"] == "pm_new123"
-            assert data["last_four"] == "5555"
+            assert data.get("card_last4") == "5555"
 
     def test_set_default_payment_method(
         self,
@@ -561,12 +654,15 @@ class TestPaymentMethods:
                 billing_email=None,
                 billing_country=None,
                 is_verified=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
+                expires_at=datetime.now(timezone.utc) + timedelta(days=365),
             )
             mock_service.set_default_payment_method = AsyncMock(return_value=updated_method)
             mock_service_class.return_value = mock_service
 
-            response = client.post("/api/v1/customer/payment-methods/pm_test123/default")
+            response = client.post(
+                _url(client, "set_default_payment_method", payment_method_id="pm_test123")
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -588,7 +684,9 @@ class TestPaymentMethods:
             mock_service.remove_payment_method = AsyncMock()
             mock_service_class.return_value = mock_service
 
-            response = client.delete("/api/v1/customer/payment-methods/pm_test123")
+            response = client.delete(
+                _url(client, "remove_payment_method", payment_method_id="pm_test123")
+            )
 
             assert response.status_code == 204
 
@@ -626,12 +724,15 @@ class TestPaymentMethods:
                 billing_email=None,
                 billing_country=None,
                 is_verified=True,
-                created_at=datetime.utcnow(),
+                created_at=datetime.now(timezone.utc),
+                expires_at=datetime.now(timezone.utc) + timedelta(days=365),
             )
             mock_service.toggle_autopay = AsyncMock(return_value=updated_method)
             mock_service_class.return_value = mock_service
 
-            response = client.post("/api/v1/customer/payment-methods/pm_test123/toggle-autopay")
+            response = client.post(
+                _url(client, "toggle_autopay", payment_method_id="pm_test123")
+            )
 
             assert response.status_code == 200
             data = response.json()
@@ -652,7 +753,7 @@ class TestErrorHandling:
         mock_result.scalar_one_or_none = Mock(return_value=sample_customer)
         mock_db.execute.side_effect = [mock_result, Exception("Database error")]
 
-        response = client.get("/api/v1/customer/usage/history")
+        response = client.get(_url(client, "get_usage_history"))
 
         assert response.status_code == 500
         assert "failed" in response.json()["detail"].lower()

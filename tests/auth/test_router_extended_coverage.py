@@ -11,7 +11,6 @@ Focuses on:
 """
 
 from datetime import timezone, datetime
-from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
@@ -545,19 +544,15 @@ async def test_login_with_username_and_spaces(
 
     extended_app.dependency_overrides[get_auth_session] = override_session
 
-    with (
-        patch("dotmac.platform.tenant.get_current_tenant_id", return_value="test-tenant"),
-        patch("dotmac.platform.tenant.get_tenant_config", return_value=None),
-    ):
-        transport = ASGITransport(app=extended_app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            response = await client.post(
-                "/auth/login",
-                json={
-                    "username": f"  {test_user_extended.username}  ",  # With spaces
-                    "password": "TestPassword123!",
-                },
-            )
+    transport = ASGITransport(app=extended_app)
+    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        response = await client.post(
+            "/auth/login",
+            json={
+                "username": f"  {test_user_extended.username}  ",  # With spaces
+                "password": "TestPassword123!",
+            },
+        )
 
     # May succeed if implementation trims, or fail
     assert response.status_code in [200, 401]

@@ -198,7 +198,7 @@ class LeadResponse(BaseModel):  # BaseModel resolves to Any in isolation
     first_contact_date: datetime | None
     last_contact_date: datetime | None
     expected_close_date: datetime | None
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime
@@ -277,7 +277,7 @@ class QuoteResponse(BaseModel):  # BaseModel resolves to Any in isolation
     rejection_reason: str | None
     signature_data: dict[str, Any]
     line_items: list[dict[str, Any]]
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime
@@ -343,7 +343,7 @@ class SiteSurveyResponse(BaseModel):  # BaseModel resolves to Any in isolation
     photos: list[dict[str, Any]]
     recommendations: str | None
     obstacles: str | None
-    metadata: dict[str, Any]
+    metadata: dict[str, Any] = Field(validation_alias="metadata_")
     notes: str | None
     created_at: datetime
     updated_at: datetime

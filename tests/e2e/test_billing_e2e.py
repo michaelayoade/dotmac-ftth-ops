@@ -215,9 +215,10 @@ class TestProductCatalogE2E:
         )
         product_id = create_response.json()["product_id"]
 
-        # Update price (using query parameter, not JSON body)
+        # Update price using request body that matches API schema
         price_response = await async_client.patch(
-            f"/api/v1/billing/catalog/products/{product_id}/price?new_price=349.99",
+            f"/api/v1/billing/catalog/products/{product_id}/price",
+            json={"new_price": "349.99"},
             headers=auth_headers,
         )
 
@@ -616,8 +617,9 @@ class TestBillingCatalogErrorHandling:
 
     async def test_get_nonexistent_product(self, async_client: AsyncClient, auth_headers):
         """Test retrieving a product that doesn't exist."""
+        missing_id = str(uuid4())
         response = await async_client.get(
-            "/api/v1/billing/catalog/products/nonexistent-id-12345",
+            f"/api/v1/billing/catalog/products/{missing_id}",
             headers=auth_headers,
         )
 
@@ -667,9 +669,10 @@ class TestBillingCatalogErrorHandling:
         update_data = {
             "name": "Updated Name",
         }
+        missing_id = str(uuid4())
 
         response = await async_client.put(
-            "/api/v1/billing/catalog/products/nonexistent-123",
+            f"/api/v1/billing/catalog/products/{missing_id}",
             json=update_data,
             headers=auth_headers,
         )

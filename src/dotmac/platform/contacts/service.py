@@ -34,8 +34,10 @@ from dotmac.platform.contacts.schemas import (
     ContactMethodCreate,
     ContactMethodUpdate,
     ContactUpdate,
+    ContactResponse,
 )
-from dotmac.platform.core.caching import cache_delete, cache_get
+from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
+from pydantic import ValidationError
 
 logger = structlog.get_logger(__name__)
 
@@ -149,15 +151,27 @@ class ContactService:
         tenant_id: UUID,
         include_methods: bool = True,
         include_labels: bool = True,
-    ) -> Contact | None:
+        *,
+        use_cache: bool = True,
+    ) -> Contact | ContactResponse | None:
         """Get a contact by ID."""
         cache_key = f"contact:{tenant_id}:{contact_id}"
 
         # Check cache
-        if not include_methods and not include_labels:
+        if use_cache and not include_methods and not include_labels:
             cached = cache_get(cache_key)
             if cached:
-                return cast(Contact, cached)
+                # If the cached payload is already a model or ORM instance, return as-is
+                if isinstance(cached, (Contact, ContactResponse)):
+                    return cached
+                if isinstance(cached, dict):
+                    try:
+                        return ContactResponse.model_validate(cached)
+                    except ValidationError:
+                        cache_delete(cache_key)
+                else:
+                    # Unexpected payload type – return it directly for backward compatibility
+                    return cached
 
         # Build query
         query = select(Contact).where(
@@ -178,10 +192,13 @@ class ContactService:
         contact = result.scalar_one_or_none()
 
         # Cache if not including relationships
-        # Note: Cannot cache SQLAlchemy models directly (not JSON-serializable)
-        # cache_set uses JSON serialization - would need to convert to dict/Pydantic model first
-        # if contact and not include_methods and not include_labels:
-        #     cache_set(cache_key, contact, ttl=300)
+        if contact and use_cache and not include_methods and not include_labels:
+            try:
+                serialized = ContactResponse.model_validate(contact).model_dump(mode="json")
+                cache_set(cache_key, serialized, ttl=300)
+            except (ValidationError, TypeError, ValueError):
+                # Ignore serialization issues; cache is best-effort
+                pass
 
         return contact
 
@@ -190,7 +207,11 @@ class ContactService:
     ) -> Contact | None:
         """Update a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None
@@ -228,7 +249,11 @@ class ContactService:
     ) -> bool:
         """Delete a contact (soft or hard)."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return False
@@ -373,7 +398,11 @@ class ContactService:
     ) -> ContactMethod | None:
         """Add a contact method to a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None
@@ -494,7 +523,11 @@ class ContactService:
     ) -> ContactActivity | None:
         """Add an activity to a contact."""
         contact = await self.get_contact(
-            contact_id, tenant_id, include_methods=False, include_labels=False
+            contact_id,
+            tenant_id,
+            include_methods=False,
+            include_labels=False,
+            use_cache=False,
         )
         if not contact:
             return None
