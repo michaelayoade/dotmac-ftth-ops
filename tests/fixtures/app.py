@@ -2,33 +2,39 @@
 
 from __future__ import annotations
 
+import logging
 from contextlib import suppress
-from typing import Any, AsyncIterator, Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any, AsyncIterator
 
 import pytest
 
-from tests.fixtures.environment import HAS_FASTAPI
+from tests.fixtures.environment import HAS_FASTAPI, _is_integration_test
 
 if not HAS_FASTAPI:  # pragma: no cover - FastAPI optional in some environments
     __all__: list[str] = []
 else:
-    from fastapi import FastAPI, Request, status
+    from fastapi import FastAPI, HTTPException, Request, status
     from fastapi.testclient import TestClient
     from httpx import ASGITransport, AsyncClient
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
-    from dotmac.platform.auth.core import TokenType, UserInfo, jwt_service
+    from dotmac.platform.auth.core import TokenType, UserInfo, _claims_to_user_info, jwt_service
     from dotmac.platform.auth.dependencies import (
         get_current_user,
         get_current_user_optional,
     )
     from dotmac.platform.redis_client import get_redis_client
     from dotmac.platform.routers import register_routers
-    from dotmac.platform.tenant import TenantConfiguration, TenantMiddleware, TenantMode, get_current_tenant_id
+    from dotmac.platform.tenant import (
+        TenantConfiguration,
+        TenantMiddleware,
+        TenantMode,
+        get_current_tenant_id,
+        set_tenant_config,
+    )
     from dotmac.platform.db import get_async_session, get_session_dependency
 
-    from tests.fixtures.environment import HAS_DATABASE_BASE
+    from tests.fixtures.app_stubs import create_mock_redis, start_infrastructure_patchers
 
     try:
         import pytest_asyncio
@@ -36,6 +42,8 @@ else:
         pytest_asyncio = None
 
     AsyncFixture = pytest_asyncio.fixture if pytest_asyncio else pytest.fixture
+
+    logger = logging.getLogger(__name__)
 
     def _default_user() -> UserInfo:
         return UserInfo(
@@ -68,18 +76,16 @@ else:
         if not token:
             return None
 
-        with suppress(Exception):
+        try:
             claims = jwt_service.verify_token(token, expected_type=TokenType.ACCESS)
-            return UserInfo(
-                user_id=claims.get("sub", ""),
-                email=claims.get("email"),
-                username=claims.get("username"),
-                roles=claims.get("roles", []),
-                permissions=claims.get("permissions", []),
-                tenant_id=claims.get("tenant_id"),
-                is_platform_admin=claims.get("is_platform_admin", False),
-            )
-        return None
+        except HTTPException as exc:
+            logger.debug("JWT verification failed for test request: %s", exc.detail)
+            return None
+        except Exception:  # pragma: no cover - defensive
+            logger.exception("Unexpected error verifying JWT for test request")
+            return None
+
+        return _claims_to_user_info(claims)
 
     def _override_auth_dependencies(app: FastAPI) -> None:
         async def override_get_current_user(request: Request) -> UserInfo:
@@ -93,7 +99,10 @@ else:
         app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
 
     def _override_tenant_dependency(app: FastAPI) -> None:
-        def override_get_current_tenant_id() -> str:
+        def override_get_current_tenant_id(request: Request) -> str:
+            header_tenant = request.headers.get("X-Tenant-ID") if request else None
+            if header_tenant:
+                return header_tenant
             return "test-tenant"
 
         app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
@@ -122,29 +131,46 @@ else:
         except ImportError:
             pass
 
+    _INFRA_PATCHERS: list[Any] = []
+    _INFRA_PATCHERS_STARTED = False
+
+    def _ensure_infrastructure_patchers() -> None:
+        global _INFRA_PATCHERS_STARTED
+        if _INFRA_PATCHERS_STARTED:
+            return
+
+        patchers = start_infrastructure_patchers()
+        if patchers:
+            _INFRA_PATCHERS.extend(patchers)
+        _INFRA_PATCHERS_STARTED = True
+
+    @pytest.fixture(scope="session", autouse=True)
+    def _teardown_infrastructure_patchers() -> None:
+        global _INFRA_PATCHERS_STARTED
+        try:
+            yield
+        finally:
+            for patcher in _INFRA_PATCHERS:
+                with suppress(RuntimeError, AttributeError):
+                    patcher.stop()
+            _INFRA_PATCHERS.clear()
+            _INFRA_PATCHERS_STARTED = False
+
     def _override_rbac_and_cache(app: FastAPI) -> None:
-        # RBAC guard
-        with suppress(ImportError):
-            patcher = patch(
-                "dotmac.platform.auth.rbac_service.RBACService.user_has_all_permissions",
-                new_callable=AsyncMock,
-                return_value=True,
-            )
-            patcher.start()
+        _ensure_infrastructure_patchers()
 
-        # Redis client
-        mock_redis = MagicMock()
-        mock_redis.get = AsyncMock(return_value=None)
-        mock_redis.set = AsyncMock(return_value=True)
-        mock_redis.delete = AsyncMock(return_value=True)
-        mock_redis.exists = AsyncMock(return_value=False)
-        mock_redis.expire = AsyncMock(return_value=True)
-        mock_redis.ttl = AsyncMock(return_value=-1)
-        mock_redis.keys = AsyncMock(return_value=[])
-        mock_redis.scan = AsyncMock(return_value=(0, []))
-        mock_redis.ping = AsyncMock(return_value=True)
+        if not _is_integration_test:
+            mock_redis = create_mock_redis()
+            app.state._redis_mock = mock_redis
 
-        app.dependency_overrides[get_redis_client] = lambda: mock_redis
+            def _mock_redis_dependency():
+                return app.state._redis_mock
+
+            app.dependency_overrides[get_redis_client] = _mock_redis_dependency
+
+        if _INFRA_PATCHERS:
+            app.state._test_patchers = list(_INFRA_PATCHERS)
+        app.state._infra_patched = True
 
     def _include_all_routers(app: FastAPI) -> None:
         register_routers(app)
@@ -160,9 +186,11 @@ else:
         try:
             tenant_config = TenantConfiguration(
                 mode=TenantMode.MULTI,
-                require_tenant_header=False,
+                default_tenant_id="test-tenant",
+                require_tenant_header=True,
                 tenant_header_name="X-Tenant-ID",
             )
+            set_tenant_config(tenant_config)
             app.add_middleware(TenantMiddleware, config=tenant_config)
         except ImportError:
             pass
@@ -175,16 +203,20 @@ else:
         _override_db_dependency(app, SessionMaker)
         _override_rbac_and_cache(app)
         _include_all_routers(app)
+
+        app.state._base_overrides = dict(app.dependency_overrides)
         return app
 
     @pytest.fixture
     def test_app(async_db_engine) -> FastAPI:
         """FastAPI application configured with lightweight overrides."""
         app = _build_app(async_db_engine, override_auth=True)
+        base_overrides = getattr(app.state, "_base_overrides", {}).copy()
         try:
             yield app
         finally:
             app.dependency_overrides.clear()
+            app.dependency_overrides.update(base_overrides)
 
     class _HybridResponse:
         """Wrapper supporting sync and async access to HTTP responses."""
@@ -229,13 +261,33 @@ else:
             return _run().__await__()
 
     class HybridTestClient:
-        """Client compatible with sync and async usage."""
+        """Client compatible with sync and async usage.
+
+        Provides a unified interface so tests can call the same fixture from synchronous
+        pytest functions (via `TestClient`) and async tests (via httpx) without creating
+        separate clients. This keeps integration scenarios concise while still exercising
+        the real ASGI stack.
+        """
 
         def __init__(self, app: FastAPI) -> None:
             self._app = app
             self._sync_client = TestClient(app)
+            self._tenant_header = "X-Tenant-ID"
+            self._default_tenant = "test-tenant"
+
+        def _apply_tenant_header(self, headers: dict[str, Any] | None) -> dict[str, Any]:
+            """Ensure every request carries a tenant header."""
+            merged: dict[str, Any] = {}
+            if headers:
+                merged.update(headers)
+            header_keys = {key.lower() for key in merged}
+            if self._tenant_header.lower() not in header_keys:
+                merged[self._tenant_header] = self._default_tenant
+            return merged
 
         def _make_request(self, method: str, *args: Any, **kwargs: Any) -> _HybridResponse:
+            kwargs = dict(kwargs)
+            kwargs["headers"] = self._apply_tenant_header(kwargs.get("headers"))
             return _HybridResponse(self._sync_client, self._app, method, args, kwargs)
 
         def get(self, *args: Any, **kwargs: Any) -> _HybridResponse:

@@ -9,7 +9,7 @@ tenant middleware silently fell back to default tenant, bypassing isolation.
 """
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi import Request, status
@@ -287,7 +287,8 @@ class TestTenantMiddlewarePlatformAdmin:
         mock_request.url.path = "/api/v1/customers"
         mock_request.method = "GET"
         mock_request.headers = {
-            "X-Target-Tenant-ID": "tenant-target-123"  # Platform admin impersonation
+            "X-Target-Tenant-ID": "tenant-target-123",  # Platform admin impersonation
+            "Authorization": "Bearer test-token",
         }
         mock_request.query_params = {}
         mock_request.state = SimpleNamespace()
@@ -295,7 +296,18 @@ class TestTenantMiddlewarePlatformAdmin:
         mock_call_next = AsyncMock()
 
         # Execute middleware
-        await middleware.dispatch(mock_request, mock_call_next)
+        with patch("dotmac.platform.auth.core.jwt_service.verify_token") as verify_token:
+            verify_token.return_value = {
+                "sub": "platform-admin-1",
+                "email": "admin@example.com",
+                "username": "platform-admin",
+                "roles": ["admin"],
+                "permissions": ["platform:admin"],
+                "tenant_id": None,
+                "is_platform_admin": True,
+            }
+
+            await middleware.dispatch(mock_request, mock_call_next)
 
         # ASSERTION: Request is allowed through
         mock_call_next.assert_called_once()

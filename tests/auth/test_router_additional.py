@@ -14,7 +14,7 @@ Focuses on:
 
 from datetime import timezone, datetime
 from io import BytesIO
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest

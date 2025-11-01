@@ -8,6 +8,7 @@ endpoint functionality tested, beyond mere importability.
 Covers the 26+ routers that previously only appeared in test_router_registration.py
 """
 
+from contextlib import ExitStack
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
@@ -16,7 +17,11 @@ import pytest
 from fastapi import FastAPI
 from starlette.testclient import TestClient
 
-from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.core import (
+    UserInfo,
+    get_current_user,
+    get_current_user_optional,
+)
 from dotmac.platform.database import get_async_session
 from dotmac.platform.routers import ROUTER_CONFIGS, RouterConfig
 from tests.helpers.router_testkit import RouterTestKit
@@ -130,6 +135,10 @@ class TestRouterSmokeTests:
 
         This ensures that routers requiring auth actually enforce it.
         """
+        original_get_current_user = test_app.dependency_overrides.pop(get_current_user, None)
+        original_get_current_user_optional = test_app.dependency_overrides.pop(
+            get_current_user_optional, None
+        )
         client = TestClient(test_app)
 
         # Determine a test endpoint path
@@ -153,6 +162,13 @@ class TestRouterSmokeTests:
                 f"Router {router_id} endpoint {path} should require auth or return 404, "
                 f"got {response.status_code}"
             )
+
+        if original_get_current_user is not None:
+            test_app.dependency_overrides[get_current_user] = original_get_current_user
+        if original_get_current_user_optional is not None:
+            test_app.dependency_overrides[
+                get_current_user_optional
+            ] = original_get_current_user_optional
 
     @pytest.mark.parametrize(
         "router_config,router_id",
@@ -192,31 +208,32 @@ class TestRouterSmokeTests:
         # Test each known endpoint
         endpoints = ROUTER_ENDPOINTS.get(router_id, [])
         for path, method in endpoints:
-            # Mock service responses based on router
-            self._setup_service_mocks(router_id, mock_db)
+            with ExitStack() as stack:
+                # Mock service responses based on router
+                self._setup_service_mocks(router_id, mock_db, stack)
 
-            if method == "GET":
-                response = client.get(path)
-            elif method == "POST":
-                response = client.post(path, json={})
-            elif method == "PUT":
-                response = client.put(path, json={})
-            elif method == "DELETE":
-                response = client.delete(path)
-            else:
-                continue
+                if method == "GET":
+                    response = client.get(path)
+                elif method == "POST":
+                    response = client.post(path, json={})
+                elif method == "PUT":
+                    response = client.put(path, json={})
+                elif method == "DELETE":
+                    response = client.delete(path)
+                else:
+                    continue
 
-            # Should get a valid response (not 500)
-            # Can be 200, 400, 404, 422 depending on implementation
-            assert response.status_code < 500, (
-                f"Router {router_id} endpoint {method} {path} returned server error: "
-                f"{response.status_code}. This indicates a code issue, not auth."
-            )
+                # Should get a valid response (not 500)
+                # Can be 200, 400, 404, 422 depending on implementation
+                assert response.status_code < 500, (
+                    f"Router {router_id} endpoint {method} {path} returned server error: "
+                    f"{response.status_code}. This indicates a code issue, not auth."
+                )
 
         # Cleanup
         test_app.dependency_overrides.clear()
 
-    def _setup_service_mocks(self, router_id: str, mock_db: AsyncMock):
+    def _setup_service_mocks(self, router_id: str, mock_db: AsyncMock, stack: ExitStack):
         """
         Setup service-specific mocks for different routers.
 
@@ -234,13 +251,26 @@ class TestRouterSmokeTests:
         # Router-specific mocks
         if "access" in router_id:
             # Mock access network service
-            with patch("dotmac.platform.access.router.get_access_service") as mock_svc:
-                mock_service = AsyncMock()
-                mock_service.health = AsyncMock(
-                    return_value={"state": "HEALTHY", "version": "test"}
+            from dotmac.platform.voltha.schemas import DeviceListResponse, VOLTHAHealthResponse
+
+            mock_service = AsyncMock()
+            mock_service.health = AsyncMock(
+                return_value=VOLTHAHealthResponse(
+                    healthy=True,
+                    state="HEALTHY",
+                    message="All systems operational",
+                    version="test",
+                    adapters=[],
+                    total_devices=0,
                 )
-                mock_service.list_devices = AsyncMock(return_value={"devices": []})
-                mock_svc.return_value = mock_service
+            )
+            mock_service.list_devices = AsyncMock(
+                return_value=DeviceListResponse(devices=[], total=0)
+            )
+            from dotmac.platform.access.router import configure_access_service
+
+            configure_access_service(mock_service)
+            stack.callback(lambda: configure_access_service(None))
 
         elif "customer_portal" in router_id:
             # Mock customer lookup
@@ -254,6 +284,24 @@ class TestRouterSmokeTests:
                 email="test@example.com",
             )
             mock_result.scalar_one_or_none = Mock(return_value=mock_customer)
+            stack.enter_context(
+                patch(
+                    "dotmac.platform.customer_portal.router.calculate_usage_from_radius",
+                    return_value=(10.0, 5.0),
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "dotmac.platform.customer_portal.router.get_daily_usage_breakdown",
+                    return_value=[],
+                )
+            )
+            stack.enter_context(
+                patch(
+                    "dotmac.platform.customer_portal.router.get_hourly_usage_breakdown",
+                    return_value=[],
+                )
+            )
 
         elif "billing" in router_id:
             # Mock invoice service

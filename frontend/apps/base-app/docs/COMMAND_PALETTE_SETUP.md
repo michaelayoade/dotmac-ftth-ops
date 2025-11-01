@@ -371,7 +371,6 @@ Potential improvements:
 
 ## Related Documentation
 
-- [Global Search Implementation](/docs/UI_IMPLEMENTATION_STATUS.md)
 - [React Query Hooks](/hooks/useSearch.ts)
 - [Search Service](/lib/services/search-service.ts)
 - [Search Types](/types/search.ts)

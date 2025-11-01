@@ -10,7 +10,8 @@ from datetime import datetime
 from typing import Any
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.tenant.oss_config import OSSService, update_service_config
@@ -806,3 +807,23 @@ async def get_tenant_provisioning_job(
     except TenantProvisioningJobNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     return TenantProvisioningJobResponse.model_validate(job)
+
+
+# Legacy route alias (/api/v1/tenant/*) maintained for backwards compatibility.
+legacy_router = APIRouter(prefix="/tenant", tags=["Tenant Management (legacy)"])
+
+
+@legacy_router.api_route(
+    "/{full_path:path}",
+    methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"],
+    include_in_schema=False,
+)
+async def redirect_legacy_tenant_paths(full_path: str, request: Request) -> RedirectResponse:
+    """
+    Redirect legacy /tenant/* paths to the canonical /tenants/* endpoints.
+
+    Uses HTTP 307 to preserve the original HTTP method.
+    """
+    new_path = request.url.path.replace("/tenant", "/tenants", 1)
+    new_url = request.url.replace(path=new_path)
+    return RedirectResponse(url=str(new_url), status_code=status.HTTP_307_TEMPORARY_REDIRECT)

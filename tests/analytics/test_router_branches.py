@@ -6,6 +6,7 @@ Covers error handling, edge cases, and conditional branches.
 """
 
 from datetime import timezone, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -14,18 +15,22 @@ from starlette.requests import Request
 
 from dotmac.platform.analytics.models import AnalyticsQueryRequest
 from dotmac.platform.analytics.router import (
-
-
     custom_query,
     get_metrics,
 )
 from dotmac.platform.auth.core import UserInfo
 
 
+class _TestApp:
+    """Minimal FastAPI-like app for Request scope cleanup."""
 
+    def __init__(self) -> None:
+        self.dependency_overrides = {}
+        self.state = SimpleNamespace(_state={})
 
 
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def mock_user():
@@ -43,7 +48,8 @@ def mock_user():
 @pytest.fixture
 def mock_request():
     """Create mock FastAPI Request."""
-    return Request(scope={"type": "http", "method": "GET", "path": "/"})
+    scope = {"type": "http", "method": "GET", "path": "/", "app": _TestApp()}
+    return Request(scope=scope)
 
 
 @pytest.mark.unit

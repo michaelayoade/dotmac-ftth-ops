@@ -84,10 +84,14 @@ class TestVaultContainerE2E:
         container_name = "dotmac-test-vault"
 
         # Stop and remove existing test container if present
-        subprocess.run(
-            ["docker", "rm", "-f", container_name],
-            capture_output=True,
-        )
+        try:
+            subprocess.run(
+                ["docker", "rm", "-f", container_name],
+                capture_output=True,
+                timeout=10,
+            )
+        except subprocess.TimeoutExpired:
+            pytest.skip("Unable to remove existing Vault container (docker rm timed out)")
 
         # Start Vault dev container
         try:
@@ -117,10 +121,14 @@ class TestVaultContainerE2E:
 
         finally:
             # Cleanup: stop and remove container only if we created it
-            subprocess.run(
-                ["docker", "rm", "-f", container_name],
-                capture_output=True,
-            )
+            try:
+                subprocess.run(
+                    ["docker", "rm", "-f", container_name],
+                    capture_output=True,
+                    timeout=10,
+                )
+            except subprocess.TimeoutExpired:
+                pytest.skip("Failed to clean up Vault test container (docker rm timed out)")
 
     def test_vault_connection_successful(self, vault_container):
         """Test Vault client can connect to real Vault instance."""

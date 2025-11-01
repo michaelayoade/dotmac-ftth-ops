@@ -23,6 +23,29 @@ from dotmac.platform.billing.subscriptions.models import (
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
 
+async def _create_test_plan(
+    service: SubscriptionService,
+    tenant_id: str = "test-tenant",
+    **overrides,
+):
+    """Helper to create a subscription plan via the service."""
+
+    plan_data = SubscriptionPlanCreateRequest(
+        product_id=overrides.get("product_id", "prod_123"),
+        name=overrides.get("name", "Test Plan"),
+        description=overrides.get("description", "Test subscription plan"),
+        billing_cycle=overrides.get("billing_cycle", BillingCycle.MONTHLY),
+        price=overrides.get("price", Decimal("29.99")),
+        currency=overrides.get("currency", "usd"),
+        trial_days=overrides.get("trial_days", 14),
+        included_usage=overrides.get("included_usage", {}),
+        overage_rates=overrides.get("overage_rates", {}),
+        metadata=overrides.get("metadata", {}),
+    )
+
+    return await service.create_plan(plan_data=plan_data, tenant_id=tenant_id)
+
+
 
 
 pytestmark = pytest.mark.integration
@@ -52,38 +75,42 @@ class TestSubscriptionPlanManagement:
         assert plan.price == Decimal("49.99")
         assert plan.trial_days == 14
 
-    async def test_list_plans(self, async_session, test_subscription_plan):
+    async def test_list_plans(self, async_session):
         """Test listing plans."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         plans = await service.list_plans(tenant_id="test-tenant")
 
         assert len(plans) >= 1
-        assert any(p.plan_id == test_subscription_plan.plan_id for p in plans)
+        assert any(p.plan_id == plan.plan_id for p in plans)
 
-    async def test_get_plan_by_id(self, async_session, test_subscription_plan):
+    async def test_get_plan_by_id(self, async_session):
         """Test getting plan by ID."""
         service = SubscriptionService(db_session=async_session)
 
-        plan = await service.get_plan(
-            plan_id=test_subscription_plan.plan_id, tenant_id="test-tenant"
-        )
+        plan_created = await _create_test_plan(service)
 
-        assert plan.plan_id == test_subscription_plan.plan_id
-        assert plan.name == test_subscription_plan.name
+        plan = await service.get_plan(plan_id=plan_created.plan_id, tenant_id="test-tenant")
+
+        assert plan.plan_id == plan_created.plan_id
+        assert plan.name == plan_created.name
 
 
 @pytest.mark.asyncio
 class TestSubscriptionLifecycle:
     """Test subscription lifecycle with real database."""
 
-    async def test_create_subscription_with_trial(self, async_session, test_subscription_plan):
+    async def test_create_subscription_with_trial(self, async_session):
         """Test creating subscription with trial period."""
         service = SubscriptionService(db_session=async_session)
 
+        plan = await _create_test_plan(service)
+
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_123",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
 
         subscription = await service.create_subscription(
@@ -121,14 +148,16 @@ class TestSubscriptionLifecycle:
         assert subscription.status == SubscriptionStatus.ACTIVE
         assert subscription.trial_end is None
 
-    async def test_get_subscription(self, async_session, test_subscription_plan):
+    async def test_get_subscription(self, async_session):
         """Test getting subscription by ID."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         # Create subscription
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_123",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
         created = await service.create_subscription(
             subscription_data=subscription_data, tenant_id="test-tenant"
@@ -142,14 +171,16 @@ class TestSubscriptionLifecycle:
         assert subscription.subscription_id == created.subscription_id
         assert subscription.customer_id == "cust_123"
 
-    async def test_list_subscriptions(self, async_session, test_subscription_plan):
+    async def test_list_subscriptions(self, async_session):
         """Test listing subscriptions."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         # Create subscription
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_list",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
         await service.create_subscription(
             subscription_data=subscription_data, tenant_id="test-tenant"
@@ -202,14 +233,16 @@ class TestSubscriptionCancellation:
         # When canceled at period end, status remains ACTIVE until period ends
         assert canceled.status == SubscriptionStatus.ACTIVE
 
-    async def test_cancel_subscription_immediately(self, async_session, test_subscription_plan):
+    async def test_cancel_subscription_immediately(self, async_session):
         """Test immediate subscription cancellation."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         # Create subscription
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_456",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
             subscription_data=subscription_data, tenant_id="test-tenant"
@@ -287,14 +320,16 @@ class TestSubscriptionPlanChange:
 class TestSubscriptionReactivation:
     """Test subscription reactivation."""
 
-    async def test_reactivate_canceled_subscription(self, async_session, test_subscription_plan):
+    async def test_reactivate_canceled_subscription(self, async_session):
         """Test reactivating a canceled subscription."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         # Create and cancel subscription at period end (sets status to CANCELED)
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_reactivate",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
             subscription_data=subscription_data, tenant_id="test-tenant"
@@ -320,14 +355,16 @@ class TestSubscriptionReactivation:
 class TestSubscriptionUpdate:
     """Test subscription updates."""
 
-    async def test_update_subscription_metadata(self, async_session, test_subscription_plan):
+    async def test_update_subscription_metadata(self, async_session):
         """Test updating subscription metadata."""
         service = SubscriptionService(db_session=async_session)
+
+        plan = await _create_test_plan(service)
 
         # Create subscription
         subscription_data = SubscriptionCreateRequest(
             customer_id="cust_update",
-            plan_id=test_subscription_plan.plan_id,
+            plan_id=plan.plan_id,
         )
         subscription = await service.create_subscription(
             subscription_data=subscription_data, tenant_id="test-tenant"

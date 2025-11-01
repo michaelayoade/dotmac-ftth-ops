@@ -1,0 +1,201 @@
+# RADIUS Operations Makefile
+#
+# This Makefile provides common RADIUS server operations for operators.
+# All changes to server configuration should go through GitOps (PR workflow).
+#
+# Usage: make -f Makefile.radius <target>
+
+.PHONY: help status health reload restart validate rotate-secrets rotate-secret-single backup restore logs
+
+# Configuration
+RADIUS_CONTAINER := isp-freeradius
+RADIUS_CONFIG_DIR := $(CURDIR)/config/radius
+RADIUS_BACKUP_DIR := $(CURDIR)/backups/radius
+
+help: ## Show this help message
+	@echo 'RADIUS Server Operations'
+	@echo ''
+	@echo 'Usage:'
+	@echo '  make -f Makefile.radius <target>'
+	@echo ''
+	@echo 'Targets:'
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+
+status: ## Show RADIUS server status
+	@echo "=== FreeRADIUS Container Status ==="
+	@docker ps --filter "name=$(RADIUS_CONTAINER)" --format "table {{.Names}}\t{{.Status}}\t{{.Health}}"
+	@echo ""
+	@echo "=== Health Check ==="
+	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123 || echo "Health check failed"
+
+health: ## Run comprehensive health check
+	@echo "=== FreeRADIUS Health Check ==="
+	@echo "1. Container running:"
+	@docker ps --filter "name=$(RADIUS_CONTAINER)" --format "  ✓ {{.Names}} is {{.Status}}" || echo "  ✗ Container not running"
+	@echo "2. Config validation:"
+	@docker exec $(RADIUS_CONTAINER) radiusd -XC 2>&1 | tail -5
+	@echo "3. Test authentication:"
+	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123 | grep -q "Access-Accept" && echo "  ✓ Auth test passed" || echo "  ✗ Auth test failed"
+	@echo "4. Port status:"
+	@docker exec $(RADIUS_CONTAINER) netstat -uln | grep -E "(1812|1813|3799)" || echo "  Installing netstat..."
+
+validate: ## Validate FreeRADIUS configuration (does not apply)
+	@echo "=== Validating FreeRADIUS Configuration ==="
+	@docker exec $(RADIUS_CONTAINER) radiusd -XC
+	@echo ""
+	@echo "✓ Configuration is valid"
+
+reload: ## Reload FreeRADIUS gracefully (SIGHUP)
+	@echo "=== Reloading FreeRADIUS (graceful) ==="
+	@docker exec $(RADIUS_CONTAINER) kill -HUP 1
+	@echo "Waiting for reload..."
+	@sleep 3
+	@docker ps --filter "name=$(RADIUS_CONTAINER)" --filter "health=healthy" | grep -q "$(RADIUS_CONTAINER)" && echo "✓ Reload successful" || echo "✗ Reload failed - check logs"
+
+restart: ## Restart FreeRADIUS container (full restart)
+	@echo "=== Restarting FreeRADIUS Container ==="
+	@echo "WARNING: This will disconnect all active sessions!"
+	@read -p "Continue? [y/N] " -n 1 -r; echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		docker restart $(RADIUS_CONTAINER); \
+		echo "Waiting for container to start..."; \
+		sleep 10; \
+		docker ps --filter "name=$(RADIUS_CONTAINER)"; \
+	else \
+		echo "Aborted"; \
+	fi
+
+rotate-secrets: ## Rotate ALL NAS shared secrets (interactive)
+	@echo "=== Rotating All NAS Shared Secrets ==="
+	@echo "This will:"
+	@echo "  1. Generate new strong secrets for all NAS devices"
+	@echo "  2. Store them in HashiCorp Vault"
+	@echo "  3. Update clients.conf"
+	@echo "  4. Reload FreeRADIUS"
+	@echo ""
+	@echo "WARNING: You must update secrets on NAS devices manually after this!"
+	@read -p "Continue? [y/N] " -n 1 -r; echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		./scripts/radius/rotate-nas-secrets.sh --all; \
+	else \
+		echo "Aborted"; \
+	fi
+
+rotate-secret-single: ## Rotate a single NAS secret (Usage: make rotate-secret-single NAS=router01)
+	@if [ -z "$(NAS)" ]; then \
+		echo "Error: NAS parameter required"; \
+		echo "Usage: make -f Makefile.radius rotate-secret-single NAS=router01"; \
+		exit 1; \
+	fi
+	@echo "=== Rotating Secret for NAS: $(NAS) ==="
+	@./scripts/radius/rotate-nas-secrets.sh --nas-name=$(NAS)
+
+dry-run-rotate: ## Dry-run secret rotation (shows what would happen)
+	@echo "=== Dry-Run: Secret Rotation ==="
+	@./scripts/radius/rotate-nas-secrets.sh --all --dry-run
+
+backup: ## Create configuration backup
+	@echo "=== Creating FreeRADIUS Configuration Backup ==="
+	@mkdir -p $(RADIUS_BACKUP_DIR)
+	@BACKUP_NAME="radius-backup-$$(date +%Y%m%d-%H%M%S).tar.gz"; \
+	tar -czf $(RADIUS_BACKUP_DIR)/$$BACKUP_NAME -C $(RADIUS_CONFIG_DIR) . && \
+	echo "✓ Backup created: $(RADIUS_BACKUP_DIR)/$$BACKUP_NAME"
+
+restore: ## Restore from backup (Usage: make restore BACKUP=filename.tar.gz)
+	@if [ -z "$(BACKUP)" ]; then \
+		echo "Available backups:"; \
+		ls -lh $(RADIUS_BACKUP_DIR)/*.tar.gz 2>/dev/null || echo "No backups found"; \
+		echo ""; \
+		echo "Usage: make -f Makefile.radius restore BACKUP=filename.tar.gz"; \
+		exit 1; \
+	fi
+	@echo "=== Restoring FreeRADIUS Configuration ==="
+	@echo "WARNING: This will overwrite current configuration!"
+	@read -p "Restore from $(BACKUP)? [y/N] " -n 1 -r; echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		tar -xzf $(RADIUS_BACKUP_DIR)/$(BACKUP) -C $(RADIUS_CONFIG_DIR) && \
+		echo "✓ Configuration restored" && \
+		$(MAKE) -f Makefile.radius reload; \
+	else \
+		echo "Aborted"; \
+	fi
+
+logs: ## Tail FreeRADIUS logs
+	@docker logs -f --tail=100 $(RADIUS_CONTAINER)
+
+logs-debug: ## Tail FreeRADIUS logs with debug level
+	@docker exec -it $(RADIUS_CONTAINER) tail -f /var/log/freeradius/radius.log
+
+test-auth: ## Test RADIUS authentication with test user
+	@echo "=== Testing RADIUS Authentication ==="
+	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123
+
+test-auth-custom: ## Test custom user (Usage: make test-auth-custom USER=john PASS=secret)
+	@if [ -z "$(USER)" ] || [ -z "$(PASS)" ]; then \
+		echo "Usage: make -f Makefile.radius test-auth-custom USER=john PASS=secret"; \
+		exit 1; \
+	fi
+	@docker exec $(RADIUS_CONTAINER) radtest $(USER) $(PASS) localhost 0 testing123
+
+show-sessions: ## Show active RADIUS sessions
+	@echo "=== Active RADIUS Sessions ==="
+	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+		"SELECT username, nasipaddress, acctstarttime, acctsessiontime FROM radacct WHERE acctstoptime IS NULL LIMIT 20;"
+
+show-auth-failures: ## Show recent authentication failures
+	@echo "=== Recent Authentication Failures ==="
+	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+		"SELECT authdate, username, reply FROM radpostauth WHERE reply != 'Access-Accept' ORDER BY authdate DESC LIMIT 20;"
+
+check-certificates: ## Check TLS certificate expiry
+	@echo "=== TLS Certificate Status ==="
+	@docker exec $(RADIUS_CONTAINER) openssl x509 -in /etc/freeradius/certs/server.pem -noout -dates 2>/dev/null || echo "No TLS certificate found"
+
+enable-debug: ## Enable debug logging (temporarily)
+	@echo "=== Enabling Debug Logging ==="
+	@echo "This will restart radiusd in debug mode"
+	@docker exec -it $(RADIUS_CONTAINER) sh -c "kill -TERM 1 && radiusd -X"
+
+# GitOps helpers
+
+gitops-status: ## Show GitOps status (what's in Git vs deployed)
+	@echo "=== GitOps Configuration Status ==="
+	@echo "Config directory: $(RADIUS_CONFIG_DIR)"
+	@git status --short $(RADIUS_CONFIG_DIR) || echo "Not a git repository"
+
+gitops-diff: ## Show diff between Git and working directory
+	@git diff $(RADIUS_CONFIG_DIR)
+
+gitops-sync: ## Pull latest config from Git and reload
+	@echo "=== Syncing Configuration from Git ==="
+	@echo "WARNING: This will overwrite local changes!"
+	@read -p "Pull latest from Git and reload? [y/N] " -n 1 -r; echo; \
+	if [[ $$REPLY =~ ^[Yy]$$ ]]; then \
+		git pull && \
+		$(MAKE) -f Makefile.radius validate && \
+		$(MAKE) -f Makefile.radius reload; \
+	else \
+		echo "Aborted"; \
+	fi
+
+# Monitoring helpers
+
+watch-status: ## Watch server status (refreshes every 5s)
+	@watch -n 5 'make -f Makefile.radius status'
+
+metrics: ## Show RADIUS performance metrics
+	@echo "=== RADIUS Performance Metrics ==="
+	@echo "Total sessions (last 24h):"
+	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+		"SELECT COUNT(*) FROM radacct WHERE acctstarttime > NOW() - INTERVAL '24 hours';"
+	@echo ""
+	@echo "Auth success rate (last 24h):"
+	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+		"SELECT \
+			COUNT(CASE WHEN reply = 'Access-Accept' THEN 1 END) * 100.0 / COUNT(*) AS success_rate \
+		FROM radpostauth WHERE authdate > NOW() - INTERVAL '24 hours';"
+
+clean-old-sessions: ## Clean up old session records (> 90 days)
+	@echo "=== Cleaning Up Old Sessions ==="
+	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+		"DELETE FROM radacct WHERE acctstoptime < NOW() - INTERVAL '90 days';"

@@ -334,7 +334,9 @@ class TestBillingPerformance:
             t.start()
 
         for t in threads:
-            t.join()
+            t.join(timeout=5)
+            if t.is_alive():
+                pytest.fail("Webhook worker thread hung after 5s; aborting test")
 
         end_time = time.time()
 

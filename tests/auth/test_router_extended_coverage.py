@@ -12,6 +12,7 @@ Focuses on:
 
 from datetime import timezone, datetime
 from uuid import uuid4
+from unittest.mock import patch
 
 import pytest
 import pytest_asyncio

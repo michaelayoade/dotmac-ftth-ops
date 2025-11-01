@@ -19,15 +19,8 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-# Skip all integration tests due to database I/O errors
-# Module already achieves 91% coverage through unit tests
-
-
-
-
 pytestmark = [
     pytest.mark.integration,
-    pytest.mark.skip(reason="Database I/O errors - 91% coverage already achieved via unit tests"),
 ]
 
 from dotmac.platform.customer_management.models import (  # noqa: E402
@@ -45,6 +38,16 @@ from dotmac.platform.customer_management.schemas import (  # noqa: E402
     CustomerUpdate,
 )
 from dotmac.platform.customer_management.service import CustomerService  # noqa: E402
+
+
+@pytest.fixture(autouse=True)
+async def _require_postgres_backend(async_session: AsyncSession):
+    """Ensure integration tests run only when PostgreSQL is available."""
+    bind = getattr(async_session, "bind", None)
+    dialect_name = getattr(getattr(bind, "dialect", None), "name", None)
+    if dialect_name != "postgresql":
+        pytest.skip("Requires PostgreSQL backend via DOTMAC_DATABASE_URL_ASYNC")
+    yield
 
 
 @pytest.mark.asyncio

@@ -9,6 +9,7 @@ import dns.resolver
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.audit.models import ActivitySeverity, ActivityType
 from dotmac.platform.audit.service import AuditService
 from dotmac.platform.tenant.domain_verification import (
     DomainVerificationService,
@@ -37,7 +38,7 @@ def mock_db_session():
 def mock_audit_service():
     """Mock audit service."""
     service = AsyncMock(spec=AuditService)
-    service.log_activity = AsyncMock()
+    service.log_activity = AsyncMock(spec=AuditService.log_activity)
     return service
 
 
@@ -188,8 +189,11 @@ class TestInitiateVerification:
         # Verify audit log
         mock_audit_service.log_activity.assert_called_once()
         call_args = mock_audit_service.log_activity.call_args
+        assert call_args.kwargs["activity_type"] == ActivityType.API_REQUEST
         assert call_args.kwargs["action"] == "domain.verification.initiated"
+        assert "initiated" in call_args.kwargs["description"]
         assert call_args.kwargs["resource_type"] == "domain"
+        assert call_args.kwargs["severity"] == ActivitySeverity.MEDIUM
 
     @pytest.mark.asyncio
     async def test_initiate_verification_invalid_domain(
@@ -469,7 +473,10 @@ class TestVerifyDomain:
         # Verify audit log
         mock_audit_service.log_activity.assert_called_once()
         call_args = mock_audit_service.log_activity.call_args
+        assert call_args.kwargs["activity_type"] == ActivityType.API_REQUEST
         assert call_args.kwargs["action"] == "domain.verification.succeeded"
+        assert "succeeded" in call_args.kwargs["description"]
+        assert call_args.kwargs["severity"] == ActivitySeverity.LOW
 
     @pytest.mark.asyncio
     async def test_verify_domain_cname_success(
@@ -520,7 +527,10 @@ class TestVerifyDomain:
         # Verify failure audit log
         mock_audit_service.log_activity.assert_called_once()
         call_args = mock_audit_service.log_activity.call_args
+        assert call_args.kwargs["activity_type"] == ActivityType.API_ERROR
         assert call_args.kwargs["action"] == "domain.verification.failed"
+        assert "failed" in call_args.kwargs["description"]
+        assert call_args.kwargs["severity"] == ActivitySeverity.HIGH
 
     @pytest.mark.asyncio
     async def test_verify_domain_unsupported_method(
@@ -575,7 +585,10 @@ class TestRemoveDomain:
         # Verify audit log
         mock_audit_service.log_activity.assert_called_once()
         call_args = mock_audit_service.log_activity.call_args
+        assert call_args.kwargs["activity_type"] == ActivityType.API_REQUEST
         assert call_args.kwargs["action"] == "domain.removed"
+        assert "removed" in call_args.kwargs["description"]
+        assert call_args.kwargs["severity"] == ActivitySeverity.MEDIUM
 
     @pytest.mark.asyncio
     async def test_remove_domain_tenant_not_found(

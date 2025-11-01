@@ -136,7 +136,7 @@ class InvoiceSettings(AppBaseModel):  # type: ignore[misc]  # AppBaseModel resol
 
     # Numbering
     invoice_number_prefix: str = Field("INV", max_length=10)
-    invoice_number_format: str = Field("{prefix}-{year}-{sequence:06d}")
+    invoice_number_format: str = Field("{prefix}-{tenant_suffix}-{year}-{sequence:06d}")
 
     # Default terms
     default_due_days: int = Field(30, ge=0, le=365)
@@ -208,7 +208,7 @@ def _default_payment_settings() -> PaymentSettings:
 def _default_invoice_settings() -> InvoiceSettings:
     return InvoiceSettings(
         invoice_number_prefix="INV",
-        invoice_number_format="{prefix}-{year}-{sequence:06d}",
+        invoice_number_format="{prefix}-{tenant_suffix}-{year}-{sequence:06d}",
         default_due_days=30,
         include_payment_instructions=True,
         payment_instructions=None,

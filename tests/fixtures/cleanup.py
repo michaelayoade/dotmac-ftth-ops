@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
+import logging
+from collections.abc import MutableMapping
 from typing import Any, Set
+from unittest.mock import Mock
 
 import pytest
 
 from tests.fixtures.environment import HAS_FASTAPI
+
+
+logger = logging.getLogger(__name__)
 
 
 @pytest.fixture(autouse=True, scope="function")
@@ -27,6 +32,9 @@ def cleanup_fastapi_state(request):
         if obj is None:
             return
 
+        if isinstance(obj, Mock):
+            return
+
         obj_id = id(obj)
         if obj_id in seen:
             return
@@ -35,8 +43,10 @@ def cleanup_fastapi_state(request):
         if isinstance(obj, FastAPI):
             if hasattr(obj, "dependency_overrides"):
                 obj.dependency_overrides.clear()
-            if hasattr(obj, "state") and hasattr(obj.state, "_state"):
-                obj.state._state.clear()  # type: ignore[attr-defined]
+            if hasattr(obj, "state"):
+                state_dict = getattr(obj.state, "_state", None)
+                if isinstance(state_dict, MutableMapping):
+                    state_dict.clear()
             return
 
         if isinstance(obj, dict):
@@ -49,7 +59,7 @@ def cleanup_fastapi_state(request):
                 _clean(value)
             return
 
-        for attr in (
+        attr_candidates = {
             "app",
             "_app",
             "application",
@@ -58,12 +68,24 @@ def cleanup_fastapi_state(request):
             "_client",
             "transport",
             "_transport",
-        ):
-            if hasattr(obj, attr):
-                try:
-                    _clean(getattr(obj, attr))
-                except AttributeError:
-                    continue
+        }
+
+        for attr_name in dir(obj):
+            if attr_name.startswith("__"):
+                continue
+            lower_name = attr_name.lower()
+            if any(token in lower_name for token in ("app", "client", "transport")):
+                attr_candidates.add(attr_name)
+
+        for attr in attr_candidates:
+            if not hasattr(obj, attr):
+                continue
+            try:
+                _clean(getattr(obj, attr))
+            except AttributeError:
+                continue
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.debug("cleanup_fastapi_state: unable to traverse %s (%s)", attr, exc)
 
     for value in funcargs.values():
         _clean(value)

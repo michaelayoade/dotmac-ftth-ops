@@ -23,6 +23,7 @@ services:
       # Mount only custom clients file for now - defaults for everything else
       - ./config/radius/clients.conf:/etc/freeradius/clients.conf:ro
       - ./config/radius/dictionary:/etc/freeradius/dictionary.local:ro
+      - ./config/radius/authorize:/etc/raddb/mods-config/files/authorize:ro
       - radius_logs:/var/log/freeradius
       - radius_config:/etc/freeradius
     networks:
@@ -34,7 +35,9 @@ services:
         max-size: "10m"
         max-file: "3"
     healthcheck:
-      test: ["CMD", "radtest", "test", "test", "localhost", "0", "testing123"]
+      # NOTE: In production, healthcheck should use a real database user
+      # For local dev, copy docker-compose.override.yml.example to enable test user
+      test: ["CMD", "sh", "-c", "radiusd -v || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3

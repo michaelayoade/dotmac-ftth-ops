@@ -1,134 +1,115 @@
 # Quick Start Guide
 
-## TL;DR - Get Everything Running
+Use this checklist to get the DotMac platform and ISP services running locally in minutes. It mirrors the infrastructure scripts and defaults in `INFRASTRUCTURE.md`.
+
+## Prerequisites
+
+- Docker Desktop 20.10+ with Compose v2
+- Python 3.12+ with Poetry
+- Node.js 18+ with pnpm 9+
+- ≥ 8 GB RAM / 50 GB free disk space
+
+## Step 1: Clone and prepare the project
 
 ```bash
-# 1. Rebuild FreeRADIUS for Apple Silicon
-docker build --platform linux/amd64 -f Dockerfile.freeradius -t freeradius-postgresql:latest .
-
-# 2. Start base infrastructure
-docker compose -f docker-compose.base.yml up -d postgres redis
-
-# 3. Wait 30 seconds for postgres to initialize databases
-sleep 30
-
-# 4. Start ISP services
-docker compose -f docker-compose.isp.yml up -d
-
-# 5. Check status
-docker ps
+git clone https://github.com/your-org/dotmac-isp-ops.git
+cd dotmac-isp-ops
+cp .env.example .env   # update secrets as needed
 ```
 
-## What Was Fixed
-
-### ✅ Issue 1: AWX Database Not Found
-**Problem**: AWX containers crashed with "database awx does not exist"
-
-**Solution**:
-- Created `database/init/02-create-databases.sql` to auto-create awx, netbox, librenms databases
-- Mounted init scripts in docker-compose.base.yml:15
-- Created AWX settings file at `config/awx/settings.py`
-- Mounted settings file in both awx-web and awx-task containers
-
-### ✅ Issue 2: FreeRADIUS Restart Loop on Apple Silicon
-**Problem**: FreeRADIUS container restarting continuously on M-series Macs
-
-**Solution**:
-- Added `platform: linux/amd64` to docker-compose.isp.yml:9
-- Updated Dockerfile.freeradius:6 with `FROM --platform=linux/amd64`
-- Requires rebuilding image: `docker build --platform linux/amd64 -f Dockerfile.freeradius -t freeradius-postgresql:latest .`
-
-### ✅ Issue 3: Network Isolation
-**Problem**: ISP services couldn't reach postgres/redis (Name or service not known)
-
-**Solution**:
-- Mapped external network in docker-compose.isp.yml:358
-- Changed from `external: true` to `external: true; name: dotmac-ftth-ops-network`
-- All services now on same network
-
-## Files Changed
-
-```
-Modified:
-  ✏️ docker-compose.base.yml (line 15)
-  ✏️ docker-compose.isp.yml (lines 9, 263, 293, 358)
-  ✏️ Dockerfile.freeradius (line 6)
-
-Created:
-  ➕ database/init/02-create-databases.sql
-  ➕ config/awx/settings.py
-  ➕ DEPLOYMENT_GUIDE.md
-  ➕ QUICK_START.md (this file)
-```
-
-## Verify Everything Works
+## Step 2: Start core infrastructure
 
 ```bash
-# Should show all containers running (not restarting)
+make start-platform        # postgres, redis, vault, minio
+make start-platform-obs    # optional observability stack
+```
+
+Behind the scenes these commands invoke `./scripts/infra.sh`. You can inspect service health at any time:
+
+```bash
+make status-platform
+make logs-platform
+```
+
+## Step 3: Start ISP services (optional)
+
+```bash
+make start-isp
+make status-isp
+```
+
+This composes FreeRADIUS, NetBox, GenieACS, LibreNMS, WireGuard, TimescaleDB, and supporting workers.
+
+### Apple Silicon tip
+
+The FreeRADIUS container targets `linux/amd64`. On M-series Macs rebuild before first start:
+
+```bash
+docker build --platform linux/amd64 \
+  -f Dockerfile.freeradius \
+  -t freeradius-postgresql:latest .
+```
+
+## Step 4: Install dependencies and run services
+
+```bash
+poetry install --with dev
+poetry run alembic upgrade head
+poetry run uvicorn src.dotmac.platform.main:app \
+  --reload --host 0.0.0.0 --port 8000
+```
+
+Frontend apps live in `frontend/`. For the base app:
+
+```bash
+cd frontend
+pnpm install
+pnpm dev:base-app   # see frontend/QUICK-START-MULTI-APP.md for all portals
+```
+
+## Step 5: Smoke checks
+
+```bash
+# Compose status
 docker ps --format "table {{.Names}}\t{{.Status}}"
 
-# Expected running services:
-# ✅ isp-awx-web          (Up X seconds)
-# ✅ isp-awx-task         (Up X minutes)
-# ✅ isp-freeradius       (Up X minutes)
-# ✅ isp-netbox           (Up X minutes, healthy)
-# ✅ isp-netbox-worker    (Up X minutes)
-# ✅ isp-genieacs         (Up X minutes, healthy)
-# ✅ isp-mongodb          (Up X minutes, healthy)
-# ✅ isp-timescaledb      (Up X minutes, healthy)
-# ✅ isp-librenms         (Up X minutes)
-# ✅ isp-wireguard        (Up X minutes)
-# ✅ dotmac-postgres-1    (Up X minutes, healthy)
-# ✅ dotmac-redis-1       (Up X minutes, healthy)
+# Database connectivity
+docker exec dotmac-ftth-ops-postgres-1 \
+  psql -U dotmac_user -d dotmac -c "SELECT 1"
+
+# Service probes
+curl -I http://localhost:8000/health
+curl -I http://localhost:8052   # AWX
+curl -I http://localhost:8080   # NetBox
 ```
 
-## Quick Health Checks
-
-```bash
-# Test database connectivity
-docker exec dotmac-ftth-ops-postgres-1 psql -U dotmac_user -d awx -c "SELECT 1"
-
-# Test FreeRADIUS
-docker logs isp-freeradius | tail -20
-
-# Test AWX
-curl -I http://localhost:8052
-
-# Test NetBox
-curl -I http://localhost:8080
-```
-
-## Access Services
+## Service URLs
 
 | Service | URL | Default Credentials |
 |---------|-----|---------------------|
+| API | http://localhost:8000/docs | n/a |
+| ISP Operations App | http://localhost:3001 | seeded accounts (`make db-seed`) |
+| Platform Admin App | http://localhost:3002 | seeded accounts (`make db-seed`) |
 | AWX | http://localhost:8052 | admin / changeme_awx_admin |
 | NetBox | http://localhost:8080 | admin / admin |
-| GenieACS | http://localhost:7567 | (created on first access) |
-| LibreNMS | http://localhost:8000 | (setup wizard) |
+| GenieACS | http://localhost:7567 | generated on first visit |
+| LibreNMS | http://localhost:8000 | setup wizard |
 | MinIO | http://localhost:9001 | minioadmin / minioadmin123 |
 
-## Still Having Issues?
+## Troubleshooting
 
 ```bash
-# Check logs for specific service
-docker logs <container_name> --tail 50
+# Tail logs
+docker logs <container> --tail 50
 
-# Restart a service
-docker compose -f docker-compose.isp.yml restart <service_name>
+# Restart single service
+docker compose -f docker-compose.isp.yml restart <service>
 
-# Complete reset (WARNING: deletes all data)
-docker compose -f docker-compose.isp.yml down -v
-docker compose -f docker-compose.base.yml down -v
-# Then start from Step 1 above
+# Clean restart (DESTRUCTIVE)
+make clean-platform
+make clean-isp
+make start-platform
+make start-isp
 ```
 
-## Next Steps
-
-1. Change default passwords in `.env` file
-2. Run AWX database migrations: `docker exec -it isp-awx-web awx-manage migrate`
-3. Configure RADIUS clients in `./config/radius/clients.conf`
-4. Set up NetBox network inventory
-5. Configure GenieACS for your CPE devices
-
-See `DEPLOYMENT_GUIDE.md` for detailed documentation.
+Need more context? Start with `INFRASTRUCTURE.md`, `README-INFRASTRUCTURE.md`, the full documentation index at `docs/INDEX.md`, or the environment playbook in `docs/ENVIRONMENT_SETUP.md`.

@@ -5,7 +5,7 @@ Focuses on filling coverage gaps in audit service functionality.
 """
 
 from datetime import timezone, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, Mock
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest

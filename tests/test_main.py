@@ -1,5 +1,8 @@
 """Tests for main module."""
 
+import os
+
+os.environ.setdefault("DOTMAC_FAST_STARTUP", "1")
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -28,11 +31,15 @@ def patch_lifespan_dependencies():
         patch("dotmac.platform.main.init_redis", new_callable=AsyncMock) as mock_init_redis,
         patch("dotmac.platform.main.shutdown_redis", new_callable=AsyncMock) as mock_shutdown_redis,
         patch("dotmac.platform.main.AsyncSessionLocal") as mock_session_factory,
+        patch(
+            "dotmac.platform.main.run_startup_health_checks", new_callable=AsyncMock
+        ) as mock_run_startup_checks,
     ):
         session_cm = MagicMock()
         session_cm.__aenter__ = AsyncMock(return_value=MagicMock())
         session_cm.__aexit__ = AsyncMock(return_value=None)
         mock_session_factory.return_value = session_cm
+        mock_run_startup_checks.return_value = True
         yield {
             "isp_rbac": mock_isp_rbac,
             "billing_rbac": mock_billing_rbac,
@@ -40,6 +47,7 @@ def patch_lifespan_dependencies():
             "init_redis": mock_init_redis,
             "shutdown_redis": mock_shutdown_redis,
             "session_factory": mock_session_factory,
+            "run_startup_health_checks": mock_run_startup_checks,
         }
 
 
@@ -71,6 +79,31 @@ class TestCreateApplication:
         assert test_app.version == "2.0.0"
         assert test_app.debug is False
 
+    def test_single_tenant_shared_routes_accessible(self, monkeypatch):
+        """Ensure shared /api/v1 routes remain reachable in single-tenant deployments."""
+        from dotmac.platform.settings import Environment, settings as runtime_settings
+
+        monkeypatch.setattr(runtime_settings, "DEPLOYMENT_MODE", "single_tenant", raising=False)
+        monkeypatch.setattr(runtime_settings, "environment", Environment.DEVELOPMENT)
+
+        with patch("dotmac.platform.main.HealthChecker") as mock_checker:
+            mock_instance = mock_checker.return_value
+            mock_instance.run_all_checks.return_value = (True, [])
+
+            app = create_application()
+
+        api_route = next(
+            (
+                route
+                for route in app.routes
+                if getattr(route, "path", None) == "/api/v1/health"
+                and "GET" in getattr(route, "methods", set())
+            ),
+            None,
+        )
+
+        assert api_route is not None
+
 
 class TestLifespan:
     """Test lifespan context manager."""
@@ -93,6 +126,11 @@ class TestLifespan:
         """Test lifespan startup sequence."""
         mock_settings.environment = "development"
         mock_settings.is_production = False
+        call_order: list[str] = []
+        mock_load_secrets.side_effect = lambda: call_order.append("load_secrets")
+        mock_settings.validate_production_security = MagicMock(
+            side_effect=lambda: call_order.append("validate_security")
+        )
         # Mock HealthChecker
         mock_checker_instance = MagicMock()
         mock_checker_instance.run_all_checks.return_value = (True, [])
@@ -107,6 +145,8 @@ class TestLifespan:
             mock_init_db.assert_called_once()
             mock_setup_telemetry.assert_called_once_with(test_app)
 
+        assert call_order[:2] == ["load_secrets", "validate_security"]
+
         # Verify print statements
         print_calls = [str(call) for call in mock_print.call_args_list]
         assert any("DotMac Platform Services starting" in str(call) for call in print_calls)
@@ -115,10 +155,11 @@ class TestLifespan:
         assert any("Shutting down" in str(call) for call in print_calls)
 
     @patch("dotmac.platform.main.HealthChecker")
+    @patch("dotmac.platform.main.load_secrets_from_vault_sync")
     @patch("dotmac.platform.main.settings")
     @patch("builtins.print")
     async def test_lifespan_startup_deps_failed_production(
-        self, mock_print, mock_settings, mock_health_checker
+        self, mock_print, mock_settings, mock_load_secrets, mock_health_checker
     ):
         """Test lifespan when dependencies fail in production."""
         mock_settings.environment = "production"
@@ -140,6 +181,8 @@ class TestLifespan:
         with pytest.raises(RuntimeError, match="Required services unavailable"):
             async with lifespan(test_app):
                 pass
+
+        mock_load_secrets.assert_called_once()
 
     @patch("dotmac.platform.main.HealthChecker")
     @patch("dotmac.platform.main.load_secrets_from_vault_sync")

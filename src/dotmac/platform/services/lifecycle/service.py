@@ -1339,13 +1339,16 @@ class LifecycleOrchestrationService:
         # Get service type prefix
         type_prefix = service_type.value[:4].upper()
 
+        # Random segment keeps identifiers globally unique across tenants
+        unique_segment = uuid4().hex[:6].upper()
+
         # Get count for this tenant
         result = await self.session.execute(
             select(func.count(ServiceInstance.id)).where(ServiceInstance.tenant_id == tenant_id)
         )
         count = result.scalar_one() + 1
 
-        return f"SVC-{type_prefix}-{count:06d}"
+        return f"SVC-{type_prefix}-{unique_segment}-{count:06d}"
 
     def _get_provisioning_steps_count(self, service_type: ServiceType) -> int:
         """Get number of provisioning steps for service type."""

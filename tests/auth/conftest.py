@@ -64,6 +64,15 @@ async def clean_rbac_tables(async_db_engine):
         Permission,
         Role,
     )
+    from dotmac.platform.user_management.models import (
+        BackupCode,
+        EmailVerificationToken,
+        ProfileChangeHistory,
+        Team,
+        TeamMember,
+        User,
+        UserDevice,
+    )
 
     SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
     async with SessionMaker() as cleanup_session:
@@ -78,6 +87,15 @@ async def clean_rbac_tables(async_db_engine):
             # Fixtures will recreate what they need for each test
             await cleanup_session.execute(delete(Permission))
             await cleanup_session.execute(delete(Role))
+
+            # Clean user-related tables to prevent UNIQUE constraint conflicts
+            await cleanup_session.execute(delete(UserDevice))
+            await cleanup_session.execute(delete(TeamMember))
+            await cleanup_session.execute(delete(Team))
+            await cleanup_session.execute(delete(ProfileChangeHistory))
+            await cleanup_session.execute(delete(EmailVerificationToken))
+            await cleanup_session.execute(delete(BackupCode))
+            await cleanup_session.execute(delete(User))
 
             await cleanup_session.commit()
 

@@ -8,10 +8,13 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
+import pytest_asyncio
+
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.models import PaymentMethodType, PaymentStatus
 from dotmac.platform.billing.payments.router import router
@@ -221,3 +224,14 @@ class TestGetFailedPayments:
 
         # Should fail without authentication
         assert response.status_code in [401, 422]  # Unauthorized or validation error
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_payment_tables(async_db_session: AsyncSession):
+    """Ensure payment table starts empty for each test."""
+    await async_db_session.execute(delete(PaymentEntity))
+    await async_db_session.commit()
+    yield
+    try:
+        await async_db_session.execute(delete(PaymentEntity))
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()

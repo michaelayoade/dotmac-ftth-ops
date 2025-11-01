@@ -13,9 +13,12 @@ Usage:
     # Mock a session with specific query behavior
     mock_session = create_mock_async_session(execute_return=mock_result)
 """
-
+from collections.abc import Callable, Iterable
+import hashlib
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
+
+import pytest
 
 
 def create_mock_async_result(data: list[Any] | None = None) -> MagicMock:
@@ -136,6 +139,10 @@ def create_mock_scalar_result(value: Any = None) -> MagicMock:
     return mock_result
 
 
+QueryMatcher = Callable[[Any], bool]
+SchemaValidator = Callable[[Any], None]
+
+
 class MockAsyncSessionFactory:
     """
     Factory for creating mock sessions with pre-configured query responses.
@@ -157,24 +164,53 @@ class MockAsyncSessionFactory:
     """
 
     def __init__(self):
-        self.query_responses: dict[str, Any] = {}
+        self.query_responses: dict[str, tuple[Any, SchemaValidator | None]] = {}
+        self.matcher_responses: list[tuple[QueryMatcher, Any, SchemaValidator | None]] = []
         self.default_response = create_mock_async_result([])
 
-    def add_query_result(self, query_matcher: str, result_data: Any) -> None:
-        """Add a query response mapping."""
-        self.query_responses[str(query_matcher)] = result_data
+    def add_query_result(
+        self,
+        query_matcher: Any,
+        result_data: Any,
+        *,
+        model: type[Any] | None = None,
+        validator: SchemaValidator | None = None,
+    ) -> None:
+        """
+        Add a query response mapping.
+
+        Args:
+            query_matcher: Query object or callable used to match execute() calls.
+            result_data: Data to feed into mocked results.
+            model: Optional SQLAlchemy model to validate the mocked data against.
+            validator: Optional custom callable to validate mocked data.
+        """
+        schema_validator = _resolve_validator(model, validator)
+        _run_validator(result_data, schema_validator)
+
+        if callable(query_matcher) and not isinstance(query_matcher, str):
+            self.matcher_responses.append((query_matcher, result_data, schema_validator))
+            return
+
+        signature = _signature_for_query(query_matcher)
+        self.query_responses[signature] = (result_data, schema_validator)
 
     def create_session(self) -> AsyncMock:
         """Create a session with configured responses."""
         mock_session = AsyncMock()
 
         async def execute_side_effect(query):
-            query_str = str(query)
-            for matcher, data in self.query_responses.items():
-                if matcher in query_str:
-                    if isinstance(data, (int, float, str)):
-                        return create_mock_scalar_result(data)
-                    return create_mock_async_result(data)
+            for matcher, data, validator in self.matcher_responses:
+                if matcher(query):
+                    _run_validator(data, validator)
+                    return _coerce_result(data)
+
+            signature = _signature_for_query(query)
+            if signature in self.query_responses:
+                data, validator = self.query_responses[signature]
+                _run_validator(data, validator)
+                return _coerce_result(data)
+
             return self.default_response
 
         mock_session.execute = AsyncMock(side_effect=execute_side_effect)
@@ -187,10 +223,6 @@ class MockAsyncSessionFactory:
         mock_session.close = AsyncMock()
 
         return mock_session
-
-
-# Pytest fixtures for common use
-import pytest  # noqa: E402
 
 
 @pytest.fixture
@@ -209,3 +241,91 @@ def mock_empty_result():
 def async_session_factory():
     """Fixture providing a session factory for complex mocking."""
     return MockAsyncSessionFactory()
+
+
+def _signature_for_query(query: Any) -> str:
+    """
+    Generate a stable hash for a SQLAlchemy query-like object or string matcher.
+    Falls back to the string representation when cache_key is unavailable.
+    """
+    if isinstance(query, str):
+        raw = query
+    else:
+        cache_key = getattr(query, "cache_key", None)
+        if cache_key:
+            raw = repr(cache_key)
+        else:
+            raw = str(query)
+    return hashlib.sha1(raw.encode("utf-8")).hexdigest()
+
+
+def _coerce_result(data: Any) -> MagicMock:
+    if isinstance(data, (int, float, str)):
+        return create_mock_scalar_result(data)
+
+    if isinstance(data, MagicMock):
+        return data
+
+    return create_mock_async_result(data)
+
+
+def _resolve_validator(
+    model: type[Any] | None, validator: SchemaValidator | None
+) -> SchemaValidator | None:
+    if model and validator:
+        raise ValueError("Provide either model or validator, not both.")
+
+    if validator:
+        return validator
+
+    if model:
+        return lambda data: validate_result_against_model(data, model)
+
+    return None
+
+
+def _run_validator(data: Any, validator: SchemaValidator | None) -> None:
+    if validator is None:
+        return
+    validator(data)
+
+
+def validate_result_against_model(result_data: Any, model: type[Any]) -> None:
+    """
+    Ensure mocked result data satisfies the given SQLAlchemy model schema.
+
+    Args:
+        result_data: List or single entity returned by the mock.
+        model: SQLAlchemy declarative model class.
+
+    Raises:
+        ValueError: If required attributes are missing from provided data.
+    """
+    try:
+        from sqlalchemy.inspection import inspect as sa_inspect
+    except ModuleNotFoundError as exc:
+        raise RuntimeError(
+            "SQLAlchemy must be installed to validate mocked data against a model."
+        ) from exc
+
+    mapper = sa_inspect(model)
+    expected_columns = {column.key for column in mapper.column_attrs}
+
+    items: Iterable[Any]
+    if isinstance(result_data, Iterable) and not isinstance(result_data, (str, bytes)):
+        items = result_data
+    else:
+        items = [result_data]
+
+    for item in items:
+        if item is None:
+            continue
+        if isinstance(item, dict):
+            missing = expected_columns - set(item.keys())
+        else:
+            missing = {column for column in expected_columns if not hasattr(item, column)}
+
+        if missing:
+            raise ValueError(
+                f"Mocked data is missing attributes {sorted(missing)} required by {model.__name__}"
+            )

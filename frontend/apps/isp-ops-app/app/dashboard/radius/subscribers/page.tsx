@@ -280,7 +280,7 @@ export default function RADIUSSubscribersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <Link
-                            href={`/dashboard/radius/subscribers/${subscriber.username}`}
+                            href={`/dashboard/radius/subscribers/${encodeURIComponent(subscriber.username)}/edit`}
                           >
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />

@@ -18,8 +18,15 @@ pytestmark = pytest.mark.integration
 class FakeWireGuardClient:
     """Minimal WireGuard client stub for tests."""
 
+    def __init__(self) -> None:
+        self.last_generated: tuple[str, str] | None = None
+
     async def generate_keypair(self):
-        return "priv-key", "pub-key"
+        unique_suffix = uuid.uuid4().hex
+        private_key = f"priv-key-{unique_suffix}"
+        public_key = f"pub-key-{unique_suffix}"
+        self.last_generated = (private_key, public_key)
+        return private_key, public_key
 
 
 class FakeVaultClient:
@@ -56,10 +63,12 @@ async def test_create_server_with_encryption_fallback(async_db_session):
     )
 
     assert isinstance(server, WireGuardServer)
-    assert server.public_key == "pub-key"
+    assert service.client.last_generated is not None
+    priv_key, pub_key = service.client.last_generated
+    assert server.public_key == pub_key
     assert server.private_key_encrypted
     # Encrypted data should not match the raw private key
-    assert server.private_key_encrypted != "priv-key"
+    assert server.private_key_encrypted != priv_key
 
 
 @pytest.mark.asyncio
@@ -84,7 +93,9 @@ async def test_create_server_with_vault_storage(async_db_session):
     assert len(vault.stored) == 1
     stored_path, stored_value = next(iter(vault.stored.items()))
     assert stored_path in server.private_key_encrypted
-    assert stored_value["private_key"] == "priv-key"
+    assert service.client.last_generated is not None
+    priv_key, _ = service.client.last_generated
+    assert stored_value["private_key"] == priv_key
 
 
 @pytest.mark.asyncio

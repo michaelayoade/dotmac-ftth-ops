@@ -289,16 +289,20 @@ class TestPerformanceBenchmark:
         """Test benchmark cancellation."""
 
         class SlowBenchmark(MockBenchmark):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._blocker = asyncio.Event()
+
             async def execute(self):
                 self.execute_called = True
-                await asyncio.sleep(10)  # Long operation
+                await self._blocker.wait()  # Block until cancelled
                 return self.execution_data
 
         benchmark = SlowBenchmark("Slow Benchmark")
 
         # Start benchmark and cancel it
         task = asyncio.create_task(benchmark.run())
-        await asyncio.sleep(0.1)  # Let it start
+        await asyncio.sleep(0.01)  # Let it start
         task.cancel()
 
         try:
@@ -483,8 +487,12 @@ class TestBenchmarkSuite:
         suite = BenchmarkSuite(suite_config)
 
         class SlowBenchmark(MockBenchmark):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._blocker = asyncio.Event()
+
             async def execute(self):
-                await asyncio.sleep(5)  # Longer than timeout
+                await self._blocker.wait()  # Block until suite timeout triggers
                 return self.execution_data
 
         suite.add_benchmark(SlowBenchmark("Slow Benchmark"))
@@ -598,14 +606,14 @@ class TestBenchmarkManager:
 
         class SlowBenchmark(MockBenchmark):
             async def execute(self):
-                await asyncio.sleep(0.5)
+                await asyncio.sleep(0.05)
                 return self.execution_data
 
         benchmark = SlowBenchmark("Slow Benchmark")
 
         # Start benchmark without awaiting
         task = asyncio.create_task(benchmark_manager.run_benchmark(benchmark))
-        await asyncio.sleep(0.1)  # Let it start
+        await asyncio.sleep(0.02)  # Let it start
 
         # Should have active benchmark
         active = benchmark_manager.get_active_benchmarks()
@@ -623,15 +631,19 @@ class TestBenchmarkManager:
         """Test cancelling active benchmarks."""
 
         class SlowBenchmark(MockBenchmark):
+            def __init__(self, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+                self._blocker = asyncio.Event()
+
             async def execute(self):
-                await asyncio.sleep(5)
+                await self._blocker.wait()
                 return self.execution_data
 
         benchmark = SlowBenchmark("Cancellable Benchmark")
 
         # Start benchmark
         task = asyncio.create_task(benchmark_manager.run_benchmark(benchmark))
-        await asyncio.sleep(0.1)  # Let it start
+        await asyncio.sleep(0.02)  # Let it start
 
         # Get task ID and cancel
         active = benchmark_manager.get_active_benchmarks()

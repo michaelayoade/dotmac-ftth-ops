@@ -11,9 +11,8 @@ import pytest
 from fastapi import HTTPException
 
 from dotmac.platform.customer_management.models import (
-
-
     ActivityType,
+    Customer,
     CustomerActivity,
     CustomerNote,
     CustomerSegment,
@@ -51,12 +50,45 @@ from dotmac.platform.customer_management.schemas import (
     CustomerUpdate,
 )
 from dotmac.platform.customer_management.service import CustomerService
+from tests.customer_management.conftest import _build_customer_kwargs
 
 
 
 pytestmark = pytest.mark.integration
 
 # Fixtures are now in conftest.py
+
+
+@pytest.fixture
+def sample_customer():
+    """Deterministic customer fixture for router tests."""
+    overrides = {
+        "customer_number": "CUST-001",
+        "email": "customer@example.com",
+        "first_name": "John",
+        "middle_name": "Quincy",
+        "last_name": "Doe",
+        "display_name": "John Q. Doe",
+        "metadata_": {"loyalty_level": "gold", "segment": "enterprise"},
+        "custom_fields": {"account_manager": "Alice Smith", "csat": 9.8},
+        "tags": ["vip", "fiber"],
+    }
+    return Customer(**_build_customer_kwargs(index=1, overrides=overrides))
+
+
+@pytest.fixture
+def sample_customers():
+    """Deterministic customer list for router tests."""
+    customers = []
+    for idx in range(1, 4):
+        overrides = {
+            "customer_number": f"CUST-{idx:03d}",
+            "email": f"customer{idx}@example.com",
+            "first_name": f"Customer{idx}",
+            "display_name": f"Customer{idx} Example",
+        }
+        customers.append(Customer(**_build_customer_kwargs(index=idx, overrides=overrides)))
+    return customers
 
 
 

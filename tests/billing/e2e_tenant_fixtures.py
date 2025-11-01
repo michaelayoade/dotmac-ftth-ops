@@ -253,13 +253,6 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
         )
         payments.append(payment)
         async_session.add(payment)
-        async_session.add(
-            PaymentInvoiceEntity(
-                payment_id=payment.payment_id,
-                invoice_id=target_invoice.invoice_id,
-                amount_applied=payment.amount,
-            )
-        )
 
     # 3. Pending/Processing payments (3)
     for i in range(3):
@@ -285,13 +278,6 @@ async def tenant_portal_billing_data(async_session: AsyncSession):
         )
         payments.append(payment)
         async_session.add(payment)
-        async_session.add(
-            PaymentInvoiceEntity(
-                payment_id=payment.payment_id,
-                invoice_id=target_invoice.invoice_id,
-                amount_applied=payment.amount,
-            )
-        )
 
     # 4. Recent successful payments (4)
     for i in range(4):

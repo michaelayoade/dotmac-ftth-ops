@@ -1,25 +1,29 @@
 """Database fixtures for tests - provides real async database sessions."""
 
 import asyncio
+import logging
 import os
 from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 import pytest
 import pytest_asyncio
-from typing import AsyncIterator
 
 try:
     import sqlalchemy as sa
+    from dotmac.platform.db import Base
     from sqlalchemy import event
+    from sqlalchemy.orm import Session, sessionmaker
     from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
     from sqlalchemy.pool import StaticPool
-    from dotmac.platform.db import Base
-    from alembic.config import Config
-    from alembic import command
+
     HAS_SQLALCHEMY = True
 except ImportError:
     AsyncSession = object  # Fallback type
     HAS_SQLALCHEMY = False
+
+
+logger = logging.getLogger(__name__)
 
 
 if HAS_SQLALCHEMY:
@@ -30,12 +34,18 @@ if HAS_SQLALCHEMY:
         """Create test database engine with synchronous setup.
 
         Session-scoped to avoid recreating schema for every test.
-        Uses Alembic migrations to create schema (not Base.metadata.create_all).
-        This ensures enums have correct lowercase values matching Python code.
-        Test isolation is achieved through nested transactions in async_db_session.
+        PostgreSQL databases must be migrated ahead of time with Alembic.
+        SQLite test databases fall back to creating schema from metadata.
+        Test isolation is achieved through nested transactions in async sessions.
         """
-        # Use configured test database URL or default to in-memory
-        db_url = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+        default_file_db = os.path.join(
+            os.environ.get("PYTEST_TMPDIR", os.getcwd()),
+            "test_db.sqlite",
+        )
+        db_url = os.environ.get(
+            "DOTMAC_DATABASE_URL_ASYNC",
+            f"sqlite+aiosqlite:///{default_file_db}",
+        )
 
         metadata_base = Base
         if HAS_DATABASE_BASE:
@@ -48,52 +58,48 @@ if HAS_SQLALCHEMY:
             echo=False,
         )
 
-        # For PostgreSQL: Skip schema creation - assume database is already migrated
-        # For SQLite in-memory: Create schema using migrations or metadata
         if "postgresql" in db_url:
-            # PostgreSQL database should already be migrated via `alembic upgrade head`
-            # Just verify connection works
+
             async def verify_connection():
                 async with engine.begin() as conn:
                     await conn.execute(sa.text("SELECT 1"))
 
             try:
                 asyncio.run(verify_connection())
-            except Exception as e:
-                print(f"PostgreSQL connection failed: {e}")
+            except Exception:  # pragma: no cover - diagnostic path
+                logger.exception("PostgreSQL connection failed")
                 raise
         else:
-            # SQLite in-memory: Create schema using Base.metadata
+
             async def create_tables():
                 async with engine.begin() as conn:
                     await conn.run_sync(metadata_base.metadata.create_all)
 
-            asyncio.run(create_tables())
+            try:
+                asyncio.run(create_tables())
+            except Exception:  # pragma: no cover - diagnostic path
+                logger.exception("Failed to initialize SQLite schema for tests")
+                raise
 
         yield engine
 
-        # Cleanup once at session end (synchronously)
         async def drop_tables():
             is_postgres = "postgresql" in db_url
             try:
                 async with engine.begin() as conn:
                     if not is_postgres:
                         await conn.run_sync(metadata_base.metadata.drop_all, checkfirst=False)
-            except Exception:
-                # Ignore errors during cleanup (may not matter if session is ending)
-                pass
+            except Exception:  # pragma: no cover - diagnostic path
+                logger.warning("Errors encountered while cleaning up test database", exc_info=True)
             finally:
                 await engine.dispose()
 
         asyncio.run(drop_tables())
 
-
-    # Backward compatibility alias
     @pytest.fixture(scope="session")
     def async_db_engine(async_db_engine_sync):
         """Backward compatibility alias for async_db_engine_sync."""
         return async_db_engine_sync
-
 
     @asynccontextmanager
     async def _session_scope(engine):
@@ -106,65 +112,82 @@ if HAS_SQLALCHEMY:
                 expire_on_commit=False,
                 autoflush=False,
             )
+
             async with session_factory() as session:
-                nested = None
                 restart_listener = None
                 try:
-                    nested = await connection.begin_nested()
-                except Exception:
-                    nested = None
-
-                if nested is not None:
-
+                    await session.begin_nested()
+                    @event.listens_for(session.sync_session, "after_transaction_end")
                     def restart_savepoint(sess, transaction):
                         if transaction.nested and not transaction._parent.nested:
                             connection.sync_connection.begin_nested()
 
                     restart_listener = restart_savepoint
-                    event.listen(session.sync_session, "after_transaction_end", restart_savepoint)
+                except Exception:  # pragma: no cover - database may not support nested tx
+                    logger.debug("Nested transactions unavailable; proceeding without savepoints.")
 
                 try:
                     yield session
                 finally:
-                    if nested is not None and restart_listener is not None:
+                    if restart_listener is not None:
                         event.remove(session.sync_session, "after_transaction_end", restart_listener)
-                        try:
-                            if nested.is_active:
-                                await nested.rollback()
-                        except Exception:
-                            pass
-                    else:
-                        # Nested transactions unsupported; ensure session rolls back any active tx
-                        try:
-                            if session.in_transaction():
-                                await session.rollback()
-                        except Exception:
-                            pass
+
+                    try:
+                        await session.rollback()
+                    except Exception:  # pragma: no cover - diagnostic path
+                        logger.warning("Error rolling back async session in test fixture", exc_info=True)
 
                     try:
                         if trans.is_active:
                             await trans.rollback()
-                    except Exception:
-                        pass
-
-                    await asyncio.sleep(0)
-
+                    except Exception:  # pragma: no cover - diagnostic path
+                        logger.warning("Error rolling back connection transaction in test fixture", exc_info=True)
 
     @pytest_asyncio.fixture
-    async def async_session(async_db_engine_sync):
+    async def async_session(async_db_engine_sync) -> AsyncIterator[AsyncSession]:
         """Create async database session for tests."""
         async with _session_scope(async_db_engine_sync) as session:
             yield session
 
+    @pytest_asyncio.fixture(name="async_db_session")
+    async def async_db_session_fixture(async_session: AsyncSession) -> AsyncIterator[AsyncSession]:
+        """Backward compatibility alias for async_session fixture."""
+        yield async_session
 
-    @pytest_asyncio.fixture
-    async def async_db_session(async_db_engine_sync) -> AsyncIterator[AsyncSession]:
-        """Async database session with transaction isolation."""
-        async with _session_scope(async_db_engine_sync) as session:
+    @pytest.fixture
+    def db_session(pytestconfig) -> Session:
+        """Provide a synchronous SQLAlchemy session for legacy tests."""
+        db_url = getattr(pytestconfig, "db_url_sync", os.environ.get("DOTMAC_DATABASE_URL", "sqlite:///:memory:"))
+
+        metadata_base = Base
+        if HAS_DATABASE_BASE:
+            metadata_base = _import_base_and_models()
+
+        engine = sa.create_engine(
+            db_url,
+            connect_args={"check_same_thread": False} if "sqlite" in db_url else {},
+            poolclass=StaticPool if "sqlite" in db_url else None,
+            future=True,
+        )
+
+        created_schema = False
+        if "sqlite" in db_url:
+            metadata_base.metadata.create_all(engine)
+            created_schema = True
+
+        SessionLocal = sessionmaker(bind=engine, expire_on_commit=False, autoflush=False, future=True)
+        session = SessionLocal()
+
+        try:
             yield session
-
+        finally:
+            try:
+                session.close()
+            finally:
+                if created_schema:
+                    metadata_base.metadata.drop_all(engine, checkfirst=False)
+                engine.dispose()
 
     __all__ = ["async_db_engine_sync", "async_db_engine", "async_session", "async_db_session"]
 else:
-    # Fallback when SQLAlchemy not available
     __all__ = []

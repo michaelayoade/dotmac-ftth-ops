@@ -78,7 +78,7 @@ def sample_workflow_execution():
         "completed_at": "2025-01-01T12:10:00",
         "trigger_type": "manual",
         "trigger_source": "api",
-        "tenant_id": 1,
+        "tenant_id": "00000000-0000-0000-0000-0000000000aa",
         "created_at": "2025-01-01T12:05:00",
         "updated_at": "2025-01-01T12:10:00",
         "steps": [],

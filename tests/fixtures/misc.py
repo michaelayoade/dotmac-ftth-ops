@@ -2,11 +2,53 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict
+import copy
+import logging
+import threading
+from collections.abc import Mapping, Sequence
+from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable
 
 import pytest
 
 from tests.fixtures.environment import HAS_FASTAPI, HAS_FAKEREDIS, HAS_SQLALCHEMY
+
+logger = logging.getLogger(__name__)
+CONFIG_LOCK = threading.RLock()
+
+DEFAULT_TEST_USER_PERMISSIONS: Sequence[str] = (
+    "read",
+    "write",
+    "admin",
+    "access:read",
+    "access:write",
+    "billing:read",
+    "billing:write",
+    "billing:subscriptions:read",
+    "billing:subscriptions:write",
+    "billing:invoices:read",
+    "billing:invoices:write",
+    "billing:payments:read",
+    "billing:payments:write",
+    "customer:read",
+    "customer:write",
+)
+
+if TYPE_CHECKING:
+    from dotmac.platform.auth.core import UserInfo
+
+
+def _clone_platform_config(config: Any) -> Any:
+    """Attempt to copy platform config so tests can mutate safely."""
+    try:
+        clone = copy.deepcopy(config)
+    except Exception:
+        logger.debug("Deep copy of platform config failed; attempting shallow copy.", exc_info=True)
+        try:
+            clone = copy.copy(config)
+        except Exception:
+            logger.debug("Shallow copy of platform config failed; falling back to shared instance.", exc_info=True)
+            clone = config
+    return clone
 
 
 @pytest.fixture
@@ -78,37 +120,39 @@ def configure_celery_for_tests():
 
 
 @pytest.fixture
-def test_user():
-    """Create a privileged tenant user for API authentication."""
+def test_user_factory() -> Callable[..., "UserInfo"]:
+    """Factory for creating configurable tenant users for API authentication."""
     from uuid import uuid4
 
     from dotmac.platform.auth.core import UserInfo
 
-    return UserInfo(
-        user_id=str(uuid4()),
-        tenant_id=f"test_tenant_{uuid4()}",
-        email="test@example.com",
-        is_platform_admin=True,
-        username="testuser",
-        roles=["admin"],
-        permissions=[
-            "read",
-            "write",
-            "admin",
-            "access:read",
-            "access:write",
-            "billing:read",
-            "billing:write",
-            "billing:subscriptions:read",
-            "billing:subscriptions:write",
-            "billing:invoices:read",
-            "billing:invoices:write",
-            "billing:payments:read",
-            "billing:payments:write",
-            "customer:read",
-            "customer:write",
-        ],
-    )
+    def factory(
+        *,
+        user_id: str | None = None,
+        tenant_id: str | None = None,
+        email: str = "test@example.com",
+        is_platform_admin: bool = True,
+        username: str = "testuser",
+        roles: Iterable[str] | None = None,
+        permissions: Iterable[str] | None = None,
+    ) -> UserInfo:
+        return UserInfo(
+            user_id=user_id or str(uuid4()),
+            tenant_id=tenant_id or f"test_tenant_{uuid4()}",
+            email=email,
+            is_platform_admin=is_platform_admin,
+            username=username,
+            roles=list(roles) if roles is not None else ["admin"],
+            permissions=list(permissions) if permissions is not None else list(DEFAULT_TEST_USER_PERMISSIONS),
+        )
+
+    return factory
+
+
+@pytest.fixture
+def test_user(test_user_factory) -> "UserInfo":
+    """Create a privileged tenant user for API authentication."""
+    return test_user_factory()
 
 
 @pytest.fixture
@@ -142,13 +186,17 @@ def authenticated_client_with_tenant(test_app, test_user):
             self._tenant_id = tenant_id
 
         def _with_header(self, kwargs: dict) -> dict:
-            headers = kwargs.get("headers") or {}
-            if isinstance(headers, dict):
+            headers = kwargs.get("headers")
+            if headers is None:
+                kwargs["headers"] = {"X-Tenant-ID": self._tenant_id}
+            elif isinstance(headers, Mapping):
                 updated = dict(headers)
+                updated["X-Tenant-ID"] = self._tenant_id
+                kwargs["headers"] = updated
             else:
-                updated = dict(headers)
-            updated["X-Tenant-ID"] = self._tenant_id
-            kwargs["headers"] = updated
+                header_items = list(headers)
+                header_items.append(("X-Tenant-ID", self._tenant_id))
+                kwargs["headers"] = header_items
             return kwargs
 
         def get(self, *args, **kwargs):
@@ -190,8 +238,13 @@ try:
     )
 
     HAS_FAKES = True
-except ImportError:
+except ImportError as exc:
     HAS_FAKES = False
+    logger.warning(
+        "tests.helpers.fakes unavailable; fake service fixtures disabled. (%s)",
+        exc,
+        exc_info=True,
+    )
 
 
 if HAS_FAKES:
@@ -222,14 +275,25 @@ def reset_platform_config():
     """Ensure global platform config is restored between tests."""
     import dotmac.platform as platform_module
 
-    original_config = platform_module.config
-    yield
+    with CONFIG_LOCK:
+        original_config = platform_module.config
+        cloned_config = _clone_platform_config(platform_module.config)
+        if cloned_config is original_config:
+            logger.warning(
+                "Platform config fixture is reusing the global config instance; "
+                "mutations may leak between tests."
+            )
+        platform_module.config = cloned_config
 
-    platform_module.config = original_config
-    if not hasattr(platform_module.config, "get"):
-        from dotmac.platform import PlatformConfig
+    try:
+        yield
+    finally:
+        with CONFIG_LOCK:
+            platform_module.config = original_config
+            if not hasattr(platform_module.config, "get"):
+                from dotmac.platform import PlatformConfig
 
-        platform_module.config = PlatformConfig()
+                platform_module.config = PlatformConfig()
 
 
 __all__ = [
@@ -239,6 +303,7 @@ __all__ = [
     "configure_celery_for_tests",
     "reset_platform_config",
     "test_user",
+    "test_user_factory",
 ]
 
 if HAS_FAKES:

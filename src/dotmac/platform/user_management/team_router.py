@@ -283,32 +283,22 @@ async def update_team_member(
 
     Requires: team.manage_members permission
     """
-    try:
-        member = await team_service.update_team_member(
-            member_id, member_data, current_user.tenant_id
-        )
+    member = await team_service.update_team_member(member_id, member_data, current_user.tenant_id)
 
-        # Verify member belongs to the specified team
-        if str(member.team_id) != str(team_id):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Member does not belong to specified team",
-            )
-
-        return TeamMember.model_validate(member)
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception as e:
-        logger.error(
-            "Failed to update team member",
-            error=str(e),
+    if str(member.team_id) != str(team_id):
+        logger.warning(
+            "Team member belongs to different team",
             member_id=str(member_id),
+            expected_team_id=str(team_id),
+            actual_team_id=str(member.team_id),
             tenant_id=current_user.tenant_id,
         )
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update team member",
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Member does not belong to specified team",
         )
+
+    return TeamMember.model_validate(member)
 
 
 @router.delete("/{team_id}/members/{member_id}", status_code=status.HTTP_204_NO_CONTENT)

@@ -67,7 +67,7 @@ class WorkflowExecuteRequest(BaseModel):
     context: dict[str, Any] = Field(default_factory=dict, description="Input context")
     trigger_type: str = Field(default="manual", description="Trigger type")
     trigger_source: str | None = Field(None, description="Trigger source")
-    tenant_id: int | None = Field(None, description="Tenant ID")
+    tenant_id: str | None = Field(None, description="Tenant ID")
 
 
 class WorkflowStepResponse(BaseModel):
@@ -107,7 +107,7 @@ class WorkflowExecutionResponse(BaseModel):
     completed_at: datetime | None
     trigger_type: str | None
     trigger_source: str | None
-    tenant_id: int | None
+    tenant_id: str | None
     created_at: datetime
     updated_at: datetime
     steps: list[WorkflowStepResponse] | None = None

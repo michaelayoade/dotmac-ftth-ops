@@ -464,7 +464,8 @@ dotmac-ftth-ops/
 - **API Documentation**: http://localhost:8000/docs (when running)
 - **GraphQL Playground**: http://localhost:8000/api/v1/graphql
 - **Quick Start**: `QUICK_START.md`
-- **Deployment Guide**: `DEPLOYMENT_GUIDE.md`
+- **Deployment Checklist**: `docs/DEPLOYMENT_CHECKLIST_SUBSCRIBER_FK.md`
+- **Documentation Index**: `docs/INDEX.md`
 
 ## Production Considerations
 
@@ -479,4 +480,4 @@ Before deploying to production:
 7. **Review security settings** in all services
 8. **Use production compose files** (not dev configs)
 
-For production deployment, see `DEPLOYMENT_GUIDE.md`.
+For production deployment, coordinate with the infrastructure team and review `deployment/systemd/` alongside the runbooks referenced in `docs/INDEX.md`.

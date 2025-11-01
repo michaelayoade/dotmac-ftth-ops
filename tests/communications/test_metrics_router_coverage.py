@@ -10,6 +10,8 @@ from unittest.mock import Mock
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 pytestmark = pytest.mark.integration
@@ -27,6 +29,19 @@ from dotmac.platform.communications.models import (
     CommunicationStatus,
     CommunicationType,
 )
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_communication_logs(async_db_session: AsyncSession):
+    """Ensure communication logs table is cleared between tests."""
+    await async_db_session.execute(delete(CommunicationLog))
+    await async_db_session.commit()
+    yield
+    try:
+        await async_db_session.execute(delete(CommunicationLog))
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()
 
 
 class TestGetCommunicationStatsCached:

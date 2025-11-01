@@ -59,7 +59,7 @@ class InvoiceConfig(BaseModel):
     model_config = ConfigDict()
 
     number_format: str = Field(
-        "INV-{year}-{sequence:06d}",
+        "INV-{tenant_suffix}-{year}-{sequence:06d}",
         description="Invoice number format template",
     )
     due_days_default: int = Field(30, description="Default payment terms in days")
@@ -129,7 +129,7 @@ def _default_currency_config() -> CurrencyConfig:
 def _default_invoice_config() -> InvoiceConfig:
     """Create default InvoiceConfig instance"""
     return InvoiceConfig(
-        number_format="INV-{year}-{sequence:06d}",
+        number_format="INV-{tenant_suffix}-{year}-{sequence:06d}",
         due_days_default=30,
         auto_finalize=False,
         overdue_check_hours=24,
@@ -225,7 +225,9 @@ class BillingConfig(BaseModel):
 
         # Invoice configuration
         invoice_config = InvoiceConfig(
-            number_format=os.getenv("INVOICE_NUMBER_FORMAT", "INV-{year}-{sequence:06d}"),
+            number_format=os.getenv(
+                "INVOICE_NUMBER_FORMAT", "INV-{tenant_suffix}-{year}-{sequence:06d}"
+            ),
             due_days_default=int(os.getenv("INVOICE_DUE_DAYS", "30")),
             auto_finalize=os.getenv("INVOICE_AUTO_FINALIZE", "false").lower() == "true",
             overdue_check_hours=int(os.getenv("OVERDUE_CHECK_HOURS", "24")),

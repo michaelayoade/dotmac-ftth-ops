@@ -1,107 +1,201 @@
-# RADIUS Dictionary Files
+# FreeRADIUS Configuration Files
 
-This directory contains minimal RADIUS dictionary files required for the dotmac FTTH platform's CoA/DM (Change of Authorization / Disconnect Messages) functionality.
+## Security Model
 
-## Files
+### Production Configuration
 
-### dictionary
-Core RADIUS attribute definitions from RFC 2865 and RFC 2866. Contains:
-- User identification attributes (User-Name, NAS-IP-Address, etc.)
-- Service parameters (Service-Type, Framed-Protocol, etc.)
-- Accounting attributes (Acct-Session-Id, Acct-Status-Type, etc.)
-- Common value mappings
+**Files committed to Git:**
+- `radiusd.conf` - Server settings (NO secrets)
+- `clients.conf` - NAS client template (secrets via environment variables)
+- `authorize` - EMPTY or SQL fallback only (NO test users)
+- `dictionary*` - RADIUS attribute definitions
 
-### dictionary.rfc5176
-RFC 5176 extensions for dynamic authorization. Contains:
-- CoA packet types (CoA-Request, CoA-ACK, CoA-NAK)
-- Disconnect packet types (Disconnect-Request, Disconnect-ACK, Disconnect-NAK)
-- Error-Cause attribute and values
-- Usage examples
+**Secrets managed separately:**
+- NAS shared secrets → HashiCorp Vault
+- TLS private keys → Vault + mounted at runtime
+- Test credentials → Local override files (NOT committed)
 
-## Usage
+### Local Development Configuration
 
-### Development
-For local development, these bundled dictionaries are sufficient. The platform will automatically use them if no system dictionaries are found.
+**For local testing only:**
 
+1. **Copy the override file:**
+   ```bash
+   cp docker-compose.override.yml.example docker-compose.override.yml
+   ```
+
+2. **This enables:**
+   - Test user `test/test` for healthchecks
+   - Localhost client with `testing123` secret
+   - FreeRADIUS healthcheck passes
+
+3. **Files used:**
+   - `authorize.test` - Contains test user (mounted via override)
+   - Environment variable `RADIUS_LOCALHOST_SECRET=testing123`
+
+## File Descriptions
+
+### `clients.conf`
+Defines NAS devices that can communicate with RADIUS.
+
+**Production:**
+- NAS devices are added via API (`POST /api/v1/radius/nas`)
+- Secrets stored in Vault, referenced via environment variables
+- Example entries are removed or use `${VAR}` placeholders
+
+**Local Dev:**
+- Override file adds localhost with `testing123`
+- Test NAS devices can be added manually
+
+### `authorize`
+Controls user authentication methods.
+
+**Production (THIS FILE):**
+```
+# All authentication via SQL database (enforces tenant isolation)
+DEFAULT Auth-Type := SQL
+        Fall-Through = Yes
+```
+
+**Local Dev (`authorize.test`):**
+```
+# Test user (bypasses database)
+test    Cleartext-Password := "test"
+
+# All other users via SQL
+DEFAULT Auth-Type := SQL
+```
+
+**⚠️ NEVER mount `authorize.test` in production!**
+
+### `dictionary*`
+RADIUS attribute definitions (RFC 2865, 2866, vendor-specific).
+
+These are safe to commit - they contain no secrets, only attribute definitions.
+
+### `radiusd.conf`
+Main server configuration.
+
+**Settings:**
+- Listen ports (1812, 1813, 3799)
+- Performance tuning (max_requests, timeouts)
+- Logging configuration
+- Module loading
+
+**NO secrets in this file.** Use environment variables for anything sensitive.
+
+## Environment Variables
+
+### Production
 ```bash
-# Dictionaries are automatically loaded from config/radius/
-poetry run python -m dotmac.platform.main
+# Vault-backed secrets
+RADIUS_LOCALHOST_SECRET=<from-vault>
+POSTGRES_PASSWORD=<from-vault>
+REDIS_PASSWORD=<from-vault>
+```
+
+### Local Development
+```bash
+# .env file (NOT committed to Git)
+RADIUS_LOCALHOST_SECRET=testing123
+POSTGRES_PASSWORD=changeme
+```
+
+## Adding New NAS Devices
+
+### Via API (Recommended)
+```bash
+POST /api/v1/radius/nas
+{
+  "nasname": "10.0.1.1",
+  "shortname": "router01",
+  "type": "router",
+  "vendor": "mikrotik",
+  "secret": "strong-random-secret-32-chars"
+}
+```
+
+The API will:
+- Generate strong secret if not provided
+- Store secret in Vault
+- Update `clients.conf` dynamically
+- Reload FreeRADIUS
+
+### Manual (For Infrastructure)
+If adding infrastructure NAS devices that should be in Git:
+
+1. **Edit `clients.conf`:**
+   ```
+   client router01 {
+       ipaddr = 10.0.1.1
+       secret = ${ROUTER01_RADIUS_SECRET}
+       shortname = router01
+   }
+   ```
+
+2. **Store secret in Vault:**
+   ```bash
+   vault kv put secret/radius/nas/router01 shared_secret="..."
+   ```
+
+3. **Update environment/compose:**
+   ```yaml
+   environment:
+     - ROUTER01_RADIUS_SECRET=${ROUTER01_RADIUS_SECRET}
+   ```
+
+4. **Commit to Git** (no secrets in files)
+
+## Secret Rotation
+
+Use the provided script:
+```bash
+# Rotate all NAS secrets
+make -f Makefile.radius rotate-secrets
+
+# Rotate single NAS
+make -f Makefile.radius rotate-secret-single NAS=router01
+```
+
+The script will:
+1. Generate new strong secret
+2. Store in Vault with timestamp
+3. Update `clients.conf`
+4. Reload FreeRADIUS gracefully
+5. Create backup before changes
+
+## Testing Authentication
+
+### Local Development
+```bash
+# Using test user (only works with override file)
+docker exec isp-freeradius radtest test test localhost 0 testing123
+
+# Using database user (via API)
+docker exec isp-freeradius radtest user@example.com password localhost 0 testing123
 ```
 
 ### Production
-For production deployments, it's recommended to use the full FreeRADIUS dictionary set for maximum compatibility:
-
-#### Option 1: Download Full Dictionaries
 ```bash
-# Run the setup script
-./scripts/setup_radius_dictionaries.sh /etc/raddb
+# Only database authentication works
+docker exec isp-freeradius radtest user@example.com password localhost 0 "${RADIUS_LOCALHOST_SECRET}"
 ```
 
-#### Option 2: Install FreeRADIUS Package
-```bash
-# On Debian/Ubuntu
-apt-get install freeradius-utils
+## Security Checklist
 
-# On RHEL/CentOS
-yum install freeradius-utils
+Before deploying to production:
 
-# Dictionaries will be in /usr/share/freeradius/
-```
-
-#### Option 3: Docker
-```dockerfile
-FROM python:3.13-slim
-
-# Download FreeRADIUS dictionaries
-RUN mkdir -p /etc/raddb && \
-    curl -sSL https://raw.githubusercontent.com/FreeRADIUS/freeradius-server/v3.2.x/share/dictionary \
-         -o /etc/raddb/dictionary && \
-    curl -sSL https://raw.githubusercontent.com/FreeRADIUS/freeradius-server/v3.2.x/share/dictionary.rfc5176 \
-         -o /etc/raddb/dictionary.rfc5176
-```
-
-## Configuration
-
-Set environment variables to specify dictionary locations:
-
-```bash
-# Use bundled dictionaries (development)
-export RADIUS_DICTIONARY_PATH="./config/radius/dictionary"
-export RADIUS_DICTIONARY_COA_PATH="./config/radius/dictionary.rfc5176"
-
-# Use system dictionaries (production)
-export RADIUS_DICTIONARY_PATH="/etc/raddb/dictionary"
-export RADIUS_DICTIONARY_COA_PATH="/etc/raddb/dictionary.rfc5176"
-```
-
-Or add to `.env` file:
-
-```env
-RADIUS_DICTIONARY_PATH=/etc/raddb/dictionary
-RADIUS_DICTIONARY_COA_PATH=/etc/raddb/dictionary.rfc5176
-```
-
-## Vendor-Specific Attributes
-
-If you need vendor-specific RADIUS attributes (Cisco, Mikrotik, etc.), download the appropriate vendor dictionary from FreeRADIUS:
-
-```bash
-# Example: Cisco VSAs
-curl -sSL https://raw.githubusercontent.com/FreeRADIUS/freeradius-server/v3.2.x/share/dictionary.cisco \
-     -o /etc/raddb/dictionary.cisco
-
-# Add to main dictionary file:
-echo '$INCLUDE dictionary.cisco' >> /etc/raddb/dictionary
-```
+- [ ] Remove `docker-compose.override.yml` (or ensure it's in `.gitignore`)
+- [ ] Verify `authorize` file has NO test users
+- [ ] Verify `clients.conf` has NO hardcoded secrets (use `${VAR}`)
+- [ ] All secrets in Vault
+- [ ] Environment variables configured
+- [ ] Test that `test/test` user does NOT authenticate
+- [ ] Verify only database users can authenticate
+- [ ] Healthcheck uses real database user or is adjusted for SQL-only auth
 
 ## References
 
-- [RFC 2865 - RADIUS](https://tools.ietf.org/html/rfc2865)
-- [RFC 2866 - RADIUS Accounting](https://tools.ietf.org/html/rfc2866)
-- [RFC 5176 - Dynamic Authorization Extensions](https://tools.ietf.org/html/rfc5176)
-- [FreeRADIUS Dictionaries](https://github.com/FreeRADIUS/freeradius-server/tree/v3.2.x/share)
-
-## License
-
-These dictionaries are based on FreeRADIUS dictionaries, which are licensed under GPL v2.
-See: https://github.com/FreeRADIUS/freeradius-server/blob/v3.2.x/COPYRIGHT
+- [FreeRADIUS Documentation](https://wiki.freeradius.org/)
+- [RADIUS RFC 2865](https://datatracker.ietf.org/doc/html/rfc2865)
+- [GitOps Workflow](../docs/RADIUS_GITOPS_WORKFLOW.md)

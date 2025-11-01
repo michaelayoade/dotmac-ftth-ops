@@ -277,7 +277,7 @@ class BillingSettingsService:
             ),
             invoice_settings=InvoiceSettings(
                 invoice_number_prefix="INV",
-                invoice_number_format="{prefix}-{year}-{sequence:06d}",
+                invoice_number_format="{prefix}-{tenant_suffix}-{year}-{sequence:06d}",
                 default_due_days=30,
                 include_payment_instructions=True,
                 payment_instructions=None,

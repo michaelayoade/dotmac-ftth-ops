@@ -69,24 +69,34 @@ def auth_error_handler(request: Request, exc: Exception) -> JSONResponse:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
     """Manage application lifecycle events."""
-    # SECURITY: Validate production security settings before anything else
+    import structlog
+
+    logger = structlog.get_logger(__name__)
+    print("DotMac Platform Services starting...")
+
+    # Load secrets from Vault/OpenBao before security validation so production checks
+    # evaluate the final configuration rather than placeholder defaults.
+    try:
+        load_secrets_from_vault_sync()
+        logger.info("secrets.load.success", source="vault", emoji="✅")
+    except Exception as e:
+        logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
+        if settings.is_production:
+            logger.error("secrets.load.production_failure", error=str(e))
+            raise RuntimeError("Vault secrets initialization failed") from e
+        print(f"Using default secrets (Vault unavailable: {e})")
+
+    # SECURITY: Validate production security settings after secrets are loaded
     try:
         settings.validate_production_security()
     except ValueError as e:
-        # Setup basic logging to capture security validation failure
-        import structlog
-
-        logger = structlog.get_logger(__name__)
         logger.critical(
             "security.validation.failed", error=str(e), environment=settings.environment
         )
         raise RuntimeError(str(e)) from e
 
     # Get structured logger (telemetry configured during app creation)
-    import structlog
-
     logger = structlog.get_logger(__name__)
-    print("DotMac Platform Services starting...")
 
     # Ensure telemetry is configured (lifespan may be used outside create_application)
     try:
@@ -185,18 +195,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             emoji="⚠️",
         )
         print(f"Infrastructure health check failed: {e}")
-
-    # Load secrets from Vault/OpenBao if configured
-    try:
-        load_secrets_from_vault_sync()
-        logger.info("secrets.load.success", source="vault", emoji="✅")
-    except Exception as e:
-        logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
-        # Continue with default values in development, fail in production
-        if settings.is_production:
-            logger.error("secrets.load.production_failure", error=str(e))
-            raise
-        print(f"Using default secrets (Vault unavailable: {e})")
 
     # Initialize database
     try:
@@ -353,6 +351,12 @@ def create_application() -> FastAPI:
     # Add auth error handler for proper status codes (401 for auth, 403 for authz)
     app.add_exception_handler(AuthError, auth_error_handler)
 
+    # Register shared routers (auth, webhooks, etc.) before mounting tenant apps so
+    # single-tenant deployments retain access to shared endpoints under /api/v1.
+    # NOTE: For Phase 2, we're keeping the old router registration for shared routes.
+    # This will be refactored in Phase 3.
+    register_routers(app)
+
     # Mount sub-applications based on deployment mode
     logger.info(
         "mounting_applications",
@@ -382,11 +386,6 @@ def create_application() -> FastAPI:
         logger.info("multi_tenant_mode.mounting_both_apps")
         app.mount("/api/platform/v1", platform_app)
         app.mount("/api/tenant/v1", tenant_app)
-
-    # Register shared routers (auth, webhooks, etc.) - available in all modes
-    # NOTE: For Phase 2, we're keeping the old router registration for shared routes
-    # This will be refactored in Phase 3
-    register_routers(app)
 
     # Health check endpoint (public - no auth required)
     @app.get("/health")

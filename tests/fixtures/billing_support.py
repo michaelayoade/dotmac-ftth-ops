@@ -2,16 +2,13 @@
 
 from __future__ import annotations
 
-import asyncio
-from typing import AsyncIterator
+from typing import TYPE_CHECKING, AsyncIterator
 
 import pytest
 
 from tests.fixtures.environment import HAS_SQLALCHEMY
 
 if HAS_SQLALCHEMY:
-    from sqlalchemy.ext.asyncio import async_sessionmaker
-
     try:
         import pytest_asyncio
     except ImportError:  # pragma: no cover - fallback when pytest-asyncio unavailable
@@ -19,8 +16,37 @@ if HAS_SQLALCHEMY:
 
     AsyncFixture = pytest_asyncio.fixture if pytest_asyncio else pytest.fixture
 
+    if TYPE_CHECKING:
+        from decimal import Decimal
+        from httpx import AsyncClient
+        from unittest.mock import AsyncMock
+
+        from dotmac.platform.billing.core.entities import PaymentMethodEntity
+        from dotmac.platform.billing.models import BillingSubscriptionPlanTable
+
+    @pytest.fixture
+    def tenant_id() -> str:
+        """Tenant identifier used in billing fixtures."""
+        return "test-tenant"
+
+    @pytest.fixture
+    def customer_id() -> str:
+        """Customer identifier used in billing fixtures."""
+        return "cust_123"
+
+    @pytest.fixture
+    def billing_subject_id() -> str:
+        """Subject identifier for auth headers."""
+        from uuid import uuid4
+
+        return str(uuid4())
+
     @AsyncFixture
-    async def test_payment_method(async_session) -> AsyncIterator[object]:
+    async def test_payment_method(
+        async_session,
+        tenant_id: str,
+        customer_id: str,
+    ) -> AsyncIterator["PaymentMethodEntity"]:
         """Persist a payment method entity for integration tests."""
         from uuid import uuid4
 
@@ -29,8 +55,8 @@ if HAS_SQLALCHEMY:
 
         payment_method = PaymentMethodEntity(
             payment_method_id=str(uuid4()),
-            tenant_id="test-tenant",
-            customer_id="cust_123",
+            tenant_id=tenant_id,
+            customer_id=customer_id,
             type=PaymentMethodType.CARD,
             status=PaymentMethodStatus.ACTIVE,
             provider="stripe",
@@ -42,12 +68,17 @@ if HAS_SQLALCHEMY:
             expiry_year=2030,
         )
         async_session.add(payment_method)
-        await async_session.commit()
+        await async_session.flush()
         await async_session.refresh(payment_method)
-        return payment_method
+
+        try:
+            yield payment_method
+        finally:
+            await async_session.delete(payment_method)
+            await async_session.flush()
 
     @pytest.fixture
-    def mock_stripe_provider():
+    def mock_stripe_provider() -> "AsyncMock":
         """Mock Stripe payment provider."""
         from unittest.mock import AsyncMock
 
@@ -56,7 +87,7 @@ if HAS_SQLALCHEMY:
         return provider
 
     @AsyncFixture
-    async def test_subscription_plan(async_session):
+    async def test_subscription_plan(async_session, tenant_id: str) -> AsyncIterator["BillingSubscriptionPlanTable"]:
         """Create a subscription plan in the test database."""
         from decimal import Decimal
 
@@ -65,7 +96,7 @@ if HAS_SQLALCHEMY:
 
         plan = BillingSubscriptionPlanTable(
             plan_id="plan_test_123",
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             product_id="prod_123",
             name="Test Plan",
             description="Test subscription plan",
@@ -76,12 +107,17 @@ if HAS_SQLALCHEMY:
             is_active=True,
         )
         async_session.add(plan)
-        await async_session.commit()
+        await async_session.flush()
         await async_session.refresh(plan)
-        return plan
+
+        try:
+            yield plan
+        finally:
+            await async_session.delete(plan)
+            await async_session.flush()
 
     @AsyncFixture
-    async def client(test_app):
+    async def client(test_app) -> AsyncIterator["AsyncClient"]:
         """Async HTTP client used in billing integration tests."""
         from httpx import ASGITransport, AsyncClient
 
@@ -90,31 +126,44 @@ if HAS_SQLALCHEMY:
             yield client
 
     @pytest.fixture
-    def auth_headers():
-        """Standard auth headers for billing tests."""
+    def jwt_access_token(monkeypatch, billing_subject_id: str, tenant_id: str) -> str:
+        """Provide a mocked JWT access token without hitting production secrets."""
+        from unittest.mock import Mock
+
         from dotmac.platform.auth.core import jwt_service
 
-        test_token = jwt_service.create_access_token(
-            subject="550e8400-e29b-41d4-a716-446655440000",
-            additional_claims={
-                "scopes": ["read", "write", "admin"],
-                "tenant_id": "test-tenant",
-                "email": "test@example.com",
-            },
+        fake_token = f"test-token-{billing_subject_id}"
+        monkeypatch.setattr(
+            jwt_service,
+            "create_access_token",
+            Mock(return_value=fake_token),
         )
+        monkeypatch.setattr(
+            jwt_service,
+            "decode_access_token",
+            Mock(return_value={"sub": billing_subject_id, "tenant_id": tenant_id}),
+        )
+        return fake_token
 
+    @pytest.fixture
+    def auth_headers(jwt_access_token: str, tenant_id: str) -> dict[str, str]:
+        """Standard auth headers for billing tests using mocked JWT token."""
         return {
-            "Authorization": f"Bearer {test_token}",
-            "X-Tenant-ID": "test-tenant",
+            "Authorization": f"Bearer {jwt_access_token}",
+            "X-Tenant-ID": tenant_id,
         }
 
     __all__ = [
         "auth_headers",
+        "billing_subject_id",
         "client",
+        "customer_id",
+        "jwt_access_token",
         "mock_stripe_provider",
+        "tenant_id",
         "test_payment_method",
         "test_subscription_plan",
     ]
 
 else:  # pragma: no cover - SQLAlchemy unavailable
-    __all__: list[str] = []
+    pytest.skip("SQLAlchemy is required for billing fixtures.", allow_module_level=True)

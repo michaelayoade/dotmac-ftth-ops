@@ -60,7 +60,7 @@ async def _provision_service_instance(
 @pytest.fixture
 def test_tenant_id() -> str:
     """Provide tenant id for lifecycle tests."""
-    return "tenant-lifecycle-test"
+    return f"tenant-lifecycle-{uuid4().hex[:8]}"
 
 
 @pytest_asyncio.fixture

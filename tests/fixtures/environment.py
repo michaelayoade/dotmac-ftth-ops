@@ -8,138 +8,372 @@ Splitting the logic keeps fixture modules focused while preserving behaviour.
 
 from __future__ import annotations
 
-import builtins
+import logging
 import os
+import shutil
+import subprocess
 import sys
-import types
+import time
+from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import patch as _mock_patch
 
 import pytest
+from _pytest.mark.expression import Expression
+
+from tests.fixtures.stubs import create_fakeredis_stub, ensure_minio_stub
+
+patch = _mock_patch
 
 # ---------------------------------------------------------------------------
 # Optional dependency guards
 # ---------------------------------------------------------------------------
 
-# Make unittest.mock.patch globally available for legacy tests that rely on it
-if not hasattr(builtins, "patch"):
-    builtins.patch = patch
-
 # Determine whether the test run targets integration scenarios
-_is_integration_test = any("integration" in arg for arg in sys.argv)
+_is_integration_test = False
 _original_db_url = os.environ.get("DATABASE_URL")
 _async_db_url: str | None = None
 _sync_db_url: str | None = None
+_integration_services_started = False
+_migrations_applied = False
+
+logger = logging.getLogger(__name__)
 
 
-def _configure_database_env() -> None:
+def _env_flag(name: str, default: bool = True) -> bool:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip().lower() not in {"0", "false", "no", "off"}
+
+
+def _detect_compose_command() -> list[str] | None:
+    legacy = shutil.which("docker-compose")
+    if legacy:
+        return [legacy]
+    docker = shutil.which("docker")
+    if docker:
+        return [docker, "compose"]
+    return None
+
+
+def _wait_for_database(url: str, timeout: int = 90) -> None:
+    if not url or "postgresql" not in url:
+        return
+
+    if "asyncpg" in url:
+        try:
+            from sqlalchemy.engine import make_url
+
+            sync_url = make_url(url).set(drivername="postgresql").render_as_string(hide_password=False)
+        except Exception:
+            sync_url = url.replace("+asyncpg", "", 1)
+    else:
+        sync_url = url
+
+    try:
+        from sqlalchemy import create_engine, text
+        from sqlalchemy.exc import OperationalError
+    except Exception:
+        logger.warning("SQLAlchemy not available; skipping database readiness check")
+        return
+
+    engine = create_engine(sync_url, future=True)
+
+    try:
+        timeout = int(os.getenv("DOTMAC_DB_READY_TIMEOUT", timeout))
+    except Exception:
+        timeout = 90
+
+    # Give the container a brief moment to start accepting connections
+    time.sleep(2)
+
+    deadline = time.time() + timeout
+    try:
+        while time.time() < deadline:
+            try:
+                with engine.connect() as conn:
+                    conn.execute(text("SELECT 1"))
+                    return
+            except OperationalError:
+                time.sleep(1.5)
+            except Exception:
+                time.sleep(1.5)
+    finally:
+        engine.dispose()
+    raise pytest.UsageError(
+        f"Timed out waiting for PostgreSQL at {sync_url}. Ensure the database is reachable and migrations are applied."
+    )
+
+
+def _ensure_integration_services() -> None:
+    global _integration_services_started  # noqa: PLW0603
+    if not _is_integration_test or _integration_services_started:
+        return
+
+    if not _env_flag("DOTMAC_AUTOSTART_SERVICES", True):
+        logger.info("Skipping automatic infrastructure startup (DOTMAC_AUTOSTART_SERVICES disabled)")
+        return
+
+    compose_cmd = _detect_compose_command()
+    if not compose_cmd:
+        raise pytest.UsageError(
+            "Integration tests require Docker Compose to provision dependencies. "
+            "Install docker (with 'docker compose') or set DOTMAC_AUTOSTART_SERVICES=0 to manage services manually."
+        )
+
+    project_root = Path(__file__).resolve().parents[2]
+    compose_file = project_root / "docker-compose.base.yml"
+    if not compose_file.exists():
+        raise pytest.UsageError(
+            f"Expected {compose_file} to exist for integration infrastructure. "
+            "Ensure the repository includes docker-compose definitions."
+        )
+
+    services_env = os.getenv("DOTMAC_INTEGRATION_SERVICES", "postgres redis")
+    services = [service for service in services_env.split() if service]
+    if not services:
+        services = ["postgres", "redis"]
+
+    logger.info("Starting integration services via %s for: %s", " ".join(compose_cmd), ", ".join(services))
+    try:
+        subprocess.run([*compose_cmd, "-f", str(compose_file), "up", "-d", *services], check=True, cwd=str(project_root))
+    except subprocess.CalledProcessError as exc:
+        raise pytest.UsageError(
+            "Failed to start integration services with docker compose. "
+            "Check Docker daemon status or disable auto-start via DOTMAC_AUTOSTART_SERVICES=0."
+        ) from exc
+
+    if _async_db_url:
+        try:
+            _wait_for_database(_async_db_url)
+        except pytest.UsageError:
+            raise
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.warning("Database readiness check failed: %s", exc)
+        else:
+            _apply_migrations_if_needed()
+
+    _integration_services_started = True
+
+
+def _stop_integration_services() -> None:
+    global _integration_services_started  # noqa: PLW0603
+    if not _integration_services_started:
+        return
+
+    if not _env_flag("DOTMAC_SHUTDOWN_SERVICES", False):
+        return
+
+    compose_cmd = _detect_compose_command()
+    if not compose_cmd:
+        logger.warning("Unable to locate docker compose; skipping integration service shutdown")
+        return
+
+    project_root = Path(__file__).resolve().parents[2]
+    compose_file = project_root / "docker-compose.base.yml"
+    if not compose_file.exists():
+        return
+
+    logger.info("Stopping integration services via %s", " ".join(compose_cmd))
+    try:
+        subprocess.run([*compose_cmd, "-f", str(compose_file), "down", "--remove-orphans"], check=True, cwd=str(project_root))
+    except subprocess.CalledProcessError as exc:
+        logger.warning("Failed to stop integration services cleanly: %s", exc)
+        return
+
+    _integration_services_started = False
+
+
+def _default_postgres_urls() -> tuple[str, str]:
+    host = os.getenv("POSTGRES_HOST", "127.0.0.1")
+    port = os.getenv("POSTGRES_PORT", "5432")
+    user = os.getenv("POSTGRES_USER", "dotmac_user")
+    password = os.getenv("POSTGRES_PASSWORD", "change-me-in-production")
+    database = os.getenv("POSTGRES_DB", "dotmac")
+
+    auth_part = f"{user}:{password}@" if password else f"{user}@"
+    async_url = f"postgresql+asyncpg://{auth_part}{host}:{port}/{database}"
+    sync_url = f"postgresql://{auth_part}{host}:{port}/{database}"
+    return async_url, sync_url
+
+
+def _apply_migrations_if_needed() -> None:
+    global _migrations_applied  # noqa: PLW0603
+    if _migrations_applied:
+        return
+
+    sync_url = _sync_db_url
+    if not sync_url or "postgresql" not in sync_url:
+        return
+
+    project_root = Path(__file__).resolve().parents[2]
+    alembic_ini = project_root / "alembic.ini"
+    if not alembic_ini.exists():
+        logger.warning("Alembic configuration not found at %s; skipping migrations", alembic_ini)
+        _migrations_applied = True
+        return
+
+    try:
+        from alembic import command
+        from alembic.config import Config
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Alembic not available; skipping migrations: %s", exc)
+        _migrations_applied = True
+        return
+
+    cfg = Config(str(alembic_ini))
+    cfg.set_main_option("sqlalchemy.url", sync_url)
+
+    try:
+        command.upgrade(cfg, "head")
+    except Exception as exc:
+        raise pytest.UsageError(
+            "Failed to apply database migrations for integration tests. "
+            "Ensure alembic is installed and the database is reachable."
+        ) from exc
+
+    _migrations_applied = True
+
+
+def _configure_database_env(is_integration: bool) -> None:
     """
     Configure database URLs up-front so fixtures can rely on consistent values.
 
     Integration suites prefer psycopg while unit suites default to in-memory SQLite.
     """
 
-    global _async_db_url, _sync_db_url  # noqa: PLW0603
+    global _async_db_url, _sync_db_url, _is_integration_test  # noqa: PLW0603
 
-    if _is_integration_test and _original_db_url:
-        if _original_db_url.startswith("postgresql://"):
-            _async_db_url = _original_db_url.replace("postgresql://", "postgresql+psycopg://", 1)
-            _sync_db_url = _original_db_url
-        elif _original_db_url.startswith("postgresql+asyncpg://"):
-            _async_db_url = _original_db_url.replace(
-                "postgresql+asyncpg://",
-                "postgresql+psycopg://",
-                1,
-            )
-            _sync_db_url = _original_db_url.replace(
-                "postgresql+asyncpg://",
-                "postgresql://",
-                1,
-            )
-        else:
-            _async_db_url = _original_db_url
-            _sync_db_url = _original_db_url
+    _is_integration_test = is_integration
 
-        os.environ["DOTMAC_DATABASE_URL_ASYNC"] = _async_db_url
-        os.environ["DOTMAC_DATABASE_URL"] = _sync_db_url
+    if is_integration:
+        explicit_async = os.environ.get("DOTMAC_DATABASE_URL_ASYNC") or None
+        if explicit_async and "postgresql" not in explicit_async.lower():
+            explicit_async = None
+        explicit_sync = os.environ.get("DOTMAC_DATABASE_URL") or None
+        if explicit_sync and "postgresql" not in explicit_sync.lower():
+            explicit_sync = None
+
+        async_url = explicit_async
+        sync_url = explicit_sync
+
+        autostart_enabled = _env_flag("DOTMAC_AUTOSTART_SERVICES", True)
+
+        if async_url and "postgresql" not in async_url:
+            if autostart_enabled:
+                async_url = None
+                explicit_async = None
+            else:
+                raise pytest.UsageError(
+                    "Integration tests require PostgreSQL. "
+                    "Set DOTMAC_DATABASE_URL_ASYNC to a Postgres DSN (e.g. postgresql+asyncpg://...)."
+                )
+
+        if async_url is None and _original_db_url:
+            async_url, derived_sync = _derive_database_urls(_original_db_url)
+            sync_url = sync_url or derived_sync
+
+        if async_url is None:
+            if autostart_enabled:
+                async_url, default_sync = _default_postgres_urls()
+                sync_url = sync_url or default_sync
+            else:
+                raise pytest.UsageError(
+                    "Integration tests require a PostgreSQL database. "
+                    "Provide DOTMAC_DATABASE_URL_ASYNC with your Postgres DSN or enable auto-start by setting DOTMAC_AUTOSTART_SERVICES=1."
+                )
+
+        if "postgresql" not in async_url:
+            raise pytest.UsageError(
+                "Integration tests require PostgreSQL. "
+                "Set DOTMAC_DATABASE_URL_ASYNC to a Postgres DSN (e.g. postgresql+asyncpg://...)."
+            )
+
+        if sync_url is None or "postgresql" not in sync_url:
+            _, sync_url = _derive_database_urls(async_url)
+
+        _async_db_url = async_url
+        _sync_db_url = sync_url
+        os.environ["DOTMAC_DATABASE_URL_ASYNC"] = async_url
+        os.environ["DOTMAC_DATABASE_URL"] = sync_url
+
+        try:
+            _ensure_integration_services()
+        except pytest.UsageError as exc:
+            should_fallback = autostart_enabled and not explicit_async and not explicit_sync
+            if not should_fallback:
+                raise
+
+            logger.warning(
+                "Failed to auto-start integration services (%s); falling back to in-memory SQLite. "
+                "Set DOTMAC_AUTOSTART_SERVICES=0 or provide explicit Postgres URLs to skip this fallback.",
+                exc,
+            )
+            sqlite_async = "sqlite+aiosqlite:///:memory:"
+            sqlite_sync = "sqlite:///:memory:"
+            _async_db_url = sqlite_async
+            _sync_db_url = sqlite_sync
+            os.environ["DOTMAC_DATABASE_URL_ASYNC"] = sqlite_async
+            os.environ["DOTMAC_DATABASE_URL"] = sqlite_sync
+            os.environ["DOTMAC_AUTOSTART_SERVICES"] = "0"
+            _is_integration_test = False
     else:
         os.environ.setdefault("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
         os.environ.setdefault("DOTMAC_DATABASE_URL", "sqlite:///:memory:")
         os.environ.pop("DATABASE_URL", None)
+        _async_db_url = os.environ["DOTMAC_DATABASE_URL_ASYNC"]
+        _sync_db_url = os.environ["DOTMAC_DATABASE_URL"]
 
 
-_configure_database_env()
+def _derive_database_urls(source_url: str) -> tuple[str, str]:
+    """
+    Derive async and sync SQLAlchemy URLs from the provided runtime DATABASE_URL.
 
-# ---------------------------------------------------------------------------
-# MinIO stub to keep object storage imports optional
-# ---------------------------------------------------------------------------
+    Uses SQLAlchemy's URL helper when available to avoid string slicing bugs
+    and falls back to a minimal parser otherwise.
+    """
+    try:
+        from sqlalchemy.engine import make_url
 
-if "minio" not in sys.modules:
-    minio_module = types.ModuleType("minio")
+        url = make_url(source_url)
+        driver = url.drivername
 
-    class _DummyMinioClient:
-        def __init__(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401, ANN001
-            pass
+        if driver.startswith("postgresql+asyncpg"):
+            async_url = url.set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
+            sync_url = url.set(drivername="postgresql").render_as_string(hide_password=False)
+        elif driver.startswith("postgresql+psycopg"):
+            async_url = url.render_as_string(hide_password=False)
+            sync_url = url.set(drivername="postgresql").render_as_string(hide_password=False)
+        elif driver.startswith("postgresql"):
+            async_url = url.set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
+            sync_url = url.render_as_string(hide_password=False)
+        else:
+            async_url = url.render_as_string(hide_password=False)
+            sync_url = async_url
 
-        def bucket_exists(self, bucket: str) -> bool:  # noqa: D401, ANN001
-            return True
+        return async_url, sync_url
+    except Exception:
+        # Conservative fallback when SQLAlchemy is unavailable: best-effort replacements.
+        if source_url.startswith("postgresql+asyncpg://"):
+            async_url = source_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+            sync_url = source_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+        elif source_url.startswith("postgresql://"):
+            async_url = source_url.replace("postgresql://", "postgresql+psycopg://", 1)
+            sync_url = source_url
+        else:
+            async_url = source_url
+            sync_url = source_url
+        return async_url, sync_url
 
-        def make_bucket(self, bucket: str) -> None:  # noqa: D401, ANN001
-            return None
 
-        def put_object(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401, ANN001
-            return None
-
-        def get_object(self, *args: Any, **kwargs: Any):  # noqa: ANN001
-            class _DummyResponse:
-                def read(self) -> bytes:
-                    return b""
-
-                def close(self) -> None:
-                    return None
-
-                def release_conn(self) -> None:
-                    return None
-
-            return _DummyResponse()
-
-        def remove_object(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401, ANN001
-            return None
-
-        def copy_object(self, *args: Any, **kwargs: Any) -> None:  # noqa: D401, ANN001
-            return None
-
-    minio_module.Minio = _DummyMinioClient
-
-    error_module = types.ModuleType("minio.error")
-
-    class S3Error(Exception):
-        """Minimal S3Error stub used in unit tests."""
-
-    error_module.S3Error = S3Error
-
-    commonconfig_module = types.ModuleType("minio.commonconfig")
-
-    class CopySource:
-        """Lightweight stand-in for MinIO CopySource."""
-
-        def __init__(self, bucket: str, object_name: str) -> None:
-            self.bucket = bucket
-            self.object_name = object_name
-
-    commonconfig_module.CopySource = CopySource
-
-    sys.modules["minio"] = minio_module
-    sys.modules["minio.error"] = error_module
-    sys.modules["minio.commonconfig"] = commonconfig_module
-
-    minio_module.error = error_module
-    minio_module.commonconfig = commonconfig_module
+_configure_database_env(False)
 
 # ---------------------------------------------------------------------------
 # Optional dependency imports with graceful fallbacks
 # ---------------------------------------------------------------------------
+
+ensure_minio_stub()
 
 try:
     import fakeredis as _fakeredis
@@ -147,54 +381,61 @@ try:
     fakeredis = _fakeredis
     HAS_FAKEREDIS = True
 except Exception:  # pragma: no cover - fallback for environments without fakeredis
-    from types import SimpleNamespace
-
-    class _DummySyncRedis:
-        def __init__(self, *_, **__):
-            self._data: dict[str, str] = {}
-
-        # minimal subset used in tests/fixtures
-        def flushdb(self) -> None:
-            self._data.clear()
-
-        def set(self, key, value, ex=None):  # noqa: ANN001, ARG002
-            self._data[str(key)] = value
-            return True
-
-        def get(self, key):  # noqa: ANN001
-            return self._data.get(str(key))
-
-        def delete(self, key):  # noqa: ANN001
-            return 1 if self._data.pop(str(key), None) is not None else 0
-
-        def close(self) -> None:
-            return None
-
-    class _DummyAsyncRedis:
-        def __init__(self, *_, **__):
-            self._data: dict[str, str] = {}
-
-        async def flushdb(self) -> None:
-            self._data.clear()
-
-        async def set(self, key, value, ex=None):  # noqa: ANN001, ARG002
-            self._data[str(key)] = value
-            return True
-
-        async def get(self, key):  # noqa: ANN001
-            return self._data.get(str(key))
-
-        async def delete(self, key):  # noqa: ANN001
-            return 1 if self._data.pop(str(key), None) is not None else 0
-
-        async def close(self) -> None:
-            return None
-
-    fakeredis = SimpleNamespace(
-        FakeRedis=_DummySyncRedis,
-        aioredis=SimpleNamespace(FakeRedis=_DummyAsyncRedis),
-    )
+    fakeredis = create_fakeredis_stub()
     HAS_FAKEREDIS = False
+
+
+class _MarkerNamespace(dict[str, bool]):
+    """Mapping that defaults unknown markers to False when evaluating expressions."""
+
+    def __missing__(self, key: str) -> bool:
+        return False
+
+
+def _should_run_integration(config: pytest.Config) -> bool:
+    """
+    Determine whether the current pytest invocation targets integration tests.
+
+    Prefers the ``-m`` marker expression but allows overriding via the
+    ``DOTMAC_TEST_PROFILE`` environment variable for CI pipelines.
+    """
+    env_flag = os.getenv("DOTMAC_TEST_PROFILE", "").strip().lower()
+    if env_flag in {"integration", "integration_tests", "integration-test"}:
+        return True
+
+    mark_expr = getattr(config.option, "markexpr", "") or ""
+    if mark_expr:
+        try:
+            expression = Expression(mark_expr)
+            if expression.evaluate(_MarkerNamespace(integration=True)) and not expression.evaluate(
+                _MarkerNamespace(integration=False)
+            ):
+                return True
+        except Exception:
+            pass
+
+        normalized = mark_expr.lower()
+        if "not integration" in normalized.replace("(", " ").replace(")", " "):
+            return False
+        if "integration" in normalized.replace("(", " ").replace(")", " ").split():
+            return True
+        if "integration" in normalized:
+            return True
+
+    invocation_args = getattr(getattr(config, "invocation_params", None), "args", None) or []
+    explicit_args = getattr(config, "args", []) or []
+    for arg in (*invocation_args, *explicit_args):
+        arg_str = str(arg)
+        if "tests/integration" in arg_str:
+            return True
+        if "integration" in Path(arg_str).name:
+            return True
+
+    env_async_url = os.getenv("DOTMAC_DATABASE_URL_ASYNC", "").strip()
+    if env_async_url and "postgresql" in env_async_url.lower():
+        return True
+
+    return False
 
 try:
     import freezegun  # noqa: F401
@@ -282,11 +523,15 @@ def _import_base_and_models():
 @pytest.fixture(scope="session", autouse=True)
 def configure_test_database():
     """Ensure DOTMAC database URLs are aligned with the selected test mode."""
-    if _is_integration_test and _original_db_url:
-        assert _async_db_url is not None  # narrow type for mypy
+    if _is_integration_test and _async_db_url:
         os.environ["DOTMAC_DATABASE_URL_ASYNC"] = _async_db_url
-        os.environ["DOTMAC_DATABASE_URL"] = _sync_db_url or _original_db_url
-    yield
+        os.environ["DOTMAC_DATABASE_URL"] = _sync_db_url or _async_db_url
+        _ensure_integration_services()
+    try:
+        yield
+    finally:
+        if _is_integration_test:
+            _stop_integration_services()
 
 
 # Use in-memory rate limiting and disable Redis requirements during tests
@@ -296,7 +541,9 @@ os.environ.setdefault("RATE_LIMIT__ENABLED", "false")
 os.environ.setdefault("OTEL_SDK_DISABLED", "true")  # Disable OpenTelemetry exporters
 
 # Add src to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", "src"))
+_SRC_ROOT = Path(__file__).resolve().parents[2] / "src"
+if str(_SRC_ROOT) not in sys.path:
+    sys.path.insert(0, str(_SRC_ROOT))
 
 
 @pytest.fixture(autouse=True)
@@ -324,12 +571,10 @@ def pytest_configure(config):
     config.addinivalue_line("markers", "asyncio: Async test")
     config.addinivalue_line("markers", "slow: Slow test")
 
-    if _is_integration_test and _original_db_url:
-        db_url_sync = _sync_db_url or _original_db_url
-        db_url_async = _async_db_url or _original_db_url
-    else:
-        db_url_async = "sqlite+aiosqlite:///:memory:"
-        db_url_sync = "sqlite:///:memory:"
+    _configure_database_env(_should_run_integration(config))
+
+    db_url_async = _async_db_url or os.environ.get("DOTMAC_DATABASE_URL_ASYNC") or "sqlite+aiosqlite:///:memory:"
+    db_url_sync = _sync_db_url or os.environ.get("DOTMAC_DATABASE_URL") or "sqlite:///:memory:"
 
     config.db_url_async = db_url_async
     config.db_url_sync = db_url_sync
@@ -343,8 +588,8 @@ def patch_main_app_startup() -> None:
     Many test modules import ``dotmac.platform.main.app`` directly, which would
     otherwise trigger costly startup routines (Redis, migrations, Vault, etc.)
     when the TestClient/AsyncClient enters the lifespan context. We replace those
-    initialisers with lightweight stubs so tests can exercise routes without
-    needing real infrastructure.
+    initialisers with a lightweight lifespan stub so tests can exercise routes
+    without needing real infrastructure.
     """
     try:
         import dotmac.platform.main as main_module
@@ -353,27 +598,12 @@ def patch_main_app_startup() -> None:
 
     mp = pytest.MonkeyPatch()
 
-    mp.setattr(main_module, "init_db", lambda: None, raising=False)
-    mp.setattr(main_module, "init_timescaledb", lambda: None, raising=False)
-    mp.setattr(main_module, "load_secrets_from_vault_sync", lambda: None, raising=False)
-
-    mp.setattr(main_module, "init_redis", AsyncMock(return_value=None), raising=False)
-    mp.setattr(main_module, "shutdown_redis", AsyncMock(return_value=None), raising=False)
-    mp.setattr(main_module, "run_startup_health_checks", AsyncMock(return_value=None), raising=False)
-    mp.setattr(main_module, "ensure_default_admin_user", AsyncMock(return_value=None), raising=False)
-    mp.setattr(main_module, "ensure_isp_rbac", AsyncMock(return_value=None), raising=False)
-    mp.setattr(main_module, "ensure_billing_rbac", AsyncMock(return_value=None), raising=False)
-
-    class _DummyAsyncSessionCtx:
-        async def __aenter__(self) -> AsyncMock:
-            return AsyncMock()
-
-        async def __aexit__(self, exc_type, exc, tb) -> bool:  # noqa: D401, ANN001
-            return False
-
-    mp.setattr(main_module, "AsyncSessionLocal", lambda: _DummyAsyncSessionCtx(), raising=False)
+    @asynccontextmanager
+    async def _noop_lifespan(app):
+        yield
 
     try:
+        mp.setattr(main_module, "lifespan", _noop_lifespan, raising=False)
         yield
     finally:
         mp.undo()
@@ -390,6 +620,7 @@ __all__ = [
     "_is_integration_test",
     "_original_db_url",
     "_sync_db_url",
+    "patch",
     "patch_main_app_startup",
     "configure_test_database",
     "fakeredis",

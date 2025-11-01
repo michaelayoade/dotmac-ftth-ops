@@ -6,6 +6,7 @@ BEFORE: 171 lines with repetitive mock setup
 AFTER: ~120 lines using shared helpers (30% reduction)
 """
 
+import hashlib
 from datetime import timezone, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
@@ -41,7 +42,8 @@ class TestInvoiceServiceHelpers:
 
         # Verify format
         year = datetime.now(timezone.utc).year
-        assert invoice_number == f"INV-{year}-000001"
+        expected = _build_invoice_number(sample_tenant_id, year, 1)
+        assert invoice_number == expected
 
     async def test_generate_invoice_number_sequential(self, sample_tenant_id):
         """Test generating sequential invoice numbers"""
@@ -52,7 +54,7 @@ class TestInvoiceServiceHelpers:
 
         # Mock existing invoice
         mock_invoice = MagicMock()
-        mock_invoice.invoice_number = f"INV-{year}-000042"
+        mock_invoice.invoice_number = _build_invoice_number(sample_tenant_id, year, 42)
 
         mock_db.execute = AsyncMock(return_value=build_success_result(mock_invoice))
 
@@ -60,7 +62,12 @@ class TestInvoiceServiceHelpers:
         invoice_number = await service._generate_invoice_number(sample_tenant_id)
 
         # Verify sequential increment
-        assert invoice_number == f"INV-{year}-000043"
+        assert invoice_number == _build_invoice_number(sample_tenant_id, year, 43)
+
+
+def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
+    suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    return f"INV-{suffix}-{year}-{sequence:06d}"
 
     async def test_get_invoice_entity_found(self, sample_tenant_id, mock_invoice_entity):
         """Test getting invoice entity by ID"""

@@ -186,18 +186,19 @@ def sample_customer():
     """Create a sample customer with all required fields populated."""
     from dotmac.platform.customer_management.models import Customer
 
+    unique_suffix = uuid4().hex[:8]
     customer_kwargs = _build_customer_kwargs(
         index=1,
         overrides={
-            "customer_number": "CUST-001",
-            "email": "customer@example.com",
+            "customer_number": f"CUST-{unique_suffix.upper()}",
+            "email": f"customer_{unique_suffix}@example.com",
             "first_name": "John",
             "middle_name": "Quincy",
             "last_name": "Doe",
-            "display_name": "John Q. Doe",
+            "display_name": f"John Q. Doe {unique_suffix}",
             "metadata_": {"loyalty_level": "gold", "segment": "enterprise"},
             "custom_fields": {"account_manager": "Alice Smith", "csat": 9.8},
-            "tags": ["vip", "fiber"],
+            "tags": ["vip", "fiber", unique_suffix],
         },
     )
     return Customer(**customer_kwargs)

@@ -60,7 +60,7 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ign
     invoice_id: Mapped[str] = mapped_column(
         UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid4())
     )
-    invoice_number: Mapped[str | None] = mapped_column(String(50), unique=True, index=True)
+    invoice_number: Mapped[str | None] = mapped_column(String(50), index=True)
 
     # Idempotency
     idempotency_key: Mapped[str | None] = mapped_column(String(255), index=True)
@@ -126,6 +126,7 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ign
         Index("idx_invoice_tenant_status", "tenant_id", "status"),
         Index("idx_invoice_tenant_due_date", "tenant_id", "due_date"),
         UniqueConstraint("tenant_id", "idempotency_key", name="uq_invoice_idempotency"),
+        UniqueConstraint("tenant_id", "invoice_number", name="uq_invoice_number_by_tenant"),
         {"extend_existing": True},
     )
 

@@ -11,11 +11,14 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from typing import Any
 
-from fastapi import Request
+import structlog
+from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from .config import TenantConfiguration, get_tenant_config
+
+logger = structlog.get_logger(__name__)
 
 
 class TenantIdentityResolver:
@@ -130,12 +133,24 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 skip_tenant_validation = True
 
         if skip_tenant_validation:
-            # In single-tenant mode, still set default tenant for consistency
-            if self.config.is_single_tenant:
-                request.state.tenant_id = self.config.default_tenant_id
-                from . import set_current_tenant_id
+            # Even when validation is skipped, honor explicit tenant headers if provided
+            tenant_override = None
+            try:
+                tenant_header = request.headers.get(self.header_name)
+                if isinstance(tenant_header, str):
+                    tenant_override = tenant_header.strip() or None
+            except Exception:
+                tenant_override = None
 
+            from . import set_current_tenant_id
+
+            if tenant_override:
+                request.state.tenant_id = tenant_override
+                set_current_tenant_id(tenant_override)
+            elif self.config.is_single_tenant:
+                request.state.tenant_id = self.config.default_tenant_id
                 set_current_tenant_id(self.config.default_tenant_id)
+
             return await call_next(request)
 
         # SECURITY: Middleware is the ONLY place that reads tenant from headers/query params
@@ -150,10 +165,8 @@ class TenantMiddleware(BaseHTTPMiddleware):
             target_tenant_header = target_tenant_header.strip()
 
         if isinstance(target_tenant_header, str) and target_tenant_header:
-            # SECURITY: Platform admin impersonation - verify authorization
-            # This will be validated by downstream dependencies (require_platform_admin)
-            # Middleware sets it on state, but actual authorization happens in handlers
-            resolved_id = target_tenant_header
+            # SECURITY: Only allow platform administrators to impersonate another tenant
+            resolved_id = self._resolve_platform_admin_impersonation(request, target_tenant_header)
             is_platform_admin_request = True
         else:
             is_platform_admin_request = False
@@ -231,3 +244,88 @@ class TenantMiddleware(BaseHTTPMiddleware):
             set_current_tenant_id(fallback_tenant)
 
         return await call_next(request)
+
+    def _resolve_platform_admin_impersonation(self, request: Request, header_value: str) -> str:
+        """
+        Validate platform admin impersonation attempts.
+
+        Ensures the caller is authenticated as a platform admin before honoring X-Target-Tenant-ID.
+        """
+        candidate = header_value.strip()
+        if not candidate:
+            raise HTTPException(
+                status_code=400,
+                detail="Target tenant header cannot be empty.",
+            )
+
+        token = None
+        auth_header = request.headers.get("Authorization")
+        if isinstance(auth_header, str) and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+
+        if not token:
+            # Support HttpOnly cookie tokens for browser-based admin tooling
+            cookies = getattr(request, "cookies", None)
+            if cookies:
+                try:
+                    cookie_token = cookies.get("access_token")
+                except Exception:
+                    cookie_token = None
+                if isinstance(cookie_token, str) and cookie_token:
+                    token = cookie_token
+
+        if not token:
+            logger.warning(
+                "tenant_impersonation_missing_token",
+                path=request.url.path,
+                target_tenant=candidate,
+            )
+            raise HTTPException(
+                status_code=403,
+                detail="Authentication is required to impersonate a tenant.",
+            )
+
+        try:
+            from dotmac.platform.auth.core import TokenType, UserInfo, jwt_service
+            from dotmac.platform.auth.platform_admin import is_platform_admin
+
+            claims = jwt_service.verify_token(token, TokenType.ACCESS)
+            user_info = UserInfo(
+                user_id=claims.get("sub", ""),
+                email=claims.get("email"),
+                username=claims.get("username"),
+                roles=claims.get("roles", []),
+                permissions=claims.get("permissions", []),
+                tenant_id=claims.get("tenant_id"),
+                is_platform_admin=claims.get("is_platform_admin", False),
+            )
+
+            if not is_platform_admin(user_info):
+                logger.warning(
+                    "tenant_impersonation_not_platform_admin",
+                    user_id=user_info.user_id,
+                    target_tenant=candidate,
+                )
+                raise HTTPException(
+                    status_code=403,
+                    detail="Platform administrator access required to impersonate tenants.",
+                )
+
+            logger.info(
+                "tenant_impersonation_authorized",
+                user_id=user_info.user_id,
+                target_tenant=candidate,
+            )
+            return candidate
+        except HTTPException:
+            raise
+        except Exception as exc:
+            logger.warning(
+                "tenant_impersonation_validation_failed",
+                error=str(exc),
+                target_tenant=candidate,
+            )
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid authentication for tenant impersonation.",
+            ) from exc

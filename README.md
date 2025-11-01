@@ -27,25 +27,28 @@ Built for ISPs, WISPs, and fiber network operators who need:
 
 ### Docker Compose Layout
 
-The stack now uses a shared base file plus environment overlays:
+Infrastructure is split across two Compose files. Use the Makefile wrappers (or call Compose directly) to start what you need:
 
 ```bash
-# core development stack
-docker compose up -d
+# Core platform: Postgres, Redis, Vault, MinIO
+make start-platform
 
-# optional profiles (Celery workers, observability, MinIO)
-docker compose --profile celery up -d
-docker compose -f docker-compose.observability.yml up -d
+# Core platform + observability (OTel collector, Prometheus, Grafana, Jaeger)
+make start-platform-obs
+
+# ISP services (FreeRADIUS, NetBox, GenieACS, WireGuard, LibreNMS, TimescaleDB)
+make start-isp
 ```
 
-Environment-specific overlays extend `docker-compose.base.yml`:
+Under the hood these targets call Compose directly:
 
-- Development: `docker-compose.yml`
-- Test/CI: `docker-compose.test.yml`
-- Staging: `docker-compose.staging.yml`
-- Production: `docker-compose.production.yml`
+```bash
+docker compose -f docker-compose.base.yml up -d postgres redis vault minio
+docker compose -f docker-compose.base.yml --profile observability up -d
+docker compose -f docker-compose.isp.yml up -d
+```
 
-Each overlay automatically pulls in the shared service definitions, so you only override what differs per environment.
+The helper script `./scripts/infra.sh` powers these targets and supports `start`, `status`, `logs`, `restart`, and `clean` actions for `platform`, `isp`, or `all`.
 
 ### Business Support Systems (BSS) - 90% Complete
 
@@ -245,8 +248,6 @@ Start with these active resources:
 - **[docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md)** – fiber data model and workflows
 - **Frontend architecture**: see [frontend/MULTI-APP-ARCHITECTURE.md](frontend/MULTI-APP-ARCHITECTURE.md) and [frontend/DEPLOYMENT-ARCHITECTURE.md](frontend/DEPLOYMENT-ARCHITECTURE.md)
 
-Historical planning artifacts (timelines, team allocations) remain in [docs/README_ISP_PLATFORM.md](docs/README_ISP_PLATFORM.md) for reference.
-
 ## 🛠️ Technology Stack
 
 ### Backend
@@ -396,7 +397,6 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 - ✅ Deployment orchestration
 - ✅ Job scheduler with chains
 - ✅ **Service Layer Testing Initiative** - 92.24% average coverage across 5 critical services
-  - See [TESTING_INITIATIVE_COMPLETE.md](TESTING_INITIATIVE_COMPLETE.md) for full details
 - ⏳ Mobile apps (planned)
 - ⏳ Enhanced customer self-service portal (basic ticketing complete)
 
@@ -449,7 +449,8 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 ## 🆘 Support
 
 - **Documentation**: See `docs/` folder
-- **Quick Start**: [INFRASTRUCTURE_QUICKSTART.md](INFRASTRUCTURE_QUICKSTART.md)
+- **Quick Start**: [QUICK_START.md](QUICK_START.md)
+- **Environment Setup**: [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md)
 - **Issues**: [GitHub Issues](https://github.com/your-org/dotmac-isp-ops/issues)
 - **Discussions**: [GitHub Discussions](https://github.com/your-org/dotmac-isp-ops/discussions)
 
@@ -466,4 +467,4 @@ Built on top of:
 
 **Ready to manage your ISP operations? Let's go! 🚀**
 
-For detailed setup instructions, see [INFRASTRUCTURE_QUICKSTART.md](INFRASTRUCTURE_QUICKSTART.md)
+For detailed setup instructions, see [QUICK_START.md](QUICK_START.md) and [`docs/ENVIRONMENT_SETUP.md`](docs/ENVIRONMENT_SETUP.md).

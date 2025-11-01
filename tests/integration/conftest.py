@@ -7,6 +7,7 @@ Shared fixtures and configuration for integration tests.
 import asyncio
 import pytest
 import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
 @pytest.fixture(scope="session", autouse=True)
 def integration_test_environment():
@@ -28,6 +29,20 @@ def integration_test_environment():
         os.environ["REQUIRE_TENANT_HEADER"] = original_value
 
     set_tenant_config(TenantConfiguration())
+
+
+@pytest.fixture
+def postgres_only(async_db_session: AsyncSession):
+    """
+    Skip the requesting test when the database backend is not PostgreSQL.
+
+    Useful for tests that rely on PostgreSQL-specific functionality such as
+    information_schema queries or extensions unavailable on SQLite.
+    """
+    bind = getattr(async_db_session, "bind", None)
+    if bind is None or bind.dialect.name != "postgresql":
+        pytest.skip("Requires PostgreSQL backend for integration test")
+    return async_db_session
 
 
 # Mark all tests in this directory as integration tests

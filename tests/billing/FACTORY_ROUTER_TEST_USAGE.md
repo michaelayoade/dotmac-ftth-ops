@@ -372,6 +372,4 @@ plan = await subscription_plan_factory(..., _commit=True)
 ## See Also
 
 - `tests/billing/factories.py` - Factory implementations
-- `MOCK_REDUCTION_SESSION_4_LEARNINGS.md` - Session mismatch diagnosis
-- `MOCK_REDUCTION_READY_TO_USE.md` - Factory usage guide
 - `tests/billing/_fixtures/shared.py` - Session fixtures

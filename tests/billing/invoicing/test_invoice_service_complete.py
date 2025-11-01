@@ -9,6 +9,7 @@ Focuses on:
 - All edge cases and error paths
 """
 
+import hashlib
 from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -49,13 +50,21 @@ def invoice_service(mock_db):
         return InvoiceService(db_session=mock_db)
 
 
+def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
+    """Mirror invoice number generation logic used by the service."""
+    tenant_suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    return f"INV-{tenant_suffix}-{year}-{sequence:06d}"
+
+
 @pytest.fixture
 def sample_invoice_entity():
     """Create sample invoice entity."""
+    tenant_id = "tenant-1"
+    year = datetime.now(timezone.utc).year
     return InvoiceEntity(
         invoice_id="inv_123",
-        tenant_id="tenant-1",
-        invoice_number="INV-2025-001",
+        tenant_id=tenant_id,
+        invoice_number=_build_invoice_number(tenant_id, year, 1),
         customer_id="cust_123",
         billing_email="customer@example.com",
         billing_address={"street": "123 Main St", "city": "Boston"},
@@ -88,43 +97,43 @@ class TestInvoiceNumberGeneration:
         mock_result.scalar_one_or_none.return_value = None
         mock_db.execute.return_value = mock_result
 
-        invoice_number = await invoice_service._generate_invoice_number("tenant-1")
+        tenant_id = "tenant-1"
+        invoice_number = await invoice_service._generate_invoice_number(tenant_id)
 
-        # Should generate INV-{year}-000001
         year = datetime.now(timezone.utc).year
-        assert invoice_number == f"INV-{year}-000001"
+        assert invoice_number == _build_invoice_number(tenant_id, year, 1)
 
     async def test_generate_sequential_invoice_number(self, invoice_service, mock_db):
         """Test generating sequential invoice number."""
         year = datetime.now(timezone.utc).year
         # Mock existing invoice
+        tenant_id = "tenant-1"
         last_invoice = MagicMock()
-        last_invoice.invoice_number = f"INV-{year}-000005"
+        last_invoice.invoice_number = _build_invoice_number(tenant_id, year, 5)
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = last_invoice
         mock_db.execute.return_value = mock_result
 
-        invoice_number = await invoice_service._generate_invoice_number("tenant-1")
+        invoice_number = await invoice_service._generate_invoice_number(tenant_id)
 
-        # Should increment to 000006
-        assert invoice_number == f"INV-{year}-000006"
+        assert invoice_number == _build_invoice_number(tenant_id, year, 6)
 
     async def test_generate_invoice_number_new_year(self, invoice_service, mock_db):
         """Test invoice number resets for new year."""
         current_year = datetime.now(timezone.utc).year
+        tenant_id = "tenant-1"
         # Mock existing invoice from previous year
         last_invoice = MagicMock()
-        last_invoice.invoice_number = f"INV-{current_year - 1}-000999"
+        last_invoice.invoice_number = _build_invoice_number(tenant_id, current_year - 1, 999)
 
         mock_result = MagicMock()
         mock_result.scalar_one_or_none.return_value = None  # No invoices for current year
         mock_db.execute.return_value = mock_result
 
-        invoice_number = await invoice_service._generate_invoice_number("tenant-1")
+        invoice_number = await invoice_service._generate_invoice_number(tenant_id)
 
-        # Should start at 000001 for new year
-        assert invoice_number == f"INV-{current_year}-000001"
+        assert invoice_number == _build_invoice_number(tenant_id, current_year, 1)
 
 
 @pytest.mark.unit
