@@ -700,6 +700,8 @@ class TestGetExecutionStats:
         mock_result.all.return_value = mock_rows
         db.execute = AsyncMock(return_value=mock_result)
 
-        stats = await service.get_execution_stats(tenant_id=123)
+        stats = await service.get_execution_stats(
+            tenant_id="00000000-0000-0000-0000-0000000000dd"
+        )
 
         assert stats["total"] == 3

@@ -17,7 +17,6 @@ Tests marked with @requires_postgres will skip on SQLite.
 Run all tests with: DOTMAC_DATABASE_URL_ASYNC=postgresql://... pytest
 """
 
-import os
 from uuid import uuid4
 
 import pytest
@@ -41,23 +40,14 @@ pytestmark = [
     pytest.mark.asyncio,
 ]
 
-# Check if using PostgreSQL
-DB_URL = os.environ.get("DOTMAC_DATABASE_URL_ASYNC", "")
-IS_POSTGRES = "postgresql" in DB_URL
-
-requires_postgres = pytest.mark.skipif(
-    not IS_POSTGRES,
-    reason="Requires PostgreSQL - SQLite doesn't enforce FK constraints or CASCADE behavior"
-)
-
-
 @pytest_asyncio.fixture
 async def test_tenant(async_db_session):
     """Create a test tenant for integration tests."""
+    tenant_id = f"test-tenant-{uuid4().hex[:8]}"
     tenant = Tenant(
-        id="test-tenant",
-        name="Test Tenant",
-        slug="test-tenant",
+        id=tenant_id,
+        name=f"Test Tenant {tenant_id}",
+        slug=f"{tenant_id}-slug",
         status=TenantStatus.ACTIVE,
     )
     async_db_session.add(tenant)
@@ -73,12 +63,14 @@ class TestCustomerContactRelationship:
     async def test_customer_contact_link_creation(self, async_db_session, test_tenant):
         """Test basic creation of customer-contact link."""
         # Create customer
+        tenant_id = test_tenant.id
+        unique_suffix = uuid4().hex[:8]
         customer = Customer(
-            customer_number="TEST001",
-            tenant_id="test-tenant",
+            customer_number=f"TEST001-{unique_suffix}",
+            tenant_id=tenant_id,
             first_name="John",
             last_name="Doe",
-            email=f"john.doe.{uuid4()}@example.com",
+            email=f"john.doe.{unique_suffix}@example.com",
             status=CustomerStatus.ACTIVE,
             customer_type=CustomerType.INDIVIDUAL,
             tier=CustomerTier.FREE,
@@ -88,10 +80,10 @@ class TestCustomerContactRelationship:
 
         # Create contact (Contact model doesn't have email field - emails are in ContactMethod table)
         contact = Contact(
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             first_name="Jane",
             last_name="Smith",
-            display_name="Jane Smith",  # Required field
+            display_name=f"Jane Smith {unique_suffix}",  # Required field
         )
         async_db_session.add(contact)
         await async_db_session.flush()
@@ -100,7 +92,7 @@ class TestCustomerContactRelationship:
         link = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             role=ContactRole.PRIMARY,
             is_primary_for_role=True,
         )
@@ -115,19 +107,20 @@ class TestCustomerContactRelationship:
         assert loaded_link.contact_id == contact.id
         assert loaded_link.role == ContactRole.PRIMARY
 
-    @requires_postgres
-    async def test_foreign_key_constraint_enforced(self, async_db_session, test_tenant):
+    async def test_foreign_key_constraint_enforced(self, async_db_session, postgres_only, test_tenant):
         """Test that foreign key constraints are enforced.
 
         Requires PostgreSQL - SQLite doesn't enforce FK constraints by default.
         """
         # Create customer
+        tenant_id = test_tenant.id
+        unique_suffix = uuid4().hex[:8]
         customer = Customer(
-            customer_number="TEST002",
-            tenant_id="test-tenant",
+            customer_number=f"TEST002-{unique_suffix}",
+            tenant_id=tenant_id,
             first_name="John",
             last_name="Doe",
-            email=f"john.{uuid4()}@example.com",
+            email=f"john.{unique_suffix}@example.com",
             status=CustomerStatus.ACTIVE,
             customer_type=CustomerType.INDIVIDUAL,
             tier=CustomerTier.FREE,
@@ -140,7 +133,7 @@ class TestCustomerContactRelationship:
         link = CustomerContactLink(
             customer_id=customer.id,
             contact_id=invalid_contact_id,  # Non-existent
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             role=ContactRole.PRIMARY,
         )
         async_db_session.add(link)
@@ -149,28 +142,29 @@ class TestCustomerContactRelationship:
         with pytest.raises(IntegrityError):
             await async_db_session.flush()
 
-    @requires_postgres
-    async def test_cascade_delete_behavior(self, async_db_session, test_tenant):
+    async def test_cascade_delete_behavior(self, async_db_session, postgres_only, test_tenant):
         """Test CASCADE delete when customer is deleted.
 
         Requires PostgreSQL - SQLite CASCADE behavior differs from PostgreSQL.
         """
         # Create customer and contact
+        tenant_id = test_tenant.id
+        unique_suffix = uuid4().hex[:8]
         customer = Customer(
-            customer_number="TEST003",
-            tenant_id="test-tenant",
+            customer_number=f"TEST003-{unique_suffix}",
+            tenant_id=tenant_id,
             first_name="John",
             last_name="Doe",
-            email=f"john.{uuid4()}@example.com",
+            email=f"john.{unique_suffix}@example.com",
             status=CustomerStatus.ACTIVE,
             customer_type=CustomerType.INDIVIDUAL,
             tier=CustomerTier.FREE,
         )
         contact = Contact(
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             first_name="Jane",
             last_name="Smith",
-            display_name="Jane Smith",
+            display_name=f"Jane Smith {unique_suffix}",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
@@ -180,7 +174,7 @@ class TestCustomerContactRelationship:
         link = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             role=ContactRole.PRIMARY,
         )
         async_db_session.add(link)
@@ -200,21 +194,23 @@ class TestCustomerContactRelationship:
     async def test_multiple_roles_for_single_contact(self, async_db_session, test_tenant):
         """Test that a contact can have multiple roles with same customer."""
         # Create customer and contact
+        tenant_id = test_tenant.id
+        unique_suffix = uuid4().hex[:8]
         customer = Customer(
-            customer_number="TEST004",
-            tenant_id="test-tenant",
+            customer_number=f"TEST004-{unique_suffix}",
+            tenant_id=tenant_id,
             first_name="John",
             last_name="Doe",
-            email=f"john.{uuid4()}@example.com",
+            email=f"john.{unique_suffix}@example.com",
             status=CustomerStatus.ACTIVE,
             customer_type=CustomerType.INDIVIDUAL,
             tier=CustomerTier.FREE,
         )
         contact = Contact(
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             first_name="Jane",
             last_name="Smith",
-            display_name="Jane Smith",
+            display_name=f"Jane Smith {unique_suffix}",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
@@ -224,14 +220,14 @@ class TestCustomerContactRelationship:
         link1 = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             role=ContactRole.PRIMARY,
             is_primary_for_role=True,
         )
         link2 = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=tenant_id,
             role=ContactRole.TECHNICAL,
             is_primary_for_role=True,
         )

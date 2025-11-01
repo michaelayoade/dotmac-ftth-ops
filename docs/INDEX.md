@@ -1,6 +1,6 @@
 # Documentation Index
 
-**Last Updated:** January 15, 2026
+**Last Updated:** October 31, 2025
 
 This repository now ships a lean documentation set. Everything you are likely to reference lives in one of the sections below.
 
@@ -9,8 +9,9 @@ This repository now ships a lean documentation set. Everything you are likely to
 ## Core References
 
 - [README.md](../README.md) — project overview and high-level architecture.
-- [README_ISP_PLATFORM.md](README_ISP_PLATFORM.md) — ISP-specific workflows and terminology.
-- [quick_start.md](quick_start.md) — fastest path to running the stack locally.
+- [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) — end-to-end environment setup (dev/staging/prod).
+- [../QUICK_START.md](../QUICK_START.md) — infrastructure quick start (scripted workflow).
+- [quick_start.md](quick_start.md) — platform module entry points (auth, secrets, observability).
 - [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) — configuration knobs with defaults.
 - [DEVELOPMENT_DATABASE.md](DEVELOPMENT_DATABASE.md) — local database setup, migrations, and troubleshooting.
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — canonical entity model and relationships.
@@ -38,7 +39,6 @@ This repository now ships a lean documentation set. Everything you are likely to
 - [API_SPECIFICATIONS.md](API_SPECIFICATIONS.md) — protocol-level expectations by service.
 - [API_EXAMPLES.md](API_EXAMPLES.md) — request/response samples for common flows.
 - [EMAIL_TEMPLATES_SETUP.md](EMAIL_TEMPLATES_SETUP.md) — transactional email configuration.
-- [CODE_IMPROVEMENTS_2025_01_15.md](CODE_IMPROVEMENTS_2025_01_15.md) — code-quality improvements and follow-up checklist.
 
 ---
 
@@ -66,5 +66,4 @@ This repository now ships a lean documentation set. Everything you are likely to
 - `api/` — per-service API references.
 - `guides/` — developer setup, testing, and deployment guides.
 - `plugins/` — plugin contract documentation.
-- `sessions/` — detailed historical dev session logs (still available for audit).
 - `webhooks/` — webhook payloads, retry logic, and onboarding.

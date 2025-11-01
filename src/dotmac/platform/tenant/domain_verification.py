@@ -28,6 +28,7 @@ import structlog
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.audit.models import ActivitySeverity, ActivityType
 from dotmac.platform.audit.service import AuditService
 from dotmac.platform.tenant.models import (
     DomainVerificationAttempt,
@@ -141,11 +142,14 @@ class DomainVerificationService:
 
         # Log audit event
         await self.audit_service.log_activity(
+            activity_type=ActivityType.API_REQUEST,
+            action="domain.verification.initiated",
+            description=f"Domain verification initiated for {domain} using {method.value}",
             tenant_id=tenant_id,
             user_id=user_id,
-            action="domain.verification.initiated",
             resource_type="domain",
             resource_id=domain,
+            severity=ActivitySeverity.MEDIUM,
             details={
                 "domain": domain,
                 "method": method.value,
@@ -274,11 +278,14 @@ class DomainVerificationService:
 
             # Log success
             await self.audit_service.log_activity(
+                activity_type=ActivityType.API_REQUEST,
+                action="domain.verification.succeeded",
+                description=f"Domain verification succeeded for {domain} using {method.value}",
                 tenant_id=tenant_id,
                 user_id=user_id,
-                action="domain.verification.succeeded",
                 resource_type="domain",
                 resource_id=domain,
+                severity=ActivitySeverity.LOW,
                 details=audit_details,
             )
 
@@ -317,11 +324,14 @@ class DomainVerificationService:
 
             # Log failure
             await self.audit_service.log_activity(
+                activity_type=ActivityType.API_ERROR,
+                action="domain.verification.failed",
+                description=f"Domain verification failed for {domain}",
                 tenant_id=tenant_id,
                 user_id=user_id,
-                action="domain.verification.failed",
                 resource_type="domain",
                 resource_id=domain,
+                severity=ActivitySeverity.HIGH,
                 details=audit_details,
             )
 
@@ -520,11 +530,14 @@ class DomainVerificationService:
 
         # Log audit event
         await self.audit_service.log_activity(
+            activity_type=ActivityType.API_REQUEST,
+            action="domain.removed",
+            description=f"Custom domain {domain} removed from tenant {tenant_id}",
             tenant_id=tenant_id,
             user_id=user_id,
-            action="domain.removed",
             resource_type="domain",
             resource_id=domain,
+            severity=ActivitySeverity.MEDIUM,
             details={"domain": domain},
         )
 

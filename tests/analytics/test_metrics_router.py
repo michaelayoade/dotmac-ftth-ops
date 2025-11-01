@@ -11,6 +11,39 @@ from unittest.mock import patch
 
 from httpx import AsyncClient
 
+from dotmac.platform.auth.core import TokenType, jwt_service
+
+
+@pytest.fixture(autouse=True)
+def _mock_jwt(monkeypatch):
+    """Provide deterministic JWT behaviour for analytics tests."""
+
+    def _create_access_token(*args, **kwargs) -> str:
+        return "test-access-token"
+
+    def _verify_token(token: str, expected_type: TokenType | None = None):
+        token_type = expected_type.value if expected_type else TokenType.ACCESS.value
+        return {
+            "sub": "analytics-test-user",
+            "tenant_id": "test-tenant",
+            "type": token_type,
+            "roles": ["admin"],
+            "permissions": ["analytics:read"],
+        }
+
+    monkeypatch.setattr(jwt_service, "create_access_token", _create_access_token)
+    monkeypatch.setattr(jwt_service, "verify_token", _verify_token)
+    yield
+
+
+@pytest.fixture
+def auth_headers():
+    """Standard auth headers for analytics tests."""
+    return {
+        "Authorization": "Bearer test-access-token",
+        "X-Tenant-ID": "test-tenant",
+    }
+
 
 
 pytestmark = pytest.mark.integration

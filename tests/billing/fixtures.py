@@ -190,6 +190,8 @@ def payment_method_entity(test_tenant_id, test_customer_id):
         customer_id=test_customer_id,
         type=PaymentMethodType.CARD,
         status=PaymentMethodStatus.ACTIVE,
+        provider="stripe",
+        display_name="Visa •••• 4242",
         provider_payment_method_id=f"pm_test_{uuid4().hex[:8]}",
         last_four="4242",
         brand="visa",

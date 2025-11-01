@@ -7,6 +7,7 @@ Coverage Target: 85%+ for router endpoints
 """
 
 from uuid import uuid4
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient

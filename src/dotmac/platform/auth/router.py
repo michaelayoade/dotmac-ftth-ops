@@ -293,6 +293,39 @@ async def _authenticate_and_issue_tokens(
 
     # Get current tenant from request context (set by TenantMiddleware)
     current_tenant_id = get_current_tenant_id()
+
+    # Fallback to request.state tenant when middleware populated but context not yet synced
+    try:
+        from dotmac.platform.tenant import get_tenant_config
+
+        tenant_config = get_tenant_config()
+        header_tenant = request.headers.get(tenant_config.tenant_header_name)
+        if isinstance(header_tenant, str):
+            header_tenant = header_tenant.strip() or None
+
+        # Explicit tenant header always takes precedence
+        if header_tenant:
+            current_tenant_id = header_tenant
+        else:
+            state_tenant = getattr(request.state, "tenant_id", None)
+
+            if state_tenant and (
+                current_tenant_id is None or state_tenant != current_tenant_id
+            ):
+                current_tenant_id = state_tenant
+
+            # If tenant is still unset and tenant headers are optional, default to config value
+            if current_tenant_id is None and tenant_config.is_multi_tenant:
+                current_tenant_id = tenant_config.default_tenant_id
+
+        logger.debug(
+            "resolved registration tenant",
+            context_tenant=current_tenant_id,
+            header_tenant=header_tenant,
+            state_tenant=getattr(request.state, "tenant_id", None),
+        )
+    except Exception:  # pragma: no cover - defensive fallback
+        pass
     tenant_config = get_tenant_config()
     default_tenant_id = tenant_config.default_tenant_id if tenant_config else None
 

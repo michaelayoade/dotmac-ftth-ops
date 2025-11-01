@@ -10,17 +10,50 @@ This file focuses on covering the gaps left by existing tests, particularly:
 - Overdue invoice checking
 """
 
+import hashlib
 from datetime import timezone, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 
+from sqlalchemy import delete
+
+from dotmac.platform.billing.core.entities import (
+    InvoiceEntity,
+    InvoiceLineItemEntity,
+    PaymentEntity,
+    PaymentInvoiceEntity,
+    TransactionEntity,
+)
 from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus, TransactionType
 from dotmac.platform.billing.core.exceptions import (
     InvoiceNotFoundError,
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_invoice_tables(async_db_session):
+    """Ensure invoice-related tables start empty for each test."""
+    await async_db_session.execute(delete(PaymentInvoiceEntity))
+    await async_db_session.execute(delete(InvoiceLineItemEntity))
+    await async_db_session.execute(delete(PaymentEntity))
+    await async_db_session.execute(delete(TransactionEntity))
+    await async_db_session.execute(delete(InvoiceEntity))
+    await async_db_session.commit()
+    yield
+
+    try:
+        await async_db_session.execute(delete(PaymentInvoiceEntity))
+        await async_db_session.execute(delete(InvoiceLineItemEntity))
+        await async_db_session.execute(delete(PaymentEntity))
+        await async_db_session.execute(delete(TransactionEntity))
+        await async_db_session.execute(delete(InvoiceEntity))
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()
 
 
 @pytest.fixture
@@ -61,7 +94,6 @@ class TestInvoiceCreation:
         self, invoice_service, async_db_session, sample_line_items
     ):
         """Test that idempotency key returns existing invoice."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         idempotency_key = "test-idempotency-key-123"
@@ -168,7 +200,6 @@ class TestInvoicePaymentStatus:
         self, invoice_service, async_db_session
     ):
         """Test that event publishing errors are handled gracefully."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -226,7 +257,6 @@ class TestInvoicePaymentStatus:
         self, invoice_service, async_db_session
     ):
         """Test that SUCCEEDED payment status sets invoice to PAID."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -266,7 +296,6 @@ class TestInvoicePaymentStatus:
         self, invoice_service, async_db_session
     ):
         """Test pending payment status updates for partial payments."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -325,7 +354,6 @@ class TestCreditApplication:
         self, invoice_service, async_db_session
     ):
         """Test that full credit marks invoice as paid."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -370,7 +398,6 @@ class TestCreditApplication:
         self, invoice_service, async_db_session
     ):
         """Test that partial credit marks invoice as partially paid."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -415,7 +442,6 @@ class TestCreditApplication:
         """Test that applying credit creates a transaction record."""
         from sqlalchemy import select
 
-        from dotmac.platform.billing.core.entities import InvoiceEntity, TransactionEntity
 
         tenant_id = str(uuid4())
         invoice = InvoiceEntity(
@@ -466,7 +492,6 @@ class TestOverdueInvoices:
     @pytest.mark.asyncio
     async def test_check_overdue_invoices_updates_status(self, invoice_service, async_db_session):
         """Test that overdue invoices are marked as OVERDUE."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
 
@@ -529,7 +554,6 @@ class TestOverdueInvoices:
         self, invoice_service, async_db_session
     ):
         """Test that paid invoices are not marked as overdue even if past due date."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
 
@@ -594,7 +618,6 @@ class TestPrivateHelperMethods:
         self, invoice_service, async_db_session
     ):
         """Test that invoice numbers are generated sequentially."""
-        from dotmac.platform.billing.core.entities import InvoiceEntity
 
         tenant_id = str(uuid4())
         year = datetime.now(timezone.utc).year
@@ -603,7 +626,7 @@ class TestPrivateHelperMethods:
         invoice1 = InvoiceEntity(
             tenant_id=tenant_id,
             invoice_id=str(uuid4()),
-            invoice_number=f"INV-{year}-000001",
+            invoice_number=_build_invoice_number(tenant_id, year, 1),
             customer_id="cust-123",
             billing_email="test@example.com",
             billing_address={"street": "123 Main St"},
@@ -626,4 +649,7 @@ class TestPrivateHelperMethods:
         # Generate next invoice number
         next_number = await invoice_service._generate_invoice_number(tenant_id)
 
-        assert next_number == f"INV-{year}-000002"
+        assert next_number == _build_invoice_number(tenant_id, year, 2)
+def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
+    suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    return f"INV-{suffix}-{year}-{sequence:06d}"

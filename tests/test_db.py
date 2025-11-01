@@ -32,6 +32,23 @@ from dotmac.platform.db import (
     get_sync_engine,
     init_db,
 )
+from dotmac.platform.db.testing import override_database_for_tests
+
+
+@pytest.fixture(scope="module", autouse=True)
+def isolated_database(tmp_path_factory):
+    """Provide an isolated SQLite database for this test module."""
+    db_path = (tmp_path_factory.mktemp("db") / "test.sqlite").resolve()
+    db_uri = db_path.as_posix()
+    sync_url = f"sqlite:///{db_uri}"
+    async_url = f"sqlite+aiosqlite:///{db_uri}"
+
+    with override_database_for_tests(
+        sync_url=sync_url,
+        async_url=async_url,
+        metadata_bases=[Base],
+    ):
+        yield
 
 
 @pytest.mark.integration

@@ -4,7 +4,7 @@ Tests for audit service functionality.
 """
 
 from datetime import timezone, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest

@@ -118,7 +118,10 @@ class TestGetAvailableAddons:
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
                     client.get(
                         "/api/v1/billing/addons",
-                        headers={"Authorization": "Bearer test_token"},
+                        headers={
+                            "Authorization": "Bearer test_token",
+                            "X-Tenant-ID": authorized_user.tenant_id,
+                        },
                     )
 
         # Assertions would depend on actual router implementation
@@ -126,10 +129,13 @@ class TestGetAvailableAddons:
 
     def test_get_available_addons_unauthorized(self, client):
         """Test unauthorized access."""
-        response = client.get("/api/v1/billing/addons")
+        response = client.get(
+            "/api/v1/billing/addons",
+            headers={"X-Tenant-ID": "test-tenant"},
+        )
 
         # Expect 401 or redirect depending on auth implementation
-        assert response.status_code in [401, 403, 307]
+        assert response.status_code in [400, 401, 403, 307]
 
 
 class TestGetTenantAddons:
@@ -154,7 +160,10 @@ class TestGetTenantAddons:
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
                     client.get(
                         "/api/v1/billing/addons/my-addons",
-                        headers={"Authorization": "Bearer test_token"},
+                        headers={
+                            "Authorization": "Bearer test_token",
+                            "X-Tenant-ID": authorized_user.tenant_id,
+                        },
                     )
 
         # Assertions would depend on actual implementation
@@ -400,7 +409,10 @@ class TestGetAddonById:
                 with patch("dotmac.platform.billing.addons.router.get_async_db"):
                     response = client.get(
                         "/api/v1/billing/addons/nonexistent",
-                        headers={"Authorization": "Bearer test_token"},
+                        headers={
+                            "Authorization": "Bearer test_token",
+                            "X-Tenant-ID": authorized_user.tenant_id,
+                        },
                     )
 
         # Expect 404

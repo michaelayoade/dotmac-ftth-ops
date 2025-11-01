@@ -179,7 +179,7 @@ class TestEnhancedTicketingSmoke:
     """Smoke tests for enhanced ticketing with ISP fields."""
 
     async def test_create_ticket_with_isp_fields(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test creating ticket with ISP-specific fields."""
         tenant_id = smoke_test_tenant.id
@@ -224,7 +224,7 @@ class TestEnhancedTicketingSmoke:
         assert ticket.escalation_level == 0
 
     async def test_sla_breach_detection(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test SLA breach detection and tracking."""
         tenant_id = smoke_test_tenant.id
@@ -263,7 +263,7 @@ class TestEnhancedTicketingSmoke:
         assert breached_tickets[0].sla_breached is True
 
     async def test_ticket_escalation(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test ticket escalation workflow."""
         tenant_id = smoke_test_tenant.id
@@ -310,7 +310,7 @@ class TestEnhancedTicketingSmoke:
 class TestDunningSmoke:
     """Smoke tests for dunning & collections."""
 
-    async def test_create_dunning_campaign(self, async_session: AsyncSession):
+    async def test_create_dunning_campaign(self, async_session: AsyncSession, smoke_test_tenant):
         """Test creating a dunning campaign."""
         tenant_id = smoke_test_tenant.id
         user_id = uuid4()
@@ -350,7 +350,7 @@ class TestDunningSmoke:
         assert len(campaign.actions) == 3
         assert campaign.is_active is True
 
-    async def test_start_dunning_execution(self, async_session: AsyncSession):
+    async def test_start_dunning_execution(self, async_session: AsyncSession, smoke_test_tenant):
         """Test starting a dunning execution."""
         tenant_id = smoke_test_tenant.id
         user_id = uuid4()
@@ -394,7 +394,7 @@ class TestDunningSmoke:
         assert execution.current_step == 0
         assert execution.next_action_at is not None
 
-    async def test_get_campaign_stats(self, async_session: AsyncSession):
+    async def test_get_campaign_stats(self, async_session: AsyncSession, smoke_test_tenant):
         """Test retrieving campaign statistics."""
         tenant_id = smoke_test_tenant.id
         user_id = uuid4()
@@ -433,7 +433,7 @@ class TestUsageBillingSmoke:
     """Smoke tests for usage billing."""
 
     async def test_create_usage_record(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test creating a usage record."""
         tenant_id = smoke_test_tenant.id
@@ -472,7 +472,7 @@ class TestUsageBillingSmoke:
         assert usage.billed_status == BilledStatus.PENDING
 
     async def test_query_usage_by_subscription(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test querying usage records by subscription (index test)."""
         tenant_id = smoke_test_tenant.id
@@ -524,7 +524,7 @@ class TestUsageBillingSmoke:
         assert len(records) == 2
 
     async def test_query_pending_usage(
-        self, async_session: AsyncSession, smoke_test_customer
+        self, async_session: AsyncSession, smoke_test_customer, smoke_test_tenant
     ):
         """Test querying pending usage records for billing."""
         tenant_id = smoke_test_tenant.id
@@ -579,7 +579,7 @@ class TestUsageBillingSmoke:
         assert len(pending_records) == 1
         assert pending_records[0].billed_status == BilledStatus.PENDING
 
-    async def test_create_usage_aggregate(self, async_session: AsyncSession):
+    async def test_create_usage_aggregate(self, async_session: AsyncSession, smoke_test_tenant):
         """Test creating usage aggregate for reporting."""
         tenant_id = smoke_test_tenant.id
         unique_id = str(uuid4())[:8]
@@ -619,7 +619,7 @@ class TestUsageBillingSmoke:
 class TestDatabaseMigrations:
     """Smoke tests to verify all Phase 1 migrations are applied."""
 
-    async def test_all_phase1_tables_exist(self, async_db_session: AsyncSession):
+    async def test_all_phase1_tables_exist(self, async_db_session: AsyncSession, postgres_only):
         """Test all Phase 1 tables exist in database."""
         # Query information_schema to check tables exist
         result = await async_db_session.execute(
@@ -655,7 +655,7 @@ class TestDatabaseMigrations:
 
         assert set(tables) == expected_tables
 
-    async def test_isp_customer_columns_exist(self, async_db_session: AsyncSession):
+    async def test_isp_customer_columns_exist(self, async_db_session: AsyncSession, postgres_only):
         """Test ISP customer columns exist in customers table."""
         result = await async_db_session.execute(
             text(
@@ -690,7 +690,7 @@ class TestDatabaseMigrations:
 
         assert sorted(columns) == expected_columns
 
-    async def test_ticket_isp_columns_exist(self, async_db_session: AsyncSession):
+    async def test_ticket_isp_columns_exist(self, async_db_session: AsyncSession, postgres_only):
         """Test ISP ticket columns exist in tickets table."""
         result = await async_db_session.execute(
             text(

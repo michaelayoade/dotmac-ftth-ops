@@ -253,6 +253,11 @@ def get_event_bus() -> EventBus:
     return _event_bus
 
 
+# Preserve reference to the unpatched getter so helper functions can avoid
+# accidentally switching to test doubles that may patch get_event_bus later.
+_get_event_bus_unpatched = get_event_bus
+
+
 def register_event(
     event_type: str,
     description: str,
@@ -268,7 +273,7 @@ def register_event(
         schema: Optional JSON schema for validation
         example: Optional example payload
     """
-    get_event_bus().register_event(
+    _get_event_bus_unpatched().register_event(
         event_type=event_type,
         description=description,
         schema=schema,

@@ -32,6 +32,7 @@ import { Badge } from "@/components/ui/badge";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { useToast } from "@/components/ui/use-toast";
+import { NASDeviceDialog } from "@/components/radius/NASDeviceDialog";
 
 interface NASDevice {
   id: number;
@@ -48,6 +49,8 @@ interface NASDevice {
 
 export default function RADIUSNASPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedNAS, setSelectedNAS] = useState<NASDevice | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -107,6 +110,16 @@ export default function RADIUSNASPage() {
     }
   };
 
+  const handleCreate = () => {
+    setSelectedNAS(null);
+    setDialogOpen(true);
+  };
+
+  const handleEdit = (nas: NASDevice) => {
+    setSelectedNAS(nas);
+    setDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -117,7 +130,7 @@ export default function RADIUSNASPage() {
             Manage Network Access Servers (routers, OLTs, APs)
           </p>
         </div>
-        <Button>
+        <Button onClick={handleCreate}>
           <Plus className="mr-2 h-4 w-4" />
           Add NAS Device
         </Button>
@@ -234,7 +247,7 @@ export default function RADIUSNASPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(nas)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Edit
                           </DropdownMenuItem>
@@ -262,7 +275,7 @@ export default function RADIUSNASPage() {
                   ? "No NAS devices match your search criteria."
                   : "Get started by adding your first NAS device."}
               </p>
-              <Button>
+              <Button onClick={handleCreate}>
                 <Plus className="mr-2 h-4 w-4" />
                 Add NAS Device
               </Button>
@@ -270,6 +283,13 @@ export default function RADIUSNASPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* NAS Device Dialog */}
+      <NASDeviceDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        nasDevice={selectedNAS}
+      />
     </div>
   );
 }

@@ -47,7 +47,7 @@ class TestPortalDashboard:
         # Create partner with data
         partner = await service.create_partner(
             PartnerCreate(
-                company_name="Test Partner",
+                company_name="Test Partner Dashboard",
                 primary_email="test@partner.com",
                 tier=PartnerTier.GOLD,
                 commission_model=CommissionModel.REVENUE_SHARE,
@@ -113,7 +113,7 @@ class TestPortalProfile:
 
         partner = await service.create_partner(
             PartnerCreate(
-                company_name="Test Partner",
+                company_name="Profile Test Partner",
                 primary_email="test@partner.com",
                 website="https://test.com",
             ),
@@ -124,7 +124,7 @@ class TestPortalProfile:
 
         profile = await get_partner_profile(partner=partner)
 
-        assert profile.company_name == "Test Partner"
+        assert profile.company_name == "Profile Test Partner"
         assert profile.primary_email == "test@partner.com"
         assert profile.website == "https://test.com"
 
@@ -137,7 +137,7 @@ class TestPortalProfile:
 
         partner = await service.create_partner(
             PartnerCreate(
-                company_name="Old Name",
+                company_name="Update Profile Partner",
                 primary_email="test@partner.com",
             ),
         )
@@ -173,7 +173,10 @@ class TestPortalReferrals:
         service = PartnerService(async_db_session)
 
         partner = await service.create_partner(
-            PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
+            PartnerCreate(
+                company_name="Referrals Test Partner",
+                primary_email="test@partner.com",
+            ),
         )
 
         # Create referrals
@@ -202,7 +205,10 @@ class TestPortalReferrals:
         service = PartnerService(async_db_session)
 
         partner = await service.create_partner(
-            PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
+            PartnerCreate(
+                company_name="Submit Referral Partner",
+                primary_email="test@partner.com",
+            ),
         )
 
         # Submit referral
@@ -242,7 +248,7 @@ class TestPortalCommissions:
 
         partner = await service.create_partner(
             PartnerCreate(
-                company_name="Test Partner",
+                company_name="Commissions Test Partner",
                 primary_email="test@partner.com",
                 default_commission_rate=Decimal("0.15"),
             ),
@@ -282,7 +288,10 @@ class TestPortalCustomers:
         service = PartnerService(async_db_session)
 
         partner = await service.create_partner(
-            PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
+            PartnerCreate(
+                company_name="Customers Test Partner",
+                primary_email="test@partner.com",
+            ),
         )
 
         # Create customer accounts

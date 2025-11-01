@@ -180,16 +180,15 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
         router_name="router",
-        prefix="/api/v1/tenants",  # Router mounts at root; prefix adds tenants path
+        prefix="/api/v1",  # Router defines /tenants prefix internally
         tags=["Tenant Management"],
         description="Multi-tenant organization management",
         requires_auth=True,
     ),
-    # Legacy singular prefix for backwards compatibility
     RouterConfig(
         module_path="dotmac.platform.tenant.router",
-        router_name="router",
-        prefix="/api/v1/tenant",  # Legacy singular path support
+        router_name="legacy_router",
+        prefix="/api/v1",  # Legacy singular path (/api/v1/tenant/*)
         tags=["Tenant Management"],
         description="Legacy tenant endpoints (singular prefix)",
         requires_auth=True,
@@ -213,7 +212,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.tenant.usage_billing_router",
         router_name="router",
-        prefix="/api/v1",  # Module has /usage prefix
+        prefix="/api/v1/tenants",  # Router exposes /{tenant_id}/usage paths
         tags=["Tenant Usage Billing"],
         description="Usage tracking and billing integration",
         requires_auth=True,
@@ -464,7 +463,7 @@ ROUTER_CONFIGS = [
         prefix="/api/v1/billing",
         tags=["Billing - Webhooks"],
         description="Billing webhook handlers (Stripe, etc.)",
-        requires_auth=True,
+        requires_auth=False,
     ),
     RouterConfig(
         module_path="dotmac.platform.monitoring.logs_router",
@@ -701,7 +700,7 @@ ROUTER_CONFIGS = [
     RouterConfig(
         module_path="dotmac.platform.crm.router",
         router_name="router",
-        prefix="/api/v1",  # Module has /crm prefix
+        prefix="/api/v1/crm",  # Module has /crm prefix
         tags=["CRM"],
         description="Lead management, quotes, and site surveys",
         requires_auth=True,

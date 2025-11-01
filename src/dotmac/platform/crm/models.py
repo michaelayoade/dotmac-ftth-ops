@@ -276,15 +276,6 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
         return f"<Lead(id={self.id}, number={self.lead_number}, status={self.status})>"
 
     @property
-    def metadata(self) -> dict[str, Any]:
-        """Expose JSON metadata via legacy attribute name."""
-        return self.metadata_
-
-    @metadata.setter
-    def metadata(self, value: dict[str, Any] | None) -> None:
-        self.metadata_ = value or {}
-
-    @property
     def full_name(self) -> str:
         """Get lead's full name."""
         return f"{self.first_name} {self.last_name}"
@@ -459,15 +450,6 @@ class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # 
         return f"<Quote(id={self.id}, number={self.quote_number}, status={self.status})>"
 
     @property
-    def metadata(self) -> dict[str, Any]:
-        """Expose JSON metadata via legacy attribute name."""
-        return self.metadata_
-
-    @metadata.setter
-    def metadata(self, value: dict[str, Any] | None) -> None:
-        self.metadata_ = value or {}
-
-    @property
     def is_expired(self) -> bool:
         """Check if quote has expired."""
         return datetime.now(UTC) > self.valid_until
@@ -614,14 +596,22 @@ class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         Index("ix_survey_technician", "technician_id"),
     )
 
-    def __repr__(self) -> str:
-        return f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
+def __repr__(self) -> str:
+    return f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
 
-    @property
-    def metadata(self) -> dict[str, Any]:
-        """Expose JSON metadata via legacy attribute name."""
-        return self.metadata_
 
-    @metadata.setter
-    def metadata(self, value: dict[str, Any] | None) -> None:
-        self.metadata_ = value or {}
+def _get_metadata(instance: Any) -> dict[str, Any]:
+    """Helper to return metadata dict with safe default."""
+    value = getattr(instance, "metadata_", None)
+    return value if isinstance(value, dict) else {}
+
+
+def _set_metadata(instance: Any, value: dict[str, Any] | None) -> None:
+    """Helper to set metadata dict ensuring non-null default."""
+    setattr(instance, "metadata_", value or {})
+
+
+# SAFE ALIASES: Preserve legacy attribute without breaking SQLAlchemy metadata handling
+Lead.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]
+Quote.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]
+SiteSurvey.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]

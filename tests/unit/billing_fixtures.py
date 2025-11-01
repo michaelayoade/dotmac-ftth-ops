@@ -6,6 +6,7 @@ Provides lightweight fixtures for unit testing billing logic without database de
 
 from datetime import datetime, timezone, timedelta
 from decimal import Decimal
+from enum import Enum
 from typing import Any, Dict, List, Optional
 from uuid import UUID, uuid4
 
@@ -22,6 +23,23 @@ from moneyed import Money, Currency
 
 
 pytestmark = pytest.mark.unit
+
+
+try:
+    from dotmac.platform.billing.invoicing.models import InvoiceStatus as _InvoiceStatus  # type: ignore
+except ImportError:
+    class _InvoiceStatus(str, Enum):
+        """Fallback InvoiceStatus enum for environments without billing models."""
+
+        DRAFT = "draft"
+        SENT = "sent"
+        PAID = "paid"
+        VOID = "void"
+
+
+DEFAULT_INVOICE_STATUS = getattr(_InvoiceStatus, "DRAFT", "draft")
+InvoiceStatus = _InvoiceStatus
+
 
 def create_test_money(amount: Decimal | int | float = 100, currency: str = "USD") -> Money:
     """Create test Money instance with defaults."""
@@ -49,14 +67,12 @@ def create_test_invoice_item(**overrides):
 
 def create_test_invoice(**overrides):
     """Create test invoice with sensible defaults."""
-    from dotmac.platform.billing.invoicing.models import InvoiceStatus
-
     defaults = {
         "id": uuid4(),
         "tenant_id": uuid4(),
         "customer_id": uuid4(),
         "invoice_number": f"INV-{uuid4().hex[:8].upper()}",
-        "status": InvoiceStatus.DRAFT,
+        "status": DEFAULT_INVOICE_STATUS,
         "subtotal": Decimal("100.00"),
         "tax_amount": Decimal("20.00"),
         "total_amount": Decimal("120.00"),

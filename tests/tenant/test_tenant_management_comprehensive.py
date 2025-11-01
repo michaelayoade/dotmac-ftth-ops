@@ -5,6 +5,7 @@ Tests all tenant CRUD operations, settings, usage tracking, and invitations.
 """
 
 from datetime import timezone, datetime, timedelta
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -37,10 +38,12 @@ async def tenant_service(async_session):
 @pytest_asyncio.fixture
 async def sample_tenant(tenant_service):
     """Create a sample tenant for testing."""
+    unique_suffix = uuid4().hex[:8]
+    slug = f"test-org-{unique_suffix}"
     tenant_data = TenantCreate(
         name="Test Org",
-        slug="test-org",
-        email="test@example.com",
+        slug=slug,
+        email=f"{slug}@example.com",
         plan_type=TenantPlanType.PROFESSIONAL,
     )
     return await tenant_service.create_tenant(tenant_data, created_by="test-user")
@@ -78,7 +81,7 @@ class TestTenantCRUD:
         """Test creating tenant with duplicate slug fails."""
         tenant_data = TenantCreate(
             name="Another Org",
-            slug="test-org",  # Same slug as sample_tenant
+            slug=sample_tenant.slug,  # Same slug as sample_tenant
             email="another@example.com",
         )
 
@@ -138,23 +141,29 @@ class TestTenantCRUD:
 
     async def test_list_tenants(self, tenant_service):
         """Test listing tenants with pagination."""
+        batch_id = uuid4().hex[:8]
+
         # Create multiple tenants
         for i in range(5):
             tenant_data = TenantCreate(
-                name=f"Org {i}",
-                slug=f"org-{i}",
-                email=f"org{i}@example.com",
+                name=f"Org {batch_id}-{i}",
+                slug=f"org-{batch_id}-{i}",
+                email=f"org{batch_id}_{i}@example.com",
             )
             await tenant_service.create_tenant(tenant_data)
 
         # List first page
-        tenants, total = await tenant_service.list_tenants(page=1, page_size=3)
+        tenants, total = await tenant_service.list_tenants(
+            page=1, page_size=3, search=batch_id
+        )
 
         assert len(tenants) == 3
         assert total == 5
 
         # List second page
-        tenants, total = await tenant_service.list_tenants(page=2, page_size=3)
+        tenants, total = await tenant_service.list_tenants(
+            page=2, page_size=3, search=batch_id
+        )
 
         assert len(tenants) == 2
         assert total == 5

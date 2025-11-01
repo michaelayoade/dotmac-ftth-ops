@@ -4,6 +4,7 @@ Shared fixtures for invoice service tests.
 Pytest fixtures for billing invoicing router tests.
 """
 
+import hashlib
 from datetime import timezone, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -24,6 +25,12 @@ from dotmac.platform.billing.core.enums import (
     PaymentStatus,
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
+
+
+def _build_invoice_number(tenant_id: str, year: int | None = None, sequence: int = 1) -> str:
+    year = year or datetime.now(timezone.utc).year
+    suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    return f"INV-{suffix}-{year}-{sequence:06d}"
 
 
 @pytest.fixture
@@ -121,7 +128,7 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
     entity = MagicMock(spec=InvoiceEntity)
     entity.tenant_id = sample_tenant_id
     entity.invoice_id = str(uuid4())
-    entity.invoice_number = "INV-2024-000001"
+    entity.invoice_number = _build_invoice_number(sample_tenant_id, sequence=1)
     entity.idempotency_key = None
     entity.created_by = "system"
     entity.customer_id = sample_customer_id
@@ -191,7 +198,7 @@ def sample_invoice() -> dict[str, Any]:
     """Sample invoice for testing."""
     return {
         "invoice_id": "inv-123",
-        "invoice_number": "INV-2025-001",
+        "invoice_number": _build_invoice_number("tenant-1"),
         "tenant_id": "tenant-1",
         "customer_id": "cust-456",
         "billing_email": "customer@example.com",

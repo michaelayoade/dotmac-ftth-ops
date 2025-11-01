@@ -12,6 +12,7 @@ import asyncio
 import time
 import uuid
 from datetime import timezone, datetime, timedelta
+from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
@@ -65,47 +66,78 @@ def setup_test_database():
 @pytest.fixture
 def mock_usage_billing_integration():
     """Create a mock for the usage billing integration."""
-    mock_integration = AsyncMock()
+    async def record_usage(tenant_id, usage_data, subscription_id=None):
+        billing_records: list[dict[str, object]] = []
+        if usage_data.api_calls > 0:
+            billing_records.append(
+                {"type": "api_calls", "quantity": usage_data.api_calls, "recorded": True}
+            )
+        if usage_data.storage_gb > 0:
+            billing_records.append(
+                {"type": "storage_gb", "quantity": float(usage_data.storage_gb), "recorded": True}
+            )
+        if usage_data.active_users > 0:
+            billing_records.append(
+                {"type": "users", "quantity": usage_data.active_users, "recorded": True}
+            )
 
-    # Set up default mock responses
-    mock_integration.record_tenant_usage_with_billing = AsyncMock(
-        return_value={
+        return {
             "tenant_usage_id": "usage-123",
-            "billing_records": [
-                {"type": "api_calls", "quantity": 1000, "recorded": True},
-                {"type": "storage_gb", "quantity": 5, "recorded": True},
+            "tenant_id": tenant_id,
+            "period_start": usage_data.period_start,
+            "period_end": usage_data.period_end,
+            "billing_records": billing_records,
+            "subscription_id": subscription_id,
+        }
+
+    async def sync_usage(tenant_id, subscription_id=None):
+        return {
+            "synced": True,
+            "tenant_id": tenant_id,
+            "subscription_id": subscription_id or "sub-auto",
+            "metrics_synced": [
+                {"type": "api_calls", "quantity": 5000, "recorded": True},
+                {"type": "storage_gb", "quantity": 10, "recorded": True},
+                {"type": "users", "quantity": 25, "recorded": True},
             ],
-            "status": "success",
         }
-    )
 
-    mock_integration.sync_tenant_counters_with_billing = AsyncMock(
-        return_value={
-            "synced_metrics": ["api_calls", "storage_gb", "users"],
-            "status": "success",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
-        }
-    )
-
-    mock_integration.calculate_overage_charges = AsyncMock(
-        return_value={
-            "overages": {},
-            "total_overage_charge": 0.00,
+    async def calculate_overages(tenant_id, period_start=None, period_end=None):
+        return {
+            "tenant_id": tenant_id,
+            "period_start": period_start,
+            "period_end": period_end,
+            "has_overages": False,
+            "overages": [],
+            "total_overage_charge": "0.00",
             "currency": "USD",
         }
-    )
 
-    mock_integration.get_billing_preview = AsyncMock(
-        return_value={
-            "base_cost": 99.00,
-            "total_estimated": 99.00,
-            "usage_breakdown": {
-                "api_calls": {"used": 5000, "limit": 10000, "percentage": 50},
+    async def billing_preview(tenant_id, include_overages=True):
+        base_cost = "99.00"
+        preview = {
+            "tenant_id": tenant_id,
+            "plan_type": "professional",
+            "billing_cycle": "monthly",
+            "base_subscription_cost": base_cost,
+            "usage_summary": {
+                "api_calls": {"current": 5000, "limit": 10000, "percentage": 50.0},
+                "storage_gb": {"current": 5.0, "limit": 50, "percentage": 10.0},
+                "users": {"current": 25, "limit": 100, "percentage": 25.0},
             },
         }
-    )
 
-    return mock_integration
+        if include_overages:
+            preview["overages"] = await calculate_overages(tenant_id)
+        preview["total_estimated_charge"] = base_cost
+        return preview
+
+    return SimpleNamespace(
+        record_tenant_usage_with_billing=AsyncMock(side_effect=record_usage),
+        sync_tenant_counters_with_billing=AsyncMock(side_effect=sync_usage),
+        calculate_overage_charges=AsyncMock(side_effect=calculate_overages),
+        get_billing_preview=AsyncMock(side_effect=billing_preview),
+    )
 
 
 @pytest_asyncio.fixture
@@ -204,8 +236,9 @@ class TestUsageBillingRecordEndpoint:
 
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
-        assert "billing_records" in data or "status" in data
-        assert data["status"] == "success"
+        assert data["tenant_id"] == tenant["id"]
+        assert data["subscription_id"] is None
+        assert any(record["type"] == "api_calls" for record in data["billing_records"])
 
     async def test_record_usage_with_subscription_id(self, test_client_with_auth: AsyncClient):
         """Test recording usage with explicit subscription ID."""
@@ -224,6 +257,8 @@ class TestUsageBillingRecordEndpoint:
         )
 
         assert response.status_code == status.HTTP_201_CREATED
+        data = response.json()
+        assert data["subscription_id"] == "sub-123"
 
     async def test_record_usage_error_handling(
         self, test_client_with_auth: AsyncClient, mock_usage_billing_integration
@@ -265,8 +300,9 @@ class TestUsageBillingSyncEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "synced_metrics" in data or "status" in data
-        assert data["status"] == "success"
+        assert data["synced"] is True
+        assert data["tenant_id"] == tenant["id"]
+        assert any(metric["type"] == "api_calls" for metric in data["metrics_synced"])
 
     async def test_sync_usage_with_subscription_id(self, test_client_with_auth: AsyncClient):
         """Test sync with explicit subscription ID."""
@@ -277,6 +313,9 @@ class TestUsageBillingSyncEndpoint:
         )
 
         assert response.status_code == status.HTTP_200_OK
+        data = response.json()
+        assert data["synced"] is True
+        assert data["subscription_id"] == "sub-456"
 
 
 class TestUsageOveragesEndpoint:
@@ -290,8 +329,9 @@ class TestUsageOveragesEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "overages" in data or "total_overage_charge" in data
-        assert data.get("total_overage_charge") == 0.00
+        assert data["tenant_id"] == tenant["id"]
+        assert data["has_overages"] is False
+        assert data["total_overage_charge"] == "0.00"
 
     async def test_get_overages_with_period(self, test_client_with_auth: AsyncClient):
         """Test getting overages endpoint with period parameters."""
@@ -311,7 +351,9 @@ class TestUsageOveragesEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "total_overage_charge" in data
+        assert data["tenant_id"] == tenant["id"]
+        assert data["has_overages"] is False
+        assert data["total_overage_charge"] == "0.00"
 
     async def test_get_overages_no_overages(self, test_client_with_auth: AsyncClient):
         """Test getting overages when tenant is within limits."""
@@ -321,7 +363,7 @@ class TestUsageOveragesEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert data.get("total_overage_charge") == 0.00
+        assert data["total_overage_charge"] == "0.00"
 
 
 class TestBillingPreviewEndpoint:
@@ -337,8 +379,9 @@ class TestBillingPreviewEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "base_cost" in data or "total_estimated" in data or "usage_breakdown" in data
-        assert data.get("total_estimated") == 99.00
+        assert data["tenant_id"] == tenant["id"]
+        assert data["total_estimated_charge"] == "99.00"
+        assert "usage_summary" in data
 
     async def test_billing_preview_without_overages(self, test_client_with_auth: AsyncClient):
         """Test billing preview excluding overage calculations."""
@@ -350,7 +393,7 @@ class TestBillingPreviewEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "total_estimated" in data
+        assert data["total_estimated_charge"] == "99.00"
 
     async def test_billing_preview_default_includes_overages(
         self, test_client_with_auth: AsyncClient
@@ -364,7 +407,7 @@ class TestBillingPreviewEndpoint:
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "total_estimated" in data
+        assert data["total_estimated_charge"] == "99.00"
 
 
 class TestUsageBillingStatusEndpoint:

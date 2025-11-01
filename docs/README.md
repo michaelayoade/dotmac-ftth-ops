@@ -12,13 +12,10 @@ System design decisions, portal navigation, runtime execution paths, and infrast
 Navigation aides and revenue workflows for the BSS surface area.
 
 ### `/guides` — Developer Guides  
-Testing patterns, makefile enhancements, OpenAPI/TypeScript setup, and helper references.
+Testing patterns, Makefile enhancements, OpenAPI/TypeScript setup, and helper references.
 
 ### `/plugins` — Plugin Contracts  
 Extension points and lifecycle documentation for third-party integrations.
-
-### `/sessions` — Development Session Summaries  
-Historical records of work streams. Treat these as read-only history.
 
 ### `/webhooks` — Webhook Documentation  
 Payload schemas, retry logic, onboarding flow, and usage notes.
@@ -27,7 +24,7 @@ Payload schemas, retry logic, onboarding flow, and usage notes.
 
 - **Main project overview**: root [`README.md`](../README.md)
 - **Infrastructure workflows**: [`INFRASTRUCTURE.md`](../INFRASTRUCTURE.md) and [`README-INFRASTRUCTURE.md`](../README-INFRASTRUCTURE.md)
+- **Environment setup**: [`ENVIRONMENT_SETUP.md`](ENVIRONMENT_SETUP.md)
 - **Environment variables**: [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md)
 - **API specifications**: [`API_SPECIFICATIONS.md`](API_SPECIFICATIONS.md)
 - **Frontend multi-app architecture**: [`../frontend/MULTI-APP-ARCHITECTURE.md`](../frontend/MULTI-APP-ARCHITECTURE.md)
-- **Historical planning context**: [`README_ISP_PLATFORM.md`](README_ISP_PLATFORM.md)

@@ -383,9 +383,6 @@ describe('TenantSelector Visibility', () => {
 ## Related Documentation
 
 1. [Portal Architecture Guide](./PORTAL_ARCHITECTURE.md)
-2. [Frontend Comprehensive Review](./FRONTEND_COMPREHENSIVE_REVIEW.md)
-3. [Phase 2 & 3 Completion Summary](./PHASE2_PHASE3_COMPLETION_SUMMARY.md)
-4. [Bundle Optimization Complete](./BUNDLE_OPTIMIZATION_COMPLETE.md)
 
 ---
 

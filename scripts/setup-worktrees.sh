@@ -1,6 +1,6 @@
 #!/bin/bash
 # Git Worktree Setup for Parallel Development
-# This script creates isolated worktrees for multiple Claude instances or developers
+# This script creates isolated worktrees for multiple developers
 
 set -e
 
@@ -93,7 +93,7 @@ echo "  • Independent branch"
 echo "  • Own node_modules (after npm install)"
 echo "  • Own .next build cache"
 echo ""
-echo "Multiple Claude instances can work simultaneously!"
+echo "Multiple developers can work simultaneously!"
 echo ""
 
 echo "🔧 To start development in a worktree:"

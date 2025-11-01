@@ -7,13 +7,15 @@ from uuid import uuid4
 
 import pytest
 
+import pytest_asyncio
+from sqlalchemy import delete
+
 from dotmac.platform.communications.metrics_service import (
-
-
     CommunicationMetricsService,
     get_metrics_service,
 )
 from dotmac.platform.communications.models import (
+    CommunicationLog,
     CommunicationStatus,
     CommunicationType,
 )
@@ -23,6 +25,20 @@ from dotmac.platform.communications.models import (
 
 
 pytestmark = pytest.mark.asyncio
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def _clean_communications(async_db_session):
+    """Ensure communications table is reset between tests."""
+    await async_db_session.execute(delete(CommunicationLog))
+    await async_db_session.commit()
+    yield
+    try:
+        await async_db_session.execute(delete(CommunicationLog))
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()
+
 
 @pytest.mark.integration
 class TestMetricsServiceIntegration:

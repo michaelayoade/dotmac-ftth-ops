@@ -91,9 +91,9 @@ make start-all
 ## Full Documentation
 
 - **Complete Guide**: `INFRASTRUCTURE.md`
-- **Deployment**: `DEPLOYMENT_GUIDE.md`
+- **Deployment checklist & rollout notes**: `docs/DEPLOYMENT_CHECKLIST_SUBSCRIBER_FK.md`
 - **Quick Start**: `QUICK_START.md`
-- **Success Summary**: `DEPLOYMENT_SUCCESS.md`
+- **Documentation index**: `docs/INDEX.md`
 
 ## Help
 
@@ -101,3 +101,20 @@ make start-all
 make help               # Show all make commands
 ./scripts/infra.sh      # Show infrastructure script usage
 ```
+
+## Integration Smoke Tests
+
+After starting the ISP stack you can run docker-backed integration checks:
+
+```bash
+# Ensure infrastructure is up (postgres, redis, netbox, freeradius, ...)
+make start-isp
+
+# Exercise the smoke tests
+pytest tests/infra -m "integration and infra"
+```
+
+The RADIUS smoke test sends a real Access-Request to the FreeRADIUS container
+using the seeded `test/test` credentials exposed on `localhost:1812`. Override
+`FREERADIUS_HOST`, `FREERADIUS_AUTH_PORT`, or `FREERADIUS_SHARED_SECRET` if your
+environment maps the service differently.

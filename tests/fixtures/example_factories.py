@@ -6,6 +6,10 @@ that can be used as templates for creating your own.
 
 These are NOT automatically loaded - copy the patterns you need
 into your feature-specific conftest.py files.
+
+The ``FixtureFactory`` and ``ModelFactory`` base classes live in
+``tests/helpers/fixture_factories.py`` and supply common tracking /
+cleanup utilities that these examples build upon.
 """
 
 from datetime import datetime, timedelta, timezone
@@ -16,18 +20,70 @@ from unittest.mock import AsyncMock
 import pytest
 import pytest_asyncio
 
+from dataclasses import dataclass, field
+
 from tests.helpers.fixture_factories import FixtureFactory, ModelFactory
+
+
+# =============================================================================
+# QUICK START: Working In-Memory Factory
+# =============================================================================
+
+
+@dataclass
+class ExampleInvoice:
+    """Lightweight invoice representation for in-memory testing."""
+
+    id: str
+    amount: Decimal
+    status: str
+    customer_id: str
+    created_at: datetime
+    due_date: datetime
+    extras: dict[str, Any] = field(default_factory=dict)
+
+
+class ExampleInvoiceFactory(FixtureFactory):
+    """Simple factory that creates in-memory invoices without a database."""
+
+    def create(
+        self,
+        amount: Decimal = Decimal("49.99"),
+        status: str = "pending",
+        customer_id: str = "cust_demo",
+        **kwargs,
+    ) -> ExampleInvoice:
+        """Create and track a new invoice instance."""
+        invoice = ExampleInvoice(
+            id=self.generate_id("demo_inv"),
+            amount=amount,
+            status=status,
+            customer_id=customer_id,
+            created_at=datetime.now(timezone.utc),
+            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            extras=dict(kwargs),
+        )
+        self.track(invoice)
+        return invoice
+
+    async def cleanup_instance(self, instance: ExampleInvoice) -> None:  # noqa: D401 - intentional no-op
+        """In-memory objects need no cleanup; override shown for completeness."""
+        return None
+
+
+@pytest.fixture
+async def example_invoice_factory():
+    """Working fixture developers can import directly."""
+    factory = ExampleInvoiceFactory()
+    try:
+        yield factory
+    finally:
+        await factory.cleanup_all()
 
 
 # =============================================================================
 # EXAMPLE 1: Simple Dictionary Factory
 # =============================================================================
-
-
-
-
-
-pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def invoice_dict_factory():

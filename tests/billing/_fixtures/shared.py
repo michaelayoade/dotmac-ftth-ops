@@ -11,12 +11,21 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
 
 # Provide billing-specific environment defaults while keeping other tests isolated
 @pytest.fixture(autouse=True)
 def billing_test_environment(monkeypatch):
     monkeypatch.setenv("TESTING", "1")
     monkeypatch.setenv("DATABASE_URL", "sqlite:///:memory:")
+    monkeypatch.setenv("DOTMAC_AUTOSTART_SERVICES", "0")
+    try:
+        from dotmac.platform.settings import settings
+        settings.rate_limit.storage_url = "memory://"
+        settings.rate_limit.enabled = False
+        settings.redis.cache_url = "memory://"
+    except Exception:
+        pass
 
 # Import models with error handling
 try:
@@ -700,6 +709,9 @@ async def router_client(async_db_session, test_app, tenant_id):
     """
     from httpx import ASGITransport, AsyncClient
 
+    from fastapi import Request
+    from dotmac.platform.auth.core import UserInfo
+    from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.db import get_async_session, get_session_dependency
     from dotmac.platform.tenant import get_current_tenant_id
 
@@ -709,6 +721,25 @@ async def router_client(async_db_session, test_app, tenant_id):
 
     test_app.dependency_overrides[get_session_dependency] = override_get_session
     test_app.dependency_overrides[get_async_session] = override_get_session
+
+    async def override_get_current_user(request: Request):
+        return UserInfo(
+            user_id="router-test-user",
+            email="router@example.com",
+            username="router-user",
+            tenant_id=tenant_id,
+            roles=["admin"],
+            permissions=[
+                "billing:subscriptions:write",
+                "billing:subscriptions:read",
+                "billing:invoices:write",
+                "billing:invoices:read",
+                "billing:payments:write",
+                "billing:payments:read",
+            ],
+        )
+
+    test_app.dependency_overrides[get_current_user] = override_get_current_user
 
     # Override tenant_id to match factory fixture (test-tenant-123)
     def override_get_current_tenant_id():
@@ -725,56 +756,23 @@ async def router_client(async_db_session, test_app, tenant_id):
 
 
 @pytest_asyncio.fixture
-async def unauth_client(async_session):
-    """
-    HTTP client for testing unauthorized access (401/403 scenarios).
-
-    This fixture creates a fresh FastAPI app WITHOUT auth override,
-    allowing tests to verify authentication failures properly.
-
-    Still includes session override for database consistency.
-    """
-    from fastapi import FastAPI
+async def unauth_client(async_db_session, async_db_engine):
+    """HTTP client without auth overrides for 401/403 scenarios."""
     from httpx import ASGITransport, AsyncClient
-
     from dotmac.platform.db import get_async_session, get_session_dependency
-    from dotmac.platform.tenant import get_current_tenant_id
 
-    # Create minimal app without auth override
-    app = FastAPI(title="Unauth Test App")
+    from tests.fixtures.app import _build_app
 
-    # Override session dependencies (needed for DB access)
+    app = _build_app(async_db_engine, override_auth=False)
+
     async def override_get_session():
-        yield async_session
+        yield async_db_session
 
     app.dependency_overrides[get_session_dependency] = override_get_session
     app.dependency_overrides[get_async_session] = override_get_session
 
-    # Override tenant (needed for tenant filtering)
-    def override_get_current_tenant_id():
-        return "test-tenant"
-
-    app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
-
-    # Register billing routers
-    try:
-        from dotmac.platform.billing.payments.router import router as payments_router
-
-        app.include_router(payments_router, prefix="/api/v1/billing", tags=["Payments"])
-    except ImportError:
-        pass
-
-    try:
-        from dotmac.platform.billing.subscriptions.router import router as subscriptions_router
-
-        app.include_router(
-            subscriptions_router, prefix="/api/v1/billing", tags=["Subscriptions"]
-        )
-    except ImportError:
-        pass
-
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+    async with AsyncClient(transport=transport, base_url="http://testserver", headers={"X-Tenant-ID": "test-tenant-123"}) as client:
         yield client
 
     app.dependency_overrides.clear()
@@ -1375,3 +1373,63 @@ def subscription_dict_factory():
 #         yield factory
 #         await factory.cleanup_all()
 # =============================================================================
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def clean_billing_tables(async_db_session):
+    """Ensure key billing tables are cleared between tests."""
+    try:
+        from dotmac.platform.billing.bank_accounts.entities import (
+            CashReconciliation,
+            CashRegister,
+            CashTransaction,
+            CompanyBankAccount,
+            ManualPayment,
+            PaymentReconciliation,
+        )
+        from dotmac.platform.billing.core.entities import InvoiceEntity, PaymentEntity
+        from dotmac.platform.billing.currency.models import ExchangeRate
+    except ImportError:
+        yield
+        return
+
+    models = [
+        ManualPayment,
+        CashTransaction,
+        CashReconciliation,
+        PaymentReconciliation,
+        PaymentEntity,
+        InvoiceEntity,
+        ExchangeRate,
+        CashRegister,
+        CompanyBankAccount,
+    ]
+
+    dialect_name = getattr(getattr(async_db_session.bind, "dialect", None), "name", None)
+    if dialect_name and dialect_name != "sqlite":
+        # Integration tests running against Postgres manage their own cleanup.
+        yield
+        return
+
+    async def _clear_tables() -> None:
+        """Best-effort cleanup that tolerates missing tables."""
+
+        try:
+            for model in models:
+                try:
+                    await async_db_session.execute(delete(model))
+                except Exception:
+                    await async_db_session.rollback()
+                    return
+            try:
+                await async_db_session.commit()
+            except Exception:
+                await async_db_session.rollback()
+        except Exception:
+            await async_db_session.rollback()
+
+    await _clear_tables()
+    try:
+        yield
+    finally:
+        await _clear_tables()

@@ -1001,12 +1001,16 @@ Best regards,
         # For now, use simple sequential numbering
         year = datetime.now(UTC).year
 
-        # CRITICAL: Use PostgreSQL advisory lock to prevent race conditions
-        # Lock key is derived from tenant_id and year to allow concurrent generation
-        # for different tenants/years while ensuring atomicity within same tenant/year
+        # Use a short tenant-specific suffix to guarantee uniqueness across tenants
         import hashlib
 
-        lock_key = int(hashlib.sha256(f"{tenant_id}-{year}".encode()).hexdigest()[:15], 16) % (
+        tenant_suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+
+        # CRITICAL: Use PostgreSQL advisory lock to prevent race conditions
+        # Lock key incorporates tenant-specific suffix and year
+        lock_key = int(
+            hashlib.sha256(f"{tenant_suffix}-{year}".encode()).hexdigest()[:15], 16
+        ) % (
             2**31
         )
 
@@ -1022,7 +1026,7 @@ Best regards,
             .where(
                 and_(
                     InvoiceEntity.tenant_id == tenant_id,
-                    InvoiceEntity.invoice_number.like(f"INV-{year}-%"),
+                    InvoiceEntity.invoice_number.like(f"INV-{tenant_suffix}-{year}-%"),
                 )
             )
             .order_by(InvoiceEntity.invoice_number.desc())
@@ -1039,7 +1043,7 @@ Best regards,
         else:
             next_seq = 1
 
-        return f"INV-{year}-{next_seq:06d}"
+        return f"INV-{tenant_suffix}-{year}-{next_seq:06d}"
 
     async def _create_invoice_transaction(self, invoice: InvoiceEntity) -> None:
         """Create transaction record for invoice creation"""

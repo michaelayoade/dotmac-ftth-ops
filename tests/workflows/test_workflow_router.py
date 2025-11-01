@@ -132,16 +132,17 @@ class TestWorkflowCRUD:
         assert data["workflows"][1]["id"] == 2
 
     @pytest.mark.asyncio
-    async def test_delete_workflow_success(self, async_client: AsyncClient, mock_workflow_service):
-        """Test successful workflow deletion."""
+    async def test_delete_workflow_not_found(self, async_client: AsyncClient, mock_workflow_service):
+        """Test workflow deletion when service reports missing workflow."""
         # Arrange
-        mock_workflow_service.delete_workflow.return_value = None
+        mock_workflow_service.delete_workflow.side_effect = ValueError("Workflow 1 not found")
 
         # Act
         response = await async_client.delete("/api/v1/workflows/1")
 
         # Assert
-        assert response.status_code == status.HTTP_204_NO_CONTENT
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert "not found" in response.json()["detail"].lower()
         mock_workflow_service.delete_workflow.assert_called_once_with(1)
 
 
@@ -164,7 +165,7 @@ class TestWorkflowExecution:
                 "context": {"subscriber_id": "SUB-123", "username": "test@example.com"},
                 "trigger_type": "manual",
                 "trigger_source": "api",
-                "tenant_id": 1,
+                "tenant_id": "00000000-0000-0000-0000-0000000000bb",
             },
         )
 
@@ -247,6 +248,39 @@ class TestWorkflowCRUDExtended:
         # Assert
         assert response.status_code == status.HTTP_204_NO_CONTENT
         mock_workflow_service.delete_workflow.assert_called_once_with(1)
+
+    @pytest.mark.asyncio
+    async def test_execute_workflow_by_id_success(
+        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
+    ):
+        """Test executing workflow by ID."""
+        # Arrange
+        mock_workflow_service.execute_workflow_by_id.return_value = sample_workflow_execution
+
+        # Act
+        response = await async_client.post(
+            "/api/v1/workflows/1/execute",
+            params={
+                "trigger_type": "manual",
+                "trigger_source": "api",
+                "tenant_id": "00000000-0000-0000-0000-0000000000ee",
+            },
+            json={"subscriber_id": "SUB-123", "username": "test@example.com"},
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_202_ACCEPTED
+        data = response.json()
+        assert data["id"] == 1
+        assert data["workflow_id"] == 1
+        assert data["status"] == "completed"
+        mock_workflow_service.execute_workflow_by_id.assert_called_once_with(
+            workflow_id=1,
+            context={"subscriber_id": "SUB-123", "username": "test@example.com"},
+            trigger_type="manual",
+            trigger_source="api",
+            tenant_id="00000000-0000-0000-0000-0000000000ee",
+        )
 
     @pytest.mark.asyncio
     async def test_cancel_execution_success(self, async_client: AsyncClient, mock_workflow_service):

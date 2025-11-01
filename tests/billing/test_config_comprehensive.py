@@ -158,7 +158,7 @@ class TestInvoiceConfig:
         """Test InvoiceConfig with default values."""
         config = InvoiceConfig()
 
-        assert config.number_format == "INV-{year}-{sequence:06d}"
+        assert config.number_format == "INV-{tenant_suffix}-{year}-{sequence:06d}"
         assert config.due_days_default == 30
         assert config.auto_finalize is False
         assert config.overdue_check_hours == 24

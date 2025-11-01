@@ -190,7 +190,7 @@ class WorkflowService:
         context: dict[str, Any],
         trigger_type: str = "manual",
         trigger_source: str | None = None,
-        tenant_id: int | None = None,
+        tenant_id: str | None = None,
     ) -> WorkflowExecution:
         """
         Execute a workflow by name.
@@ -233,7 +233,7 @@ class WorkflowService:
         context: dict[str, Any],
         trigger_type: str = "manual",
         trigger_source: str | None = None,
-        tenant_id: int | None = None,
+        tenant_id: str | None = None,
     ) -> WorkflowExecution:
         """
         Execute a workflow by ID.
@@ -297,7 +297,7 @@ class WorkflowService:
         self,
         workflow_id: int | None = None,
         status: WorkflowStatus | None = None,
-        tenant_id: int | None = None,
+        tenant_id: str | None = None,
         limit: int = 100,
         offset: int = 0,
     ) -> list[WorkflowExecution]:
@@ -346,7 +346,7 @@ class WorkflowService:
     async def get_execution_stats(
         self,
         workflow_id: int | None = None,
-        tenant_id: int | None = None,
+        tenant_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Get execution statistics.

@@ -55,13 +55,13 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def tenant_id() -> str:
     """Test tenant ID."""
-    return "test-tenant-123"
+    return f"test-tenant-{uuid4()}"
 
 
 @pytest.fixture
 def customer_id() -> str:
     """Test customer ID."""
-    return "cust_abc123"
+    return f"cust_{uuid4()}"
 
 
 @pytest.fixture

@@ -11,7 +11,17 @@ from enum import Enum
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import JSON, CheckConstraint, ForeignKey, Index, Integer, Numeric, String, Time
+from sqlalchemy import (
+    JSON,
+    CheckConstraint,
+    ForeignKey,
+    Index,
+    Integer,
+    Numeric,
+    String,
+    Time,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
@@ -89,7 +99,7 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
 
     # Plan identification
-    plan_code: Mapped[str] = mapped_column(String(50), nullable=False, unique=True, index=True)
+    plan_code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String(1000))
     plan_type: Mapped[PlanType] = mapped_column(nullable=False, index=True)
@@ -192,6 +202,7 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
         Index("idx_plan_tenant_status", "tenant_id", "status"),
         Index("idx_plan_type_status", "plan_type", "status"),
         Index("idx_plan_code", "plan_code"),
+        UniqueConstraint("tenant_id", "plan_code", name="uq_plan_tenant_code"),
     )
 
     def __repr__(self) -> str:

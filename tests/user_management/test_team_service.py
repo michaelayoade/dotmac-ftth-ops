@@ -5,7 +5,7 @@ from datetime import timezone, datetime
 
 import pytest
 import pytest_asyncio
-from sqlalchemy import select
+from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.user_management.models import Team, TeamMember
@@ -18,10 +18,17 @@ from dotmac.platform.user_management.schemas import (
 from dotmac.platform.user_management.team_service import TeamService
 
 
-@pytest.fixture
-def team_service(async_db_session: AsyncSession):
-    """Create TeamService instance for testing."""
-    return TeamService(async_db_session)
+@pytest_asyncio.fixture
+async def team_service(async_db_session: AsyncSession):
+    """Create TeamService instance for testing with automatic cleanup."""
+    service = TeamService(async_db_session)
+    try:
+        yield service
+    finally:
+        try:
+            await async_db_session.commit()
+        except Exception:
+            await async_db_session.rollback()
 
 
 @pytest.fixture
@@ -33,11 +40,12 @@ def tenant_id():
 @pytest_asyncio.fixture
 async def sample_team(async_db_session: AsyncSession, tenant_id: str):
     """Create a sample team for testing."""
+    unique_suffix = uuid.uuid4().hex[:8]
     team = Team(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
-        name="Engineering",
-        slug="engineering",
+        name=f"Engineering-{unique_suffix}",
+        slug=f"engineering-{unique_suffix}",
         description="Engineering team",
         is_active=True,
         is_default=False,
@@ -50,7 +58,14 @@ async def sample_team(async_db_session: AsyncSession, tenant_id: str):
     async_db_session.add(team)
     await async_db_session.commit()
     await async_db_session.refresh(team)
-    return team
+    try:
+        yield team
+    finally:
+        try:
+            await async_db_session.delete(team)
+            await async_db_session.commit()
+        except Exception:
+            await async_db_session.rollback()
 
 
 @pytest_asyncio.fixture
@@ -70,7 +85,14 @@ async def sample_user(async_db_session: AsyncSession, tenant_id: str):
     async_db_session.add(user)
     await async_db_session.commit()
     await async_db_session.refresh(user)
-    return user
+    try:
+        yield user
+    finally:
+        try:
+            await async_db_session.delete(user)
+            await async_db_session.commit()
+        except Exception:
+            await async_db_session.rollback()
 
 
 @pytest.mark.integration
@@ -606,3 +628,10 @@ class TestTenantIsolation:
         result = await team_service.get_team_member(member.id, tenant2)
 
         assert result is None
+@pytest_asyncio.fixture(autouse=True)
+async def clean_team_tables(async_db_session: AsyncSession):
+    """Ensure team tables start empty for each test."""
+    await async_db_session.execute(delete(TeamMember))
+    await async_db_session.execute(delete(Team))
+    await async_db_session.commit()
+    yield

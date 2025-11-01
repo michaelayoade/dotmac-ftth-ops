@@ -119,7 +119,7 @@ async def list_executions(
     status_filter: WorkflowStatus | None = Query(
         None, alias="status", description="Filter by status"
     ),
-    tenant_id: int | None = Query(None, description="Filter by tenant ID"),
+    tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     limit: int = Query(100, ge=1, le=1000, description="Maximum results"),
     offset: int = Query(0, ge=0, description="Results offset"),
     service: WorkflowService = Depends(get_workflow_service),
@@ -149,7 +149,7 @@ async def list_executions(
 )
 async def get_workflow_stats(
     workflow_id: int | None = Query(None, description="Filter by workflow ID"),
-    tenant_id: int | None = Query(None, description="Filter by tenant ID"),
+    tenant_id: str | None = Query(None, description="Filter by tenant ID"),
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowStatsResponse:
     """
@@ -298,7 +298,7 @@ async def execute_workflow_by_id(
     context: dict,
     trigger_type: str = "manual",
     trigger_source: str | None = None,
-    tenant_id: int | None = None,
+    tenant_id: str | None = None,
     service: WorkflowService = Depends(get_workflow_service),
 ) -> WorkflowExecutionResponse:
     """

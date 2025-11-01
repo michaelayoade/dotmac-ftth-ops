@@ -24,6 +24,9 @@ from dotmac.platform.ansible.device_provisioning import (
 from dotmac.platform.ansible.lifecycle_integration import AnsibleLifecycleIntegration
 from dotmac.platform.ansible.playbook_library import PlaybookLibrary, PlaybookType
 from dotmac.platform.ansible.router_management import RouterManagementService
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from dotmac.platform.services.lifecycle.models import (
     ServiceInstance,
     ServiceStatus,
@@ -140,6 +143,17 @@ class TestLifecycleIntegration:
             }
         )
         return client
+
+    @pytest_asyncio.fixture(autouse=True)
+    async def _clean_service_instances(self, async_session: AsyncSession):
+        await async_session.execute(delete(ServiceInstance))
+        await async_session.commit()
+        yield
+        try:
+            await async_session.execute(delete(ServiceInstance))
+            await async_session.commit()
+        except Exception:
+            await async_session.rollback()
 
     @pytest_asyncio.fixture
     async def service_instance(self, async_session):

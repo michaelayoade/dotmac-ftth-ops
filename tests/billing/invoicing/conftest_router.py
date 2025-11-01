@@ -2,6 +2,7 @@
 Pytest fixtures for billing invoicing router tests.
 """
 
+import hashlib
 from datetime import datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
@@ -20,13 +21,20 @@ class MockObject:
             setattr(self, key, value)
 
 
+def _build_invoice_number(tenant_id: str, sequence: int = 1, *, year: int | None = None) -> str:
+    year = year or datetime.utcnow().year
+    suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
+    return f"INV-{suffix}-{year}-{sequence:06d}"
+
+
 @pytest.fixture
 def sample_invoice() -> dict[str, Any]:
     """Sample invoice for testing."""
+    tenant_id = "tenant-1"
     return {
         "invoice_id": "inv-123",
-        "invoice_number": "INV-2025-001",
-        "tenant_id": "tenant-1",
+        "invoice_number": _build_invoice_number(tenant_id),
+        "tenant_id": tenant_id,
         "customer_id": "cust-456",
         "billing_email": "customer@example.com",
         "billing_address": {

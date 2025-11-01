@@ -103,7 +103,7 @@ class TestUpdateLastLogin:
         assert result == sample_user
         assert sample_user.last_login is not None
         # IP should not be set
-        assert sample_user.last_login_ip is None or sample_user.last_login_ip == "+1234567890"
+        assert sample_user.last_login_ip is None
         mock_session.commit.assert_called_once()
 
     @pytest.mark.asyncio

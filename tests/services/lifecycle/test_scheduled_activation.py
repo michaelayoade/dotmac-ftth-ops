@@ -27,13 +27,24 @@ from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationSer
 
 pytestmark = pytest.mark.integration
 
+
+def _unique_code(prefix: str) -> str:
+    """Generate a short unique identifier for test entities."""
+    return f"{prefix}-{uuid4().hex[:6].upper()}"
+
+
+@pytest.fixture
+def scheduled_tenant_id() -> str:
+    """Provide a unique tenant identifier for scheduled activation tests."""
+    return f"tenant-scheduled-{uuid4().hex[:8]}"
+
 @pytest_asyncio.fixture
-async def provisioned_service(async_session) -> ServiceInstance:
+async def provisioned_service(async_session, scheduled_tenant_id: str) -> ServiceInstance:
     """Create a provisioned service ready for activation."""
     service = ServiceInstance(
         id=uuid4(),
-        tenant_id="test-tenant",
-        service_identifier="SVC-TEST-000001",
+        tenant_id=scheduled_tenant_id,
+        service_identifier=_unique_code("SVC-TEST"),
         service_name="Test Fiber Internet",
         service_type=ServiceType.FIBER_INTERNET,
         customer_id=uuid4(),
@@ -62,7 +73,7 @@ async def test_schedule_service_activation(async_session, provisioned_service: S
 
     result = await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
-        tenant_id="test-tenant",
+        tenant_id=provisioned_service.tenant_id,
         activation_datetime=activation_time,
         user_id=uuid4(),
     )
@@ -95,7 +106,7 @@ async def test_schedule_activation_invalid_status(
 
     result = await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
-        tenant_id="test-tenant",
+        tenant_id=provisioned_service.tenant_id,
         activation_datetime=activation_time,
     )
 
@@ -116,7 +127,7 @@ async def test_get_services_due_for_activation_past(
     await async_session.commit()
 
     # Get due services
-    due_services = await service.get_services_due_for_activation(tenant_id="test-tenant")
+    due_services = await service.get_services_due_for_activation(tenant_id=provisioned_service.tenant_id)
 
     assert len(due_services) == 1
     assert due_services[0].id == provisioned_service.id
@@ -135,7 +146,7 @@ async def test_get_services_due_for_activation_future(
     await async_session.commit()
 
     # Get due services
-    due_services = await service.get_services_due_for_activation(tenant_id="test-tenant")
+    due_services = await service.get_services_due_for_activation(tenant_id=provisioned_service.tenant_id)
 
     assert len(due_services) == 0
 
@@ -151,7 +162,7 @@ async def test_get_services_due_for_activation_no_schedule(
     await async_session.commit()
 
     # Get due services
-    due_services = await service.get_services_due_for_activation(tenant_id="test-tenant")
+    due_services = await service.get_services_due_for_activation(tenant_id=provisioned_service.tenant_id)
 
     assert len(due_services) == 0
 
@@ -167,12 +178,12 @@ async def test_scheduled_activation_workflow_end_to_end(
     activation_time = datetime.now(timezone.utc)
     await service.schedule_service_activation(
         service_instance_id=provisioned_service.id,
-        tenant_id="test-tenant",
+        tenant_id=provisioned_service.tenant_id,
         activation_datetime=activation_time,
     )
 
     # Step 2: Get due services
-    due_services = await service.get_services_due_for_activation(tenant_id="test-tenant")
+    due_services = await service.get_services_due_for_activation(tenant_id=provisioned_service.tenant_id)
     assert len(due_services) == 1
 
     # Step 3: Manually activate (simulating what the task would do)
@@ -196,7 +207,7 @@ async def test_scheduled_activation_workflow_end_to_end(
 
 
 @pytest.mark.asyncio
-async def test_multiple_scheduled_activations(async_session):
+async def test_multiple_scheduled_activations(async_session, scheduled_tenant_id: str):
     """Test scheduling multiple services for activation."""
     service = LifecycleOrchestrationService(async_session)
 
@@ -211,8 +222,8 @@ async def test_multiple_scheduled_activations(async_session):
     for i, activation_time in enumerate(activation_times):
         svc = ServiceInstance(
             id=uuid4(),
-            tenant_id="test-tenant",
-            service_identifier=f"SVC-TEST-{i:06d}",
+            tenant_id=scheduled_tenant_id,
+            service_identifier=_unique_code("SVC-TEST"),
             service_name=f"Test Service {i}",
             service_type=ServiceType.FIBER_INTERNET,
             customer_id=uuid4(),
@@ -226,7 +237,7 @@ async def test_multiple_scheduled_activations(async_session):
     await async_session.commit()
 
     # Get due services
-    due_services = await service.get_services_due_for_activation(tenant_id="test-tenant")
+    due_services = await service.get_services_due_for_activation(tenant_id=scheduled_tenant_id)
 
     # Should only get the 2 past-scheduled services
     assert len(due_services) == 2
@@ -244,10 +255,13 @@ async def test_scheduled_activation_tenant_isolation(async_session):
     past_time = datetime.now(timezone.utc) - timedelta(hours=1)
 
     # Create services for different tenants
+    tenant1_id = f"tenant-{uuid4().hex[:6]}"
+    tenant2_id = f"tenant-{uuid4().hex[:6]}"
+
     service1 = ServiceInstance(
         id=uuid4(),
-        tenant_id="tenant-1",
-        service_identifier="SVC-T1-000001",
+        tenant_id=tenant1_id,
+        service_identifier=_unique_code("SVC-T1"),
         service_name="Tenant 1 Service",
         service_type=ServiceType.FIBER_INTERNET,
         customer_id=uuid4(),
@@ -258,8 +272,8 @@ async def test_scheduled_activation_tenant_isolation(async_session):
 
     service2 = ServiceInstance(
         id=uuid4(),
-        tenant_id="tenant-2",
-        service_identifier="SVC-T2-000001",
+        tenant_id=tenant2_id,
+        service_identifier=_unique_code("SVC-T2"),
         service_name="Tenant 2 Service",
         service_type=ServiceType.FIBER_INTERNET,
         customer_id=uuid4(),
@@ -272,8 +286,8 @@ async def test_scheduled_activation_tenant_isolation(async_session):
     await async_session.commit()
 
     # Get due services for tenant-1 only
-    due_services = await service.get_services_due_for_activation(tenant_id="tenant-1")
+    due_services = await service.get_services_due_for_activation(tenant_id=tenant1_id)
 
     assert len(due_services) == 1
     assert due_services[0].id == service1.id
-    assert due_services[0].tenant_id == "tenant-1"
+    assert due_services[0].tenant_id == tenant1_id

@@ -1,6 +1,7 @@
 """Tests for tenant OSS configuration router."""
 
 import os
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -30,7 +31,8 @@ EXPECTED_NETBOX_API_TOKEN = os.getenv("NETBOX_API_TOKEN", None)
 
 @pytest_asyncio.fixture
 async def tenant(async_db_session: AsyncSession) -> Tenant:
-    tenant = Tenant(id="tenant-1", name="Tenant One", slug="tenant-one")
+    tenant_id = f"tenant-{uuid4().hex[:8]}"
+    tenant = Tenant(id=tenant_id, name="Tenant One", slug=f"tenant-{uuid4().hex[:8]}")
     async_db_session.add(tenant)
     await async_db_session.commit()
     return tenant

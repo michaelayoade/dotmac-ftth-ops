@@ -62,11 +62,12 @@ async def test_subscriber(async_session: AsyncSession, tenant_id: UUID, customer
     async_session.add(customer)
 
     # Create subscriber
+    subscriber_id = f"test-subscriber-{uuid4().hex[:8]}"
     subscriber = Subscriber(
-        id="test-subscriber-001",
+        id=subscriber_id,
         tenant_id=str(tenant_id),
         customer_id=customer_id,
-        username="test-subscriber-001",
+        username=subscriber_id,
         password="test-password-hash",
         service_type="fiber_internet",
     )

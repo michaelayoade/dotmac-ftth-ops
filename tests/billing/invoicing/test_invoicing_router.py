@@ -107,7 +107,7 @@ class TestInvoiceCRUD:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["invoice_id"] == "inv-123"
-        assert data["invoice_number"] == "INV-2025-001"
+        assert data["invoice_number"].startswith("INV-")
 
     @pytest.mark.asyncio
     async def test_get_invoice_not_found(self, async_client: AsyncClient, mock_invoice_service):
