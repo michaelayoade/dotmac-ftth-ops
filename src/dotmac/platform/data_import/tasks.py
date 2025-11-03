@@ -20,7 +20,7 @@ from dotmac.platform.core.tasks import app, idempotent_task
 from dotmac.platform.customer_management.mappers import CustomerImportSchema, CustomerMapper
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.data_import.models import ImportJob, ImportJobStatus, ImportJobType
-from dotmac.platform.db import get_async_database_url
+import dotmac.platform.db as db_module
 
 logger = structlog.get_logger(__name__)
 
@@ -31,7 +31,10 @@ MAX_CHUNK_SIZE = 5000
 
 def get_async_session() -> AsyncSession:
     """Create async database session for Celery tasks."""
-    engine = create_async_engine(get_async_database_url(), echo=False)
+    engine = create_async_engine(
+        db_module.get_async_database_url(),  # type: ignore[attr-defined]
+        echo=False,
+    )
     async_session_maker = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     return async_session_maker()
 

@@ -68,6 +68,9 @@ class TicketType(str, Enum):
     SPEED_ISSUE = "speed_issue"
     NETWORK_ISSUE = "network_issue"
     CONNECTIVITY_ISSUE = "connectivity_issue"
+    FAULT = "fault"
+    OUTAGE = "outage"
+    MAINTENANCE = "maintenance"
 
 
 class Ticket(BaseModel, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]

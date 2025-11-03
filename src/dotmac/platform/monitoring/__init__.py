@@ -12,6 +12,8 @@ Provides comprehensive monitoring capabilities including:
 
 import os
 
+from fastapi import APIRouter
+
 from dotmac.platform.settings import settings
 
 from .benchmarks import (
@@ -36,12 +38,16 @@ _skip_router_imports = os.getenv("DOTMAC_MONITORING_SKIP_IMPORTS", "").lower() i
     "yes",
 }
 
+logs_router: APIRouter | None = None
+traces_router: APIRouter | None = None
+
 if not _skip_router_imports:
-    from .logs_router import logs_router
-    from .traces_router import traces_router
-else:  # pragma: no cover - used only in test environments
-    logs_router = None
-    traces_router = None
+    from .logs_router import logs_router as _logs_router
+    from .traces_router import traces_router as _traces_router
+
+    logs_router = _logs_router
+    traces_router = _traces_router
+# Else branch retains default None assignments (used in test environments)
 
 __all__ = [
     # Settings

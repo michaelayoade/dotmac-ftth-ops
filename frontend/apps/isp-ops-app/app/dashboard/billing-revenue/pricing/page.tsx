@@ -166,7 +166,7 @@ export default function PricingPage() {
       const searchLower = searchQuery.toLowerCase();
       if (
         !rule.name.toLowerCase().includes(searchLower) &&
-        !(rule.description ?? "").toLowerCase().includes(searchLower)
+        !rule.description?.toLowerCase().includes(searchLower)
       ) {
         return false;
       }
@@ -1180,7 +1180,7 @@ export default function PricingPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Deactivate Pricing Rule</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to deactivate the rule "{selectedRule?.name}"? This will remove it from
+              Are you sure you want to deactivate the rule &quot;{selectedRule?.name}&quot;? This will remove it from
               active pricing calculations.
             </AlertDialogDescription>
           </AlertDialogHeader>

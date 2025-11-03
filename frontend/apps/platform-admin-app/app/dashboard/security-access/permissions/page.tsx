@@ -166,7 +166,7 @@ export default function PermissionsPage() {
     return roles.filter((role) => role.permissions.some((p) => p.name === permissionName)).length;
   };
 
-  // Show access denied if user doesn't have permission
+  // Show access denied if user doesn&apos;t have permission
   if (!canViewPermissions) {
     return (
       <div className="space-y-6">

@@ -533,7 +533,7 @@ class DiagnosticsService:
                 recommendations.append(
                     {
                         "severity": "error",
-                        "message": f"ONU not operational (state: {onu_status.get('operational_state')})",
+                        "message": f"ONU not operational (state: {onu_status_payload.get('operational_state')})",
                         "action": "Check ONU power and fiber connection",
                     }
                 )

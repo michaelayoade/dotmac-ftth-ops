@@ -20,7 +20,6 @@ import {
   Info,
 } from 'lucide-react';
 import { useRouter, useParams } from 'next/navigation';
-import { toast } from '@/components/ui/toast';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -50,6 +49,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { platformConfig } from '@/lib/config';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 interface ReconciliationSession {
@@ -187,6 +187,7 @@ export default function ReconciliationDetailPage() {
   const params = useParams();
   const id = params.id as string;
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddPaymentDialogOpen, setIsAddPaymentDialogOpen] = useState(false);
   const [addPaymentForm, setAddPaymentForm] = useState<ReconcilePaymentRequest>({
@@ -202,7 +203,10 @@ export default function ReconciliationDetailPage() {
   } = useQuery({
     queryKey: ['reconciliation', id],
     queryFn: () => fetchReconciliation(id),
-    refetchInterval: 5000,
+    refetchInterval: (query) => {
+      // Refetch every 15 seconds if in_progress
+      return query?.state?.data?.status === 'in_progress' ? 15000 : false;
+    },
   });
 
   // Mutations
@@ -211,12 +215,12 @@ export default function ReconciliationDetailPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
-      toast.success('Payment added to reconciliation successfully');
+      toast({ title: 'Payment added to reconciliation successfully' });
       setIsAddPaymentDialogOpen(false);
       setAddPaymentForm({ payment_id: 0, notes: '' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to add payment: ${error.message}`);
+      toast({ title: `Failed to add payment: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -226,10 +230,10 @@ export default function ReconciliationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation completed successfully');
+      toast({ title: 'Reconciliation completed successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to complete reconciliation: ${error.message}`);
+      toast({ title: `Failed to complete reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -239,10 +243,10 @@ export default function ReconciliationDetailPage() {
       queryClient.invalidateQueries({ queryKey: ['reconciliation', id] });
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation approved successfully');
+      toast({ title: 'Reconciliation approved successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to approve reconciliation: ${error.message}`);
+      toast({ title: `Failed to approve reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -268,7 +272,7 @@ export default function ReconciliationDetailPage() {
 
   const handleAddPayment = () => {
     if (!addPaymentForm.payment_id) {
-      toast.error('Please enter a valid payment ID');
+      toast({ title: 'Please enter a valid payment ID', variant: 'destructive' });
       return;
     }
     addPaymentMutation.mutate(addPaymentForm);
@@ -276,7 +280,7 @@ export default function ReconciliationDetailPage() {
 
   if (isLoading) {
     return (
-      <RouteGuard permission="billing:write">
+      <RouteGuard permission={['billing:write']}>
         <div className="flex justify-center items-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -286,7 +290,7 @@ export default function ReconciliationDetailPage() {
 
   if (!reconciliation) {
     return (
-      <RouteGuard permission="billing:write">
+      <RouteGuard permission={['billing:write']}>
         <div className="container mx-auto p-6">
           <Alert variant="destructive">
             <AlertTriangle className="h-4 w-4" />
@@ -310,7 +314,7 @@ export default function ReconciliationDetailPage() {
   );
 
   return (
-    <RouteGuard permission="billing:write">
+    <RouteGuard permission={['billing:write']}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -698,7 +702,7 @@ export default function ReconciliationDetailPage() {
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No payments reconciled yet</p>
                     {reconciliation.status === 'in_progress' && (
-                      <p className="text-sm mt-2">Click "Add Payment" to start reconciling</p>
+                      <p className="text-sm mt-2">Click &quot;Add Payment&quot; to start reconciling</p>
                     )}
                   </div>
                 ) : (

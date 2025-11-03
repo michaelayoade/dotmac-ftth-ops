@@ -634,7 +634,7 @@ function SubscriberDiagnosticsContent() {
           <DialogHeader>
             <DialogTitle>Restart CPE Device</DialogTitle>
             <DialogDescription>
-              This will restart the customer's CPE device, which may cause a temporary service interruption.
+              This will restart the customer&apos;s CPE device, which may cause a temporary service interruption.
               Are you sure you want to proceed?
             </DialogDescription>
           </DialogHeader>

@@ -21,6 +21,11 @@ from dotmac.platform.billing.bank_accounts.entities import (
 from dotmac.platform.billing.reconciliation_service import ReconciliationService
 
 
+def unique_payment_reference(prefix: str) -> str:
+    """Generate a unique payment reference for tests to avoid constraint collisions."""
+    return f"{prefix}-{uuid4()}"
+
+
 @pytest.fixture
 def mock_audit_service():
     """Mock audit service to avoid API signature issues."""
@@ -66,8 +71,8 @@ async def test_manual_payment(
         amount=Decimal("100.00"),
         currency="USD",
         payment_date=datetime.now(UTC),
-        payment_method=PaymentMethodType.BANK_TRANSFER,
-        payment_reference="REF-001",
+        payment_method=PaymentMethodType.CASH,
+        payment_reference=unique_payment_reference("REF"),
         status="verified",
         reconciled=False,
         notes="Test payment",
@@ -169,8 +174,8 @@ class TestReconciliationCircuitBreaker:
             amount=Decimal("100.00"),
             currency="USD",
             payment_date=datetime.now(UTC),
-            payment_method=PaymentMethodType.BANK_TRANSFER,
-            payment_reference="FAIL-001",
+            payment_method=PaymentMethodType.CASH,
+            payment_reference=unique_payment_reference("FAIL"),
             status="failed",
             reconciled=False,
         )
@@ -195,12 +200,12 @@ class TestManualPaymentIntegration:
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
             recorded_by="test-user",
-            customer_id=str(uuid4()),
+            customer_id=uuid4(),
             amount=Decimal("250.00"),
             currency="USD",
             payment_date=datetime.now(UTC),
             payment_method=PaymentMethodType.CHECK,
-            payment_reference="CHK-12345",
+            payment_reference=unique_payment_reference("CHK"),
             status="pending",
             reconciled=False,
             notes="Integration test payment",
@@ -252,12 +257,12 @@ class TestManualPaymentIntegration:
                 tenant_id=tenant_id,
                 bank_account_id=test_bank_account.id,
                 recorded_by="test-user",
-                customer_id=str(uuid4()),
+                customer_id=uuid4(),
                 amount=Decimal(f"{100 * (i + 1)}.00"),
                 currency="USD",
                 payment_date=datetime.now(UTC),
-                payment_method=PaymentMethodType.BANK_TRANSFER,
-                payment_reference=f"REF-{i}",
+                payment_method=PaymentMethodType.CASH,
+                payment_reference=unique_payment_reference(f"REF-{i}"),
                 status="verified",
                 reconciled=False,
             )
@@ -372,8 +377,8 @@ class TestReconciliationTenantIsolation:
             amount=Decimal("100.00"),
             currency="USD",
             payment_date=datetime.now(UTC),
-            payment_method=PaymentMethodType.BANK_TRANSFER,
-            payment_reference="T1-001",
+            payment_method=PaymentMethodType.CASH,
+            payment_reference=unique_payment_reference("T1"),
             status="verified",
             reconciled=False,
         )
@@ -386,8 +391,8 @@ class TestReconciliationTenantIsolation:
             amount=Decimal("200.00"),
             currency="USD",
             payment_date=datetime.now(UTC),
-            payment_method=PaymentMethodType.BANK_TRANSFER,
-            payment_reference="T2-001",
+            payment_method=PaymentMethodType.CASH,
+            payment_reference=unique_payment_reference("T2"),
             status="verified",
             reconciled=False,
         )

@@ -278,7 +278,7 @@ function DiagnosticsPageContent() {
                 Restart CPE Device
               </Button>
               <p className="text-xs text-muted-foreground">
-                This will trigger a reboot of the subscriber's CPE device via TR-069
+                This will trigger a reboot of the subscriber&apos;s CPE device via TR-069
               </p>
             </CardContent>
           </Card>

@@ -11,7 +11,7 @@ from typing import Any
 from uuid import uuid4
 
 import structlog
-from sqlalchemy import and_, select
+from sqlalchemy import and_, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.exceptions import (
@@ -1275,22 +1275,22 @@ class SubscriptionService:
         self, subscription_id: str, status: SubscriptionStatus, tenant_id: str
     ) -> bool:
         """Update subscription status."""
-        stmt = select(BillingSubscriptionTable).where(
-            and_(
-                BillingSubscriptionTable.subscription_id == subscription_id,
-                BillingSubscriptionTable.tenant_id == tenant_id,
+        stmt = (
+            update(BillingSubscriptionTable)
+            .where(
+                and_(
+                    BillingSubscriptionTable.subscription_id == subscription_id,
+                    BillingSubscriptionTable.tenant_id == tenant_id,
+                )
+            )
+            .values(
+                status=status.value,
+                updated_at=datetime.now(UTC),
             )
         )
         result = await self.db.execute(stmt)
-        db_subscription = result.scalar_one_or_none()
-
-        if not db_subscription:
-            return False
-
-        # Use setattr to avoid mypy Column assignment errors
-            setattr(db_subscription, "status", status.value)
         await self.db.commit()
-        return True
+        return bool(result.rowcount)
 
     async def _reset_usage_for_new_period(self, subscription_id: str, tenant_id: str) -> bool:
         """Reset usage records for new billing period."""

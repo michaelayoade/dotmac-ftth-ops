@@ -768,7 +768,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Pricing Rule</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the rule "{rule.name}"? This action cannot be undone and
+              Are you sure you want to delete the rule &quot;{rule.name}&quot;? This action cannot be undone and
               will remove the rule permanently.
             </AlertDialogDescription>
           </AlertDialogHeader>

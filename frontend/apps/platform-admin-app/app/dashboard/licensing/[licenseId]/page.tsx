@@ -207,7 +207,7 @@ function LicenseDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">License Not Found</h2>
-        <p className="text-muted-foreground mb-4">The license you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mb-4">The license you&apos;re looking for doesn&apos;t exist.</p>
         <Button asChild>
           <Link href="/dashboard/licensing">
             <ArrowLeft className="h-4 w-4 mr-2" />

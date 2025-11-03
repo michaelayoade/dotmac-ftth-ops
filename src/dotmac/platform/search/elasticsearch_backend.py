@@ -10,6 +10,7 @@ import structlog
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from dotmac.platform.search.interfaces import (
+    SearchBackend,
     SearchQuery,
     SearchResponse,
     SearchResult,
@@ -20,7 +21,7 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 
-class ElasticsearchBackend:
+class ElasticsearchBackend(SearchBackend):
     """Elasticsearch search backend."""
 
     def __init__(self, es_url: str | None = None):

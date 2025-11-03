@@ -13,12 +13,13 @@ from __future__ import annotations
 import secrets
 from datetime import datetime
 from time import time
-from typing import Annotated
+from typing import Annotated, Any, cast
 
 import structlog
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request, status
 from pydantic import BaseModel
 from sqlalchemy import delete, select
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -533,10 +534,15 @@ async def delete_alert_channel(
             detail="Platform administrator access required to delete alert channels",
         )
 
-    deleted = await session.execute(
+    delete_result = await session.execute(
         delete(MonitoringAlertChannel).where(MonitoringAlertChannel.id == channel_id)
     )
-    if deleted.rowcount == 0:
+    rowcount = (
+        delete_result.rowcount
+        if isinstance(delete_result, CursorResult)
+        else getattr(delete_result, "rowcount", 0)
+    )
+    if not rowcount:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Alert channel {channel_id} not found",

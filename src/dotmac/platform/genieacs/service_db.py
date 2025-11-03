@@ -6,7 +6,7 @@ and Prometheus metrics.
 """
 
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, cast
 from uuid import uuid4
 
 import structlog
@@ -74,6 +74,13 @@ class GenieACSServiceDB(GenieACSService):
             raise ValueError("Tenant ID is required for GenieACS operations")
         return self.tenant_id
 
+    @property
+    def _db(self) -> AsyncSession:
+        """Return the active database session."""
+        if self.session is None:
+            raise RuntimeError("Database session is not configured for GenieACSServiceDB")
+        return self.session
+
     # =========================================================================
     # Scheduled Firmware Upgrades
     # =========================================================================
@@ -100,7 +107,7 @@ class GenieACSServiceDB(GenieACSService):
         # Create schedule model
         schedule = FirmwareUpgradeSchedule(
             schedule_id=schedule_id,
-            tenant_id=self.tenant_id,
+            tenant_id=self._require_tenant_id(),
             name=request.name,
             description=request.description,
             firmware_file=request.firmware_file,
@@ -113,17 +120,18 @@ class GenieACSServiceDB(GenieACSService):
             created_at=datetime.now(UTC),
         )
 
-        self.session.add(schedule)
-        await self.session.commit()
+        self._db.add(schedule)
+        await self._db.commit()
 
         # Record metrics
-        record_firmware_upgrade_created(self.tenant_id)
-        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "pending", 1.0)
+        tenant_id = self._require_tenant_id()
+        record_firmware_upgrade_created(tenant_id)
+        set_firmware_upgrade_schedule_status(tenant_id, schedule_id, "pending", 1.0)
 
         logger.info(
             "firmware_schedule.created_db",
             schedule_id=schedule_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
             total_devices=total_devices,
         )
 
@@ -154,9 +162,11 @@ class GenieACSServiceDB(GenieACSService):
         self,
     ) -> FirmwareUpgradeScheduleList:
         """List all firmware upgrade schedules for tenant."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+
+        result = await self._db.execute(
             select(FirmwareUpgradeSchedule)
-            .where(FirmwareUpgradeSchedule.tenant_id == self.tenant_id)
+            .where(FirmwareUpgradeSchedule.tenant_id == tenant_id)
             .order_by(FirmwareUpgradeSchedule.created_at.desc())
         )
 
@@ -164,7 +174,7 @@ class GenieACSServiceDB(GenieACSService):
 
         # Update active schedules metric
         active_count = sum(1 for s in schedules if s.status in ("pending", "running"))
-        set_firmware_upgrade_active_schedules(self.tenant_id, active_count)
+        set_firmware_upgrade_active_schedules(tenant_id, active_count)
 
         return FirmwareUpgradeScheduleList(
             schedules=[
@@ -192,10 +202,12 @@ class GenieACSServiceDB(GenieACSService):
         self, schedule_id: str
     ) -> FirmwareUpgradeScheduleResponse:
         """Get firmware upgrade schedule with results."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+
+        result = await self._db.execute(
             select(FirmwareUpgradeSchedule).where(
                 FirmwareUpgradeSchedule.schedule_id == schedule_id,
-                FirmwareUpgradeSchedule.tenant_id == self.tenant_id,
+                FirmwareUpgradeSchedule.tenant_id == tenant_id,
             )
         )
 
@@ -204,7 +216,7 @@ class GenieACSServiceDB(GenieACSService):
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
 
         # Get results
-        results_result = await self.session.execute(
+        results_result = await self._db.execute(
             select(FirmwareUpgradeResult).where(FirmwareUpgradeResult.schedule_id == schedule_id)
         )
 
@@ -216,7 +228,8 @@ class GenieACSServiceDB(GenieACSService):
         pending = sum(1 for r in results if r.status in ("pending", "in_progress"))
 
         # Query current device count
-        devices = await self.client.get_devices(query=schedule.device_filter)
+        filter_payload = cast(dict[str, Any], schedule.device_filter or {})
+        devices = await self.client.get_devices(query=filter_payload)
         total_devices = len(devices)
 
         return FirmwareUpgradeScheduleResponse(
@@ -253,10 +266,12 @@ class GenieACSServiceDB(GenieACSService):
 
     async def cancel_firmware_upgrade_schedule(self, schedule_id: str) -> dict[str, Any]:
         """Cancel firmware upgrade schedule."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+
+        result = await self._db.execute(
             select(FirmwareUpgradeSchedule).where(
                 FirmwareUpgradeSchedule.schedule_id == schedule_id,
-                FirmwareUpgradeSchedule.tenant_id == self.tenant_id,
+                FirmwareUpgradeSchedule.tenant_id == tenant_id,
             )
         )
 
@@ -267,17 +282,17 @@ class GenieACSServiceDB(GenieACSService):
         if schedule.status not in ("pending", "queued", "running"):
             raise ValueError(f"Cannot cancel schedule with status: {schedule.status}")
 
-        schedule.status = "cancelled"
-        schedule.completed_at = datetime.now(UTC)
-        await self.session.commit()
+        setattr(schedule, "status", "cancelled")
+        setattr(schedule, "completed_at", datetime.now(UTC))
+        await self._db.commit()
 
         # Update metrics
-        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "cancelled", 1.0)
+        set_firmware_upgrade_schedule_status(tenant_id, schedule_id, "cancelled", 1.0)
 
         logger.info(
             "firmware_schedule.cancelled_db",
             schedule_id=schedule_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
         )
 
         return {"success": True, "message": f"Schedule {schedule_id} cancelled"}
@@ -296,11 +311,13 @@ class GenieACSServiceDB(GenieACSService):
         """
         from dotmac.platform.genieacs.tasks import execute_firmware_upgrade
 
+        tenant_id = self._require_tenant_id()
+
         # Verify schedule exists
-        result = await self.session.execute(
+        result = await self._db.execute(
             select(FirmwareUpgradeSchedule).where(
                 FirmwareUpgradeSchedule.schedule_id == schedule_id,
-                FirmwareUpgradeSchedule.tenant_id == self.tenant_id,
+                FirmwareUpgradeSchedule.tenant_id == tenant_id,
             )
         )
 
@@ -309,11 +326,11 @@ class GenieACSServiceDB(GenieACSService):
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
 
         # Mark as queued before handing off to Celery to ensure durable replay
-        schedule.status = "queued"
-        schedule.started_at = None
-        schedule.completed_at = None
-        await self.session.commit()
-        set_firmware_upgrade_schedule_status(self.tenant_id, schedule_id, "queued", 1.0)
+        setattr(schedule, "status", "queued")
+        setattr(schedule, "started_at", None)
+        setattr(schedule, "completed_at", None)
+        await self._db.commit()
+        set_firmware_upgrade_schedule_status(tenant_id, schedule_id, "queued", 1.0)
 
         # Queue Celery task
         execute_firmware_upgrade.delay(schedule_id)
@@ -321,7 +338,7 @@ class GenieACSServiceDB(GenieACSService):
         logger.info(
             "firmware_schedule.queued",
             schedule_id=schedule_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
         )
 
         # Return current state
@@ -348,6 +365,8 @@ class GenieACSServiceDB(GenieACSService):
                 )
 
         # Build config_changes JSON
+        tenant_id = self._require_tenant_id()
+
         config_changes: dict[str, Any] = {}
         if request.wifi:
             config_changes["wifi"] = request.wifi.model_dump(exclude_none=True)
@@ -361,7 +380,7 @@ class GenieACSServiceDB(GenieACSService):
         # Create job model
         job = MassConfigJob(
             job_id=job_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
             name=request.name,
             description=request.description,
             device_filter=request.device_filter.query,
@@ -374,18 +393,18 @@ class GenieACSServiceDB(GenieACSService):
             created_at=datetime.now(UTC),
         )
 
-        self.session.add(job)
-        await self.session.commit()
+        self._db.add(job)
+        await self._db.commit()
 
         # Record metrics
-        if not request.dry_run and self.tenant_id is not None:
-            record_mass_config_created(self.tenant_id)
-            set_mass_config_job_status(self.tenant_id, job_id, "pending", 1.0)
+        if not request.dry_run:
+            record_mass_config_created(tenant_id)
+            set_mass_config_job_status(tenant_id, job_id, "pending", 1.0)
 
         logger.info(
             "mass_config.created_db",
             job_id=job_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
             total_devices=total_devices,
             dry_run=request.dry_run,
         )
@@ -417,9 +436,10 @@ class GenieACSServiceDB(GenieACSService):
 
     async def list_mass_config_jobs(self) -> MassConfigJobList:
         """List all mass configuration jobs for tenant."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+        result = await self._db.execute(
             select(MassConfigJob)
-            .where(MassConfigJob.tenant_id == self.tenant_id)
+            .where(MassConfigJob.tenant_id == tenant_id)
             .order_by(MassConfigJob.created_at.desc())
         )
 
@@ -427,8 +447,7 @@ class GenieACSServiceDB(GenieACSService):
 
         # Update active jobs metric
         active_count = sum(1 for j in jobs if j.status in ("pending", "running"))
-        if self.tenant_id is not None:
-            set_mass_config_active_jobs(self.tenant_id, active_count)
+        set_mass_config_active_jobs(tenant_id, active_count)
 
         return MassConfigJobList(
             jobs=[
@@ -454,10 +473,11 @@ class GenieACSServiceDB(GenieACSService):
 
     async def get_mass_config_job(self, job_id: str) -> MassConfigResponse:
         """Get mass configuration job with results."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+        result = await self._db.execute(
             select(MassConfigJob).where(
                 MassConfigJob.job_id == job_id,
-                MassConfigJob.tenant_id == self.tenant_id,
+                MassConfigJob.tenant_id == tenant_id,
             )
         )
 
@@ -466,7 +486,7 @@ class GenieACSServiceDB(GenieACSService):
             raise ValueError(f"Mass configuration job {job_id} not found")
 
         # Get results
-        results_result = await self.session.execute(
+        results_result = await self._db.execute(
             select(MassConfigResult).where(MassConfigResult.job_id == job_id)
         )
 
@@ -504,10 +524,11 @@ class GenieACSServiceDB(GenieACSService):
 
     async def cancel_mass_config_job(self, job_id: str) -> dict[str, Any]:
         """Cancel mass configuration job."""
-        result = await self.session.execute(
+        tenant_id = self._require_tenant_id()
+        result = await self._db.execute(
             select(MassConfigJob).where(
                 MassConfigJob.job_id == job_id,
-                MassConfigJob.tenant_id == self.tenant_id,
+                MassConfigJob.tenant_id == tenant_id,
             )
         )
 
@@ -518,18 +539,17 @@ class GenieACSServiceDB(GenieACSService):
         if job.status not in ("pending", "running"):
             raise ValueError(f"Cannot cancel job with status: {job.status}")
 
-        job.status = "cancelled"
-        job.completed_at = datetime.now(UTC)
-        await self.session.commit()
+        setattr(job, "status", "cancelled")
+        setattr(job, "completed_at", datetime.now(UTC))
+        await self._db.commit()
 
         # Update metrics
-        if self.tenant_id is not None:
-            set_mass_config_job_status(self.tenant_id, job_id, "cancelled", 1.0)
+        set_mass_config_job_status(tenant_id, job_id, "cancelled", 1.0)
 
         logger.info(
             "mass_config.cancelled_db",
             job_id=job_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
         )
 
         return {"success": True, "message": f"Job {job_id} cancelled"}
@@ -548,7 +568,7 @@ class GenieACSServiceDB(GenieACSService):
         tenant_id = self._require_tenant_id()
 
         # Verify job exists
-        result = await self.session.execute(
+        result = await self._db.execute(
             select(MassConfigJob).where(
                 MassConfigJob.job_id == job_id,
                 MassConfigJob.tenant_id == tenant_id,
@@ -562,13 +582,14 @@ class GenieACSServiceDB(GenieACSService):
         if job.dry_run == "true":
             raise ValueError("Cannot execute dry-run job")
 
-        job.status = "queued"
-        job.started_at = None
-        job.completed_at = None
-        job.completed_devices = 0
-        job.failed_devices = 0
-        job.pending_devices = job.total_devices
-        await self.session.commit()
+        setattr(job, "status", "queued")
+        setattr(job, "started_at", None)
+        setattr(job, "completed_at", None)
+        setattr(job, "completed_devices", 0)
+        setattr(job, "failed_devices", 0)
+        total_devices = cast(int, job.total_devices)
+        setattr(job, "pending_devices", total_devices)
+        await self._db.commit()
         set_mass_config_job_status(tenant_id, job_id, "queued", 1.0)
 
         # Queue Celery task

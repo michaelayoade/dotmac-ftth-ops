@@ -4,7 +4,7 @@ NetBox API Router
 FastAPI endpoints for NetBox IPAM and DCIM operations.
 """
 
-from typing import cast
+from typing import Any, Mapping, Type, TypeVar, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -51,6 +51,25 @@ from dotmac.platform.tenant.dependencies import TenantAdminAccess
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
 
 router = APIRouter(prefix="/netbox", tags=["NetBox"])
+
+ResponseT = TypeVar(
+    "ResponseT",
+    PrefixResponse,
+    IPAddressResponse,
+    InterfaceResponse,
+    VLANResponse,
+)
+
+
+def _coerce_response(model: Type[ResponseT], value: ResponseT | Mapping[str, Any]) -> ResponseT:
+    """Convert NetBox service results to typed responses."""
+    if isinstance(value, model):
+        return value
+    if hasattr(value, "model_dump"):
+        return model(**cast(Any, value).model_dump())
+    if isinstance(value, Mapping):
+        return model(**dict(value))
+    return model(**cast(Any, value))
 
 
 # =============================================================================
@@ -265,7 +284,8 @@ async def create_prefix(
 ) -> PrefixResponse:
     """Create IP prefix"""
     try:
-        return await service.create_prefix(data)
+        prefix = await service.create_prefix(data)
+        return _coerce_response(PrefixResponse, prefix)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -309,7 +329,7 @@ async def allocate_ip(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Failed to allocate IP from prefix {request.prefix_id}",
         )
-    return ip_address
+    return _coerce_response(IPAddressResponse, ip_address)
 
 
 @router.get(
@@ -537,7 +557,8 @@ async def create_interface(
 ) -> InterfaceResponse:
     """Create interface"""
     try:
-        return await service.create_interface(data)
+        interface = await service.create_interface(data)
+        return _coerce_response(InterfaceResponse, interface)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -605,7 +626,8 @@ async def create_vlan(
 ) -> VLANResponse:
     """Create VLAN"""
     try:
-        return await service.create_vlan(data)
+        vlan = await service.create_vlan(data)
+        return _coerce_response(VLANResponse, vlan)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

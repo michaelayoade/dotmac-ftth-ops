@@ -5,8 +5,9 @@ from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID, uuid4
 
 import pytest
+import pytest_asyncio
 from fastapi import FastAPI
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -20,16 +21,18 @@ from dotmac.platform.database import get_async_session
 pytestmark = pytest.mark.integration
 
 
-@pytest.fixture
-def usage_test_client(async_db_session: AsyncSession):
+@pytest_asyncio.fixture
+async def usage_test_client(async_db_session: AsyncSession):
     """Create a test client with dependency overrides."""
+
+    from httpx import ASGITransport, AsyncClient
 
     tenant_id = f"usage-test-tenant-{uuid4().hex[:8]}"
     app = FastAPI()
 
     def override_current_user() -> UserInfo:
         return UserInfo(
-            user_id="usage-test-user",
+            user_id=str(uuid4()),
             email="usage-test@example.com",
             username="usage-test",
             tenant_id=tenant_id,
@@ -37,11 +40,22 @@ def usage_test_client(async_db_session: AsyncSession):
             permissions=["billing:usage:write"],
         )
 
+    async def override_session():
+        yield async_db_session
+
     app.dependency_overrides[get_current_user] = override_current_user
-    app.dependency_overrides[get_async_session] = lambda: async_db_session
+    app.dependency_overrides[get_async_session] = override_session
     app.include_router(router, prefix="/billing")
 
-    with TestClient(app) as client:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Tenant-ID": tenant_id,
+        },
+    ) as client:
         yield client, tenant_id
 
     app.dependency_overrides.clear()
@@ -103,7 +117,7 @@ async def test_create_usage_record_uses_tenant_currency(
         "description": "Test usage record",
     }
 
-    response = client.post(
+    response = await client.post(
         "/billing/usage/records",
         json=payload,
         headers={"X-Tenant-ID": tenant_id},
@@ -142,7 +156,7 @@ async def test_create_usage_record_allows_currency_override_header(
         "description": "Override currency record",
     }
 
-    response = client.post(
+    response = await client.post(
         "/billing/usage/records",
         json=payload,
         headers={"X-Tenant-ID": tenant_id, "X-Currency": "NGN"},

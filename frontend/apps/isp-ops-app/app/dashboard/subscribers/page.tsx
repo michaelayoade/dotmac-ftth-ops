@@ -6,7 +6,7 @@
 
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -259,7 +259,7 @@ export default function SubscribersPage() {
   const hasActiveFilters = search || statusFilter !== "all" || connectionTypeFilter !== "all";
 
   // Bulk action handlers
-  const handleBulkSuspend = async (selectedSubscribers: Subscriber[]) => {
+  const handleBulkSuspend = useCallback(async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
         selectedSubscribers.map((subscriber) =>
@@ -288,9 +288,9 @@ export default function SubscribersPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [suspendSubscriber, toast, refetch]);
 
-  const handleBulkActivate = async (selectedSubscribers: Subscriber[]) => {
+  const handleBulkActivate = useCallback(async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
         selectedSubscribers.map((subscriber) => activateSubscriber(subscriber.id)),
@@ -317,9 +317,9 @@ export default function SubscribersPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [activateSubscriber, toast, refetch]);
 
-  const handleBulkDelete = async (selectedSubscribers: Subscriber[]) => {
+  const handleBulkDelete = useCallback(async (selectedSubscribers: Subscriber[]) => {
     try {
       const results = await Promise.allSettled(
         selectedSubscribers.map((subscriber) => deleteSubscriber(subscriber.id)),
@@ -346,7 +346,7 @@ export default function SubscribersPage() {
         variant: "destructive",
       });
     }
-  };
+  }, [deleteSubscriber, toast, refetch]);
 
   // Define bulk actions based on permissions
   const bulkActions = useMemo<BulkAction<Subscriber>[]>(() => {
@@ -383,7 +383,7 @@ export default function SubscribersPage() {
     }
 
     return actions;
-  }, [canUpdate, canDelete]);
+  }, [canUpdate, canDelete, handleBulkSuspend, handleBulkActivate, handleBulkDelete]);
 
   // Permission check
   if (!canView) {

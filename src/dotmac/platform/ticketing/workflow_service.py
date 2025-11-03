@@ -96,7 +96,7 @@ class TicketingService:
                     select(Customer).where(Customer.id == str(customer_id))
                 )
                 customer = result.scalar_one_or_none()
-                customer_uuid = UUID(customer.id) if customer else None
+                customer_uuid = customer.id if customer else None
         except (ValueError, AttributeError):
             customer_uuid = None
 
@@ -132,7 +132,7 @@ class TicketingService:
             ticket_type_enum = type_map.get(ticket_type.lower())
 
         # Build metadata
-        metadata = {}
+        metadata: dict[str, Any] = {}
         if assigned_team:
             metadata["assigned_team"] = assigned_team
             metadata["routing"] = {"team": assigned_team}

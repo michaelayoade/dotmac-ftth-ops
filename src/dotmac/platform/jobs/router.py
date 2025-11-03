@@ -4,7 +4,7 @@ Job API Router
 REST endpoints for job management and monitoring.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status as fastapi_status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
@@ -46,7 +46,7 @@ async def get_job_service(
 @router.post(
     "",
     response_model=JobResponse,
-    status_code=status.HTTP_201_CREATED,
+    status_code=fastapi_status.HTTP_201_CREATED,
     summary="Create Job",
     description="Create a new async job",
 )
@@ -72,7 +72,7 @@ async def create_job(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required to create a job",
         )
 
@@ -92,7 +92,7 @@ async def create_job(
 )
 async def list_jobs(
     job_type: str | None = Query(None, description="Filter by job type"),
-    status: str | None = Query(None, description="Filter by status"),
+    job_status: str | None = Query(None, description="Filter by status"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(50, ge=1, le=100, description="Items per page"),
     service: JobService = Depends(get_job_service),
@@ -112,14 +112,14 @@ async def list_jobs(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
     return await service.list_jobs(
         tenant_id=current_user.tenant_id,
         job_type=job_type,
-        status=status,
+        status=job_status,
         page=page,
         page_size=page_size,
     )
@@ -140,7 +140,7 @@ async def get_job_statistics(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
@@ -165,14 +165,14 @@ async def get_job(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
     job = await service.get_job(job_id, current_user.tenant_id)
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=fastapi_status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
     return JobResponse.model_validate(job)
@@ -208,7 +208,7 @@ async def update_job_progress(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
@@ -219,7 +219,7 @@ async def update_job_progress(
     )
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=fastapi_status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found",
         )
     return JobResponse.model_validate(job)
@@ -245,7 +245,7 @@ async def cancel_job(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
@@ -256,7 +256,7 @@ async def cancel_job(
     )
     if not job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=fastapi_status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found or already in terminal state",
         )
     return JobCancelResponse(
@@ -292,7 +292,7 @@ async def retry_failed_items(
     """
     if current_user.tenant_id is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=fastapi_status.HTTP_400_BAD_REQUEST,
             detail="Tenant ID is required",
         )
 
@@ -303,11 +303,13 @@ async def retry_failed_items(
     )
     if not retry_job:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=fastapi_status.HTTP_404_NOT_FOUND,
             detail=f"Job {job_id} not found or has no failed items to retry",
         )
 
-    failed_items_count = len(retry_job.parameters.get("failed_items", []))
+    parameters = retry_job.parameters if isinstance(retry_job.parameters, dict) else {}
+    failed_items = parameters.get("failed_items", [])
+    failed_items_count = len(failed_items)
 
     return JobRetryResponse(
         original_job_id=job_id,

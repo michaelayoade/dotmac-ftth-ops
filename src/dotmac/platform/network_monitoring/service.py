@@ -7,7 +7,7 @@ unified network health and performance monitoring.
 import asyncio
 import math
 from datetime import datetime
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import structlog
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -465,26 +465,34 @@ class NetworkMonitoringService:
                 tenant_id=self.tenant_id,
             )
 
+    def _require_voltha(self) -> Any:
+        """Return configured VOLTHA client or raise."""
+        if self.voltha is None:
+            raise RuntimeError("VOLTHA client is not configured")
+        return self.voltha
+
     async def _get_onu_health(self, onu_id: str) -> DeviceHealthResponse:
         """Get ONU health from VOLTHA"""
         try:
-            onu_data = await self.voltha.get_onu(onu_id)
+            voltha_client = self._require_voltha()
+            onu_data = await voltha_client.get_onu(onu_id)
+            onu_payload = self._device_payload(onu_data)
 
             return DeviceHealthResponse(
                 device_id=onu_id,
-                device_name=onu_data.get("serial_number", onu_id),
+                device_name=onu_payload.get("serial_number", onu_id),
                 device_type=DeviceType.ONU,
                 status=(
                     DeviceStatus.ONLINE
-                    if onu_data.get("admin_state") == "ENABLED"
-                    and onu_data.get("oper_status") == "ACTIVE"
+                    if onu_payload.get("admin_state") == "ENABLED"
+                    and onu_payload.get("oper_status") == "ACTIVE"
                     else DeviceStatus.OFFLINE
                 ),
                 last_seen=datetime.utcnow(),
                 # Optical metrics
-                temperature_celsius=onu_data.get("temperature"),
-                firmware_version=onu_data.get("software_version"),
-                model=onu_data.get("device_type"),
+                temperature_celsius=onu_payload.get("temperature"),
+                firmware_version=onu_payload.get("software_version"),
+                model=onu_payload.get("device_type"),
                 tenant_id=self.tenant_id,
             )
         except Exception as e:
@@ -494,7 +502,8 @@ class NetworkMonitoringService:
     async def _get_cpe_health(self, cpe_id: str) -> DeviceHealthResponse:
         """Get CPE health from GenieACS"""
         try:
-            cpe_data = await self.genieacs.get_device(cpe_id)
+            cpe_raw = await self.genieacs.get_device(cpe_id)
+            cpe_data = self._device_payload(cpe_raw)
 
             # Calculate status based on last inform
             last_inform = cpe_data.get("_lastInform")
@@ -547,7 +556,9 @@ class NetworkMonitoringService:
     async def _get_network_device_health(self, device_id: str) -> DeviceHealthResponse:
         """Get network device health from NetBox metadata."""
         try:
-            device_data = await self.netbox.get_device(device_id)
+            device_identifier = int(device_id)
+            device_raw = await self.netbox.get_device(device_identifier)
+            device_data = self._device_payload(device_raw)
         except Exception as exc:
             logger.warning(
                 "Failed to load network device from NetBox",
@@ -721,25 +732,32 @@ class NetworkMonitoringService:
         """Get comprehensive metrics for a device"""
 
         # Get health and traffic in parallel
-        health, traffic = await asyncio.gather(
+        health_result, traffic_result = await asyncio.gather(
             self.get_device_health(device_id, device_type, tenant_id),
             self.get_traffic_stats(device_id, device_type, tenant_id),
             return_exceptions=True,
         )
 
         # Handle exceptions
-        if isinstance(health, Exception):
-            logger.error("Failed to get device health", error=str(health))
+        if isinstance(health_result, Exception):
+            logger.error("Failed to get device health", error=str(health_result))
             health = DeviceHealthResponse(
                 device_id=device_id,
                 device_name=f"Device {device_id}",
                 device_type=device_type,
                 status=DeviceStatus.UNKNOWN,
             )
+        else:
+            health = cast(DeviceHealthResponse, health_result)
 
-        if isinstance(traffic, Exception):
-            logger.error("Failed to get traffic stats", error=str(traffic))
-            traffic = None
+        if isinstance(traffic_result, Exception):
+            logger.error("Failed to get traffic stats", error=str(traffic_result))
+            traffic = TrafficStatsResponse(
+                device_id=device_id,
+                device_name=f"Device {device_id}",
+            )
+        else:
+            traffic = cast(TrafficStatsResponse, traffic_result)
 
         # Get device-specific metrics
         onu_metrics = None
@@ -763,7 +781,9 @@ class NetworkMonitoringService:
     async def _get_onu_metrics(self, onu_id: str) -> ONUMetrics | None:
         """Get ONU-specific metrics"""
         try:
-            onu_data = await self.voltha.get_onu(onu_id)
+            voltha_client = self._require_voltha()
+            onu_raw = await voltha_client.get_onu(onu_id)
+            onu_data = self._device_payload(onu_raw)
             return ONUMetrics(
                 serial_number=onu_data.get("serial_number", onu_id),
                 optical_power_rx_dbm=onu_data.get("optical_power_rx"),
@@ -779,15 +799,22 @@ class NetworkMonitoringService:
     async def _get_cpe_metrics(self, cpe_id: str) -> CPEMetrics | None:
         """Get CPE-specific metrics"""
         try:
-            cpe_data = await self.genieacs.get_device(cpe_id)
-            wifi_data = cpe_data.get("Device", {}).get("WiFi", {})
+            cpe_raw = await self.genieacs.get_device(cpe_id)
+            cpe_data = self._device_payload(cpe_raw)
+            wifi_data = cpe_data.get("Device", {}).get("WiFi", {}) or {}
+
+            host_section = cpe_data.get("Device", {}).get("Hosts", {}).get("Host", {})
+            if isinstance(host_section, dict):
+                connected_clients = len(host_section)
+            elif isinstance(host_section, list):
+                connected_clients = len(host_section)
+            else:
+                connected_clients = 0
 
             return CPEMetrics(
                 mac_address=cpe_data.get("_deviceId", {}).get("_SerialNumber", cpe_id),
                 wifi_enabled=wifi_data.get("Radio", {}).get("1", {}).get("Enable", False),
-                connected_clients=len(
-                    cpe_data.get("Device", {}).get("Hosts", {}).get("Host", {}).values()
-                ),
+                connected_clients=connected_clients,
                 last_inform=datetime.fromisoformat(
                     cpe_data.get("_lastInform", "").replace("Z", "+00:00")
                 ).replace(tzinfo=None)
@@ -914,8 +941,10 @@ class NetworkMonitoringService:
         # ------------------------------------------------------------------
         voltha_added = 0
         try:
-            if hasattr(self.voltha, "get_devices"):
-                voltha_devices = await self.voltha.get_devices()
+            voltha_client = self.voltha
+            if voltha_client and hasattr(voltha_client, "get_devices"):
+                get_devices = getattr(voltha_client, "get_devices")
+                voltha_devices = await get_devices()
                 for onu in self._normalize_collection(voltha_devices):
                     if not isinstance(onu, dict):
                         continue
@@ -1151,3 +1180,14 @@ class NetworkMonitoringService:
         # In production, this would query database
         # For now, return empty list
         return []
+
+    @staticmethod
+    def _device_payload(data: Any) -> dict[str, Any]:
+        """Normalise device payloads returned by external services."""
+        if data is None:
+            return {}
+        if hasattr(data, "model_dump"):
+            return cast(dict[str, Any], data.model_dump())
+        if isinstance(data, dict):
+            return data
+        return {}

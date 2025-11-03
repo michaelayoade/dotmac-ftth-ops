@@ -51,7 +51,7 @@ export default function WireGuardServersPage() {
   const { mutate: deleteServer } = useDeleteWireGuardServer();
 
   const handleSearch = () => {
-    // Note: Backend doesn't support search yet, would need to add to API
+    // Note: Backend doesn&apos;t support search yet, would need to add to API
     // For now, filter client-side
   };
 

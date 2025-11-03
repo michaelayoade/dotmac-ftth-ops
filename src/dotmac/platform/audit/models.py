@@ -13,7 +13,7 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from ..db import Base as BaseRuntime
-from ..db import StrictTenantMixin, TimestampMixin
+from ..db import TenantMixin, TimestampMixin
 
 
 if TYPE_CHECKING:
@@ -70,6 +70,14 @@ class ActivityType(str, Enum):
     # Frontend activities
     FRONTEND_LOG = "frontend.log"
 
+    # Resource lifecycle activities
+    RESOURCE_CREATED = "resource.created"
+    RESOURCE_UPDATED = "resource.updated"
+    RESOURCE_DELETED = "resource.deleted"
+
+    # Analytics events
+    ANALYTICS = "analytics.event"
+
 
 class ActivitySeverity(str, Enum):
     """Severity levels for activities."""
@@ -80,7 +88,7 @@ class ActivitySeverity(str, Enum):
     CRITICAL = "critical"
 
 
-class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
+class AuditActivity(Base, TimestampMixin, TenantMixin):
     """Audit activity tracking table."""
 
     __tablename__ = "audit_activities"
@@ -109,7 +117,7 @@ class AuditActivity(Base, TimestampMixin, StrictTenantMixin):
 
     # Who and when
     user_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
-    # tenant_id is inherited from StrictTenantMixin and is NOT NULL
+    # tenant_id is inherited from TenantMixin and is NOT NULL
     timestamp: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(UTC), index=True
     )
