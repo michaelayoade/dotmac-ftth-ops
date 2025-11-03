@@ -7,10 +7,7 @@ These handlers implement commission tracking when billing events occur.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 

@@ -25,7 +25,7 @@ class RADIUSSubscriberCreate(BaseModel):
 
     model_config = ConfigDict()
 
-    subscriber_id: str = Field(..., description="Internal subscriber ID")
+    subscriber_id: str | None = Field(None, description="Internal subscriber ID (optional)")
     username: str = Field(..., min_length=3, max_length=64, description="RADIUS username")
     password: str = Field(..., min_length=8, description="RADIUS password")
     bandwidth_profile_id: str | None = Field(None, description="Bandwidth profile to apply")
@@ -83,7 +83,7 @@ class RADIUSSubscriberCreate(BaseModel):
         """Validate IPv6 prefix (CIDR notation)"""
         return IPv6NetworkValidator.validate(v, strict=False)
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Handle backward compatibility for framed_ip_address"""
         if self.framed_ip_address and not self.framed_ipv4_address:
             self.framed_ipv4_address = self.framed_ip_address
@@ -139,7 +139,7 @@ class RADIUSSubscriberUpdate(BaseModel):
         """Validate IPv6 prefix"""
         return IPv6NetworkValidator.validate(v, strict=False)
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Handle backward compatibility"""
         if self.framed_ip_address and not self.framed_ipv4_address:
             self.framed_ipv4_address = self.framed_ip_address
@@ -150,7 +150,7 @@ class RADIUSSubscriberResponse(BaseModel):
 
     id: int
     tenant_id: str
-    subscriber_id: str
+    subscriber_id: str | None = None
     username: str
     bandwidth_profile_id: str | None = None
 

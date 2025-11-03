@@ -4,30 +4,29 @@ Billing-specific unit test fixtures and stubs.
 Provides lightweight fixtures for unit testing billing logic without database dependencies.
 """
 
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-from moneyed import Money, Currency
-
+from moneyed import Currency, Money
 
 # ============================================================================
 # Money and Currency Test Helpers
 # ============================================================================
 
 
-
-
-
 pytestmark = pytest.mark.unit
 
 
 try:
-    from dotmac.platform.billing.invoicing.models import InvoiceStatus as _InvoiceStatus  # type: ignore
+    from dotmac.platform.billing.invoicing.models import (
+        InvoiceStatus as _InvoiceStatus,  # type: ignore
+    )
 except ImportError:
+
     class _InvoiceStatus(str, Enum):
         """Fallback InvoiceStatus enum for environments without billing models."""
 
@@ -59,10 +58,10 @@ def create_test_invoice_item(**overrides):
         "amount": Decimal("100.00"),
         "tax_amount": Decimal("0.00"),
         "discount_amount": Decimal("0.00"),
-        "created_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
     }
     defaults.update(overrides)
-    return type('InvoiceItem', (), defaults)()
+    return type("InvoiceItem", (), defaults)()
 
 
 def create_test_invoice(**overrides):
@@ -77,15 +76,15 @@ def create_test_invoice(**overrides):
         "tax_amount": Decimal("20.00"),
         "total_amount": Decimal("120.00"),
         "currency": "USD",
-        "issue_date": datetime.now(timezone.utc).date(),
-        "due_date": (datetime.now(timezone.utc) + timedelta(days=30)).date(),
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "issue_date": datetime.now(UTC).date(),
+        "due_date": (datetime.now(UTC) + timedelta(days=30)).date(),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
     defaults.update(overrides)
 
     # Return a simple object with attributes
-    return type('Invoice', (), defaults)()
+    return type("Invoice", (), defaults)()
 
 
 def create_test_subscription(**overrides):
@@ -96,16 +95,16 @@ def create_test_subscription(**overrides):
         "customer_id": uuid4(),
         "plan_id": uuid4(),
         "status": "active",
-        "current_period_start": datetime.now(timezone.utc),
-        "current_period_end": datetime.now(timezone.utc) + timedelta(days=30),
+        "current_period_start": datetime.now(UTC),
+        "current_period_end": datetime.now(UTC) + timedelta(days=30),
         "billing_cycle": "monthly",
         "amount": Decimal("50.00"),
         "currency": "USD",
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
     defaults.update(overrides)
-    return type('Subscription', (), defaults)()
+    return type("Subscription", (), defaults)()
 
 
 def create_test_payment(**overrides):
@@ -121,11 +120,11 @@ def create_test_payment(**overrides):
         "payment_method": "card",
         "provider": "stripe",
         "provider_payment_id": f"pay_{uuid4().hex[:24]}",
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
     defaults.update(overrides)
-    return type('Payment', (), defaults)()
+    return type("Payment", (), defaults)()
 
 
 # ============================================================================
@@ -137,8 +136,8 @@ class StubInvoiceRepository:
     """In-memory invoice repository for unit tests."""
 
     def __init__(self):
-        self._invoices: Dict[UUID, Any] = {}
-        self._invoice_numbers: Dict[str, UUID] = {}
+        self._invoices: dict[UUID, Any] = {}
+        self._invoice_numbers: dict[str, UUID] = {}
 
     async def add(self, invoice):
         """Add invoice to store."""
@@ -162,7 +161,7 @@ class StubInvoiceRepository:
                 return invoice
         return None
 
-    async def list_by_customer(self, customer_id: UUID, tenant_id: UUID) -> List[Any]:
+    async def list_by_customer(self, customer_id: UUID, tenant_id: UUID) -> list[Any]:
         """List invoices for a customer."""
         return [
             inv
@@ -187,7 +186,7 @@ class StubPaymentRepository:
     """In-memory payment repository for unit tests."""
 
     def __init__(self):
-        self._payments: Dict[UUID, Any] = {}
+        self._payments: dict[UUID, Any] = {}
 
     async def add(self, payment):
         """Add payment to store."""
@@ -200,15 +199,11 @@ class StubPaymentRepository:
         """Get payment by ID."""
         return self._payments.get(payment_id)
 
-    async def list_by_invoice(self, invoice_id: UUID) -> List[Any]:
+    async def list_by_invoice(self, invoice_id: UUID) -> list[Any]:
         """List payments for an invoice."""
-        return [
-            pay
-            for pay in self._payments.values()
-            if pay.invoice_id == invoice_id
-        ]
+        return [pay for pay in self._payments.values() if pay.invoice_id == invoice_id]
 
-    async def list_by_customer(self, customer_id: UUID, tenant_id: UUID) -> List[Any]:
+    async def list_by_customer(self, customer_id: UUID, tenant_id: UUID) -> list[Any]:
         """List payments for a customer."""
         return [
             pay
@@ -225,7 +220,7 @@ class StubSubscriptionRepository:
     """In-memory subscription repository for unit tests."""
 
     def __init__(self):
-        self._subscriptions: Dict[UUID, Any] = {}
+        self._subscriptions: dict[UUID, Any] = {}
 
     async def add(self, subscription):
         """Add subscription to store."""
@@ -249,7 +244,7 @@ class StubSubscriptionRepository:
                 return sub
         return None
 
-    async def list_active(self, tenant_id: UUID) -> List[Any]:
+    async def list_active(self, tenant_id: UUID) -> list[Any]:
         """List active subscriptions for tenant."""
         return [
             sub
@@ -322,12 +317,14 @@ class MockTaxCalculator:
     def calculate_tax(self, amount: Decimal, jurisdiction: str = None, **kwargs) -> Decimal:
         """Mock tax calculation."""
         tax_amount = amount * (self.default_rate / Decimal("100"))
-        self.calculations.append({
-            "amount": amount,
-            "jurisdiction": jurisdiction,
-            "tax_amount": tax_amount,
-            "rate": self.default_rate,
-        })
+        self.calculations.append(
+            {
+                "amount": amount,
+                "jurisdiction": jurisdiction,
+                "tax_amount": tax_amount,
+                "rate": self.default_rate,
+            }
+        )
         return tax_amount
 
     def set_rate(self, rate: Decimal):

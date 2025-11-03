@@ -153,9 +153,9 @@ function DiagnosticRunDetailsContent() {
       if (!response.ok) throw new Error("Failed to fetch diagnostic run");
       return response.json();
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if status is pending or running
-      return data && (data.status === DiagnosticStatus.RUNNING || data.status === DiagnosticStatus.PENDING)
+      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
         ? 5000
         : false;
     },
@@ -562,7 +562,7 @@ function DiagnosticRunDetailsContent() {
 
 export default function DiagnosticRunDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.diagnostics.read">
+    <RouteGuard permission="isp.diagnostics.read">
       <DiagnosticRunDetailsContent />
     </RouteGuard>
   );

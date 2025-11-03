@@ -7,7 +7,7 @@ Tests the three lifecycle event handlers:
 - Churn handling (status change to CHURNED/INACTIVE)
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -44,8 +44,8 @@ def sample_active_subscription():
         customer_id="cust_123",
         plan_id="plan_basic",
         status=SubscriptionStatus.ACTIVE.value,
-        current_period_start=datetime.now(timezone.utc),
-        current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+        current_period_start=datetime.now(UTC),
+        current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
         metadata_json={},
     )
 
@@ -59,8 +59,8 @@ def sample_paused_subscription():
         customer_id="cust_123",
         plan_id="plan_basic",
         status=SubscriptionStatus.PAUSED.value,
-        current_period_start=datetime.now(timezone.utc),
-        current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+        current_period_start=datetime.now(UTC),
+        current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
         metadata_json={
             "suspension": {
                 "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -118,7 +118,7 @@ class TestServiceSuspension:
                     metadata_json={
                         **(subscription.metadata_json or {}),
                         "suspension": {
-                            "suspended_at": datetime.now(timezone.utc).isoformat(),
+                            "suspended_at": datetime.now(UTC).isoformat(),
                             "original_status": subscription.status,
                             "reason": "customer_suspended",
                         },
@@ -189,7 +189,7 @@ class TestServiceSuspension:
         for subscription in active_subscriptions:
             # Build the metadata that would be stored
             suspension_metadata = {
-                "suspended_at": datetime.now(timezone.utc).isoformat(),
+                "suspended_at": datetime.now(UTC).isoformat(),
                 "original_status": subscription.status,
                 "reason": "customer_suspended",
             }
@@ -438,8 +438,8 @@ class TestChurnHandling:
                 customer_id="cust_123",
                 plan_id="plan_premium",
                 status=SubscriptionStatus.TRIALING.value,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+                current_period_start=datetime.now(UTC),
+                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
                 metadata_json={},
             ),
         ]
@@ -512,7 +512,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "suspended_at": datetime.now(timezone.utc).isoformat(),
+                "suspended_at": datetime.now(UTC).isoformat(),
                 "reason": "customer_suspended",
             },
         )
@@ -533,7 +533,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "reactivated_at": datetime.now(timezone.utc).isoformat(),
+                "reactivated_at": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -553,7 +553,7 @@ class TestEventPublishing:
             data={
                 "customer_id": str(customer_id),
                 "tenant_id": tenant_id,
-                "churned_at": datetime.now(timezone.utc).isoformat(),
+                "churned_at": datetime.now(UTC).isoformat(),
                 "new_status": new_status,
                 "subscriptions_affected": 2,
             },

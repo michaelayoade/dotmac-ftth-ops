@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for auth router to improve coverage.
 
@@ -11,9 +10,9 @@ Targets uncovered lines in router.py focusing on:
 - Cookie-based auth
 """
 
-from datetime import timezone, datetime
-from uuid import uuid4
+from datetime import UTC, datetime
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -24,12 +23,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
-
-
-
-
-
-
 
 pytestmark = pytest.mark.integration
 
@@ -53,6 +46,7 @@ def _patch_tenant_context(monkeypatch):
         raising=False,
     )
 
+
 @pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):
     """Create a test user in the database."""
@@ -67,8 +61,8 @@ async def test_user(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -149,8 +143,8 @@ async def test_login_inactive_user(router_app: FastAPI, async_db_session):
         is_active=False,  # Account disabled
         is_verified=True,
         mfa_enabled=False,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(inactive_user)
     await async_db_session.commit()

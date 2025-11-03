@@ -14,9 +14,9 @@ from dotmac.platform.main import (
     create_application,
     lifespan,
 )
+from dotmac.platform.version import get_version
 
 pytestmark = pytest.mark.integration
-from dotmac.platform.version import get_version
 
 
 @pytest.fixture(autouse=True)
@@ -24,7 +24,9 @@ def patch_lifespan_dependencies():
     """Patch asynchronous startup dependencies introduced in main.lifespan."""
     with (
         patch("dotmac.platform.main.ensure_isp_rbac", new_callable=AsyncMock) as mock_isp_rbac,
-        patch("dotmac.platform.main.ensure_billing_rbac", new_callable=AsyncMock) as mock_billing_rbac,
+        patch(
+            "dotmac.platform.main.ensure_billing_rbac", new_callable=AsyncMock
+        ) as mock_billing_rbac,
         patch(
             "dotmac.platform.main.ensure_default_admin_user", new_callable=AsyncMock
         ) as mock_default_admin,
@@ -81,7 +83,8 @@ class TestCreateApplication:
 
     def test_single_tenant_shared_routes_accessible(self, monkeypatch):
         """Ensure shared /api/v1 routes remain reachable in single-tenant deployments."""
-        from dotmac.platform.settings import Environment, settings as runtime_settings
+        from dotmac.platform.settings import Environment
+        from dotmac.platform.settings import settings as runtime_settings
 
         monkeypatch.setattr(runtime_settings, "DEPLOYMENT_MODE", "single_tenant", raising=False)
         monkeypatch.setattr(runtime_settings, "environment", Environment.DEVELOPMENT)

@@ -6,7 +6,7 @@ Database models for user notifications and preferences.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import Boolean, String, Text, UniqueConstraint
@@ -16,6 +16,13 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from dotmac.platform.db import Base, SoftDeleteMixin, TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase
+
+    BaseModel = DeclarativeBase
+else:
+    BaseModel = Base
 
 
 class NotificationType(str, Enum):
@@ -99,7 +106,7 @@ class NotificationChannel(str, Enum):
     WEBHOOK = "webhook"
 
 
-class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type: ignore[misc]
+class Notification(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin):
     """User notifications for in-app and multi-channel delivery."""
 
     __tablename__ = "notifications"
@@ -159,7 +166,7 @@ class Notification(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type:
         return f"<Notification(id={self.id}, type={self.type}, user_id={self.user_id}, is_read={self.is_read})>"
 
 
-class NotificationPreference(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class NotificationPreference(BaseModel, TimestampMixin, TenantMixin):
     """User preferences for notification delivery."""
 
     __tablename__ = "notification_preferences"
@@ -208,7 +215,7 @@ class NotificationPreference(Base, TimestampMixin, TenantMixin):  # type: ignore
         return f"<NotificationPreference(id={self.id}, user_id={self.user_id}, enabled={self.enabled})>"
 
 
-class NotificationTemplate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class NotificationTemplate(BaseModel, TimestampMixin, TenantMixin):
     """Templates for notification content generation."""
 
     __tablename__ = "notification_templates"

@@ -17,11 +17,8 @@ from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, 
 # Import shared fixtures
 from tests.shared_fixtures import *  # noqa: F401, F403
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def test_tenant(async_db_session: AsyncSession) -> Tenant:

@@ -5,41 +5,54 @@ These tests verify that the FreeRADIUS service exposed via Docker Compose
 responds to real RADIUS authentication traffic. They require the ISP
 infrastructure stack to be running locally (``make start-isp``) with the
 default credentials from ``config/radius``.
+
+The tests automatically detect if running inside Docker and adjust connection
+parameters accordingly:
+- Inside Docker: Use service name 'freeradius'
+- Outside Docker: Use 'localhost' with port forwarding
 """
 
 from __future__ import annotations
 
 import os
-import platform
 import socket
 from pathlib import Path
 
 import pytest
-
 from pyrad.client import Client, Timeout
 from pyrad.dictionary import Dictionary
 from pyrad.packet import AccessAccept, AccessReject, AccessRequest
 
+from tests.helpers.docker_env import get_service_host, is_running_in_docker
 
 pytestmark = [pytest.mark.integration, pytest.mark.infra]
-
-# Docker Desktop for Mac has known issues with UDP port forwarding
-# See: https://github.com/docker/for-mac/issues/68
-SKIP_ON_MACOS = platform.system() == "Darwin"
-MACOS_SKIP_REASON = (
-    "UDP port forwarding from macOS host to Docker containers is unreliable. "
-    "FreeRADIUS works correctly (healthcheck passes), but direct connections from "
-    "macOS host timeout due to Docker Desktop limitations. Run this test on Linux "
-    "or inside the Docker network."
-)
 
 
 @pytest.fixture(scope="module")
 def radius_endpoint():
-    """Return connection parameters for the local FreeRADIUS instance."""
-    host = os.getenv("FREERADIUS_HOST", "127.0.0.1")
+    """
+    Return connection parameters for the FreeRADIUS instance.
+
+    Automatically detects Docker environment:
+    - Inside Docker: connects to 'freeradius' service
+    - Outside Docker: connects to 'localhost:1812'
+
+    Can be overridden with environment variables:
+    - FREERADIUS_HOST: Override hostname
+    - FREERADIUS_AUTH_PORT: Override port (default: 1812)
+    - FREERADIUS_SHARED_SECRET: Override shared secret (default: testing123)
+    """
+    # Allow explicit host override, otherwise auto-detect
+    host_env = os.getenv("FREERADIUS_HOST")
+    if host_env:
+        host = host_env
+    else:
+        # Auto-detect: use 'freeradius' in Docker, 'localhost' outside
+        host = get_service_host("freeradius", "127.0.0.1")
+
     port = int(os.getenv("FREERADIUS_AUTH_PORT", "1812"))
     secret = os.getenv("FREERADIUS_SHARED_SECRET", "testing123").encode("utf-8")
+
     return host, port, secret
 
 
@@ -88,7 +101,6 @@ def radius_available(radius_endpoint):
     return True
 
 
-@pytest.mark.skipif(SKIP_ON_MACOS, reason=MACOS_SKIP_REASON)
 def test_access_request_roundtrip(radius_endpoint, radius_dictionary, radius_available):
     """
     Send a real Access-Request to FreeRADIUS and assert we receive any response.
@@ -98,8 +110,12 @@ def test_access_request_roundtrip(radius_endpoint, radius_dictionary, radius_ava
     reply code rather than the access decision so that the check stays valid
     even if operators rotate the shared secret.
 
-    Note: This test is skipped on macOS due to Docker Desktop UDP port forwarding
-    limitations. The FreeRADIUS service itself works correctly (verified by healthcheck).
+    The test automatically adapts to the Docker environment:
+    - Inside Docker: Connects to 'freeradius' service via Docker network
+    - Outside Docker: Connects to 'localhost:1812' via port forwarding
+
+    Note: If running outside Docker on macOS, UDP port forwarding may be unreliable.
+    For best results, run this test inside a Docker container or on Linux.
     """
     host, port, secret = radius_endpoint
     client = Client(server=host, authport=port, secret=secret, dict=radius_dictionary)

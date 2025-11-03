@@ -225,7 +225,7 @@ class EventBus:
             event_id = event.get("event_id")
 
             if not event_type:
-                logger.warning("Skipping event without event_type", event=event)
+                logger.warning("Skipping event without event_type", event_payload=event)
                 continue
 
             count = await self.publish(

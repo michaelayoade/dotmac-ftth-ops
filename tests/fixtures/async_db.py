@@ -13,8 +13,9 @@ Usage:
     # Mock a session with specific query behavior
     mock_session = create_mock_async_session(execute_return=mock_result)
 """
-from collections.abc import Callable, Iterable
+
 import hashlib
+from collections.abc import Callable, Iterable
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 

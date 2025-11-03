@@ -4,7 +4,7 @@ Integration tests for usage billing workflows.
 Tests complete lifecycle: RADIUS accounting → usage aggregation → invoice generation
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -56,7 +56,7 @@ async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Custom
         tier=CustomerTier.BASIC,
     )
     db_session.add(customer)
-    await db_session.commit()
+    await db_session.flush()  # Flush instead of commit to stay in same transaction
     await db_session.refresh(customer)
     return customer
 
@@ -64,7 +64,7 @@ async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Custom
 @pytest.fixture
 def test_usage_record_data(test_customer: Customer):
     """Create reusable usage record payload for tests."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return UsageRecordCreate(
         subscription_id="sub_test_usage_001",
         customer_id=test_customer.id,
@@ -129,8 +129,8 @@ class TestUsageRecordManagement:
             quantity=Decimal("-10.0"),  # Negative quantity should fail
             unit="GB",
             unit_price=Decimal("0.10"),
-            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(hours=1),
+            period_end=datetime.now(UTC),
             source_system="test",
         )
 
@@ -201,8 +201,8 @@ class TestUsageRecordManagement:
                 quantity=Decimal(f"{i + 1}.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(timezone.utc) - timedelta(hours=i + 1),
-                period_end=datetime.now(timezone.utc) - timedelta(hours=i),
+                period_start=datetime.now(UTC) - timedelta(hours=i + 1),
+                period_end=datetime.now(UTC) - timedelta(hours=i),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -238,8 +238,8 @@ class TestUsageBillingWorkflow:
         radius_session = {
             "acctsessionid": "TEST-SESSION-001",
             "username": "test.user@alpha.com",
-            "acctstarttime": datetime.now(timezone.utc) - timedelta(hours=2),
-            "acctstoptime": datetime.now(timezone.utc),
+            "acctstarttime": datetime.now(UTC) - timedelta(hours=2),
+            "acctstoptime": datetime.now(UTC),
             "acctinputoctets": 5368709120,  # 5 GB download
             "acctoutputoctets": 1073741824,  # 1 GB upload
             "acctsessiontime": 7200,  # 2 hours
@@ -327,8 +327,8 @@ class TestUsageBillingWorkflow:
                 quantity=Decimal(f"{i + 1}.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(timezone.utc) - timedelta(days=i + 1),
-                period_end=datetime.now(timezone.utc) - timedelta(days=i),
+                period_start=datetime.now(UTC) - timedelta(days=i + 1),
+                period_end=datetime.now(UTC) - timedelta(days=i),
                 source_system="test",
             )
             record = await usage_service.create_usage_record(
@@ -372,8 +372,8 @@ class TestUsageBillingWorkflow:
                 quantity=Decimal("10.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(timezone.utc) - timedelta(days=i + 1),
-                period_end=datetime.now(timezone.utc) - timedelta(days=i),
+                period_start=datetime.now(UTC) - timedelta(days=i + 1),
+                period_end=datetime.now(UTC) - timedelta(days=i),
                 source_system="test",
             )
             record = await usage_service.create_usage_record(
@@ -415,7 +415,7 @@ class TestUsageAggregation:
     ):
         """Test daily usage aggregation."""
         subscription_id = "sub_aggregate_test"
-        target_date = datetime.now(timezone.utc).date()
+        target_date = datetime.now(UTC).date()
 
         # Create multiple hourly usage records for the same day
         total_expected = Decimal("0")
@@ -470,7 +470,7 @@ class TestUsageAggregation:
     ):
         """Test monthly usage aggregation."""
         subscription_id = "sub_monthly_test"
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
         # Create daily usage records for the month
@@ -538,8 +538,8 @@ class TestUsageReporting:
                 quantity=quantity,
                 unit=unit,
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(timezone.utc) - timedelta(days=1),
-                period_end=datetime.now(timezone.utc),
+                period_start=datetime.now(UTC) - timedelta(days=1),
+                period_end=datetime.now(UTC),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -551,8 +551,8 @@ class TestUsageReporting:
         # Generate report
         report_request = UsageReportRequest(
             subscription_id=subscription_id,
-            period_start=datetime.now(timezone.utc) - timedelta(days=7),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=7),
+            period_end=datetime.now(UTC),
         )
 
         report = await usage_service.generate_usage_report(
@@ -587,8 +587,8 @@ class TestUsageReporting:
                 quantity=Decimal("10.0"),
                 unit="GB",
                 unit_price=Decimal("0.10"),
-                period_start=datetime.now(timezone.utc) - timedelta(days=1),
-                period_end=datetime.now(timezone.utc),
+                period_start=datetime.now(UTC) - timedelta(days=1),
+                period_end=datetime.now(UTC),
                 source_system="test",
             )
             await usage_service.create_usage_record(
@@ -634,8 +634,8 @@ class TestOverageCharges:
             quantity=total_usage,
             unit="GB",
             unit_price=Decimal("0.05"),  # Base rate
-            period_start=datetime.now(timezone.utc) - timedelta(days=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=1),
+            period_end=datetime.now(UTC),
             source_system="test",
         )
         await usage_service.create_usage_record(
@@ -693,8 +693,8 @@ class TestUsageEdgeCases:
             quantity=Decimal("0.0"),  # Zero usage
             unit="GB",
             unit_price=Decimal("0.10"),
-            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(hours=1),
+            period_end=datetime.now(UTC),
             source_system="test",
         )
 
@@ -724,8 +724,8 @@ class TestUsageEdgeCases:
             quantity=Decimal("10.123456"),  # 6 decimal places
             unit="GB",
             unit_price=Decimal("0.123456"),
-            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(hours=1),
+            period_end=datetime.now(UTC),
             source_system="test",
         )
 

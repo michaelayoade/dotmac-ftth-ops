@@ -6,10 +6,7 @@ import asyncio
 import json
 import pickle
 from asyncio import Task
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from types import TracebackType
 from typing import Any

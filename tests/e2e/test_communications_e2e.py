@@ -1,4 +1,3 @@
-
 """
 End-to-End Tests for Communications Module
 
@@ -19,11 +18,8 @@ from httpx import AsyncClient
 
 from dotmac.platform.communications.email_service import EmailResponse
 
-
-
-
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
 
 class TestEmailSendingE2E:
     """End-to-end tests for email sending workflow."""
@@ -529,9 +525,12 @@ class TestBulkEmailWorkflowE2E:
             ],
         }
 
-        with patch("dotmac.platform.communications.router.queue_bulk_emails") as mock_queue, patch(
-            "dotmac.platform.communications.router.get_task_service"
-        ) as mock_get_task_service:
+        with (
+            patch("dotmac.platform.communications.router.queue_bulk_emails") as mock_queue,
+            patch(
+                "dotmac.platform.communications.router.get_task_service"
+            ) as mock_get_task_service,
+        ):
             job_id = "bulk_job_789"
             mock_queue.return_value = job_id
 

@@ -1,4 +1,3 @@
-
 """
 Comprehensive RADIUS Service Tests
 
@@ -19,9 +18,6 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from dotmac.platform.radius.schemas import (
-
-
-
     BandwidthProfileCreate,
     NASCreate,
     NASUpdate,
@@ -31,10 +27,8 @@ from dotmac.platform.radius.schemas import (
 )
 from dotmac.platform.radius.service import RADIUSService
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestRADIUSSessionManagement:
@@ -46,7 +40,6 @@ class TestRADIUSSessionManagement:
 
         # Create subscriber first
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-session-001",
             username="session_user@isp",
             password="SecurePass123!",
         )
@@ -74,7 +67,6 @@ class TestRADIUSSessionManagement:
 
         # Create subscriber
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-history-001",
             username="history_user@isp",
             password="SecurePass123!",
         )
@@ -91,7 +83,6 @@ class TestRADIUSSessionManagement:
 
         # Create subscriber
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-disconnect-001",
             username="disconnect_user@isp",
             password="SecurePass123!",
         )
@@ -105,7 +96,7 @@ class TestRADIUSSessionManagement:
             mock_disconnect.return_value = {
                 "success": True,
                 "message": "Session disconnected successfully",
-                "username": "disconnect_user@isp"
+                "username": "disconnect_user@isp",
             }
 
             result = await service.disconnect_session(username="disconnect_user@isp")
@@ -127,7 +118,7 @@ class TestRADIUSSessionManagement:
             mock_disconnect.return_value = {
                 "success": True,
                 "message": "Session disconnected successfully",
-                "session_id": "test-session-123"
+                "session_id": "test-session-123",
             }
 
             result = await service.disconnect_session(session_id="test-session-123")
@@ -149,7 +140,7 @@ class TestRADIUSSessionManagement:
                 "success": False,
                 "message": "Failed to disconnect session",
                 "username": "nonexistent@isp",
-                "error": "Session not found"
+                "error": "Session not found",
             }
 
             result = await service.disconnect_session(username="nonexistent@isp")
@@ -169,7 +160,6 @@ class TestRADIUSUsageStats:
 
         # Create subscriber first
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-usage-001",
             username="usage_user@isp",
             password="SecurePass123!",
         )
@@ -195,7 +185,6 @@ class TestRADIUSUsageStats:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-usage-002",
             username="usage_date_user@isp",
             password="SecurePass123!",
         )
@@ -302,7 +291,6 @@ class TestRADIUSBandwidthProfiles:
 
         # Create subscriber
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-bandwidth-001",
             username="bandwidth_user@isp",
             password="SecurePass123!",
         )
@@ -473,7 +461,6 @@ class TestRADIUSSubscriberAdvanced:
 
         # Create subscriber
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-multi-update-001",
             username="multi_update_user@isp",
             password="OldPass123!",
         )
@@ -507,7 +494,6 @@ class TestRADIUSSubscriberAdvanced:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-ipv4-001",
             username="ipv4_user@isp",
             password="SecurePass123!",
             framed_ipv4_address="192.168.100.50",
@@ -533,7 +519,6 @@ class TestRADIUSSubscriberAdvanced:
         # Create multiple subscribers
         for i in range(5):
             data = RADIUSSubscriberCreate(
-                subscriber_id=f"sub-page-{i}",
                 username=f"page_user_{i}@isp",
                 password="SecurePass123!",
             )
@@ -568,7 +553,6 @@ class TestRADIUSErrorHandling:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-invalid-profile",
             username="invalid_profile_user@isp",
             password="SecurePass123!",
             bandwidth_profile_id="nonexistent-profile-id",
@@ -584,7 +568,6 @@ class TestRADIUSErrorHandling:
 
         # Create subscriber first
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-nonexist-profile",
             username="nonexist_profile_user@isp",
             password="SecurePass123!",
         )

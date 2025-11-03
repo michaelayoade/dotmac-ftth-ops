@@ -25,9 +25,7 @@ class TestTrackHTTPError:
     def test_track_4xx_error(self):
         """Test tracking 4xx client error."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.http_errors_total"
-            ) as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.http_errors_total") as mock_total,
             patch("dotmac.platform.monitoring.error_tracking.http_4xx_errors") as mock_4xx,
         ):
             mock_total.labels.return_value = MagicMock()
@@ -42,9 +40,7 @@ class TestTrackHTTPError:
     def test_track_5xx_error(self):
         """Test tracking 5xx server error."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.http_errors_total"
-            ) as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.http_errors_total") as mock_total,
             patch("dotmac.platform.monitoring.error_tracking.http_5xx_errors") as mock_5xx,
         ):
             mock_total.labels.return_value = MagicMock()
@@ -58,12 +54,8 @@ class TestTrackHTTPError:
     def test_track_error_with_response_time(self):
         """Test tracking error with response time."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.http_errors_total"
-            ) as mock_total,
-            patch(
-                "dotmac.platform.monitoring.error_tracking.error_response_time"
-            ) as mock_time,
+            patch("dotmac.platform.monitoring.error_tracking.http_errors_total") as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.error_response_time") as mock_time,
         ):
             mock_total.labels.return_value = MagicMock()
             mock_time_obj = MagicMock()
@@ -80,9 +72,7 @@ class TestTrackException:
 
     def test_track_exception_basic(self):
         """Test basic exception tracking."""
-        with patch(
-            "dotmac.platform.monitoring.error_tracking.exceptions_total"
-        ) as mock_counter:
+        with patch("dotmac.platform.monitoring.error_tracking.exceptions_total") as mock_counter:
             mock_counter.labels.return_value = MagicMock()
 
             exc = ValueError("Test error")
@@ -97,9 +87,7 @@ class TestTrackException:
     def test_track_exception_with_endpoint(self):
         """Test exception tracking with endpoint."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.exceptions_total"
-            ) as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.exceptions_total") as mock_total,
             patch(
                 "dotmac.platform.monitoring.error_tracking.exception_by_endpoint"
             ) as mock_endpoint,
@@ -134,9 +122,7 @@ class TestTrackDatabaseError:
     def test_track_connection_failure(self):
         """Test tracking database connection failure."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.database_errors_total"
-            ) as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.database_errors_total") as mock_total,
             patch(
                 "dotmac.platform.monitoring.error_tracking.database_connection_failures"
             ) as mock_conn,
@@ -157,9 +143,7 @@ class TestTrackDatabaseError:
     def test_track_query_timeout(self):
         """Test tracking database query timeout."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.database_errors_total"
-            ) as mock_total,
+            patch("dotmac.platform.monitoring.error_tracking.database_errors_total") as mock_total,
             patch(
                 "dotmac.platform.monitoring.error_tracking.database_query_timeouts"
             ) as mock_timeout,
@@ -184,9 +168,7 @@ class TestTrackAuthFailure:
 
     def test_track_auth_failure_basic(self):
         """Test basic auth failure tracking."""
-        with patch(
-            "dotmac.platform.monitoring.error_tracking.auth_failures_total"
-        ) as mock_counter:
+        with patch("dotmac.platform.monitoring.error_tracking.auth_failures_total") as mock_counter:
             mock_counter.labels.return_value = MagicMock()
 
             track_auth_failure("invalid_credentials", tenant_id="tenant-1")
@@ -196,12 +178,8 @@ class TestTrackAuthFailure:
     def test_track_invalid_token(self):
         """Test tracking invalid token attempt."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_tracking.auth_failures_total"
-            ) as mock_failures,
-            patch(
-                "dotmac.platform.monitoring.error_tracking.invalid_token_attempts"
-            ) as mock_token,
+            patch("dotmac.platform.monitoring.error_tracking.auth_failures_total") as mock_failures,
+            patch("dotmac.platform.monitoring.error_tracking.invalid_token_attempts") as mock_token,
         ):
             mock_failures.labels.return_value = MagicMock()
             mock_token.labels.return_value = MagicMock()
@@ -219,9 +197,7 @@ class TestTrackRateLimitViolation:
 
     def test_track_rate_limit(self):
         """Test tracking rate limit violation."""
-        with patch(
-            "dotmac.platform.monitoring.error_tracking.rate_limit_exceeded"
-        ) as mock_counter:
+        with patch("dotmac.platform.monitoring.error_tracking.rate_limit_exceeded") as mock_counter:
             mock_counter.labels.return_value = MagicMock()
 
             track_rate_limit_violation("/api/users", tenant_id="tenant-1")
@@ -238,9 +214,7 @@ class TestTrackExternalAPIError:
 
     def test_track_external_api_error(self):
         """Test tracking external API error."""
-        with patch(
-            "dotmac.platform.monitoring.error_tracking.external_api_errors"
-        ) as mock_counter:
+        with patch("dotmac.platform.monitoring.error_tracking.external_api_errors") as mock_counter:
             mock_counter.labels.return_value = MagicMock()
 
             exc = Exception("API error")

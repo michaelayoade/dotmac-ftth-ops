@@ -1,4 +1,3 @@
-
 """
 NetBox Integration Tests
 
@@ -7,6 +6,11 @@ Requires Docker NetBox to be running.
 
 Run with: pytest tests/netbox/test_netbox_integration.py -v -m integration
 Skip with: pytest tests/netbox/ -v -m "not integration"
+
+The tests automatically detect if running inside Docker and adjust connection
+parameters accordingly:
+- Inside Docker: Use service name 'netbox'
+- Outside Docker: Use 'localhost' with port forwarding
 """
 
 import os
@@ -19,13 +23,17 @@ import pytest_asyncio
 
 from dotmac.platform.core.http_client import RobustHTTPClient
 from dotmac.platform.netbox.client import NetBoxClient
+from tests.helpers.docker_env import get_docker_network_url
+
+# NetBox connection configuration
 
 
 # Mark all tests in this file as integration tests
 pytestmark = pytest.mark.integration
 
-# NetBox connection configuration
-NETBOX_URL_ENV = os.getenv("NETBOX_URL", "http://localhost:8080")
+# Auto-detect NetBox URL based on environment
+_default_netbox_url = get_docker_network_url("netbox", 8080, scheme="http")
+NETBOX_URL_ENV = os.getenv("NETBOX_URL", _default_netbox_url)
 NETBOX_TOKEN_ENV = os.getenv("NETBOX_API_TOKEN", "0123456789abcdef0123456789abcdef01234567")
 
 
@@ -36,23 +44,39 @@ def netbox_health_check():
 
     This is now a fixture instead of module-level code to avoid blocking
     pytest collection when NetBox isn't available (e.g., when running -m e2e).
+
+    Uses retry logic with increased timeout for more reliable health checks.
     """
+    import time
+
     status_url = f"{NETBOX_URL_ENV.rstrip('/')}/api/status/"
-    try:
-        status_request = urllib_request.Request(status_url)
-        if NETBOX_TOKEN_ENV:
-            status_request.add_header("Authorization", f"Token {NETBOX_TOKEN_ENV}")
-        with urllib_request.urlopen(status_request, timeout=5) as resp:
-            if resp.status >= 400:
-                pytest.skip(
-                    f"NetBox health check failed with status {resp.status} at {status_url}. "
-                    f"Integration tests require a running NetBox instance."
-                )
-    except (URLError, TimeoutError) as e:
-        pytest.skip(
-            f"NetBox service not reachable at {NETBOX_URL_ENV}. "
-            f"Integration tests require a running NetBox instance. Error: {e}"
-        )
+    max_retries = 3
+    timeout_per_attempt = 15  # Increased from 5 to 15 seconds
+
+    for attempt in range(max_retries):
+        try:
+            status_request = urllib_request.Request(status_url)
+            if NETBOX_TOKEN_ENV:
+                status_request.add_header("Authorization", f"Token {NETBOX_TOKEN_ENV}")
+            with urllib_request.urlopen(status_request, timeout=timeout_per_attempt) as resp:
+                if resp.status >= 400:
+                    if attempt < max_retries - 1:
+                        time.sleep(2)  # Wait before retry
+                        continue
+                    pytest.skip(
+                        f"NetBox health check failed with status {resp.status} at {status_url}. "
+                        f"Integration tests require a running NetBox instance."
+                    )
+                # Success!
+                return True
+        except (URLError, TimeoutError) as e:
+            if attempt < max_retries - 1:
+                time.sleep(2)  # Wait before retry
+                continue
+            pytest.skip(
+                f"NetBox service not reachable at {NETBOX_URL_ENV} after {max_retries} attempts. "
+                f"Integration tests require a running NetBox instance. Last error: {e}"
+            )
     return True
 
 
@@ -71,6 +95,8 @@ def netbox_token():
 @pytest_asyncio.fixture
 async def netbox_client(netbox_url, netbox_token, netbox_health_check):
     """Create NetBox client for integration tests"""
+    import asyncio
+
     # netbox_health_check ensures NetBox is available before we create the client
     client = NetBoxClient(
         base_url=netbox_url,
@@ -78,21 +104,29 @@ async def netbox_client(netbox_url, netbox_token, netbox_health_check):
         verify_ssl=False,  # Disable SSL verification for local Docker
     )
 
-    healthy = await client.health_check()
-    if not healthy:
-        await client.client.aclose()
-        pool_key = f"netbox:default:{client.base_url}"
-        RobustHTTPClient._client_pool.pop(pool_key, None)
-        RobustHTTPClient._circuit_breakers.pop("netbox:default", None)
-        pytest.skip(f"NetBox health check failed at {netbox_url}, skipping integration tests.")
+    # Retry health check with backoff to handle transient issues
+    max_attempts = 3
+    for attempt in range(max_attempts):
+        try:
+            healthy = await client.health_check()
+            if healthy:
+                break
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(1)  # Wait before retry
+        except Exception as e:
+            if attempt == max_attempts - 1:
+                pytest.skip(
+                    f"NetBox health check failed at {netbox_url} after {max_attempts} attempts. "
+                    f"Error: {e}"
+                )
+            await asyncio.sleep(1)
+    else:
+        pytest.skip(f"NetBox health check failed at {netbox_url} after {max_attempts} attempts.")
 
-    try:
-        yield client
-    finally:
-        await client.client.aclose()
-        pool_key = f"netbox:default:{client.base_url}"
-        RobustHTTPClient._client_pool.pop(pool_key, None)
-        RobustHTTPClient._circuit_breakers.pop("netbox:default", None)
+    # Yield the client without closing it - pooled clients should remain open across tests
+    yield client
+    # Note: We don't close the pooled client here to allow reuse across tests
+    # The connection pool will be cleaned up when the test session ends
 
 
 @pytest.mark.asyncio

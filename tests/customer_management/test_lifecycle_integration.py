@@ -5,7 +5,7 @@ These tests exercise the lifecycle handler logic in isolation with patched
 dependencies to avoid touching real infrastructure components.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
@@ -74,7 +74,7 @@ class TestServiceSuspensionEndpoint:
             "old_status": "ACTIVE",
             "new_status": "SUSPENDED",
             "tenant_id": sample_customer_data["tenant_id"],
-            "changed_at": datetime.now(timezone.utc).isoformat(),
+            "changed_at": datetime.now(UTC).isoformat(),
         }
 
         # Mock active subscriptions
@@ -84,8 +84,8 @@ class TestServiceSuspensionEndpoint:
             customer_id=sample_customer_data["customer_id"],
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={},
         )
 
@@ -126,8 +126,8 @@ class TestServiceSuspensionEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_basic",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+                current_period_start=datetime.now(UTC),
+                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
                 metadata_json={},
             ),
             BillingSubscriptionTable(
@@ -136,8 +136,8 @@ class TestServiceSuspensionEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_premium",
                 status=SubscriptionStatus.TRIALING.value,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+                current_period_start=datetime.now(UTC),
+                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
                 metadata_json={},
             ),
         ]
@@ -165,7 +165,7 @@ class TestServiceReactivationEndpoint:
             "old_status": "SUSPENDED",
             "new_status": "ACTIVE",
             "tenant_id": tenant_id,
-            "changed_at": datetime.now(timezone.utc).isoformat(),
+            "changed_at": datetime.now(UTC).isoformat(),
         }
 
         # Mock suspended subscription
@@ -175,8 +175,8 @@ class TestServiceReactivationEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.PAUSED.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={
                 "suspension": {
                     "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -215,8 +215,8 @@ class TestServiceReactivationEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.PAUSED.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={
                 "suspension": {
                     "suspended_at": "2025-10-15T10:00:00+00:00",
@@ -248,7 +248,7 @@ class TestChurnHandlingEndpoint:
             "old_status": "ACTIVE",
             "new_status": "CHURNED",
             "tenant_id": tenant_id,
-            "changed_at": datetime.now(timezone.utc).isoformat(),
+            "changed_at": datetime.now(UTC).isoformat(),
         }
 
         # Mock active subscription
@@ -258,8 +258,8 @@ class TestChurnHandlingEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={},
         )
 
@@ -287,8 +287,8 @@ class TestChurnHandlingEndpoint:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={},
         )
 
@@ -331,8 +331,8 @@ class TestChurnHandlingEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_basic",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+                current_period_start=datetime.now(UTC),
+                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
                 metadata_json={},
             ),
             BillingSubscriptionTable(
@@ -341,8 +341,8 @@ class TestChurnHandlingEndpoint:
                 customer_id=customer_id,
                 plan_id="plan_premium",
                 status=SubscriptionStatus.ACTIVE.value,
-                current_period_start=datetime.now(timezone.utc),
-                current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+                current_period_start=datetime.now(UTC),
+                current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
                 metadata_json={},
             ),
         ]
@@ -372,8 +372,8 @@ class TestEndToEndLifecycleWorkflow:
             customer_id=customer_id,
             plan_id="plan_basic",
             status=SubscriptionStatus.ACTIVE.value,
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime(2025, 11, 20, tzinfo=timezone.utc),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime(2025, 11, 20, tzinfo=UTC),
             metadata_json={},
         )
 
@@ -419,7 +419,7 @@ class TestEventDrivenWorkflow:
             data={
                 "customer_id": customer_id,
                 "tenant_id": tenant_id,
-                "suspended_at": datetime.now(timezone.utc).isoformat(),
+                "suspended_at": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -435,7 +435,7 @@ class TestEventDrivenWorkflow:
         churn_event_data = {
             "customer_id": customer_id,
             "tenant_id": tenant_id,
-            "churned_at": datetime.now(timezone.utc).isoformat(),
+            "churned_at": datetime.now(UTC).isoformat(),
             "new_status": "CHURNED",
             "subscriptions_affected": 2,
             "lifetime_value": 1250.00,

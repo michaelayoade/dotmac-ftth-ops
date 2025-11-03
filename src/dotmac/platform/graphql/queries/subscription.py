@@ -5,11 +5,9 @@ Provides efficient subscription queries with conditional loading of customers,
 plans, and invoices via DataLoaders to prevent N+1 queries.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any, cast
 
 import strawberry
 from sqlalchemy import func, or_, select
@@ -62,7 +60,8 @@ class SubscriptionQueries:
         from dotmac.platform.billing.domain.aggregates import Subscription as SubscriptionModel
 
         # Fetch subscription
-        stmt = select(SubscriptionModel).where(SubscriptionModel.subscription_id == str(id))
+        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
+        stmt = select(SubscriptionModel).where(subscription_id_column == str(id))
         result = await db.execute(stmt)
         sub_model = result.scalar_one_or_none()
 
@@ -137,10 +136,14 @@ class SubscriptionQueries:
 
         # Build base query
         stmt = select(SubscriptionModel)
+        status_column = cast(Any, getattr(SubscriptionModel, "status"))
+        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
+        customer_id_column = cast(Any, getattr(SubscriptionModel, "customer_id"))
+        created_at_column = cast(Any, getattr(SubscriptionModel, "created_at"))
 
         # Apply filters
         if status:
-            stmt = stmt.where(SubscriptionModel.status == status.value)
+            stmt = stmt.where(status_column == status.value)
 
         # Note: billing_cycle filter would require joining with plan table
         # For now, we'll filter after loading if needed
@@ -149,8 +152,8 @@ class SubscriptionQueries:
         if search:
             stmt = stmt.where(
                 or_(
-                    SubscriptionModel.subscription_id.ilike(f"%{search}%"),
-                    SubscriptionModel.customer_id.ilike(f"%{search}%"),
+                    subscription_id_column.ilike(f"%{search}%"),
+                    customer_id_column.ilike(f"%{search}%"),
                 )
             )
 
@@ -160,7 +163,7 @@ class SubscriptionQueries:
         total_count = total_count_result.scalar() or 0
 
         # Apply sorting and pagination
-        stmt = stmt.order_by(SubscriptionModel.created_at.desc()).limit(page_size).offset(offset)
+        stmt = stmt.order_by(created_at_column.desc()).limit(page_size).offset(offset)
 
         # Execute query
         result = await db.execute(stmt)
@@ -224,13 +227,17 @@ class SubscriptionQueries:
         from dotmac.platform.billing.domain.aggregates import Subscription as SubscriptionModel
 
         # Get status counts
+        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
+        status_column = cast(Any, getattr(SubscriptionModel, "status"))
+        created_at_column = cast(Any, getattr(SubscriptionModel, "created_at"))
+
         status_stmt = select(
-            func.count(SubscriptionModel.subscription_id).label("total"),
-            func.count(func.case((SubscriptionModel.status == "active", 1))).label("active"),
-            func.count(func.case((SubscriptionModel.status == "trialing", 1))).label("trialing"),
-            func.count(func.case((SubscriptionModel.status == "past_due", 1))).label("past_due"),
-            func.count(func.case((SubscriptionModel.status == "canceled", 1))).label("canceled"),
-            func.count(func.case((SubscriptionModel.status == "paused", 1))).label("paused"),
+            func.count(subscription_id_column).label("total"),
+            func.count(func.case((status_column == "active", 1))).label("active"),
+            func.count(func.case((status_column == "trialing", 1))).label("trialing"),
+            func.count(func.case((status_column == "past_due", 1))).label("past_due"),
+            func.count(func.case((status_column == "canceled", 1))).label("canceled"),
+            func.count(func.case((status_column == "paused", 1))).label("paused"),
         )
 
         status_result = await db.execute(status_stmt)
@@ -256,14 +263,12 @@ class SubscriptionQueries:
         last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
 
         growth_stmt = select(
-            func.count(func.case((SubscriptionModel.created_at >= this_month_start, 1))).label(
-                "this_month"
-            ),
+            func.count(func.case((created_at_column >= this_month_start, 1))).label("this_month"),
             func.count(
                 func.case(
                     (
-                        (SubscriptionModel.created_at >= last_month_start)
-                        & (SubscriptionModel.created_at < this_month_start),
+                        (created_at_column >= last_month_start)
+                        & (created_at_column < this_month_start),
                         1,
                     )
                 )
@@ -339,21 +344,26 @@ class SubscriptionQueries:
         db: AsyncSession = info.context.db
 
         # Import here to avoid circular imports
-        from dotmac.platform.billing.subscriptions.models import SubscriptionPlan
+        from dotmac.platform.billing.subscriptions.models import (
+            SubscriptionPlan as SubscriptionPlanModel,
+        )
 
         # Limit page_size
         page_size = min(page_size, 100)
         offset = (page - 1) * page_size
 
         # Build base query
-        stmt = select(SubscriptionPlan)
+        stmt = select(SubscriptionPlanModel)
+        plan_is_active_column = cast(Any, getattr(SubscriptionPlanModel, "is_active"))
+        plan_billing_cycle_column = cast(Any, getattr(SubscriptionPlanModel, "billing_cycle"))
+        plan_created_at_column = cast(Any, getattr(SubscriptionPlanModel, "created_at"))
 
         # Apply filters
         if is_active is not None:
-            stmt = stmt.where(SubscriptionPlan.is_active == is_active)
+            stmt = stmt.where(plan_is_active_column == is_active)
 
         if billing_cycle:
-            stmt = stmt.where(SubscriptionPlan.billing_cycle == billing_cycle.value)
+            stmt = stmt.where(plan_billing_cycle_column == billing_cycle.value)
 
         # Get total count
         count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -361,7 +371,7 @@ class SubscriptionQueries:
         total_count = total_count_result.scalar() or 0
 
         # Apply sorting and pagination
-        stmt = stmt.order_by(SubscriptionPlan.created_at.desc()).limit(page_size).offset(offset)
+        stmt = stmt.order_by(plan_created_at_column.desc()).limit(page_size).offset(offset)
 
         # Execute query
         result = await db.execute(stmt)
@@ -411,13 +421,16 @@ class SubscriptionQueries:
 
         # Build base query
         stmt = select(ProductModel)
+        product_is_active_column = cast(Any, getattr(ProductModel, "is_active"))
+        product_category_column = cast(Any, getattr(ProductModel, "category"))
+        product_created_at_column = cast(Any, getattr(ProductModel, "created_at"))
 
         # Apply filters
         if is_active is not None:
-            stmt = stmt.where(ProductModel.is_active == is_active)
+            stmt = stmt.where(product_is_active_column == is_active)
 
         if category:
-            stmt = stmt.where(ProductModel.category == category)
+            stmt = stmt.where(product_category_column == category)
 
         # Get total count
         count_stmt = select(func.count()).select_from(stmt.subquery())
@@ -425,7 +438,7 @@ class SubscriptionQueries:
         total_count = total_count_result.scalar() or 0
 
         # Apply sorting and pagination
-        stmt = stmt.order_by(ProductModel.created_at.desc()).limit(page_size).offset(offset)
+        stmt = stmt.order_by(product_created_at_column.desc()).limit(page_size).offset(offset)
 
         # Execute query
         result = await db.execute(stmt)

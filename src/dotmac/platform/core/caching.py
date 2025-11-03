@@ -6,6 +6,7 @@ arbitrary code execution vulnerabilities.
 """
 
 import json
+import logging
 from datetime import datetime
 from functools import wraps
 from typing import Any, cast
@@ -14,6 +15,8 @@ from cachetools import LRUCache, TTLCache, cached  # noqa: PGH003
 
 import redis
 from dotmac.platform.settings import settings
+
+logger = logging.getLogger(__name__)
 
 
 class DateTimeEncoder(json.JSONEncoder):
@@ -99,11 +102,11 @@ def cache_get(key: str, default: Any | None = None) -> Any:
                 if isinstance(value, (bytearray, memoryview)):
                     return json.loads(bytes(value).decode("utf-8"))
                 return json.loads(value)
-        except (json.JSONDecodeError, UnicodeDecodeError, TypeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, TypeError) as e:
             # Invalid JSON or encoding - return default
-            pass
-        except Exception:
-            pass  # Fall back to memory cache
+            logger.debug(f"Cache value decode error for key {key}: {e}")
+        except Exception as e:
+            logger.debug(f"Redis cache get failed for key {key}, falling back to memory cache: {e}")
 
     return memory_cache.get(key, default)
 
@@ -143,8 +146,8 @@ def cache_set(key: str, value: Any, ttl: int | None = 300) -> bool:
         except (TypeError, ValueError) as e:
             # Value not JSON-serializable - raise error for caller to handle
             raise TypeError(f"Cache value must be JSON-serializable: {e}") from e
-        except Exception:
-            pass  # Fall back to memory cache
+        except Exception as e:
+            logger.debug(f"Redis cache set failed for key {key}, falling back to memory cache: {e}")
 
     memory_cache[key] = value
     _tracked_keys.add(key)
@@ -167,8 +170,8 @@ def cache_delete(key: str) -> bool:
     if client:
         try:
             deleted = bool(client.delete(key))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Redis cache delete failed for key {key}: {e}")
 
     if key in memory_cache:
         del memory_cache[key]
@@ -202,8 +205,8 @@ def cache_clear(namespace: str | None = None, *, flush_all: bool = False) -> Non
                     batch = keys_to_clear[idx : idx + 500]
                     if batch:
                         client.delete(*batch)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.debug(f"Redis cache clear failed for namespace {namespace}: {e}")
 
     if flush_all:
         memory_cache.clear()

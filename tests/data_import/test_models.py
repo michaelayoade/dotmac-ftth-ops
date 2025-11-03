@@ -3,23 +3,17 @@
 import pytest
 
 from dotmac.platform.data_import.models import (
-
-
     ImportFailure,
     ImportJob,
     ImportJobStatus,
     ImportJobType,
 )
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestImportJobType:
     """Test ImportJobType enum."""
-
 
     def test_job_types(self):
         """Test all job types are defined."""

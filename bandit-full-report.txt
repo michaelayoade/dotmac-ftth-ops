@@ -1,0 +1,809 @@
+Run started:2025-11-01 15:07:48.333204
+
+Test results:
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/access/snmp.py:194:8
+193	            transport.closeDispatcher()
+194	        except Exception:
+195	            pass
+196	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'user.password_reset_admin'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/audit/models.py:31:27
+30	    # RBAC activities
+31	    ROLE_CREATED = "rbac.role.created"
+32	    ROLE_UPDATED = "rbac.role.updated"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'secret.created'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/audit/models.py:46:21
+45	    SECRET_UPDATED = "secret.updated"
+46	    SECRET_DELETED = "secret.deleted"
+47	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'secret.accessed'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/audit/models.py:47:22
+46	    SECRET_DELETED = "secret.deleted"
+47	
+48	    # File activities
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'secret.updated'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/audit/models.py:48:21
+47	
+48	    # File activities
+49	    FILE_UPLOADED = "file.uploaded"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'secret.deleted'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/audit/models.py:49:21
+48	    # File activities
+49	    FILE_UPLOADED = "file.uploaded"
+50	    FILE_DOWNLOADED = "file.downloaded"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'default-secret-change-this'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/auth/core.py:75:18
+74	    _access_token_expire_minutes = 15
+75	    _refresh_token_expire_days = 7
+76	    _redis_url = "redis://localhost:6379"
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/auth/platform_admin_router.py:746:11
+745	
+746	    return ImpersonationTokenResponse(
+747	        access_token=token,
+748	        token_type="bearer",
+749	        expires_in=duration_minutes * 60,
+750	        target_tenant=tenant_id,
+751	        impersonating=True,
+752	    )
+753	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/auth/router.py:170:0
+169	
+170	security = HTTPBearer(auto_error=False)
+171	
+172	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/auth/router.py:328:4
+327	    tenant_config = get_tenant_config()
+328	    default_tenant_id = tenant_config.default_tenant_id if tenant_config else None
+329	
+330	    # Try to find user by username or email within the current tenant
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/auth/router.py:496:11
+495	        refresh_token=refresh_token,
+496	        token_type="bearer",
+497	        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+498	    )
+499	
+500	
+501	async def _complete_cookie_login(
+502	    user: User,
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/auth/router.py:748:11
+747	        refresh_token=refresh_token,
+748	        token_type="bearer",
+749	        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+750	    )
+751	
+752	
+753	@auth_router.post("/login/verify-2fa", response_model=TokenResponse)
+754	async def verify_2fa_login(
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/auth/router.py:1136:11
+1135	        refresh_token=refresh_token,
+1136	        token_type="bearer",
+1137	        expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+1138	    )
+1139	
+1140	
+1141	@auth_router.post("/refresh", response_model=TokenResponse)
+1142	@rate_limit("10/minute")  # type: ignore[misc]  # SECURITY: Reasonable limit for token refresh
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'bearer'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/auth/router.py:1218:15
+1217	            refresh_token=new_refresh_token,
+1218	            token_type="bearer",
+1219	            expires_in=ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+1220	        )
+1221	
+1222	    except HTTPException:
+1223	        # Re-raise HTTPException as-is
+1224	        raise
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/auth/router.py:1302:8
+1301	
+1302	        # Always clear cookies on logout
+1303	        clear_auth_cookies(response)
+1304	        return {"message": "Logout completed"}
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/auth/router.py:1387:12
+1386	
+1387	        # Prevent revoking current session
+1388	        if session_id == current_session_id:
+1389	            raise HTTPException(
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/auth/router.py:1462:12
+1461	
+1462	        # Get all sessions
+1463	        sessions = await session_manager.get_user_sessions(user_info.user_id)
+1464	
+
+--------------------------------------------------
+>> Issue: [B324:hashlib] Use of weak SHA1 hash for security. Consider usedforsecurity=False
+   Severity: High   Confidence: High
+   CWE: CWE-327 (https://cwe.mitre.org/data/definitions/327.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b324_hashlib.html
+   Location: src/dotmac/platform/billing/invoicing/service.py:1007:24
+1006	        # CRITICAL: Use PostgreSQL advisory lock to prevent race conditions
+1007	        # Lock key incorporates tenant-specific suffix and year
+1008	        lock_key = int(
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/billing/usage/router.py:109:4
+108	            return default_currency.upper()
+109	    except Exception:
+110	        # Fallback to USD when settings retrieval fails
+111	        pass
+112	
+
+--------------------------------------------------
+>> Issue: [B112:try_except_continue] Try, Except, Continue detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b112_try_except_continue.html
+   Location: src/dotmac/platform/cache/decorators.py:326:12
+325	                    key_parts.append(f"{param_name}:{value_hash}")
+326	            except Exception:
+327	                # Skip unpicklable objects
+328	                continue
+329	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'auth_token'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/cache/models.py:67:17
+66	    SESSION = "session"
+67	    AUTH_TOKEN = "auth_token"
+68	
+
+--------------------------------------------------
+>> Issue: [B404:blacklist] Consider possible security implications associated with the subprocess module.
+   Severity: Low   Confidence: High
+   CWE: CWE-78 (https://cwe.mitre.org/data/definitions/78.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b404-import-subprocess
+   Location: src/dotmac/platform/cli.py:43:4
+42	    import httpx
+43	
+44	    from dotmac.platform.core.caching import redis_client
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/caching.py:105:8
+104	            pass
+105	        except Exception:
+106	            pass  # Fall back to memory cache
+107	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/caching.py:146:8
+145	            raise TypeError(f"Cache value must be JSON-serializable: {e}") from e
+146	        except Exception:
+147	            pass  # Fall back to memory cache
+148	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/caching.py:170:8
+169	            deleted = bool(client.delete(key))
+170	        except Exception:
+171	            pass
+172	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/caching.py:205:8
+204	                        client.delete(*batch)
+205	        except Exception:
+206	            pass
+207	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/ip_validation.py:518:12
+517	                return str(network)
+518	            except Exception:
+519	                pass
+520	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/core/tasks.py:236:0
+235	        init_celery_instrumentation()
+236	except Exception:
+237	    pass  # Not in worker context
+238	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/customer_portal/router.py:871:16
+870	        # Determine which token to use based on method type
+871	        token = ""
+872	        if request.method_type.value == "card":
+
+--------------------------------------------------
+>> Issue: [B405:blacklist] Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.
+   Severity: Low   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b405-import-xml-etree
+   Location: src/dotmac/platform/data_transfer/exporters.py:10:0
+9	import json
+10	import xml.etree.ElementTree as ET
+11	import zipfile
+
+--------------------------------------------------
+>> Issue: [B405:blacklist] Using xml.etree.ElementTree to parse untrusted XML data is known to be vulnerable to XML attacks. Replace xml.etree.ElementTree with the equivalent defusedxml package, or make sure defusedxml.defuse_stdlib() is called.
+   Severity: Low   Confidence: High
+   CWE: CWE-20 (https://cwe.mitre.org/data/definitions/20.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b405-import-xml-etree
+   Location: src/dotmac/platform/data_transfer/importers.py:7:0
+6	import importlib
+7	import xml.etree.ElementTree as ET
+8	from collections.abc import AsyncGenerator
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/data_transfer/importers.py:59:12
+58	                self._progress.total_batches = (total_rows // self.config.batch_size) + 1
+59	            except Exception:
+60	                pass
+61	
+
+--------------------------------------------------
+>> Issue: [B403:blacklist] Consider possible security implications associated with pickle module.
+   Severity: Low   Confidence: High
+   CWE: CWE-502 (https://cwe.mitre.org/data/definitions/502.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_imports.html#b403-import-pickle
+   Location: src/dotmac/platform/data_transfer/progress.py:7:0
+6	import json
+7	import pickle
+8	from asyncio import Task
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/data_transfer/progress.py:223:12
+222	                callback(self._progress)
+223	            except Exception:
+224	                pass
+225	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/file_storage/service.py:970:12
+969	                self.client.delete_file(destination_path, tenant_id)
+970	            except Exception:
+971	                pass
+972	            return None
+
+--------------------------------------------------
+>> Issue: [B112:try_except_continue] Try, Except, Continue detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b112_try_except_continue.html
+   Location: src/dotmac/platform/genieacs/service.py:232:16
+231	                    device_models.append(self._extract_device_info(entry))
+232	                except Exception:
+233	                    continue
+234	            total = len(devices)
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/genieacs/service.py:276:12
+275	                )
+276	            except Exception:
+277	                # Fall back to raw data if parsing fails
+278	                pass
+279	
+
+--------------------------------------------------
+>> Issue: [B501:request_with_no_cert_validation] Call to httpx with verify=False disabling SSL certificate checks, security issue.
+   Severity: High   Confidence: High
+   CWE: CWE-295 (https://cwe.mitre.org/data/definitions/295.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b501_request_with_no_cert_validation.html
+   Location: src/dotmac/platform/infrastructure_health.py:269:19
+268	    try:
+269	        async with httpx.AsyncClient(timeout=timeout, verify=False) as client:
+270	            response = await client.get(url)
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/monitoring/benchmarks.py:141:8
+140	                result.duration = result.end_time - result.start_time
+141	        except Exception:
+142	            pass
+143	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/monitoring/health_checks.py:113:16
+112	                    client.close()
+113	                except Exception:
+114	                    pass  # Ignore close errors
+115	
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:295:21
+294	        # Generate mock trace with detailed spans
+295	        span_count = random.randint(3, 8)
+296	        spans = []
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:305:24
+304	                name=f"operation_{i}",
+305	                service=random.choice(["api-gateway", "auth-service", "database"]),
+306	                duration=random.randint(10, 200),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:306:25
+305	                service=random.choice(["api-gateway", "auth-service", "database"]),
+306	                duration=random.randint(10, 200),
+307	                start_time=datetime.now(UTC),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:355:28
+354	                        value=(
+355	                            random.uniform(100, 1000)
+356	                            if "count" in metric_name
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:357:33
+356	                            if "count" in metric_name
+357	                            else random.uniform(50, 200)
+358	                        ),
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/monitoring/traces_router.py:425:34
+424	
+425	        health_scores = {service: random.uniform(85, 99) for service in services}
+426	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/network/workflow_service.py:184:20
+183	                        gateway = str(network.network_address + 1)
+184	                    except Exception:
+185	                        pass
+186	
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/network/workflow_service.py:229:21
+228	            # Generate a random IP from 10.x.x.x range
+229	            ip_int = random.randint(
+230	                int(ipaddress.IPv4Address("10.100.0.1")),
+231	                int(ipaddress.IPv4Address("10.255.255.254")),
+232	            )
+233	            ip_address = str(ipaddress.IPv4Address(ip_int))
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'password_reset'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/notifications/models.py:72:21
+71	    # System events
+72	    PASSWORD_RESET = "password_reset"
+73	    ACCOUNT_LOCKED = "account_locked"
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/orchestration/service.py:576:12
+575	                workflow.workflow_type = workflow_type
+576	            except Exception:
+577	                pass
+578	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/partner_management/dependencies.py:146:4
+145	        request.state.partner_id = str(partner.id)
+146	    except Exception:  # pragma: no cover - defensive
+147	        pass
+148	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'secret'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/plugins/schema.py:25:13
+24	    MULTI_SELECT = "multi_select"
+25	    SECRET = "secret"  # Write-only sensitive data
+26	    URL = "url"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'changeme_radius_shared_secret'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/radius/coa_client.py:199:30
+198	        if not settings.is_production:
+199	            fallback_secret = "changeme_radius_shared_secret"
+200	            logger.warning(
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/auth.py:212:12
+211	                )
+212	            except Exception:
+213	                pass  # Connection might already be closed
+214	        raise
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/auth.py:361:8
+360	            await self.websocket.close()
+361	        except Exception:
+362	            pass  # Connection might already be closed
+363	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/websocket.py:129:8
+128	            await self.websocket.close()
+129	        except Exception:
+130	            pass
+131	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/websocket_authenticated.py:194:8
+193	            await websocket.close()
+194	        except Exception:
+195	            pass
+196	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/websocket_authenticated.py:398:8
+397	            await websocket.close()
+398	        except Exception:
+399	            pass
+400	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/realtime/websocket_authenticated.py:658:8
+657	            await websocket.close()
+658	        except Exception:
+659	            pass
+660	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'change-me-in-production'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/secrets/secrets_loader.py:377:34
+376	    # Check critical secrets
+377	    if settings_obj.secret_key == "change-me-in-production":
+378	        errors.append("Application secret_key must be changed from default")
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'change-me'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/secrets/secrets_loader.py:380:38
+379	
+380	    if settings_obj.jwt.secret_key == "change-me":
+381	        errors.append("JWT secret_key must be changed from default")
+
+--------------------------------------------------
+>> Issue: [B106:hardcoded_password_funcarg] Possible hardcoded password: 'root-token'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b106_hardcoded_password_funcarg.html
+   Location: src/dotmac/platform/secrets/vault_config.py:110:11
+109	    logger.warning("Using default Vault configuration (development mode)")
+110	    return VaultConnectionConfig(
+111	        url="http://localhost:8200",
+112	        token="root-token",
+113	        namespace=None,
+114	        mount_path="secret",
+115	        kv_version=2,
+116	        timeout=30.0,
+117	        verify_ssl=True,
+118	        role_id=None,
+119	        secret_id=None,
+120	        kubernetes_role=None,
+121	    )
+122	
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/service_registry/client.py:41:18
+40	        # Simple random load balancing
+41	        service = random.choice(services)
+42	        return service.url
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/services/lifecycle/tasks.py:549:16
+548	
+549	                except Exception:
+550	                    # Log error but continue checking other services
+551	                    pass
+552	
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: ''
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/settings.py:755:35
+754	            return (
+755	                self.secret_key != ""
+756	                and self.secret_key != "change-me"
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'change-me'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/settings.py:756:39
+755	                self.secret_key != ""
+756	                and self.secret_key != "change-me"
+757	                and len(self.secret_key) >= 32
+
+--------------------------------------------------
+>> Issue: [B105:hardcoded_password_string] Possible hardcoded password: 'cleartext'
+   Severity: Low   Confidence: Medium
+   CWE: CWE-259 (https://cwe.mitre.org/data/definitions/259.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b105_hardcoded_password_string.html
+   Location: src/dotmac/platform/subscribers/models.py:524:44
+523	                # No prefix, assume cleartext
+524	                self.password_hash_method = "cleartext"
+525	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/telemetry.py:71:8
+70	            self.exporter.shutdown()
+71	        except Exception:
+72	            pass
+73	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/tenant/tenant.py:181:12
+180	                    resolved_id = tenant_id_header
+181	            except Exception:
+182	                pass
+183	
+
+--------------------------------------------------
+>> Issue: [B110:try_except_pass] Try, Except, Pass detected.
+   Severity: Low   Confidence: High
+   CWE: CWE-703 (https://cwe.mitre.org/data/definitions/703.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/plugins/b110_try_except_pass.html
+   Location: src/dotmac/platform/tenant/tenant.py:192:16
+191	                        resolved_id = tenant_id_param
+192	                except Exception:
+193	                    pass
+194	
+
+--------------------------------------------------
+>> Issue: [B311:blacklist] Standard pseudo-random generators are not suitable for security/cryptographic purposes.
+   Severity: Low   Confidence: High
+   CWE: CWE-330 (https://cwe.mitre.org/data/definitions/330.html)
+   More Info: https://bandit.readthedocs.io/en/1.8.6/blacklists/blacklist_calls.html#b311-random
+   Location: src/dotmac/platform/workflows/base.py:484:29
+483	
+484	                    delay *= random.uniform(0.5, 1.5)
+485	
+
+--------------------------------------------------
+
+Code scanned:
+	Total lines of code: 192098
+	Total lines skipped (#nosec): 0
+	Total potential issues skipped due to specifically being disabled (e.g., #nosec BXXX): 7
+
+Run metrics:
+	Total issues (by severity):
+		Undefined: 0
+		Low: 69
+		Medium: 0
+		High: 2
+	Total issues (by confidence):
+		Undefined: 0
+		Low: 0
+		Medium: 22
+		High: 49
+Files skipped (0):

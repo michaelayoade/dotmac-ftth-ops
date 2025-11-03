@@ -5,10 +5,7 @@ Provides types for subscriptions with customer, plan, and invoice batching
 via DataLoaders to prevent N+1 queries.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import TYPE_CHECKING, Any
@@ -213,13 +210,13 @@ class Subscription:
 
         is_in_trial = False
         if subscription.trial_end:
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             is_in_trial = datetime.now(UTC) < subscription.trial_end
 
         days_until_renewal = 0
         if is_active_status:
-            from datetime import datetime, timezone
+            from datetime import datetime
 
             delta = subscription.current_period_end - datetime.now(UTC)
             days_until_renewal = max(0, delta.days)

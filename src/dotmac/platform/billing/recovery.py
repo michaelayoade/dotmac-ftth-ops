@@ -9,10 +9,7 @@ import asyncio
 import secrets
 import uuid
 from collections.abc import Awaitable, Callable, Iterable
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar
 

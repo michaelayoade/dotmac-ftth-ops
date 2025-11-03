@@ -15,9 +15,8 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestSubscriptionPlans:
     """Tests for subscription plan management endpoints."""

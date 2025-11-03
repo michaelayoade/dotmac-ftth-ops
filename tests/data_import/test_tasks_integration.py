@@ -19,16 +19,11 @@ from dotmac.platform.data_import.tasks import (
     _update_job_task_id,
 )
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 class TestUpdateJobTaskId:
     """Test _update_job_task_id helper function."""
-
 
     @pytest.mark.asyncio
     async def test_update_job_task_id_success(self):

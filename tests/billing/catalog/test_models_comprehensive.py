@@ -4,7 +4,7 @@ Comprehensive tests for billing catalog models.
 Tests Pydantic model validation, business logic, and edge cases.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -97,7 +97,7 @@ class TestProductCategoryModel:
 
     def test_valid_category_creation(self):
         """Test creating a valid product category."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         category = ProductCategory(
             category_id="cat_123",
             tenant_id="test-tenant",
@@ -118,7 +118,7 @@ class TestProductCategoryModel:
 
     def test_category_defaults(self):
         """Test category model defaults."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         category = ProductCategory(
             category_id="cat_123",
             tenant_id="test-tenant",
@@ -133,7 +133,7 @@ class TestProductCategoryModel:
 
     def test_category_json_serialization(self):
         """Test category JSON serialization."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         category = ProductCategory(
             category_id="cat_123",
             tenant_id="test-tenant",
@@ -151,7 +151,7 @@ class TestProductModel:
 
     def test_valid_product_creation(self):
         """Test creating a valid product."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -178,7 +178,7 @@ class TestProductModel:
 
     def test_product_with_usage_configuration(self):
         """Test product with usage-based billing configuration."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_456",
             tenant_id="test-tenant",
@@ -200,7 +200,7 @@ class TestProductModel:
 
     def test_product_validation_base_price_negative(self):
         """Test product validation fails with negative base price."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with pytest.raises(ValidationError) as exc_info:
             Product(
@@ -220,7 +220,7 @@ class TestProductModel:
 
     def test_product_validation_sku_empty(self):
         """Test product validation fails with empty SKU."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with pytest.raises(ValidationError) as exc_info:
             Product(
@@ -240,7 +240,7 @@ class TestProductModel:
 
     def test_product_validation_sku_whitespace_only(self):
         """Test product validation fails with whitespace-only SKU."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with pytest.raises(ValidationError) as exc_info:
             Product(
@@ -260,7 +260,7 @@ class TestProductModel:
 
     def test_product_validation_sku_normalization(self):
         """Test SKU is normalized to uppercase and trimmed."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -277,7 +277,7 @@ class TestProductModel:
 
     def test_product_validation_currency_invalid_length(self):
         """Test product validation fails with invalid currency code length."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         with pytest.raises(ValidationError) as exc_info:
             Product(
@@ -297,7 +297,7 @@ class TestProductModel:
 
     def test_product_validation_currency_normalization(self):
         """Test currency code is normalized to uppercase."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -314,7 +314,7 @@ class TestProductModel:
 
     def test_product_defaults(self):
         """Test product model defaults."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -337,7 +337,7 @@ class TestProductModel:
 
     def test_product_is_usage_based_method(self):
         """Test is_usage_based() business logic method."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Usage-based product
         usage_product = Product(
@@ -393,7 +393,7 @@ class TestProductModel:
 
     def test_product_requires_usage_tracking_method(self):
         """Test requires_usage_tracking() business logic method."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Usage-based product with usage type configured
         product_with_tracking = Product(
@@ -437,7 +437,7 @@ class TestProductModel:
 
     def test_product_json_serialization(self):
         """Test product JSON serialization with custom encoders."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         product = Product(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -651,7 +651,7 @@ class TestProductResponse:
 
     def test_product_response_creation(self):
         """Test product response model creation."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = ProductResponse(
             product_id="prod_123",
             tenant_id="test-tenant",
@@ -678,7 +678,7 @@ class TestProductResponse:
 
     def test_product_response_with_usage_configuration(self):
         """Test product response with usage configuration."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = ProductResponse(
             product_id="prod_456",
             tenant_id="test-tenant",
@@ -709,7 +709,7 @@ class TestProductCategoryResponse:
 
     def test_category_response_creation(self):
         """Test category response model creation."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = ProductCategoryResponse(
             category_id="cat_123",
             tenant_id="test-tenant",

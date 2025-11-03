@@ -1,4 +1,3 @@
-
 """
 Executable verification tests for customer journey infrastructure.
 
@@ -9,13 +8,8 @@ These tests actually verify the system rather than just documenting it.
 import pytest
 from fastapi.testclient import TestClient
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 class TestJourneyAPIEndpoints:
@@ -112,7 +106,7 @@ class TestJourneyAPIEndpoints:
                 "or /radius endpoints for service management."
             )
 
-            print(f"\n✅ Service operations available via:")
+            print("\n✅ Service operations available via:")
             print(f"   - Subscriptions: {len(subscription_services)} endpoints")
             print(f"   - RADIUS: {len(radius_services)} endpoints")
         else:

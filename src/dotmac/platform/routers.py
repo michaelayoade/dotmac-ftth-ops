@@ -8,7 +8,7 @@ import importlib
 from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any
+from typing import Any, Awaitable, Callable, cast
 
 import structlog
 from fastapi import Depends, FastAPI
@@ -872,10 +872,14 @@ def register_routers(app: FastAPI) -> None:
 
         # GraphQLRouter with explicit path
         # Using default context (will be available via info.context.request)
+        graphql_context_getter = cast(
+            Callable[..., Awaitable[Context] | Context | None],
+            Context.get_context,
+        )
         graphql_app = GraphQLRouter(
             schema,
             path="/api/v1/graphql",
-            context_getter=Context.get_context,
+            context_getter=graphql_context_getter,
         )
 
         # Add router directly without prefix

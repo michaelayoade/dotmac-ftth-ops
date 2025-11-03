@@ -16,7 +16,7 @@ All imports are done lazily inside test methods to avoid event bus
 initialization during pytest collection phase.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -40,6 +40,7 @@ class TestInvoiceIntegrationFlow:
         """
         # Lazy imports to avoid event bus initialization during collection
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )
@@ -127,12 +128,13 @@ class TestInvoiceIntegrationFlow:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )
         from dotmac.platform.billing.commands.invoice_commands import (
-            CreateInvoiceCommand,
             ApplyPaymentToInvoiceCommand,
+            CreateInvoiceCommand,
         )
 
         mock_db_session = AsyncMock()
@@ -211,6 +213,7 @@ class TestInvoiceIntegrationFlow:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )
@@ -286,6 +289,7 @@ class TestInvoiceQueryIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, MagicMock
+
         from dotmac.platform.billing.queries.handlers import InvoiceQueryHandler
         from dotmac.platform.billing.queries.invoice_queries import GetInvoiceQuery
 
@@ -308,10 +312,10 @@ class TestInvoiceQueryIntegration:
         mock_invoice.remaining_balance = 100000
         mock_invoice.currency = "USD"
         mock_invoice.status = "draft"
-        mock_invoice.created_at = datetime.now(timezone.utc)
-        mock_invoice.updated_at = datetime.now(timezone.utc)
-        mock_invoice.issue_date = datetime.now(timezone.utc)
-        mock_invoice.due_date = datetime.now(timezone.utc) + timedelta(days=30)
+        mock_invoice.created_at = datetime.now(UTC)
+        mock_invoice.updated_at = datetime.now(UTC)
+        mock_invoice.issue_date = datetime.now(UTC)
+        mock_invoice.due_date = datetime.now(UTC) + timedelta(days=30)
         mock_invoice.finalized_at = None
         mock_invoice.paid_at = None
         mock_invoice.voided_at = None
@@ -355,6 +359,7 @@ class TestInvoiceQueryIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, MagicMock
+
         from dotmac.platform.billing.queries.handlers import InvoiceQueryHandler
         from dotmac.platform.billing.queries.invoice_queries import ListInvoicesQuery
 
@@ -405,8 +410,7 @@ class TestInvoiceBusinessRulesIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
-        from dotmac.platform.core import Money
-        from dotmac.platform.core.exceptions import BusinessRuleError
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )
@@ -414,6 +418,8 @@ class TestInvoiceBusinessRulesIntegration:
             CreateInvoiceCommand,
             VoidInvoiceCommand,
         )
+        from dotmac.platform.core import Money
+        from dotmac.platform.core.exceptions import BusinessRuleError
 
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
@@ -472,14 +478,15 @@ class TestInvoiceBusinessRulesIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
-        from dotmac.platform.core import Money
-        from dotmac.platform.core.exceptions import BusinessRuleError
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )
         from dotmac.platform.billing.commands.invoice_commands import (
             CreateInvoiceCommand,
         )
+        from dotmac.platform.core import Money
+        from dotmac.platform.core.exceptions import BusinessRuleError
 
         mock_db_session = AsyncMock()
         mock_event_bus = AsyncMock()
@@ -534,6 +541,7 @@ class TestInvoiceEventFlowIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
         )

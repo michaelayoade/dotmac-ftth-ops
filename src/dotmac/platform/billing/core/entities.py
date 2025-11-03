@@ -21,6 +21,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
+from sqlalchemy.ext.mutable import MutableDict
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -107,7 +108,7 @@ class InvoiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: ign
     # Content
     notes: Mapped[str | None] = mapped_column(Text)
     internal_notes: Mapped[str | None] = mapped_column(Text)
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Additional timestamps
     paid_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -161,7 +162,7 @@ class InvoiceLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     discount_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Relationships
     invoice: Mapped[InvoiceEntity] = relationship(back_populates="line_items")
@@ -202,13 +203,13 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
         Enum(PaymentMethodType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
-    payment_method_details: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    payment_method_details: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Provider info
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     provider_payment_id: Mapped[str | None] = mapped_column(String(255), index=True)
     provider_fee: Mapped[int | None] = mapped_column(Integer)
-    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Failure handling
     failure_reason: Mapped[str | None] = mapped_column(String(500))
@@ -220,7 +221,7 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
     refunded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
     refund_amount: Mapped[Decimal | None] = mapped_column(Numeric(18, 2))
 
     # Relationships
@@ -304,7 +305,7 @@ class PaymentMethodEntity(Base, TenantMixin, TimestampMixin, SoftDeleteMixin):  
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Indexes
     __table_args__: tuple[Any, ...] = (
@@ -349,7 +350,7 @@ class TransactionEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin has t
     )
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Indexes
     __table_args__: tuple[Any, ...] = (
@@ -416,7 +417,7 @@ class CreditNoteEntity(Base, TenantMixin, TimestampMixin, AuditMixin):  # type: 
     # Content
     notes: Mapped[str | None] = mapped_column(Text)
     internal_notes: Mapped[str | None] = mapped_column(Text)
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Additional timestamp
     voided_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -469,7 +470,7 @@ class CreditNoteLineItemEntity(Base):  # type: ignore[misc]  # Base has type Any
     tax_amount: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Relationships
     credit_note: Mapped[CreditNoteEntity] = relationship(back_populates="line_items")
@@ -505,7 +506,7 @@ class CreditApplicationEntity(Base, TenantMixin):  # type: ignore[misc]  # Mixin
     notes: Mapped[str | None] = mapped_column(String(500))
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Relationships
     credit_note: Mapped[CreditNoteEntity] = relationship(back_populates="applications")
@@ -540,7 +541,7 @@ class CustomerCreditEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[m
     auto_apply_to_new_invoices: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Metadata
-    extra_data: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    extra_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Composite primary key handled in __table_args__
 
@@ -596,7 +597,7 @@ class ServiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteMix
 
     # Service configuration (flexible JSON for service-specific data)
     bandwidth_mbps: Mapped[int | None] = mapped_column(Integer)
-    service_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    service_metadata: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
 
     # Pricing
     monthly_price: Mapped[int | None] = mapped_column(Integer, comment="Price in minor units")

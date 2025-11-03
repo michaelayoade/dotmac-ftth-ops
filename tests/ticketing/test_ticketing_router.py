@@ -1,4 +1,3 @@
-
 """
 Integration tests for the ticketing router.
 """
@@ -6,7 +5,7 @@ Integration tests for the ticketing router.
 from __future__ import annotations
 
 import uuid
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import patch
 
 import pytest
@@ -16,8 +15,6 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.dependencies import get_current_user_optional
 from dotmac.platform.customer_management.models import (
-
-
     CommunicationChannel,
     Customer,
     CustomerStatus,
@@ -25,7 +22,6 @@ from dotmac.platform.customer_management.models import (
     CustomerType,
 )
 from dotmac.platform.db import get_session_dependency
-
 from dotmac.platform.partner_management.models import (
     CommissionModel,
     Partner,
@@ -38,10 +34,8 @@ from dotmac.platform.ticketing.models import Ticket, TicketActorType
 from dotmac.platform.ticketing.router import router as ticketing_router
 from dotmac.platform.user_management.models import User
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def ticketing_app(async_db_session):
@@ -85,10 +79,25 @@ async def test_customer_creates_ticket_for_tenant(
     # Mock event bus to avoid event publishing errors in tests
     from unittest.mock import AsyncMock
 
+    from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
+
     mock_bus_instance = AsyncMock()
     mock_event_bus.return_value = mock_bus_instance
 
     app, current_user_holder = ticketing_app
+
+    # Create tenant first to satisfy FK constraint
+    tenant = Tenant(
+        id="test-tenant",
+        name="Test Tenant",
+        slug="test-tenant",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.ENTERPRISE,
+        billing_cycle=BillingCycle.MONTHLY,
+        email="admin@test-tenant.com",
+    )
+    async_db_session.add(tenant)
+    await async_db_session.commit()
 
     customer_user_id = uuid.uuid4()
     user = User(
@@ -331,4 +340,4 @@ async def test_partner_appends_message_with_status_transition(
     assert stored_ticket.status == "in_progress"
     assert stored_ticket.partner_id == partner_id
     assert stored_ticket.last_response_at is not None
-    assert stored_ticket.last_response_at <= datetime.now(timezone.utc)
+    assert stored_ticket.last_response_at <= datetime.now(UTC)

@@ -4,7 +4,7 @@ Comprehensive tests for Audit Service.
 Focuses on filling coverage gaps in audit service functionality.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from uuid import uuid4
 
@@ -57,7 +57,7 @@ def sample_activity():
     activity.severity = ActivitySeverity.LOW
     activity.user_id = "user_123"
     activity.tenant_id = "tenant_123"
-    activity.timestamp = datetime.now(timezone.utc)
+    activity.timestamp = datetime.now(UTC)
     activity.resource_type = "user"
     activity.resource_id = "user_123"
     activity.action = "login"
@@ -391,8 +391,8 @@ class TestGetActivities:
 
         mock_session.execute.side_effect = [count_result, activities_result]
 
-        start_date = datetime.now(timezone.utc) - timedelta(days=7)
-        end_date = datetime.now(timezone.utc)
+        start_date = datetime.now(UTC) - timedelta(days=7)
+        end_date = datetime.now(UTC)
 
         filters = AuditFilterParams(
             tenant_id="tenant_123",

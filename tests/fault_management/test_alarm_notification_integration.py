@@ -5,7 +5,7 @@ End-to-end tests for the complete alarm notification workflow including
 alarm creation, channel routing, user notification, and delivery tracking.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -29,8 +29,12 @@ from dotmac.platform.notifications.models import (
 )
 from dotmac.platform.user_management.models import User
 
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("override_db_session_for_services"),
+]
 
-@pytest.mark.integration
+
 class TestAlarmNotificationIntegration:
     """Integration tests for complete alarm notification workflow.
 
@@ -257,7 +261,7 @@ class TestAlarmNotificationIntegration:
         mock_notification_service.return_value = mock_service_instance
 
         # Execute: Send notifications
-        result = send_alarm_notifications(str(alarm.id), test_tenant)
+        send_alarm_notifications(str(alarm.id), test_tenant)
 
         # Verify: Title and message content match actual format
         call_args = mock_service_instance.create_notification.call_args
@@ -316,8 +320,8 @@ class TestAlarmNotificationIntegration:
             title="Tenant 1 Device Down",
             resource_name="Device-T1",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm_tenant1)
@@ -375,8 +379,8 @@ class TestAlarmNotificationIntegration:
             title="Test Alarm",
             resource_name="Device",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -434,8 +438,8 @@ class TestAlarmNotificationIntegration:
             title="Test Alarm",
             resource_name="Device",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)

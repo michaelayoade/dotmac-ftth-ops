@@ -1,4 +1,3 @@
-
 """
 Invoice overdue tests - Migrated to use shared helpers.
 
@@ -6,7 +5,7 @@ BEFORE: 119 lines with massive entity mocking
 AFTER: ~70 lines using shared helpers (41% reduction)
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -16,12 +15,8 @@ from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestInvoiceServiceOverdueManagement:
@@ -43,7 +38,7 @@ class TestInvoiceServiceOverdueManagement:
             entity.invoice_id = str(uuid4())
             entity.invoice_number = f"INV-2024-OVERDUE-{i + 1}"
             entity.status = InvoiceStatus.OPEN
-            entity.due_date = datetime.now(timezone.utc) - timedelta(days=10)
+            entity.due_date = datetime.now(UTC) - timedelta(days=10)
             entity.payment_status = PaymentStatus.PENDING
             return entity
 

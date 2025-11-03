@@ -4,7 +4,7 @@ Advanced tests for customer management service to reach 90% coverage.
 Tests batch processing, segments, metrics, and filtering methods.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -192,7 +192,7 @@ class TestCustomerFiltering:
 
     def test_sort_customers_by_created_at(self, service):
         """Test sorting customers by created_at."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         customers = [
             Customer(id=uuid4(), created_at=now - timedelta(days=1)),
             Customer(id=uuid4(), created_at=now - timedelta(days=5)),
@@ -232,7 +232,7 @@ class TestCustomerFiltering:
 
     def test_sort_customers_invalid_key(self, service):
         """Test sorting with invalid key falls back to created_at."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         customers = [
             Customer(id=uuid4(), created_at=now - timedelta(days=1)),
             Customer(id=uuid4(), created_at=now),

@@ -121,9 +121,9 @@ function OrderDetailsPageContent() {
       return response.json();
     },
     enabled: !!orderId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh while in progress
-      if (data && (data.in_progress > 0 || data.pending > 0)) {
+      if (query?.state?.data && (query.state.data.in_progress > 0 || query.state.data.pending > 0)) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -538,7 +538,7 @@ function OrderDetailsPageContent() {
 
 export default function OrderDetailsPage() {
   return (
-    <RouteGuard requiredPermission="order.read">
+    <RouteGuard permission="order.read">
       <OrderDetailsPageContent />
     </RouteGuard>
   );

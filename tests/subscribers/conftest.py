@@ -7,7 +7,7 @@ and a convenience fixture that yields a ready-made subscriber.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -33,9 +33,7 @@ class SubscriberFactory(ModelFactory):
     def get_defaults(self) -> dict[str, Any]:
         """Build default subscriber field values."""
         unique_suffix = uuid4().hex[:8]
-        hashed_password = hash_radius_password(
-            "TempP@ss123", PasswordHashingMethod.SHA256
-        )
+        hashed_password = hash_radius_password("TempP@ss123", PasswordHashingMethod.SHA256)
 
         return {
             "tenant_id": "tenant-test",
@@ -54,7 +52,7 @@ class SubscriberFactory(ModelFactory):
         """Create an active subscriber with activation metadata."""
         base = {
             "status": SubscriberStatus.ACTIVE,
-            "activation_date": datetime.now(timezone.utc),
+            "activation_date": datetime.now(UTC),
         }
         base.update(kwargs)
         return await self.create(**base)

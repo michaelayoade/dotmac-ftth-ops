@@ -4,6 +4,7 @@ Sales Order Models
 Data models for order processing and service activation.
 """
 
+from typing import TYPE_CHECKING
 import enum
 
 from sqlalchemy import (
@@ -21,8 +22,14 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import relationship
 
-from ..db import Base, TimestampMixin
+from ..db import Base as BaseRuntime
+from ..db import TimestampMixin
 
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 class OrderStatus(str, enum.Enum):
     """Order processing status"""

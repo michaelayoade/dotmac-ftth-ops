@@ -1,10 +1,9 @@
 """Comprehensive tests for dunning service layer."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
-
 from pydantic import ValidationError as PydanticValidationError
 
 from dotmac.platform.billing.dunning.models import DunningExecutionStatus
@@ -13,18 +12,14 @@ from dotmac.platform.billing.dunning.schemas import (
     DunningCampaignUpdate,
 )
 from dotmac.platform.billing.dunning.service import DunningService
-
-
-
-
-
+from dotmac.platform.core.exceptions import EntityNotFoundError
 
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestDunningCampaignCRUD:
     """Test campaign CRUD operations."""
-
 
     async def test_create_campaign_success(
         self, async_session, test_tenant_id, test_user_id, sample_campaign_data
@@ -84,12 +79,11 @@ class TestDunningCampaignCRUD:
         """Test campaign not found for wrong tenant."""
         service = DunningService(async_session)
 
-        campaign = await service.get_campaign(
-            campaign_id=sample_campaign.id,
-            tenant_id="wrong-tenant",
-        )
-
-        assert campaign is None
+        with pytest.raises(EntityNotFoundError):
+            await service.get_campaign(
+                campaign_id=sample_campaign.id,
+                tenant_id=str(uuid4()),
+            )
 
     async def test_list_campaigns(self, async_session, sample_campaign, test_tenant_id):
         """Test listing campaigns."""
@@ -279,7 +273,7 @@ class TestDunningExecutions:
         )
 
         # Set next_action_at to past
-        execution.next_action_at = datetime.now(timezone.utc) - timedelta(hours=1)
+        execution.next_action_at = datetime.now(UTC) - timedelta(hours=1)
         await async_session.commit()
 
         # Get pending actions

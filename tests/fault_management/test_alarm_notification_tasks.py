@@ -5,7 +5,7 @@ Tests for the alarm notification integration including helper functions
 and the send_alarm_notifications Celery task.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -38,6 +38,11 @@ from dotmac.platform.notifications.models import (  # noqa: E402
 )
 from dotmac.platform.user_management.models import User  # noqa: E402
 
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("override_db_session_for_services"),
+]
+
 
 @pytest.mark.integration
 class TestDetermineAlarmChannels:
@@ -54,8 +59,8 @@ class TestDetermineAlarmChannels:
             alarm_type="device.down",
             title="Critical Alarm",
             subscriber_count=15,  # High impact
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -78,8 +83,8 @@ class TestDetermineAlarmChannels:
             alarm_type="device.down",
             title="Critical Alarm",
             subscriber_count=5,  # Low impact
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -102,8 +107,8 @@ class TestDetermineAlarmChannels:
             alarm_type="device.down",
             title="Critical Alarm",
             subscriber_count=None,  # No subscriber info
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -126,8 +131,8 @@ class TestDetermineAlarmChannels:
             alarm_type="service.degraded",
             title="Major Alarm",
             subscriber_count=20,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -150,8 +155,8 @@ class TestDetermineAlarmChannels:
             alarm_type="threshold.cpu",
             title="Minor Alarm",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -174,8 +179,8 @@ class TestDetermineAlarmChannels:
             alarm_type="threshold.memory",
             title="Warning Alarm",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -236,8 +241,8 @@ class TestGetUsersToNotify:
             status=AlarmStatus.ACTIVE,
             alarm_type="test",
             title="Test",
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -273,8 +278,8 @@ class TestGetUsersToNotify:
             status=AlarmStatus.ACTIVE,
             alarm_type="test",
             title="Test",
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -306,8 +311,8 @@ class TestGetUsersToNotify:
             status=AlarmStatus.ACTIVE,
             alarm_type="test",
             title="Test",
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -332,8 +337,8 @@ class TestFormatAlarmMessage:
             alarm_type="device.down",
             title="Device Down",
             resource_name="OLT-001-Port-1",
-            first_occurrence=datetime(2025, 10, 15, 10, 30, 0, tzinfo=timezone.utc),
-            last_occurrence=datetime(2025, 10, 15, 10, 30, 0, tzinfo=timezone.utc),
+            first_occurrence=datetime(2025, 10, 15, 10, 30, 0, tzinfo=UTC),
+            last_occurrence=datetime(2025, 10, 15, 10, 30, 0, tzinfo=UTC),
             occurrence_count=1,
         )
 
@@ -356,8 +361,8 @@ class TestFormatAlarmMessage:
             title="Device Down",
             resource_name="OLT-002",
             subscriber_count=25,
-            first_occurrence=datetime(2025, 10, 15, 11, 0, 0, tzinfo=timezone.utc),
-            last_occurrence=datetime(2025, 10, 15, 11, 0, 0, tzinfo=timezone.utc),
+            first_occurrence=datetime(2025, 10, 15, 11, 0, 0, tzinfo=UTC),
+            last_occurrence=datetime(2025, 10, 15, 11, 0, 0, tzinfo=UTC),
             occurrence_count=1,
         )
 
@@ -378,8 +383,8 @@ class TestFormatAlarmMessage:
             resource_name="Service-001",
             probable_cause="High latency detected",
             description="Packet loss >5%",
-            first_occurrence=datetime(2025, 10, 15, 12, 0, 0, tzinfo=timezone.utc),
-            last_occurrence=datetime(2025, 10, 15, 12, 0, 0, tzinfo=timezone.utc),
+            first_occurrence=datetime(2025, 10, 15, 12, 0, 0, tzinfo=UTC),
+            last_occurrence=datetime(2025, 10, 15, 12, 0, 0, tzinfo=UTC),
             occurrence_count=1,
         )
 
@@ -399,8 +404,8 @@ class TestFormatAlarmMessage:
             alarm_type="threshold.cpu",
             title="High CPU",
             resource_name="Device-001",
-            first_occurrence=datetime(2025, 10, 15, 9, 0, 0, tzinfo=timezone.utc),
-            last_occurrence=datetime(2025, 10, 15, 13, 0, 0, tzinfo=timezone.utc),
+            first_occurrence=datetime(2025, 10, 15, 9, 0, 0, tzinfo=UTC),
+            last_occurrence=datetime(2025, 10, 15, 13, 0, 0, tzinfo=UTC),
             occurrence_count=5,
         )
 
@@ -422,8 +427,8 @@ class TestFormatAlarmMessage:
             subscriber_count=100,
             probable_cause="Hardware failure",
             description="Power supply fault",
-            first_occurrence=datetime(2025, 10, 15, 14, 30, 0, tzinfo=timezone.utc),
-            last_occurrence=datetime(2025, 10, 15, 14, 35, 0, tzinfo=timezone.utc),
+            first_occurrence=datetime(2025, 10, 15, 14, 30, 0, tzinfo=UTC),
+            last_occurrence=datetime(2025, 10, 15, 14, 35, 0, tzinfo=UTC),
             occurrence_count=3,
         )
 
@@ -499,8 +504,8 @@ class TestSendAlarmNotificationsTask:
             title="Device Down",
             resource_name="OLT-001",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -534,8 +539,8 @@ class TestSendAlarmNotificationsTask:
             subscriber_count=15,
             probable_cause="Link failure",
             description="Fiber cut",
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -603,8 +608,8 @@ class TestSendAlarmNotificationsTask:
             title="Service Degraded",
             resource_name="Service-001",
             subscriber_count=5,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -669,8 +674,8 @@ class TestSendAlarmNotificationsTask:
             title="High CPU",
             resource_name="Device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -735,8 +740,8 @@ class TestNotificationMetadata:
             title="Critical Alarm",
             resource_name="OLT-001",
             subscriber_count=25,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)

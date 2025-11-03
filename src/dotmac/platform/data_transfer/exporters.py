@@ -7,13 +7,13 @@ import bz2
 import gzip
 import importlib
 import json
-import xml.etree.ElementTree as ET
 import zipfile
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pandas as pd
+from defusedxml import ElementTree as ET
 from defusedxml import minidom as defused_minidom
 
 from .core import (

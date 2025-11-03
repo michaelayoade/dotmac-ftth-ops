@@ -4,19 +4,13 @@ from typing import Any
 import pytest
 
 from dotmac.platform.search.models_elasticsearch import (
-
-
-
     INDEX_MAPPINGS,
     SearchableEntity,
 )
 from dotmac.platform.search.service_elasticsearch import SearchService
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class StubIndices:
     def __init__(self) -> None:

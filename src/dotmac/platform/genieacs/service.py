@@ -62,7 +62,7 @@ class GenieACSService:
     """Service for GenieACS CPE management"""
 
     # In-memory storage for schedules and jobs (replace with database in production)
-    _firmware_schedules: dict[str, dict[str, Any]] = {}
+    _firmware_schedules: dict[str, FirmwareUpgradeSchedule] = {}
     _mass_config_jobs: dict[str, MassConfigJob] = {}
     _firmware_results: dict[str, list[FirmwareUpgradeResult]] = {}
     _mass_config_results: dict[str, list[MassConfigResult]] = {}
@@ -80,16 +80,21 @@ class GenieACSService:
             client: GenieACS client instance (creates new if not provided)
             tenant_id: Tenant ID for multi-tenancy support
         """
+        self.session: AsyncSession | None
+        client_candidate: GenieACSClient | None
         if isinstance(client_or_session, AsyncSession):
             self.session = client_or_session
-            resolved_client = client or GenieACSClient(tenant_id=tenant_id)
+            client_candidate = client
         else:
             self.session = None
-            resolved_client = client_or_session if isinstance(client_or_session, GenieACSClient) else client
-            if resolved_client is None:
-                resolved_client = GenieACSClient(tenant_id=tenant_id)
+            client_candidate = client_or_session if isinstance(
+                client_or_session, GenieACSClient
+            ) else client
 
-        self.client = resolved_client
+        if client_candidate is None:
+            client_candidate = GenieACSClient(tenant_id=tenant_id)
+
+        self.client = client_candidate
         self.tenant_id = tenant_id
         # Per-instance cache to support lightweight tests and fallback behaviour
         self._device_store: dict[str, dict[str, Any]] = {}
@@ -100,6 +105,10 @@ class GenieACSService:
         if hasattr(value, "__await__"):
             return await value  # type: ignore[func-returns-value]
         return value
+
+    @staticmethod
+    def _device_to_dict(device: DeviceResponse | dict[str, Any]) -> dict[str, Any]:
+        return device.model_dump() if isinstance(device, DeviceResponse) else device
 
     # =========================================================================
     # Health and Status
@@ -176,6 +185,29 @@ class GenieACSService:
 
         logger.info("genieacs.device.registered", device_id=device_id, tenant_id=self.tenant_id)
         return normalized.copy()
+
+    async def provision_cpe(
+        self,
+        *,
+        mac_address: str,
+        subscriber_id: str | None = None,
+        config: dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Any]:
+        """Backward-compatible helper to register a CPE device."""
+
+        device_id = subscriber_id or mac_address.replace(":", "").lower()
+        device_payload: dict[str, Any] = {
+            "device_id": device_id,
+            "serial_number": kwargs.get("serial_number") or device_id,
+            "mac_address": mac_address,
+        }
+        if config:
+            device_payload.update(config)
+        if subscriber_id:
+            device_payload["subscriber_id"] = subscriber_id
+
+        return await self.register_device(**device_payload)
 
     async def list_devices(
         self,
@@ -309,8 +341,10 @@ class GenieACSService:
         if not device:
             return None
 
+        device_data = self._device_to_dict(device)
+
         # Check last inform time to determine if online
-        last_inform_raw = device.get("_lastInform") or device.get("last_inform")
+        last_inform_raw = device_data.get("_lastInform") or device_data.get("last_inform")
         last_inform_dt = None
         if last_inform_raw:
             try:
@@ -327,8 +361,8 @@ class GenieACSService:
             online = False
 
         # Get uptime if available
-        uptime_param = device.get("InternetGatewayDevice.DeviceInfo.UpTime", {})
-        uptime = uptime_param.get("_value") if isinstance(uptime_param, dict) else device.get("uptime")
+        uptime_param = device_data.get("InternetGatewayDevice.DeviceInfo.UpTime", {})
+        uptime = uptime_param.get("_value") if isinstance(uptime_param, dict) else device_data.get("uptime")
 
         return DeviceStatusResponse(
             device_id=device_id,
@@ -347,20 +381,21 @@ class GenieACSService:
         models: dict[str, int] = {}
 
         for device in all_devices:
+            device_data = self._device_to_dict(device)
             # Check if online
-            last_inform = device.get("_lastInform")
+            last_inform = device_data.get("_lastInform")
             if last_inform:
                 last_inform_dt = datetime.fromtimestamp(last_inform / 1000)
                 if (datetime.utcnow() - last_inform_dt) < timedelta(minutes=5):
                     online_count += 1
 
             # Count manufacturers
-            mfr = self._get_param_value(device, "InternetGatewayDevice.DeviceInfo.Manufacturer")
+            mfr = self._get_param_value(device_data, "InternetGatewayDevice.DeviceInfo.Manufacturer")
             if mfr:
                 manufacturers[mfr] = manufacturers.get(mfr, 0) + 1
 
             # Count models
-            model = self._get_param_value(device, "InternetGatewayDevice.DeviceInfo.ModelName")
+            model = self._get_param_value(device_data, "InternetGatewayDevice.DeviceInfo.ModelName")
             if model:
                 models[model] = models.get(model, 0) + 1
 
@@ -695,16 +730,28 @@ class GenieACSService:
     ) -> str | None:
         """Schedule firmware upgrade for the future (in-memory placeholder)."""
         schedule_id = f"sched_{uuid4().hex[:8]}"
-        scheduled_at = request.schedule_time or datetime.now(timezone.utc).isoformat()
-        self._firmware_schedules[schedule_id] = {
-            "schedule_id": schedule_id,
-            "tenant_id": self.tenant_id,
-            "device_id": request.device_id,
-            "firmware_version": request.firmware_version,
-            "download_url": request.download_url,
-            "scheduled_at": scheduled_at,
-            "status": "scheduled",
-        }
+        scheduled_at = (
+            datetime.fromisoformat(request.schedule_time.replace("Z", "+00:00"))
+            if request.schedule_time
+            else datetime.now(timezone.utc)
+        )
+
+        schedule = FirmwareUpgradeSchedule(
+            schedule_id=schedule_id,
+            name=f"Upgrade {request.device_id}",
+            description=f"Scheduled firmware upgrade for {request.device_id}",
+            firmware_file=request.target_filename or request.download_url,
+            file_type=request.file_type or "1 Firmware Upgrade Image",
+            device_filter={"_id": request.device_id},
+            scheduled_at=scheduled_at,
+            timezone=scheduled_at.tzinfo.tzname(None) if scheduled_at.tzinfo else "UTC",
+            max_concurrent=1,
+            status="scheduled",
+            created_at=datetime.now(timezone.utc),
+        )
+
+        self._firmware_schedules[schedule_id] = schedule
+        self._firmware_results[schedule_id] = []
         logger.info(
             "genieacs.firmware.schedule",
             schedule_id=schedule_id,

@@ -1,4 +1,3 @@
-
 """
 Router smoke suite - parametrized tests for all registered routers.
 
@@ -9,7 +8,6 @@ Covers the 26+ routers that previously only appeared in test_router_registration
 """
 
 from contextlib import ExitStack
-from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -24,13 +22,8 @@ from dotmac.platform.auth.core import (
 )
 from dotmac.platform.database import get_async_session
 from dotmac.platform.routers import ROUTER_CONFIGS, RouterConfig
-from tests.helpers.router_testkit import RouterTestKit
-
-
 
 # Define routers that require special handling or are excluded from smoke tests
-
-
 
 
 pytestmark = pytest.mark.integration
@@ -166,17 +159,13 @@ class TestRouterSmokeTests:
         if original_get_current_user is not None:
             test_app.dependency_overrides[get_current_user] = original_get_current_user
         if original_get_current_user_optional is not None:
-            test_app.dependency_overrides[
-                get_current_user_optional
-            ] = original_get_current_user_optional
+            test_app.dependency_overrides[get_current_user_optional] = (
+                original_get_current_user_optional
+            )
 
     @pytest.mark.parametrize(
         "router_config,router_id",
-        [
-            (config, rid)
-            for config, rid in get_testable_routers()
-            if rid in ROUTER_ENDPOINTS
-        ],
+        [(config, rid) for config, rid in get_testable_routers() if rid in ROUTER_ENDPOINTS],
         ids=[rid for config, rid in get_testable_routers() if rid in ROUTER_ENDPOINTS],
     )
     def test_router_authenticated_access(
@@ -317,7 +306,8 @@ class TestHighRiskRouters:
 
     def test_access_network_router_health(self, test_app: FastAPI, test_user: UserInfo):
         """Test access network router health endpoint."""
-        from dotmac.platform.access.router import get_access_service, router as access_router
+        from dotmac.platform.access.router import get_access_service
+        from dotmac.platform.access.router import router as access_router
         from dotmac.platform.auth.core import get_current_user
         from dotmac.platform.voltha.schemas import VOLTHAHealthResponse
 
@@ -346,10 +336,7 @@ class TestHighRiskRouters:
         test_app.dependency_overrides[get_access_service] = override_get_access_service
 
         client = TestClient(test_app)
-        response = client.get(
-            "/api/v1/access/health",
-            headers={"X-Tenant-ID": "test-tenant"}
-        )
+        response = client.get("/api/v1/access/health", headers={"X-Tenant-ID": "test-tenant"})
 
         assert response.status_code == 200
         data = response.json()
@@ -360,7 +347,8 @@ class TestHighRiskRouters:
 
     def test_access_network_router_devices_list(self, test_app: FastAPI, test_user: UserInfo):
         """Test access network router device listing."""
-        from dotmac.platform.access.router import get_access_service, router as access_router
+        from dotmac.platform.access.router import get_access_service
+        from dotmac.platform.access.router import router as access_router
         from dotmac.platform.auth.core import get_current_user
         from dotmac.platform.voltha.schemas import DeviceListResponse
 
@@ -386,10 +374,7 @@ class TestHighRiskRouters:
         test_app.dependency_overrides[get_access_service] = override_get_access_service
 
         client = TestClient(test_app)
-        response = client.get(
-            "/api/v1/access/devices",
-            headers={"X-Tenant-ID": "test-tenant"}
-        )
+        response = client.get("/api/v1/access/devices", headers={"X-Tenant-ID": "test-tenant"})
 
         assert response.status_code == 200
         data = response.json()
@@ -400,7 +385,8 @@ class TestHighRiskRouters:
 
     def test_access_network_router_device_not_found(self, test_app: FastAPI, test_user: UserInfo):
         """Test access network router handles device not found."""
-        from dotmac.platform.access.router import get_access_service, router as access_router
+        from dotmac.platform.access.router import get_access_service
+        from dotmac.platform.access.router import router as access_router
         from dotmac.platform.auth.core import get_current_user
 
         # Register the access router (router already has /access prefix)
@@ -419,8 +405,7 @@ class TestHighRiskRouters:
 
         client = TestClient(test_app)
         response = client.get(
-            "/api/v1/access/devices/nonexistent",
-            headers={"X-Tenant-ID": "test-tenant"}
+            "/api/v1/access/devices/nonexistent", headers={"X-Tenant-ID": "test-tenant"}
         )
 
         assert response.status_code == 404
@@ -428,9 +413,12 @@ class TestHighRiskRouters:
 
         test_app.dependency_overrides.clear()
 
-    def test_access_network_router_operation_not_implemented(self, test_app: FastAPI, test_user: UserInfo):
+    def test_access_network_router_operation_not_implemented(
+        self, test_app: FastAPI, test_user: UserInfo
+    ):
         """Test access network router handles unsupported operations."""
-        from dotmac.platform.access.router import get_access_service, router as access_router
+        from dotmac.platform.access.router import get_access_service
+        from dotmac.platform.access.router import router as access_router
         from dotmac.platform.auth.core import get_current_user
 
         # Register the access router (router already has /access prefix)
@@ -451,8 +439,7 @@ class TestHighRiskRouters:
         client = TestClient(test_app)
         # Use an actual operation endpoint
         response = client.post(
-            "/api/v1/access/devices/olt1/enable",
-            headers={"X-Tenant-ID": "test-tenant"}
+            "/api/v1/access/devices/olt1/enable", headers={"X-Tenant-ID": "test-tenant"}
         )
 
         assert response.status_code == 501

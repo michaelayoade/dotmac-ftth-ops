@@ -1,4 +1,3 @@
-
 """
 HTTP-based integration tests for file storage router.
 
@@ -7,7 +6,7 @@ Targets router.py coverage (currently 24.35%).
 """
 
 import io
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -17,11 +16,6 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.core import UserInfo, create_access_token
 from dotmac.platform.file_storage.router import file_storage_router
 from dotmac.platform.file_storage.service import FileMetadata
-
-
-
-
-
 
 pytestmark = pytest.mark.integration
 
@@ -55,7 +49,7 @@ def mock_storage_service():
                 "file_size": 17,
                 "path": "uploads/test",
                 "tenant_id": "tenant-123",
-                "created_at": datetime.now(timezone.utc).isoformat(),
+                "created_at": datetime.now(UTC).isoformat(),
                 "uploaded_by": "user-123",
             },
         )
@@ -71,7 +65,7 @@ def mock_storage_service():
                 file_size=100,
                 path="uploads/test",
                 tenant_id="tenant-123",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
                 metadata={},
             )
         ]
@@ -93,7 +87,7 @@ def mock_storage_service():
             "file_size": 17,
             "path": "uploads/test",
             "tenant_id": "tenant-123",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "metadata": {},
         }
     )

@@ -33,12 +33,33 @@ from dotmac.platform.services.internet_plans.schemas import (
 )
 from dotmac.platform.services.internet_plans.service import InternetPlanService
 from dotmac.platform.subscribers.models import Subscriber
+from dotmac.platform.tenant.models import BillingCycle as TenantBillingCycle, Tenant, TenantPlanType, TenantStatus
+
+
+@pytest_asyncio.fixture
+async def test_tenant(async_session: AsyncSession) -> Tenant:
+    """Create a tenant record for internet plan tests."""
+    tenant_id = str(uuid4())
+
+    tenant = Tenant(
+        id=tenant_id,
+        name="Internet Plans Test Tenant",
+        slug=f"internet-plans-{uuid4().hex[:8]}",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.PROFESSIONAL,
+        billing_cycle=TenantBillingCycle.MONTHLY,
+        email="internet-plans-test@example.com",
+    )
+
+    async_session.add(tenant)
+    await async_session.flush()
+    return tenant
 
 
 @pytest.fixture
-def tenant_id():
-    """Create a test tenant ID."""
-    return uuid4()
+def tenant_id(test_tenant):
+    """Get tenant ID from test_tenant fixture."""
+    return UUID(test_tenant.id)
 
 
 @pytest.fixture
@@ -48,12 +69,12 @@ def customer_id():
 
 
 @pytest_asyncio.fixture
-async def test_subscriber(async_session: AsyncSession, tenant_id: UUID, customer_id: UUID):
+async def test_subscriber(async_session: AsyncSession, test_tenant, customer_id: UUID):
     """Create a test subscriber for subscription tests."""
-    # Create customer first
+    # Create customer
     customer = Customer(
         id=customer_id,
-        tenant_id=str(tenant_id),
+        tenant_id=test_tenant.id,
         customer_number=f"CUST-{str(customer_id)[:8]}",
         email="test@example.com",
         first_name="Test",
@@ -65,15 +86,14 @@ async def test_subscriber(async_session: AsyncSession, tenant_id: UUID, customer
     subscriber_id = f"test-subscriber-{uuid4().hex[:8]}"
     subscriber = Subscriber(
         id=subscriber_id,
-        tenant_id=str(tenant_id),
+        tenant_id=test_tenant.id,
         customer_id=customer_id,
         username=subscriber_id,
         password="test-password-hash",
         service_type="fiber_internet",
     )
     async_session.add(subscriber)
-    await async_session.commit()
-    await async_session.refresh(subscriber)
+    await async_session.flush()  # Use flush instead of commit to work with nested transactions
     return subscriber
 
 
@@ -561,7 +581,9 @@ class TestInternetPlanServiceSubscriptions:
     """Test subscription management."""
 
     @pytest.mark.asyncio
-    async def test_create_subscription(self, service, plan_create_data, customer_id, test_subscriber):
+    async def test_create_subscription(
+        self, service, plan_create_data, customer_id, test_subscriber
+    ):
         """Test creating subscription."""
         plan = await service.create_plan(plan_create_data)
 
@@ -625,7 +647,9 @@ class TestInternetPlanServiceSubscriptions:
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_by_plan(self, service, plan_create_data, customer_id, test_subscriber):
+    async def test_list_subscriptions_by_plan(
+        self, service, plan_create_data, customer_id, test_subscriber
+    ):
         """Test listing subscriptions by plan."""
         plan = await service.create_plan(plan_create_data)
 
@@ -635,7 +659,7 @@ class TestInternetPlanServiceSubscriptions:
                 plan_id=plan.id,
                 customer_id=customer_id,
                 start_date=datetime.utcnow(),
-            subscriber_id=test_subscriber.id,
+                subscriber_id=test_subscriber.id,
             )
             await service.create_subscription(sub_data)
 
@@ -643,7 +667,9 @@ class TestInternetPlanServiceSubscriptions:
         assert len(result) == 2
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_by_customer(self, service, plan_create_data, customer_id, test_subscriber):
+    async def test_list_subscriptions_by_customer(
+        self, service, plan_create_data, customer_id, test_subscriber
+    ):
         """Test listing subscriptions by customer."""
         plan1 = await service.create_plan(plan_create_data)
 
@@ -657,7 +683,7 @@ class TestInternetPlanServiceSubscriptions:
                 plan_id=plan.id,
                 customer_id=customer_id,
                 start_date=datetime.utcnow(),
-            subscriber_id=test_subscriber.id,
+                subscriber_id=test_subscriber.id,
             )
             await service.create_subscription(sub_data)
 
@@ -665,7 +691,9 @@ class TestInternetPlanServiceSubscriptions:
         assert len(result) == 2
 
     @pytest.mark.asyncio
-    async def test_list_subscriptions_filter_active(self, service, plan_create_data, async_session, test_subscriber, customer_id):
+    async def test_list_subscriptions_filter_active(
+        self, service, plan_create_data, async_session, test_subscriber, customer_id
+    ):
         """Test filtering subscriptions by active status."""
         plan = await service.create_plan(plan_create_data)
 
@@ -692,7 +720,7 @@ class TestInternetPlanServiceSubscriptions:
         result = await async_session.execute(stmt)
         sub2_model = result.scalar_one()
         sub2_model.is_active = False
-        await async_session.commit()
+        await async_session.flush()
 
         # Filter active only
         result = await service.list_subscriptions(is_active=True)
@@ -729,7 +757,9 @@ class TestInternetPlanServiceUsageTracking:
         assert result.current_period_usage_gb == Decimal("75.75")
 
     @pytest.mark.asyncio
-    async def test_update_usage_accumulates(self, service, plan_create_data, customer_id, test_subscriber):
+    async def test_update_usage_accumulates(
+        self, service, plan_create_data, customer_id, test_subscriber
+    ):
         """Test usage updates accumulate."""
         plan = await service.create_plan(plan_create_data)
         subscription_data = PlanSubscriptionCreate(
@@ -806,7 +836,9 @@ class TestInternetPlanServiceStatistics:
         assert result["monthly_recurring_revenue"] == 0.0
 
     @pytest.mark.asyncio
-    async def test_get_plan_statistics_with_subscriptions(self, service, plan_create_data, test_subscriber, customer_id):
+    async def test_get_plan_statistics_with_subscriptions(
+        self, service, plan_create_data, test_subscriber, customer_id
+    ):
         """Test statistics calculation with active subscriptions."""
         plan = await service.create_plan(plan_create_data)
 
@@ -816,7 +848,7 @@ class TestInternetPlanServiceStatistics:
                 plan_id=plan.id,
                 customer_id=customer_id,
                 start_date=datetime.utcnow(),
-            subscriber_id=test_subscriber.id,
+                subscriber_id=test_subscriber.id,
             )
             await service.create_subscription(sub_data)
 
@@ -856,7 +888,7 @@ class TestInternetPlanServiceStatistics:
         result = await async_session.execute(stmt)
         sub2_model = result.scalar_one()
         sub2_model.is_active = False
-        await async_session.commit()
+        await async_session.flush()
 
         # Get statistics
         result = await service.get_plan_statistics(plan.id)

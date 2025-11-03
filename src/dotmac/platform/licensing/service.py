@@ -6,13 +6,9 @@ Business logic for license management, activation, compliance, and enforcement.
 
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from types import SimpleNamespace
+from datetime import UTC, datetime, timedelta
 from typing import Any
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import structlog
 from sqlalchemy import select
@@ -288,7 +284,8 @@ class LicensingService:
         old_issued_to = license_obj.issued_to
 
         # Update license
-        license_obj.customer_id = data.new_customer_id
+        new_customer_uuid = UUID(data.new_customer_id) if data.new_customer_id else None
+        license_obj.customer_id = new_customer_uuid
         license_obj.issued_to = data.new_issued_to
         license_obj.extra_data["transfer_reason"] = data.transfer_reason
         license_obj.extra_data["transferred_at"] = datetime.now(UTC).isoformat()
@@ -308,7 +305,7 @@ class LicensingService:
             event_type="license.transferred",
             license_id=license_id,
             event_data={
-                "from_customer": old_customer_id,
+                "from_customer": str(old_customer_id) if old_customer_id else None,
                 "to_customer": data.new_customer_id,
                 "reason": data.transfer_reason,
             },
@@ -647,40 +644,6 @@ class LicensingService:
         restrictions_dict = {"restrictions": [r.model_dump() for r in data.restrictions]}
         pricing_dict = data.pricing.model_dump()
 
-        if not self._is_real_session():
-            now = datetime.now(UTC)
-            template_stub = SimpleNamespace(
-                id=str(uuid4()),
-                tenant_id=self.tenant_id,
-                template_name=data.template_name,
-                product_id=data.product_id,
-                description=data.description,
-                license_type=data.license_type,
-                license_model=data.license_model,
-                default_duration=data.default_duration,
-                max_activations=data.max_activations,
-                features=features_dict,
-                restrictions=restrictions_dict,
-                pricing=pricing_dict,
-                auto_renewal_enabled=data.auto_renewal_enabled,
-                trial_allowed=data.trial_allowed,
-                trial_duration_days=data.trial_duration_days,
-                grace_period_days=data.grace_period_days,
-                active=True,
-                created_at=now,
-                updated_at=now,
-            )
-
-            add_method = getattr(self.session, "add", None)
-            if callable(add_method):
-                add_method(template_stub)
-
-            flush_method = getattr(self.session, "flush", None)
-            if callable(flush_method):
-                await flush_method()
-
-            return template_stub
-
         template = LicenseTemplate(
             template_name=data.template_name,
             product_id=data.product_id,
@@ -698,6 +661,23 @@ class LicensingService:
             trial_duration_days=data.trial_duration_days,
             grace_period_days=data.grace_period_days,
         )
+
+        if not self._is_real_session():
+            now = datetime.now(UTC)
+            if getattr(template, "id", None) is None:
+                template.id = str(uuid4())
+            template.created_at = now
+            template.updated_at = now
+
+            add_method = getattr(self.session, "add", None)
+            if callable(add_method):
+                add_method(template)
+
+            flush_method = getattr(self.session, "flush", None)
+            if callable(flush_method):
+                await flush_method()
+
+            return template
 
         self.session.add(template)
         await self.session.flush()
@@ -773,44 +753,6 @@ class LicensingService:
         base_price = float(pricing_source.get("base_price", 0))
         total_amount = base_price * data.quantity
 
-        if not self._is_real_session():
-            now = datetime.now(UTC)
-            order_stub = SimpleNamespace(
-                id=str(uuid4()),
-                order_number=self._generate_order_number(),
-                template_id=data.template_id,
-                quantity=data.quantity,
-                customer_id=data.customer_id,
-                reseller_id=data.reseller_id,
-                tenant_id=self.tenant_id,
-                custom_features=features_dict,
-                custom_restrictions=restrictions_dict,
-                duration_override=data.duration_override,
-                pricing_override=pricing_override_dict,
-                special_instructions=data.special_instructions,
-                fulfillment_method=data.fulfillment_method,
-                status=OrderStatus.PENDING,
-                total_amount=total_amount,
-                discount_applied=None,
-                payment_status=PaymentStatus.PENDING,
-                invoice_id=None,
-                subscription_id=None,
-                generated_licenses=None,
-                created_at=now,
-                fulfilled_at=None,
-                updated_at=now,
-            )
-
-            add_method = getattr(self.session, "add", None)
-            if callable(add_method):
-                add_method(order_stub)
-
-            flush_method = getattr(self.session, "flush", None)
-            if callable(flush_method):
-                await flush_method()
-
-            return order_stub
-
         order = LicenseOrder(
             tenant_id=self.tenant_id,
             template_id=data.template_id,
@@ -828,6 +770,28 @@ class LicensingService:
             payment_status=PaymentStatus.PENDING,
             order_number=self._generate_order_number(),
         )
+
+        if not self._is_real_session():
+            now = datetime.now(UTC)
+            if getattr(order, "id", None) is None:
+                order.id = str(uuid4())
+            order.status = OrderStatus.PENDING
+            order.invoice_id = None
+            order.subscription_id = None
+            order.generated_licenses = None
+            order.created_at = now
+            order.fulfilled_at = None
+            order.updated_at = now
+
+            add_method = getattr(self.session, "add", None)
+            if callable(add_method):
+                add_method(order)
+
+            flush_method = getattr(self.session, "flush", None)
+            if callable(flush_method):
+                await flush_method()
+
+            return order
 
         self.session.add(order)
         await self.session.flush()

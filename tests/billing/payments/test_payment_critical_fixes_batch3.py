@@ -9,7 +9,7 @@ This module tests the fixes for:
 5. bank_accounts router having duplicate /billing prefix
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -56,8 +56,8 @@ class TestRetryFailedPaymentHandlers:
                 "last_four": "4242",
             },
             extra_data={"invoice_ids": ["inv_1"]},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         # Payment method for retry
@@ -72,8 +72,8 @@ class TestRetryFailedPaymentHandlers:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         # Setup mocks
@@ -134,8 +134,8 @@ class TestRetryFailedPaymentHandlers:
                 "brand": "Visa",
                 "last_four": "4242",
             },
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         payment_method = PaymentMethodEntity(
@@ -149,8 +149,8 @@ class TestRetryFailedPaymentHandlers:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -201,8 +201,8 @@ class TestRetryMissingProviderHandling:
             retry_count=0,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"payment_method_id": "pm_123"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -242,8 +242,8 @@ class TestRetryMissingProviderHandling:
             retry_count=0,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"payment_method_id": "pm_123"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -289,8 +289,8 @@ class TestRefundDefaultAmount:
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa"},
             provider_payment_id="pi_123",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -340,8 +340,8 @@ class TestRefundDefaultAmount:
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa"},
             provider_payment_id="pi_123",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)

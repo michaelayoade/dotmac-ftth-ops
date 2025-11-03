@@ -2,16 +2,18 @@
 Shared fixtures for customer management tests.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 from uuid import UUID, uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.tenant.models import Tenant
 
 try:  # pragma: no cover - imported for type/spec usage in fixtures
     from dotmac.platform.customer_management.service import CustomerService
@@ -42,7 +44,7 @@ def _build_customer_kwargs(
         CustomerType,
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     customer_uuid = customer_id or uuid4()
 
     base_kwargs: dict[str, Any] = {
@@ -106,7 +108,7 @@ def _build_customer_kwargs(
         "installation_status": "completed",
         "installation_date": now - timedelta(days=90),
         "scheduled_installation_date": now - timedelta(days=95),
-        "installation_technician_id": uuid4(),
+        "installation_technician_id": None,  # Set to None to avoid FK constraint
         "installation_notes": "Installed on schedule",
         "connection_type": "ftth",
         "last_mile_technology": "gpon",
@@ -135,6 +137,24 @@ def _build_customer_kwargs(
         base_kwargs.update(overrides)
 
     return base_kwargs
+
+
+@pytest_asyncio.fixture
+async def test_tenant(async_session):
+    """Create a test tenant for customer management tests."""
+    from uuid import uuid4
+
+    tenant_id = f"test-tenant-{uuid4().hex[:8]}"
+    tenant = Tenant(
+        id=tenant_id,
+        name=f"Test Tenant {tenant_id}",
+        slug=tenant_id,
+        timezone="UTC",
+        email="tenant@example.com",
+    )
+    async_session.add(tenant)
+    await async_session.flush()
+    return tenant
 
 
 @pytest.fixture
@@ -181,14 +201,15 @@ def mock_user():
     )
 
 
-@pytest.fixture
-def sample_customer():
+@pytest_asyncio.fixture
+async def sample_customer(test_tenant):
     """Create a sample customer with all required fields populated."""
     from dotmac.platform.customer_management.models import Customer
 
     unique_suffix = uuid4().hex[:8]
     customer_kwargs = _build_customer_kwargs(
         index=1,
+        tenant_id=test_tenant.id,  # Use the test tenant's ID
         overrides={
             "customer_number": f"CUST-{unique_suffix.upper()}",
             "email": f"customer_{unique_suffix}@example.com",
@@ -204,12 +225,15 @@ def sample_customer():
     return Customer(**customer_kwargs)
 
 
-@pytest.fixture
-def sample_customers():
+@pytest_asyncio.fixture
+async def sample_customers(test_tenant):
     """Create multiple sample customers for list tests."""
     from dotmac.platform.customer_management.models import Customer
 
-    return [Customer(**_build_customer_kwargs(index=i)) for i in range(1, 4)]
+    return [
+        Customer(**_build_customer_kwargs(index=i, tenant_id=test_tenant.id))
+        for i in range(1, 4)
+    ]
 
 
 @pytest.fixture

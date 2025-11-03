@@ -4,11 +4,11 @@ Tests for Analytics Activity Metrics Router.
 Tests caching, rate limiting, tenant isolation, and error handling
 for the analytics activity statistics endpoint.
 """
-import pytest
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime
 from unittest.mock import patch
 
+import pytest
 from httpx import AsyncClient
 
 from dotmac.platform.auth.core import TokenType, jwt_service
@@ -45,8 +45,8 @@ def auth_headers():
     }
 
 
-
 pytestmark = pytest.mark.integration
+
 
 class TestAnalyticsActivityStatsEndpoint:
     """Test analytics activity statistics endpoint."""
@@ -72,7 +72,7 @@ class TestAnalyticsActivityStatsEndpoint:
                     {"name": "button_click", "count": 200},
                 ],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -110,7 +110,7 @@ class TestAnalyticsActivityStatsEndpoint:
                 "avg_api_latency_ms": 100.0,
                 "top_events": [{"name": "page_view", "count": 50}],
                 "period": "7d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -141,7 +141,7 @@ class TestAnalyticsActivityStatsEndpoint:
                 "avg_api_latency_ms": 0.0,
                 "top_events": [],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -174,7 +174,7 @@ class TestAnalyticsActivityStatsEndpoint:
                 "avg_api_latency_ms": 150.0,
                 "top_events": top_events,
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -253,7 +253,7 @@ class TestAnalyticsActivityStatsEndpoint:
                 "avg_api_latency_ms": 120.0,
                 "top_events": [{"name": "page_view", "count": 250}],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
             mock_cached.return_value = mock_data
 
@@ -293,7 +293,7 @@ class TestAnalyticsActivityStatsTenantIsolation:
                 "avg_api_latency_ms": 100.0,
                 "top_events": [],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -336,7 +336,7 @@ class TestAnalyticsActivityRealCodePaths:
                 "avg_api_latency_ms": 0.0,
                 "top_events": [],
                 "period": "7d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             # Should work with auth headers
@@ -367,7 +367,7 @@ class TestAnalyticsActivityRealCodePaths:
                 "avg_api_latency_ms": 150.0,
                 "top_events": [],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(
@@ -400,7 +400,7 @@ class TestAnalyticsActivityRealCodePaths:
                 "avg_api_latency_ms": 125.5,
                 "top_events": [{"name": "event1", "count": 50}],
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = await client.get(

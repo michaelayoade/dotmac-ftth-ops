@@ -40,12 +40,8 @@ class SchemaValidationError(Exception):
     def __init__(self, schema_name: str, errors: list[dict]):
         self.schema_name = schema_name
         self.errors = errors
-        error_details = "\n".join(
-            f"  - {err['loc']}: {err['msg']}" for err in errors
-        )
-        super().__init__(
-            f"Mock data validation failed for {schema_name}:\n{error_details}"
-        )
+        error_details = "\n".join(f"  - {err['loc']}: {err['msg']}" for err in errors)
+        super().__init__(f"Mock data validation failed for {schema_name}:\n{error_details}")
 
 
 class SchemaValidator:
@@ -80,19 +76,11 @@ class SchemaValidator:
 
     def get_required_fields(self) -> list[str]:
         """Get list of required field names."""
-        return [
-            name
-            for name, field in self.schema.model_fields.items()
-            if field.is_required()
-        ]
+        return [name for name, field in self.schema.model_fields.items() if field.is_required()]
 
     def get_optional_fields(self) -> list[str]:
         """Get list of optional field names."""
-        return [
-            name
-            for name, field in self.schema.model_fields.items()
-            if not field.is_required()
-        ]
+        return [name for name, field in self.schema.model_fields.items() if not field.is_required()]
 
     def get_field_types(self) -> dict[str, str]:
         """Get mapping of field names to their types."""
@@ -173,11 +161,7 @@ class MockDataFactory:
     """
 
     @classmethod
-    def create(
-        cls,
-        schema: type[BaseModel],
-        **overrides: Any
-    ) -> dict[str, Any]:
+    def create(cls, schema: type[BaseModel], **overrides: Any) -> dict[str, Any]:
         """
         Create mock data for a schema with optional overrides.
 
@@ -235,17 +219,17 @@ class MockDataFactory:
                 return {}
 
         # Handle basic types
-        if annotation == str or annotation == "str":
+        if annotation is str or annotation == "str":
             return f"test_{uuid4().hex[:8]}"
-        elif annotation == int or annotation == "int":
+        elif annotation is int or annotation == "int":
             return 0
-        elif annotation == float or annotation == "float":
+        elif annotation is float or annotation == "float":
             return 0.0
-        elif annotation == bool or annotation == "bool":
+        elif annotation is bool or annotation == "bool":
             return False
-        elif annotation == list:
+        elif annotation is list:
             return []
-        elif annotation == dict:
+        elif annotation is dict:
             return {}
 
         # For BaseModel subclasses, create nested mock
@@ -256,11 +240,7 @@ class MockDataFactory:
         return None
 
     @classmethod
-    def create_instance(
-        cls,
-        schema: type[BaseModel],
-        **overrides: Any
-    ) -> BaseModel:
+    def create_instance(cls, schema: type[BaseModel], **overrides: Any) -> BaseModel:
         """
         Create an actual Pydantic model instance with mock data.
 
@@ -374,10 +354,7 @@ def validate_mock_against_schema(
         return False, str(e)
 
 
-def generate_mock_for_schema(
-    schema: type[BaseModel],
-    **overrides: Any
-) -> dict[str, Any]:
+def generate_mock_for_schema(schema: type[BaseModel], **overrides: Any) -> dict[str, Any]:
     """
     Convenience function to generate mock data.
 

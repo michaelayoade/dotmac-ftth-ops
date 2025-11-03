@@ -8,13 +8,13 @@ These smoke tests verify the PDF generator is functional with current API.
 """
 
 import pytest
-from reportlab.lib.pagesizes import A4, LETTER
+from reportlab.lib.pagesizes import LETTER
 
 from dotmac.platform.billing.pdf_generator_reportlab import (
+    DEFAULT_MARGINS,
+    DEFAULT_PAGE_SIZE,
     ReportLabInvoiceGenerator,
     default_reportlab_generator,
-    DEFAULT_PAGE_SIZE,
-    DEFAULT_MARGINS,
 )
 
 
@@ -71,7 +71,7 @@ class TestDefaultGenerator:
 # TODO: Restore comprehensive tests from archive
 # The archived test suite (test_pdf_generator_comprehensive.py.disabled) needs:
 # 1. Update Money() → MoneyField.from_money(Money(...))
-# 2. Replace MoneyLineItem → MoneyInvoiceLineItem  
+# 2. Replace MoneyLineItem → MoneyInvoiceLineItem
 # 3. Add required fields: tenant_id, discount_amount, remaining_balance, tax_rate, discount_percentage
 # 4. Remove net_amount_due field (no longer exists in MoneyInvoice)
 #

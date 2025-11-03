@@ -49,7 +49,7 @@ class ExecutionContext:
     environment: str = "production"
     region: str | None = None
     availability_zone: str | None = None
-    namespace: str | None = None
+    namespace: str = ""
     cluster_name: str | None = None
 
     # Version info (for upgrades)

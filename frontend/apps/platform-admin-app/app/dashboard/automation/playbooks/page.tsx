@@ -362,7 +362,7 @@ function PlaybooksPageContent() {
 
 export default function PlaybooksPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <PlaybooksPageContent />
     </RouteGuard>
   );

@@ -9,8 +9,6 @@ from sqlalchemy import create_engine, event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from dotmac.platform.billing.bank_accounts.entities import (  # noqa: F401
-
-
     CompanyBankAccount,
     ManualPayment,
 )
@@ -31,9 +29,8 @@ from dotmac.platform.billing.core.entities import (  # noqa: F401
 )
 from dotmac.platform.db import Base
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="function")
 def sync_test_engine():

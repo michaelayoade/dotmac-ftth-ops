@@ -68,6 +68,8 @@ class OrchestrationMutations:
             # Convert GraphQL input to request schema
             request = ProvisionSubscriberRequest(
                 customer_id=input.customer_id,
+                plan_id=None,
+                subscriber_id=None,
                 first_name=input.first_name,
                 last_name=input.last_name,
                 email=input.email,
@@ -96,6 +98,8 @@ class OrchestrationMutations:
                 configure_voltha=input.configure_voltha,
                 configure_genieacs=input.configure_genieacs,
                 notes=input.notes,
+                username=None,
+                password=None,
             )
 
             # Execute provisioning workflow
@@ -107,11 +111,13 @@ class OrchestrationMutations:
             )
 
             # Convert to GraphQL result
+            status_value = getattr(result.status, "value", result.status)
+
             return ProvisionSubscriberResult(
                 workflow_id=result.workflow_id,
                 subscriber_id=result.subscriber_id,
                 customer_id=result.customer_id,
-                status=WorkflowStatus(result.status.value),
+                status=WorkflowStatus(status_value),
                 radius_username=result.radius_username,
                 ipv4_address=result.ipv4_address,
                 vlan_id=result.vlan_id,
@@ -162,21 +168,9 @@ class OrchestrationMutations:
 
         try:
             service = OrchestrationService(db=db, tenant_id=tenant_id)
-            await service.retry_workflow(workflow_id)
+            workflow_response = await service.retry_workflow(workflow_id)
 
-            # Fetch full workflow model for conversion
-            from dotmac.platform.orchestration.models import (
-                OrchestrationWorkflow as WorkflowModel,
-            )
-
-            workflow_model = (
-                db.query(WorkflowModel).filter(WorkflowModel.workflow_id == workflow_id).first()
-            )
-
-            if not workflow_model:
-                raise Exception(f"Workflow not found: {workflow_id}")
-
-            return Workflow.from_model(workflow_model)
+            return Workflow.from_response(workflow_response)
 
         except ValueError as e:
             logger.error("Cannot retry workflow", workflow_id=workflow_id, error=str(e))
@@ -215,21 +209,9 @@ class OrchestrationMutations:
 
         try:
             service = OrchestrationService(db=db, tenant_id=tenant_id)
-            await service.cancel_workflow(workflow_id)
+            workflow_response = await service.cancel_workflow(workflow_id)
 
-            # Fetch full workflow model for conversion
-            from dotmac.platform.orchestration.models import (
-                OrchestrationWorkflow as WorkflowModel,
-            )
-
-            workflow_model = (
-                db.query(WorkflowModel).filter(WorkflowModel.workflow_id == workflow_id).first()
-            )
-
-            if not workflow_model:
-                raise Exception(f"Workflow not found: {workflow_id}")
-
-            return Workflow.from_model(workflow_model)
+            return Workflow.from_response(workflow_response)
 
         except ValueError as e:
             logger.error("Cannot cancel workflow", workflow_id=workflow_id, error=str(e))

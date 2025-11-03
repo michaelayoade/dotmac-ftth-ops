@@ -25,10 +25,7 @@ IPv6 Support:
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg,misc,no-untyped-call"
 
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 

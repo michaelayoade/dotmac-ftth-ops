@@ -37,7 +37,7 @@ class RADIUSRepository:
     async def create_radcheck(
         self,
         tenant_id: str,
-        subscriber_id: str,
+        subscriber_id: str | None,
         username: str,
         password: str,
         hashing_method: PasswordHashingMethod = PasswordHashingMethod.BCRYPT,
@@ -47,7 +47,7 @@ class RADIUSRepository:
 
         Args:
             tenant_id: Tenant identifier
-            subscriber_id: Subscriber identifier
+            subscriber_id: Subscriber identifier (optional)
             username: RADIUS username
             password: Plain text password (will be hashed)
             hashing_method: Password hashing method (default: BCRYPT)
@@ -116,8 +116,8 @@ class RADIUSRepository:
         if radcheck:
             # Hash the new password
             hashed_password = hash_radius_password(new_password, hashing_method)
-            radcheck.value = hashed_password
-            radcheck.updated_at = datetime.utcnow()
+            radcheck.value = hashed_password  # type: ignore[assignment]
+            radcheck.updated_at = datetime.utcnow()  # type: ignore[assignment]
             await self.session.flush()
         return radcheck
 
@@ -426,7 +426,7 @@ class RADIUSRepository:
         for key, value in updates.items():
             if value is not None and hasattr(nas, key):
                 setattr(nas, key, value)
-        nas.updated_at = datetime.utcnow()
+        nas.updated_at = datetime.utcnow()  # type: ignore[assignment]
         await self.session.flush()
         return nas
 
@@ -502,7 +502,7 @@ class RADIUSRepository:
         for key, value in updates.items():
             if value is not None and hasattr(profile, key):
                 setattr(profile, key, value)
-        profile.updated_at = datetime.utcnow()
+        profile.updated_at = datetime.utcnow()  # type: ignore[assignment]
         await self.session.flush()
         return profile
 

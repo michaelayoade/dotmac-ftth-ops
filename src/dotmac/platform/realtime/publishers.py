@@ -4,12 +4,16 @@ Real-Time Event Publishers
 Redis pub/sub publishers for broadcasting real-time events.
 """
 
+from typing import Any, Protocol, cast, runtime_checkable
+
 import structlog
 
 from dotmac.platform.realtime.schemas import (
     AlertEvent,
-    BaseEvent,
+    EventType,
     JobProgressEvent,
+    JobStatus,
+    ONUStatus,
     ONUStatusEvent,
     RADIUSSessionEvent,
     SubscriberEvent,
@@ -20,13 +24,21 @@ from dotmac.platform.redis_client import RedisClientType
 logger = structlog.get_logger(__name__)
 
 
+@runtime_checkable
+class SupportsEventPayload(Protocol):
+    """Protocol describing the minimal payload interface we publish."""
+
+    event_type: Any
+    tenant_id: str
+
+
 class EventPublisher:
     """Publishes events to Redis pub/sub channels."""
 
     def __init__(self, redis_client: RedisClientType):
         self.redis = redis_client
 
-    async def publish_event(self, channel: str, event: BaseEvent) -> None:
+    async def publish_event(self, channel: str, event: SupportsEventPayload) -> None:
         """
         Publish event to Redis channel.
 
@@ -35,7 +47,7 @@ class EventPublisher:
             event: Event payload
         """
         try:
-            payload = event.model_dump_json()
+            payload = cast(Any, event).model_dump_json()
             await self.redis.publish(channel, payload)
             logger.info(
                 "event.published",
@@ -107,8 +119,6 @@ async def publish_onu_online(
     """Convenience function to publish ONU online event."""
     from datetime import datetime
 
-    from dotmac.platform.realtime.schemas import EventType, ONUStatus
-
     publisher = EventPublisher(redis)
     event = ONUStatusEvent(
         event_type=EventType.ONU_ONLINE,
@@ -140,8 +150,6 @@ async def publish_job_update(
 ) -> None:
     """Convenience function to publish job progress update."""
     from datetime import datetime
-
-    from dotmac.platform.realtime.schemas import EventType, JobStatus
 
     publisher = EventPublisher(redis)
 
@@ -186,17 +194,15 @@ async def publish_radius_session_start(
     """Convenience function to publish RADIUS session start event."""
     from datetime import datetime
 
-    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
-
     publisher = EventPublisher(redis)
     event = RADIUSSessionEvent(
-        event_type=EventType.SESSION_START,
+        event_type=EventType.SESSION_STARTED,
         tenant_id=tenant_id,
         timestamp=datetime.utcnow(),
         username=username,
         session_id=session_id,
-        nas_ip=nas_ip,
-        framed_ip=framed_ip,
+        nas_ip_address=nas_ip,
+        framed_ip_address=framed_ip,
         subscriber_id=subscriber_id,
         bandwidth_profile=bandwidth_profile,
     )
@@ -217,20 +223,18 @@ async def publish_radius_session_stop(
     """Convenience function to publish RADIUS session stop event."""
     from datetime import datetime
 
-    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
-
     publisher = EventPublisher(redis)
     event = RADIUSSessionEvent(
-        event_type=EventType.SESSION_STOP,
+        event_type=EventType.SESSION_STOPPED,
         tenant_id=tenant_id,
         timestamp=datetime.utcnow(),
         username=username,
         session_id=session_id,
-        nas_ip=nas_ip,
+        nas_ip_address=nas_ip,
         terminate_cause=terminate_cause,
         session_time=session_time,
-        input_octets=input_octets,
-        output_octets=output_octets,
+        bytes_in=input_octets,
+        bytes_out=output_octets,
     )
     await publisher.publish_session(event)
 
@@ -248,18 +252,16 @@ async def publish_radius_session_update(
     """Convenience function to publish RADIUS session interim-update event."""
     from datetime import datetime
 
-    from dotmac.platform.realtime.schemas import EventType, RADIUSSessionEvent
-
     publisher = EventPublisher(redis)
     event = RADIUSSessionEvent(
-        event_type=EventType.SESSION_UPDATE,
+        event_type=EventType.SESSION_UPDATED,
         tenant_id=tenant_id,
         timestamp=datetime.utcnow(),
         username=username,
         session_id=session_id,
-        nas_ip=nas_ip,
+        nas_ip_address=nas_ip,
         session_time=session_time,
-        input_octets=input_octets,
-        output_octets=output_octets,
+        bytes_in=input_octets,
+        bytes_out=output_octets,
     )
     await publisher.publish_session(event)

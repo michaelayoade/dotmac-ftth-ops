@@ -594,7 +594,7 @@ function DataTransferPageContent() {
 
 export default function DataTransferPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <DataTransferPageContent />
     </RouteGuard>
   );

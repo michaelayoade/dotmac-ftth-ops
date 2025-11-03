@@ -1,4 +1,3 @@
-
 """
 Comprehensive Data Transfer Module Integration Tests - Week 3 Priority 2
 
@@ -17,16 +16,14 @@ Marked as integration tests.
 
 import json
 import tempfile
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import patch
 
 import pandas as pd
 import pytest
 
-
 # Mark all tests in this module as integration tests
-
 from dotmac.platform.data_transfer.core import (  # noqa: E402
     DataBatch,
     DataFormat,
@@ -46,9 +43,8 @@ from dotmac.platform.data_transfer.factory import (  # noqa: E402
 # ============================================================================
 
 
-
-
 pytestmark = pytest.mark.unit
+
 
 async def dataframe_to_batches(df: pd.DataFrame, batch_size: int = 100):
     """Convert DataFrame to async generator of DataBatches for export."""
@@ -742,7 +738,7 @@ class TestEndToEndWorkflows:
             df = pd.DataFrame(all_records)
 
             # Transform to new schema (add fields, rename, etc.)
-            df["migrated_at"] = datetime.now(timezone.utc).isoformat()
+            df["migrated_at"] = datetime.now(UTC).isoformat()
             df["status"] = "active"
             df = df.rename(columns={"id": "customer_id"})
 

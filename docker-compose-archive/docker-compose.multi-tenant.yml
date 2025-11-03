@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Multi-Tenant SaaS Deployment
 # Both platform and tenant apps mounted
 

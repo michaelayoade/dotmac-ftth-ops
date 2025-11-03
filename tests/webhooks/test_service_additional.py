@@ -1,4 +1,3 @@
-
 """
 Additional service tests to reach 90% coverage for webhooks service.
 
@@ -11,19 +10,14 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 
 from dotmac.platform.webhooks.models import (
-
-
     DeliveryStatus,
     WebhookSubscription,
     WebhookSubscriptionUpdate,
 )
 from dotmac.platform.webhooks.service import WebhookSubscriptionService
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.integration
 class TestListSubscriptionsFiltering:

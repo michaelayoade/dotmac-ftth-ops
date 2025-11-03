@@ -28,7 +28,6 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-
 RUN_SUBSCRIPTION_LOAD_TESTS = os.getenv("RUN_SUBSCRIPTION_LOAD_TESTS") == "1"
 
 # Mark these as integration tests and skip unless explicitly enabled.
@@ -39,6 +38,7 @@ pytestmark = [
         reason="Set RUN_SUBSCRIPTION_LOAD_TESTS=1 to enable subscription load tests.",
     ),
 ]
+
 
 @pytest_asyncio.fixture
 async def load_test_plans(async_db_session):
@@ -274,7 +274,9 @@ class TestSubscriptionLoadPerformance:
         canceled_count = 0
         for sub_id in subscription_ids:
             await service.cancel_subscription(
-                subscription_id=sub_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
+                subscription_id=sub_id,
+                tenant_id=tenant_id,
+                at_period_end=True,  # Cancel at period end
             )
             canceled_count += 1
 
@@ -469,7 +471,9 @@ async def test_complete_load_test_scenario(async_db_session):
     for i in range(50):
         sub_id = subscription_ids[-(i + 1)]  # Cancel from the end
         await service.cancel_subscription(
-            subscription_id=sub_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
+            subscription_id=sub_id,
+            tenant_id=tenant_id,
+            at_period_end=True,  # Cancel at period end
         )
 
     await async_db_session.commit()

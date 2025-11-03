@@ -9,10 +9,10 @@ Tests cover:
 - Proxy functionality
 - Rate limit decorator
 """
-import pytest
 
 from unittest.mock import Mock, patch
 
+import pytest
 from slowapi import Limiter
 
 from dotmac.platform.core.rate_limiting import (

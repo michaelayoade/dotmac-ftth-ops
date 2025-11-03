@@ -5,12 +5,9 @@ Comprehensive service layer for managing ISP service lifecycle including
 provisioning, activation, suspension, resumption, and termination workflows.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, func, select
@@ -41,6 +38,12 @@ from dotmac.platform.services.lifecycle.schemas import (
     ServiceSuspensionRequest,
     ServiceTerminationRequest,
 )
+
+User: Any | None
+try:  # pragma: no cover - optional dependency during minimized installs
+    from dotmac.platform.user_management.models import User
+except Exception:  # pragma: no cover - optional dependency
+    User = None
 
 
 class LifecycleOrchestrationService:
@@ -269,10 +272,13 @@ class LifecycleOrchestrationService:
         await self.session.commit()
 
         # Activate service using existing activation flow
-        activation_result = await self.activate_service(
-            tenant_id=tenant_id,
-            data=ServiceActivationRequest(service_instance_id=service_instance.id),
-            activated_by_user_id=triggered_by_user_id,
+        activation_result = cast(
+            ServiceOperationResult,
+            await self.activate_service(
+                tenant_id=tenant_id,
+                data=ServiceActivationRequest(service_instance_id=service_instance.id),
+                activated_by_user_id=triggered_by_user_id,
+            ),
         )
 
         if not activation_result.success:
@@ -342,8 +348,10 @@ class LifecycleOrchestrationService:
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
-                raise ValueError("service_id or service_instance_id is required when data is not provided")
-            data = ServiceActivationRequest.model_construct(
+                raise ValueError(
+                    "service_id or service_instance_id is required when data is not provided"
+                )
+            data = ServiceActivationRequest(
                 service_instance_id=resolved_id,
                 activation_note=activation_note,
                 send_notification=send_notification if send_notification is not None else True,
@@ -352,8 +360,12 @@ class LifecycleOrchestrationService:
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            raise ValueError("service_instance_id is required for service activation")
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             return ServiceOperationResult(
                 success=False,
@@ -453,24 +465,44 @@ class LifecycleOrchestrationService:
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None or reason is None:
-                raise ValueError("service_id/service_instance_id and reason are required when data is not provided")
+                raise ValueError(
+                    "service_id/service_instance_id and reason are required when data is not provided"
+                )
             effective_type = suspension_type
             if fraud_suspension:
                 effective_type = "fraud"
-            data = ServiceSuspensionRequest.model_construct(
-                service_instance_id=resolved_id,
-                suspension_reason=reason,
-                suspension_type=effective_type,
-                auto_resume_at=auto_resume_at,
-                send_notification=send_notification if send_notification is not None else True,
-                metadata=metadata or {},
-                suspension_note=None,
-            )
+            normalized_reason = reason or "Service suspension"
+            if len(normalized_reason.strip()) < 5:
+                normalized_reason = f"{normalized_reason.strip()} reason"
+
+            payload = {
+                "service_instance_id": resolved_id,
+                "reason": normalized_reason,
+                "auto_resume_at": auto_resume_at,
+                "send_notification": True if send_notification is None else send_notification,
+                "metadata": metadata or {},
+                "suspension_note": None,
+            }
+            if effective_type is not None:
+                payload["suspension_type"] = effective_type
+
+            data = ServiceSuspensionRequest.model_validate(payload)
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        # Check if service_instance_id is provided
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            return ServiceOperationResult(
+                success=False,
+                service_instance_id=None,
+                operation="suspend",
+                message="Service instance ID is required",
+                error="MISSING_ID",
+            )
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             return ServiceOperationResult(
                 success=False,
@@ -497,10 +529,9 @@ class LifecycleOrchestrationService:
         previous_status = service.status
         if data.suspension_type == "fraud":
             service.status = ServiceStatus.SUSPENDED_FRAUD
-        elif (
-            (data.suspension_type or "").lower() == "non_payment"
-            or (data.suspension_reason or "").lower().startswith("non_payment")
-        ):
+        elif (data.suspension_type or "").lower() == "non_payment" or (
+            data.suspension_reason or ""
+        ).lower().startswith("non_payment"):
             service.status = ServiceStatus.SUSPENDED_NON_PAYMENT
         else:
             service.status = ServiceStatus.SUSPENDED
@@ -579,18 +610,33 @@ class LifecycleOrchestrationService:
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
-                raise ValueError("service_id or service_instance_id is required when data is not provided")
-            data = ServiceResumptionRequest.model_construct(
-                service_instance_id=resolved_id,
-                resumption_note=resumption_note,
-                send_notification=send_notification if send_notification is not None else True,
-                metadata=metadata or {},
+                raise ValueError(
+                    "service_id or service_instance_id is required when data is not provided"
+                )
+            data = ServiceResumptionRequest.model_validate(
+                {
+                    "service_instance_id": resolved_id,
+                    "resumption_note": resumption_note,
+                    "send_notification": True if send_notification is None else send_notification,
+                    "metadata": metadata or {},
+                }
             )
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        # Check if service_instance_id is provided
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            return ServiceOperationResult(
+                success=False,
+                service_instance_id=None,
+                operation="resume",
+                message="Service instance ID is required",
+                error="MISSING_ID",
+            )
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             return ServiceOperationResult(
                 success=False,
@@ -690,23 +736,41 @@ class LifecycleOrchestrationService:
         legacy_mode = data is None
         if data is None:
             resolved_reason = termination_reason or reason or "Customer request"
+            if len(resolved_reason.strip()) < 5:
+                resolved_reason = f"{resolved_reason.strip()} request"
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
-                raise ValueError("service_id or service_instance_id is required when data is not provided")
-            data = ServiceTerminationRequest.model_construct(
-                service_instance_id=resolved_id,
-                termination_reason=resolved_reason,
-                termination_type=termination_type,
-                termination_date=termination_date,
-                send_notification=send_notification if send_notification is not None else True,
-                return_equipment=return_equipment if return_equipment is not None else False,
-                metadata=metadata or {},
-            )
+                raise ValueError(
+                    "service_id or service_instance_id is required when data is not provided"
+                )
+            payload = {
+                "service_instance_id": resolved_id,
+                "reason": resolved_reason,
+                "termination_date": termination_date,
+                "send_notification": True if send_notification is None else send_notification,
+                "return_equipment": False if return_equipment is None else return_equipment,
+                "metadata": metadata or {},
+            }
+            if termination_type is not None:
+                payload["termination_type"] = termination_type
+
+            data = ServiceTerminationRequest.model_validate(payload)
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        # Check if service_instance_id is provided
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            return ServiceOperationResult(
+                success=False,
+                service_instance_id=None,
+                operation="terminate",
+                message="Service instance ID is required",
+                error="MISSING_ID",
+            )
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             return ServiceOperationResult(
                 success=False,
@@ -825,25 +889,39 @@ class LifecycleOrchestrationService:
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
-                raise ValueError("service_id or service_instance_id is required when data is not provided")
+                raise ValueError(
+                    "service_id or service_instance_id is required when data is not provided"
+                )
             payload = changes or {}
-            data = ServiceModificationRequest.model_construct(
-                service_instance_id=resolved_id,
-                service_config=payload.get("service_config"),
-                service_name=payload.get("service_name"),
-                installation_address=payload.get("installation_address"),
-                equipment_assigned=payload.get("equipment_assigned"),
-                vlan_id=payload.get("vlan_id"),
-                metadata=payload.get("metadata"),
-                notes=payload.get("notes"),
-                modification_reason=payload.get("modification_reason", "Manual update"),
-                send_notification=payload.get("send_notification", True),
+            data = ServiceModificationRequest.model_validate(
+                {
+                    "service_instance_id": resolved_id,
+                    "service_config": payload.get("service_config"),
+                    "service_name": payload.get("service_name"),
+                    "installation_address": payload.get("installation_address"),
+                    "equipment_assigned": payload.get("equipment_assigned"),
+                    "vlan_id": payload.get("vlan_id"),
+                    "metadata": payload.get("metadata"),
+                    "notes": payload.get("notes"),
+                    "modification_reason": payload.get("modification_reason", "Manual update"),
+                    "send_notification": payload.get("send_notification", True),
+                }
             )
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            return ServiceOperationResult(
+                success=False,
+                service_instance_id=None,
+                operation="modify",
+                message="Service instance ID is required",
+                error="MISSING_ID",
+            )
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             result = ServiceOperationResult(
                 success=False,
@@ -900,7 +978,8 @@ class LifecycleOrchestrationService:
         if data.notes is not None:
             service.notes = data.notes
 
-        service.updated_by_user_id = modified_by_user_id
+        if modified_by_user_id is not None:
+            service.updated_by = str(modified_by_user_id)
 
         # Create lifecycle event
         event = await self._create_lifecycle_event(
@@ -957,16 +1036,30 @@ class LifecycleOrchestrationService:
         if data is None:
             resolved_id = service_instance_id or service_id
             if resolved_id is None:
-                raise ValueError("service_id or service_instance_id is required when data is not provided")
-            data = ServiceHealthCheckRequest.model_construct(
-                service_instance_id=resolved_id,
-                check_type=check_type,
+                raise ValueError(
+                    "service_id or service_instance_id is required when data is not provided"
+                )
+            data = ServiceHealthCheckRequest.model_validate(
+                {
+                    "service_instance_id": resolved_id,
+                    "check_type": check_type,
+                }
             )
         elif service_instance_id is not None and not data.service_instance_id:
             data.service_instance_id = service_instance_id
 
+        service_instance_id_value = data.service_instance_id
+        if service_instance_id_value is None:
+            return ServiceOperationResult(
+                success=False,
+                service_instance_id=None,
+                operation="health_check",
+                message="Service instance ID is required",
+                error="MISSING_ID",
+            )
+
         # Get service instance
-        service = await self.get_service_instance(data.service_instance_id, tenant_id)
+        service = await self.get_service_instance(service_instance_id_value, tenant_id)
         if not service:
             result = ServiceOperationResult(
                 success=False,
@@ -1048,7 +1141,6 @@ class LifecycleOrchestrationService:
         if "performed_by_user_id" in legacy_kwargs and user_id is None:
             user_id = legacy_kwargs.pop("performed_by_user_id")
 
-        legacy_mode = data is None
         if data is None:
             if service_ids is None or operation is None:
                 raise ValueError("service_ids and operation are required when data is not provided")
@@ -1108,7 +1200,7 @@ class LifecycleOrchestrationService:
             raise ValueError("Unexpected keyword arguments for bulk operation")
 
         start_time = datetime.now(UTC)
-        results: list[ServiceOperationResult] = []
+        operation_results: list[ServiceOperationResult] = []
 
         for service_id in data.service_instance_ids:
             try:
@@ -1141,9 +1233,29 @@ class LifecycleOrchestrationService:
                         error="UNKNOWN_OPERATION",
                     )
 
-                results.append(result)
+                if isinstance(result, ServiceOperationResult):
+                    operation_results.append(result)
+                elif isinstance(result, ServiceInstance):
+                    operation_results.append(
+                        ServiceOperationResult(
+                            success=True,
+                            service_instance_id=result.id,
+                            operation=data.operation,
+                            message="Operation completed successfully",
+                        )
+                    )
+                else:
+                    operation_results.append(
+                        ServiceOperationResult(
+                            success=False,
+                            service_instance_id=service_id,
+                            operation=data.operation,
+                            message="Unsupported result type from operation",
+                            error="UNEXPECTED_RESULT",
+                        )
+                    )
             except Exception as e:
-                results.append(
+                operation_results.append(
                     ServiceOperationResult(
                         success=False,
                         service_instance_id=service_id,
@@ -1156,14 +1268,14 @@ class LifecycleOrchestrationService:
         end_time = datetime.now(UTC)
         execution_time = (end_time - start_time).total_seconds()
 
-        successful = sum(1 for r in results if r.success)
-        failed = len(results) - successful
+        successful = sum(1 for r in operation_results if r.success)
+        failed = len(operation_results) - successful
 
         bulk_result = BulkServiceOperationResult(
             total_requested=len(data.service_instance_ids),
             total_successful=successful,
             total_failed=failed,
-            results=results,
+            results=operation_results,
             execution_time_seconds=execution_time,
         )
         return bulk_result
@@ -1672,6 +1784,12 @@ class LifecycleOrchestrationService:
         external_system_response: dict[str, Any] | None = None,
     ) -> LifecycleEvent:
         """Create a lifecycle event."""
+        resolved_user_id = triggered_by_user_id
+        if triggered_by_user_id and User is not None:
+            existing_user = await self.session.get(User, triggered_by_user_id)
+            if existing_user is None:
+                resolved_user_id = None
+
         event = LifecycleEvent(
             tenant_id=tenant_id,
             service_instance_id=service_instance_id,
@@ -1685,7 +1803,7 @@ class LifecycleOrchestrationService:
             workflow_id=workflow_id,
             task_id=task_id,
             duration_seconds=duration_seconds,
-            triggered_by_user_id=triggered_by_user_id,
+            triggered_by_user_id=resolved_user_id,
             triggered_by_system=triggered_by_system,
             event_data=event_data or {},
             external_system_response=external_system_response,

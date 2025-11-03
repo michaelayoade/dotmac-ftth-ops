@@ -1,4 +1,3 @@
-
 """
 Tests for Payment Methods Service - List and Get operations.
 """
@@ -11,12 +10,8 @@ from dotmac.platform.billing.payment_methods.models import PaymentMethodResponse
 from dotmac.platform.billing.payment_methods.service import PaymentMethodService
 from tests.billing.payment_methods.conftest import build_mock_result
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.integration
 class TestListPaymentMethods:

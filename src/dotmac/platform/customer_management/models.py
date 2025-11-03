@@ -5,10 +5,7 @@ Provides comprehensive customer data models with full audit trail,
 multi-tenant support, and rich metadata capabilities.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
 from typing import Any
@@ -27,10 +24,10 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy import Enum as SQLEnum
-from dotmac.platform.db import GUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import (
+    GUID,
     AuditMixin,
     Base,
     SoftDeleteMixin,
@@ -366,7 +363,7 @@ class Customer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin): 
         "CustomerContactLink",
         back_populates="customer",
         cascade="all, delete-orphan",
-        lazy="dynamic"
+        lazy="dynamic",
     )
 
     # Indexes and constraints

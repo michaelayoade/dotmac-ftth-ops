@@ -7,13 +7,8 @@ import pytest
 from dotmac.platform.communications.email_service import EmailMessage, EmailService
 from dotmac.platform.communications.plugins import register_plugin
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class _DummyTransport:
     def __init__(self) -> None:

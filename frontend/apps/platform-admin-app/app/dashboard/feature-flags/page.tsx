@@ -476,7 +476,7 @@ function FeatureFlagsPageContent() {
 
 export default function FeatureFlagsPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <FeatureFlagsPageContent />
     </RouteGuard>
   );

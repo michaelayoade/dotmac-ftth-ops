@@ -1,4 +1,3 @@
-
 """
 Tests for SMS-based phone verification flow.
 """
@@ -16,8 +15,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo, session_manager
 from dotmac.platform.auth.router import auth_router, get_auth_session
 from dotmac.platform.communications.models import (
-
-
     CommunicationLog,
     CommunicationStatus,
     CommunicationType,
@@ -25,11 +22,8 @@ from dotmac.platform.communications.models import (
 from dotmac.platform.integrations import IntegrationStatus
 from dotmac.platform.settings import settings
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def sms_test_app(async_db_session: AsyncSession):

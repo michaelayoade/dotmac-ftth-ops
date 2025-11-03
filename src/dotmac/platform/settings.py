@@ -595,17 +595,17 @@ class Settings(BaseSettings):
         pool_size: int = Field(
             10,
             description="Connection pool size (override with PG_POOL_SIZE env var)",
-            validation_alias="PG_POOL_SIZE"
+            validation_alias="PG_POOL_SIZE",
         )
         max_overflow: int = Field(
             20,
             description="Max overflow connections (override with PG_MAX_OVERFLOW env var)",
-            validation_alias="PG_MAX_OVERFLOW"
+            validation_alias="PG_MAX_OVERFLOW",
         )
         pool_timeout: int = Field(
             30,
             description="Pool timeout in seconds (override with PG_POOL_TIMEOUT env var)",
-            validation_alias="PG_POOL_TIMEOUT"
+            validation_alias="PG_POOL_TIMEOUT",
         )
         pool_recycle: int = Field(3600, description="Recycle connections after seconds")
         pool_pre_ping: bool = Field(True, description="Test connections before use")
@@ -617,8 +617,28 @@ class Settings(BaseSettings):
         @property
         def sqlalchemy_url(self) -> str:
             """Build SQLAlchemy database URL."""
+            override_async = os.getenv("DOTMAC_DATABASE_URL_ASYNC")
+            if override_async:
+                return override_async
+
+            override_sync = os.getenv("DOTMAC_DATABASE_URL") or os.getenv("DATABASE_URL")
+            if override_sync:
+                if override_sync.startswith("sqlite+"):
+                    return override_sync
+                if override_sync.startswith("sqlite://"):
+                    return override_sync.replace("sqlite://", "sqlite+aiosqlite://", 1)
+                if override_sync.startswith("postgresql+"):
+                    return override_sync
+                if override_sync.startswith("postgresql://"):
+                    return override_sync.replace("postgresql://", "postgresql+asyncpg://", 1)
+                return override_sync
+
             if self.url:
-                return str(self.url)
+                url = str(self.url)
+                if url.startswith("postgresql://"):
+                    return url.replace("postgresql://", "postgresql+asyncpg://", 1)
+                return url
+
             return f"postgresql+asyncpg://{self.username}:{self.password}@{self.host}:{self.port}/{self.database}"
 
     database: DatabaseSettings = DatabaseSettings()  # type: ignore[call-arg]

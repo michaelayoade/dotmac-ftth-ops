@@ -118,6 +118,8 @@ class RADIUSSessionEvent(BaseModel):  # BaseModel resolves to Any in isolation
     session_id: str
     nas_ip_address: str
     framed_ip_address: str | None = None
+    subscriber_id: str | None = None
+    bandwidth_profile: str | None = None
     bytes_in: int | None = None
     bytes_out: int | None = None
     session_time: int | None = None  # seconds

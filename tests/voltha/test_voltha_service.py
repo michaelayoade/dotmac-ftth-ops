@@ -4,9 +4,9 @@ Unit tests for VOLTHA Service layer
 
 from __future__ import annotations
 
+import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import base64
 import pytest
 
 from dotmac.platform.voltha.client import VOLTHAClient
@@ -196,9 +196,9 @@ class TestVOLTHAServiceEvents:
                 "items": [
                     {
                         "id": "evt-1",
-                    "event_type": "onu_discovered",
-                    "category": "ONU",
-                    "resource_id": "onu-1",
+                        "event_type": "onu_discovered",
+                        "category": "ONU",
+                        "resource_id": "onu-1",
                         "timestamp": "2024-01-01T00:00:00Z",
                     },
                     {

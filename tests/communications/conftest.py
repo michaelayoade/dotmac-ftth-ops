@@ -3,8 +3,7 @@
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI, HTTPException, Request
-from httpx import AsyncClient
-from httpx import ASGITransport
+from httpx import ASGITransport, AsyncClient
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 

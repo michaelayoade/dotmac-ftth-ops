@@ -1,4 +1,3 @@
-
 """
 Core Payment Service Tests - Phase 1 Coverage Improvement
 
@@ -14,6 +13,7 @@ Tests critical payment service workflows:
 Target: Increase payment service coverage from 10.64% to 70%+
 """
 
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
@@ -23,13 +23,13 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
-
-
+    InvoiceEntity,
     PaymentEntity,
     PaymentInvoiceEntity,
     PaymentMethodEntity,
 )
 from dotmac.platform.billing.core.enums import (
+    InvoiceStatus,
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
@@ -46,11 +46,8 @@ from dotmac.platform.billing.payments.providers import (
 )
 from dotmac.platform.billing.payments.service import PaymentService
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def tenant_id() -> str:
@@ -115,9 +112,38 @@ async def test_payment_method(async_session: AsyncSession, tenant_id: str, custo
         is_default=True,
     )
     async_session.add(payment_method)
-    await async_session.commit()
+    await async_session.flush()
     await async_session.refresh(payment_method)
     return payment_method
+
+
+@pytest_asyncio.fixture
+async def test_invoice(async_session: AsyncSession, tenant_id: str, customer_id: str):
+    """Create a test invoice for payment linking."""
+    invoice = InvoiceEntity(
+        tenant_id=tenant_id,
+        customer_id=customer_id,
+        billing_email="test@example.com",
+        billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
+        currency="USD",
+        subtotal=10000,
+        tax_amount=0,
+        discount_amount=0,
+        total_amount=10000,
+        remaining_balance=10000,
+        status=InvoiceStatus.OPEN,
+        payment_status=PaymentStatus.PENDING,
+    )
+    async_session.add(invoice)
+    await async_session.flush()
+    await async_session.refresh(invoice)
+    # Store the invoice_id before making transient
+    invoice_id = invoice.invoice_id
+    # Expunge to prevent cleanup issues with detached instances
+    async_session.expunge(invoice)
+    return invoice
 
 
 @pytest.mark.integration
@@ -203,7 +229,7 @@ class TestPaymentCreation:
                 amount=1000,
                 currency="USD",
                 customer_id=customer_id,
-                payment_method_id="nonexistent_pm",
+                payment_method_id=str(uuid4()),
             )
 
     async def test_create_payment_inactive_payment_method(
@@ -328,6 +354,7 @@ class TestPaymentCreation:
         tenant_id: str,
         customer_id: str,
         test_payment_method: PaymentMethodEntity,
+        test_invoice: InvoiceEntity,
     ):
         """Test successful payment publishes webhook event."""
         mock_event_bus = AsyncMock()
@@ -339,7 +366,7 @@ class TestPaymentCreation:
             currency="USD",
             customer_id=customer_id,
             payment_method_id=test_payment_method.payment_method_id,
-            invoice_ids=["inv_123"],
+            invoice_ids=[test_invoice.invoice_id],
         )
 
         # Verify event was published
@@ -348,7 +375,7 @@ class TestPaymentCreation:
         assert call_args.kwargs["event_type"] == "payment.succeeded"
         assert call_args.kwargs["event_data"]["payment_id"] == payment.payment_id
         assert call_args.kwargs["event_data"]["amount"] == 100.0  # Converted from cents
-        assert call_args.kwargs["event_data"]["invoice_ids"] == ["inv_123"]
+        assert call_args.kwargs["event_data"]["invoice_ids"] == [test_invoice.invoice_id]
 
     @patch("dotmac.platform.billing.payments.service.get_event_bus")
     async def test_create_payment_publishes_failure_event(
@@ -501,7 +528,7 @@ class TestPaymentRefunds:
         with pytest.raises(PaymentNotFoundError):
             await payment_service.refund_payment(
                 tenant_id=tenant_id,
-                payment_id="nonexistent_payment",
+                payment_id=str(uuid4()),
             )
 
     async def test_refund_payment_not_successful(
@@ -531,7 +558,9 @@ class TestPaymentRefunds:
         )
 
         # Try to refund failed payment
-        with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
+        with pytest.raises(
+            PaymentError, match="Can only refund successful or partially refunded payments"
+        ):
             await payment_service.refund_payment(
                 tenant_id=tenant_id,
                 payment_id=payment.payment_id,
@@ -553,7 +582,9 @@ class TestPaymentRefunds:
             payment_method_id=test_payment_method.payment_method_id,
         )
 
-        with pytest.raises(PaymentError, match="Refund amount .* exceeds remaining refundable amount"):
+        with pytest.raises(
+            PaymentError, match="Refund amount .* exceeds remaining refundable amount"
+        ):
             await payment_service.refund_payment(
                 tenant_id=tenant_id,
                 payment_id=payment.payment_id,
@@ -696,7 +727,7 @@ class TestPaymentMethodManagement:
         """Test getting non-existent payment method."""
         pm = await payment_service.get_payment_method(
             tenant_id=tenant_id,
-            payment_method_id="nonexistent",
+            payment_method_id=str(uuid4()),
         )
         assert pm is None
 
@@ -902,7 +933,7 @@ class TestPaymentRetry:
         with pytest.raises(PaymentNotFoundError):
             await payment_service.retry_failed_payment(
                 tenant_id=tenant_id,
-                payment_id="nonexistent",
+                payment_id=str(uuid4()),
             )
 
     async def test_retry_successful_payment(
@@ -1013,6 +1044,31 @@ class TestInvoiceLinking:
         customer_id: str,
     ):
         """Ensure invoice linking allocates any leftover minor units."""
+        # Create 3 test invoices
+        invoices = []
+        for _ in range(3):
+            invoice = InvoiceEntity(
+                tenant_id=tenant_id,
+                customer_id=customer_id,
+                billing_email="test@example.com",
+                billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
+                issue_date=datetime.now(UTC),
+                due_date=datetime.now(UTC) + timedelta(days=30),
+                currency="USD",
+                subtotal=5000,
+                tax_amount=0,
+                discount_amount=0,
+                total_amount=5000,
+                remaining_balance=5000,
+                status=InvoiceStatus.OPEN,
+                payment_status=PaymentStatus.PENDING,
+            )
+            async_session.add(invoice)
+            invoices.append(invoice)
+        await async_session.flush()
+        for invoice in invoices:
+            await async_session.refresh(invoice)
+
         payment = PaymentEntity(
             tenant_id=tenant_id,
             amount=100,  # Not divisible by 3
@@ -1025,10 +1081,10 @@ class TestInvoiceLinking:
             provider_payment_data={},
         )
         async_session.add(payment)
-        await async_session.commit()
+        await async_session.flush()
         await async_session.refresh(payment)
 
-        invoice_ids = [str(uuid4()), str(uuid4()), str(uuid4())]
+        invoice_ids = [invoice.invoice_id for invoice in invoices]
         await payment_service._link_payment_to_invoices(payment, invoice_ids)
 
         result = await async_session.execute(

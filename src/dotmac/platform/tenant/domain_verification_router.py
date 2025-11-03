@@ -109,7 +109,7 @@ async def initiate_domain_verification(
             tenant_id=tenant_id,
             domain=request.domain,
             method=verification_method,
-            user_id=current_user.id,
+            user_id=current_user.user_id,
         )
 
         return DomainVerificationResponse(**result)
@@ -201,7 +201,7 @@ async def check_domain_verification(
             domain=request.domain,
             token=request.token,
             method=verification_method,
-            user_id=current_user.id,
+            user_id=current_user.user_id,
         )
 
         return DomainVerificationResponse(**result)
@@ -359,7 +359,7 @@ async def remove_verified_domain(
         result = await service.remove_domain(
             tenant_id=tenant_id,
             domain=tenant.domain,
-            user_id=current_user.id,
+            user_id=current_user.user_id,
         )
 
         return DomainRemovalResponse(**result)

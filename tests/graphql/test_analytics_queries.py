@@ -1,11 +1,10 @@
-
 """
 Tests for GraphQL analytics queries.
 
 Tests dashboard and metrics queries using Strawberry test client.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -14,13 +13,8 @@ import pytest_asyncio
 from dotmac.platform.graphql.schema import schema
 from dotmac.platform.version import get_version
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest_asyncio.fixture
 async def graphql_client():
@@ -140,7 +134,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         with patch(
@@ -183,7 +177,7 @@ class TestAnalyticsQueries:
             "customer_growth_rate": 15.5,
             "churn_rate": 3.3,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         with patch(
@@ -245,7 +239,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         mock_customer_data = {
@@ -256,7 +250,7 @@ class TestAnalyticsQueries:
             "customer_growth_rate": 15.5,
             "churn_rate": 3.3,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         mock_communications_data = {
@@ -275,7 +269,7 @@ class TestAnalyticsQueries:
             "open_rate": 0.0,
             "click_rate": 0.0,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         mock_file_data = {
@@ -283,7 +277,7 @@ class TestAnalyticsQueries:
             "total_size": 1024000000,
             "files_uploaded": 30,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         mock_auth_data = {
@@ -294,7 +288,7 @@ class TestAnalyticsQueries:
             "successful_logins": 1150,
             "failed_logins": 50,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         mock_monitoring_data = {
@@ -313,7 +307,7 @@ class TestAnalyticsQueries:
             "high_latency_requests": 10,
             "timeout_count": 2,
             "period": "30d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         with (
@@ -434,7 +428,7 @@ class TestAnalyticsQueries:
             "failed_payments": 5,
             "total_payment_amount": 42500.0,
             "period": "7d",
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
 
         with patch(

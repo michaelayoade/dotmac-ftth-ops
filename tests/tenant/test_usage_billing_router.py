@@ -11,7 +11,7 @@ Run separately with: pytest tests/tenant/test_usage_billing_router.py
 import asyncio
 import time
 import uuid
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
@@ -22,9 +22,8 @@ from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.auth.core import UserInfo
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -66,6 +65,7 @@ def setup_test_database():
 @pytest.fixture
 def mock_usage_billing_integration():
     """Create a mock for the usage billing integration."""
+
     async def record_usage(tenant_id, usage_data, subscription_id=None):
         billing_records: list[dict[str, object]] = []
         if usage_data.api_calls > 0:
@@ -222,7 +222,7 @@ class TestUsageBillingRecordEndpoint:
         # Create a tenant
         tenant = await create_test_tenant(test_client_with_auth, "record-usage")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
@@ -244,7 +244,7 @@ class TestUsageBillingRecordEndpoint:
         """Test recording usage with explicit subscription ID."""
         tenant = await create_test_tenant(test_client_with_auth, "record-sub-id")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing?subscription_id=sub-123",
             json={
@@ -271,7 +271,7 @@ class TestUsageBillingRecordEndpoint:
             side_effect=Exception("Database connection failed")
         )
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={
@@ -337,8 +337,8 @@ class TestUsageOveragesEndpoint:
         """Test getting overages endpoint with period parameters."""
         tenant = await create_test_tenant(test_client_with_auth, "overages-period")
 
-        period_start = datetime(2025, 10, 1, tzinfo=timezone.utc)
-        period_end = datetime(2025, 10, 31, 23, 59, 59, tzinfo=timezone.utc)
+        period_start = datetime(2025, 10, 1, tzinfo=UTC)
+        period_end = datetime(2025, 10, 31, 23, 59, 59, tzinfo=UTC)
 
         # URL encode the datetime parameters properly
         from urllib.parse import quote
@@ -552,7 +552,7 @@ class TestUsageBillingIntegration:
         tenant = await create_test_tenant(test_client_with_auth, "e2e-workflow")
 
         # Step 1: Try to record usage (may fail without billing setup, that's ok)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         record_response = await test_client_with_auth.post(
             f"/api/v1/tenants/{tenant['id']}/usage/record-with-billing",
             json={

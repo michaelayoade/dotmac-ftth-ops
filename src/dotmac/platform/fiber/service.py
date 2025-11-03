@@ -6,10 +6,7 @@ Business logic for fiber optic network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -175,7 +172,7 @@ class FiberService:
 
         stmt = select(FiberCable).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_cable(
         self,
@@ -344,7 +341,7 @@ class FiberService:
 
         stmt = select(DistributionPoint).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_distribution_point(
         self,
@@ -490,7 +487,7 @@ class FiberService:
 
         stmt = select(ServiceArea).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_service_area(
         self,
@@ -649,7 +646,7 @@ class FiberService:
 
         stmt = select(SplicePoint).where(*filters).offset(offset).limit(limit)
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     async def update_splice_point(
         self,
@@ -773,7 +770,7 @@ class FiberService:
             .limit(limit)
         )
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     # ========================================================================
     # OTDR Test Result Methods
@@ -880,7 +877,7 @@ class FiberService:
             .limit(limit)
         )
         result = await self.db.execute(stmt)
-        return result.scalars().all()
+        return list(result.scalars().all())
 
     # ========================================================================
     # Analytics & Reporting Methods

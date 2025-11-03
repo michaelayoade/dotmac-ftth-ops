@@ -11,8 +11,6 @@ from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
-
-pytestmark = pytest.mark.integration
 from click.testing import CliRunner
 
 # Import the entire module to ensure coverage tracking
@@ -27,6 +25,8 @@ from dotmac.platform.cli import (
     init_database,
     run_migrations,
 )
+
+pytestmark = pytest.mark.integration
 
 
 def _make_async_context_manager() -> AsyncMock:
@@ -176,9 +176,7 @@ class TestCreateAdmin:
     @patch("dotmac.platform.cli._get_cli_dependencies")
     def test_create_admin_database_error(self, mock_get_deps, runner):
         """Test admin creation with database error."""
-        deps = build_cli_dependencies(
-            session_factory=Mock(side_effect=Exception("Database error"))
-        )
+        deps = build_cli_dependencies(session_factory=Mock(side_effect=Exception("Database error")))
         mock_get_deps.return_value = deps
 
         result = runner.invoke(create_admin, input="admin@example.com\npassword123\n")
@@ -245,9 +243,7 @@ class TestRunMigrations:
     @patch("dotmac.platform.cli._get_cli_dependencies")
     def test_run_migrations_success(self, mock_get_deps, runner):
         """Test successful migration execution."""
-        completed = Mock(
-            returncode=0, stdout="Migration completed successfully", stderr=""
-        )
+        completed = Mock(returncode=0, stdout="Migration completed successfully", stderr="")
         deps = build_cli_dependencies(subprocess_run=Mock(return_value=completed))
         mock_get_deps.return_value = deps
 
@@ -265,9 +261,7 @@ class TestRunMigrations:
     @patch("dotmac.platform.cli._get_cli_dependencies")
     def test_run_migrations_failure(self, mock_get_deps, runner):
         """Test migration execution failure."""
-        completed = Mock(
-            returncode=1, stdout="", stderr="Migration failed: table already exists"
-        )
+        completed = Mock(returncode=1, stdout="", stderr="Migration failed: table already exists")
         deps = build_cli_dependencies(subprocess_run=Mock(return_value=completed))
         mock_get_deps.return_value = deps
 
@@ -511,9 +505,7 @@ class TestExportAuditLogs:
     @patch("dotmac.platform.cli._get_cli_dependencies")
     def test_export_audit_logs_database_error(self, mock_get_deps, runner):
         """Test audit log export with database error."""
-        deps = build_cli_dependencies(
-            session_factory=Mock(side_effect=Exception("Query failed"))
-        )
+        deps = build_cli_dependencies(session_factory=Mock(side_effect=Exception("Query failed")))
         mock_get_deps.return_value = deps
 
         result = runner.invoke(export_audit_logs)
@@ -589,9 +581,7 @@ class TestCLIErrorHandling:
 
     def test_cli_unexpected_error(self, runner):
         """Test CLI handling of unexpected errors."""
-        deps = build_cli_dependencies(
-            init_db=Mock(side_effect=RuntimeError("Unexpected error"))
-        )
+        deps = build_cli_dependencies(init_db=Mock(side_effect=RuntimeError("Unexpected error")))
         with patch("dotmac.platform.cli._get_cli_dependencies", return_value=deps):
             result = runner.invoke(init_database)
 

@@ -447,7 +447,7 @@ function LogicalDeviceDetails() {
 
 export default function OLTDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.read">
+    <RouteGuard permission="isp.network.pon.read">
       <LogicalDeviceDetails />
     </RouteGuard>
   );

@@ -229,6 +229,8 @@ class InternetPlanService:
         )
         sub_result = await self.session.execute(sub_stmt)
         active_subs = sub_result.scalar()
+        if active_subs is None:
+            active_subs = 0
 
         if active_subs > 0:
             # Cannot delete plan with active subscriptions

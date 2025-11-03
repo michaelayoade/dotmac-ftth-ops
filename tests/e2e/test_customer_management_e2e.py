@@ -1,4 +1,3 @@
-
 """
 End-to-End tests for Customer Management API.
 
@@ -10,14 +9,12 @@ from uuid import uuid4
 
 import pytest
 
-
 # Note: auth_headers fixture is provided by tests/e2e/conftest.py
 # It includes both Authorization and X-Tenant-ID headers
 
 
-
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
 
 class TestCustomerCreationE2E:
     """Test customer creation workflows."""

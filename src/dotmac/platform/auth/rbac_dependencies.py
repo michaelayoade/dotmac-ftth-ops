@@ -7,7 +7,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from enum import Enum
 from functools import cache, wraps
-from typing import Any, ParamSpec, TypeVar
+from typing import Any, ParamSpec, TypeVar, cast
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer
@@ -161,27 +161,33 @@ def _cached_role_checker(
     )
 
 
-def require_permission(permission: str, error_message: str | None = None) -> Any:
+def require_permission(
+    permission: str, error_message: str | None = None
+) -> PermissionChecker:
     """Require a single permission"""
     return _cached_permission_checker((permission,), PermissionMode.ALL, error_message)
 
 
-def require_permissions(*permissions: str, error_message: str | None = None) -> Any:
+def require_permissions(
+    *permissions: str, error_message: str | None = None
+) -> PermissionChecker:
     """Require all specified permissions"""
     return _cached_permission_checker(tuple(permissions), PermissionMode.ALL, error_message)
 
 
-def require_any_permission(*permissions: str, error_message: str | None = None) -> Any:
+def require_any_permission(
+    *permissions: str, error_message: str | None = None
+) -> PermissionChecker:
     """Require any of the specified permissions"""
     return _cached_permission_checker(tuple(permissions), PermissionMode.ANY, error_message)
 
 
-def require_role(role: str, error_message: str | None = None) -> Any:
+def require_role(role: str, error_message: str | None = None) -> RoleChecker:
     """Require a single role"""
     return _cached_role_checker((role,), PermissionMode.ALL, error_message)
 
 
-def require_any_role(*roles: str, error_message: str | None = None) -> Any:
+def require_any_role(*roles: str, error_message: str | None = None) -> RoleChecker:
     """Require any of the specified roles"""
     return _cached_role_checker(tuple(roles), PermissionMode.ANY, error_message)
 
@@ -337,7 +343,7 @@ def check_permission(
             if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
-            rbac_service = RBACService(db)
+            rbac_service = RBACService(cast(AsyncSession, db))
             has_permission = await rbac_service.user_has_permission(user.user_id, permission)
 
             if not has_permission:
@@ -364,7 +370,7 @@ def check_any_permission(
             if not isinstance(user, UserInfo) or not _is_async_session_like(db):
                 raise AuthorizationError("Unable to verify permissions")
 
-            rbac_service = RBACService(db)
+            rbac_service = RBACService(cast(AsyncSession, db))
             has_permission = await rbac_service.user_has_any_permission(
                 user.user_id, list(permissions)
             )

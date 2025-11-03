@@ -1,4 +1,3 @@
-
 """
 Tests for email verification and password reset flows in auth router.
 
@@ -8,7 +7,7 @@ Targets large uncovered blocks in router.py:
 - Lines 695-736: Login with activity logging
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -22,13 +21,8 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import EmailVerificationToken, User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def verification_app():
@@ -55,8 +49,8 @@ async def verification_test_user(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -137,11 +131,11 @@ async def test_confirm_email_verification_valid_token(
         user_id=user_uuid,
         token_hash=token_hash,
         email=verification_test_user.email,
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+        expires_at=datetime.now(UTC) + timedelta(hours=24),
         used=False,
         tenant_id=verification_test_user.tenant_id,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(verification_token)
     await async_db_session.commit()
@@ -237,11 +231,11 @@ async def test_confirm_email_verification_expired_token(
         user_id=user_uuid,
         token_hash=token_hash,
         email=verification_test_user.email,
-        expires_at=datetime.now(timezone.utc) - timedelta(hours=1),  # Expired 1 hour ago
+        expires_at=datetime.now(UTC) - timedelta(hours=1),  # Expired 1 hour ago
         used=False,
         tenant_id=verification_test_user.tenant_id,
-        created_at=datetime.now(timezone.utc) - timedelta(hours=25),
-        updated_at=datetime.now(timezone.utc) - timedelta(hours=25),
+        created_at=datetime.now(UTC) - timedelta(hours=25),
+        updated_at=datetime.now(UTC) - timedelta(hours=25),
     )
     async_db_session.add(verification_token)
     await async_db_session.commit()
@@ -303,12 +297,12 @@ async def test_confirm_email_verification_already_used_token(
         user_id=user_uuid,
         token_hash=token_hash,
         email=verification_test_user.email,
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=24),
+        expires_at=datetime.now(UTC) + timedelta(hours=24),
         used=True,  # Already used
-        used_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        used_at=datetime.now(UTC) - timedelta(hours=1),
         tenant_id=verification_test_user.tenant_id,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(verification_token)
     await async_db_session.commit()

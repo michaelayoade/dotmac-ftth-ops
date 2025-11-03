@@ -11,6 +11,47 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from typing import Any, AsyncIterator, Iterator
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
+    from sqlalchemy.orm import DeclarativeBase, Session
+    from sqlalchemy.engine import Engine
+
+    # Type hints for exported symbols - these are defined in the stub file
+    # but we need minimal declarations here for proper resolution
+    Base: Any
+    BaseModel: Any
+    TimestampMixin: Any
+    TenantMixin: Any
+    SoftDeleteMixin: Any
+    AuditMixin: Any
+    get_db: Any
+    get_async_db: Any
+    get_async_session: Any
+    get_async_session_context: Any
+    get_database_session: Any
+    get_db_session: Any
+    get_async_db_session: Any
+    get_session: Any
+    get_session_dependency: Any
+    get_sync_engine: Any
+    get_async_engine: Any
+    SyncSessionLocal: Any
+    AsyncSessionLocal: Any
+    async_session_maker: Any
+    DatabaseState: Any
+    snapshot_database_state: Any
+    restore_database_state: Any
+    configure_database_for_testing: Any
+    create_all_tables: Any
+    create_all_tables_async: Any
+    drop_all_tables: Any
+    drop_all_tables_async: Any
+    check_database_health: Any
+    init_db: Any
+    GUID: Any
 
 # ---------------------------------------------------------------------------
 # Load legacy db.py implementation under a private module name

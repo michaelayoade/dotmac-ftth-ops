@@ -10,7 +10,7 @@ Focuses on:
 """
 
 import hashlib
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -60,7 +60,7 @@ def _build_invoice_number(tenant_id: str, year: int, sequence: int) -> str:
 def sample_invoice_entity():
     """Create sample invoice entity."""
     tenant_id = "tenant-1"
-    year = datetime.now(timezone.utc).year
+    year = datetime.now(UTC).year
     return InvoiceEntity(
         invoice_id="inv_123",
         tenant_id=tenant_id,
@@ -68,8 +68,8 @@ def sample_invoice_entity():
         customer_id="cust_123",
         billing_email="customer@example.com",
         billing_address={"street": "123 Main St", "city": "Boston"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=100,
         tax_amount=0,
@@ -100,12 +100,12 @@ class TestInvoiceNumberGeneration:
         tenant_id = "tenant-1"
         invoice_number = await invoice_service._generate_invoice_number(tenant_id)
 
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         assert invoice_number == _build_invoice_number(tenant_id, year, 1)
 
     async def test_generate_sequential_invoice_number(self, invoice_service, mock_db):
         """Test generating sequential invoice number."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         # Mock existing invoice
         tenant_id = "tenant-1"
         last_invoice = MagicMock()
@@ -121,7 +121,7 @@ class TestInvoiceNumberGeneration:
 
     async def test_generate_invoice_number_new_year(self, invoice_service, mock_db):
         """Test invoice number resets for new year."""
-        current_year = datetime.now(timezone.utc).year
+        current_year = datetime.now(UTC).year
         tenant_id = "tenant-1"
         # Mock existing invoice from previous year
         last_invoice = MagicMock()
@@ -199,8 +199,8 @@ class TestOverdueInvoiceCheck:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc) - timedelta(days=60),
-            due_date=datetime.now(timezone.utc) - timedelta(days=30),  # 30 days past due
+            issue_date=datetime.now(UTC) - timedelta(days=60),
+            due_date=datetime.now(UTC) - timedelta(days=30),  # 30 days past due
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -330,8 +330,8 @@ class TestInvoiceNotification:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -497,8 +497,8 @@ class TestListInvoicesFiltering:
         mock_result.scalars.return_value.all.return_value = []
         mock_db.execute.return_value = mock_result
 
-        start_date = datetime.now(timezone.utc) - timedelta(days=30)
-        end_date = datetime.now(timezone.utc)
+        start_date = datetime.now(UTC) - timedelta(days=30)
+        end_date = datetime.now(UTC)
 
         invoices = await invoice_service.list_invoices(
             tenant_id="tenant-1",

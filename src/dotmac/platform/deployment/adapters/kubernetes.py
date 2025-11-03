@@ -7,7 +7,7 @@ Handles deployment to Kubernetes clusters using Helm charts.
 import asyncio
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Sequence
 
 from .base import DeploymentAdapter, DeploymentResult, ExecutionContext, ExecutionStatus
 
@@ -320,18 +320,16 @@ class KubernetesAdapter(DeploymentAdapter):
     async def get_status(self, context: ExecutionContext) -> dict[str, Any]:
         """Get Kubernetes deployment status"""
         try:
+            namespace = self._ensure_namespace(context)
+
             # Get namespace status
-            namespace_info = await self._kubectl(
-                ["get", "namespace", context.namespace, "-o", "json"]
-            )
+            namespace_info = await self._kubectl_json(["get", "namespace", namespace])
 
             # Get pod status
-            pods_info = await self._kubectl(["get", "pods", "-n", context.namespace, "-o", "json"])
+            pods_info = await self._kubectl_json(["get", "pods", "-n", namespace])
 
             # Get service status
-            services_info = await self._kubectl(
-                ["get", "services", "-n", context.namespace, "-o", "json"]
-            )
+            services_info = await self._kubectl_json(["get", "services", "-n", namespace])
 
             pods = pods_info.get("items", [])
             total_pods = len(pods)
@@ -339,7 +337,7 @@ class KubernetesAdapter(DeploymentAdapter):
 
             return {
                 "ready": ready_pods == total_pods and total_pods > 0,
-                "namespace": context.namespace,
+                "namespace": namespace,
                 "total_pods": total_pods,
                 "ready_pods": ready_pods,
                 "services": len(services_info.get("items", [])),
@@ -353,8 +351,10 @@ class KubernetesAdapter(DeploymentAdapter):
     async def get_logs(self, context: ExecutionContext, lines: int = 100) -> str:
         """Get Kubernetes pod logs"""
         try:
+            namespace = self._ensure_namespace(context)
+
             # Get first pod in namespace
-            pods_info = await self._kubectl(["get", "pods", "-n", context.namespace, "-o", "json"])
+            pods_info = await self._kubectl_json(["get", "pods", "-n", namespace])
             pods = pods_info.get("items", [])
 
             if not pods:
@@ -362,7 +362,7 @@ class KubernetesAdapter(DeploymentAdapter):
 
             pod_name = pods[0]["metadata"]["name"]
             logs = await self._kubectl(
-                ["logs", pod_name, "-n", context.namespace, f"--tail={lines}"], return_output=True
+                ["logs", pod_name, "-n", namespace, f"--tail={lines}"]
             )
 
             return logs
@@ -394,6 +394,12 @@ class KubernetesAdapter(DeploymentAdapter):
         return len(errors) == 0, errors
 
     # Helper methods
+
+    def _ensure_namespace(self, context: ExecutionContext) -> str:
+        """Return a namespace string or raise if missing."""
+        if not context.namespace:
+            raise ValueError("Execution context namespace is required")
+        return context.namespace
 
     def _build_helm_values(self, context: ExecutionContext) -> dict[str, Any]:
         """Build Helm values from context"""
@@ -444,7 +450,8 @@ class KubernetesAdapter(DeploymentAdapter):
 
     async def _delete_namespace(self, context: ExecutionContext) -> None:
         """Delete Kubernetes namespace"""
-        await self._kubectl(["delete", "namespace", context.namespace, "--wait=true"])
+        namespace = self._ensure_namespace(context)
+        await self._kubectl(["delete", "namespace", namespace, "--wait=true"])
 
     async def _apply_network_policies(self, context: ExecutionContext) -> None:
         """Apply network policies for tenant isolation"""
@@ -547,21 +554,24 @@ class KubernetesAdapter(DeploymentAdapter):
         except Exception:
             return False
 
-    async def _kubectl(self, args: list[str], return_output: bool = False) -> dict[str, Any] | str:
-        """Run kubectl command"""
+    async def _kubectl(
+        self,
+        args: Sequence[str],
+        *,
+        input_data: str | None = None,
+    ) -> str:
+        """Run kubectl command and return raw stdout."""
         cmd = ["kubectl"]
         if self.kubeconfig_path:
             cmd.extend(["--kubeconfig", self.kubeconfig_path])
         cmd.extend(args)
 
-        result = await self._run_command(cmd)
+        return await self._run_command(cmd, input_data=input_data)
 
-        if return_output or "-o" in args:
-            if "json" in args:
-                return json.loads(result) if result else {}
-            return result
-
-        return {}
+    async def _kubectl_json(self, args: Sequence[str]) -> dict[str, Any]:
+        """Run kubectl command and parse JSON output."""
+        output = await self._kubectl([*args, "-o", "json"])
+        return json.loads(output) if output else {}
 
     async def _kubectl_apply(self, resource: dict[str, Any]) -> None:
         """Apply Kubernetes resource"""
@@ -570,16 +580,16 @@ class KubernetesAdapter(DeploymentAdapter):
 
     async def _scale_deployments(self, context: ExecutionContext, replicas: int) -> None:
         """Scale all deployments in namespace"""
+        namespace = self._ensure_namespace(context)
         deployments = await self._kubectl(
             [
                 "get",
                 "deployments",
                 "-n",
-                context.namespace,
+                namespace,
                 "-o",
                 "jsonpath={.items[*].metadata.name}",
             ],
-            return_output=True,
         )
 
         for deployment in deployments.split():
@@ -589,7 +599,7 @@ class KubernetesAdapter(DeploymentAdapter):
                     "deployment",
                     deployment,
                     "-n",
-                    context.namespace,
+                    namespace,
                     f"--replicas={replicas}",
                 ]
             )
@@ -609,16 +619,16 @@ class KubernetesAdapter(DeploymentAdapter):
         self, context: ExecutionContext, timeout_seconds: int = 600
     ) -> None:
         """Wait for rollout to complete"""
+        namespace = self._ensure_namespace(context)
         deployments = await self._kubectl(
             [
                 "get",
                 "deployments",
                 "-n",
-                context.namespace,
+                namespace,
                 "-o",
                 "jsonpath={.items[*].metadata.name}",
             ],
-            return_output=True,
         )
 
         for deployment in deployments.split():
@@ -628,14 +638,15 @@ class KubernetesAdapter(DeploymentAdapter):
                     "status",
                     f"deployment/{deployment}",
                     "-n",
-                    context.namespace,
+                    namespace,
                     f"--timeout={timeout_seconds}s",
                 ]
             )
 
     async def _get_service_endpoints(self, context: ExecutionContext) -> dict[str, str]:
         """Get service endpoints"""
-        services = await self._kubectl(["get", "services", "-n", context.namespace, "-o", "json"])
+        namespace = self._ensure_namespace(context)
+        services = await self._kubectl_json(["get", "services", "-n", namespace])
 
         endpoints = {}
         for service in services.get("items", []):

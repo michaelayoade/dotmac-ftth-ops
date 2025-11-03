@@ -1,6 +1,6 @@
 """Tests for billing money_models module."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -455,7 +455,7 @@ class TestMoneyInvoice:
 
     def test_invoice_with_dates(self):
         """Test invoice with issue and due dates."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         due = now + timedelta(days=30)
 
         invoice = MoneyInvoice.create_invoice(

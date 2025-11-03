@@ -9,7 +9,6 @@
 #
 # WARNING: This file enables test users and weak secrets - LOCAL DEV ONLY!
 
-version: '3.8'
 
 services:
   freeradius:

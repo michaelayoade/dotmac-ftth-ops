@@ -25,7 +25,7 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Any, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import uuid4
 
@@ -37,9 +37,8 @@ from starlette.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.database import get_async_session
 
-
-
 pytestmark = pytest.mark.unit
+
 
 class RouterTestBase:
     """
@@ -113,6 +112,7 @@ class RouterTestBase:
                 router_attr = self.router_name
 
             import importlib
+
             router_module = importlib.import_module(module_path)
             router = getattr(router_module, router_attr)
 
@@ -128,6 +128,7 @@ class RouterTestBase:
         # Override database
         async def get_mock_db():
             yield mock_db
+
         test_app.dependency_overrides[get_async_session] = get_mock_db
 
         # Apply custom overrides from subclass
@@ -169,27 +170,21 @@ class RouterTestBase:
     def assert_success(self, response, status_code: int = 200) -> dict[str, Any]:
         """Assert response is successful and return JSON data."""
         assert response.status_code == status_code, (
-            f"Expected {status_code}, got {response.status_code}. "
-            f"Response: {response.text}"
+            f"Expected {status_code}, got {response.status_code}. Response: {response.text}"
         )
         return response.json()
 
     def assert_error(
-        self,
-        response,
-        status_code: int,
-        expected_detail: str | None = None
+        self, response, status_code: int, expected_detail: str | None = None
     ) -> dict[str, Any]:
         """Assert response is an error with expected status code."""
         assert response.status_code == status_code, (
-            f"Expected error {status_code}, got {response.status_code}. "
-            f"Response: {response.text}"
+            f"Expected error {status_code}, got {response.status_code}. Response: {response.text}"
         )
         data = response.json()
         if expected_detail:
             assert expected_detail.lower() in data.get("detail", "").lower(), (
-                f"Expected detail containing '{expected_detail}', "
-                f"got: {data.get('detail')}"
+                f"Expected detail containing '{expected_detail}', got: {data.get('detail')}"
             )
         return data
 
@@ -262,6 +257,7 @@ class RouterWithServiceTestBase(RouterTestBase):
         """Override service dependency."""
         if self.service_dependency_name and self.service_module:
             import importlib
+
             service_mod = importlib.import_module(self.service_module)
             service_dep = getattr(service_mod, self.service_dependency_name)
 
@@ -337,8 +333,7 @@ class CRUDRouterTestBase(RouterWithServiceTestBase):
         mock_service.create.return_value = self.get_sample_response()
 
         response = client.post(
-            f"/api/v1{self.router_prefix}{self.create_endpoint}",
-            json=sample_data
+            f"/api/v1{self.router_prefix}{self.create_endpoint}", json=sample_data
         )
 
         self.assert_success(response, 201)
@@ -350,10 +345,7 @@ class CRUDRouterTestBase(RouterWithServiceTestBase):
         mock_service.update.return_value = self.get_sample_response()
 
         endpoint = self.update_endpoint.format(resource_id=resource_id)
-        response = client.put(
-            f"/api/v1{self.router_prefix}{endpoint}",
-            json=sample_data
-        )
+        response = client.put(f"/api/v1{self.router_prefix}{endpoint}", json=sample_data)
 
         self.assert_success(response)
 

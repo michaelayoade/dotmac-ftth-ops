@@ -1,9 +1,8 @@
-
 """
 API tests for tenant provisioning endpoints.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -12,13 +11,8 @@ from httpx import AsyncClient
 from dotmac.platform.tenant.models import TenantDeploymentMode, TenantProvisioningStatus
 from dotmac.platform.tenant.provisioning_service import TenantProvisioningConflictError
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 def _job_factory(
     tenant_id: str,
@@ -26,7 +20,7 @@ def _job_factory(
     status: TenantProvisioningStatus = TenantProvisioningStatus.QUEUED,
 ) -> SimpleNamespace:
     """Build a simple object with the attributes expected by response models."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return SimpleNamespace(
         id=job_id,
         tenant_id=tenant_id,

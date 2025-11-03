@@ -4,11 +4,8 @@ Analytics API router.
 Provides REST endpoints for analytics operations.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, TYPE_CHECKING
 from uuid import uuid4
 
 import structlog
@@ -32,6 +29,8 @@ from .models import (
 
 logger = structlog.get_logger(__name__)
 
+if TYPE_CHECKING:
+    from dotmac.platform.analytics.service import AnalyticsService
 
 def _ensure_utc(value: Any | None) -> datetime:
     """Normalize incoming datetime-like values to UTC-aware datetimes."""
@@ -90,7 +89,7 @@ def _resolve_tenant_id(request: Request, current_user: CurrentUser) -> str:
     return str(tenant_id)
 
 
-def get_analytics_service(request: Request, current_user: CurrentUser) -> Any:
+def get_analytics_service(request: Request, current_user: CurrentUser) -> "AnalyticsService":
     """Get tenant-scoped analytics service instance."""
     from dotmac.platform.analytics.service import get_analytics_service as get_service
 
@@ -166,7 +165,7 @@ async def record_metric(
 
         # Record metric
         service = get_analytics_service(request, current_user)
-        metric_id = await service.record_metric(
+        await service.record_metric(
             metric_name=metric_request.metric_name,
             value=metric_request.value,
             unit=metric_request.unit.value,
@@ -176,7 +175,7 @@ async def record_metric(
         metric_timestamp = _ensure_utc(metric_request.timestamp)
 
         return MetricRecordResponse(
-            metric_id=str(metric_id) if metric_id else str(uuid4()),
+            metric_id=str(uuid4()),
             metric_name=metric_request.metric_name,
             value=metric_request.value,
             unit=metric_request.unit.value,

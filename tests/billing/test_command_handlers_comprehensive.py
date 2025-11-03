@@ -1,4 +1,3 @@
-
 """
 Tests for billing command handlers that were recently implemented.
 
@@ -23,16 +22,13 @@ Verifies that:
 5. handle_record_offline_payment calls PaymentService.record_offline_payment
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
 from dotmac.platform.billing.commands.handlers import (
-
-
-
     InvoiceCommandHandler,
     PaymentCommandHandler,
 )
@@ -47,10 +43,8 @@ from dotmac.platform.billing.commands.payment_commands import (
 )
 from dotmac.platform.billing.core.enums import PaymentStatus
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_db_session():
@@ -76,7 +70,7 @@ class TestUpdateInvoiceHandler:
         handler.invoice_service.update_invoice = AsyncMock(return_value=mock_result)
 
         # Create and execute command
-        due_date = datetime.now(timezone.utc)
+        due_date = datetime.now(UTC)
         command = UpdateInvoiceCommand(
             tenant_id="tenant-123",
             invoice_id="inv-123",
@@ -305,7 +299,7 @@ class TestRecordOfflinePaymentHandler:
         mock_result = MagicMock()
         handler.payment_service.record_offline_payment = AsyncMock(return_value=mock_result)
 
-        payment_date = datetime.now(timezone.utc)
+        payment_date = datetime.now(UTC)
         # amount must be int in minor units, invoice_id is required
         command = RecordOfflinePaymentCommand(
             tenant_id="tenant-123",

@@ -59,7 +59,7 @@ class WirelessDeviceCreate(BaseModel):
         """Validate management IPv6 address"""
         return IPv6AddressValidator.validate(v)
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Handle backward compatibility for ip_address"""
         if self.ip_address and not self.management_ipv4:
             self.management_ipv4 = self.ip_address
@@ -121,7 +121,7 @@ class WirelessDeviceUpdate(BaseModel):
         """Validate management IPv6 address"""
         return IPv6AddressValidator.validate(v)
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Handle backward compatibility for ip_address"""
         if self.ip_address and not self.management_ipv4:
             self.management_ipv4 = self.ip_address

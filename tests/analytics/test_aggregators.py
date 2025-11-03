@@ -1,6 +1,6 @@
 """Tests for analytics aggregators module."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -29,7 +29,7 @@ class TestMetricAggregator:
         metric = Metric(
             name="request.duration",
             value=150.5,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             tenant_id="tenant-123",
             attributes={"service": "api", "endpoint": "/users"},
         )
@@ -46,7 +46,7 @@ class TestMetricAggregator:
         metric = Metric(
             name="request.count",
             value=1,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             tenant_id="tenant-123",
         )
 
@@ -60,7 +60,7 @@ class TestMetricAggregator:
         metric = Metric(
             name="cpu.usage",
             value=75.0,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             tenant_id="tenant-456",
             attributes={"service": "worker", "method": "POST"},
         )
@@ -74,7 +74,7 @@ class TestMetricAggregator:
     def test_get_aggregates_avg(self):
         """Test getting average aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add multiple metrics
         for i in range(5):
@@ -97,7 +97,7 @@ class TestMetricAggregator:
     def test_get_aggregates_sum(self):
         """Test getting sum aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for i in range(3):
             metric = Metric(
@@ -115,7 +115,7 @@ class TestMetricAggregator:
     def test_get_aggregates_min(self):
         """Test getting min aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in [100, 50, 150, 25]:
             metric = Metric(
@@ -133,7 +133,7 @@ class TestMetricAggregator:
     def test_get_aggregates_max(self):
         """Test getting max aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in [100, 50, 150, 25]:
             metric = Metric(
@@ -151,7 +151,7 @@ class TestMetricAggregator:
     def test_get_aggregates_count(self):
         """Test getting count aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for _ in range(7):
             metric = Metric(
@@ -169,7 +169,7 @@ class TestMetricAggregator:
     def test_get_aggregates_median(self):
         """Test getting median aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in [10, 20, 30, 40, 50]:
             metric = Metric(
@@ -187,7 +187,7 @@ class TestMetricAggregator:
     def test_get_aggregates_stddev(self):
         """Test getting standard deviation aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in [10, 20, 30, 40, 50]:
             metric = Metric(
@@ -205,7 +205,7 @@ class TestMetricAggregator:
     def test_get_aggregates_p95(self):
         """Test getting p95 percentile aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in range(1, 101):  # 1-100
             metric = Metric(
@@ -223,7 +223,7 @@ class TestMetricAggregator:
     def test_get_aggregates_p99(self):
         """Test getting p99 percentile aggregates."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in range(1, 101):
             metric = Metric(
@@ -257,7 +257,7 @@ class TestMetricAggregator:
     def test_get_aggregates_with_cutoff(self):
         """Test aggregates with cutoff time."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         cutoff = now - timedelta(seconds=30)
 
         # Add old metric (should be filtered)
@@ -287,7 +287,7 @@ class TestMetricAggregator:
     def test_clear_old_metrics(self):
         """Test clearing old metrics."""
         aggregator = MetricAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add old metric
         old_metric = Metric(
@@ -329,7 +329,7 @@ class TestTimeWindowAggregator:
     def test_add_metric(self):
         """Test adding metric to time window."""
         aggregator = TimeWindowAggregator(window_minutes=5)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         metric = Metric(
             name="requests",
@@ -361,7 +361,7 @@ class TestTimeWindowAggregator:
     def test_get_window_aggregates(self):
         """Test getting aggregates for a specific window."""
         aggregator = TimeWindowAggregator(window_minutes=5)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add multiple metrics in same window
         for i in range(5):
@@ -384,7 +384,7 @@ class TestTimeWindowAggregator:
     def test_get_window_aggregates_with_custom_function(self):
         """Test getting aggregates with custom aggregation function."""
         aggregator = TimeWindowAggregator(window_minutes=5)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for value in [10, 20, 30, 40, 50]:
             metric = Metric(
@@ -408,7 +408,7 @@ class TestTimeWindowAggregator:
     def test_get_recent_windows(self):
         """Test getting recent window aggregates."""
         aggregator = TimeWindowAggregator(window_minutes=5)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add metrics to current window
         for _i in range(3):
@@ -431,7 +431,7 @@ class TestTimeWindowAggregator:
     def test_cleanup_old_windows(self):
         """Test cleanup of old time windows."""
         aggregator = TimeWindowAggregator(window_minutes=5)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add old metric (25 hours ago - beyond 24h retention)
         old_time = now - timedelta(hours=25)
@@ -477,7 +477,7 @@ class TestStatisticalAggregator:
     def test_add_and_calculate_stats(self):
         """Test adding metrics and calculating statistics."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add range of values for statistical calculations
         for value in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
@@ -518,7 +518,7 @@ class TestStatisticalAggregator:
     def test_get_statistics(self):
         """Test getting comprehensive statistics."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add diverse dataset
         for value in [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]:
@@ -546,7 +546,7 @@ class TestStatisticalAggregator:
     def test_get_statistics_with_time_range(self):
         """Test getting statistics for a specific time range."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add old data points
         for value in [10, 20, 30]:
@@ -590,7 +590,7 @@ class TestStatisticalAggregator:
     def test_get_statistics_empty_after_filter(self):
         """Test getting statistics when time filter removes all data."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add old data points
         for value in [10, 20, 30]:
@@ -613,7 +613,7 @@ class TestStatisticalAggregator:
     def test_get_statistics_comprehensive(self):
         """Test comprehensive statistics calculation."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add diverse dataset with multiple values
         for i, value in enumerate([10, 20, 25, 30, 40, 50, 60, 70, 80, 90]):
@@ -658,7 +658,7 @@ class TestStatisticalAggregator:
     def test_get_trend(self):
         """Test trend calculation."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add increasing trend
         for i in range(20):
@@ -683,7 +683,7 @@ class TestStatisticalAggregator:
     def test_get_trend_insufficient_data(self):
         """Test trend with insufficient data."""
         aggregator = StatisticalAggregator()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add only one data point
         metric = Metric(

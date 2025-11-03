@@ -4,9 +4,6 @@ RBAC Service Layer - Handles role and permission management
 
 import logging
 from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
@@ -30,6 +27,12 @@ from dotmac.platform.auth.rbac_audit import rbac_audit_logger
 from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
+
+# Python 3.9/3.10 compatibility: datetime.UTC was added in 3.11
+try:
+    UTC = datetime.UTC  # type: ignore[attr-defined]
+except AttributeError:  # pragma: no cover - older Python versions
+    UTC = timezone.utc  # noqa: UP017 - fallback for Python <3.11
 
 logger = logging.getLogger(__name__)
 
@@ -137,38 +140,54 @@ class RBACService:
 
         user_perms = await self.get_user_permissions(user_id)
 
-        # Check for platform admin permission
-        if "platform:admin" in user_perms:
-            return True
-
-        # Check exact match
-        if permission in user_perms:
-            return True
-
-        # Check wildcard permissions (e.g., "ticket.*" matches "ticket.read")
-        for user_perm in user_perms:
-            if user_perm.endswith(".*"):
-                prefix = user_perm[:-2]
-                if permission.startswith(prefix + "."):
-                    return True
-            elif user_perm == "*":  # Superadmin
-                return True
-
-        return False
+        return self._permission_matches(user_perms, permission)
 
     async def user_has_any_permission(self, user_id: UUID | str, permissions: list[str]) -> bool:
         """Check if user has any of the specified permissions"""
-        for perm in permissions:
-            if await self.user_has_permission(user_id, perm):
-                return True
-        return False
+        # Preserve behaviour for mocked services that override user_has_permission
+        bound_impl = getattr(self.user_has_permission, "__func__", None)
+        if bound_impl is not RBACService.user_has_permission:
+            for perm in permissions:
+                if await self.user_has_permission(user_id, perm):
+                    return True
+            return False
+
+        user_perms = await self.get_user_permissions(user_id)
+        return any(self._permission_matches(user_perms, perm) for perm in permissions)
 
     async def user_has_all_permissions(self, user_id: UUID | str, permissions: list[str]) -> bool:
         """Check if user has all specified permissions"""
-        for perm in permissions:
-            if not await self.user_has_permission(user_id, perm):
-                return False
-        return True
+        bound_impl = getattr(self.user_has_permission, "__func__", None)
+        if bound_impl is not RBACService.user_has_permission:
+            for perm in permissions:
+                if not await self.user_has_permission(user_id, perm):
+                    return False
+            return True
+
+        user_perms = await self.get_user_permissions(user_id)
+        return all(self._permission_matches(user_perms, perm) for perm in permissions)
+
+    @staticmethod
+    def _permission_matches(user_perms: set[str], permission: str) -> bool:
+        """Evaluate whether a permission is satisfied by a user's permission set."""
+        if not user_perms:
+            return False
+
+        # Super-admin style overrides
+        if "*" in user_perms or "platform:admin" in user_perms:
+            return True
+
+        if permission in user_perms:
+            return True
+
+        # Wildcard matching (e.g., "ticket.*" covers "ticket.read")
+        for user_perm in user_perms:
+            if user_perm.endswith(".*"):
+                prefix = user_perm[:-2]
+                if permission.startswith(f"{prefix}."):
+                    return True
+
+        return False
 
     # ==================== Role Management ====================
 
@@ -642,3 +661,8 @@ class RBACService:
 async def get_rbac_service(db: AsyncSession = Depends(get_async_session)) -> RBACService:
     """Dependency to get RBAC service"""
     return RBACService(db)
+
+
+# Preserve original method references for test environments that temporarily monkeypatch them.
+ORIGINAL_USER_HAS_ALL_PERMISSIONS = RBACService.user_has_all_permissions
+ORIGINAL_USER_HAS_PERMISSION = RBACService.user_has_permission

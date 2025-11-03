@@ -5,6 +5,7 @@ Provides workflow-compatible methods for billing operations.
 """
 
 import logging
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 
@@ -96,7 +97,6 @@ class BillingService:
             Dict with payment_id, status, transaction_id
         """
         import secrets
-        from datetime import datetime
         from uuid import UUID
 
         amount_decimal = Decimal(str(amount)) if not isinstance(amount, Decimal) else amount
@@ -295,7 +295,6 @@ class BillingService:
         Raises:
             ValueError: If subscription or customer not found
         """
-        from datetime import datetime, timezone
 
         from sqlalchemy import select
 
@@ -454,7 +453,7 @@ class BillingService:
             ValueError: If subscription not found or invalid extension period
             RuntimeError: If extension fails
         """
-        from datetime import datetime, timedelta, timezone
+        from datetime import timedelta
 
         from sqlalchemy import select, update
 
@@ -610,7 +609,6 @@ class BillingService:
             ValueError: If quote not found, customer mismatch, or invalid status
             RuntimeError: If payment processing fails
         """
-        from datetime import datetime, timezone
         from uuid import UUID
 
         from sqlalchemy import select
@@ -782,7 +780,6 @@ class BillingService:
         Raises:
             ValueError: If customer or service not found
         """
-        from datetime import datetime, timezone
 
         from sqlalchemy import select, update
 

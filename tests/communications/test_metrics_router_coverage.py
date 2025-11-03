@@ -5,7 +5,7 @@ Focuses on testing the _get_communication_stats_cached function
 and error handling paths in the endpoint.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import Mock
 from uuid import uuid4
 
@@ -14,8 +14,6 @@ import pytest_asyncio
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 
-pytestmark = pytest.mark.integration
-
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.communications.metrics_router import (
     CommunicationStatsResponse,
@@ -23,12 +21,17 @@ from dotmac.platform.communications.metrics_router import (
     get_communication_stats,
 )
 from dotmac.platform.communications.models import (
-
-
     CommunicationLog,
     CommunicationStatus,
     CommunicationType,
 )
+
+try:
+    UTC = datetime.UTC  # type: ignore[attr-defined]
+except AttributeError:  # pragma: no cover - older Python versions
+    UTC = timezone.utc  # noqa: UP017 - fallback for Python <3.11
+
+pytestmark = pytest.mark.integration
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -51,7 +54,7 @@ class TestGetCommunicationStatsCached:
     async def test_stats_with_data(self, async_db_session: AsyncSession):
         """Test stats calculation with actual data."""
         # Create test data
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         logs = [
             CommunicationLog(
                 id=uuid4(),
@@ -161,7 +164,7 @@ class TestGetCommunicationStatsCached:
     async def test_stats_without_tenant_filter(self, async_db_session: AsyncSession):
         """Test stats calculation without tenant isolation."""
         # Create data for multiple tenants
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         logs = [
             CommunicationLog(
                 id=uuid4(),
@@ -200,7 +203,7 @@ class TestGetCommunicationStatsCached:
     @pytest.mark.asyncio
     async def test_stats_different_periods(self, async_db_session: AsyncSession):
         """Test stats for different time periods."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Create logs at different times
         old_log = CommunicationLog(

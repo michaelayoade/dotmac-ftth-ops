@@ -1,4 +1,3 @@
-
 """
 Tests for Workflow Router
 
@@ -8,23 +7,17 @@ for the workflow management API.
 
 import pytest
 from fastapi import status
-from httpx import AsyncClient
-
-
-
-
-
-
+from fastapi.testclient import TestClient
 
 pytestmark = pytest.mark.integration
+
 
 class TestWorkflowCRUD:
     """Test workflow template CRUD endpoints."""
 
-    @pytest.mark.asyncio
-    async def test_create_workflow_success(
+    def test_create_workflow_success(
         self,
-        async_client: AsyncClient,
+        workflow_client: TestClient,
         mock_workflow_service,
         sample_workflow,
         sample_workflow_definition,
@@ -34,7 +27,7 @@ class TestWorkflowCRUD:
         mock_workflow_service.create_workflow.return_value = sample_workflow
 
         # Act
-        response = await async_client.post(
+        response = workflow_client.post(
             "/api/v1/workflows/",
             json={
                 "name": "test_workflow",
@@ -56,11 +49,10 @@ class TestWorkflowCRUD:
         assert "definition" in data
         assert "created_at" in data
 
-    @pytest.mark.asyncio
-    async def test_create_workflow_validation_error(self, async_client: AsyncClient):
+    def test_create_workflow_validation_error(self, workflow_client: TestClient):
         """Test workflow creation with invalid data."""
         # Act - missing required field 'definition'
-        response = await async_client.post(
+        response = workflow_client.post(
             "/api/v1/workflows/",
             json={
                 "name": "test_workflow",
@@ -74,16 +66,15 @@ class TestWorkflowCRUD:
         data = response.json()
         assert "detail" in data
 
-    @pytest.mark.asyncio
-    async def test_get_workflow_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
+    def test_get_workflow_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow
     ):
         """Test get workflow by ID."""
         # Arrange
         mock_workflow_service.get_workflow.return_value = sample_workflow
 
         # Act
-        response = await async_client.get("/api/v1/workflows/1")
+        response = workflow_client.get("/api/v1/workflows/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -92,23 +83,21 @@ class TestWorkflowCRUD:
         assert data["name"] == "test_workflow"
         assert data["is_active"] is True
 
-    @pytest.mark.asyncio
-    async def test_get_workflow_not_found(self, async_client: AsyncClient, mock_workflow_service):
+    def test_get_workflow_not_found(self, workflow_client: TestClient, mock_workflow_service):
         """Test get non-existent workflow."""
         # Arrange
         mock_workflow_service.get_workflow.return_value = None
 
         # Act
-        response = await async_client.get("/api/v1/workflows/999")
+        response = workflow_client.get("/api/v1/workflows/999")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
         data = response.json()
         assert "not found" in data["detail"].lower()
 
-    @pytest.mark.asyncio
-    async def test_list_workflows_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
+    def test_list_workflows_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow
     ):
         """Test list all workflows."""
         # Arrange
@@ -121,7 +110,7 @@ class TestWorkflowCRUD:
         mock_workflow_service.list_workflows.return_value = [sample_workflow, workflow2]
 
         # Act
-        response = await async_client.get("/api/v1/workflows/")
+        response = workflow_client.get("/api/v1/workflows/")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -131,14 +120,15 @@ class TestWorkflowCRUD:
         assert data["workflows"][0]["id"] == 1
         assert data["workflows"][1]["id"] == 2
 
-    @pytest.mark.asyncio
-    async def test_delete_workflow_not_found(self, async_client: AsyncClient, mock_workflow_service):
+    def test_delete_workflow_not_found(
+        self, workflow_client: TestClient, mock_workflow_service
+    ):
         """Test workflow deletion when service reports missing workflow."""
         # Arrange
         mock_workflow_service.delete_workflow.side_effect = ValueError("Workflow 1 not found")
 
         # Act
-        response = await async_client.delete("/api/v1/workflows/1")
+        response = workflow_client.delete("/api/v1/workflows/1")
 
         # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
@@ -149,16 +139,15 @@ class TestWorkflowCRUD:
 class TestWorkflowExecution:
     """Test workflow execution endpoints."""
 
-    @pytest.mark.asyncio
-    async def test_execute_workflow_by_name_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
+    def test_execute_workflow_by_name_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test successful workflow execution by name."""
         # Arrange
         mock_workflow_service.execute_workflow.return_value = sample_workflow_execution
 
         # Act
-        response = await async_client.post(
+        response = workflow_client.post(
             "/api/v1/workflows/execute",
             json={
                 "workflow_name": "test_workflow",
@@ -178,16 +167,15 @@ class TestWorkflowExecution:
         assert data["trigger_type"] == "manual"
         assert "context" in data
 
-    @pytest.mark.asyncio
-    async def test_get_execution_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
+    def test_get_execution_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test get workflow execution by ID."""
         # Arrange
         mock_workflow_service.get_execution.return_value = sample_workflow_execution
 
         # Act
-        response = await async_client.get("/api/v1/workflows/executions/1")
+        response = workflow_client.get("/api/v1/workflows/executions/1")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -195,16 +183,15 @@ class TestWorkflowExecution:
         assert data["id"] == 1
         assert data["status"] == "completed"
 
-    @pytest.mark.asyncio
-    async def test_list_executions_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
+    def test_list_executions_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test list workflow executions."""
         # Arrange - service returns list, router wraps in response
         mock_workflow_service.list_executions.return_value = [sample_workflow_execution]
 
         # Act
-        response = await async_client.get("/api/v1/workflows/executions")
+        response = workflow_client.get("/api/v1/workflows/executions")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK
@@ -216,9 +203,8 @@ class TestWorkflowExecution:
 class TestWorkflowCRUDExtended:
     """Test additional workflow CRUD operations."""
 
-    @pytest.mark.asyncio
-    async def test_update_workflow_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow
+    def test_update_workflow_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow
     ):
         """Test successful workflow update."""
         # Arrange
@@ -226,7 +212,7 @@ class TestWorkflowCRUDExtended:
         mock_workflow_service.update_workflow.return_value = updated_workflow
 
         # Act
-        response = await async_client.patch(
+        response = workflow_client.patch(
             "/api/v1/workflows/1", json={"description": "Updated description", "is_active": True}
         )
 
@@ -236,29 +222,27 @@ class TestWorkflowCRUDExtended:
         assert data["id"] == 1
         assert data["description"] == "Updated description"
 
-    @pytest.mark.asyncio
-    async def test_delete_workflow_success(self, async_client: AsyncClient, mock_workflow_service):
+    def test_delete_workflow_success(self, workflow_client: TestClient, mock_workflow_service):
         """Test successful workflow deletion."""
         # Arrange
         mock_workflow_service.delete_workflow.return_value = None
 
         # Act
-        response = await async_client.delete("/api/v1/workflows/1")
+        response = workflow_client.delete("/api/v1/workflows/1")
 
         # Assert
         assert response.status_code == status.HTTP_204_NO_CONTENT
         mock_workflow_service.delete_workflow.assert_called_once_with(1)
 
-    @pytest.mark.asyncio
-    async def test_execute_workflow_by_id_success(
-        self, async_client: AsyncClient, mock_workflow_service, sample_workflow_execution
+    def test_execute_workflow_by_id_success(
+        self, workflow_client: TestClient, mock_workflow_service, sample_workflow_execution
     ):
         """Test executing workflow by ID."""
         # Arrange
         mock_workflow_service.execute_workflow_by_id.return_value = sample_workflow_execution
 
         # Act
-        response = await async_client.post(
+        response = workflow_client.post(
             "/api/v1/workflows/1/execute",
             params={
                 "trigger_type": "manual",
@@ -282,14 +266,13 @@ class TestWorkflowCRUDExtended:
             tenant_id="00000000-0000-0000-0000-0000000000ee",
         )
 
-    @pytest.mark.asyncio
-    async def test_cancel_execution_success(self, async_client: AsyncClient, mock_workflow_service):
+    def test_cancel_execution_success(self, workflow_client: TestClient, mock_workflow_service):
         """Test successful execution cancellation."""
         # Arrange
         mock_workflow_service.cancel_execution.return_value = None
 
         # Act
-        response = await async_client.post("/api/v1/workflows/executions/1/cancel")
+        response = workflow_client.post("/api/v1/workflows/executions/1/cancel")
 
         # Assert
         assert response.status_code == status.HTTP_204_NO_CONTENT
@@ -299,9 +282,8 @@ class TestWorkflowCRUDExtended:
 class TestWorkflowStatistics:
     """Test workflow statistics endpoints."""
 
-    @pytest.mark.asyncio
-    async def test_get_workflow_stats_success(
-        self, async_client: AsyncClient, mock_workflow_service
+    def test_get_workflow_stats_success(
+        self, workflow_client: TestClient, mock_workflow_service
     ):
         """Test get workflow execution statistics."""
         # Arrange
@@ -311,7 +293,7 @@ class TestWorkflowStatistics:
         }
 
         # Act
-        response = await async_client.get("/api/v1/workflows/stats")
+        response = workflow_client.get("/api/v1/workflows/stats")
 
         # Assert
         assert response.status_code == status.HTTP_200_OK

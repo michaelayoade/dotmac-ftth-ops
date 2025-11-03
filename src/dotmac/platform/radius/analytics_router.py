@@ -22,7 +22,6 @@ from dotmac.platform.radius.analytics_schemas import (
     SubscriberUsageResponse,
     TenantUsageResponse,
     TopSubscriberEntry,
-    TopSubscribersRequest,
     TopSubscribersResponse,
 )
 from dotmac.platform.settings import settings
@@ -38,6 +37,7 @@ router = APIRouter(
         503: {"description": "TimescaleDB not configured"},
     },
 )
+
 
 # Dependency to check TimescaleDB availability
 async def check_timescaledb_available():
@@ -61,7 +61,7 @@ async def get_subscriber_usage(
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
     user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
-):
+) -> SubscriberUsageResponse:
     """
     Get usage statistics for a specific subscriber.
 
@@ -131,7 +131,7 @@ async def get_tenant_usage(
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
     user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
-):
+) -> TenantUsageResponse:
     """
     Get usage statistics for the entire tenant.
 
@@ -198,7 +198,7 @@ async def get_hourly_bandwidth(
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
     user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
-):
+) -> HourlyBandwidthResponse:
     """
     Get hourly bandwidth usage for a subscriber.
 
@@ -269,7 +269,7 @@ async def get_daily_bandwidth(
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
     user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
-):
+) -> DailyBandwidthResponse:
     """
     Get daily bandwidth usage for a subscriber.
 
@@ -337,11 +337,15 @@ async def get_daily_bandwidth(
 async def get_top_subscribers(
     start_date: Annotated[datetime, Query(description="Start date (ISO 8601)")],
     end_date: Annotated[datetime, Query(description="End date (ISO 8601)")],
-    limit: Annotated[int, Query(ge=1, le=100, description="Number of top subscribers (1-100)")] = 10,
-    metric: Annotated[str, Query(description="Sort metric: 'bandwidth' or 'duration'")] = "bandwidth",
+    limit: Annotated[
+        int, Query(ge=1, le=100, description="Number of top subscribers (1-100)")
+    ] = 10,
+    metric: Annotated[
+        str, Query(description="Sort metric: 'bandwidth' or 'duration'")
+    ] = "bandwidth",
     user_info: UserInfo = Depends(get_current_user),
     _check: None = Depends(check_timescaledb_available),
-):
+) -> TopSubscribersResponse:
     """
     Get top subscribers by bandwidth or session duration.
 

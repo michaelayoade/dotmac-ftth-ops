@@ -1,6 +1,6 @@
 """Comprehensive tests for RBAC audit logging."""
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -9,22 +9,15 @@ import pytest
 from dotmac.platform.audit.models import ActivitySeverity, ActivityType
 from dotmac.platform.auth.rbac_audit import RBACAuditLogger, rbac_audit_logger
 
-
-
-
-
-
-
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio,
 ]
 
+
 @pytest.mark.asyncio
 class TestRBACAuditLogger:
     """Test RBAC audit logger functionality."""
-
 
     @pytest.fixture
     def mock_audit_service(self):
@@ -136,7 +129,7 @@ class TestRBACAuditLogger:
         role_id = str(uuid4())
         assigned_by = str(uuid4())
         tenant_id = "tenant-123"
-        expires_at = datetime.now(timezone.utc).isoformat()
+        expires_at = datetime.now(UTC).isoformat()
 
         await audit_logger.log_role_assigned(
             user_id=user_id,
@@ -190,7 +183,7 @@ class TestRBACAuditLogger:
         permission_id = str(uuid4())
         granted_by = str(uuid4())
         tenant_id = "tenant-123"
-        expires_at = datetime.now(timezone.utc).isoformat()
+        expires_at = datetime.now(UTC).isoformat()
 
         await audit_logger.log_permission_granted(
             user_id=user_id,

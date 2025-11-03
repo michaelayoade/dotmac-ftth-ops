@@ -17,7 +17,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
 from dotmac.platform.crm.models import LeadStatus, QuoteStatus
 from dotmac.platform.crm.service import LeadService, QuoteService
-from dotmac.platform.customer_management.models import Customer, CustomerStatus
+from dotmac.platform.customer_management.models import Customer, CustomerStatus, CustomerType
+from dotmac.platform.customer_management.schemas import CustomerCreate
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.genieacs.service import GenieACSService
 from dotmac.platform.netbox.service import NetBoxService
@@ -28,6 +29,7 @@ from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.voltha.service import VOLTHAService
+from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
 logger = structlog.get_logger(__name__)
 
@@ -128,22 +130,21 @@ class OrchestrationService:
         if quote.status != QuoteStatus.ACCEPTED:
             raise ValidationError(f"Quote {accepted_quote_id} must be accepted, not {quote.status}")
 
-        # 3. Create customer from lead data
-        customer = await self.customer_service.create_customer(
-            tenant_id=tenant_id,
+        customer_type = CustomerType.BUSINESS if lead.company_name else CustomerType.INDIVIDUAL
+
+        customer_payload = CustomerCreate(
             first_name=lead.first_name,
             last_name=lead.last_name,
             email=lead.email,
             phone=lead.phone,
             company_name=lead.company_name,
-            customer_type="individual" if not lead.company_name else "business",
-            status=CustomerStatus.ACTIVE,
-            billing_address_line1=lead.service_address_line1,
-            billing_address_line2=lead.service_address_line2,
-            billing_city=lead.service_city,
-            billing_state_province=lead.service_state_province,
-            billing_postal_code=lead.service_postal_code,
-            billing_country=lead.service_country,
+            customer_type=customer_type,
+            address_line1=lead.service_address_line1,
+            address_line2=lead.service_address_line2,
+            city=lead.service_city,
+            state_province=lead.service_state_province,
+            postal_code=lead.service_postal_code,
+            country=lead.service_country,
             service_address_line1=lead.service_address_line1,
             service_address_line2=lead.service_address_line2,
             service_city=lead.service_city,
@@ -157,6 +158,23 @@ class OrchestrationService:
                 "partner_id": str(lead.partner_id) if lead.partner_id else None,
             },
         )
+
+        previous_tenant = get_current_tenant_id()
+        set_current_tenant_id(tenant_id)
+        try:
+            customer = await self.customer_service.create_customer(
+                data=customer_payload,
+                created_by=str(user_id) if user_id else None,
+            )
+        finally:
+            set_current_tenant_id(previous_tenant)
+
+        customer.status = CustomerStatus.ACTIVE
+        if user_id is not None:
+            customer.updated_by = str(user_id)
+
+        await self.customer_service.session.commit()
+        await self.customer_service.session.refresh(customer)
 
         # 4. Update lead as converted
         lead = await self.lead_service.convert_to_customer(
@@ -306,14 +324,26 @@ class OrchestrationService:
             raise ValidationError(f"Failed to create RADIUS authentication: {e}")
 
         # 6. Provision ONU in VOLTHA (if ONU serial provided)
-        voltha_status = None
+        voltha_status: dict[str, Any] | None = None
         if onu_serial:
             try:
-                voltha_status = await self.voltha_service.provision_onu(
+                voltha_response = await self.voltha_service.provision_onu(
                     onu_serial=onu_serial,
                     subscriber_id=subscriber_id,
                 )
-                subscriber.voltha_onu_id = voltha_status.get("onu_id")
+                if hasattr(voltha_response, "model_dump"):
+                    voltha_status = voltha_response.model_dump()
+                elif isinstance(voltha_response, dict):
+                    voltha_status = dict(voltha_response)
+                else:
+                    voltha_status = {"result": voltha_response}
+
+                device_id = None
+                if isinstance(voltha_status, dict):
+                    device_id = voltha_status.get("device_id") or voltha_status.get("onu_id")
+
+                if device_id:
+                    subscriber.voltha_onu_id = device_id
                 logger.info("ONU provisioned in VOLTHA", onu_serial=onu_serial)
             except Exception as e:
                 logger.warning("VOLTHA ONU provisioning failed", error=str(e))
@@ -465,7 +495,7 @@ class OrchestrationService:
         ip_release = None
         if subscriber.netbox_ip_id:
             try:
-                ip_release = await self.netbox_service.release_ip(subscriber.netbox_ip_id)
+                ip_release = await self.netbox_service.release_ip(ip_id=subscriber.netbox_ip_id)
                 logger.info("IP released in NetBox", ip_id=subscriber.netbox_ip_id)
             except Exception as e:
                 logger.warning("NetBox IP release failed", error=str(e))
@@ -549,17 +579,17 @@ class OrchestrationService:
         await radius_service.disconnect_session(username=subscriber.username)
 
         # Update RADIUS to deny authentication
-        stmt = select(RadCheck).where(
+        radcheck_stmt = select(RadCheck).where(
             RadCheck.tenant_id == tenant_id,
             RadCheck.subscriber_id == subscriber_id,
             RadCheck.attribute == "Cleartext-Password",
         )
-        result = await self.db.execute(stmt)
-        radcheck = result.scalar_one_or_none()
+        radcheck_result = await self.db.execute(radcheck_stmt)
+        radcheck_entry = radcheck_result.scalar_one_or_none()
 
-        if radcheck:
-            radcheck.attribute = "Auth-Type"
-            radcheck.value = "Reject"
+        if radcheck_entry:
+            setattr(radcheck_entry, "attribute", "Auth-Type")
+            setattr(radcheck_entry, "value", "Reject")
 
         # Mark as suspended
         subscriber.status = SubscriberStatus.SUSPENDED
@@ -619,17 +649,17 @@ class OrchestrationService:
             )
 
         # Restore RADIUS authentication
-        stmt = select(RadCheck).where(
+        radcheck_stmt = select(RadCheck).where(
             RadCheck.tenant_id == tenant_id,
             RadCheck.subscriber_id == subscriber_id,
             RadCheck.attribute == "Auth-Type",
         )
-        result = await self.db.execute(stmt)
-        radcheck = result.scalar_one_or_none()
+        radcheck_result = await self.db.execute(radcheck_stmt)
+        radcheck_entry = radcheck_result.scalar_one_or_none()
 
-        if radcheck:
-            radcheck.attribute = "Cleartext-Password"
-            radcheck.value = subscriber.password
+        if radcheck_entry:
+            setattr(radcheck_entry, "attribute", "Cleartext-Password")
+            setattr(radcheck_entry, "value", subscriber.password)
 
         # Mark as active
         subscriber.status = SubscriberStatus.ACTIVE

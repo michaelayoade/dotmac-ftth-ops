@@ -37,6 +37,7 @@ class TestPaymentCreationIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )
@@ -98,6 +99,7 @@ class TestPaymentCreationIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )
@@ -149,6 +151,7 @@ class TestPaymentRefundIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )
@@ -215,6 +218,7 @@ class TestPaymentRefundIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )
@@ -276,6 +280,7 @@ class TestPaymentInvoiceLinkingIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregateInvoiceCommandHandler,
             AggregatePaymentCommandHandler,
@@ -375,6 +380,7 @@ class TestPaymentEventPropagationIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )
@@ -434,6 +440,7 @@ class TestPaymentEventPropagationIntegration:
         """
         # Lazy imports
         from unittest.mock import AsyncMock, patch
+
         from dotmac.platform.billing.commands.aggregate_handlers import (
             AggregatePaymentCommandHandler,
         )

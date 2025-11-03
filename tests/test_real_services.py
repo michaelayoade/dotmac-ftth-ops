@@ -1,4 +1,3 @@
-
 """
 Test real services connectivity.
 """
@@ -14,12 +13,7 @@ from sqlalchemy import create_engine, text
 import redis
 from dotmac.platform.observability.manager import ObservabilityManager
 
-
-
-
 # Mark all tests in this module as integration tests
-
-
 
 
 pytestmark = [
@@ -29,6 +23,7 @@ pytestmark = [
         os.getenv("DOTMAC_LIVE") != "1", reason="Live integration disabled (set DOTMAC_LIVE=1)"
     ),
 ]
+
 
 def test_postgres_connection():
     """Test PostgreSQL connection."""

@@ -5,12 +5,9 @@ Dynamic, flexible licensing system built from reusable building blocks.
 Allows creating custom plans without hardcoded tiers.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -33,7 +30,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..db import Base
+from ..db import Base as BaseRuntime
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 # ==================== Enums ====================
 
@@ -174,6 +176,16 @@ class FeatureModule(Base):
     # Extra metadata (renamed from 'metadata' to avoid SQLAlchemy reserved word)
     extra_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
+    @property
+    def config(self) -> dict[str, Any]:
+        """Compatibility alias for quota configuration metadata."""
+        return self.extra_metadata
+
+    @config.setter
+    def config(self, value: dict[str, Any]) -> None:
+        self.extra_metadata = value
+    custom_config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=lambda: datetime.now(UTC)
@@ -227,9 +239,11 @@ class ModuleCapability(Base):
 
     # UI routes this capability unlocks
     ui_routes: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    permissions: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
 
     # Configuration
     config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
 
     # Timestamps
     created_at: Mapped[datetime] = mapped_column(
@@ -392,6 +406,16 @@ class ServicePlan(Base):
         {"extend_existing": True},
     )
 
+    @property
+    def modules(self) -> list["PlanModule"]:
+        """Compatibility alias for included_modules relationship."""
+        return self.included_modules
+
+    @property
+    def quotas(self) -> list["PlanQuotaAllocation"]:
+        """Compatibility alias for included_quotas relationship."""
+        return self.included_quotas
+
 
 class PlanModule(Base):
     """
@@ -452,6 +476,15 @@ class PlanModule(Base):
         {"extend_existing": True},
     )
 
+    @property
+    def config(self) -> dict[str, Any]:
+        """Compatibility alias for configuration override."""
+        return self.config_override
+
+    @config.setter
+    def config(self, value: dict[str, Any]) -> None:
+        self.config_override = value
+
 
 class PlanQuotaAllocation(Base):
     """
@@ -487,6 +520,7 @@ class PlanQuotaAllocation(Base):
 
     # Tiered pricing (for volume-based)
     pricing_tiers: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
+    config_data: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     # Example: [{"from": 0, "to": 1000, "price": 0}, {"from": 1001, "to": 5000, "price": 0.01}]
 
     # Timestamps
@@ -502,6 +536,15 @@ class PlanQuotaAllocation(Base):
         Index("ix_plan_quotas_plan_quota", "plan_id", "quota_id", unique=True),
         {"extend_existing": True},
     )
+
+    @property
+    def config(self) -> dict[str, Any]:
+        """Compatibility alias for stored configuration data."""
+        return self.config_data
+
+    @config.setter
+    def config(self, value: dict[str, Any]) -> None:
+        self.config_data = value
 
 
 # ==================== Tenant Subscriptions ====================
@@ -587,6 +630,16 @@ class TenantSubscription(Base):
         Index("ix_tenant_subscriptions_plan_status", "plan_id", "status"),
         {"extend_existing": True},
     )
+
+    @property
+    def modules(self) -> list["SubscriptionModule"]:
+        """Compatibility alias for active_modules relationship."""
+        return self.active_modules
+
+    @property
+    def quotas(self) -> list["SubscriptionQuotaUsage"]:
+        """Compatibility alias for quota_usage relationship."""
+        return self.quota_usage
 
 
 class SubscriptionModule(Base):

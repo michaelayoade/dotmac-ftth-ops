@@ -6,15 +6,13 @@ import asyncio
 import json
 from collections.abc import AsyncIterator, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
 import structlog
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
+from pydantic_core import ValidationError
 from sqlalchemy import func, select
 from sqlalchemy.exc import OperationalError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -658,10 +656,14 @@ class SettingsManagementService:
                 )
 
             active_backup = legacy_backup or self._backups.get(backup_id)
-            backup_name = active_backup.name if active_backup else backup_entry.name
-            backup_data = (
-                active_backup.settings_data if active_backup else backup_entry.settings_data
-            )
+            if active_backup is not None:
+                backup_name = active_backup.name
+                backup_data = active_backup.settings_data
+            elif backup_entry is not None:
+                backup_name = backup_entry.name
+                backup_data = backup_entry.settings_data
+            else:  # Defensive safeguard; should be covered by earlier guard
+                raise ValueError(f"Backup not found: {backup_id}")
 
             restored: dict[SettingsCategory, SettingsResponse] = {}
             audit_entries: list[AdminSettingsAuditEntry] = []

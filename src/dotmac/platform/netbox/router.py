@@ -122,7 +122,7 @@ async def list_ip_addresses(
 ) -> list[IPAddressResponse]:
     """List IP addresses"""
     result = await service.list_ip_addresses(tenant=tenant, vrf=vrf, limit=limit, offset=offset)
-    return cast(list[IPAddressResponse], result)
+    return result
 
 
 @router.get(
@@ -227,7 +227,7 @@ async def list_prefixes(
 ) -> list[PrefixResponse]:
     """List IP prefixes"""
     result = await service.list_prefixes(tenant=tenant, vrf=vrf, limit=limit, offset=offset)
-    return cast(list[PrefixResponse], result)
+    return result
 
 
 @router.get(
@@ -287,7 +287,7 @@ async def get_available_ips(
 ) -> list[str]:
     """Get available IPs in prefix"""
     result = await service.get_available_ips(prefix_id, limit)
-    return cast(list[str], result)
+    return result
 
 
 @router.post(
@@ -327,7 +327,7 @@ async def list_vrfs(
 ) -> list[VRFResponse]:
     """List VRFs"""
     result = await service.list_vrfs(tenant=tenant, limit=limit, offset=offset)
-    return cast(list[VRFResponse], result)
+    return result
 
 
 @router.post(
@@ -372,7 +372,7 @@ async def list_sites(
 ) -> list[SiteResponse]:
     """List sites"""
     result = await service.list_sites(tenant=tenant, limit=limit, offset=offset)
-    return cast(list[SiteResponse], result)
+    return result
 
 
 @router.get(
@@ -437,7 +437,7 @@ async def list_devices(
     result = await service.list_devices(
         tenant=tenant, site=site, role=role, limit=limit, offset=offset
     )
-    return cast(list[DeviceResponse], result)
+    return result
 
 
 @router.get(
@@ -520,7 +520,7 @@ async def list_interfaces(
 ) -> list[InterfaceResponse]:
     """List interfaces"""
     result = await service.list_interfaces(device_id=device_id, limit=limit, offset=offset)
-    return cast(list[InterfaceResponse], result)
+    return result
 
 
 @router.post(
@@ -567,7 +567,7 @@ async def list_vlans(
 ) -> list[VLANResponse]:
     """List VLANs"""
     result = await service.list_vlans(tenant=tenant, site=site, vid=vid, limit=limit, offset=offset)
-    return cast(list[VLANResponse], result)
+    return result
 
 
 @router.get(
@@ -677,7 +677,7 @@ async def list_cables(
 ) -> list[CableResponse]:
     """List cables"""
     result = await service.list_cables(tenant=tenant, site=site, limit=limit, offset=offset)
-    return cast(list[CableResponse], result)
+    return result
 
 
 @router.get(
@@ -785,7 +785,7 @@ async def list_circuit_providers(
 ) -> list[CircuitProviderResponse]:
     """List circuit providers"""
     result = await service.list_circuit_providers(limit=limit, offset=offset)
-    return cast(list[CircuitProviderResponse], result)
+    return result
 
 
 @router.get(
@@ -845,7 +845,7 @@ async def list_circuit_types(
 ) -> list[CircuitTypeResponse]:
     """List circuit types"""
     result = await service.list_circuit_types(limit=limit, offset=offset)
-    return cast(list[CircuitTypeResponse], result)
+    return result
 
 
 @router.post(
@@ -888,7 +888,7 @@ async def list_circuits(
     result = await service.list_circuits(
         tenant=tenant, provider=provider, limit=limit, offset=offset
     )
-    return cast(list[CircuitResponse], result)
+    return result
 
 
 @router.get(
@@ -995,7 +995,7 @@ async def list_circuit_terminations(
     result = await service.list_circuit_terminations(
         circuit_id=circuit_id, site=site, limit=limit, offset=offset
     )
-    return cast(list[CircuitTerminationResponse], result)
+    return result
 
 
 @router.post(

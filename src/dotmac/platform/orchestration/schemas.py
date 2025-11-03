@@ -8,14 +8,7 @@ Pydantic schemas for API requests and responses.
 from datetime import datetime
 from typing import Any
 
-from pydantic import (
-    AliasChoices,
-    BaseModel,
-    Field,
-    FieldValidationInfo,
-    field_validator,
-    model_validator,
-)
+from pydantic import BaseModel, Field, FieldValidationInfo, field_validator, model_validator
 
 from .models import WorkflowStatus, WorkflowStepStatus, WorkflowType
 
@@ -38,6 +31,7 @@ class ProvisionSubscriberRequest(BaseModel):
     last_name: str | None = Field(None, description="Customer last name")
     email: str | None = Field(None, description="Customer email address")
     phone: str | None = Field(None, description="Primary phone number")
+    secondary_phone: str | None = Field(None, description="Secondary phone number")
     username: str | None = Field(None, description="Portal or RADIUS username")
     password: str | None = Field(None, description="Portal or RADIUS password")
 
@@ -174,10 +168,19 @@ class SuspendServiceRequest(BaseModel):
     suspend_until: datetime | None = Field(None, description="Auto-resume date")
     send_notification: bool = Field(True, description="Send suspension notification")
     disconnect_sessions: bool = Field(
-        False,
+        default=False,
         description="Disconnect active subscriber sessions",
-        validation_alias=AliasChoices("disconnect_sessions", "disconnect_active_sessions"),
     )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _apply_disconnect_alias(cls, data: Any) -> Any:
+        if isinstance(data, dict) and "disconnect_sessions" not in data:
+            if "disconnect_active_sessions" in data:
+                updated = dict(data)
+                updated["disconnect_sessions"] = updated["disconnect_active_sessions"]
+                return updated
+        return data
 
     @model_validator(mode="after")
     def ensure_identifier(self) -> "SuspendServiceRequest":

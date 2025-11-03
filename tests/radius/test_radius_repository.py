@@ -1,4 +1,3 @@
-
 """
 Tests for RADIUS Repository Layer
 
@@ -9,13 +8,8 @@ import pytest
 
 from dotmac.platform.radius.repository import RADIUSRepository
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestRADIUSRepository:
@@ -27,14 +21,14 @@ class TestRADIUSRepository:
 
         radcheck = await repo.create_radcheck(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=None,  # Optional field - no subscriber FK needed for test
             username="testuser@isp",
             password="securepass123",
         )
 
         assert radcheck.id is not None
         assert radcheck.tenant_id == test_tenant.id
-        assert radcheck.subscriber_id == "sub-001"
+        assert radcheck.subscriber_id is None
         assert radcheck.username == "testuser@isp"
         assert radcheck.attribute == "Cleartext-Password"
         assert radcheck.op == ":="
@@ -42,6 +36,7 @@ class TestRADIUSRepository:
         assert radcheck.value.startswith("bcrypt:$2b$")
         # Verify we can validate the password
         from dotmac.platform.auth.core import pwd_context
+
         stored_hash = radcheck.value.replace("bcrypt:", "")
         assert pwd_context.verify("securepass123", stored_hash)
 
@@ -52,7 +47,7 @@ class TestRADIUSRepository:
         # Create entry
         await repo.create_radcheck(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=None,
             username="testuser@isp",
             password="securepass123",
         )
@@ -65,26 +60,27 @@ class TestRADIUSRepository:
         # Verify password is bcrypt-hashed
         assert radcheck.value.startswith("bcrypt:$2b$")
         from dotmac.platform.auth.core import pwd_context
+
         stored_hash = radcheck.value.replace("bcrypt:", "")
         assert pwd_context.verify("securepass123", stored_hash)
 
-    async def test_get_radcheck_by_subscriber(self, async_db_session, test_tenant):
+    async def test_get_radcheck_by_subscriber(self, async_db_session, test_tenant, test_subscriber):
         """Test retrieving radcheck by subscriber ID"""
         repo = RADIUSRepository(async_db_session)
 
-        # Create entry
+        # Create entry with a valid subscriber_id
         await repo.create_radcheck(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=test_subscriber.id,
             username="testuser@isp",
             password="securepass123",
         )
 
         # Retrieve
-        radcheck = await repo.get_radcheck_by_subscriber(test_tenant.id, "sub-001")
+        radcheck = await repo.get_radcheck_by_subscriber(test_tenant.id, test_subscriber.id)
 
         assert radcheck is not None
-        assert radcheck.subscriber_id == "sub-001"
+        assert radcheck.subscriber_id == test_subscriber.id
         assert radcheck.username == "testuser@isp"
 
     async def test_update_radcheck_password(self, async_db_session, test_tenant):
@@ -94,7 +90,7 @@ class TestRADIUSRepository:
         # Create entry
         await repo.create_radcheck(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=None,
             username="testuser@isp",
             password="oldpassword",
         )
@@ -108,6 +104,7 @@ class TestRADIUSRepository:
         # Verify new password is bcrypt-hashed
         assert updated.value.startswith("bcrypt:$2b$")
         from dotmac.platform.auth.core import pwd_context
+
         stored_hash = updated.value.replace("bcrypt:", "")
         assert pwd_context.verify("newpassword123", stored_hash)
 
@@ -118,7 +115,7 @@ class TestRADIUSRepository:
         # Create entry
         await repo.create_radcheck(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=None,
             username="testuser@isp",
             password="securepass123",
         )
@@ -135,11 +132,11 @@ class TestRADIUSRepository:
         """Test listing radcheck entries"""
         repo = RADIUSRepository(async_db_session)
 
-        # Create multiple entries
+        # Create multiple entries without subscriber_id (not required for this test)
         for i in range(5):
             await repo.create_radcheck(
                 tenant_id=test_tenant.id,
-                subscriber_id=f"sub-{i:03d}",
+                subscriber_id=None,
                 username=f"user{i}@isp",
                 password=f"pass{i}",
             )
@@ -154,7 +151,7 @@ class TestRADIUSRepository:
 
         radreply = await repo.create_radreply(
             tenant_id=test_tenant.id,
-            subscriber_id="sub-001",
+            subscriber_id=None,
             username="testuser@isp",
             attribute="Framed-IP-Address",
             value="10.0.0.100",
@@ -166,16 +163,16 @@ class TestRADIUSRepository:
         assert radreply.attribute == "Framed-IP-Address"
         assert radreply.value == "10.0.0.100"
 
-    async def test_get_radreplies_by_username(self, async_db_session, test_tenant):
+    async def test_get_radreplies_by_username(self, async_db_session, test_tenant, test_subscriber):
         """Test retrieving all reply attributes for username"""
         repo = RADIUSRepository(async_db_session)
 
         # Create multiple attributes
         await repo.create_radreply(
-            test_tenant.id, "sub-001", "testuser@isp", "Framed-IP-Address", "10.0.0.100"
+            test_tenant.id, test_subscriber.id, "testuser@isp", "Framed-IP-Address", "10.0.0.100"
         )
         await repo.create_radreply(
-            test_tenant.id, "sub-001", "testuser@isp", "Session-Timeout", "3600"
+            test_tenant.id, test_subscriber.id, "testuser@isp", "Session-Timeout", "3600"
         )
 
         # Retrieve all
@@ -186,29 +183,29 @@ class TestRADIUSRepository:
         assert "Framed-IP-Address" in attributes
         assert "Session-Timeout" in attributes
 
-    async def test_delete_radreply(self, async_db_session, test_tenant):
+    async def test_delete_radreply(self, async_db_session, test_tenant, test_subscriber):
         """Test deleting specific reply attribute"""
         repo = RADIUSRepository(async_db_session)
 
         # Create attribute
         await repo.create_radreply(
-            test_tenant.id, "sub-001", "testuser@isp", "Framed-IP-Address", "10.0.0.100"
+            test_tenant.id, test_subscriber.id, "testuser@isp", "Framed-IP-Address", "10.0.0.100"
         )
 
         # Delete
         deleted = await repo.delete_radreply(test_tenant.id, "testuser@isp", "Framed-IP-Address")
         assert deleted == 1  # Returns number of rows deleted
 
-    async def test_delete_all_radreplies(self, async_db_session, test_tenant):
+    async def test_delete_all_radreplies(self, async_db_session, test_tenant, test_subscriber):
         """Test deleting all reply attributes for username"""
         repo = RADIUSRepository(async_db_session)
 
         # Create multiple attributes
         await repo.create_radreply(
-            test_tenant.id, "sub-001", "testuser@isp", "Framed-IP-Address", "10.0.0.100"
+            test_tenant.id, test_subscriber.id, "testuser@isp", "Framed-IP-Address", "10.0.0.100"
         )
         await repo.create_radreply(
-            test_tenant.id, "sub-001", "testuser@isp", "Session-Timeout", "3600"
+            test_tenant.id, test_subscriber.id, "testuser@isp", "Session-Timeout", "3600"
         )
 
         # Delete all
@@ -297,12 +294,12 @@ class TestRADIUSRepository:
         assert profile is not None
         assert profile.id == "profile-10mbps"
 
-    async def test_tenant_isolation_radcheck(self, async_db_session, test_tenant, test_tenant_2):
+    async def test_tenant_isolation_radcheck(self, async_db_session, test_tenant, test_tenant_2, test_subscriber):
         """Test that radcheck entries are tenant-isolated"""
         repo = RADIUSRepository(async_db_session)
 
-        # Create entry for tenant 1
-        await repo.create_radcheck(test_tenant.id, "sub-001", "user1@isp", "password1")
+        # Create entry for tenant 1 with valid subscriber
+        await repo.create_radcheck(test_tenant.id, test_subscriber.id, "user1@isp", "password1")
 
         # Try to retrieve from tenant 2
         radcheck = await repo.get_radcheck_by_username(test_tenant_2.id, "user1@isp")

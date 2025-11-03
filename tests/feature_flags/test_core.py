@@ -1,4 +1,3 @@
-
 """
 Tests for feature flags core functionality.
 
@@ -26,11 +25,8 @@ from dotmac.platform.feature_flags.core import (
     sync_from_redis,
 )
 
-
-
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.asyncio]
+
 
 @pytest.fixture(autouse=True)
 def clean_cache():

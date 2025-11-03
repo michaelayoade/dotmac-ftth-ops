@@ -16,9 +16,8 @@ from fastapi.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.main import app
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_vault_client():

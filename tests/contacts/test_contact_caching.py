@@ -1,4 +1,3 @@
-
 """
 Contact caching service tests - Migrated to use shared helpers.
 
@@ -14,12 +13,8 @@ from dotmac.platform.contacts.schemas import ContactUpdate
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import build_mock_db_session
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestContactCaching:

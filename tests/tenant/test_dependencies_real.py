@@ -8,7 +8,7 @@ This test file focuses on:
 4. Avoiding over-mocking
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -241,7 +241,7 @@ class TestRequireTrialOrActiveTenant:
     @pytest.mark.asyncio
     async def test_require_trial_or_active_trial_success(self):
         """Test trial tenant with valid trial passes."""
-        future = datetime.now(timezone.utc) + timedelta(days=30)
+        future = datetime.now(UTC) + timedelta(days=30)
         tenant = create_fake_tenant(status=TenantStatus.TRIAL, trial_ends_at=future)
 
         result = await require_trial_or_active_tenant(tenant=tenant)
@@ -251,7 +251,7 @@ class TestRequireTrialOrActiveTenant:
     @pytest.mark.asyncio
     async def test_require_trial_or_active_trial_expired(self):
         """Test trial tenant with expired trial fails."""
-        past = datetime.now(timezone.utc) - timedelta(days=1)
+        past = datetime.now(UTC) - timedelta(days=1)
         tenant = create_fake_tenant(status=TenantStatus.TRIAL, trial_ends_at=past)
 
         with pytest.raises(HTTPException) as exc_info:

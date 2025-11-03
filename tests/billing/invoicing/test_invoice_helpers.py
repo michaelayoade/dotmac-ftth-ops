@@ -1,4 +1,3 @@
-
 """
 Invoice service helper tests - Migrated to use shared helpers.
 
@@ -7,7 +6,7 @@ AFTER: ~120 lines using shared helpers (30% reduction)
 """
 
 import hashlib
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -18,12 +17,8 @@ from dotmac.platform.billing.core.enums import TransactionType
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestInvoiceServiceHelpers:
@@ -41,7 +36,7 @@ class TestInvoiceServiceHelpers:
         invoice_number = await service._generate_invoice_number(sample_tenant_id)
 
         # Verify format
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         expected = _build_invoice_number(sample_tenant_id, year, 1)
         assert invoice_number == expected
 
@@ -50,7 +45,7 @@ class TestInvoiceServiceHelpers:
         mock_db = build_mock_db_session()
         service = InvoiceService(mock_db)
 
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
 
         # Mock existing invoice
         mock_invoice = MagicMock()

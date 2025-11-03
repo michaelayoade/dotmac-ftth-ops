@@ -4,10 +4,7 @@ Subscription management API router.
 Provides REST endpoints for managing subscription plans and customer subscriptions.
 """
 
-from datetime import timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC
 from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -61,8 +58,7 @@ async def create_subscription_plan(
     service = SubscriptionService(db_session)
     try:
         plan = await service.create_plan(plan_data, tenant_id)
-        # Return dict and let FastAPI serialize using response_model
-        return cast(dict[str, Any], plan.model_dump(mode="json"))
+        return plan.model_dump(mode="json")
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
@@ -85,7 +81,7 @@ async def list_subscription_plans(
         active_only=active_only,
     )
     # Return list of dicts and let FastAPI serialize using response_model
-    return [cast(dict[str, Any], plan.model_dump(mode="json")) for plan in plans]
+    return [plan.model_dump(mode="json") for plan in plans]
 
 
 @router.get("/plans/{plan_id}", response_model=SubscriptionPlanResponse)
@@ -101,8 +97,7 @@ async def get_subscription_plan(
     service = SubscriptionService(db_session)
     try:
         plan = await service.get_plan(plan_id, tenant_id)
-        # Return dict and let FastAPI serialize using response_model
-        return cast(dict[str, Any], plan.model_dump(mode="json"))
+        return plan.model_dump(mode="json")
     except PlanNotFoundError:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail=f"Subscription plan {plan_id} not found"
@@ -168,7 +163,7 @@ async def create_subscription(
     service = SubscriptionService(db_session)
     try:
         subscription = await service.create_subscription(subscription_data, tenant_id)
-        response_data = cast(dict[str, Any], subscription.model_dump(mode="json"))
+        response_data = subscription.model_dump(mode="json")
         # Add computed fields
         response_data["is_in_trial"] = subscription.is_in_trial()
         response_data["days_until_renewal"] = subscription.days_until_renewal()

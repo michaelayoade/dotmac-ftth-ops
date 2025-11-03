@@ -6,16 +6,14 @@ Enhanced with comprehensive error handling, retry logic, and metrics.
 """
 
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from typing import Any
+from datetime import UTC, datetime
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.notifications.models import (
+    Notification,
     NotificationChannel,
     NotificationPriority,
     NotificationType,
@@ -126,18 +124,21 @@ class NotificationsService(WorkflowServiceBase):
             RuntimeError: If notification delivery fails
         """
         # Validate inputs using Pydantic schema
-        validated = self.validate_input(
+        validated = cast(
             NotifyTeamInput,
-            {
-                "team": team,
-                "channel": channel,
-                "subject": subject,
-                "message": message,
-                "metadata": metadata,
-                "tenant_id": tenant_id,
-                "priority": priority,
-                "notification_type": notification_type,
-            },
+            self.validate_input(
+                NotifyTeamInput,
+                {
+                    "team": team,
+                    "channel": channel,
+                    "subject": subject,
+                    "message": message,
+                    "metadata": metadata,
+                    "tenant_id": tenant_id,
+                    "priority": priority,
+                    "notification_type": notification_type,
+                },
+            ),
         )
 
         # Use validated values
@@ -152,6 +153,8 @@ class NotificationsService(WorkflowServiceBase):
 
         # Map channel string to enum
         notification_channel = CHANNEL_MAPPING.get(channel)
+        if notification_channel is None:
+            raise ValueError(f"Unsupported notification channel: {channel}")
 
         # Map priority string to enum
         notification_priority = NotificationPriority(priority)
@@ -166,7 +169,9 @@ class NotificationsService(WorkflowServiceBase):
         # Use transaction context manager with automatic rollback
         async with self.transaction("notify_team"):
             # Step 1: Fetch team members based on role mapping with retry logic
-            team_members = await self.with_retry(self._get_team_members, team, tenant_id)
+            team_members = cast(
+                list[User], await self.with_retry(self._get_team_members, team, tenant_id)
+            )
 
             if not team_members:
                 raise ValueError(
@@ -192,22 +197,25 @@ class NotificationsService(WorkflowServiceBase):
                     effective_tenant_id = tenant_id or user.tenant_id
 
                     # Create notification for this user with retry logic
-                    notification = await self.with_retry(
-                        notification_service.create_notification,
-                        tenant_id=effective_tenant_id,
-                        user_id=user.id,
-                        notification_type=notification_type_enum,
-                        title=subject,
-                        message=message,
-                        priority=notification_priority,
-                        channels=[notification_channel],
-                        metadata={
-                            **(metadata or {}),
-                            "team": team,
-                            "sent_via": "workflow",
-                            "workflow_timestamp": datetime.now(UTC).isoformat(),
-                        },
-                        auto_send=True,  # Auto-send via configured channels
+                    notification = cast(
+                        Notification,
+                        await self.with_retry(
+                            notification_service.create_notification,
+                            tenant_id=effective_tenant_id,
+                            user_id=user.id,
+                            notification_type=notification_type_enum,
+                            title=subject,
+                            message=message,
+                            priority=notification_priority,
+                            channels=[notification_channel],
+                            metadata={
+                                **(metadata or {}),
+                                "team": team,
+                                "sent_via": "workflow",
+                                "workflow_timestamp": datetime.now(UTC).isoformat(),
+                            },
+                            auto_send=True,  # Auto-send via configured channels
+                        ),
                     )
 
                     notification_ids.append(str(notification.id))

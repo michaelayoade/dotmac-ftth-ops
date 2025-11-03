@@ -8,7 +8,7 @@ Tests all business logic for add-on management including:
 - Cancellation and reactivation
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -69,8 +69,8 @@ def sample_addon_data():
         "metadata": {},
         "icon": "test-icon",
         "features": ["Feature 1", "Feature 2"],
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
 
@@ -179,8 +179,8 @@ class TestGetAddon:
         mock_row.metadata_json = {}
         mock_row.icon = "icon"
         mock_row.features = ["Feature 1"]
-        mock_row.created_at = datetime.now(timezone.utc)
-        mock_row.updated_at = datetime.now(timezone.utc)
+        mock_row.created_at = datetime.now(UTC)
+        mock_row.updated_at = datetime.now(UTC)
 
         mock_result = AsyncMock()
         mock_result.scalar_one_or_none.return_value = mock_row
@@ -225,7 +225,7 @@ class TestPurchaseAddon:
             mock_row.subscription_id = None
             mock_row.status = "active"
             mock_row.quantity = 1
-            mock_row.started_at = datetime.now(timezone.utc)
+            mock_row.started_at = datetime.now(UTC)
             mock_row.current_period_start = None
             mock_row.current_period_end = None
             mock_row.canceled_at = None
@@ -343,9 +343,9 @@ class TestUpdateAddonQuantity:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=2,
-            started_at=datetime.now(timezone.utc),
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
+            started_at=datetime.now(UTC),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime.now(UTC) + timedelta(days=30),
             canceled_at=None,
             ended_at=None,
             current_usage=0,
@@ -409,9 +409,9 @@ class TestCancelAddon:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=1,
-            started_at=datetime.now(timezone.utc),
-            current_period_start=datetime.now(timezone.utc),
-            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
+            started_at=datetime.now(UTC),
+            current_period_start=datetime.now(UTC),
+            current_period_end=datetime.now(UTC) + timedelta(days=30),
             canceled_at=None,
             ended_at=None,
             current_usage=0,
@@ -470,10 +470,10 @@ class TestCancelAddon:
             subscription_id=None,
             status=AddonStatus.CANCELED,
             quantity=1,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             current_period_start=None,
             current_period_end=None,
-            canceled_at=datetime.now(timezone.utc),
+            canceled_at=datetime.now(UTC),
             ended_at=None,
             current_usage=0,
             addon=AddonResponse(
@@ -524,11 +524,11 @@ class TestReactivateAddon:
             subscription_id=None,
             status=AddonStatus.CANCELED,
             quantity=1,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             current_period_start=None,
-            current_period_end=datetime.now(timezone.utc) + timedelta(days=30),
-            canceled_at=datetime.now(timezone.utc),
-            ended_at=datetime.now(timezone.utc) + timedelta(days=30),
+            current_period_end=datetime.now(UTC) + timedelta(days=30),
+            canceled_at=datetime.now(UTC),
+            ended_at=datetime.now(UTC) + timedelta(days=30),
             current_usage=0,
             addon=AddonResponse(
                 addon_id="addon_test_123",
@@ -582,7 +582,7 @@ class TestReactivateAddon:
             subscription_id=None,
             status=AddonStatus.ACTIVE,
             quantity=1,
-            started_at=datetime.now(timezone.utc),
+            started_at=datetime.now(UTC),
             current_period_start=None,
             current_period_end=None,
             canceled_at=None,

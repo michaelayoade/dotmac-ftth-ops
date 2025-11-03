@@ -11,7 +11,7 @@ from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, 
 
 
 @pytest_asyncio.fixture
-async def test_tenant(async_db_session: AsyncSession) -> Tenant:
+async def test_tenant(async_session: AsyncSession) -> Tenant:
     """Create a tenant record scoped for internet plan tests."""
     tenant_id = str(uuid4())
 
@@ -25,15 +25,6 @@ async def test_tenant(async_db_session: AsyncSession) -> Tenant:
         email="internet-plans-test@example.com",
     )
 
-    async_db_session.add(tenant)
-    await async_db_session.commit()
-    await async_db_session.refresh(tenant)
-
-    try:
-        yield tenant
-    finally:
-        try:
-            await async_db_session.delete(tenant)
-            await async_db_session.commit()
-        except Exception:
-            await async_db_session.rollback()
+    async_session.add(tenant)
+    await async_session.flush()
+    return tenant

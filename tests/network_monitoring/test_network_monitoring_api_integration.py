@@ -3,19 +3,6 @@ from datetime import datetime
 import pytest
 
 from dotmac.platform.auth import dependencies as auth_dependencies
-
-
-# Some environments still expect require_user alias; provide compatibility before router import.
-
-
-
-
-
-pytestmark = pytest.mark.integration
-
-if not hasattr(auth_dependencies, "require_user"):
-    auth_dependencies.require_user = auth_dependencies.require_auth  # type: ignore[attr-defined]
-
 from dotmac.platform.network_monitoring.router import (
     get_monitoring_service,
 )
@@ -29,6 +16,12 @@ from dotmac.platform.network_monitoring.schemas import (
     NetworkAlertResponse,
     NetworkOverviewResponse,
 )
+
+pytestmark = pytest.mark.integration
+
+# Some environments still expect require_user alias; provide compatibility after import.
+if not hasattr(auth_dependencies, "require_user"):
+    auth_dependencies.require_user = auth_dependencies.require_auth  # type: ignore[attr-defined]
 
 
 class _StubMonitoringService:

@@ -1,6 +1,6 @@
 """Tests for Subscription Query Handlers (CQRS Pattern)"""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -36,7 +36,7 @@ class TestSubscriptionQueryHandler:
         query = GetSubscriptionQuery(tenant_id="tenant-1", subscription_id="sub-123")
 
         # Mock database result
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         mock_subscription = MagicMock()
         mock_subscription.subscription_id = "sub-123"
         mock_subscription.tenant_id = "tenant-1"

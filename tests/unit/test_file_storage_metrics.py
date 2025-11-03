@@ -1,4 +1,4 @@
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -6,14 +6,8 @@ import pytest
 from dotmac.platform.file_storage.metrics_router import _get_file_stats_cached
 from dotmac.platform.file_storage.service import FileMetadata
 
-
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class StubStorageService:
     """Stub storage service that returns batches of files based on offset."""
@@ -32,7 +26,7 @@ class StubStorageService:
 
 @pytest.mark.asyncio
 async def test_metrics_iterates_all_batches():
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     recent = now - timedelta(days=1)
     batches = [
         [

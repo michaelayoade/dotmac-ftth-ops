@@ -204,7 +204,7 @@ async def async_client(
 ):
     """Async HTTP client with deployment router registered and dependencies mocked."""
     import dotmac.platform.auth.rbac_dependencies
-    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.dependencies import get_db
     from dotmac.platform.deployment.router import (
         get_deployment_service,
@@ -221,6 +221,11 @@ async def async_client(
     # Monkeypatch DeploymentRegistry to return our mock instance
     monkeypatch.setattr(
         "dotmac.platform.deployment.router.DeploymentRegistry", lambda db: mock_deployment_registry
+    )
+    # Avoid instantiating real SQLAlchemy models inside the router. Use lightweight objects.
+    monkeypatch.setattr(
+        "dotmac.platform.deployment.router.DeploymentTemplate",
+        lambda **kwargs: MockObject(**kwargs),
     )
 
     app = FastAPI()

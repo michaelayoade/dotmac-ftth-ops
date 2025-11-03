@@ -1,4 +1,3 @@
-
 """
 Invoice Integration Tests - Real Database End-to-End Testing.
 
@@ -8,7 +7,7 @@ Coverage Target: 85-90% invoice service coverage.
 """
 
 import uuid
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -16,17 +15,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.core.exceptions import (
-
-
     InvalidInvoiceStatusError,
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestInvoiceCreation:
@@ -898,7 +892,7 @@ class TestInvoiceLifecycle:
         service = InvoiceService(async_session)
 
         # Create invoice with past due date
-        past_due_date = datetime.now(timezone.utc) - timedelta(days=5)
+        past_due_date = datetime.now(UTC) - timedelta(days=5)
 
         with patch("dotmac.platform.billing.invoicing.service.get_event_bus") as mock_event_bus:
             mock_event_bus.return_value.publish = AsyncMock()

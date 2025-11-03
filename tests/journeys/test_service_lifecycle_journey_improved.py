@@ -1,4 +1,3 @@
-
 """
 Improved integration tests for service lifecycle journey.
 
@@ -13,7 +12,7 @@ This ensures:
 - Downstream effects (notifications, provisioning) are created
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -23,19 +22,17 @@ from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from dotmac.platform.billing.subscriptions.models import (
     BillingCycle,
-    SubscriptionStatus,
-    SubscriptionPlanCreateRequest,
     SubscriptionCreateRequest,
     SubscriptionPlanChangeRequest,
+    SubscriptionPlanCreateRequest,
+    SubscriptionStatus,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.tenant.models import Tenant
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestServiceLifecycleJourneyImproved:
@@ -74,7 +71,7 @@ class TestServiceLifecycleJourneyImproved:
             first_name="Lifecycle",
             last_name="Test",
             email=f"lifecycle_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -101,7 +98,7 @@ class TestServiceLifecycleJourneyImproved:
         subscription_data = SubscriptionCreateRequest(
             customer_id=str(customer.id),
             plan_id=plan.plan_id,
-            start_date=datetime.now(timezone.utc),
+            start_date=datetime.now(UTC),
         )
         subscription = await subscription_service.create_subscription(
             subscription_data=subscription_data,
@@ -132,7 +129,7 @@ class TestServiceLifecycleJourneyImproved:
                 }
             ],
             currency="USD",
-            due_date=datetime.now(timezone.utc) + timedelta(days=7),
+            due_date=datetime.now(UTC) + timedelta(days=7),
         )
 
         assert invoice1.invoice_id is not None
@@ -175,7 +172,7 @@ class TestServiceLifecycleJourneyImproved:
         # In production, this would be triggered by a scheduled job
         # But we need to test the invoice generation logic
 
-        renewal_date = datetime.now(timezone.utc) + timedelta(days=30)
+        renewal_date = datetime.now(UTC) + timedelta(days=30)
         invoice2 = await invoicing_service.create_invoice(
             tenant_id=test_tenant.id,
             customer_id=str(customer.id),
@@ -236,7 +233,9 @@ class TestServiceLifecycleJourneyImproved:
         # For now, document that suspension logic should be tested separately
 
         print(f"✅ Step 5: Checked overdue invoices - {len(overdue_invoices)} found")
-        print("⚠️  NOTE: Suspension/reactivation workflow should be tested separately via workflow service")
+        print(
+            "⚠️  NOTE: Suspension/reactivation workflow should be tested separately via workflow service"
+        )
 
         # ===================================================================
         # Step 6: Cancel service using SubscriptionService
@@ -293,7 +292,7 @@ class TestServiceLifecycleJourneyImproved:
             first_name="Upgrade",
             last_name="Customer",
             email=f"upgrade_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -327,7 +326,7 @@ class TestServiceLifecycleJourneyImproved:
         subscription_data = SubscriptionCreateRequest(
             customer_id=str(customer.id),
             plan_id=basic_plan.plan_id,
-            start_date=datetime.now(timezone.utc),
+            start_date=datetime.now(UTC),
         )
         subscription = await subscription_service.create_subscription(
             subscription_data=subscription_data,
@@ -342,7 +341,7 @@ class TestServiceLifecycleJourneyImproved:
         # This ensures proration calculation, invoicing, and plan change logic work
         change_request = SubscriptionPlanChangeRequest(
             new_plan_id=premium_plan.plan_id,
-            effective_date=datetime.now(timezone.utc),
+            effective_date=datetime.now(UTC),
         )
         upgraded_subscription, _ = await subscription_service.change_plan(
             subscription_id=subscription.subscription_id,
@@ -408,7 +407,7 @@ class TestServiceLifecycleBestPractices:
             first_name="Test",
             last_name="User",
             email="test@example.com",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -430,7 +429,7 @@ class TestServiceLifecycleBestPractices:
         subscription_data = SubscriptionCreateRequest(
             customer_id=str(customer.id),
             plan_id=plan.plan_id,
-            start_date=datetime.now(timezone.utc),
+            start_date=datetime.now(UTC),
         )
         subscription = await subscription_service.create_subscription(
             subscription_data=subscription_data,

@@ -5,10 +5,7 @@ Handles complete subscription lifecycle with simple, clear operations.
 """
 
 from calendar import monthrange
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -321,12 +318,11 @@ class SubscriptionService:
 
         for field, value in update_data.items():
             if field == "metadata":
-                db_subscription.metadata_json = value
+                setattr(db_subscription, "metadata_json", value)
             elif field == "status":
                 # Convert SubscriptionStatus enum to string value for database
-                db_subscription.status = (
-                    value.value if isinstance(value, SubscriptionStatus) else value
-                )
+                status_value = value.value if isinstance(value, SubscriptionStatus) else value
+                setattr(db_subscription, "status", status_value)
             else:
                 setattr(db_subscription, field, value)
 
@@ -392,8 +388,8 @@ class SubscriptionService:
         if effective_date > now:
             # Schedule the plan change for future processing
             # The renewal/scheduled job will check scheduled_plan_id and apply it at effective_date
-            db_subscription.scheduled_plan_id = change_request.new_plan_id
-            db_subscription.scheduled_plan_change_date = effective_date
+            setattr(db_subscription, "scheduled_plan_id", change_request.new_plan_id)
+            setattr(db_subscription, "scheduled_plan_change_date", effective_date)
 
             logger.info(
                 "Scheduled plan change",
@@ -405,7 +401,7 @@ class SubscriptionService:
             )
         else:
             # Apply plan change immediately
-            db_subscription.plan_id = change_request.new_plan_id
+            setattr(db_subscription, "plan_id", change_request.new_plan_id)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -479,16 +475,16 @@ class SubscriptionService:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
         if immediate:
-            # End subscription immediately - use setattr to avoid mypy Column assignment errors
-            db_subscription.status = SubscriptionStatus.ENDED.value
-            db_subscription.ended_at = now
-            db_subscription.canceled_at = now
+            # End subscription immediately
+            setattr(db_subscription, "status", SubscriptionStatus.ENDED.value)
+            setattr(db_subscription, "ended_at", now)
+            setattr(db_subscription, "canceled_at", now)
         else:
             # Cancel at period end (default behavior) - use setattr to avoid mypy Column assignment errors
             # IMPORTANT: Keep status as ACTIVE so subscription remains usable until period ends
             # The renewal job will check cancel_at_period_end and transition to ENDED at current_period_end
-            db_subscription.cancel_at_period_end = True
-            db_subscription.canceled_at = now
+            setattr(db_subscription, "cancel_at_period_end", True)
+            setattr(db_subscription, "canceled_at", now)
             # Do NOT change status to CANCELED - keep it ACTIVE until period actually ends
 
         await self.db.commit()
@@ -553,9 +549,9 @@ class SubscriptionService:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
         # Use setattr to avoid mypy Column assignment errors
-        db_subscription.status = SubscriptionStatus.ACTIVE.value
-        db_subscription.cancel_at_period_end = False
-        db_subscription.canceled_at = None
+        setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
+        setattr(db_subscription, "cancel_at_period_end", False)
+        setattr(db_subscription, "canceled_at", None)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -623,7 +619,7 @@ class SubscriptionService:
         )
 
         # Use setattr to avoid mypy Column assignment errors
-        db_subscription.usage_records = current_usage
+        setattr(db_subscription, "usage_records", current_usage)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -800,16 +796,16 @@ class SubscriptionService:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
         # Update period dates
-        db_subscription.current_period_start = new_period_start
-        db_subscription.current_period_end = new_period_end
+            setattr(db_subscription, "current_period_start", new_period_start)
+            setattr(db_subscription, "current_period_end", new_period_end)
 
         # Reset usage counters for new period
-        db_subscription.usage_records = {}
+            setattr(db_subscription, "usage_records", {})
 
         # If subscription was trialing and trial has ended, activate it
         if subscription.status == SubscriptionStatus.TRIALING:
             if subscription.trial_end and datetime.now(UTC) >= subscription.trial_end:
-                db_subscription.status = SubscriptionStatus.ACTIVE.value
+                    setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -1292,7 +1288,7 @@ class SubscriptionService:
             return False
 
         # Use setattr to avoid mypy Column assignment errors
-        db_subscription.status = status.value
+            setattr(db_subscription, "status", status.value)
         await self.db.commit()
         return True
 
@@ -1312,7 +1308,7 @@ class SubscriptionService:
 
         # Use setattr to avoid mypy Column assignment errors
         empty_usage: dict[str, Any] = {}
-        db_subscription.usage_records = empty_usage
+        setattr(db_subscription, "usage_records", empty_usage)
         await self.db.commit()
         return True
 
@@ -1595,9 +1591,9 @@ class SubscriptionService:
             raise SubscriptionNotFoundError("Subscription not found")
 
         # Update status and remove cancellation
-        db_subscription.status = SubscriptionStatus.ACTIVE.value
-        db_subscription.cancel_at_period_end = False
-        db_subscription.canceled_at = None
+        setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
+        setattr(db_subscription, "cancel_at_period_end", False)
+        setattr(db_subscription, "canceled_at", None)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)

@@ -1,4 +1,5 @@
 """Tests for integration models and dataclasses."""
+
 import pytest
 
 from dotmac.platform.integrations import (

@@ -1,11 +1,10 @@
-
 """
 FastAPI Integration Testing - Phase 2
 Comprehensive testing of FastAPI endpoints with authentication, validation, and error handling.
 """
 
 import asyncio
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import Mock
 
@@ -13,19 +12,14 @@ import pytest
 
 from dotmac.platform.version import get_version
 
-
-
-
-
-
 # Mock FastAPI components for testing
-
 
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.asyncio,
 ]
+
 
 class MockRequest:
     """Mock FastAPI Request object"""
@@ -79,7 +73,7 @@ class APIEndpointHandler:
 
         return {
             "status": "healthy",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "version": self._version,
             "checks": checks,
         }
@@ -108,7 +102,7 @@ class APIEndpointHandler:
             "name": profile_data["name"],
             "email": profile_data["email"],
             "tenant_id": current_user.tenant_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "active": True,
         }
 
@@ -171,7 +165,7 @@ class APIEndpointHandler:
             "name": update_data.get("name", "Test User"),
             "email": update_data.get("email", "test@example.com"),
             "bio": update_data.get("bio", ""),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
         return {"profile": updated_profile, "status_code": 200}
@@ -234,7 +228,7 @@ class APIEndpointHandler:
             "name": key_data["name"],
             "api_key": f"dotmac_live_{hash(key_data['name']) % 1000000:06d}",
             "user_id": current_user.user_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "active": True,
         }
 

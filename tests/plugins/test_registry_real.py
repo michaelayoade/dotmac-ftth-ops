@@ -8,6 +8,7 @@ This test file achieves 90%+ coverage using the fake pattern:
 """
 
 import json
+from datetime import UTC
 from typing import Any
 from uuid import uuid4
 
@@ -130,7 +131,7 @@ class FakeNotificationPlugin(NotificationProvider):
         return True
 
     async def health_check(self) -> PluginHealthCheck:
-        from datetime import timezone, datetime
+        from datetime import datetime
 
         return PluginHealthCheck(
             plugin_instance_id=str(uuid4()),  # Will be overridden by registry
@@ -142,11 +143,11 @@ class FakeNotificationPlugin(NotificationProvider):
                 "configured": self.configured,
                 "notifications_sent": len(self.notifications_sent),
             },
-            timestamp=datetime.now(timezone.utc).isoformat(),  # Will be overridden by registry
+            timestamp=datetime.now(UTC).isoformat(),  # Will be overridden by registry
         )
 
     async def test_connection(self, config: dict[str, Any]) -> PluginTestResult:
-        from datetime import timezone, datetime
+        from datetime import datetime
 
         has_required = bool(config.get("api_key") and config.get("endpoint"))
         return PluginTestResult(
@@ -156,7 +157,7 @@ class FakeNotificationPlugin(NotificationProvider):
                 "has_api_key": bool(config.get("api_key")),
                 "has_endpoint": bool(config.get("endpoint")),
             },
-            timestamp=datetime.now(timezone.utc).isoformat(),  # Will be overridden by registry
+            timestamp=datetime.now(UTC).isoformat(),  # Will be overridden by registry
         )
 
 

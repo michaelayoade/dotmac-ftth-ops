@@ -20,9 +20,8 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.data_transfer.router import data_transfer_router
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def client():

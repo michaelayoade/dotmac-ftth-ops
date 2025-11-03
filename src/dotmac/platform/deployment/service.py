@@ -51,6 +51,7 @@ class DeploymentService:
             adapter_configs: Configuration for each backend adapter
         """
         self.db = db
+        self.registry: DeploymentRegistry | AsyncDeploymentRegistry
         if isinstance(db, AsyncSession):
             self.registry = AsyncDeploymentRegistry(db)
         else:
@@ -172,7 +173,9 @@ class DeploymentService:
             raise ValueError(f"Template {template.name} is not active")
 
         # Check if instance already exists
-        existing = await self._registry_call("get_instance_by_tenant", tenant_id, request.environment)
+        existing = await self._registry_call(
+            "get_instance_by_tenant", tenant_id, request.environment
+        )
         if existing:
             raise ValueError(
                 f"Deployment already exists for tenant {tenant_id} in {request.environment}"
@@ -207,7 +210,9 @@ class DeploymentService:
         execution = await self._registry_call("create_execution", execution)
 
         # Update instance state to provisioning
-        await self._registry_call("update_instance_state", instance.id, DeploymentState.PROVISIONING)
+        await self._registry_call(
+            "update_instance_state", instance.id, DeploymentState.PROVISIONING
+        )
 
         try:
             # Get adapter
@@ -252,7 +257,10 @@ class DeploymentService:
                 logger.info(f"Successfully provisioned deployment {instance.id}")
             else:
                 await self._registry_call(
-                    "update_instance_state", instance.id, DeploymentState.FAILED, reason=result.message
+                    "update_instance_state",
+                    instance.id,
+                    DeploymentState.FAILED,
+                    reason=result.message,
                 )
                 logger.error(f"Failed to provision deployment {instance.id}: {result.message}")
 
@@ -733,7 +741,9 @@ class DeploymentService:
         )
         execution = await self._registry_call("create_execution", execution)
 
-        await self._registry_call("update_instance_state", instance.id, DeploymentState.ROLLING_BACK)
+        await self._registry_call(
+            "update_instance_state", instance.id, DeploymentState.ROLLING_BACK
+        )
 
         try:
             context = await self._create_execution_context(

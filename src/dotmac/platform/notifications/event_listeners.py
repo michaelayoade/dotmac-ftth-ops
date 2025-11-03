@@ -12,7 +12,7 @@ from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
-from dotmac.platform.events import subscribe
+from dotmac.platform.events import Event, subscribe
 from dotmac.platform.notifications.models import NotificationPriority, NotificationType
 from dotmac.platform.notifications.service import NotificationService
 
@@ -21,8 +21,9 @@ logger = structlog.get_logger(__name__)
 
 # Billing Event Listeners
 @subscribe("billing.invoice.created")  # type: ignore[misc]
-async def on_invoice_created(event_data: dict[str, Any]) -> None:
+async def on_invoice_created(event: Event) -> None:
     """Send notification when invoice is created."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -61,8 +62,9 @@ async def on_invoice_created(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("billing.invoice.finalized")  # type: ignore[misc]
-async def on_invoice_finalized(event_data: dict[str, Any]) -> None:
+async def on_invoice_finalized(event: Event) -> None:
     """Send notification when invoice is finalized and ready for payment."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -101,8 +103,9 @@ async def on_invoice_finalized(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("billing.payment.received")  # type: ignore[misc]
-async def on_payment_received(event_data: dict[str, Any]) -> None:
+async def on_payment_received(event: Event) -> None:
     """Send notification when payment is received."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -140,8 +143,9 @@ async def on_payment_received(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("billing.payment.failed")  # type: ignore[misc]
-async def on_payment_failed(event_data: dict[str, Any]) -> None:
+async def on_payment_failed(event: Event) -> None:
     """Send notification when payment fails."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -178,8 +182,9 @@ async def on_payment_failed(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("billing.subscription.renewed")  # type: ignore[misc]
-async def on_subscription_renewed(event_data: dict[str, Any]) -> None:
+async def on_subscription_renewed(event: Event) -> None:
     """Send notification when subscription is renewed."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -216,8 +221,9 @@ async def on_subscription_renewed(event_data: dict[str, Any]) -> None:
 
 # Dunning Event Listeners
 @subscribe("dunning.reminder.sent")  # type: ignore[misc]
-async def on_dunning_reminder(event_data: dict[str, Any]) -> None:
+async def on_dunning_reminder(event: Event) -> None:
     """Send notification for dunning reminder."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -255,8 +261,9 @@ async def on_dunning_reminder(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("dunning.suspension_warning")  # type: ignore[misc]
-async def on_dunning_suspension_warning(event_data: dict[str, Any]) -> None:
+async def on_dunning_suspension_warning(event: Event) -> None:
     """Send notification for suspension warning."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -294,8 +301,9 @@ async def on_dunning_suspension_warning(event_data: dict[str, Any]) -> None:
 
 # Ticketing Event Listeners
 @subscribe("ticket.created")  # type: ignore[misc]
-async def on_ticket_created(event_data: dict[str, Any]) -> None:
+async def on_ticket_created(event: Event) -> None:
     """Send notification when ticket is created."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -333,8 +341,9 @@ async def on_ticket_created(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("ticket.assigned")  # type: ignore[misc]
-async def on_ticket_assigned(event_data: dict[str, Any]) -> None:
+async def on_ticket_assigned(event: Event) -> None:
     """Send notification when ticket is assigned to a user."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)
@@ -364,8 +373,9 @@ async def on_ticket_assigned(event_data: dict[str, Any]) -> None:
 
 
 @subscribe("ticket.resolved")  # type: ignore[misc]
-async def on_ticket_resolved(event_data: dict[str, Any]) -> None:
+async def on_ticket_resolved(event: Event) -> None:
     """Send notification when ticket is resolved."""
+    event_data = event.to_dict()
     try:
         async for session in get_async_session():
             notification_service = NotificationService(session)

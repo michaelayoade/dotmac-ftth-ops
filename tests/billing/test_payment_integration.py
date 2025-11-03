@@ -1,4 +1,3 @@
-
 """
 Integration Tests for Payment Service (with Real Database).
 
@@ -7,14 +6,13 @@ Focus: Test complete workflows with actual DB operations
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
 import pytest
 from sqlalchemy import select
 
 from dotmac.platform.billing.core.entities import PaymentEntity, PaymentMethodEntity
 from dotmac.platform.billing.core.enums import (
-
-
     PaymentMethodStatus,
     PaymentMethodType,
     PaymentStatus,
@@ -25,11 +23,8 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.payments.service import PaymentService
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestPaymentCreation:
@@ -137,11 +132,11 @@ class TestPaymentCreation:
 
         with pytest.raises(PaymentMethodNotFoundError):
             await payment_service.create_payment(
-                tenant_id="test-tenant",
+                tenant_id=str(uuid4()),
                 amount=10000,
                 currency="usd",
-                customer_id="cust_123",
-                payment_method_id="pm_nonexistent",
+                customer_id=str(uuid4()),
+                payment_method_id=str(uuid4()),
             )
 
     async def test_create_payment_inactive_method(self, async_session, mock_stripe_provider):
@@ -149,10 +144,13 @@ class TestPaymentCreation:
         # Create inactive payment method
         from uuid import uuid4
 
+        tenant = str(uuid4())
+        customer = str(uuid4())
+
         inactive_method = PaymentMethodEntity(
             payment_method_id=str(uuid4()),  # Generate valid UUID
-            tenant_id="test-tenant",
-            customer_id="cust_123",
+            tenant_id=tenant,
+            customer_id=customer,
             type=PaymentMethodType.CARD,
             status=PaymentMethodStatus.INACTIVE,  # Inactive
             provider="stripe",  # Required field
@@ -174,10 +172,10 @@ class TestPaymentCreation:
 
         with pytest.raises(PaymentError, match="not active"):
             await payment_service.create_payment(
-                tenant_id="test-tenant",
+                tenant_id=tenant,
                 amount=10000,
                 currency="usd",
-                customer_id="cust_123",
+                customer_id=customer,
                 payment_method_id=inactive_method.payment_method_id,
             )
 
@@ -476,7 +474,9 @@ class TestPaymentRefunds:
             )
 
             # Try to refund again - should fail
-            with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
+            with pytest.raises(
+                PaymentError, match="Can only refund successful or partially refunded payments"
+            ):
                 await payment_service.refund_payment(
                     tenant_id=test_payment_method.tenant_id,
                     payment_id=payment.payment_id,
@@ -491,9 +491,12 @@ class TestPaymentMethods:
         """Test adding new payment method."""
         payment_service = PaymentService(db_session=async_session)
 
+        tenant = str(uuid4())
+        customer = str(uuid4())
+
         payment_method = await payment_service.add_payment_method(
-            tenant_id="test-tenant",
-            customer_id="cust_add_pm",
+            tenant_id=tenant,
+            customer_id=customer,
             payment_method_type=PaymentMethodType.CARD,  # Correct parameter name
             provider="stripe",
             provider_payment_method_id="pm_new_card",
@@ -508,29 +511,65 @@ class TestPaymentMethods:
         assert payment_method.status == PaymentMethodStatus.ACTIVE
         assert payment_method.display_name == "New Visa Card"
 
-    async def test_list_payment_methods(self, async_session, test_payment_method):
+    async def test_list_payment_methods(self, async_session):
         """Test listing payment methods."""
         payment_service = PaymentService(db_session=async_session)
 
-        methods = await payment_service.list_payment_methods(
-            tenant_id="test-tenant",
-            customer_id=test_payment_method.customer_id,
+        tenant_id = f"tenant-{uuid4().hex[:8]}"
+        customer_id = f"cust-{uuid4().hex[:8]}"
+
+        pm1 = await payment_service.add_payment_method(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            provider="stripe",
+            provider_payment_method_id="pm_list_1",
+            payment_method_type=PaymentMethodType.CARD,
+            display_name="Primary Card",
+            last_four="1111",
         )
 
-        assert len(methods) >= 1
-        assert any(pm.payment_method_id == test_payment_method.payment_method_id for pm in methods)
+        pm2 = await payment_service.add_payment_method(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            provider="stripe",
+            provider_payment_method_id="pm_list_2",
+            payment_method_type=PaymentMethodType.BANK_ACCOUNT,
+            display_name="Bank Account",
+            last_four="9999",
+        )
 
-    async def test_get_payment_method(self, async_session, test_payment_method):
+        methods = await payment_service.list_payment_methods(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+        )
+
+        method_ids = {pm.payment_method_id for pm in methods}
+        assert {pm1.payment_method_id, pm2.payment_method_id} == method_ids
+
+    async def test_get_payment_method(self, async_session):
         """Test getting specific payment method."""
         payment_service = PaymentService(db_session=async_session)
 
-        method = await payment_service.get_payment_method(
-            tenant_id="test-tenant",
-            payment_method_id=test_payment_method.payment_method_id,
+        tenant_id = f"tenant-{uuid4().hex[:8]}"
+        customer_id = f"cust-{uuid4().hex[:8]}"
+
+        created = await payment_service.add_payment_method(
+            tenant_id=tenant_id,
+            customer_id=customer_id,
+            provider="stripe",
+            provider_payment_method_id="pm_lookup",
+            payment_method_type=PaymentMethodType.CARD,
+            display_name="Lookup Card",
+            last_four="4242",
         )
 
-        assert method.payment_method_id == test_payment_method.payment_method_id
-        assert method.display_name == test_payment_method.display_name
+        method = await payment_service.get_payment_method(
+            tenant_id=tenant_id,
+            payment_method_id=created.payment_method_id,
+        )
+
+        assert method.payment_method_id == created.payment_method_id
+        assert method.display_name == "Lookup Card"
 
     async def test_set_default_payment_method(self, async_session):
         """Test setting default payment method."""
@@ -539,10 +578,13 @@ class TestPaymentMethods:
         # Add two payment methods
         from uuid import uuid4
 
+        tenant = str(uuid4())
+        customer = str(uuid4())
+
         pm1 = PaymentMethodEntity(
             payment_method_id=str(uuid4()),
-            tenant_id="test-tenant",
-            customer_id="cust_default",
+            tenant_id=tenant,
+            customer_id=customer,
             type=PaymentMethodType.CARD,
             status=PaymentMethodStatus.ACTIVE,
             provider="stripe",
@@ -552,8 +594,8 @@ class TestPaymentMethods:
         )
         pm2 = PaymentMethodEntity(
             payment_method_id=str(uuid4()),
-            tenant_id="test-tenant",
-            customer_id="cust_default",
+            tenant_id=tenant,
+            customer_id=customer,
             type=PaymentMethodType.CARD,
             status=PaymentMethodStatus.ACTIVE,
             provider="stripe",
@@ -567,8 +609,8 @@ class TestPaymentMethods:
 
         # Set second as default
         updated = await payment_service.set_default_payment_method(
-            tenant_id="test-tenant",
-            customer_id="cust_default",
+            tenant_id=tenant,
+            customer_id=customer,
             payment_method_id=pm2.payment_method_id,
         )
 

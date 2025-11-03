@@ -4,15 +4,12 @@ from decimal import Decimal
 
 import pytest
 
-
-
 pytestmark = pytest.mark.unit
+
 
 def test_partner_models_import():
     """Test that partner models can be imported."""
     from dotmac.platform.partner_management.models import (
-
-
         CommissionModel,
         CommissionStatus,
         PartnerStatus,

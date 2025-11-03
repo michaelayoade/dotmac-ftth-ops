@@ -1,4 +1,3 @@
-
 """
 Contact creation tests - Refactored with shared helpers.
 
@@ -13,8 +12,6 @@ import pytest
 
 from dotmac.platform.contacts.models import Contact, ContactMethodType
 from dotmac.platform.contacts.schemas import (
-
-
     ContactCreate,
     ContactMethodCreate,
 )
@@ -24,11 +21,8 @@ from tests.helpers import (
     create_entity_test_helper,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestContactCreationRefactored:

@@ -1,4 +1,3 @@
-
 """
 Integration Tests for Customer Management Service.
 
@@ -17,7 +16,6 @@ from uuid import uuid4
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 pytestmark = [
     pytest.mark.integration,

@@ -1,0 +1,1487 @@
+src/dotmac/platform/timeseries/db.py: note: In function "init_timescaledb":
+src/dotmac/platform/timeseries/db.py:44:30: error: No overload variant of
+"sessionmaker" matches argument types "AsyncEngine", "type[AsyncSession]",
+"bool"  [call-overload]
+        TimeSeriesSessionLocal = sessionmaker(
+                                 ^
+src/dotmac/platform/timeseries/db.py:44:30: note: Possible overload variants:
+src/dotmac/platform/timeseries/db.py:44:30: note:     def [_S: Session] sessionmaker(self, bind: Engine | Connection | None = ..., *, class_: type[_S], autoflush: bool = ..., expire_on_commit: bool = ..., info: dict[Any, Any] | None = ..., **kw: Any) -> sessionmaker[_S]
+src/dotmac/platform/timeseries/db.py:44:30: note:     def [_S: Session] sessionmaker(self, bind: Engine | Connection | None = ..., *, autoflush: bool = ..., expire_on_commit: bool = ..., info: dict[Any, Any] | None = ..., **kw: Any) -> sessionmaker[Session]
+src/dotmac/platform/plugins/builtin/paystack_plugin.py: note: In member "health_check" of class "PaystackPaymentPlugin":
+src/dotmac/platform/plugins/builtin/paystack_plugin.py:192:41: error: Item
+"None" of "str | None" has no attribute "startswith"  [union-attr]
+                            "is_live_mode": self.secret_key.startswith("sk...
+                                            ^~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_event" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:38:23: error: "BaseEvent" has no
+attribute "model_dump_json"  [attr-defined]
+                payload = event.model_dump_json()
+                          ^~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_onu_status" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:57:43: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "ONUStatusEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(channel, event)
+                                              ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_session" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:64:52: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "RADIUSSessionEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(sessions_channel, event)
+                                                       ^~~~~
+src/dotmac/platform/realtime/publishers.py:65:50: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "RADIUSSessionEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(radius_channel, event)
+                                                     ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_job_progress" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:73:50: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "JobProgressEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(tenant_channel, event)
+                                                     ^~~~~
+src/dotmac/platform/realtime/publishers.py:74:47: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "JobProgressEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(job_channel, event)
+                                                  ^~~~~
+src/dotmac/platform/realtime/publishers.py:75:61: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "JobProgressEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(tenant_scoped_job_channel, event)
+                                                                ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_ticket" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:80:43: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "TicketEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(channel, event)
+                                              ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_alert" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:85:43: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "AlertEvent"; expected
+"BaseEvent"  [arg-type]
+            await self.publish_event(channel, event)
+                                              ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In member "publish_subscriber" of class "EventPublisher":
+src/dotmac/platform/realtime/publishers.py:90:43: error: Argument 2 to
+"publish_event" of "EventPublisher" has incompatible type "SubscriberEvent";
+expected "BaseEvent"  [arg-type]
+            await self.publish_event(channel, event)
+                                              ^~~~~
+src/dotmac/platform/realtime/publishers.py: note: In function "publish_radius_session_start":
+src/dotmac/platform/realtime/publishers.py:193:20: error: "type[EventType]" has
+no attribute "SESSION_START"  [attr-defined]
+            event_type=EventType.SESSION_START,
+                       ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/publishers.py: note: In function "publish_radius_session_stop":
+src/dotmac/platform/realtime/publishers.py:224:20: error: "type[EventType]" has
+no attribute "SESSION_STOP"  [attr-defined]
+            event_type=EventType.SESSION_STOP,
+                       ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/publishers.py: note: In function "publish_radius_session_update":
+src/dotmac/platform/realtime/publishers.py:255:20: error: "type[EventType]" has
+no attribute "SESSION_UPDATE"  [attr-defined]
+            event_type=EventType.SESSION_UPDATE,
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/events/customer_publisher.py: note: In function "example_publish_network_status":
+src/dotmac/platform/events/customer_publisher.py:377:13: error: Incompatible
+types in "await" (actual type "AsyncGenerator[Redis[Any], None]", expected type
+"Awaitable[Any]")  [misc]
+        redis = await get_redis_client()
+                ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/events/customer_publisher.py: note: In function "example_publish_device_status":
+src/dotmac/platform/events/customer_publisher.py:400:13: error: Incompatible
+types in "await" (actual type "AsyncGenerator[Redis[Any], None]", expected type
+"Awaitable[Any]")  [misc]
+        redis = await get_redis_client()
+                ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/events/customer_publisher.py: note: In function "example_publish_ticket_created":
+src/dotmac/platform/events/customer_publisher.py:427:13: error: Incompatible
+types in "await" (actual type "AsyncGenerator[Redis[Any], None]", expected type
+"Awaitable[Any]")  [misc]
+        redis = await get_redis_client()
+                ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/file_storage/service.py: note: In member "list_files" of class "FileStorageService":
+src/dotmac/platform/file_storage/service.py:1113:16: error: Incompatible return
+value type (got "list[object]", expected "list[FileMetadata]")  [return-value]
+            return await self.backend.list_files(
+                   ^
+src/dotmac/platform/file_storage/service.py: note: In member "get_file_metadata" of class "FileStorageService":
+src/dotmac/platform/file_storage/service.py:1123:22: error: "StorageBackend"
+has no attribute "get_metadata"  [attr-defined]
+            return await self.backend.get_metadata(safe_file_id)
+                         ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/file_storage/service.py: note: In member "update_file_metadata" of class "FileStorageService":
+src/dotmac/platform/file_storage/service.py:1134:34: error: "StorageBackend"
+has no attribute "get_metadata"  [attr-defined]
+            current_metadata = await self.backend.get_metadata(safe_file_i...
+                                     ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/wireguard/schemas.py:11:1: error: Module "pydantic" has no
+attribute "model_validator"; maybe "field_validator"?  [attr-defined]
+    from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, fie...
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/monitoring/plugins/builtin.py: note: In function "_format_discord_message":
+src/dotmac/platform/monitoring/plugins/builtin.py:120:9: error: "object" has no
+attribute "append"  [attr-defined]
+            embed["fields"].append({"name": "Tenant", "value": alert.tenan...
+            ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/monitoring/plugins/builtin.py:122:9: error: "object" has no
+attribute "append"  [attr-defined]
+            embed["fields"].append({"name": "Instance", "value": instance,...
+            ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/jobs/scheduler_service.py: note: In member "update_scheduled_job" of class "SchedulerService":
+src/dotmac/platform/jobs/scheduler_service.py:239:24: error: Incompatible types
+in assignment (expression has type "datetime | None", variable has type
+"datetime")  [assignment]
+                next_run = scheduled_job.next_run_at
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/fault_management/archival.py: note: In member "archive_alarms" of class "AlarmArchivalService":
+src/dotmac/platform/fault_management/archival.py:339:34: error:
+"ArchivalManifest" has no attribute "model_dump_json"  [attr-defined]
+            manifest_bytes = BytesIO(manifest.model_dump_json(indent=2).en...
+                                     ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/webhooks/delivery.py: note: In member "deliver" of class "WebhookDeliveryService":
+src/dotmac/platform/webhooks/delivery.py:102:24: error: "WebhookEventPayload"
+has no attribute "model_dump_json"  [attr-defined]
+            payload_json = payload.model_dump_json()
+                           ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/webhooks/delivery.py: note: In member "retry_delivery" of class "WebhookDeliveryService":
+src/dotmac/platform/webhooks/delivery.py:317:24: error: "WebhookEventPayload"
+has no attribute "model_dump_json"  [attr-defined]
+            payload_json = payload.model_dump_json()
+                           ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/webhooks/delivery.py: note: In member "process_pending_retries" of class "WebhookDeliveryService":
+src/dotmac/platform/webhooks/delivery.py:403:28: error: "WebhookEventPayload"
+has no attribute "model_dump_json"  [attr-defined]
+                payload_json = payload.model_dump_json()
+                               ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/secrets/vault_config.py: note: In member "close" of class "VaultConnectionManager":
+src/dotmac/platform/secrets/vault_config.py:310:37: error: Argument 1 to "run"
+has incompatible type "Awaitable[Any]"; expected "Coroutine[Any, Any, Never]" 
+[arg-type]
+                            asyncio.run(result)
+                                        ^~~~~~
+src/dotmac/platform/secrets/vault_config.py:313:42: error: Argument 1 to
+"create_task" of "AbstractEventLoop" has incompatible type "Awaitable[Any]";
+expected "Coroutine[Any, Any, Never]"  [arg-type]
+                            loop.create_task(result)
+                                             ^~~~~~
+src/dotmac/platform/genieacs/client.py: note: In member "__init__" of class "GenieACSClient":
+src/dotmac/platform/genieacs/client.py:99:29: error: Argument "max_connections"
+to "__init__" of "RobustHTTPClient" has incompatible type "int | None"; expected
+"int"  [arg-type]
+                max_connections=max_connections,
+                                ^~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py:100:39: error: Argument
+"max_keepalive_connections" to "__init__" of "RobustHTTPClient" has incompatible
+type "int | None"; expected "int"  [arg-type]
+                max_keepalive_connections=max_keepalive_connections,
+                                          ^~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py: note: In member "_invalidate_device_cache" of class "GenieACSClient":
+src/dotmac/platform/genieacs/client.py:180:20: error: Item "None" of
+"Lock | None" has no attribute "__aenter__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py:180:20: note: Error code "union-attr" not covered by "type: ignore" comment
+src/dotmac/platform/genieacs/client.py:180:20: error: Item "None" of
+"Lock | None" has no attribute "__aexit__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py: note: In member "_cache_devices" of class "GenieACSClient":
+src/dotmac/platform/genieacs/client.py:191:20: error: Item "None" of
+"Lock | None" has no attribute "__aenter__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py:191:20: note: Error code "union-attr" not covered by "type: ignore" comment
+src/dotmac/platform/genieacs/client.py:191:20: error: Item "None" of
+"Lock | None" has no attribute "__aexit__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py: note: In member "_cache_device_object" of class "GenieACSClient":
+src/dotmac/platform/genieacs/client.py:200:20: error: Item "None" of
+"Lock | None" has no attribute "__aenter__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py:200:20: note: Error code "union-attr" not covered by "type: ignore" comment
+src/dotmac/platform/genieacs/client.py:200:20: error: Item "None" of
+"Lock | None" has no attribute "__aexit__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py: note: In member "_maybe_prefetch_devices" of class "GenieACSClient":
+src/dotmac/platform/genieacs/client.py:225:20: error: Item "None" of
+"Lock | None" has no attribute "__aenter__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/client.py:225:20: note: Error code "union-attr" not covered by "type: ignore" comment
+src/dotmac/platform/genieacs/client.py:225:20: error: Item "None" of
+"Lock | None" has no attribute "__aexit__"  [union-attr]
+            async with self._prefetch_lock:  # type: ignore[arg-type]
+                       ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/contacts/service.py:12:1: error: Module "pydantic" has no
+attribute "ValidationError"; maybe "ValidationInfo"?  [attr-defined]
+    from pydantic import ValidationError
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/contacts/service.py: note: In member "update_contact" of class "ContactService":
+src/dotmac/platform/contacts/service.py:238:16: error: Incompatible return
+value type (got "Contact | ContactResponse", expected "Contact | None") 
+[return-value]
+            return contact
+                   ^~~~~~~
+src/dotmac/platform/contacts/service.py: note: In member "delete_contact" of class "ContactService":
+src/dotmac/platform/contacts/service.py:262:13: error: Item "ContactResponse"
+of "Contact | ContactResponse" has no attribute "deleted_by"  [union-attr]
+                contact.deleted_by = deleted_by
+                ^~~~~~~~~~~~~~~~~~
+src/dotmac/platform/webhooks/events.py: note: In member "publish_batch" of class "EventBus":
+src/dotmac/platform/webhooks/events.py:228:17: error: "warning" of
+"BoundLogger" gets multiple values for keyword argument "event"  [misc]
+                    logger.warning("Skipping event without event_type", ev...
+                    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/webhooks/events.py:228:75: error: Argument "event" to
+"warning" of "BoundLogger" has incompatible type "dict[str, Any]"; expected
+"str | None"  [arg-type]
+    ...      logger.warning("Skipping event without event_type", event=event)
+                                                                       ^~~~~
+src/dotmac/platform/analytics/models.py:9:1: error: Module "pydantic" has no
+attribute "model_validator"; maybe "field_validator"?  [attr-defined]
+    from pydantic import ConfigDict, Field, field_validator, model_validat...
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/search/elasticsearch_backend.py: note: In member "_build_query" of class "ElasticsearchBackend":
+src/dotmac/platform/search/elasticsearch_backend.py:335:25: error: Dict entry 0
+has incompatible type "str": "dict[str, str]"; expected "str": "Sequence[str]" 
+[dict-item]
+                            "search_text": {
+                            ^
+src/dotmac/platform/search/elasticsearch_backend.py:349:44: error: List item 0
+has incompatible type "dict[str, dict[str, Any]]"; expected "str"  [list-item]
+                        {"bool": {"must_not": [{"term": {filter_spec.field...
+                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/search/elasticsearch_backend.py:354:48: error: Dict entry 0
+has incompatible type "str": "dict[str, Any]"; expected "str": "Sequence[str]" 
+[dict-item]
+                    must_clauses.append({"range": {filter_spec.field: {"gt...
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/search/elasticsearch_backend.py:356:48: error: Dict entry 0
+has incompatible type "str": "dict[str, Any]"; expected "str": "Sequence[str]" 
+[dict-item]
+                    must_clauses.append({"range": {filter_spec.field: {"gt...
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/search/elasticsearch_backend.py:358:48: error: Dict entry 0
+has incompatible type "str": "dict[str, Any]"; expected "str": "Sequence[str]" 
+[dict-item]
+                    must_clauses.append({"range": {filter_spec.field: {"lt...
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/search/elasticsearch_backend.py:360:48: error: Dict entry 0
+has incompatible type "str": "dict[str, Any]"; expected "str": "Sequence[str]" 
+[dict-item]
+                    must_clauses.append({"range": {filter_spec.field: {"lt...
+                                                   ^~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/resilience/service_mesh.py: note: In member "_make_http_call" of class "ServiceMesh":
+src/dotmac/platform/resilience/service_mesh.py:797:17: error: Argument "ssl" to
+"request" of "ClientSession" has incompatible type "SSLContext | None"; expected
+"SSLContext | bool | Fingerprint"  [arg-type]
+                ssl=ssl_context,
+                    ^~~~~~~~~~~
+src/dotmac/platform/rate_limit/decorators.py: note: In function "rate_limit":
+src/dotmac/platform/rate_limit/decorators.py:85:30: error: Missing positional
+argument "endpoint" in call to "_get_identifier" of "RateLimitService" 
+[call-arg]
+                    identifier = service._get_identifier(
+                                 ^
+src/dotmac/platform/rate_limit/decorators.py:86:28: error: Argument 2 to
+"_get_identifier" of "RateLimitService" has incompatible type "Any | None";
+expected "str"  [arg-type]
+                        scope, user_id, ip_address, api_key_id, endpoint
+                               ^~~~~~~
+src/dotmac/platform/rate_limit/decorators.py:86:37: error: Argument 3 to
+"_get_identifier" of "RateLimitService" has incompatible type "str"; expected
+"UUID | None"  [arg-type]
+                        scope, user_id, ip_address, api_key_id, endpoint
+                                        ^~~~~~~~~~
+src/dotmac/platform/telemetry.py: note: In function "configure_structlog":
+src/dotmac/platform/telemetry.py:99:9: error: Module has no attribute "stdlib" 
+[attr-defined]
+            structlog.stdlib.filter_by_level,
+            ^~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:100:9: error: Module has no attribute "stdlib"
+ [attr-defined]
+            structlog.stdlib.add_logger_name,
+            ^~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:101:9: error: Module has no attribute "stdlib"
+ [attr-defined]
+            structlog.stdlib.add_log_level,
+            ^~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:102:9: error: Module has no attribute "stdlib"
+ [attr-defined]
+            structlog.stdlib.PositionalArgumentsFormatter(),
+            ^~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:103:9: error: Module has no attribute
+"processors"  [attr-defined]
+            structlog.processors.TimeStamper(fmt="iso"),
+            ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:104:9: error: Module has no attribute
+"processors"  [attr-defined]
+            structlog.processors.StackInfoRenderer(),
+            ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:105:9: error: Module has no attribute
+"processors"  [attr-defined]
+            structlog.processors.format_exc_info,
+            ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:106:9: error: Module has no attribute
+"processors"  [attr-defined]
+            structlog.processors.UnicodeDecoder(),
+            ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:111:30: error: Module has no attribute
+"contextvars"  [attr-defined]
+            processors.insert(0, structlog.contextvars.merge_contextvars)
+                                 ^~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:115:27: error: Module has no attribute
+"processors"  [attr-defined]
+            processors.append(structlog.processors.JSONRenderer())
+                              ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:117:27: error: Module has no attribute "dev" 
+[attr-defined]
+            processors.append(structlog.dev.ConsoleRenderer())
+                              ^~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:119:5: error: Module has no attribute
+"configure"  [attr-defined]
+        structlog.configure(
+        ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:121:23: error: Module has no attribute
+"stdlib"  [attr-defined]
+            wrapper_class=structlog.stdlib.BoundLogger,
+                          ^~~~~~~~~~~~~~~~
+src/dotmac/platform/telemetry.py:122:24: error: Module has no attribute
+"stdlib"  [attr-defined]
+            logger_factory=structlog.stdlib.LoggerFactory(),
+                           ^~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/connection_manager.py: note: In member "register" of class "WebSocketConnectionManager":
+src/dotmac/platform/realtime/connection_manager.py:120:34: error: Invalid index
+type "str | None" for "dict[str, set[UUID]]"; expected type "str"  [index]
+            self._tenant_connections[user_info.tenant_id].add(connection_i...
+                                     ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/realtime/connection_manager.py: note: In member "unregister" of class "WebSocketConnectionManager":
+src/dotmac/platform/realtime/connection_manager.py:153:34: error: Invalid index
+type "str | None" for "dict[str, set[UUID]]"; expected type "str"  [index]
+            self._tenant_connections[conn_info.tenant_id].discard(connecti...
+                                     ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/analytics_router.py: note: In function "get_subscriber_usage":
+src/dotmac/platform/radius/analytics_router.py:82:20: error: "None" not
+callable  [misc]
+            async with TimeSeriesSessionLocal() as session:
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/analytics_router.py: note: In function "get_tenant_usage":
+src/dotmac/platform/radius/analytics_router.py:151:20: error: "None" not
+callable  [misc]
+            async with TimeSeriesSessionLocal() as session:
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/analytics_router.py: note: In function "get_hourly_bandwidth":
+src/dotmac/platform/radius/analytics_router.py:216:20: error: "None" not
+callable  [misc]
+            async with TimeSeriesSessionLocal() as session:
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/analytics_router.py: note: In function "get_daily_bandwidth":
+src/dotmac/platform/radius/analytics_router.py:287:20: error: "None" not
+callable  [misc]
+            async with TimeSeriesSessionLocal() as session:
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/analytics_router.py: note: In function "get_top_subscribers":
+src/dotmac/platform/radius/analytics_router.py:375:20: error: "None" not
+callable  [misc]
+            async with TimeSeriesSessionLocal() as session:
+                       ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/monitoring/alert_router.py: note: In function "delete_alert_channel":
+src/dotmac/platform/monitoring/alert_router.py:539:8: error: "Result[Any]" has
+no attribute "rowcount"  [attr-defined]
+        if deleted.rowcount == 0:
+           ^~~~~~~~~~~~~~~~
+src/dotmac/platform/jobs/router.py: note: In function "list_jobs":
+src/dotmac/platform/jobs/router.py:115:25: error: Item "str" of "str | None"
+has no attribute "HTTP_400_BAD_REQUEST"  [union-attr]
+                status_code=status.HTTP_400_BAD_REQUEST,
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/jobs/router.py:115:25: error: Item "None" of "str | None"
+has no attribute "HTTP_400_BAD_REQUEST"  [union-attr]
+                status_code=status.HTTP_400_BAD_REQUEST,
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/jobs/router.py: note: In function "retry_failed_items":
+src/dotmac/platform/jobs/router.py:310:30: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+        failed_items_count = len(retry_job.parameters.get("failed_items", ...
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/audit/models.py:16:1: error: Module "dotmac.platform.db"
+has no attribute "StrictTenantMixin"; maybe "TenantMixin"?  [attr-defined]
+    from ..db import StrictTenantMixin, TimestampMixin
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/monitoring/logs_router.py: note: In member "__init__" of class "LogsService":
+src/dotmac/platform/monitoring/logs_router.py:121:30: error: "LogEntry" has no
+attribute "model_copy"  [attr-defined]
+            self._sample_logs = [log.model_copy(deep=True) for log in sour...
+                                 ^~~~~~~~~~~~~~
+src/dotmac/platform/monitoring/logs_router.py: note: In member "_get_logs_from_sample" of class "LogsService":
+src/dotmac/platform/monitoring/logs_router.py:375:19: error: "LogEntry" has no
+attribute "model_copy"  [attr-defined]
+                logs=[log.model_copy(deep=True) for log in paginated],
+                      ^~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "handle_ticket_created":
+src/dotmac/platform/ticketing/handlers.py:95:27: error: "type[ActivityType]"
+has no attribute "RESOURCE_CREATED"  [attr-defined]
+                activity_type=ActivityType.RESOURCE_CREATED,
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "handle_ticket_message_added":
+src/dotmac/platform/ticketing/handlers.py:178:27: error: "type[ActivityType]"
+has no attribute "RESOURCE_UPDATED"  [attr-defined]
+                activity_type=ActivityType.RESOURCE_UPDATED,
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "handle_ticket_status_changed":
+src/dotmac/platform/ticketing/handlers.py:237:54: error: Item "None" of
+"Any | None" has no attribute "replace"  [union-attr]
+    ...        f"Ticket {ticket_number} Status Update: {new_status.replace('_...
+                                                        ^~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py:239:46: error: Argument 1 to "get" of
+"dict" has incompatible type "Any | None"; expected "str"  [arg-type]
+            status_message = status_messages.get(new_status, f"Ticket stat...
+                                                 ^~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py:284:27: error: "type[ActivityType]"
+has no attribute "RESOURCE_UPDATED"  [attr-defined]
+                activity_type=ActivityType.RESOURCE_UPDATED,
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "handle_ticket_assigned":
+src/dotmac/platform/ticketing/handlers.py:357:27: error: "type[ActivityType]"
+has no attribute "RESOURCE_UPDATED"  [attr-defined]
+                activity_type=ActivityType.RESOURCE_UPDATED,
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "handle_ticket_escalated_to_partner":
+src/dotmac/platform/ticketing/handlers.py:438:27: error: "type[ActivityType]"
+has no attribute "RESOURCE_UPDATED"  [attr-defined]
+                activity_type=ActivityType.RESOURCE_UPDATED,
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "track_ticket_creation_analytics":
+src/dotmac/platform/ticketing/handlers.py:483:27: error: "type[ActivityType]"
+has no attribute "ANALYTICS"  [attr-defined]
+                activity_type=ActivityType.ANALYTICS,
+                              ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/handlers.py: note: In function "track_ticket_resolution_analytics":
+src/dotmac/platform/ticketing/handlers.py:533:31: error: "type[ActivityType]"
+has no attribute "ANALYTICS"  [attr-defined]
+                    activity_type=ActivityType.ANALYTICS,
+                                  ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/monitoring/__init__.py:43:19: error: Incompatible types in
+assignment (expression has type "None", variable has type "APIRouter") 
+[assignment]
+        logs_router = None
+                      ^~~~
+src/dotmac/platform/monitoring/__init__.py:44:21: error: Incompatible types in
+assignment (expression has type "None", variable has type "APIRouter") 
+[assignment]
+        traces_router = None
+                        ^~~~
+src/dotmac/platform/genieacs/service.py: note: In member "__init__" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:87:28: error: Incompatible types in
+assignment (expression has type "None", variable has type "AsyncSession") 
+[assignment]
+                self.session = None
+                               ^~~~
+src/dotmac/platform/genieacs/service.py:88:31: error: Incompatible types in
+assignment (expression has type "GenieACSClient | None", variable has type
+"GenieACSClient")  [assignment]
+                resolved_client = client_or_session if isinstance(client_o...
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/genieacs/service.py: note: In member "get_device_status" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:336:27: error: Item "DeviceResponse" of
+"DeviceResponse | dict[str, Any]" has no attribute "get"  [union-attr]
+            last_inform_raw = device.get("_lastInform") or device.get("las...
+                              ^~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:353:24: error: Item "DeviceResponse" of
+"DeviceResponse | dict[str, Any]" has no attribute "get"  [union-attr]
+            uptime_param = device.get("InternetGatewayDevice.DeviceInfo.Up...
+                           ^~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:354:84: error: Item "DeviceResponse" of
+"DeviceResponse | dict[str, Any]" has no attribute "get"  [union-attr]
+    ...("_value") if isinstance(uptime_param, dict) else device.get("uptime")
+                                                         ^~~~~~~~~~
+src/dotmac/platform/genieacs/service.py: note: In member "create_firmware_upgrade_schedule" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:1112:49: error: Incompatible types in
+assignment (expression has type "FirmwareUpgradeSchedule", target has type
+"dict[str, Any]")  [assignment]
+            self._firmware_schedules[schedule_id] = schedule
+                                                    ^~~~~~~~
+src/dotmac/platform/genieacs/service.py: note: In member "get_firmware_upgrade_schedule" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:1163:55: error: "dict[str, Any]" has no
+attribute "device_filter"  [attr-defined]
+    ...   devices = await self.client.get_devices(query=schedule.device_filte...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py: note: In member "cancel_firmware_upgrade_schedule" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:1192:12: error: "dict[str, Any]" has no
+attribute "status"  [attr-defined]
+            if schedule.status not in ("pending", "running"):
+               ^~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1193:68: error: "dict[str, Any]" has no
+attribute "status"  [attr-defined]
+    ...e ValueError(f"Cannot cancel schedule with status: {schedule.status}")
+                                                          ^~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1195:9: error: "dict[str, Any]" has no
+attribute "status"  [attr-defined]
+            schedule.status = "cancelled"
+            ^~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1196:9: error: "dict[str, Any]" has no
+attribute "completed_at"  [attr-defined]
+            schedule.completed_at = datetime.now()
+            ^~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py: note: In member "execute_firmware_upgrade_schedule" of class "GenieACSService":
+src/dotmac/platform/genieacs/service.py:1225:9: error: "dict[str, Any]" has no
+attribute "status"  [attr-defined]
+            schedule.status = "running"
+            ^~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1226:9: error: "dict[str, Any]" has no
+attribute "started_at"  [attr-defined]
+            schedule.started_at = datetime.now()
+            ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1229:55: error: "dict[str, Any]" has no
+attribute "device_filter"  [attr-defined]
+    ...   devices = await self.client.get_devices(query=schedule.device_filte...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1248:47: error: "dict[str, Any]" has no
+attribute "max_concurrent"  [attr-defined]
+            for _i, result in enumerate(results[: schedule.max_concurrent]...
+                                                  ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1258:31: error: "dict[str, Any]" has no
+attribute "firmware_file"  [attr-defined]
+                        file_name=schedule.firmware_file,
+                                  ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1259:31: error: "dict[str, Any]" has no
+attribute "file_type"  [attr-defined]
+                        file_type=schedule.file_type,
+                                  ^~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1289:13: error: "dict[str, Any]" has no
+attribute "status"  [attr-defined]
+                schedule.status = "completed"
+                ^~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service.py:1290:13: error: "dict[str, Any]" has no
+attribute "completed_at"  [attr-defined]
+                schedule.completed_at = datetime.now()
+                ^~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ansible/lifecycle_integration.py: note: In member "configure_router" of class "AnsibleLifecycleIntegration":
+src/dotmac/platform/ansible/lifecycle_integration.py:162:20: error: Argument
+"wan_ip" to "build_router_config_vars" of "PlaybookLibrary" has incompatible
+type "Any | None"; expected "str"  [arg-type]
+                wan_ip=router_config.get("wan_ip"),
+                       ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ansible/lifecycle_integration.py:164:25: error: Argument
+"wan_gateway" to "build_router_config_vars" of "PlaybookLibrary" has
+incompatible type "Any | None"; expected "str"  [arg-type]
+                wan_gateway=router_config.get("wan_gateway"),
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/billing/settings/service.py: note: In member "_apply_model_to_row" of class "BillingSettingsService":
+src/dotmac/platform/billing/settings/service.py:209:27: error: Incompatible
+types in assignment (expression has type "str | Column[str]", variable has type
+"Column[str]")  [assignment]
+            row.settings_id = settings.settings_id or row.settings_id or s...
+                              ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/billing/settings/service.py:215:32: error: Incompatible
+types in assignment (expression has type "dict[str, bool]", variable has type
+"Column[Any]")  [assignment]
+            row.features_enabled = dict(settings.features_enabled)
+                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/billing/settings/service.py:216:31: error: Incompatible
+types in assignment (expression has type "dict[str, Any]", variable has type
+"Column[Any]")  [assignment]
+            row.custom_settings = dict(settings.custom_settings)
+                                  ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/billing/settings/service.py:217:28: error: Incompatible
+types in assignment (expression has type "dict[str, Any]", variable has type
+"Column[Any]")  [assignment]
+            row.api_settings = dict(settings.api_settings)
+                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/billing/settings/service.py: note: In member "_table_to_model" of class "BillingSettingsService":
+src/dotmac/platform/billing/settings/service.py:222:32: error: Incompatible
+types in assignment (expression has type "Column[str]", variable has type "str")
+ [assignment]
+            defaults.settings_id = row.settings_id
+                                   ^~~~~~~~~~~~~~~
+src/dotmac/platform/billing/settings/service.py:234:32: error: Incompatible
+types in assignment (expression has type "Column[str]", variable has type "str")
+ [assignment]
+            defaults.settings_id = row.settings_id
+                                   ^~~~~~~~~~~~~~~
+src/dotmac/platform/billing/catalog/service.py: note: In member "update_price" of class "ProductService":
+src/dotmac/platform/billing/catalog/service.py:381:33: error: Incompatible
+types in assignment (expression has type "Decimal", variable has type
+"Column[Decimal]")  [assignment]
+            db_product.base_price = new_price
+                                    ^~~~~~~~~
+src/dotmac/platform/billing/subscriptions/tenant_router.py: note: In function "get_available_plans_for_tenant":
+src/dotmac/platform/billing/subscriptions/tenant_router.py:125:16: error:
+Incompatible return value type (got "list[SubscriptionPlan]", expected
+"list[SubscriptionPlanResponse]")  [return-value]
+            return plans
+                   ^~~~~
+src/dotmac/platform/billing/pricing/service.py: note: In member "calculate_price" of class "PricingEngine":
+src/dotmac/platform/billing/pricing/service.py:291:32: error: Item "None" of
+"str | Any | None" has no attribute "upper"  [union-attr]
+            calculation_currency = (
+                                   ^
+src/dotmac/platform/billing/pricing/service.py: note: In member "_record_rule_usage" of class "PricingEngine":
+src/dotmac/platform/billing/pricing/service.py:580:36: error: Incompatible
+types in assignment (expression has type "int", variable has type
+"Column[Decimal]")  [assignment]
+                db_rule.current_uses = current_uses + 1
+                                       ^~~~~~~~~~~~~~~~
+src/dotmac/platform/billing/pricing/service.py: note: In member "get_applicable_rules" of class "PricingEngine":
+src/dotmac/platform/billing/pricing/service.py:658:32: error: Item "None" of
+"str | Any | None" has no attribute "upper"  [union-attr]
+            calculation_currency = (
+                                   ^
+src/dotmac/platform/billing/pricing/service.py: note: In member "reset_rule_usage" of class "PricingEngine":
+src/dotmac/platform/billing/pricing/service.py:730:32: error: Incompatible
+types in assignment (expression has type "int", variable has type
+"Column[Decimal]")  [assignment]
+            db_rule.current_uses = 0
+                                   ^
+src/dotmac/platform/network/workflow_service.py: note: In member "allocate_resources" of class "NetworkService":
+src/dotmac/platform/network/workflow_service.py:133:26: error: "NetBoxClient"
+has no attribute "ping"  [attr-defined]
+                ping = await netbox_client.ping()
+                             ^~~~~~~~~~~~~~~~~~
+src/dotmac/platform/customer_management/service.py: note: In member "search_customers" of class "CustomerService":
+src/dotmac/platform/customer_management/service.py:615:36: error: Item "None"
+of "Any | None" has no attribute "asc"  [union-attr]
+                query = query.order_by(sort_column.asc())
+                                       ^~~~~~~~~~~~~~~
+src/dotmac/platform/customer_management/service.py:617:36: error: Item "None"
+of "Any | None" has no attribute "desc"  [union-attr]
+                query = query.order_by(sort_column.desc())
+                                       ^~~~~~~~~~~~~~~~
+src/dotmac/platform/fault_management/service.py: note: In member "create_ticket_from_alarm" of class "AlarmService":
+src/dotmac/platform/fault_management/service.py:512:25: error:
+"type[TicketPriority]" has no attribute "CRITICAL"  [attr-defined]
+                "critical": TicketPriority.CRITICAL,
+                            ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/fault_management/service.py:601:23: error:
+"type[TicketType]" has no attribute "FAULT"  [attr-defined]
+            ticket_type = TicketType.FAULT
+                          ^~~~~~~~~~~~~~~~
+src/dotmac/platform/fault_management/service.py:603:27: error:
+"type[TicketType]" has no attribute "OUTAGE"  [attr-defined]
+                ticket_type = TicketType.OUTAGE
+                              ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/fault_management/service.py:605:27: error:
+"type[TicketType]" has no attribute "MAINTENANCE"  [attr-defined]
+                ticket_type = TicketType.MAINTENANCE
+                              ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "get_subscriber" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:278:37: error: Incompatible types in
+assignment (expression has type "Column[str]", variable has type "str | None") 
+[assignment]
+                    resolved_username = radcheck.username
+                                        ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "update_subscriber" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:606:37: error: Incompatible types in
+assignment (expression has type "Column[str]", variable has type "str | None") 
+[assignment]
+                    resolved_username = radcheck.username
+                                        ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:622:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:635:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:648:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:661:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:673:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:685:35: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                        subscriber_id=radcheck.subscriber_id,
+                                      ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py:696:31: error: Item "None" of
+"RadCheck | None" has no attribute "subscriber_id"  [union-attr]
+                    subscriber_id=radcheck.subscriber_id,
+                                  ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "delete_subscriber" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:723:24: error: Incompatible types in
+assignment (expression has type "Column[str]", variable has type "str | None") 
+[assignment]
+                username = radcheck.username
+                           ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "_get_subscriber_nas_vendor" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:827:24: error: Incompatible return value
+type (got "Column[str]", expected "str")  [return-value]
+                    return nas.vendor
+                           ^~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "apply_bandwidth_profile" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:881:25: error: Incompatible types in
+assignment (expression has type "str | Column[str]", variable has type
+"str | None")  [assignment]
+            subscriber_id = subscriber_id or radcheck.subscriber_id
+                            ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "get_subscriber_sessions" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:1047:43: error: Incompatible types in
+assignment (expression has type "Column[str]", variable has type "str | None") 
+[assignment]
+                    effective_subscriber_id = radcheck.subscriber_id
+                                              ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/service.py: note: In member "disconnect_session" of class "RADIUSService":
+src/dotmac/platform/radius/service.py:1120:28: error: Incompatible types in
+assignment (expression has type "Column[str]", variable has type "str | None") 
+[assignment]
+                    username = session.username
+                               ^~~~~~~~~~~~~~~~
+src/dotmac/platform/tenant/oss_config.py:17:1: error: Module "pydantic" has no
+attribute "ValidationError"; maybe "ValidationInfo"?  [attr-defined]
+    from pydantic import BaseModel, ConfigDict, Field, ValidationError
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/radius/tasks.py: note: In function "_sync_sessions_async":
+src/dotmac/platform/radius/tasks.py:92:24: error: "None" not callable  [misc]
+                async with TimeSeriesSessionLocal() as ts_session:
+                           ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/communications/task_service.py:13:1: error: Module
+"pydantic" has no attribute "ValidationError"; maybe "ValidationInfo"? 
+[attr-defined]
+    from pydantic import BaseModel, ConfigDict, Field, ValidationError
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py: note: In function "_execute_firmware_upgrade_async":
+src/dotmac/platform/genieacs/tasks.py:231:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "in_progress"
+                                                ^~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:232:49: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.started_at = datetime.now(UTC)
+                                                    ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:237:39: error: Argument "device_id" to
+"add_task" of "GenieACSClient" has incompatible type "Column[str]"; expected
+"str"  [arg-type]
+                                device_id=result_obj.device_id,
+                                          ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:244:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "success"
+                                                ^~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:245:51: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.completed_at = datetime.now(UTC)
+                                                      ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:269:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "failed"
+                                                ^~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:270:52: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.error_message = str(e)
+                                                       ^~~~~~
+src/dotmac/platform/genieacs/tasks.py:271:51: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.completed_at = datetime.now(UTC)
+                                                      ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py: note: In function "_execute_mass_config_async":
+src/dotmac/platform/genieacs/tasks.py:508:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "in_progress"
+                                                ^~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:509:49: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.started_at = datetime.now(UTC)
+                                                    ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:550:43: error: Argument "device_id" to
+"set_parameter_values" of "GenieACSClient" has incompatible type "Column[str]";
+expected "str"  [arg-type]
+                                    device_id=result_obj.device_id,
+                                              ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:555:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "success"
+                                                ^~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:556:57: error: Incompatible types in
+assignment (expression has type "dict[str, Any]", variable has type
+"Column[Any]")  [assignment]
+                            result_obj.parameters_changed = params_to_set
+                                                            ^~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:557:51: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.completed_at = datetime.now(UTC)
+                                                      ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:584:45: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.status = "failed"
+                                                ^~~~~~~~
+src/dotmac/platform/genieacs/tasks.py:585:52: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+                            result_obj.error_message = str(e)
+                                                       ^~~~~~
+src/dotmac/platform/genieacs/tasks.py:586:51: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+                            result_obj.completed_at = datetime.now(UTC)
+                                                      ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/models.py:15:1: error: Module
+"dotmac.platform.analytics.models" has no attribute "AnalyticsEvent" 
+[attr-defined]
+    from dotmac.platform.analytics.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:15:1: error: Module
+"dotmac.platform.analytics.models" has no attribute "Metric"  [attr-defined]
+    from dotmac.platform.analytics.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:47:1: error: Module
+"dotmac.platform.communications.models" has no attribute "EmailTemplate" 
+[attr-defined]
+    from dotmac.platform.communications.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:47:1: error: Module
+"dotmac.platform.communications.models" has no attribute "SMSTemplate" 
+[attr-defined]
+    from dotmac.platform.communications.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:60:1: error: Module
+"dotmac.platform.deployment.models" has no attribute "Deployment"; maybe
+"DeploymentType", "DeploymentState", or "DeploymentHealth"?  [attr-defined]
+    from dotmac.platform.deployment.models import Deployment  # noqa: F401
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/models.py:91:1: error: Module
+"dotmac.platform.webhooks.models" has no attribute "Webhook"  [attr-defined]
+    from dotmac.platform.webhooks.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:98:1: error: Module
+"dotmac.platform.wireless.models" has no attribute "AccessPoint"  [attr-defined]
+    from dotmac.platform.wireless.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:98:1: error: Module
+"dotmac.platform.wireless.models" has no attribute "Radio"  [attr-defined]
+    from dotmac.platform.wireless.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:98:1: error: Module
+"dotmac.platform.wireless.models" has no attribute "SubscriberCPE" 
+[attr-defined]
+    from dotmac.platform.wireless.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:98:1: error: Module
+"dotmac.platform.wireless.models" has no attribute "Tower"  [attr-defined]
+    from dotmac.platform.wireless.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:105:1: error: Module
+"dotmac.platform.workflows.models" has no attribute "WorkflowExecutionStep";
+maybe "WorkflowExecution"?  [attr-defined]
+    from dotmac.platform.workflows.models import (  # noqa: F401
+    ^
+src/dotmac/platform/models.py:113:5: error: Module
+"dotmac.platform.services.internet_plans.models" has no attribute
+"InternetPlan"; maybe "InternetServicePlan"?  [attr-defined]
+        from dotmac.platform.services.internet_plans.models import Interne...
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/models.py:119:5: error: Module
+"dotmac.platform.billing.subscriptions.models" has no attribute
+"SubscriptionAddon"; maybe "Subscription", "SubscriptionPlan", or
+"SubscriptionEvent"?  [attr-defined]
+        from dotmac.platform.billing.subscriptions.models import (  # noqa...
+        ^
+src/dotmac/platform/models.py:142:5: error: Module
+"dotmac.platform.billing.bank_accounts.models" has no attribute "BankAccount";
+maybe "BankAccountStatus" or "BankAccountSummary"?  [attr-defined]
+        from dotmac.platform.billing.bank_accounts.models import BankAccou...
+        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/wireguard/router.py: note: In function "get_wireguard_service":
+src/dotmac/platform/wireguard/router.py:60:14: error: "tuple[UserInfo, Tenant]"
+has no attribute "tenant"  [attr-defined]
+        tenant = tenant_access.tenant
+                 ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/ticketing/workflow_service.py: note: In member "create_ticket" of class "TicketingService":
+src/dotmac/platform/ticketing/workflow_service.py:99:38: error: Argument 1 to
+"UUID" has incompatible type "UUID"; expected "str | None"  [arg-type]
+                    customer_uuid = UUID(customer.id) if customer else Non...
+                                         ^~~~~~~~~~~
+src/dotmac/platform/ticketing/workflow_service.py:138:35: error: Incompatible
+types in assignment (expression has type "dict[str, str]", target has type
+"str")  [assignment]
+                metadata["routing"] = {"team": assigned_team}
+                                      ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/tenant/onboarding_schemas.py:10:1: error: Module "pydantic"
+has no attribute "model_validator"; maybe "field_validator"?  [attr-defined]
+    from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_val...
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/search/factory.py: note: In function "_register_optional_backends":
+src/dotmac/platform/search/factory.py:82:53: error: Argument 2 to
+"register_backend" of "SearchBackendRegistry" has incompatible type
+"type[ElasticsearchBackend]"; expected "type[SearchBackend]"  [arg-type]
+    ...     _registry.register_backend("elasticsearch", ElasticsearchBackend)
+                                                        ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_onu_health" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:471:30: error: Item
+"VOLTHAClient" of "VOLTHAClient | None" has no attribute "get_onu"  [union-attr]
+                onu_data = await self.voltha.get_onu(onu_id)
+                                 ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:471:30: error: Item "None" of
+"VOLTHAClient | None" has no attribute "get_onu"  [union-attr]
+                onu_data = await self.voltha.get_onu(onu_id)
+                                 ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_cpe_health" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:500:27: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                last_inform = cpe_data.get("_lastInform")
+                              ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:512:17: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    cpe_data.get("InternetGatewayDevice", {})
+                    ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:524:29: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    device_name=cpe_data.get("_deviceId", {}).get("_Produc...
+                                ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:529:35: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    cpu_usage_percent=cpe_data.get("Device", {})
+                                      ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:533:38: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    memory_usage_percent=cpe_data.get("Device", {})
+                                         ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:537:34: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    firmware_version=cpe_data.get("Device", {})
+                                     ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:540:23: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    model=cpe_data.get("Device", {}).get("DeviceInfo", {})...
+                          ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_network_device_health" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:550:56: error: Argument 1 to
+"get_device" of "NetBoxClient" has incompatible type "str"; expected "int" 
+[arg-type]
+                device_data = await self.netbox.get_device(device_id)
+                                                           ^~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "get_device_metrics" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:742:23: error: Incompatible
+types in assignment (expression has type "None", variable has type
+"TrafficStatsResponse | BaseException")  [assignment]
+                traffic = None
+                          ^~~~
+src/dotmac/platform/network_monitoring/service.py:755:25: error: Item
+"BaseException" of "DeviceHealthResponse | BaseException" has no attribute
+"device_name"  [union-attr]
+                device_name=health.device_name,
+                            ^~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_onu_metrics" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:766:30: error: Item
+"VOLTHAClient" of "VOLTHAClient | None" has no attribute "get_onu"  [union-attr]
+                onu_data = await self.voltha.get_onu(onu_id)
+                                 ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:766:30: error: Item "None" of
+"VOLTHAClient | None" has no attribute "get_onu"  [union-attr]
+                onu_data = await self.voltha.get_onu(onu_id)
+                                 ^~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_cpe_metrics" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:783:25: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                wifi_data = cpe_data.get("Device", {}).get("WiFi", {})
+                            ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:786:29: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    mac_address=cpe_data.get("_deviceId", {}).get("_Serial...
+                                ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:789:21: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                        cpe_data.get("Device", {}).get("Hosts", {}).get("H...
+                        ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:792:21: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                        cpe_data.get("_lastInform", "").replace("Z", "+00:...
+                        ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py:794:20: error: Item "None" of
+"dict[str, Any] | None" has no attribute "get"  [union-attr]
+                    if cpe_data.get("_lastInform")
+                       ^~~~~~~~~~~~
+src/dotmac/platform/network_monitoring/service.py: note: In member "_get_tenant_devices" of class "NetworkMonitoringService":
+src/dotmac/platform/network_monitoring/service.py:918:40: error: Item "None" of
+"VOLTHAClient | None" has no attribute "get_devices"  [union-attr]
+                    voltha_devices = await self.voltha.get_devices()
+                                           ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/netbox/router.py: note: In function "create_prefix":
+src/dotmac/platform/netbox/router.py:268:16: error: Incompatible return value
+type (got "PrefixResponse | dict[str, Any]", expected "PrefixResponse") 
+[return-value]
+            return await service.create_prefix(data)
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/netbox/router.py: note: In function "allocate_ip":
+src/dotmac/platform/netbox/router.py:312:12: error: Incompatible return value
+type (got "dict[str, Any]", expected "IPAddressResponse")  [return-value]
+        return ip_address
+               ^~~~~~~~~~
+src/dotmac/platform/netbox/router.py: note: In function "create_interface":
+src/dotmac/platform/netbox/router.py:540:16: error: Incompatible return value
+type (got "InterfaceResponse | dict[str, Any]", expected "InterfaceResponse") 
+[return-value]
+            return await service.create_interface(data)
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/netbox/router.py: note: In function "create_vlan":
+src/dotmac/platform/netbox/router.py:608:16: error: Incompatible return value
+type (got "VLANResponse | dict[str, Any]", expected "VLANResponse") 
+[return-value]
+            return await service.create_vlan(data)
+                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/metrics/service.py: note: In member "get_dashboard_metrics" of class "MetricsService":
+src/dotmac/platform/metrics/service.py:89:24: error: "type[DashboardMetrics]"
+has no attribute "parse_raw"  [attr-defined]
+                    return DashboardMetrics.parse_raw(cached)
+                           ^~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/metrics/service.py:110:63: error: "DashboardMetrics" has no
+attribute "model_dump_json"  [attr-defined]
+    ...wait self.redis.setex(cache_key, self.cache_ttl, result.model_dump_jso...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "create_firmware_upgrade_schedule" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:120:41: error: Argument 1 to
+"record_firmware_upgrade_created" has incompatible type "str | None"; expected
+"str"  [arg-type]
+            record_firmware_upgrade_created(self.tenant_id)
+                                            ^~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:121:46: error: Argument 1 to
+"set_firmware_upgrade_schedule_status" has incompatible type "str | None";
+expected "str"  [arg-type]
+            set_firmware_upgrade_schedule_status(self.tenant_id, schedule_...
+                                                 ^~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "list_firmware_upgrade_schedules" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:167:47: error: Argument 1 to
+"set_firmware_upgrade_active_schedules" has incompatible type "str | None";
+expected "str"  [arg-type]
+            set_firmware_upgrade_active_schedules(self.tenant_id, active_c...
+                                                  ^~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "get_firmware_upgrade_schedule" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:219:55: error: Argument "query" to
+"get_devices" of "GenieACSClient" has incompatible type "Column[Any]"; expected
+"dict[str, Any] | None"  [arg-type]
+    ...   devices = await self.client.get_devices(query=schedule.device_filte...
+                                                        ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "cancel_firmware_upgrade_schedule" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:270:27: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+            schedule.status = "cancelled"
+                              ^~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:271:33: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+            schedule.completed_at = datetime.now(UTC)
+                                    ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:275:46: error: Argument 1 to
+"set_firmware_upgrade_schedule_status" has incompatible type "str | None";
+expected "str"  [arg-type]
+            set_firmware_upgrade_schedule_status(self.tenant_id, schedule_...
+                                                 ^~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "execute_firmware_upgrade_schedule" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:312:27: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+            schedule.status = "queued"
+                              ^~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:313:31: error: Incompatible types in
+assignment (expression has type "None", variable has type "Column[datetime]") 
+[assignment]
+            schedule.started_at = None
+                                  ^~~~
+src/dotmac/platform/genieacs/service_db.py:314:33: error: Incompatible types in
+assignment (expression has type "None", variable has type "Column[datetime]") 
+[assignment]
+            schedule.completed_at = None
+                                    ^~~~
+src/dotmac/platform/genieacs/service_db.py:316:46: error: Argument 1 to
+"set_firmware_upgrade_schedule_status" has incompatible type "str | None";
+expected "str"  [arg-type]
+            set_firmware_upgrade_schedule_status(self.tenant_id, schedule_...
+                                                 ^~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "cancel_mass_config_job" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:521:22: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+            job.status = "cancelled"
+                         ^~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:522:28: error: Incompatible types in
+assignment (expression has type "datetime", variable has type
+"Column[datetime]")  [assignment]
+            job.completed_at = datetime.now(UTC)
+                               ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/genieacs/service_db.py: note: In member "execute_mass_config_job" of class "GenieACSServiceDB":
+src/dotmac/platform/genieacs/service_db.py:565:22: error: Incompatible types in
+assignment (expression has type "str", variable has type "Column[str]") 
+[assignment]
+            job.status = "queued"
+                         ^~~~~~~~
+src/dotmac/platform/genieacs/service_db.py:566:26: error: Incompatible types in
+assignment (expression has type "None", variable has type "Column[datetime]") 
+[assignment]
+            job.started_at = None
+                             ^~~~
+src/dotmac/platform/genieacs/service_db.py:567:28: error: Incompatible types in
+assignment (expression has type "None", variable has type "Column[datetime]") 
+[assignment]
+            job.completed_at = None
+                               ^~~~
+src/dotmac/platform/genieacs/service_db.py:568:33: error: Incompatible types in
+assignment (expression has type "int", variable has type "Column[int]") 
+[assignment]
+            job.completed_devices = 0
+                                    ^
+src/dotmac/platform/genieacs/service_db.py:569:30: error: Incompatible types in
+assignment (expression has type "int", variable has type "Column[int]") 
+[assignment]
+            job.failed_devices = 0
+                                 ^
+src/dotmac/platform/fault_management/router.py: note: In function "create_alarm":
+src/dotmac/platform/fault_management/router.py:89:47: error: Argument "user_id"
+to "create" of "AlarmService" has incompatible type "str"; expected
+"UUID | None"  [arg-type]
+        return await service.create(data, user_id=user.user_id)
+                                                  ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "update_alarm":
+src/dotmac/platform/fault_management/router.py:166:58: error: Argument
+"user_id" to "update" of "AlarmService" has incompatible type "str"; expected
+"UUID | None"  [arg-type]
+        alarm = await service.update(alarm_id, data, user_id=user.user_id)
+                                                             ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "acknowledge_alarm":
+src/dotmac/platform/fault_management/router.py:185:60: error: Argument 3 to
+"acknowledge" of "AlarmService" has incompatible type "str"; expected "UUID" 
+[arg-type]
+    ...  alarm = await service.acknowledge(alarm_id, data.note, user.user_id)
+                                                                ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "clear_alarm":
+src/dotmac/platform/fault_management/router.py:203:51: error: Argument
+"user_id" to "clear" of "AlarmService" has incompatible type "str"; expected
+"UUID | None"  [arg-type]
+        alarm = await service.clear(alarm_id, user_id=user.user_id)
+                                                      ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "resolve_alarm":
+src/dotmac/platform/fault_management/router.py:222:62: error: Argument 3 to
+"resolve" of "AlarmService" has incompatible type "str"; expected "UUID" 
+[arg-type]
+    ...alarm = await service.resolve(alarm_id, resolution_note, user.user_id)
+                                                                ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "add_alarm_note":
+src/dotmac/platform/fault_management/router.py:241:44: error: Argument 3 to
+"add_note" of "AlarmService" has incompatible type "str"; expected "UUID" 
+[arg-type]
+        await service.add_note(alarm_id, data, user.user_id)
+                                               ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "create_ticket_from_alarm":
+src/dotmac/platform/fault_management/router.py:270:21: error: Argument
+"user_id" to "create_ticket_from_alarm" of "AlarmService" has incompatible type
+"str"; expected "UUID"  [arg-type]
+                user_id=user.user_id,
+                        ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "create_alarm_rule":
+src/dotmac/platform/fault_management/router.py:318:52: error: Argument
+"user_id" to "create_rule" of "AlarmService" has incompatible type "str";
+expected "UUID | None"  [arg-type]
+        return await service.create_rule(data, user_id=user.user_id)
+                                                       ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "update_alarm_rule":
+src/dotmac/platform/fault_management/router.py:349:61: error: Argument
+"user_id" to "update_rule" of "AlarmService" has incompatible type "str";
+expected "UUID | None"  [arg-type]
+    ... rule = await service.update_rule(rule_id, data, user_id=user.user_id)
+                                                                ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "create_sla_definition":
+src/dotmac/platform/fault_management/router.py:390:58: error: Argument
+"user_id" to "create_definition" of "SLAMonitoringService" has incompatible type
+"str"; expected "UUID | None"  [arg-type]
+        return await service.create_definition(data, user_id=user.user_id)
+                                                             ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "create_sla_instance":
+src/dotmac/platform/fault_management/router.py:445:56: error: Argument
+"user_id" to "create_instance" of "SLAMonitoringService" has incompatible type
+"str"; expected "UUID | None"  [arg-type]
+        return await service.create_instance(data, user_id=user.user_id)
+                                                           ^~~~~~~~~~~~
+src/dotmac/platform/fault_management/router.py: note: In function "create_maintenance_window":
+src/dotmac/platform/fault_management/router.py:541:72: error: Argument
+"user_id" to "create_maintenance_window" of "AlarmService" has incompatible type
+"str"; expected "UUID | None"  [arg-type]
+    ...it alarm_service.create_maintenance_window(data, user_id=user.user_id)
+                                                                ^~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "__init__" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:62:35: error: Missing positional
+argument "tenant_id" in call to "RADIUSService"  [call-arg]
+                self.radius_service = RADIUSService(db)
+                                      ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "check_subscriber_connectivity" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:239:38: error: "RADIUSService" has
+no attribute "get_subscriber_auth"; maybe "get_subscriber",
+"get_subscriber_usage", or "_subscriber_cache"?  [attr-defined]
+                    radius_check = await self.radius_service.get_subscribe...
+                                         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/diagnostics/service.py: note: In member "get_radius_sessions" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:373:30: error: Too many arguments
+for "get_active_sessions" of "RADIUSService"  [call-arg]
+                sessions = await self.radius_service.get_active_sessions(t...
+                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/diagnostics/service.py: note: In member "check_onu_status" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:463:32: error: "VOLTHAService" has
+no attribute "get_onu_status"  [attr-defined]
+                onu_status = await self.voltha_service.get_onu_status(subs...
+                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "check_cpe_status" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:560:27: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "status": cpe_status.get("status", "unknown"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:560:27: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "status": cpe_status.get("status", "unknown"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:561:32: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "last_inform": cpe_status.get("last_inform"),
+                                   ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:561:32: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "last_inform": cpe_status.get("last_inform"),
+                                   ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:562:37: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "firmware_version": cpe_status.get("firmware_version")...
+                                        ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:562:37: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "firmware_version": cpe_status.get("firmware_version")...
+                                        ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:563:26: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "model": cpe_status.get("model"),
+                             ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:563:26: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "model": cpe_status.get("model"),
+                             ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:564:27: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "uptime": cpe_status.get("uptime"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:564:27: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "uptime": cpe_status.get("uptime"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:565:27: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "wan_ip": cpe_status.get("wan_ip"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:565:27: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "wan_ip": cpe_status.get("wan_ip"),
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:566:33: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                    "wifi_enabled": cpe_status.get("wifi_enabled"),
+                                    ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:566:33: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                    "wifi_enabled": cpe_status.get("wifi_enabled"),
+                                    ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:571:27: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                last_inform = cpe_status.get("last_inform")
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:571:27: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                last_inform = cpe_status.get("last_inform")
+                              ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:602:16: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                if cpe_status.get("firmware_outdated"):
+                   ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:602:16: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                if cpe_status.get("firmware_outdated"):
+                   ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:611:23: error: Item
+"DeviceStatusResponse" of "DeviceStatusResponse | None" has no attribute "get" 
+[union-attr]
+                success = cpe_status.get("status") == "online"
+                          ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:611:23: error: Item "None" of
+"DeviceStatusResponse | None" has no attribute "get"  [union-attr]
+                success = cpe_status.get("status") == "online"
+                          ^~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "verify_ip_allocation" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:658:40: error: Item
+"IPAddressResponse" of "IPAddressResponse | None" has no attribute "get" 
+[union-attr]
+                    results["netbox_ip"] = netbox_ip.get("address")
+                                           ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:658:40: error: Item "None" of
+"IPAddressResponse | None" has no attribute "get"  [union-attr]
+                    results["netbox_ip"] = netbox_ip.get("address")
+                                           ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:659:44: error: Item
+"IPAddressResponse" of "IPAddressResponse | None" has no attribute "get" 
+[union-attr]
+                    results["netbox_status"] = netbox_ip.get("status")
+                                               ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:659:44: error: Item "None" of
+"IPAddressResponse | None" has no attribute "get"  [union-attr]
+                    results["netbox_status"] = netbox_ip.get("status")
+                                               ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:660:41: error: Item
+"IPAddressResponse" of "IPAddressResponse | None" has no attribute "get" 
+[union-attr]
+                    results["netbox_vrf"] = netbox_ip.get("vrf")
+                                            ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:660:41: error: Item "None" of
+"IPAddressResponse | None" has no attribute "get"  [union-attr]
+                    results["netbox_vrf"] = netbox_ip.get("vrf")
+                                            ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:663:78: error: Item
+"IPAddressResponse" of "IPAddressResponse | None" has no attribute "get" 
+[union-attr]
+    ...bscriber.static_ipv4 and str(subscriber.static_ipv4) != netbox_ip.get(
+                                                               ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:663:78: error: Item "None" of
+"IPAddressResponse | None" has no attribute "get"  [union-attr]
+    ...bscriber.static_ipv4 and str(subscriber.static_ipv4) != netbox_ip.get(
+                                                               ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:670:66: error: Item
+"IPAddressResponse" of "IPAddressResponse | None" has no attribute "get" 
+[union-attr]
+    ...            "action": f"Update subscriber IP to {netbox_ip.get('addres...
+                                                        ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:670:66: error: Item "None" of
+"IPAddressResponse | None" has no attribute "get"  [union-attr]
+    ...            "action": f"Update subscriber IP to {netbox_ip.get('addres...
+                                                        ^~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "restart_cpe" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:739:71: error: Argument 1 to
+"reboot_device" of "GenieACSService" has incompatible type "str"; expected
+"RebootRequest"  [arg-type]
+    ...sult = await self.genieacs_service.reboot_device(subscriber.cpe_mac_ad...
+                                                        ^~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/diagnostics/service.py:743:37: error: Item "TaskResponse"
+of "TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "reboot_initiated": reboot_result.get("success", False...
+                                        ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:743:37: error: Item "str" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "reboot_initiated": reboot_result.get("success", False...
+                                        ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:743:37: error: Item "None" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "reboot_initiated": reboot_result.get("success", False...
+                                        ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:744:28: error: Item "TaskResponse"
+of "TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "task_id": reboot_result.get("task_id"),
+                               ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:744:28: error: Item "str" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "task_id": reboot_result.get("task_id"),
+                               ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:744:28: error: Item "None" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    "task_id": reboot_result.get("task_id"),
+                               ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:757:25: error: Item "TaskResponse"
+of "TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    success=reboot_result.get("success", False),
+                            ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:757:25: error: Item "str" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    success=reboot_result.get("success", False),
+                            ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py:757:25: error: Item "None" of
+"TaskResponse | str | None" has no attribute "get"  [union-attr]
+                    success=reboot_result.get("success", False),
+                            ^~~~~~~~~~~~~~~~~
+src/dotmac/platform/diagnostics/service.py: note: In member "_get_usage_statistics" of class "DiagnosticsService":
+src/dotmac/platform/diagnostics/service.py:922:24: error: "None" not callable 
+[misc]
+                async with TimeSeriesSessionLocal() as ts_session:
+                           ^~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/db/testing.py:32:40: error: Module has no attribute
+"get_database_url"  [attr-defined]
+    _get_database_url: Callable[[], str] = db_module.get_database_url
+                                           ^~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/db/testing.py:33:46: error: Module has no attribute
+"get_async_database_url"  [attr-defined]
+    _get_async_database_url: Callable[[], str] = db_module.get_async_datab...
+                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/data_import/tasks.py:23:1: error: Module
+"dotmac.platform.db" has no attribute "get_async_database_url"  [attr-defined]
+    from dotmac.platform.db import get_async_database_url
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/data_import/tasks.py: note: In function "_process_data_chunk":
+src/dotmac/platform/data_import/tasks.py:403:19: error: Incompatible types in
+assignment (expression has type "InvoiceService", variable has type
+"CustomerService")  [assignment]
+            service = InvoiceService(session)
+                      ^~~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/data_import/tasks.py:404:18: error: Incompatible types in
+assignment (expression has type "type[InvoiceMapper]", variable has type
+"type[CustomerMapper]")  [assignment]
+            mapper = InvoiceMapper
+                     ^~~~~~~~~~~~~
+src/dotmac/platform/data_import/tasks.py:428:34: error: Unexpected keyword
+argument "generate_invoice_number" for "from_import_to_model" of
+"CustomerMapper"; did you mean "generate_customer_number"?  [call-arg]
+                        model_data = mapper.from_import_to_model(
+                                     ^
+src/dotmac/platform/customer_management/mappers.py:166:6: note: "from_import_to_model" of "CustomerMapper" defined here
+src/dotmac/platform/data_import/tasks.py:431:27: error: "CustomerService" has
+no attribute "create_invoice"  [attr-defined]
+                        await service.create_invoice(**model_data)
+                              ^~~~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/communications/router.py:15:1: error: Module "pydantic" has
+no attribute "ValidationError"; maybe "ValidationInfo"?  [attr-defined]
+    from pydantic import BaseModel, ConfigDict, EmailStr, Field, Validatio...
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/communications/router.py: note: In function "queue_email_endpoint":
+src/dotmac/platform/communications/router.py:172:16: error: Argument "to" to
+"queue_email" has incompatible type "list[EmailStr]"; expected "list[str]" 
+[arg-type]
+                to=request.to,
+                   ^~~~~~~~~~
+src/dotmac/platform/communications/router.py:172:16: note: "list" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+src/dotmac/platform/communications/router.py:172:16: note: Consider using "Sequence" instead, which is covariant
+src/dotmac/platform/communications/router.py:179:16: error: Argument "cc" to
+"queue_email" has incompatible type "list[EmailStr]"; expected
+"list[str] | None"  [arg-type]
+                cc=request.cc,
+                   ^~~~~~~~~~
+src/dotmac/platform/communications/router.py:179:16: note: "list" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+src/dotmac/platform/communications/router.py:179:16: note: Consider using "Sequence" instead, which is covariant
+src/dotmac/platform/communications/router.py:180:17: error: Argument "bcc" to
+"queue_email" has incompatible type "list[EmailStr]"; expected
+"list[str] | None"  [arg-type]
+                bcc=request.bcc,
+                    ^~~~~~~~~~~
+src/dotmac/platform/communications/router.py:180:17: note: "list" is invariant -- see https://mypy.readthedocs.io/en/stable/common_issues.html#variance
+src/dotmac/platform/communications/router.py:180:17: note: Consider using "Sequence" instead, which is covariant
+Found 301 errors in 55 files (checked 653 source files)

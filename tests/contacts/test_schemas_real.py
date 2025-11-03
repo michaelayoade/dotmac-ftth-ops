@@ -8,7 +8,7 @@ This test file focuses on:
 4. Avoiding over-mocking
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -97,7 +97,7 @@ class TestContactMethodSchemas:
 
     def test_contact_method_response(self):
         """Test ContactMethodResponse schema."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         contact_id = uuid4()
         method_id = uuid4()
 
@@ -161,7 +161,7 @@ class TestContactSchemas:
         """Test contact with all optional fields."""
         owner_id = uuid4()
         team_id = uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         contact = ContactCreate(
             first_name="John",
@@ -194,7 +194,7 @@ class TestContactSchemas:
 
     def test_contact_response_schema(self):
         """Test ContactResponse schema."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         contact_id = uuid4()
         tenant_id = uuid4()
 
@@ -223,8 +223,8 @@ class TestContactSchemas:
                 last_name="Doe",
                 display_name="John Doe",
                 is_verified=False,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
         ]
 
@@ -276,7 +276,7 @@ class TestContactLabelSchemas:
 
     def test_label_definition_response(self):
         """Test ContactLabelDefinitionResponse."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         label_id = uuid4()
         tenant_id = uuid4()
 
@@ -343,7 +343,7 @@ class TestContactFieldSchemas:
 
     def test_field_definition_response(self):
         """Test ContactFieldDefinitionResponse."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         field_id = uuid4()
         tenant_id = uuid4()
 
@@ -398,7 +398,7 @@ class TestContactActivitySchemas:
 
     def test_activity_response(self):
         """Test ContactActivityResponse."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         activity_id = uuid4()
         contact_id = uuid4()
         user_id = uuid4()

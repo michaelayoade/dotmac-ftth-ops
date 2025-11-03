@@ -5,7 +5,7 @@ Tests complete lifecycle: provision → activate → suspend → resume → term
 """
 
 import inspect
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
@@ -51,7 +51,7 @@ async def _provision_service_instance(
         data=provision_request,
         **kwargs,
     )
-    await db_session.commit()
+    await db_session.flush()  # Use flush instead of commit to work with nested transactions
     service = await lifecycle_service.get_service_instance(response.service_instance_id, tenant_id)
     assert service is not None
     return service
@@ -72,6 +72,20 @@ async def lifecycle_service(db_session: AsyncSession) -> LifecycleOrchestrationS
 @pytest_asyncio.fixture
 async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Customer:
     """Create test customer for lifecycle tests."""
+    from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
+
+    # Create tenant first
+    tenant = Tenant(
+        id=test_tenant_id,
+        name="Lifecycle Test Tenant",
+        slug=f"lifecycle-{uuid4().hex[:8]}",
+        status=TenantStatus.ACTIVE,
+        plan_type=TenantPlanType.PROFESSIONAL,
+        billing_cycle=BillingCycle.MONTHLY,
+        email="lifecycle-test@example.com",
+    )
+    db_session.add(tenant)
+
     customer = Customer(
         id=uuid4(),
         tenant_id=test_tenant_id,
@@ -87,12 +101,11 @@ async def test_customer(db_session: AsyncSession, test_tenant_id: str) -> Custom
         city="Test City",
         state_province="TS",
         postal_code="12345",
-        country="USA",
+        country="US",
     )
     db_session.add(customer)
-    flush_result = db_session.flush()
-    if inspect.isawaitable(flush_result):
-        await flush_result
+    # Use flush instead of commit to work with nested transactions
+    await db_session.flush()
     return customer
 
 
@@ -111,7 +124,7 @@ def test_service_provision_request(test_customer: Customer) -> ServiceProvisionR
             "vlan_id": 100,
         },
         installation_address="123 Test St, Test City, TS 12345",
-        installation_scheduled_date=datetime.now(timezone.utc) + timedelta(days=7),
+        installation_scheduled_date=datetime.now(UTC) + timedelta(days=7),
     )
 
 
@@ -234,7 +247,7 @@ class TestServiceActivation:
             service_id=service.id,
             tenant_id=test_tenant_id,
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify activation
         assert activated.status == ServiceStatus.ACTIVE
@@ -306,7 +319,7 @@ class TestServiceSuspension:
             reason="Non-payment",
             suspended_by_user_id=uuid4(),
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify suspension
         assert suspended.status == ServiceStatus.SUSPENDED
@@ -346,7 +359,7 @@ class TestServiceSuspension:
             reason="Suspected fraud activity",
             fraud_suspension=True,
         )
-        await db_session.commit()
+        await db_session.flush()
 
         assert suspended.status == ServiceStatus.SUSPENDED_FRAUD
 
@@ -404,7 +417,7 @@ class TestServiceResumption:
             tenant_id=test_tenant_id,
             reason="Non-payment",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         assert suspended.status == ServiceStatus.SUSPENDED
 
@@ -414,7 +427,7 @@ class TestServiceResumption:
             tenant_id=test_tenant_id,
             resumed_by_user_id=uuid4(),
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify resumption
         assert resumed.status == ServiceStatus.ACTIVE
@@ -484,7 +497,7 @@ class TestServiceTermination:
             reason="Customer cancellation",
             terminated_by_user_id=uuid4(),
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify termination
         assert terminated.status == ServiceStatus.TERMINATED
@@ -521,7 +534,7 @@ class TestServiceTermination:
             tenant_id=test_tenant_id,
             reason="Non-payment",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Terminate suspended service
         terminated = await lifecycle_service.terminate_service(
@@ -529,7 +542,7 @@ class TestServiceTermination:
             tenant_id=test_tenant_id,
             reason="Long-term non-payment",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         assert terminated.status == ServiceStatus.TERMINATED
 
@@ -554,7 +567,7 @@ class TestServiceTermination:
             tenant_id=test_tenant_id,
             reason="Test",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Try to terminate again
         with pytest.raises(BusinessRuleError):
@@ -603,7 +616,7 @@ class TestServiceModification:
             tenant_id=test_tenant_id,
             data=modification_request,
         )
-        await db_session.commit()
+        await db_session.flush()
 
         if hasattr(modified_result, "service_config"):
             modified = modified_result
@@ -653,7 +666,7 @@ class TestServiceHealthChecks:
             service_id=service.id,
             tenant_id=test_tenant_id,
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify health check
         assert health_result.is_healthy is True
@@ -707,7 +720,7 @@ class TestBulkOperations:
             operation="suspend",
             reason="Bulk test suspension",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify all suspended
         assert len(results) == 3
@@ -751,7 +764,7 @@ class TestBulkOperations:
             tenant_id=test_tenant_id,
             operation="resume",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Verify all resumed
         assert len(results) == 2
@@ -798,7 +811,7 @@ class TestLifecycleEvents:
             tenant_id=test_tenant_id,
             reason="Test complete",
         )
-        await db_session.commit()
+        await db_session.flush()
 
         # Get all events
         events = await lifecycle_service.get_lifecycle_events(

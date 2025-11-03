@@ -87,6 +87,11 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         password = password or os.getenv("GENIEACS_PASSWORD", "")
 
         # Initialize robust HTTP client
+        max_connections_value = max_connections if max_connections is not None else 20
+        max_keepalive_value = (
+            max_keepalive_connections if max_keepalive_connections is not None else 10
+        )
+
         super().__init__(
             service_name="genieacs",
             base_url=base_url,
@@ -96,8 +101,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
             verify_ssl=verify_ssl,
             default_timeout=timeout_seconds,
             max_retries=max_retries,
-            max_connections=max_connections,
-            max_keepalive_connections=max_keepalive_connections,
+            max_connections=max_connections_value,
+            max_keepalive_connections=max_keepalive_value,
         )
 
         # Prefetch/cache state (lazily initialised inside async context)
@@ -177,7 +182,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
 
     async def _invalidate_device_cache(self) -> None:
         await self._ensure_prefetch_lock()
-        async with self._prefetch_lock:  # type: ignore[arg-type]
+        assert self._prefetch_lock is not None
+        async with self._prefetch_lock:
             self._device_cache = None
             self._prefetch_task = None
 
@@ -188,7 +194,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
                 cache[str(device["_id"])] = device
 
         await self._ensure_prefetch_lock()
-        async with self._prefetch_lock:  # type: ignore[arg-type]
+        assert self._prefetch_lock is not None
+        async with self._prefetch_lock:
             self._device_cache = cache
             self._prefetch_task = None
 
@@ -197,7 +204,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
         if device_id is None:
             return
         await self._ensure_prefetch_lock()
-        async with self._prefetch_lock:  # type: ignore[arg-type]
+        assert self._prefetch_lock is not None
+        async with self._prefetch_lock:
             if self._device_cache is not None:
                 self._device_cache[str(device_id)] = device
 
@@ -222,7 +230,8 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
             return
 
         await self._ensure_prefetch_lock()
-        async with self._prefetch_lock:  # type: ignore[arg-type]
+        assert self._prefetch_lock is not None
+        async with self._prefetch_lock:
             if self._device_cache is not None:
                 return
 
@@ -237,7 +246,7 @@ class GenieACSClient(RobustHTTPClient):  # type: ignore[misc]
     async def _get_cached_device(self, device_id: str) -> dict[str, Any] | None:
         await self._maybe_prefetch_devices()
         if self._device_cache is not None:
-            return cast(dict[str, Any] | None, self._device_cache.get(device_id))
+            return self._device_cache.get(device_id)
         return None
 
     async def get_device(self, device_id: str) -> dict[str, Any] | None:

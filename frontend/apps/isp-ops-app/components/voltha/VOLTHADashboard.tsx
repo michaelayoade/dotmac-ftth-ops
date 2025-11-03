@@ -118,7 +118,8 @@ export function VOLTHADashboard() {
     operation: "enable" | "disable" | "reboot" | "delete",
   ) => {
     try {
-      const query = selectedDevice?.metadata?.olt_id || selectedDevice?.parent_id;
+      const device = onus.find((d) => d.id === deviceId);
+      const query = (device as any)?.metadata?.olt_id || device?.parent_id;
       const url = query
         ? `/api/v1/access/devices/${deviceId}/${operation}?olt_id=${encodeURIComponent(query)}`
         : `/api/v1/access/devices/${deviceId}/${operation}`;

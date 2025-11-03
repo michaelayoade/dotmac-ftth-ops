@@ -38,6 +38,17 @@ logger = structlog.get_logger(__name__)
 router = APIRouter(prefix="/teams", tags=["Team Management"])
 
 
+def _require_tenant_id(user: UserInfo) -> str:
+    """Ensure team operations run within an explicit tenant context."""
+    tenant_id = user.tenant_id
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context is required for team operations.",
+        )
+    return tenant_id
+
+
 def get_team_service(
     db: Annotated[AsyncSession, Depends(get_async_session)],
 ) -> TeamService:
@@ -59,13 +70,14 @@ async def create_team(
 
     Requires: team.create permission
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
-        team = await team_service.create_team(team_data, current_user.tenant_id)
+        team = await team_service.create_team(team_data, tenant_id)
         return Team.model_validate(team)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
     except Exception as e:
-        logger.error("Failed to create team", error=str(e), tenant_id=current_user.tenant_id)
+        logger.error("Failed to create team", error=str(e), tenant_id=tenant_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create team",
@@ -86,16 +98,17 @@ async def list_teams(
 
     Requires: team.read permission
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
         return await team_service.list_teams(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             page=page,
             page_size=page_size,
             is_active=is_active,
             search=search,
         )
     except Exception as e:
-        logger.error("Failed to list teams", error=str(e), tenant_id=current_user.tenant_id)
+        logger.error("Failed to list teams", error=str(e), tenant_id=tenant_id)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to list teams",
@@ -113,7 +126,8 @@ async def get_team(
 
     Requires: team.read permission
     """
-    team = await team_service.get_team(team_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    team = await team_service.get_team(team_id, tenant_id)
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -134,7 +148,8 @@ async def get_team_by_slug(
 
     Requires: team.read permission
     """
-    team = await team_service.get_team_by_slug(slug, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    team = await team_service.get_team_by_slug(slug, tenant_id)
     if not team:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -156,8 +171,9 @@ async def update_team(
 
     Requires: team.update permission
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
-        team = await team_service.update_team(team_id, team_data, current_user.tenant_id)
+        team = await team_service.update_team(team_id, team_data, tenant_id)
         return Team.model_validate(team)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -166,7 +182,7 @@ async def update_team(
             "Failed to update team",
             error=str(e),
             team_id=str(team_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -185,7 +201,8 @@ async def delete_team(
 
     Requires: team.delete permission
     """
-    deleted = await team_service.delete_team(team_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    deleted = await team_service.delete_team(team_id, tenant_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -216,7 +233,8 @@ async def add_team_member(
         )
 
     try:
-        member = await team_service.add_team_member(member_data, current_user.tenant_id)
+        tenant_id = _require_tenant_id(current_user)
+        member = await team_service.add_team_member(member_data, tenant_id)
         return TeamMember.model_validate(member)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -225,7 +243,7 @@ async def add_team_member(
             "Failed to add team member",
             error=str(e),
             team_id=str(team_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -248,10 +266,11 @@ async def list_team_members(
 
     Requires: team.read permission
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
         return await team_service.list_team_members(
             team_id=team_id,
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             page=page,
             page_size=page_size,
             role=role,
@@ -262,7 +281,7 @@ async def list_team_members(
             "Failed to list team members",
             error=str(e),
             team_id=str(team_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -283,7 +302,8 @@ async def update_team_member(
 
     Requires: team.manage_members permission
     """
-    member = await team_service.update_team_member(member_id, member_data, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    member = await team_service.update_team_member(member_id, member_data, tenant_id)
 
     if str(member.team_id) != str(team_id):
         logger.warning(
@@ -291,7 +311,7 @@ async def update_team_member(
             member_id=str(member_id),
             expected_team_id=str(team_id),
             actual_team_id=str(member.team_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -314,7 +334,8 @@ async def remove_team_member(
     Requires: team.manage_members permission
     """
     # Get member to verify it belongs to the team
-    member = await team_service.get_team_member(member_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    member = await team_service.get_team_member(member_id, tenant_id)
     if not member:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -327,7 +348,7 @@ async def remove_team_member(
             detail="Member does not belong to specified team",
         )
 
-    deleted = await team_service.remove_team_member(member_id, current_user.tenant_id)
+    deleted = await team_service.remove_team_member(member_id, tenant_id)
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -350,10 +371,11 @@ async def get_user_teams(
 
     Requires: team.read permission
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
         teams = await team_service.get_user_teams(
             user_id=user_id,
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             is_active=is_active,
         )
         return [Team.model_validate(team) for team in teams]
@@ -362,7 +384,7 @@ async def get_user_teams(
             "Failed to get user teams",
             error=str(e),
             user_id=str(user_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -381,10 +403,12 @@ async def get_my_teams(
 
     Requires: authenticated user
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
+        user_uuid = UUID(current_user.user_id)
         teams = await team_service.get_user_teams(
-            user_id=current_user.user_id,
-            tenant_id=current_user.tenant_id,
+            user_id=user_uuid,
+            tenant_id=tenant_id,
             is_active=is_active,
         )
         return [Team.model_validate(team) for team in teams]
@@ -393,7 +417,7 @@ async def get_my_teams(
             "Failed to get current user teams",
             error=str(e),
             user_id=str(current_user.user_id),
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
         )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,

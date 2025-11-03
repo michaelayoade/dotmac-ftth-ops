@@ -5,17 +5,13 @@ Tests complete workflows for WireGuard server and peer creation with automatic
 dual-stack IP allocation.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
 
 from dotmac.platform.wireguard.client import WireGuardClient
-from dotmac.platform.wireguard.schemas import (
-    WireGuardPeerCreate,
-    WireGuardServerCreate,
-)
 from dotmac.platform.wireguard.service import WireGuardService, WireGuardServiceError
 
 
@@ -28,8 +24,8 @@ def mock_wireguard_client():
     async def mock_generate_keypair():
         # Generate unique 44-character keys (base64-like format) using uuid4().hex
         unique_suffix = uuid4().hex[:32]  # 32 hex chars
-        private_key = f"priv{unique_suffix}====".ljust(44, '=')[:44]
-        public_key = f"pub{unique_suffix}=====".ljust(44, '=')[:44]
+        private_key = f"priv{unique_suffix}====".ljust(44, "=")[:44]
+        public_key = f"pub{unique_suffix}=====".ljust(44, "=")[:44]
         return (private_key, public_key)
 
     # Mock allocate_peer_ip to return sequential IP addresses
@@ -59,12 +55,12 @@ def mock_wireguard_client():
         return f"""[Interface]
 PrivateKey = {peer_private_key}
 Address = {peer_address}
-DNS = {', '.join(dns_servers)}
+DNS = {", ".join(dns_servers)}
 
 [Peer]
 PublicKey = {server_public_key}
 Endpoint = {server_endpoint}
-AllowedIPs = {', '.join(allowed_ips)}
+AllowedIPs = {", ".join(allowed_ips)}
 PersistentKeepalive = 25
 """
 
@@ -86,7 +82,9 @@ PersistentKeepalive = 25
 class TestWireGuardDualStackIntegration:
     """Integration tests for WireGuard dual-stack operations."""
 
-    async def test_create_dual_stack_server_integration(self, async_db_session, mock_wireguard_client):
+    async def test_create_dual_stack_server_integration(
+        self, async_db_session, mock_wireguard_client
+    ):
         """
         Test creating WireGuard server with dual-stack support.
 
@@ -337,11 +335,12 @@ class TestWireGuardDualStackIntegration:
                     peer_ipv6="fd00:50::10",  # Conflict
                 )
 
-            assert "already in use" in str(exc_info.value).lower() or "conflict" in str(exc_info.value).lower()
+            assert (
+                "already in use" in str(exc_info.value).lower()
+                or "conflict" in str(exc_info.value).lower()
+            )
 
-    async def test_generate_peer_config_dual_stack(
-        self, async_db_session, mock_wireguard_client
-    ):
+    async def test_generate_peer_config_dual_stack(self, async_db_session, mock_wireguard_client):
         """
         Test generating WireGuard config for dual-stack peer.
         """
@@ -455,9 +454,9 @@ class TestWireGuardDualStackIntegration:
             )
 
             # Create peer with expiration
-            from datetime import timedelta, timezone
+            from datetime import timedelta
 
-            expires_at = datetime.now(timezone.utc) + timedelta(days=30)
+            expires_at = datetime.now(UTC) + timedelta(days=30)
 
             peer = await service.create_peer(
                 server_id=server.id,
@@ -504,4 +503,7 @@ class TestWireGuardDualStackIntegration:
                     name="Peer 4",
                 )
 
-            assert "capacity" in str(exc_info.value).lower() or "max_peers" in str(exc_info.value).lower()
+            assert (
+                "capacity" in str(exc_info.value).lower()
+                or "max_peers" in str(exc_info.value).lower()
+            )

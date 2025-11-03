@@ -1,10 +1,7 @@
 """Payment processing service with tenant support and idempotency."""
 
 from collections.abc import Mapping
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -407,12 +404,12 @@ class PaymentService:
 
         # Update original payment refund tracking and status
         # Track total refunded amount
-        current_refund_total = int(original_payment.refund_amount or 0)
-        new_refund_total = current_refund_total + refund_amount
+        current_refund_total = Decimal(original_payment.refund_amount or 0)
+        new_refund_total = current_refund_total + Decimal(refund_amount)
         original_payment.refund_amount = new_refund_total
 
         # Update status based on total refunded
-        if new_refund_total >= original_payment.amount:
+        if new_refund_total >= Decimal(original_payment.amount):
             original_payment.status = PaymentStatus.REFUNDED
         else:
             original_payment.status = PaymentStatus.PARTIALLY_REFUNDED

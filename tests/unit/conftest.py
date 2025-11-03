@@ -5,29 +5,26 @@ Provides lightweight fixtures and stubs for unit testing without database depend
 These fixtures enable fast, isolated tests that mock external dependencies.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from typing import Any, Dict, List, Optional
+from typing import Any
 from uuid import UUID, uuid4
 
 import pytest
-
 
 # ============================================================================
 # Stub Repositories
 # ============================================================================
 
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class StubRepository:
     """Base stub repository with in-memory storage."""
 
     def __init__(self):
-        self._store: Dict[UUID, Any] = {}
+        self._store: dict[UUID, Any] = {}
         self._committed = False
         self._rolled_back = False
 
@@ -46,7 +43,7 @@ class StubRepository:
         """Get entity by ID."""
         return self._store.get(entity_id)
 
-    async def list_all(self, **filters) -> List[Any]:
+    async def list_all(self, **filters) -> list[Any]:
         """List all entities, optionally filtered."""
         entities = list(self._store.values())
 
@@ -205,11 +202,11 @@ class StubPlanRepository(StubRepository):
 class StubSubscriptionRepository(StubRepository):
     """In-memory repository for plan subscriptions."""
 
-    async def list_by_plan(self, plan_id: UUID) -> List[Any]:
+    async def list_by_plan(self, plan_id: UUID) -> list[Any]:
         """List subscriptions for a plan."""
         return [s for s in self._store.values() if s.plan_id == plan_id]
 
-    async def list_by_customer(self, customer_id: UUID) -> List[Any]:
+    async def list_by_customer(self, customer_id: UUID) -> list[Any]:
         """List subscriptions for a customer."""
         return [s for s in self._store.values() if s.customer_id == customer_id]
 
@@ -274,8 +271,8 @@ def create_test_plan(**overrides):
         "features": [],
         "restrictions": [],
         "validation_errors": [],
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     defaults.update(overrides)
@@ -291,16 +288,16 @@ def create_test_subscription(**overrides):
         "tenant_id": uuid4(),
         "plan_id": uuid4(),
         "customer_id": uuid4(),
-        "start_date": datetime.now(timezone.utc),
+        "start_date": datetime.now(UTC),
         "end_date": None,
         "is_active": True,
         "current_period_usage_gb": Decimal("0.00"),
-        "last_usage_reset": datetime.now(timezone.utc),
+        "last_usage_reset": datetime.now(UTC),
         "custom_download_speed": None,
         "custom_upload_speed": None,
         "notes": "",
-        "created_at": datetime.now(timezone.utc),
-        "updated_at": datetime.now(timezone.utc),
+        "created_at": datetime.now(UTC),
+        "updated_at": datetime.now(UTC),
     }
 
     defaults.update(overrides)
@@ -374,9 +371,7 @@ class MockEmailService:
 
     async def send_template_email(self, template_name: str, to: str, context: dict):
         """Record sent template email."""
-        self.sent_emails.append(
-            {"template": template_name, "to": to, "context": context}
-        )
+        self.sent_emails.append({"template": template_name, "to": to, "context": context})
         return True
 
 

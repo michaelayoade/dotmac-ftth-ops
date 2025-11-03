@@ -1,4 +1,3 @@
-
 """
 Tests for feature flags API router.
 
@@ -14,26 +13,21 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.feature_flags.router import (
-
-
     BulkFlagUpdateRequest,
     FeatureFlagCheckRequest,
     FeatureFlagRequest,
     feature_flags_router,
 )
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def client():
     """Create test client with mocked authentication."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user_optional
+    from dotmac.platform.auth.dependencies import get_current_user_optional
 
     app = FastAPI()
 
@@ -58,7 +52,7 @@ def regular_user_client():
     """Create test client with regular user (no admin privileges)."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user_optional
+    from dotmac.platform.auth.dependencies import get_current_user_optional
 
     app = FastAPI()
 
@@ -82,7 +76,7 @@ def feature_flag_admin_client():
     """Create test client with feature flag admin role."""
     from fastapi import FastAPI
 
-    from dotmac.platform.auth.core import get_current_user_optional
+    from dotmac.platform.auth.dependencies import get_current_user_optional
 
     app = FastAPI()
 

@@ -6,12 +6,12 @@ Models for WireGuard VPN servers, peers, and configurations.
 
 from datetime import datetime
 from enum import Enum as PyEnum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import JSON, Boolean, DateTime, ForeignKey, Index, Integer, String, Text, Uuid
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, synonym
 
 from dotmac.platform.db import (
     AuditMixin,
@@ -20,6 +20,11 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 
 class WireGuardServerStatus(str, PyEnum):
@@ -40,7 +45,7 @@ class WireGuardPeerStatus(str, PyEnum):
     EXPIRED = "expired"
 
 
-class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class WireGuardServer(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     WireGuard VPN Server Model.
 
@@ -224,7 +229,7 @@ class WireGuardServer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
         return self.server_ipv6 is not None
 
 
-class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class WireGuardPeer(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     WireGuard VPN Peer Model.
 
@@ -250,7 +255,8 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
     )
 
     # Customer/Subscriber relationship
-    customer_id: Mapped[UUID | None] = mapped_column(
+    _customer_id: Mapped[UUID | None] = mapped_column(
+        "customer_id",
         Uuid(as_uuid=True),
         ForeignKey("customers.id", ondelete="SET NULL"),
         nullable=True,
@@ -381,12 +387,44 @@ class WireGuardPeer(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMix
         comment="Generated WireGuard config file for peer",
     )
 
+    def _get_customer_id(self) -> UUID | str | None:
+        """Return linked customer UUID or stored customer reference."""
+        if self._customer_id is not None:
+            return self._customer_id
+        metadata = self.metadata_ or {}
+        return metadata.get("customer_reference")
+
+    def _set_customer_id(self, value: UUID | str | None) -> None:
+        """Store customer reference, accepting UUIDs or arbitrary identifiers."""
+        metadata = dict(self.metadata_ or {})
+        metadata.pop("customer_reference", None)
+
+        if value is None:
+            self._customer_id = None
+        elif isinstance(value, UUID):
+            self._customer_id = value
+        else:
+            try:
+                uuid_value = UUID(str(value))
+            except (ValueError, TypeError):
+                self._customer_id = None
+                metadata["customer_reference"] = str(value)
+            else:
+                self._customer_id = uuid_value
+
+        self.metadata_ = metadata
+
+    customer_id = synonym(
+        "_customer_id",
+        descriptor=property(_get_customer_id, _set_customer_id),
+    )
+
     # Relationships
     server: Mapped["WireGuardServer"] = relationship(
         "WireGuardServer",
         back_populates="peers",
     )
-    customer = relationship("Customer", foreign_keys=[customer_id])
+    customer = relationship("Customer", foreign_keys=[_customer_id])
     subscriber = relationship("Subscriber", foreign_keys=[subscriber_id])
 
     __table_args__ = (

@@ -450,10 +450,16 @@ class WorkflowEngine:
             The value at the path
         """
         parts = path.split(".")
-        current = obj
+        current: Any = obj
         for part in parts:
             if isinstance(current, dict):
                 current = current.get(part)
+            elif isinstance(current, list) and part.isdigit():
+                index = int(part)
+                if 0 <= index < len(current):
+                    current = current[index]
+                else:
+                    return None
             else:
                 return None
         return current

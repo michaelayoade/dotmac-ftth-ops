@@ -16,6 +16,7 @@ import uuid
 from collections import defaultdict
 from datetime import datetime
 from statistics import mean
+from typing import Any, DefaultDict, Sequence
 
 import strawberry
 from sqlalchemy import and_, desc, func, or_, select
@@ -73,7 +74,8 @@ async def _fetch_site_radios(db: AsyncSession, tenant_id: str, site_id: str) -> 
         )
     )
     result = await db.execute(radios_query)
-    return result.unique().scalars().all()
+    radios_sequence: Sequence[WirelessRadio] = result.unique().scalars().all()
+    return list(radios_sequence)
 
 
 def _channel_to_frequency_mhz(channel: int | None, frequency: Frequency) -> int:
@@ -203,6 +205,7 @@ class WirelessQueries:
         db: AsyncSession = info.context["db"]
         tenant_id = info.context["tenant_id"]
 
+        lookup_id: uuid.UUID | str
         try:
             lookup_id = uuid.UUID(str(id))
         except ValueError:
@@ -336,7 +339,8 @@ class WirelessQueries:
             )
 
         result = await db.execute(query)
-        client_models = result.scalars().all()
+        client_models_seq = result.scalars().all()
+        client_models: list[WirelessClientModel] = list(client_models_seq)
 
         if customer_id:
             filtered_clients: list[WirelessClientModel] = []
@@ -676,8 +680,8 @@ class WirelessQueries:
             Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
         }
 
-        band_to_channels = defaultdict(list)
-        clients_per_band = defaultdict(int)
+        band_to_channels: DefaultDict[Frequency, list[ChannelUtilization]] = defaultdict(list)
+        clients_per_band: DefaultDict[Frequency, int] = defaultdict(int)
         interference_values: list[float] = []
         signal_values: list[float] = []
         snr_values: list[float] = []
@@ -925,8 +929,9 @@ class WirelessQueries:
             .limit(1)
         )
         metadata_row = await db.execute(metadata_query)
-        metadata_value = metadata_row.scalar_one_or_none() or {}
-        site_meta = metadata_value.get("site") if isinstance(metadata_value, dict) else {}
+        metadata_raw = metadata_row.scalar_one_or_none()
+        metadata_dict: dict[str, Any] = metadata_raw if isinstance(metadata_raw, dict) else {}
+        site_meta = metadata_dict.get("site", {}) if isinstance(metadata_dict, dict) else {}
         site_display_name = site_meta.get("name", site_display_name)
 
         # Calculate 6 GHz clients
@@ -1312,7 +1317,8 @@ def map_client_model_to_graphql(client: WirelessClientModel) -> WirelessClient:
     }
     connection_type = connection_type_map.get(connection_type_value, ClientConnectionType.WIFI_5)
 
-    frequency_band = freq_map.get(client.frequency, FrequencyBand.BAND_5_GHZ)
+    client_frequency = client.frequency or Frequency.FREQ_5_GHZ
+    frequency_band = freq_map.get(client_frequency, FrequencyBand.BAND_5_GHZ)
 
     is_authenticated = bool(metadata.get("is_authenticated", client.connected))
     is_authorized = bool(metadata.get("is_authorized", client.connected))

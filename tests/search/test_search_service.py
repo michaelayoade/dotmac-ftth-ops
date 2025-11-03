@@ -1,4 +1,3 @@
-
 """
 Tests for search service implementation.
 """
@@ -9,8 +8,6 @@ import pytest
 import pytest_asyncio
 
 from dotmac.platform.search.interfaces import (
-
-
     SearchFilter,
     SearchQuery,
     SearchResponse,
@@ -23,11 +20,8 @@ from dotmac.platform.search.service import (
     SearchService,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.integration
 class TestInMemorySearchBackend:

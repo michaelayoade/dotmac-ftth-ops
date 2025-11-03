@@ -6,7 +6,7 @@ Tests archiving old cleared alarms to MinIO cold storage.
 
 import gzip
 import json
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from io import BytesIO
 from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
@@ -21,6 +21,11 @@ from dotmac.platform.fault_management.archival import (
 )
 from dotmac.platform.fault_management.models import Alarm, AlarmSeverity, AlarmSource, AlarmStatus
 from dotmac.platform.fault_management.tasks import cleanup_old_cleared_alarms
+
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("override_db_session_for_services"),
+]
 
 # =============================================================================
 # Fixtures
@@ -68,12 +73,12 @@ def sample_alarm(tenant_id):
         customer_id=uuid4(),
         customer_name="Acme Corp",
         subscriber_count=50,
-        first_occurrence=datetime.now(timezone.utc) - timedelta(days=100),
-        last_occurrence=datetime.now(timezone.utc) - timedelta(days=95),
+        first_occurrence=datetime.now(UTC) - timedelta(days=100),
+        last_occurrence=datetime.now(UTC) - timedelta(days=95),
         occurrence_count=3,
-        acknowledged_at=datetime.now(timezone.utc) - timedelta(days=94),
-        cleared_at=datetime.now(timezone.utc) - timedelta(days=93),
-        resolved_at=datetime.now(timezone.utc) - timedelta(days=93),
+        acknowledged_at=datetime.now(UTC) - timedelta(days=94),
+        cleared_at=datetime.now(UTC) - timedelta(days=93),
+        resolved_at=datetime.now(UTC) - timedelta(days=93),
     )
 
 
@@ -161,7 +166,7 @@ class TestAlarmArchivalService:
         manifest = await service.archive_alarms(
             alarms=[],
             tenant_id=tenant_id,
-            cutoff_date=datetime.now(timezone.utc),
+            cutoff_date=datetime.now(UTC),
             session=async_session,
         )
 
@@ -175,7 +180,7 @@ class TestAlarmArchivalService:
     ):
         """Test successful alarm archival."""
         service = AlarmArchivalService(storage=mock_minio_storage)
-        cutoff_date = datetime.now(timezone.utc) - timedelta(days=90)
+        cutoff_date = datetime.now(UTC) - timedelta(days=90)
 
         # Create multiple alarms
         alarms = [sample_alarm]
@@ -189,9 +194,9 @@ class TestAlarmArchivalService:
                 source=AlarmSource.CPE if i % 2 == 0 else AlarmSource.MONITORING,
                 alarm_type="TEST_ALARM",
                 title=f"Test Alarm {i}",
-                first_occurrence=datetime.now(timezone.utc) - timedelta(days=100),
-                last_occurrence=datetime.now(timezone.utc) - timedelta(days=95),
-                cleared_at=datetime.now(timezone.utc) - timedelta(days=93),
+                first_occurrence=datetime.now(UTC) - timedelta(days=100),
+                last_occurrence=datetime.now(UTC) - timedelta(days=95),
+                cleared_at=datetime.now(UTC) - timedelta(days=93),
             )
             alarms.append(alarm)
 
@@ -240,7 +245,7 @@ class TestAlarmArchivalService:
             await service.archive_alarms(
                 alarms=[sample_alarm],
                 tenant_id=tenant_id,
-                cutoff_date=datetime.now(timezone.utc),
+                cutoff_date=datetime.now(UTC),
                 session=async_session,
             )
 
@@ -287,7 +292,7 @@ class TestAlarmArchivalService:
                 path=f"alarms/{tenant_id}/year=2025/month=01/day=15/alarms_20250115_120000.json.gz",
                 size=1024,
                 content_type="application/gzip",
-                modified_at=datetime.now(timezone.utc),
+                modified_at=datetime.now(UTC),
                 tenant_id=tenant_id,
             ),
             FileInfo(
@@ -295,7 +300,7 @@ class TestAlarmArchivalService:
                 path=f"alarms/{tenant_id}/year=2025/month=01/day=15/alarms_20250115_120000_manifest.json",
                 size=512,
                 content_type="application/json",
-                modified_at=datetime.now(timezone.utc),
+                modified_at=datetime.now(UTC),
                 tenant_id=tenant_id,
             ),
         ]
@@ -343,9 +348,9 @@ class TestCleanupOldClearedAlarms:
             source=AlarmSource.NETWORK_DEVICE,
             alarm_type="LINK_DOWN",
             title="Old Cleared Alarm",
-            first_occurrence=datetime.now(timezone.utc) - timedelta(days=100),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(days=95),
-            cleared_at=datetime.now(timezone.utc) - timedelta(days=95),  # 95 days ago
+            first_occurrence=datetime.now(UTC) - timedelta(days=100),
+            last_occurrence=datetime.now(UTC) - timedelta(days=95),
+            cleared_at=datetime.now(UTC) - timedelta(days=95),  # 95 days ago
         )
 
         async_session.add(old_alarm)
@@ -357,9 +362,9 @@ class TestCleanupOldClearedAlarms:
             mock_instance.archive_alarms = AsyncMock(
                 return_value=ArchivalManifest(
                     tenant_id=tenant_id,
-                    archive_date=datetime.now(timezone.utc),
+                    archive_date=datetime.now(UTC),
                     alarm_count=1,
-                    cutoff_date=datetime.now(timezone.utc) - timedelta(days=90),
+                    cutoff_date=datetime.now(UTC) - timedelta(days=90),
                     severity_breakdown={"critical": 1},
                     source_breakdown={"network_device": 1},
                     total_size_bytes=1024,
@@ -394,9 +399,9 @@ class TestCleanupOldClearedAlarms:
             source=AlarmSource.CPE,
             alarm_type="POWER_FAIL",
             title="Recent Cleared Alarm",
-            first_occurrence=datetime.now(timezone.utc) - timedelta(days=30),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(days=25),
-            cleared_at=datetime.now(timezone.utc) - timedelta(days=25),  # Only 25 days ago
+            first_occurrence=datetime.now(UTC) - timedelta(days=30),
+            last_occurrence=datetime.now(UTC) - timedelta(days=25),
+            cleared_at=datetime.now(UTC) - timedelta(days=25),  # Only 25 days ago
         )
 
         async_session.add(recent_alarm)
@@ -426,8 +431,8 @@ class TestCleanupOldClearedAlarms:
             source=AlarmSource.SERVICE,
             alarm_type="SERVICE_DOWN",
             title="Active Alarm",
-            first_occurrence=datetime.now(timezone.utc) - timedelta(days=100),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(days=1),
+            first_occurrence=datetime.now(UTC) - timedelta(days=100),
+            last_occurrence=datetime.now(UTC) - timedelta(days=1),
         )
 
         async_session.add(active_alarm)

@@ -1,4 +1,3 @@
-
 """
 Integration tests for metrics service with real DB.
 """
@@ -6,7 +5,6 @@ Integration tests for metrics service with real DB.
 from uuid import uuid4
 
 import pytest
-
 import pytest_asyncio
 from sqlalchemy import delete
 
@@ -19,10 +17,6 @@ from dotmac.platform.communications.models import (
     CommunicationStatus,
     CommunicationType,
 )
-
-
-
-
 
 pytestmark = pytest.mark.asyncio
 

@@ -4,14 +4,15 @@ Billing system test fixtures and configuration.
 Provides reusable fixtures for testing billing components.
 """
 
-import os
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
 from sqlalchemy import delete
+
 
 # Provide billing-specific environment defaults while keeping other tests isolated
 @pytest.fixture(autouse=True)
@@ -144,7 +145,7 @@ def sample_product_category():
         description="Development and productivity software",
         is_active=True,
         metadata={"department": "engineering"},
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
     )
 
@@ -165,7 +166,7 @@ def sample_product():
         is_active=True,
         usage_rates={"api_calls": Decimal("0.01"), "storage_gb": Decimal("0.50")},
         metadata={"tier": "professional"},
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
     )
 
@@ -186,7 +187,7 @@ def usage_based_product():
         is_active=True,
         usage_rates={"api_calls": Decimal("0.001"), "bandwidth_gb": Decimal("0.10")},
         metadata={"rate_limited": True},
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
     )
 
@@ -240,7 +241,7 @@ def sample_subscription_plan():
         overage_rates={"api_calls": Decimal("0.001"), "storage_gb": Decimal("0.50")},
         is_active=True,
         metadata={"tier": "professional"},
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
     )
 
@@ -248,7 +249,7 @@ def sample_subscription_plan():
 @pytest.fixture
 def sample_subscription(sample_subscription_plan):
     """Sample subscription for testing."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     return Subscription(
         subscription_id="sub_123",
         tenant_id="test-tenant-123",
@@ -327,7 +328,7 @@ def sample_pricing_rule():
         priority=100,
         is_active=True,
         metadata={"campaign": "q4-2024"},
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         updated_at=None,
     )
 
@@ -446,7 +447,7 @@ def mock_db_product():
     db_product.is_active = True
     db_product.usage_rates = {"api_calls": "0.01"}
     db_product.metadata_json = {"test": True}
-    db_product.created_at = datetime.now(timezone.utc)
+    db_product.created_at = datetime.now(UTC)
     db_product.updated_at = None
     return db_product
 
@@ -457,7 +458,7 @@ def mock_db_subscription():
     # Use mock instead of importing to avoid conflicts
     BillingSubscriptionTable = MagicMock
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     db_subscription = MagicMock(spec=BillingSubscriptionTable)
     db_subscription.subscription_id = "sub_123"
     db_subscription.tenant_id = "test-tenant-123"
@@ -503,7 +504,7 @@ def mock_db_pricing_rule():
     db_rule.priority = 100
     db_rule.is_active = True
     db_rule.metadata_json = {"test": True}
-    db_rule.created_at = datetime.now(timezone.utc)
+    db_rule.created_at = datetime.now(UTC)
     db_rule.updated_at = None
     return db_rule
 
@@ -532,7 +533,7 @@ class TestDataBuilder:
             "is_active": True,
             "usage_rates": {},
             "metadata": {},
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -556,7 +557,7 @@ class TestDataBuilder:
             "overage_rates": {},
             "is_active": True,
             "metadata": {},
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -565,7 +566,7 @@ class TestDataBuilder:
     @staticmethod
     def build_subscription(**overrides) -> Subscription:
         """Build a subscription with optional field overrides."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         defaults = {
             "subscription_id": "sub_test",
             "tenant_id": "test-tenant",
@@ -609,7 +610,7 @@ class TestDataBuilder:
             "priority": 100,
             "is_active": True,
             "metadata": {},
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "updated_at": None,
         }
         defaults.update(overrides)
@@ -650,6 +651,14 @@ def mock_tenant_context():
     context.tenant_id = "test-tenant-123"
     context.user_id = "user_123"
     return context
+
+
+class _NoopLimiter:
+    def limit(self, limit):
+        def decorator(func):
+            return func
+        return decorator
+
 
 
 # ========================================
@@ -707,11 +716,12 @@ async def router_client(async_db_session, test_app, tenant_id):
     Factories use async_db_session and commit with _commit=True, so the router
     needs to query from the same session to see committed data.
     """
+    from fastapi import Request
     from httpx import ASGITransport, AsyncClient
 
-    from fastapi import Request
     from dotmac.platform.auth.core import UserInfo
     from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.auth.rbac_service import RBACService
     from dotmac.platform.db import get_async_session, get_session_dependency
     from dotmac.platform.tenant import get_current_tenant_id
 
@@ -722,9 +732,13 @@ async def router_client(async_db_session, test_app, tenant_id):
     test_app.dependency_overrides[get_session_dependency] = override_get_session
     test_app.dependency_overrides[get_async_session] = override_get_session
 
+    from dotmac.platform.core import rate_limiting
+
+    rate_limiting._limiter = _NoopLimiter()
+
     async def override_get_current_user(request: Request):
         return UserInfo(
-            user_id="router-test-user",
+            user_id=str(uuid4()),
             email="router@example.com",
             username="router-user",
             tenant_id=tenant_id,
@@ -748,19 +762,28 @@ async def router_client(async_db_session, test_app, tenant_id):
     test_app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
 
     transport = ASGITransport(app=test_app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-        yield client
 
-    # Clear overrides after test
-    test_app.dependency_overrides.clear()
+    original_get_user_permissions = RBACService.get_user_permissions
+
+    async def mock_get_user_permissions(self, user_id, include_expired=False):  # type: ignore[override]
+        return {"*"}
+
+    RBACService.get_user_permissions = mock_get_user_permissions  # type: ignore[assignment]
+
+    try:
+        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+            yield client
+    finally:
+        RBACService.get_user_permissions = original_get_user_permissions  # type: ignore[assignment]
+        test_app.dependency_overrides.clear()
 
 
 @pytest_asyncio.fixture
 async def unauth_client(async_db_session, async_db_engine):
     """HTTP client without auth overrides for 401/403 scenarios."""
     from httpx import ASGITransport, AsyncClient
-    from dotmac.platform.db import get_async_session, get_session_dependency
 
+    from dotmac.platform.db import get_async_session, get_session_dependency
     from tests.fixtures.app import _build_app
 
     app = _build_app(async_db_engine, override_auth=False)
@@ -809,9 +832,6 @@ from unittest.mock import MagicMock  # noqa: E402
 from uuid import uuid4  # noqa: E402
 
 import pytest  # noqa: E402
-
-pytestmark = pytest.mark.integration
-
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402
 
 from dotmac.platform.billing.core.entities import (  # noqa: E402
@@ -827,6 +847,8 @@ from dotmac.platform.billing.core.enums import (  # noqa: E402
 )
 from dotmac.platform.billing.core.models import Payment, PaymentMethod  # noqa: E402
 from dotmac.platform.billing.models import Invoice  # noqa: E402
+
+pytestmark = pytest.mark.integration
 
 # =============================================================================
 # Payment Provider Mocks
@@ -1008,8 +1030,8 @@ async def sample_draft_invoice(async_db_session: AsyncSession, test_tenant_id, t
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=10000,  # $100.00 in cents
         tax_amount=1000,  # $10.00
@@ -1038,8 +1060,8 @@ async def sample_open_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=25000,  # $250.00
         tax_amount=2500,  # $25.00
@@ -1068,8 +1090,8 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc) - timedelta(days=5),
-        due_date=datetime.now(timezone.utc) + timedelta(days=25),
+        issue_date=datetime.now(UTC) - timedelta(days=5),
+        due_date=datetime.now(UTC) + timedelta(days=25),
         currency="USD",
         subtotal=50000,  # $500.00
         tax_amount=5000,  # $50.00
@@ -1080,7 +1102,7 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         credit_applications=[],
         status=InvoiceStatus.PAID,
         payment_status=PaymentStatus.SUCCEEDED,
-        paid_at=datetime.now(timezone.utc) - timedelta(days=3),
+        paid_at=datetime.now(UTC) - timedelta(days=3),
         created_by="test-system",
     )
     async_db_session.add(invoice)
@@ -1099,8 +1121,8 @@ def invoice_entity(test_tenant_id, test_customer_id):
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=10000,
         tax_amount=1000,
@@ -1144,7 +1166,7 @@ async def sample_successful_payment(
         provider_payment_id="pi_test_123",
         provider_fee=30,
         retry_count=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -1178,7 +1200,7 @@ async def sample_failed_payment(
         provider_fee=0,
         failure_reason="Your card was declined.",
         retry_count=1,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -1201,7 +1223,7 @@ def payment_entity(test_tenant_id, test_customer_id):
         provider="stripe",
         provider_payment_id="pi_test_123",
         retry_count=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         extra_data={},
     )
 
@@ -1308,8 +1330,8 @@ def invoice_dict_factory():
             "amount": amount,
             "status": status,
             "customer_id": customer_id,
-            "created_at": datetime.now(timezone.utc),
-            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+            "created_at": datetime.now(UTC),
+            "due_date": datetime.now(UTC) + timedelta(days=30),
             **kwargs,
         }
 
@@ -1343,7 +1365,7 @@ def subscription_dict_factory():
             "status": status,
             "customer_id": customer_id,
             "billing_cycle": "monthly",
-            "start_date": datetime.now(timezone.utc),
+            "start_date": datetime.now(UTC),
             **kwargs,
         }
 

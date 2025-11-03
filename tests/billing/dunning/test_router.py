@@ -7,18 +7,12 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_user():
     """Mock authenticated user."""
-
 
     return MagicMock(
         user_id=uuid4(),
@@ -79,9 +73,7 @@ class TestCampaignEndpoints:
 
     async def test_list_campaigns(self, async_client: AsyncClient, auth_headers, sample_campaign):
         """Test GET /campaigns - list all campaigns."""
-        response = await async_client.get(
-            "/api/v1/billing/dunning/campaigns", headers=auth_headers
-        )
+        response = await async_client.get("/api/v1/billing/dunning/campaigns", headers=auth_headers)
 
         assert response.status_code == status.HTTP_200_OK
         data = response.json()

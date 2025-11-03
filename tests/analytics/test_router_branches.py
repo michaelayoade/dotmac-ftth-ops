@@ -1,11 +1,10 @@
-
 """
 Tests for analytics router branch coverage.
 
 Covers error handling, edge cases, and conditional branches.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -93,8 +92,8 @@ class TestGetMetricsDateDefaults:
                 request=mock_request,
                 current_user=mock_user,
                 metric_name="test_metric",
-                start_date=datetime.now(timezone.utc) - timedelta(hours=1),
-                end_date=datetime.now(timezone.utc),
+                start_date=datetime.now(UTC) - timedelta(hours=1),
+                end_date=datetime.now(UTC),
                 aggregation="sum",
                 interval="minute",
             )
@@ -109,7 +108,7 @@ class TestGetMetricsDateDefaults:
         mock_service.query_metrics = AsyncMock(
             return_value={
                 "counters": {"requests": 100, "errors": 5},
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
         )
 
@@ -120,8 +119,8 @@ class TestGetMetricsDateDefaults:
                 request=mock_request,
                 current_user=mock_user,
                 metric_name="requests",
-                start_date=datetime.now(timezone.utc) - timedelta(hours=1),
-                end_date=datetime.now(timezone.utc),
+                start_date=datetime.now(UTC) - timedelta(hours=1),
+                end_date=datetime.now(UTC),
                 aggregation="sum",
                 interval="hour",
             )

@@ -6,10 +6,7 @@ Business logic for wireless network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog

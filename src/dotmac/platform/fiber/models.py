@@ -12,10 +12,7 @@ Provides comprehensive database models for fiber optic network infrastructure ma
 Created: 2025-10-19
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
 from typing import TYPE_CHECKING
 from uuid import UUID, uuid4

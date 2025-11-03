@@ -1,4 +1,3 @@
-
 """
 Jobs Router Integration Tests
 
@@ -14,13 +13,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.jobs.models import Job, JobStatus
 from dotmac.platform.tenant.models import Tenant
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestJobEndpoints:

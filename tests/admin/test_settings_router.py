@@ -1,4 +1,3 @@
-
 """
 Integration tests for admin settings management router.
 
@@ -15,13 +14,8 @@ from fastapi.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_admin_user():
@@ -312,7 +306,11 @@ class TestSettingsRouterEndpoints:
         # Create a backup
         create_response = test_client.post(
             "/api/v1/admin/settings/backup",
-            json={"name": "Restart Test", "description": "Test after restart", "categories": ["email"]},
+            json={
+                "name": "Restart Test",
+                "description": "Test after restart",
+                "categories": ["email"],
+            },
         )
         assert create_response.status_code == 200
         backup_data = create_response.json()
@@ -536,7 +534,9 @@ class TestErrorHandling:
 
     def test_unsupported_export_format(self, test_client):
         """Test export with unsupported format."""
-        export_request = {"format": "xml"}  # Unsupported format (only json, yaml, env are supported)
+        export_request = {
+            "format": "xml"
+        }  # Unsupported format (only json, yaml, env are supported)
 
         response = test_client.post("/api/v1/admin/settings/export", json=export_request)
 
@@ -545,6 +545,7 @@ class TestErrorHandling:
         data = response.json()
         assert "detail" in data
         assert "Unsupported export format" in data["detail"]
+
 
 class TestAdminSettingsPermissions:
     """Test that all endpoints properly enforce permission requirements."""
@@ -567,7 +568,9 @@ class TestAdminSettingsPermissions:
 
             # Verify the correct permission was checked
             self.mock_rbac_deny.user_has_all_permissions.assert_called()
-            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.read"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_get_category_requires_read_permission(self, test_app):
         """Test GET /category/{category} requires settings.read permission."""
@@ -579,7 +582,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.read"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_update_category_requires_update_permission(self, test_app):
         """Test PUT /category/{category} requires settings.update permission."""
@@ -594,7 +599,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.update"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.update"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_validate_requires_read_permission(self, test_app):
         """Test POST /validate requires settings.read permission."""
@@ -610,7 +617,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.read"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_bulk_update_requires_update_permission(self, test_app):
         """Test POST /bulk-update requires settings.update permission."""
@@ -625,7 +634,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.update"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.update"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_backup_requires_backup_permission(self, test_app):
         """Test POST /backup requires settings.backup permission."""
@@ -640,7 +651,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.backup"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.backup"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_restore_requires_restore_permission(self, test_app):
         """Test POST /restore/{backup_id} requires settings.restore permission."""
@@ -653,7 +666,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.restore"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.restore"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_audit_logs_requires_audit_read_permission(self, test_app):
         """Test GET /audit-logs requires settings.audit.read permission."""
@@ -665,7 +680,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.audit.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.audit.read"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_export_requires_export_permission(self, test_app):
         """Test POST /export requires settings.export permission."""
@@ -680,7 +697,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.export"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.export"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_import_requires_import_permission(self, test_app):
         """Test POST /import requires settings.import permission."""
@@ -695,7 +714,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.import"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.import"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_reset_requires_reset_permission(self, test_app):
         """Test POST /reset/{category} requires settings.reset permission."""
@@ -707,7 +728,9 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.reset"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.reset"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]
 
     def test_health_requires_read_permission(self, test_app):
         """Test GET /health requires settings.read permission."""
@@ -719,4 +742,6 @@ class TestAdminSettingsPermissions:
             assert response.status_code == 403
 
             # Verify the correct permission was checked
-            assert ["settings.read"] in [call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list]
+            assert ["settings.read"] in [
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+            ]

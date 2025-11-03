@@ -1,4 +1,3 @@
-
 """
 Tests for WireGuard Vault encryption integration.
 
@@ -17,9 +16,6 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.secrets import (
-
-
-
     AsyncVaultClient,
     DataClassification,
     SymmetricEncryptionService,
@@ -29,10 +25,8 @@ from dotmac.platform.wireguard.client import WireGuardClient
 from dotmac.platform.wireguard.models import WireGuardServer, WireGuardServerStatus
 from dotmac.platform.wireguard.service import WireGuardService, WireGuardServiceError
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_vault_client():

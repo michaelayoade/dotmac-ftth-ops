@@ -4,7 +4,7 @@ Tenant-facing add-ons API router.
 Provides self-service endpoints for tenant admins to browse and purchase add-ons.
 """
 
-from inspect import isawaitable
+from inspect import isawaitable, signature
 from typing import Any
 
 import structlog
@@ -163,15 +163,32 @@ async def _get_authenticated_user(request: Request) -> UserInfo:
     credentials = await bearer_scheme(request)
 
     override = get_current_user
+    candidate = None
+
     try:
-        candidate = override(
-            request=request,
-            token=token,
-            api_key=api_key,
-            credentials=credentials,
-        )
-    except TypeError:
-        candidate = override()
+        override_signature = signature(override)
+    except (TypeError, ValueError):
+        override_signature = None
+
+    if override_signature:
+        params = override_signature.parameters
+        call_kwargs: dict[str, Any] = {}
+        if "request" in params:
+            call_kwargs["request"] = request
+        if "token" in params and token is not None:
+            call_kwargs["token"] = token
+        if "api_key" in params and api_key is not None:
+            call_kwargs["api_key"] = api_key
+        if "credentials" in params and credentials is not None:
+            call_kwargs["credentials"] = credentials
+
+        try:
+            candidate = override(**call_kwargs)
+        except TypeError:
+            candidate = override(request=request)
+    else:
+        candidate = override(request=request)
+
     resolved = await _resolve(candidate)
     normalized = _normalize_user(resolved)
     if normalized:

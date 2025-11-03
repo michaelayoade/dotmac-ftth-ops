@@ -20,6 +20,17 @@ from dotmac.platform.redis_client import RedisClientType, get_redis_client
 router = APIRouter(prefix="/jobs/scheduler", tags=["Job Scheduler"])
 
 
+def _require_tenant_id(user: UserInfo) -> str:
+    """Ensure Scheduler API operations have an explicit tenant context."""
+    tenant_id = user.tenant_id
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context is required for scheduler operations.",
+        )
+    return tenant_id
+
+
 # =============================================================================
 # Schemas
 # =============================================================================
@@ -176,9 +187,10 @@ async def create_scheduled_job(
     {"interval_seconds": 900, ...}
     ```
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
         scheduled_job = await service.create_scheduled_job(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             created_by=current_user.user_id,
             name=job_data.name,
             job_type=job_data.job_type,
@@ -218,8 +230,9 @@ async def list_scheduled_jobs(
     - `page`: Page number (1-indexed)
     - `page_size`: Items per page (max 100)
     """
+    tenant_id = _require_tenant_id(current_user)
     scheduled_jobs, total = await service.list_scheduled_jobs(
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         is_active=is_active,
         page=page,
         page_size=page_size,
@@ -240,7 +253,8 @@ async def get_scheduled_job(
     current_user: UserInfo = Depends(get_current_user),
 ) -> ScheduledJobResponse:
     """Get detailed information about a scheduled job."""
-    scheduled_job = await service.get_scheduled_job(scheduled_job_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    scheduled_job = await service.get_scheduled_job(scheduled_job_id, tenant_id)
 
     if not scheduled_job:
         raise HTTPException(
@@ -269,10 +283,11 @@ async def update_scheduled_job(
     **Note:** Changing `cron_expression` or `interval_seconds` will recalculate `next_run_at`.
     """
     update_dict = updates.model_dump(exclude_unset=True)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         scheduled_job = await service.update_scheduled_job(
-            scheduled_job_id, current_user.tenant_id, **update_dict
+            scheduled_job_id, tenant_id, **update_dict
         )
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -299,8 +314,9 @@ async def toggle_scheduled_job(
     current_user: UserInfo = Depends(get_current_user),
 ) -> ScheduledJobResponse:
     """Toggle scheduled job active status."""
+    tenant_id = _require_tenant_id(current_user)
     scheduled_job = await service.toggle_scheduled_job(
-        scheduled_job_id, current_user.tenant_id, is_active
+        scheduled_job_id, tenant_id, is_active
     )
 
     if not scheduled_job:
@@ -324,7 +340,8 @@ async def delete_scheduled_job(
     current_user: UserInfo = Depends(get_current_user),
 ) -> None:
     """Delete a scheduled job permanently."""
-    deleted = await service.delete_scheduled_job(scheduled_job_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    deleted = await service.delete_scheduled_job(scheduled_job_id, tenant_id)
 
     if not deleted:
         raise HTTPException(
@@ -382,9 +399,10 @@ async def create_job_chain(
     }
     ```
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
         job_chain = await service.create_job_chain(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             created_by=current_user.user_id,
             name=chain_data.name,
             chain_definition=chain_data.chain_definition,
@@ -410,7 +428,8 @@ async def get_job_chain(
     current_user: UserInfo = Depends(get_current_user),
 ) -> JobChainResponse:
     """Get detailed information about a job chain including progress and results."""
-    job_chain = await service.get_job_chain(chain_id, current_user.tenant_id)
+    tenant_id = _require_tenant_id(current_user)
+    job_chain = await service.get_job_chain(chain_id, tenant_id)
 
     if not job_chain:
         raise HTTPException(
@@ -444,8 +463,9 @@ async def execute_job_chain(
 
     **Note:** This is an async operation. Use GET /chains/{chain_id} to poll for progress.
     """
+    tenant_id = _require_tenant_id(current_user)
     try:
-        job_chain = await service.execute_job_chain(chain_id, current_user.tenant_id)
+        job_chain = await service.execute_job_chain(chain_id, tenant_id)
         return JobChainResponse.model_validate(job_chain)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

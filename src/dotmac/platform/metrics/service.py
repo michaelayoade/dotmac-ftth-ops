@@ -4,10 +4,7 @@ Metrics Service
 Computes and caches ISP operational metrics and KPIs.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from sqlalchemy import and_, func, or_, select
@@ -47,6 +44,20 @@ def _safe_float(value: object) -> float | None:
         return float(str(value))
     except (TypeError, ValueError):
         return None
+
+
+def _safe_int(value: object) -> int:
+    """Best-effort conversion to int with graceful fallback."""
+    try:
+        if value is None:
+            return 0
+        if isinstance(value, bool):
+            return int(value)
+        if isinstance(value, (int, float)):
+            return int(value)
+        return int(str(value))
+    except (TypeError, ValueError):
+        return 0
 
 
 class MetricsService:
@@ -104,16 +115,59 @@ class MetricsService:
         """Compute subscriber metrics."""
         session = self._require_session()
 
-        status_counts: dict[SubscriberStatus, int] = dict.fromkeys(SubscriberStatus, 0)
-        status_stmt = (
-            select(Subscriber.status, func.count(Subscriber.id))
-            .where(Subscriber.tenant_id == tenant_id, Subscriber.deleted_at.is_(None))
-            .group_by(Subscriber.status)
-        )
-        for status, count in await session.execute(status_stmt):
-            if status is None:
+        status_counts: dict[SubscriberStatus, int] = {status: 0 for status in SubscriberStatus}
+        subscriber_rows = (
+            await session.execute(
+                select(
+                    Subscriber.status,
+                    Subscriber.activation_date,
+                    Subscriber.termination_date,
+                ).where(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.deleted_at.is_(None),
+                )
+            )
+        ).all()
+
+        def _normalize(dt: datetime | None) -> datetime | None:
+            if dt is None:
+                return None
+            if dt.tzinfo is None:
+                return dt
+            return dt.astimezone(UTC).replace(tzinfo=None)
+
+        rolling_window_start = datetime.now(UTC) - timedelta(days=30)
+        month_start = _normalize(rolling_window_start)
+
+        new_this_month = 0
+        churned_this_month = 0
+
+        for status_value, activation_date, termination_date in subscriber_rows:
+            if status_value is None:
                 continue
-            status_counts[status] = int(count or 0)
+
+            status_enum = (
+                status_value
+                if isinstance(status_value, SubscriberStatus)
+                else SubscriberStatus(status_value)
+            )
+            status_counts[status_enum] += 1
+
+            activation_normalized = _normalize(activation_date)
+            if (
+                activation_normalized is not None
+                and month_start is not None
+                and activation_normalized >= month_start
+            ):
+                new_this_month += 1
+
+            termination_normalized = _normalize(termination_date)
+            if (
+                termination_normalized is not None
+                and month_start is not None
+                and termination_normalized >= month_start
+            ):
+                churned_this_month += 1
 
         total = sum(status_counts.values())
         active = status_counts[SubscriberStatus.ACTIVE]
@@ -122,34 +176,6 @@ class MetricsService:
         disconnected = status_counts[SubscriberStatus.DISCONNECTED]
         terminated = status_counts[SubscriberStatus.TERMINATED]
         quarantined = status_counts[SubscriberStatus.QUARANTINED]
-
-        first_day_of_month = datetime.now(UTC).replace(
-            day=1, hour=0, minute=0, second=0, microsecond=0
-        )
-
-        new_this_month = (
-            await session.scalar(
-                select(func.count(Subscriber.id)).where(
-                    Subscriber.tenant_id == tenant_id,
-                    Subscriber.activation_date.isnot(None),
-                    Subscriber.activation_date >= first_day_of_month,
-                    Subscriber.deleted_at.is_(None),
-                )
-            )
-            or 0
-        )
-
-        churned_this_month = (
-            await session.scalar(
-                select(func.count(Subscriber.id)).where(
-                    Subscriber.tenant_id == tenant_id,
-                    Subscriber.termination_date.isnot(None),
-                    Subscriber.termination_date >= first_day_of_month,
-                    Subscriber.deleted_at.is_(None),
-                )
-            )
-            or 0
-        )
 
         growth = new_this_month - churned_this_month
         churn_rate = round((churned_this_month / total * 100), 2) if total else 0.0
@@ -183,7 +209,7 @@ class MetricsService:
         ]
 
         olt_count = len(olt_devices)
-        pon_ports_total = sum(nas.ports or 0 for nas in olt_devices)
+        pon_ports_total = sum(_safe_int(getattr(nas, "ports", 0)) for nas in olt_devices)
 
         # Determine which OLTs have active sessions in the last 15 minutes
         olts_online = 0

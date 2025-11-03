@@ -13,13 +13,10 @@ import re
 import shutil
 import tempfile
 import uuid
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import structlog
 from minio.error import S3Error
@@ -70,6 +67,50 @@ class FileMetadata(BaseModel):  # BaseModel resolves to Any in isolation
             "checksum": self.checksum,
             "tenant_id": self.tenant_id,
         }
+
+
+class StorageBackendProtocol(Protocol):
+    """Protocol describing the required storage backend interface."""
+
+    async def store(
+        self,
+        file_data: bytes,
+        file_name: str,
+        content_type: str,
+        path: str | None = None,
+        metadata: dict[str, Any] | None = None,
+        tenant_id: str | None = None,
+    ) -> str: ...
+
+    async def retrieve(
+        self, file_id: str, tenant_id: str | None = None
+    ) -> tuple[bytes | None, dict[str, Any] | None]: ...
+
+    async def delete(self, file_id: str, tenant_id: str | None = None) -> bool: ...
+
+    async def list_files(
+        self,
+        path: str | None = None,
+        limit: int = 100,
+        offset: int = 0,
+        tenant_id: str | None = None,
+    ) -> list[FileMetadata]: ...
+
+    async def get_metadata(self, file_id: str) -> dict[str, Any] | None: ...
+
+    async def move(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> bool: ...
+
+    async def copy(
+        self,
+        file_id: str,
+        destination: str,
+        tenant_id: str | None = None,
+    ) -> str | None: ...
 
 
 class LocalFileStorage:
@@ -1040,7 +1081,7 @@ class FileStorageService:
             )
             backend_instance, provider = get_storage_backend("local")
 
-        self.backend = backend_instance
+        self.backend: StorageBackendProtocol = cast(StorageBackendProtocol, backend_instance)
         self.backend_type = provider
 
         logger.info(f"FileStorageService initialized with {self.backend_type} backend")
@@ -1187,47 +1228,3 @@ def get_storage_service() -> FileStorageService:
     if _storage_service is None:
         _storage_service = FileStorageService()
     return _storage_service
-
-
-class StorageBackendProtocol(Protocol):
-    """Protocol describing the required storage backend interface."""
-
-    async def store(
-        self,
-        file_data: bytes,
-        file_name: str,
-        content_type: str,
-        path: str | None = None,
-        metadata: dict[str, Any] | None = None,
-        tenant_id: str | None = None,
-    ) -> str: ...
-
-    async def retrieve(
-        self, file_id: str, tenant_id: str | None = None
-    ) -> tuple[bytes | None, dict[str, Any] | None]: ...
-
-    async def delete(self, file_id: str, tenant_id: str | None = None) -> bool: ...
-
-    async def list_files(
-        self,
-        path: str | None = None,
-        limit: int = 100,
-        offset: int = 0,
-        tenant_id: str | None = None,
-    ) -> list[FileMetadata]: ...
-
-    async def get_metadata(self, file_id: str) -> dict[str, Any] | None: ...
-
-    async def move(
-        self,
-        file_id: str,
-        destination: str,
-        tenant_id: str | None = None,
-    ) -> bool: ...
-
-    async def copy(
-        self,
-        file_id: str,
-        destination: str,
-        tenant_id: str | None = None,
-    ) -> str | None: ...

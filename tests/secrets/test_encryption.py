@@ -2,7 +2,7 @@
 
 import base64
 import hashlib
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -70,17 +70,17 @@ class TestEncryptedField:
 
     def test_encrypted_field_default_timestamp(self):
         """Test that default timestamp is recent."""
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         field = EncryptedField(
             algorithm="test", encrypted_data="data", classification=DataClassification.PUBLIC
         )
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         assert before <= field.created_at <= after
 
     def test_encrypted_field_custom_timestamp(self):
         """Test EncryptedField with custom timestamp."""
-        custom_time = datetime(2023, 1, 1, tzinfo=timezone.utc)
+        custom_time = datetime(2023, 1, 1, tzinfo=UTC)
         field = EncryptedField(
             algorithm="test",
             encrypted_data="data",

@@ -7,7 +7,7 @@ Covers:
 - monitoring_metrics_router.py
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from fastapi import FastAPI
@@ -47,9 +47,8 @@ from dotmac.platform.monitoring_metrics_router import (
 )
 from dotmac.platform.monitoring_metrics_router import logs_router as logs_metrics_router
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_user():
@@ -205,7 +204,7 @@ class TestLogsService:
     @pytest.mark.asyncio
     async def test_get_logs_with_time_range(self, logs_service):
         """Test log retrieval with time range."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         start_time = now - timedelta(hours=1)
         end_time = now
 
@@ -581,7 +580,7 @@ class TestLogModels:
 
     def test_log_entry_model(self):
         """Test LogEntry model."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         log_entry = LogEntry(
             id="log_123",
             timestamp=now,
@@ -608,7 +607,7 @@ class TestTraceModels:
 
     def test_span_data_model(self):
         """Test SpanData model."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         span = SpanData(
             span_id="span_123",
             parent_span_id="span_parent",
@@ -629,7 +628,7 @@ class TestTraceModels:
 
     def test_trace_data_model(self):
         """Test TraceData model."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         trace = TraceData(
             trace_id="trace_123",
             service="test-service",

@@ -4,7 +4,7 @@ Integration tests for reconciliation router and service.
 Tests real database interactions and service workflows.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -35,7 +35,6 @@ async def test_bank_account(async_session: AsyncSession, tenant_id: str):
     from dotmac.platform.billing.bank_accounts.entities import AccountType, CompanyBankAccount
 
     bank_account = CompanyBankAccount(
-        id=1,
         tenant_id=tenant_id,
         account_name="Test Checking",
         account_number_encrypted="encrypted_123456789",
@@ -60,14 +59,13 @@ async def test_manual_payment(
 ):
     """Create a test manual payment."""
     payment = ManualPayment(
-        id=1,
         tenant_id=tenant_id,
         bank_account_id=test_bank_account.id,
         recorded_by="test-user",
         customer_id=uuid4(),
         amount=Decimal("100.00"),
         currency="USD",
-        payment_date=datetime.now(timezone.utc),
+        payment_date=datetime.now(UTC),
         payment_method=PaymentMethodType.BANK_TRANSFER,
         payment_reference="REF-001",
         status="verified",
@@ -91,8 +89,8 @@ class TestReconciliationServiceIntegration:
         """Test starting a reconciliation session."""
         service = ReconciliationService(async_session, audit_service=mock_audit_service)
 
-        period_start = datetime.now(timezone.utc) - timedelta(days=30)
-        period_end = datetime.now(timezone.utc)
+        period_start = datetime.now(UTC) - timedelta(days=30)
+        period_end = datetime.now(UTC)
 
         reconciliation = await service.start_reconciliation_session(
             tenant_id=tenant_id,
@@ -123,8 +121,8 @@ class TestReconciliationServiceIntegration:
         await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(timezone.utc) - timedelta(days=30),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=30),
+            period_end=datetime.now(UTC),
             opening_balance=Decimal("1000.00"),
             statement_balance=Decimal("1100.00"),
             user_id="user-123",
@@ -164,14 +162,13 @@ class TestReconciliationCircuitBreaker:
 
         # Create a payment that will fail
         failed_payment = ManualPayment(
-            id=999,
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
             recorded_by="test-user",
             customer_id=uuid4(),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="FAIL-001",
             status="failed",
@@ -198,10 +195,10 @@ class TestManualPaymentIntegration:
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
             recorded_by="test-user",
-            customer_id=uuid4(),
+            customer_id=str(uuid4()),
             amount=Decimal("250.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             payment_method=PaymentMethodType.CHECK,
             payment_reference="CHK-12345",
             status="pending",
@@ -221,7 +218,7 @@ class TestManualPaymentIntegration:
     async def test_update_payment_status(self, async_session: AsyncSession, test_manual_payment):
         """Test updating payment status."""
         test_manual_payment.status = "verified"
-        test_manual_payment.verified_at = datetime.now(timezone.utc)
+        test_manual_payment.verified_at = datetime.now(UTC)
         test_manual_payment.verified_by = "user-123"
 
         await async_session.commit()
@@ -235,7 +232,7 @@ class TestManualPaymentIntegration:
     async def test_reconcile_payment(self, async_session: AsyncSession, test_manual_payment):
         """Test reconciling a payment."""
         test_manual_payment.reconciled = True
-        test_manual_payment.reconciled_at = datetime.now(timezone.utc)
+        test_manual_payment.reconciled_at = datetime.now(UTC)
         test_manual_payment.reconciled_by = "system"
 
         await async_session.commit()
@@ -255,10 +252,10 @@ class TestManualPaymentIntegration:
                 tenant_id=tenant_id,
                 bank_account_id=test_bank_account.id,
                 recorded_by="test-user",
-                customer_id=uuid4(),
+                customer_id=str(uuid4()),
                 amount=Decimal(f"{100 * (i + 1)}.00"),
                 currency="USD",
-                payment_date=datetime.now(timezone.utc),
+                payment_date=datetime.now(UTC),
                 payment_method=PaymentMethodType.BANK_TRANSFER,
                 payment_reference=f"REF-{i}",
                 status="verified",
@@ -296,8 +293,8 @@ class TestReconciliationApproval:
         reconciliation = await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(timezone.utc) - timedelta(days=30),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=30),
+            period_end=datetime.now(UTC),
             opening_balance=Decimal("1000.00"),
             statement_balance=Decimal("1000.00"),
             user_id="user-123",
@@ -331,8 +328,8 @@ class TestReconciliationApproval:
         rec = await service.start_reconciliation_session(
             tenant_id=tenant_id,
             bank_account_id=test_bank_account.id,
-            period_start=datetime.now(timezone.utc) - timedelta(days=30),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=30),
+            period_end=datetime.now(UTC),
             opening_balance=Decimal("500.00"),
             statement_balance=Decimal("500.00"),
             user_id="user-123",
@@ -364,14 +361,17 @@ class TestReconciliationTenantIsolation:
     async def test_tenant_isolation_payments(self, async_session: AsyncSession, test_bank_account):
         """Test payments are isolated by tenant."""
         # Create payments for different tenants
+        tenant1 = str(uuid4())
+        tenant2 = str(uuid4())
+
         payment1 = ManualPayment(
-            tenant_id="tenant-1",
+            tenant_id=tenant1,
             bank_account_id=test_bank_account.id,
             recorded_by="test-user",
             customer_id=uuid4(),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="T1-001",
             status="verified",
@@ -379,13 +379,13 @@ class TestReconciliationTenantIsolation:
         )
 
         payment2 = ManualPayment(
-            tenant_id="tenant-2",
+            tenant_id=tenant2,
             bank_account_id=test_bank_account.id,
             recorded_by="test-user",
             customer_id=uuid4(),
             amount=Decimal("200.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             payment_method=PaymentMethodType.BANK_TRANSFER,
             payment_reference="T2-001",
             status="verified",
@@ -395,12 +395,22 @@ class TestReconciliationTenantIsolation:
         async_session.add_all([payment1, payment2])
         await async_session.commit()
 
-        # Query for tenant-1
+        # Query for tenant 1
         result = await async_session.execute(
-            select(ManualPayment).where(ManualPayment.tenant_id == "tenant-1")
+            select(ManualPayment).where(ManualPayment.tenant_id == tenant1)
         )
         tenant1_payments = result.scalars().all()
 
         assert len(tenant1_payments) == 1
-        assert tenant1_payments[0].tenant_id == "tenant-1"
+        assert tenant1_payments[0].tenant_id == tenant1
         assert tenant1_payments[0].amount == Decimal("100.00")
+
+        # Query for tenant 2
+        result = await async_session.execute(
+            select(ManualPayment).where(ManualPayment.tenant_id == tenant2)
+        )
+        tenant2_payments = result.scalars().all()
+
+        assert len(tenant2_payments) == 1
+        assert tenant2_payments[0].tenant_id == tenant2
+        assert tenant2_payments[0].amount == Decimal("200.00")

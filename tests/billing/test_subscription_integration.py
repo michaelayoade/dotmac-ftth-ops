@@ -1,4 +1,3 @@
-
 """
 Integration Tests for Subscription Service (with Real Database).
 
@@ -11,9 +10,6 @@ from decimal import Decimal
 import pytest
 
 from dotmac.platform.billing.subscriptions.models import (
-
-
-
     BillingCycle,
     SubscriptionCreateRequest,
     SubscriptionPlanCreateRequest,
@@ -46,9 +42,8 @@ async def _create_test_plan(
     return await service.create_plan(plan_data=plan_data, tenant_id=tenant_id)
 
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestSubscriptionPlanManagement:

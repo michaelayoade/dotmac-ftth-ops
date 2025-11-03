@@ -8,7 +8,7 @@ Targeting specific uncovered lines to push coverage from 86.18% to 90%+:
 Following the fake/real testing pattern as demonstrated in FAKE_PATTERN_COMPLETE_SUMMARY.md
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -226,7 +226,7 @@ class TestProcessPendingRetriesMethod:
                 event_data={"index": i},
                 subscription_id=subscription_id,
                 status=DeliveryStatus.RETRYING,
-                next_retry_at=datetime.now(timezone.utc) - timedelta(minutes=i + 1),
+                next_retry_at=datetime.now(UTC) - timedelta(minutes=i + 1),
                 attempt_number=1,
                 tenant_id="test-tenant",
             )
@@ -280,7 +280,7 @@ class TestProcessPendingRetriesMethod:
             event_data={},
             subscription_id=uuid4(),
             status=DeliveryStatus.RETRYING,
-            next_retry_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+            next_retry_at=datetime.now(UTC) - timedelta(minutes=5),
             attempt_number=1,
             tenant_id="test-tenant",
         )
@@ -333,7 +333,7 @@ class TestProcessPendingRetriesMethod:
                 event_data={},
                 subscription_id=subscription_id,
                 status=DeliveryStatus.RETRYING,
-                next_retry_at=datetime.now(timezone.utc) - timedelta(minutes=i + 1),
+                next_retry_at=datetime.now(UTC) - timedelta(minutes=i + 1),
                 attempt_number=1,
                 tenant_id="test-tenant",
             )

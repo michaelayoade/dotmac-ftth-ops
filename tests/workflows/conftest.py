@@ -5,9 +5,10 @@ Pytest fixtures for workflow router tests.
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
 from fastapi import FastAPI
-from httpx import ASGITransport, AsyncClient
+from fastapi.testclient import TestClient
+
+from dotmac.platform.auth.platform_admin import create_platform_admin_token
 
 
 @pytest.fixture
@@ -147,9 +148,9 @@ def mock_rbac_service():
     return mock_rbac
 
 
-@pytest_asyncio.fixture
-async def async_client(mock_workflow_service, mock_current_user, mock_rbac_service, monkeypatch):
-    """Async HTTP client with workflow router registered and dependencies mocked."""
+@pytest.fixture
+def workflow_client(mock_workflow_service, mock_current_user, mock_rbac_service, monkeypatch):
+    """HTTP client with workflow router registered and dependencies mocked."""
     import dotmac.platform.auth.rbac_dependencies
     from dotmac.platform.auth.core import get_current_user
     from dotmac.platform.db import get_async_session
@@ -183,6 +184,16 @@ async def async_client(mock_workflow_service, mock_current_user, mock_rbac_servi
 
     app.include_router(workflow_router, prefix="/api/v1")
 
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+    with TestClient(app) as client:
+        client.headers["Authorization"] = "Bearer " + create_platform_admin_token(
+            user_id="workflow-admin",
+            email="workflow-admin@example.com",
+            permissions=[
+                "workflows:create",
+                "workflows:read",
+                "workflows:update",
+                "workflows:delete",
+            ],
+        )
+        client.headers.setdefault("X-Tenant-ID", mock_current_user.tenant_id or "test-tenant")
         yield client

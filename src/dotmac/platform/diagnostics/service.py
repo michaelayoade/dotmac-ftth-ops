@@ -5,12 +5,9 @@ Network troubleshooting and diagnostic operations for ISP services.
 """
 
 from collections.abc import Awaitable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID
 
 import structlog
@@ -23,6 +20,7 @@ from dotmac.platform.diagnostics.models import (
     DiagnosticStatus,
     DiagnosticType,
 )
+from dotmac.platform.genieacs.schemas import RebootRequest, TaskResponse
 from dotmac.platform.settings import settings
 
 # Optional TimescaleDB imports
@@ -62,7 +60,7 @@ class DiagnosticsService:
         if radius_service is None:
             from dotmac.platform.radius.service import RADIUSService
 
-            self.radius_service = RADIUSService(db)
+            self.radius_service = RADIUSService(db, tenant_id="__diagnostics__")
         else:
             self.radius_service = radius_service
 
@@ -86,6 +84,18 @@ class DiagnosticsService:
             self.genieacs_service = GenieACSService()
         else:
             self.genieacs_service = genieacs_service
+
+    def _prepare_radius_service(self, tenant_id: str) -> "RADIUSService":
+        """Ensure the radius service is configured for the current tenant."""
+        radius_service = self.radius_service
+        if radius_service is None:
+            from dotmac.platform.radius.service import RADIUSService
+
+            radius_service = RADIUSService(self.db, tenant_id=tenant_id)
+            self.radius_service = radius_service
+        else:
+            setattr(radius_service, "tenant_id", tenant_id)
+        return radius_service
 
     async def _get_subscriber(self, tenant_id: str, subscriber_id: str) -> "Subscriber":
         """Get subscriber by ID."""
@@ -239,10 +249,9 @@ class DiagnosticsService:
 
             # Check RADIUS authentication
             try:
-                radius_check = await self.radius_service.get_subscriber_auth(
-                    tenant_id, subscriber_id
-                )
-                if radius_check:
+                radius_service = self._prepare_radius_service(tenant_id)
+                radius_record = await radius_service.get_subscriber(subscriber_id=subscriber_id)
+                if radius_record is not None:
                     results["checks"]["radius_auth"] = True
                 else:
                     results["checks"]["radius_auth"] = False
@@ -299,7 +308,9 @@ class DiagnosticsService:
                 )
 
             # Get usage statistics from TimescaleDB
-            usage_stats = await self._get_usage_statistics(tenant_id, subscriber.id, lookback_days=7)
+            usage_stats = await self._get_usage_statistics(
+                tenant_id, subscriber.id, lookback_days=7
+            )
             results["usage_statistics"] = usage_stats
 
             # Add usage-based recommendations
@@ -371,7 +382,8 @@ class DiagnosticsService:
             await self._update_diagnostic_run(diagnostic, DiagnosticStatus.RUNNING)
 
             # Get active sessions
-            sessions = await self.radius_service.get_active_sessions(tenant_id, subscriber.username)
+            radius_service = self._prepare_radius_service(tenant_id)
+            sessions = await radius_service.get_active_sessions(subscriber.username)
 
             results: dict[str, Any] = {
                 "username": subscriber.username,
@@ -404,7 +416,9 @@ class DiagnosticsService:
                 severity = DiagnosticSeverity.INFO
 
             # Get usage statistics from TimescaleDB
-            usage_stats = await self._get_usage_statistics(tenant_id, subscriber.id, lookback_days=7)
+            usage_stats = await self._get_usage_statistics(
+                tenant_id, subscriber.id, lookback_days=7
+            )
             results["usage_statistics"] = usage_stats
 
             # Correlate session issues with usage patterns
@@ -459,20 +473,37 @@ class DiagnosticsService:
                 raise ValueError("No ONU serial number configured for subscriber")
 
             # Get ONU status from VOLTHA
-            onu_status = await self.voltha_service.get_onu_status(subscriber.onu_serial)
+            onu_status_payload: dict[str, Any] = {}
+            if self.voltha_service is not None:
+                get_status = getattr(self.voltha_service, "get_onu_status", None)
+                if callable(get_status):
+                    raw_status = await get_status(subscriber.onu_serial)
+                    if raw_status is not None:
+                        if hasattr(raw_status, "model_dump"):
+                            onu_status_payload = cast(Any, raw_status).model_dump()
+                        elif isinstance(raw_status, dict):
+                            onu_status_payload = raw_status
+                else:
+                    logger.warning(
+                        "voltha.get_onu_status.unavailable",
+                        reason="Method not implemented on VOLTHA service",
+                    )
+
+            if not onu_status_payload:
+                raise ValueError("Unable to retrieve ONU status from VOLTHA")
 
             results: dict[str, Any] = {
                 "onu_serial": subscriber.onu_serial,
-                "onu_status": onu_status.get("status", "unknown"),
-                "optical_signal_level": onu_status.get("optical_signal_level"),
-                "firmware_version": onu_status.get("firmware_version"),
-                "registration_id": onu_status.get("registration_id"),
-                "operational_state": onu_status.get("operational_state"),
+                "onu_status": onu_status_payload.get("status", "unknown"),
+                "optical_signal_level": onu_status_payload.get("optical_signal_level"),
+                "firmware_version": onu_status_payload.get("firmware_version"),
+                "registration_id": onu_status_payload.get("registration_id"),
+                "operational_state": onu_status_payload.get("operational_state"),
             }
             recommendations: list[dict[str, Any]] = []
 
             # Analyze signal level
-            signal_level = onu_status.get("optical_signal_level")
+            signal_level = onu_status_payload.get("optical_signal_level")
             if signal_level is not None:
                 if signal_level < -28:
                     recommendations.append(
@@ -498,7 +529,7 @@ class DiagnosticsService:
                 severity = DiagnosticSeverity.WARNING
 
             # Check operational state
-            if onu_status.get("operational_state") != "active":
+            if onu_status_payload.get("operational_state") != "active":
                 recommendations.append(
                     {
                         "severity": "error",
@@ -508,7 +539,7 @@ class DiagnosticsService:
                 )
                 severity = DiagnosticSeverity.ERROR
 
-            success = onu_status.get("operational_state") == "active" and (
+            success = onu_status_payload.get("operational_state") == "active" and (
                 signal_level is None or signal_level >= -25
             )
 
@@ -547,45 +578,42 @@ class DiagnosticsService:
 
         try:
             await self._update_diagnostic_run(diagnostic, DiagnosticStatus.RUNNING)
+            severity = DiagnosticSeverity.INFO
 
             if not subscriber.cpe_mac_address:
                 raise ValueError("No CPE MAC address configured for subscriber")
 
             # Get CPE status from GenieACS
             cpe_status = await self.genieacs_service.get_device_status(subscriber.cpe_mac_address)
+            if cpe_status is None:
+                raise ValueError("CPE status unavailable in GenieACS")
 
+            last_inform_dt = cpe_status.last_inform
             results: dict[str, Any] = {
                 "cpe_mac": subscriber.cpe_mac_address,
-                "status": cpe_status.get("status", "unknown"),
-                "last_inform": cpe_status.get("last_inform"),
-                "firmware_version": cpe_status.get("firmware_version"),
-                "model": cpe_status.get("model"),
-                "uptime": cpe_status.get("uptime"),
-                "wan_ip": cpe_status.get("wan_ip"),
-                "wifi_enabled": cpe_status.get("wifi_enabled"),
+                "status": "online" if cpe_status.online else "offline",
+                "last_inform": last_inform_dt.isoformat() if last_inform_dt else None,
+                "firmware_version": None,
+                "model": None,
+                "uptime": cpe_status.uptime,
+                "wan_ip": None,
+                "wifi_enabled": None,
             }
             recommendations: list[dict[str, Any]] = []
 
             # Check last inform time
-            last_inform = cpe_status.get("last_inform")
-            if last_inform:
-                try:
-                    last_inform_dt = datetime.fromisoformat(last_inform)
-                    delta = datetime.now(UTC) - last_inform_dt.replace(tzinfo=UTC)
-                    results["last_inform_seconds"] = int(delta.total_seconds())
+            if last_inform_dt:
+                delta = datetime.now(UTC) - last_inform_dt.replace(tzinfo=UTC)
+                results["last_inform_seconds"] = int(delta.total_seconds())
 
-                    if delta.total_seconds() > 3600:  # 1 hour
-                        recommendations.append(
-                            {
-                                "severity": "warning",
-                                "message": f"CPE last contacted server {int(delta.total_seconds() / 60)} minutes ago",
-                                "action": "Check CPE connectivity",
-                            }
-                        )
-                        severity = DiagnosticSeverity.WARNING
-                    else:
-                        severity = DiagnosticSeverity.INFO
-                except Exception:
+                if delta.total_seconds() > 3600:  # 1 hour
+                    recommendations.append(
+                        {
+                            "severity": "warning",
+                            "message": f"CPE last contacted server {int(delta.total_seconds() / 60)} minutes ago",
+                            "action": "Check CPE connectivity",
+                        }
+                    )
                     severity = DiagnosticSeverity.WARNING
             else:
                 recommendations.append(
@@ -597,17 +625,7 @@ class DiagnosticsService:
                 )
                 severity = DiagnosticSeverity.ERROR
 
-            # Check firmware
-            if cpe_status.get("firmware_outdated"):
-                recommendations.append(
-                    {
-                        "severity": "info",
-                        "message": "CPE firmware is outdated",
-                        "action": "Schedule firmware upgrade",
-                    }
-                )
-
-            success = cpe_status.get("status") == "online"
+            success = cpe_status.online
 
             await self._update_diagnostic_run(
                 diagnostic,
@@ -653,20 +671,30 @@ class DiagnosticsService:
 
             # Check NetBox IP allocation
             if subscriber.netbox_ip_id:
-                netbox_ip = await self.netbox_service.get_ip_address(subscriber.netbox_ip_id)
-                results["netbox_ip"] = netbox_ip.get("address")
-                results["netbox_status"] = netbox_ip.get("status")
-                results["netbox_vrf"] = netbox_ip.get("vrf")
+                netbox_ip = (
+                    await self.netbox_service.get_ip_address(subscriber.netbox_ip_id)
+                    if self.netbox_service is not None
+                    else None
+                )
+                if netbox_ip is None:
+                    raise ValueError("NetBox IP allocation not found")
+
+                netbox_ip_data = netbox_ip.model_dump()
+                netbox_address = netbox_ip_data.get("address")
+                netbox_status = netbox_ip_data.get("status", {}).get("value")
+                netbox_vrf = netbox_ip_data.get("vrf", {}).get("name")
+
+                results["netbox_ip"] = netbox_address
+                results["netbox_status"] = netbox_status
+                results["netbox_vrf"] = netbox_vrf
 
                 # Verify consistency
-                if subscriber.static_ipv4 and str(subscriber.static_ipv4) != netbox_ip.get(
-                    "address"
-                ):
+                if subscriber.static_ipv4 and netbox_address and str(subscriber.static_ipv4) != netbox_address:
                     recommendations.append(
                         {
                             "severity": "error",
                             "message": "IP mismatch between subscriber and NetBox",
-                            "action": f"Update subscriber IP to {netbox_ip.get('address')} or fix NetBox",
+                            "action": f"Update subscriber IP to {netbox_address} or fix NetBox",
                         }
                     )
                     severity = DiagnosticSeverity.ERROR
@@ -735,12 +763,24 @@ class DiagnosticsService:
                 raise ValueError("No CPE MAC address configured for subscriber")
 
             # Trigger CPE reboot via GenieACS
-            reboot_result = await self.genieacs_service.reboot_device(subscriber.cpe_mac_address)
+            reboot_request = RebootRequest(device_id=subscriber.cpe_mac_address)
+            reboot_result = await self.genieacs_service.reboot_device(
+                reboot_request, return_task_response=True
+            )
+
+            reboot_success = False
+            task_id: str | None = None
+            if isinstance(reboot_result, TaskResponse):
+                reboot_success = reboot_result.success
+                task_id = reboot_result.task_id
+            elif isinstance(reboot_result, str):
+                reboot_success = True
+                task_id = reboot_result
 
             results: dict[str, Any] = {
                 "cpe_mac": subscriber.cpe_mac_address,
-                "reboot_initiated": reboot_result.get("success", False),
-                "task_id": reboot_result.get("task_id"),
+                "reboot_initiated": reboot_success,
+                "task_id": task_id,
             }
             recommendations: list[dict[str, Any]] = [
                 {
@@ -753,7 +793,7 @@ class DiagnosticsService:
             await self._update_diagnostic_run(
                 diagnostic,
                 DiagnosticStatus.COMPLETED,
-                success=reboot_result.get("success", False),
+                success=reboot_success,
                 results=results,
                 recommendations=recommendations,
                 severity=DiagnosticSeverity.INFO,
@@ -918,7 +958,16 @@ class DiagnosticsService:
             end_date = datetime.now(UTC)
             start_date = end_date - timedelta(days=lookback_days)
 
-            async with TimeSeriesSessionLocal() as ts_session:
+            session_factory = TimeSeriesSessionLocal
+            if session_factory is None:
+                logger.warning(
+                    "TimescaleDB session factory unavailable during diagnostics usage stats",
+                    tenant_id=tenant_id,
+                    subscriber_id=subscriber_id,
+                )
+                return {"available": False, "reason": "timescaledb_not_initialized"}
+
+            async with session_factory() as ts_session:
                 repo = RadiusTimeSeriesRepository()
 
                 # Get overall usage
@@ -934,15 +983,21 @@ class DiagnosticsService:
                 # Calculate statistics
                 total_bytes = usage_data["total_bandwidth"]
                 total_gb = Decimal(total_bytes) / Decimal(1024**3)
-                avg_daily_gb = total_gb / Decimal(lookback_days) if lookback_days > 0 else Decimal(0)
+                avg_daily_gb = (
+                    total_gb / Decimal(lookback_days) if lookback_days > 0 else Decimal(0)
+                )
 
                 # Detect trends
                 if len(daily_data) >= 2:
                     recent_days = daily_data[-3:] if len(daily_data) >= 3 else daily_data
-                    older_days = daily_data[:-3] if len(daily_data) >= 6 else daily_data[:-len(recent_days)]
+                    older_days = (
+                        daily_data[:-3] if len(daily_data) >= 6 else daily_data[: -len(recent_days)]
+                    )
 
                     if older_days:
-                        recent_avg = sum(d["total_bandwidth"] for d in recent_days) / len(recent_days)
+                        recent_avg = sum(d["total_bandwidth"] for d in recent_days) / len(
+                            recent_days
+                        )
                         older_avg = sum(d["total_bandwidth"] for d in older_days) / len(older_days)
 
                         if older_avg > 0:
@@ -975,7 +1030,9 @@ class DiagnosticsService:
                 # Convert daily data for output
                 daily_breakdown = [
                     {
-                        "date": day["day"].date().isoformat() if hasattr(day["day"], "date") else str(day["day"]),
+                        "date": day["day"].date().isoformat()
+                        if hasattr(day["day"], "date")
+                        else str(day["day"]),
                         "bandwidth_gb": float(Decimal(day["total_bandwidth"]) / Decimal(1024**3)),
                         "session_count": day["session_count"],
                     }
@@ -992,13 +1049,22 @@ class DiagnosticsService:
                     "total_sessions": usage_data["session_count"],
                     "total_duration_hours": float(usage_data["total_duration"] / 3600),
                     "trend": trend,
-                    "peak_day": peak_day.date().isoformat() if peak_day and hasattr(peak_day, "date") else str(peak_day) if peak_day else None,
+                    "peak_day": peak_day.date().isoformat()
+                    if peak_day and hasattr(peak_day, "date")
+                    else str(peak_day)
+                    if peak_day
+                    else None,
                     "peak_usage_gb": float(peak_usage_gb),
                     "daily_breakdown": daily_breakdown,
                 }
 
         except Exception as e:
-            logger.error("Failed to query usage statistics", error=str(e), tenant_id=tenant_id, username=username)
+            logger.error(
+                "Failed to query usage statistics",
+                error=str(e),
+                tenant_id=tenant_id,
+                subscriber_id=subscriber_id,
+            )
             return {"available": False, "reason": "query_failed", "error": str(e)}
 
     async def get_diagnostic_run(self, tenant_id: str, diagnostic_id: UUID) -> DiagnosticRun | None:

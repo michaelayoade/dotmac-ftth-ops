@@ -4,13 +4,10 @@ CRM (Customer Relationship Management) Models.
 Manages leads, quotes, and site surveys for the sales pipeline.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -34,6 +31,11 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 
 class LeadStatus(str, Enum):
@@ -96,7 +98,7 @@ class Serviceability(str, Enum):
     REQUIRES_CONSTRUCTION = "requires_construction"
 
 
-class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class Lead(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Sales Lead.
 
@@ -292,7 +294,7 @@ class Lead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # t
         return ", ".join(parts)
 
 
-class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class Quote(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Service Quote.
 
@@ -460,7 +462,7 @@ class Quote(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # 
         return self.total_upfront_cost + (self.monthly_recurring_charge * 12)
 
 
-class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+class SiteSurvey(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Site Survey.
 
@@ -596,8 +598,10 @@ class SiteSurvey(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
         Index("ix_survey_technician", "technician_id"),
     )
 
-def __repr__(self) -> str:
-    return f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
+    def __repr__(self) -> str:
+        return (
+            f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
+        )
 
 
 def _get_metadata(instance: Any) -> dict[str, Any]:
@@ -608,10 +612,10 @@ def _get_metadata(instance: Any) -> dict[str, Any]:
 
 def _set_metadata(instance: Any, value: dict[str, Any] | None) -> None:
     """Helper to set metadata dict ensuring non-null default."""
-    setattr(instance, "metadata_", value or {})
+    instance.metadata_ = value or {}
 
 
 # SAFE ALIASES: Preserve legacy attribute without breaking SQLAlchemy metadata handling
-Lead.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]
-Quote.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]
-SiteSurvey.metadata = property(_get_metadata, _set_metadata)  # type: ignore[attr-defined]
+Lead.metadata = property(_get_metadata, _set_metadata)  # type: ignore[assignment, attr-defined]
+Quote.metadata = property(_get_metadata, _set_metadata)  # type: ignore[assignment, attr-defined]
+SiteSurvey.metadata = property(_get_metadata, _set_metadata)  # type: ignore[assignment, attr-defined]

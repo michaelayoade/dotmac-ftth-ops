@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 from dotmac.platform.wireguard.models import WireGuardPeerStatus, WireGuardServerStatus
 
@@ -187,15 +187,12 @@ class WireGuardPeerCreate(BaseModel):  # BaseModel resolves to Any in isolation
     )
     notes: str | None = Field(None, description="Internal notes")
 
-    @field_validator("public_key")
-    @classmethod
-    def validate_public_key_if_not_generating(
-        cls, v: str | None, info: ValidationInfo
-    ) -> str | None:
+    @model_validator(mode='after')
+    def validate_public_key_if_not_generating(self) -> "WireGuardPeerCreate":
         """Validate public key is provided if not generating."""
-        if not info.data.get("generate_keys") and not v:
+        if not self.generate_keys and not self.public_key:
             raise ValueError("public_key is required when generate_keys=False")
-        return v
+        return self
 
 
 class WireGuardPeerUpdate(BaseModel):  # BaseModel resolves to Any in isolation
@@ -219,7 +216,7 @@ class WireGuardPeerResponse(BaseModel):  # BaseModel resolves to Any in isolatio
     id: UUID
     tenant_id: UUID
     server_id: UUID
-    customer_id: UUID | None
+    customer_id: UUID | str | None
     subscriber_id: str | None
     name: str
     description: str | None

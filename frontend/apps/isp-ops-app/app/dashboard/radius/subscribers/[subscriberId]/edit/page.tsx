@@ -43,7 +43,7 @@ export default function EditRADIUSSubscriberPage() {
   const params = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const username = decodeURIComponent(params.username as string);
+  const subscriberId = decodeURIComponent(params.subscriberId as string);
 
   const [formData, setFormData] = useState({
     password: "",
@@ -58,11 +58,11 @@ export default function EditRADIUSSubscriberPage() {
   // Fetch subscriber details
   const { data: subscriber, isLoading: subscriberLoading } =
     useQuery<RADIUSSubscriber>({
-      queryKey: ["radius-subscriber", username],
+      queryKey: ["radius-subscriber", subscriberId],
       queryFn: async () => {
         try {
           const response = await apiClient.get(
-            `/api/v1/radius/subscribers/${username}`
+            `/api/v1/radius/subscribers/${subscriberId}`
           );
           return response.data;
         } catch (error) {
@@ -70,7 +70,7 @@ export default function EditRADIUSSubscriberPage() {
           throw error;
         }
       },
-      enabled: !!username,
+      enabled: !!subscriberId,
     });
 
   // Fetch bandwidth profiles
@@ -112,14 +112,14 @@ export default function EditRADIUSSubscriberPage() {
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiClient.patch(
-        `/api/v1/radius/subscribers/${username}`,
+        `/api/v1/radius/subscribers/${subscriberId}`,
         data
       );
       return response.data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["radius-subscribers"] });
-      queryClient.invalidateQueries({ queryKey: ["radius-subscriber", username] });
+      queryClient.invalidateQueries({ queryKey: ["radius-subscriber", subscriberId] });
       toast({
         title: "Subscriber updated",
         description: "RADIUS subscriber has been updated successfully.",
@@ -223,7 +223,7 @@ export default function EditRADIUSSubscriberPage() {
         <div>
           <h1 className="text-3xl font-bold">Edit RADIUS Subscriber</h1>
           <p className="text-muted-foreground">
-            Update credentials and settings for {username}
+            Update credentials and settings for {subscriber?.username || subscriberId}
           </p>
         </div>
       </div>
@@ -248,7 +248,7 @@ export default function EditRADIUSSubscriberPage() {
 
                 <div className="space-y-2">
                   <Label>Username</Label>
-                  <Input value={username} disabled />
+                  <Input value={subscriber?.username || ""} disabled />
                   <p className="text-xs text-muted-foreground">
                     Cannot be changed
                   </p>

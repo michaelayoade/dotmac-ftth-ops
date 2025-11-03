@@ -17,6 +17,7 @@ Usage:
 
 See CACHE_BYPASS_PATTERN.md for detailed documentation.
 """
+
 import importlib
 import sys
 from collections.abc import Iterable
@@ -74,9 +75,7 @@ def apply_cache_bypass(
         import cached views.
     """
     paths = (
-        [cached_result_paths]
-        if isinstance(cached_result_paths, str)
-        else list(cached_result_paths)
+        [cached_result_paths] if isinstance(cached_result_paths, str) else list(cached_result_paths)
     )
 
     with ExitStack() as stack:
@@ -113,12 +112,11 @@ def cache_bypass_fixture():
             with cache_bypass_fixture():
                 yield
     """
+
     def _cache_bypass(
         module_name: str | None = None,
         cached_result_paths: str | Iterable[str] = DEFAULT_CACHED_RESULT_PATH,
     ):
-        return apply_cache_bypass(
-            module_name=module_name, cached_result_paths=cached_result_paths
-        )
+        return apply_cache_bypass(module_name=module_name, cached_result_paths=cached_result_paths)
 
     return _cache_bypass

@@ -9,12 +9,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from fastapi import FastAPI
 
-
-pytestmark = pytest.mark.integration
-
 from dotmac.platform.monitoring_metrics_router import (
-
-
     ErrorRateResponse,
     LatencyMetrics,
     ResourceMetrics,
@@ -24,6 +19,8 @@ from dotmac.platform.monitoring_metrics_router import (
     logs_router,
     metrics_router,
 )
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture

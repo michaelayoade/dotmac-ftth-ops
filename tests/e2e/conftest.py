@@ -6,7 +6,6 @@ import os
 
 import pytest
 import pytest_asyncio
-
 from httpx import ASGITransport, AsyncClient
 
 # Import after environment is set
@@ -122,8 +121,8 @@ async def async_client(db_engine, tenant_id, user_id):
     from dotmac.platform.auth.core import UserInfo
     from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.db import get_async_session
-    from dotmac.platform.tenant import get_current_tenant_id
     from dotmac.platform.main import app
+    from dotmac.platform.tenant import get_current_tenant_id
 
     # Create a session maker for the test engine
     test_session_maker = async_sessionmaker(
@@ -156,7 +155,7 @@ async def async_client(db_engine, tenant_id, user_id):
     # Patch get_current_tenant_id function to always return e2e tenant_id
     # This is necessary because some code calls get_current_tenant_id() as a function
     # rather than using it as a FastAPI dependency
-    from unittest.mock import AsyncMock, patch
+    from unittest.mock import patch
 
     from dotmac.platform.auth.models import Role
     from dotmac.platform.db import get_session_dependency
@@ -186,9 +185,7 @@ async def async_client(db_engine, tenant_id, user_id):
     # Patch RBACService methods
     from dotmac.platform.auth import rbac_service
 
-    rbac_patch = patch.object(
-        rbac_service.RBACService, "get_user_roles", new=mock_get_user_roles
-    )
+    rbac_patch = patch.object(rbac_service.RBACService, "get_user_roles", new=mock_get_user_roles)
     rbac_patch.start()
 
     rbac_permissions_all_patch = patch.object(

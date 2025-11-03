@@ -10,10 +10,7 @@ from __future__ import annotations
 import logging
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
@@ -106,6 +103,10 @@ class TicketService:
             raise TicketValidationError(
                 "Tenant context is required when targeting tenant or partner audiences."
             )
+
+        # Ensure tenant_scope is set for database operations
+        if tenant_scope is None:
+            raise TicketValidationError("Tenant context is required to create a ticket.")
 
         partner_id = await self._resolve_partner_id(context, data.partner_id, tenant_scope, data)
         customer_id = await self._resolve_customer_id(context)

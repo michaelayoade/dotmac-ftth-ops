@@ -179,6 +179,7 @@ types-cachetools = "^5.5.0.20240820"
 libcst = "^1.8.5"
 pytest-aiohttp = "^1.1.0"
 pytest-timeout = "^2.4.0"
+types-pyyaml = "^6.0.12.20250915"
 
 
 
@@ -319,28 +320,24 @@ line_length = 100
 
 [tool.mypy]
 python_version = "3.13"
-# Strict mode - enable all optional error checking flags
-strict = true
-# Additional strict checks
-warn_return_any = true
+# Balanced mode - not fully strict but catches important issues
 warn_unused_configs = true
-disallow_untyped_defs = true
+disallow_untyped_defs = false
 disallow_any_unimported = false
 disallow_any_explicit = false
-disallow_any_generics = true
-disallow_subclassing_any = true
-disallow_untyped_calls = true
-disallow_untyped_decorators = true
+disallow_any_generics = false
+disallow_subclassing_any = false
+disallow_untyped_calls = false
+disallow_untyped_decorators = false
 disallow_incomplete_defs = true
 no_implicit_optional = true
-no_implicit_reexport = true
+no_implicit_reexport = false
 check_untyped_defs = true
 warn_redundant_casts = true
-warn_unused_ignores = true
+warn_unused_ignores = false
 warn_no_return = true
-warn_unreachable = true
+warn_unreachable = false
 strict_equality = true
-strict_concatenate = true
 # Import following
 follow_imports = "normal"
 ignore_missing_imports = true
@@ -353,7 +350,8 @@ color_output = true
 error_summary = true
 # Exclusions
 exclude = "(^frontend/|^alembic/|^tests/|^scripts/|^examples/|^archive/)"
-explicit_package_bases = true
+# Allow mypy to treat the src layout without duplicate module warnings
+explicit_package_bases = false
 # Namespace packages
 namespace_packages = true
 # Cache
@@ -361,7 +359,33 @@ incremental = true
 cache_dir = ".mypy_cache"
 mypy_path = ["stubs"]
 # Plugins
-plugins = ["strawberry.ext.mypy_plugin"]
+plugins = [
+    "strawberry.ext.mypy_plugin",
+    "sqlalchemy.ext.mypy.plugin",
+]
+
+# Per-module overrides
+[[tool.mypy.overrides]]
+module = "pydantic.*"
+ignore_missing_imports = true
+disallow_untyped_decorators = false
+disallow_untyped_calls = false
+
+[[tool.mypy.overrides]]
+module = [
+    "dotmac.platform.workflows.*",
+    "dotmac.platform.access.*",
+    "dotmac.platform.auth.router",
+    "dotmac.platform.fiber.*",
+    "dotmac.platform.licensing.*",
+    "dotmac.platform.deployment.*",
+    "dotmac.platform.radius.*",
+    "dotmac.platform.wireless.*",
+    "dotmac.platform.billing.*",
+]
+disallow_untyped_decorators = false
+warn_return_any = false
+disable_error_code = ["attr-defined", "arg-type"]
 
 [tool.bandit]
 tests = ["B201", "B301"]

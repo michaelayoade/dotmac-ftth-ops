@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for email service to improve coverage.
 """
@@ -9,8 +8,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from dotmac.platform.communications.email_service import (
-
-
     EmailMessage,
     EmailResponse,
     EmailService,
@@ -18,11 +15,8 @@ from dotmac.platform.communications.email_service import (
     send_email,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.integration
 class TestEmailServiceSMTP:

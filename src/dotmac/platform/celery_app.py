@@ -160,11 +160,11 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
 
     # Data Cap Monitoring - Check subscriber usage against caps every hour
     if settings.timescaledb.is_configured:
-        from dotmac.platform.services.internet_plans.usage_monitoring_tasks import (
-            monitor_data_cap_usage,
-        )
         from dotmac.platform.services.internet_plans.usage_billing_tasks import (
             process_usage_billing,
+        )
+        from dotmac.platform.services.internet_plans.usage_monitoring_tasks import (
+            monitor_data_cap_usage,
         )
 
         sender.add_periodic_task(
@@ -194,11 +194,13 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
     ]
 
     if settings.timescaledb.is_configured:
-        periodic_task_names.extend([
-            "radius-sync-sessions-to-timescaledb",
-            "services-monitor-data-cap-usage",
-            "services-process-usage-billing",
-        ])
+        periodic_task_names.extend(
+            [
+                "radius-sync-sessions-to-timescaledb",
+                "services-monitor-data-cap-usage",
+                "services-process-usage-billing",
+            ]
+        )
 
     logger.info(
         "celery.worker.configured",

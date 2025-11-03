@@ -187,9 +187,7 @@ class FirmwareUpgradeRequest(BaseModel):  # BaseModel resolves to Any in isolati
     file_type: str | None = Field(
         None, description="TR-069 file type (defaults to firmware upgrade image)"
     )
-    target_filename: str | None = Field(
-        None, description="Optional target filename for download"
-    )
+    target_filename: str | None = Field(None, description="Optional target filename for download")
     schedule_time: str | None = Field(
         None,
         description="ISO timestamp to schedule upgrade (immediate if omitted)",
@@ -396,7 +394,7 @@ class LANConfig(BaseModel):  # BaseModel resolves to Any in isolation
         """Validate DHCP pool IPs"""
         return IPv4AddressValidator.validate(v)
 
-    def model_post_init(self, __context) -> None:
+    def model_post_init(self, __context: Any) -> None:
         """Handle backward compatibility for ip_address"""
         if self.ip_address and not self.ipv4_address:
             self.ipv4_address = self.ip_address

@@ -1,11 +1,10 @@
-
 """
 CRM Router Integration Tests
 
 Tests for BSS Phase 1 CRM endpoints including leads, quotes, and site surveys.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -15,13 +14,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.crm.models import Lead, LeadStatus, Quote, SiteSurvey, SiteSurveyStatus
 from dotmac.platform.tenant.models import Tenant
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestLeadEndpoints:
@@ -48,7 +42,7 @@ class TestLeadEndpoints:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/leads",
+            "/api/v1/crm/leads",
             json=lead_data,
             headers=auth_headers,
         )
@@ -77,7 +71,7 @@ class TestLeadEndpoints:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/leads",
+            "/api/v1/crm/leads",
             json=lead_data,
             headers=auth_headers,
         )
@@ -129,7 +123,7 @@ class TestLeadEndpoints:
         await db_session.commit()
 
         response = await async_client.get(
-            "/api/v1/crm/crm/leads",
+            "/api/v1/crm/leads",
             headers=auth_headers,
         )
 
@@ -167,7 +161,7 @@ class TestLeadEndpoints:
         await db_session.commit()
 
         response = await async_client.get(
-            f"/api/v1/crm/crm/leads/{lead.id}",
+            f"/api/v1/crm/leads/{lead.id}",
             headers=auth_headers,
         )
 
@@ -205,7 +199,7 @@ class TestLeadEndpoints:
         update_data = {"status": LeadStatus.QUALIFIED.value}
 
         response = await async_client.post(
-            f"/api/v1/crm/crm/leads/{lead.id}/status",
+            f"/api/v1/crm/leads/{lead.id}/status",
             json=update_data,
             headers=auth_headers,
         )
@@ -227,7 +221,7 @@ class TestLeadEndpoints:
             lead = Lead(
                 id=uuid4(),
                 tenant_id=str(test_tenant.id),
-                lead_number=f"LEAD-TEST-000{i+5}",
+                lead_number=f"LEAD-TEST-000{i + 5}",
                 first_name=f"Lead{i}",
                 last_name="Test",
                 email=f"lead{i}@example.com",
@@ -243,7 +237,7 @@ class TestLeadEndpoints:
         await db_session.commit()
 
         response = await async_client.get(
-            f"/api/v1/crm/crm/leads?status={LeadStatus.QUALIFIED.value}",
+            f"/api/v1/crm/leads?status={LeadStatus.QUALIFIED.value}",
             headers=auth_headers,
         )
 
@@ -295,7 +289,7 @@ class TestQuoteEndpoints:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/quotes",
+            "/api/v1/crm/quotes",
             json=quote_data,
             headers=auth_headers,
         )
@@ -347,13 +341,13 @@ class TestQuoteEndpoints:
             monthly_recurring_charge=79.99,
             installation_fee=99.99,
             total_upfront_cost=99.99,  # installation + equipment (0) + activation (0)
-            valid_until=datetime(2025, 12, 31, 23, 59, 59, tzinfo=timezone.utc),
+            valid_until=datetime(2025, 12, 31, 23, 59, 59, tzinfo=UTC),
         )
         db_session.add(quote)
         await db_session.commit()
 
         response = await async_client.get(
-            "/api/v1/crm/crm/quotes",
+            "/api/v1/crm/quotes",
             headers=auth_headers,
         )
 
@@ -401,7 +395,7 @@ class TestSiteSurveyEndpoints:
         }
 
         response = await async_client.post(
-            "/api/v1/crm/crm/site-surveys",
+            "/api/v1/crm/site-surveys",
             json=survey_data,
             headers=auth_headers,
         )
@@ -447,14 +441,14 @@ class TestSiteSurveyEndpoints:
             tenant_id=str(test_tenant.id),
             lead_id=lead.id,
             survey_number="SURVEY-TEST-001",
-            scheduled_date=datetime(2025, 11, 1, 10, 0, 0, tzinfo=timezone.utc),
+            scheduled_date=datetime(2025, 11, 1, 10, 0, 0, tzinfo=UTC),
             status=SiteSurveyStatus.SCHEDULED,
         )
         db_session.add(survey)
         await db_session.commit()
 
         response = await async_client.get(
-            "/api/v1/crm/crm/site-surveys",
+            "/api/v1/crm/site-surveys",
             headers=auth_headers,
         )
 
@@ -511,7 +505,7 @@ class TestCRMTenantIsolation:
 
         # List leads should not include other tenant's lead
         response = await async_client.get(
-            "/api/v1/crm/crm/leads",
+            "/api/v1/crm/leads",
             headers=auth_headers,
         )
 
@@ -564,7 +558,7 @@ class TestCRMTenantIsolation:
 
         # Try to access the other tenant's lead
         response = await async_client.get(
-            f"/api/v1/crm/crm/leads/{other_lead.id}",
+            f"/api/v1/crm/leads/{other_lead.id}",
             headers=auth_headers,
         )
 

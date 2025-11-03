@@ -5,10 +5,7 @@ Main FastAPI application entry point for DotMac Platform Services.
 import os
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
@@ -32,12 +29,12 @@ from dotmac.platform.auth.exceptions import AuthError, get_http_status
 from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
 from dotmac.platform.core.rate_limiting import get_limiter
 from dotmac.platform.db import AsyncSessionLocal, init_db
+from dotmac.platform.infrastructure_health import run_startup_health_checks
 from dotmac.platform.monitoring.error_middleware import (
     ErrorTrackingMiddleware,
     RequestMetricsMiddleware,
 )
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
-from dotmac.platform.infrastructure_health import run_startup_health_checks
 from dotmac.platform.platform_app import platform_app
 from dotmac.platform.redis_client import init_redis, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
@@ -83,7 +80,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
         logger.warning("secrets.load.failed", source="vault", error=str(e), emoji="⚠️")
         if settings.is_production:
             logger.error("secrets.load.production_failure", error=str(e))
-            raise RuntimeError("Vault secrets initialization failed") from e
+            raise RuntimeError(f"Vault secrets initialization failed: {e}") from e
         print(f"Using default secrets (Vault unavailable: {e})")
 
     # SECURITY: Validate production security settings after secrets are loaded
@@ -473,5 +470,5 @@ if __name__ == "__main__":
         host=settings.host,
         port=settings.port,
         reload=settings.is_development,
-        log_level=settings.observability.log_level.value.lower(),
+        log_level=settings.observability.log_level.lower(),
     )

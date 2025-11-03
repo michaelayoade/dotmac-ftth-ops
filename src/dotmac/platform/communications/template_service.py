@@ -6,10 +6,7 @@ Provides template functionality using Jinja2.
 
 import os
 from collections.abc import Mapping
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -305,7 +302,7 @@ class TemplateService:
         return sorted(all_variables)
 
     def _find_missing_variables(
-        self, template_data: TemplateData, data: dict[str, Any]
+        self, template_data: TemplateData, data: Mapping[str, Any]
     ) -> list[str]:
         """Find variables that are used in template but not provided in data."""
         return [var for var in template_data.variables if var not in data]

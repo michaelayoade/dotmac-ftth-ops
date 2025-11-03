@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, AsyncIterator
+from collections.abc import AsyncIterator
+from typing import TYPE_CHECKING
+from uuid import uuid4
 
 import pytest
 
@@ -17,9 +19,9 @@ if HAS_SQLALCHEMY:
     AsyncFixture = pytest_asyncio.fixture if pytest_asyncio else pytest.fixture
 
     if TYPE_CHECKING:
-        from decimal import Decimal
-        from httpx import AsyncClient
         from unittest.mock import AsyncMock
+
+        from httpx import AsyncClient
 
         from dotmac.platform.billing.core.entities import PaymentMethodEntity
         from dotmac.platform.billing.models import BillingSubscriptionPlanTable
@@ -27,18 +29,16 @@ if HAS_SQLALCHEMY:
     @pytest.fixture
     def tenant_id() -> str:
         """Tenant identifier used in billing fixtures."""
-        return "test-tenant"
+        return str(uuid4())
 
     @pytest.fixture
     def customer_id() -> str:
         """Customer identifier used in billing fixtures."""
-        return "cust_123"
+        return str(uuid4())
 
     @pytest.fixture
     def billing_subject_id() -> str:
         """Subject identifier for auth headers."""
-        from uuid import uuid4
-
         return str(uuid4())
 
     @AsyncFixture
@@ -46,7 +46,7 @@ if HAS_SQLALCHEMY:
         async_session,
         tenant_id: str,
         customer_id: str,
-    ) -> AsyncIterator["PaymentMethodEntity"]:
+    ) -> AsyncIterator[PaymentMethodEntity]:
         """Persist a payment method entity for integration tests."""
         from uuid import uuid4
 
@@ -68,8 +68,12 @@ if HAS_SQLALCHEMY:
             expiry_year=2030,
         )
         async_session.add(payment_method)
-        await async_session.flush()
-        await async_session.refresh(payment_method)
+        try:
+            await async_session.flush()
+            await async_session.refresh(payment_method)
+        except Exception as exc:  # pragma: no cover - diagnostic aid
+            await async_session.rollback()
+            raise RuntimeError("Failed to create test payment method") from exc
 
         try:
             yield payment_method
@@ -78,7 +82,7 @@ if HAS_SQLALCHEMY:
             await async_session.flush()
 
     @pytest.fixture
-    def mock_stripe_provider() -> "AsyncMock":
+    def mock_stripe_provider() -> AsyncMock:
         """Mock Stripe payment provider."""
         from unittest.mock import AsyncMock
 
@@ -87,7 +91,9 @@ if HAS_SQLALCHEMY:
         return provider
 
     @AsyncFixture
-    async def test_subscription_plan(async_session, tenant_id: str) -> AsyncIterator["BillingSubscriptionPlanTable"]:
+    async def test_subscription_plan(
+        async_session, tenant_id: str
+    ) -> AsyncIterator[BillingSubscriptionPlanTable]:
         """Create a subscription plan in the test database."""
         from decimal import Decimal
 
@@ -117,7 +123,7 @@ if HAS_SQLALCHEMY:
             await async_session.flush()
 
     @AsyncFixture
-    async def client(test_app) -> AsyncIterator["AsyncClient"]:
+    async def client(test_app) -> AsyncIterator[AsyncClient]:
         """Async HTTP client used in billing integration tests."""
         from httpx import ASGITransport, AsyncClient
 

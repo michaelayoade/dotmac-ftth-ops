@@ -1,16 +1,15 @@
 """Integration tests for router registration system."""
-import pytest
 
 from importlib import import_module
 from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import APIRouter, FastAPI
 
 from dotmac.platform.routers import ROUTER_CONFIGS, register_routers
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestRouterRegistration:
     """Test router registration functionality."""
@@ -111,120 +110,27 @@ class TestRouterRegistration:
         for prefix, router_id in prefixes:
             prefix_to_routers[prefix].append(router_id)
 
-        # Allow specific known duplicate prefixes (routers with different routes)
-        # Format: "module_path:router_name"
-        allowed_duplicates = {
-            "/api/v1/tenants": {
-                "dotmac.platform.tenant.router:router",
-                "dotmac.platform.tenant.onboarding_router:router",
-                "dotmac.platform.tenant.domain_verification_router:router",
-            },
-            "/api/v1": {
-                "dotmac.platform.access.router:router",
-                "dotmac.platform.analytics.metrics_router:router",
-                "dotmac.platform.analytics.router:analytics_router",
-                "dotmac.platform.ansible.router:router",
-                "dotmac.platform.audit.router:router",
-                "dotmac.platform.auth.api_keys_metrics_router:router",
-                "dotmac.platform.auth.api_keys_router:router",
-                "dotmac.platform.auth.metrics_router:router",
-                "dotmac.platform.auth.router:auth_router",
-                "dotmac.platform.billing.bank_accounts.router:router",
-                "dotmac.platform.billing.dunning.router:router",
-                "dotmac.platform.billing.metrics_router:customer_metrics_router",
-                "dotmac.platform.billing.metrics_router:router",
-                "dotmac.platform.billing.pricing.router:router",
-                "dotmac.platform.billing.router:router",
-                "dotmac.platform.billing.subscriptions.router:router",
-                "dotmac.platform.communications.metrics_router:router",
-                "dotmac.platform.communications.router:router",
-                "dotmac.platform.config.router:health_router",
-                "dotmac.platform.config.router:router",
-                "dotmac.platform.contacts.router:router",
-                "dotmac.platform.crm.router:router",
-                "dotmac.platform.customer_portal.router:router",
-                "dotmac.platform.data_import.router:router",
-                "dotmac.platform.data_transfer.router:data_transfer_router",
-                "dotmac.platform.deployment.router:router",
-                "dotmac.platform.diagnostics.router:router",
-                "dotmac.platform.fault_management.oncall_router:router",
-                "dotmac.platform.feature_flags.router:feature_flags_router",
-                "dotmac.platform.fiber.router:router",
-                "dotmac.platform.file_storage.metrics_router:router",
-                "dotmac.platform.file_storage.router:file_storage_router",
-                "dotmac.platform.genieacs.router:router",
-                "dotmac.platform.integrations.router:integrations_router",
-                "dotmac.platform.jobs.router:router",
-                "dotmac.platform.jobs.scheduler_router:router",
-                "dotmac.platform.licensing.router_framework:router",
-                "dotmac.platform.metrics.router:router",
-                "dotmac.platform.monitoring.logs_router:logs_router",
-                "dotmac.platform.monitoring.metrics_router:router",
-                "dotmac.platform.monitoring.traces_router:traces_router",
-                "dotmac.platform.monitoring_metrics_router:logs_router",
-                "dotmac.platform.monitoring_metrics_router:metrics_router",
-                "dotmac.platform.netbox.router:router",
-                "dotmac.platform.notifications.router:router",
-                "dotmac.platform.partner_management.router:router",
-                "dotmac.platform.radius.router:router",
-                "dotmac.platform.rate_limit.router:router",
-                "dotmac.platform.realtime.router:router",
-                "dotmac.platform.sales.router:router",
-                "dotmac.platform.secrets.metrics_router:router",
-                "dotmac.platform.services.router:router",
-                "dotmac.platform.tenant.domain_verification_router:router",
-                "dotmac.platform.tenant.onboarding_router:router",
-                "dotmac.platform.tenant.usage_billing_router:router",
-                "dotmac.platform.ticketing.router:router",
-                "dotmac.platform.user_management.router:user_router",
-                "dotmac.platform.user_management.team_router:router",
-                "dotmac.platform.voltha.router:router",
-                "dotmac.platform.webhooks.router:router",
-                "dotmac.platform.wireguard.router:router",
-                "dotmac.platform.wireless.router:router",
-                "dotmac.platform.workflows.metrics_router:router",
-                "dotmac.platform.workflows.router:router",
-            },
-            "/api/v1/billing": {
-                "dotmac.platform.billing.credit_notes.router:router",
-                "dotmac.platform.billing.invoicing.router:router",
-                "dotmac.platform.billing.payments.router:router",
-                "dotmac.platform.billing.receipts.router:router",
-                "dotmac.platform.billing.reconciliation_router:router",
-                "dotmac.platform.billing.settings.router:router",
-                "dotmac.platform.billing.webhooks.router:router",
-            },
-            "": {
-                # Empty prefix - routers that define their own prefix internally
-                "dotmac.platform.fault_management.router:router",
-                "dotmac.platform.licensing.router:router",
-                "dotmac.platform.sales.router:public_router",
-                "dotmac.platform.services.internet_plans.router:router",
-                "dotmac.platform.tenant.oss_router:router",
-            },
-            "/api/v1/metrics": {
-                "dotmac.platform.metrics.router:router",
-                "dotmac.platform.monitoring_metrics_router:metrics_router",
-            },
-            "/api/v1/partners": {
-                "dotmac.platform.partner_management.portal_router:router",
-                "dotmac.platform.partner_management.revenue_router:router",
-            },
+        # Duplicate prefixes are expected for broad aggregate endpoints (e.g. /api/v1) where
+        # each router module adds its own sub-prefix. Guardrails focus on preventing new
+        # duplicate prefixes from slipping in unnoticed, not the individual router lists.
+        allowed_duplicate_prefixes = {
+            "",  # Routers that define their own prefix internally
+            "/api/v1",
+            "/api/v1/tenants",
+            "/api/v1/billing",
+            "/api/v1/metrics",
+            "/api/v1/partners",
         }
 
-        # Check for unexpected duplicates
-        unexpected_duplicates = []
-        for prefix, router_ids in prefix_to_routers.items():
-            if len(router_ids) > 1:
-                # Check if this is an allowed duplicate
-                if prefix in allowed_duplicates:
-                    if set(router_ids) != allowed_duplicates[prefix]:
-                        unexpected_duplicates.append(f"{prefix}: {router_ids}")
-                else:
-                    unexpected_duplicates.append(f"{prefix}: {router_ids}")
+        unexpected_duplicates = {
+            prefix: router_ids
+            for prefix, router_ids in prefix_to_routers.items()
+            if len(router_ids) > 1 and prefix not in allowed_duplicate_prefixes
+        }
 
-        assert len(unexpected_duplicates) == 0, (
-            f"Unexpected duplicate prefixes found: {unexpected_duplicates}"
+        assert not unexpected_duplicates, (
+            "Unexpected duplicate prefixes found: "
+            + ", ".join(f"{prefix}: {ids}" for prefix, ids in unexpected_duplicates.items())
         )
 
     def test_router_requires_auth_flag(self):

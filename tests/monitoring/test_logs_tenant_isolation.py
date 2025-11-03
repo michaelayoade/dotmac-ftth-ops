@@ -7,7 +7,7 @@ This test suite verifies that:
 4. All three endpoints (logs, stats, services) enforce tenant isolation
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -48,7 +48,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_a_id,
             action="login",
             ip_address="192.168.1.1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         AuditActivity(
             id=uuid4(),
@@ -59,7 +59,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_a_id,
             action="payment_process",
             ip_address="192.168.1.2",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         AuditActivity(
             id=uuid4(),
@@ -70,7 +70,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_a_id,
             action="api_request",
             ip_address="192.168.1.3",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         # Tenant B logs
         AuditActivity(
@@ -82,7 +82,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_b_id,
             action="logout",
             ip_address="10.0.0.1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         AuditActivity(
             id=uuid4(),
@@ -93,7 +93,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_b_id,
             action="invoice_create",
             ip_address="10.0.0.2",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         # Tenant C logs
         AuditActivity(
@@ -105,7 +105,7 @@ async def multi_tenant_audit_logs(async_db_session: AsyncSession):
             tenant_id=tenant_c_id,
             action="api_request",
             ip_address="172.16.0.1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
     ]
 

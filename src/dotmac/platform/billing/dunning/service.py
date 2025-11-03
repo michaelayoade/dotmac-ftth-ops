@@ -4,19 +4,17 @@ Dunning & Collections Service Layer.
 Handles business logic for automated collection workflows.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from typing import Any, Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime, timedelta
+from typing import Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.dunning.models import (
-    DunningActionType,
     DunningActionLog,
+    DunningActionType,
     DunningCampaign,
     DunningExecution,
     DunningExecutionStatus,
@@ -110,7 +108,7 @@ class DunningService:
             raise EntityNotFoundError("Campaign", campaign_id)
 
         if campaign.tenant_id != tenant_id:
-            return None
+            raise EntityNotFoundError("Campaign", campaign_id)
 
         return campaign
 
@@ -510,7 +508,7 @@ class DunningService:
             raise EntityNotFoundError("Execution", execution_id)
 
         if execution.tenant_id != tenant_id:
-            return None
+            raise EntityNotFoundError("Execution", execution_id)
 
         return execution
 
@@ -695,9 +693,7 @@ class DunningService:
             func.count()
             .filter(DunningExecution.status == DunningExecutionStatus.COMPLETED)
             .label("completed"),
-            func.count()
-            .filter(DunningExecution.recovered_amount > 0)
-            .label("successful"),
+            func.count().filter(DunningExecution.recovered_amount > 0).label("successful"),
             func.count()
             .filter(DunningExecution.status == DunningExecutionStatus.FAILED)
             .label("failed"),
@@ -791,9 +787,7 @@ class DunningService:
             .filter(DunningExecution.status == DunningExecutionStatus.CANCELED)
             .label("canceled"),
             func.sum(DunningExecution.recovered_amount).label("recovered"),
-            func.count()
-            .filter(DunningExecution.recovered_amount > 0)
-            .label("successful"),
+            func.count().filter(DunningExecution.recovered_amount > 0).label("successful"),
             func.avg(DunningExecution.recovered_amount)
             .filter(DunningExecution.recovered_amount > 0)
             .label("avg_recovery"),

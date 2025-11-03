@@ -4,10 +4,7 @@ Pricing engine service.
 Simple pricing calculations with rule-based discounts - first match wins approach.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -291,9 +288,10 @@ class PricingEngine:
         if not product:
             raise PricingError(f"Product not found: {request.product_id}")
 
-        calculation_currency = (
-            request.currency or getattr(product, "currency", settings.billing.default_currency)
-        ).upper()
+        currency_value = request.currency or getattr(product, "currency", None)
+        if not isinstance(currency_value, str) or not currency_value:
+            currency_value = settings.billing.default_currency
+        calculation_currency = currency_value.upper()
 
         # Build calculation context
         context = PriceCalculationContext(
@@ -579,8 +577,9 @@ class PricingEngine:
         db_rule = result.scalar_one_or_none()
 
         if db_rule:
-            current_uses = int(getattr(db_rule, "current_uses", 0))
-            db_rule.current_uses = current_uses + 1
+            current_uses_raw = getattr(db_rule, "current_uses", 0)
+            current_uses = Decimal(str(current_uses_raw))
+            db_rule.current_uses = current_uses + Decimal(1)
 
         await self.db.commit()
 
@@ -658,9 +657,10 @@ class PricingEngine:
         """Get rules that would apply for given request (for testing/preview)."""
         product = await self.product_service.get_product(request.product_id, tenant_id)
 
-        calculation_currency = (
-            request.currency or getattr(product, "currency", settings.billing.default_currency)
-        ).upper()
+        currency_value = request.currency or getattr(product, "currency", None)
+        if not isinstance(currency_value, str) or not currency_value:
+            currency_value = settings.billing.default_currency
+        calculation_currency = currency_value.upper()
 
         context = PriceCalculationContext(
             product_id=request.product_id,
@@ -730,7 +730,7 @@ class PricingEngine:
         if not db_rule:
             return False
 
-        db_rule.current_uses = 0
+        db_rule.current_uses = Decimal(0)
         await self.db.commit()
         return True
 

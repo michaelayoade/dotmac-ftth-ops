@@ -3,6 +3,7 @@ Integration tests for the token refresh endpoint with real JWT tokens.
 """
 
 import pytest
+
 from dotmac.platform.auth.core import TokenType, jwt_service
 
 

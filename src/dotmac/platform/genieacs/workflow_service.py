@@ -5,6 +5,7 @@ Provides workflow-compatible methods for CPE device provisioning (ISP).
 """
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -69,7 +70,6 @@ class GenieACSService:
         Raises:
             ValueError: If device not found or configuration invalid
         """
-        from datetime import datetime, timezone
 
         from .client import GenieACSClient
         from .service import GenieACSService

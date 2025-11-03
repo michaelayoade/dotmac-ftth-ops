@@ -3,8 +3,6 @@ Test that factories catch typos and invalid values early.
 """
 
 import pytest
-from decimal import Decimal
-
 
 pytestmark = pytest.mark.unit
 
@@ -26,5 +24,7 @@ async def test_invoice_factory_raises_on_unknown_status(async_db_session, invoic
 @pytest.mark.asyncio
 async def test_invoice_factory_error_message_shows_valid_options(async_db_session, invoice_factory):
     """Verify error message lists valid status options."""
-    with pytest.raises(ValueError, match="Valid options: draft, open, paid, void, overdue, partially_paid"):
+    with pytest.raises(
+        ValueError, match="Valid options: draft, open, paid, void, overdue, partially_paid"
+    ):
         await invoice_factory(status="invalid")

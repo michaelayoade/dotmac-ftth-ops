@@ -7,13 +7,8 @@ from starlette.datastructures import Headers
 
 from dotmac.platform.tenant.tenant import TenantIdentityResolver
 
-
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 def make_request(headers=None, query=None, state_dict=None) -> Request:
     scope = {

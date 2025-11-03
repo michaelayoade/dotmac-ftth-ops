@@ -4,14 +4,13 @@ Test Cleanup Registry
 Provides a centralized registry for managing test cleanup handlers.
 This ensures proper cleanup order and prevents resource leaks.
 """
+
 from __future__ import annotations
 
 import logging
 from collections.abc import Callable
 from enum import IntEnum
 from typing import Any
-
-import pytest
 
 logger = logging.getLogger(__name__)
 
@@ -83,17 +82,13 @@ class CleanupRegistry:
         if self._cleaned_up:
             logger.warning(
                 "Attempting to register cleanup handler after cleanup has run: %s",
-                name or handler.__name__
+                name or handler.__name__,
             )
             return
 
         handler_name = name or getattr(handler, "__name__", "unknown")
         self._handlers.append((priority, handler_name, handler))
-        logger.debug(
-            "Registered cleanup handler: %s (priority=%d)",
-            handler_name,
-            priority
-        )
+        logger.debug("Registered cleanup handler: %s (priority=%d)", handler_name, priority)
 
     def register_fastapi_app(self, app: Any) -> None:
         """Convenience method to register FastAPI app cleanup.
@@ -101,16 +96,13 @@ class CleanupRegistry:
         Args:
             app: FastAPI application instance
         """
+
         def cleanup():
             if hasattr(app, "dependency_overrides"):
                 app.dependency_overrides.clear()
                 logger.debug("Cleared dependency overrides for FastAPI app")
 
-        self.register(
-            cleanup,
-            priority=CleanupPriority.FASTAPI_APPS,
-            name=f"fastapi_app_{id(app)}"
-        )
+        self.register(cleanup, priority=CleanupPriority.FASTAPI_APPS, name=f"fastapi_app_{id(app)}")
 
     def register_event_bus_cleanup(self, event_bus: Any) -> None:
         """Convenience method to register event bus cleanup.
@@ -118,15 +110,14 @@ class CleanupRegistry:
         Args:
             event_bus: Event bus instance
         """
+
         def cleanup():
             if hasattr(event_bus, "clear_handlers"):
                 event_bus.clear_handlers()
                 logger.debug("Cleared event bus handlers")
 
         self.register(
-            cleanup,
-            priority=CleanupPriority.EVENT_HANDLERS,
-            name=f"event_bus_{id(event_bus)}"
+            cleanup, priority=CleanupPriority.EVENT_HANDLERS, name=f"event_bus_{id(event_bus)}"
         )
 
     def cleanup_all(self) -> None:
@@ -149,12 +140,7 @@ class CleanupRegistry:
                 logger.debug("Running cleanup: %s (priority=%d)", name, priority)
                 handler()
             except Exception as e:
-                logger.error(
-                    "Error during cleanup of %s: %s",
-                    name,
-                    str(e),
-                    exc_info=True
-                )
+                logger.error("Error during cleanup of %s: %s", name, str(e), exc_info=True)
 
         self._handlers.clear()
         self._cleaned_up = True

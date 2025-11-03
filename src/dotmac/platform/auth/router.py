@@ -7,10 +7,7 @@ Provides login, register, token refresh endpoints with rate limiting.
 import json
 import secrets
 from collections.abc import AsyncGenerator
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, Literal
 
 import structlog
@@ -18,6 +15,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Request, Response, 
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import (
@@ -309,9 +307,7 @@ async def _authenticate_and_issue_tokens(
         else:
             state_tenant = getattr(request.state, "tenant_id", None)
 
-            if state_tenant and (
-                current_tenant_id is None or state_tenant != current_tenant_id
-            ):
+            if state_tenant and (current_tenant_id is None or state_tenant != current_tenant_id):
                 current_tenant_id = state_tenant
 
             # If tenant is still unset and tenant headers are optional, default to config value
@@ -350,6 +346,22 @@ async def _authenticate_and_issue_tokens(
             # Ensure we only allow cross-tenant login for true platform admins
             if candidate.is_platform_admin or candidate.tenant_id in fallback_tenant_scope:
                 user = candidate
+            else:
+                # Allow login when identifier uniquely maps to a single tenant.
+                identifier = username.lower() if "@" in username else username
+                if "@" in username:
+                    uniqueness_query = (
+                        select(User.id).where(func.lower(User.email) == identifier).limit(2)
+                    )
+                else:
+                    uniqueness_query = select(User.id).where(User.username == identifier).limit(2)
+
+                result = await session.execute(uniqueness_query)
+                matches = result.scalars().all()
+
+                if len(matches) == 1:
+                    user = candidate
+                    current_tenant_id = candidate.tenant_id
 
     if not user or not verify_password(password, user.password_hash):
         # Log failed login attempt

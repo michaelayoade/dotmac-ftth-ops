@@ -24,8 +24,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.platform_admin import is_platform_admin
+from dotmac.platform.core.caching import get_redis
 from dotmac.platform.db import get_async_session
-from dotmac.platform.core.rate_limiting import rate_limit
 from dotmac.platform.monitoring.alert_webhook_router import (
     Alert,
     AlertChannel,
@@ -37,7 +37,6 @@ from dotmac.platform.monitoring.alert_webhook_router import (
 from dotmac.platform.monitoring.models import MonitoringAlertChannel
 from dotmac.platform.monitoring.plugins import get_plugin, register_builtin_plugins
 from dotmac.platform.settings import settings
-from dotmac.platform.core.caching import get_redis
 
 logger = structlog.get_logger(__name__)
 
@@ -604,7 +603,7 @@ async def send_test_alert(
         labels={
             "alertname": "TestAlert",
             "severity": request.severity,
-            "tenant_id": current_user.tenant_id,
+            "tenant_id": current_user.tenant_id or "system",
             "instance": "test",
         },
         annotations={

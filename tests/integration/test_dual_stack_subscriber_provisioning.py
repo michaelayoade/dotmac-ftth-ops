@@ -20,7 +20,9 @@ from dotmac.platform.radius.service import RADIUSService
 class TestDualStackSubscriberProvisioning:
     """Integration tests for complete dual-stack subscriber provisioning."""
 
-    async def test_provision_subscriber_with_dual_stack_ips_integration(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_provision_subscriber_with_dual_stack_ips_integration(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test complete provisioning workflow with dual-stack IPs.
 
@@ -44,6 +46,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",
@@ -79,7 +82,9 @@ class TestDualStackSubscriberProvisioning:
             assert retrieved.framed_ipv6_address == "2001:db8:100::50"
             assert retrieved.framed_ipv6_prefix == "2001:db8:100::/64"
 
-    async def test_provision_subscriber_ipv4_only_integration(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_provision_subscriber_ipv4_only_integration(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test provisioning subscriber with IPv4 only (backward compatibility).
         """
@@ -96,6 +101,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",
@@ -118,7 +124,9 @@ class TestDualStackSubscriberProvisioning:
             assert result.framed_ipv6_address is None
             assert result.framed_ipv6_prefix is None
 
-    async def test_provision_subscriber_ipv6_only_integration(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_provision_subscriber_ipv6_only_integration(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test provisioning subscriber with IPv6 only.
         """
@@ -135,6 +143,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",
@@ -158,7 +167,9 @@ class TestDualStackSubscriberProvisioning:
             assert result.framed_ipv6_address == "2001:db8:300::10"
             assert result.framed_ipv6_prefix == "2001:db8:300::/64"
 
-    async def test_update_subscriber_add_ipv6_to_ipv4_integration(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_update_subscriber_add_ipv6_to_ipv4_integration(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test upgrading existing IPv4-only subscriber to dual-stack.
         """
@@ -175,6 +186,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",
@@ -209,7 +221,9 @@ class TestDualStackSubscriberProvisioning:
             assert updated.framed_ipv6_address == "2001:db8:400::200"
             assert updated.framed_ipv6_prefix == "2001:db8:400::/64"
 
-    async def test_provision_multiple_subscribers_tenant_isolation(self, async_session, smoke_test_tenant_a, smoke_test_tenant_b, subscriber_factory):
+    async def test_provision_multiple_subscribers_tenant_isolation(
+        self, async_session, smoke_test_tenant_a, smoke_test_tenant_b, subscriber_factory
+    ):
         """
         Test tenant isolation in dual-stack provisioning.
         """
@@ -230,6 +244,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id_a,
                 tenant_id=smoke_test_tenant_a.id,
@@ -280,7 +295,9 @@ class TestDualStackSubscriberProvisioning:
             tenant_a_sub = await service_a.get_subscriber(subscriber_id=subscriber_id_b)
             assert tenant_a_sub is None  # Not accessible cross-tenant
 
-    async def test_provision_subscriber_with_bandwidth_profile_integration(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_provision_subscriber_with_bandwidth_profile_integration(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test dual-stack provisioning with bandwidth profile.
         """
@@ -297,6 +314,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",
@@ -321,7 +339,9 @@ class TestDualStackSubscriberProvisioning:
             assert result.framed_ipv4_address == "10.100.4.50"
             assert result.framed_ipv6_address == "2001:db8:500::50"
 
-    async def test_bulk_provision_subscribers_dual_stack(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_bulk_provision_subscribers_dual_stack(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test bulk provisioning of dual-stack subscribers.
         """
@@ -340,6 +360,7 @@ class TestDualStackSubscriberProvisioning:
 
                 # Create Subscriber record first (required for FK constraint)
                 from dotmac.platform.subscribers.models import SubscriberStatus
+
                 await subscriber_factory.create(
                     id=subscriber_id,
                     tenant_id="smoke-test-tenant",
@@ -368,7 +389,9 @@ class TestDualStackSubscriberProvisioning:
             assert created_subs[0].framed_ipv6_address == "2001:db8:1000::1"
             assert created_subs[9].framed_ipv6_address == "2001:db8:1000::a"
 
-    async def test_delete_subscriber_cleanup_dual_stack(self, async_session, smoke_test_tenant, subscriber_factory):
+    async def test_delete_subscriber_cleanup_dual_stack(
+        self, async_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test subscriber deletion cleans up both IPv4 and IPv6 assignments.
         """
@@ -385,6 +408,7 @@ class TestDualStackSubscriberProvisioning:
 
             # Create Subscriber record first (required for FK constraint)
             from dotmac.platform.subscribers.models import SubscriberStatus
+
             await subscriber_factory.create(
                 id=subscriber_id,
                 tenant_id="smoke-test-tenant",

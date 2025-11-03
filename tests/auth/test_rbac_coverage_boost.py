@@ -10,7 +10,7 @@ This test file covers:
 - Error conditions
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -19,13 +19,34 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.models import Permission, PermissionCategory
+from dotmac.platform.auth import rbac_service as rbac_module
 from dotmac.platform.auth.rbac_service import RBACService
+from dotmac.platform.user_management.models import User
 
 
 @pytest_asyncio.fixture
 async def rbac_service(async_db_session: AsyncSession):
     """Create RBAC service instance."""
+    RBACService.user_has_all_permissions = rbac_module.ORIGINAL_USER_HAS_ALL_PERMISSIONS  # type: ignore[assignment]
+    RBACService.user_has_permission = rbac_module.ORIGINAL_USER_HAS_PERMISSION  # type: ignore[assignment]
     return RBACService(async_db_session)
+
+
+@pytest_asyncio.fixture
+async def test_user(async_db_session: AsyncSession):
+    """Create a test user in the database."""
+    user = User(
+        id=uuid4(),
+        tenant_id="test-tenant",
+        username="test_user",
+        email="test@example.com",
+        password_hash="hashed_password",
+        is_active=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.commit()
+    await async_db_session.refresh(user)
+    return user
 
 
 @pytest_asyncio.fixture
@@ -75,10 +96,10 @@ class TestPermissionWildcards:
 
     @pytest.mark.asyncio
     async def test_wildcard_permission_match(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test wildcard permission matching."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Grant wildcard permission
         await rbac_service.grant_permission_to_user(
@@ -97,9 +118,9 @@ class TestPermissionWildcards:
         assert not await rbac_service.user_has_permission(user_id, "admin.read")
 
     @pytest.mark.asyncio
-    async def test_superadmin_permission(self, rbac_service, sample_permissions, async_db_session):
+    async def test_superadmin_permission(self, rbac_service, sample_permissions, async_db_session, test_user):
         """Test superadmin (*) permission."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Grant superadmin permission
         await rbac_service.grant_permission_to_user(
@@ -116,10 +137,10 @@ class TestPermissionWildcards:
 
     @pytest.mark.asyncio
     async def test_user_has_any_permission(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test user_has_any_permission method."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
@@ -140,10 +161,10 @@ class TestPermissionWildcards:
 
     @pytest.mark.asyncio
     async def test_user_has_all_permissions(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test user_has_all_permissions method."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
@@ -167,10 +188,10 @@ class TestRoleExpiration:
 
     @pytest.mark.asyncio
     async def test_expired_role_not_included(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test that expired roles are not included in permissions."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role
         await rbac_service.create_role(
@@ -185,7 +206,7 @@ class TestRoleExpiration:
             user_id=user_id,
             role_name="temp_role",
             granted_by=user_id,
-            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
+            expires_at=datetime.now(UTC) - timedelta(hours=1),
         )
         await async_db_session.commit()
 
@@ -198,10 +219,10 @@ class TestRoleExpiration:
 
     @pytest.mark.asyncio
     async def test_get_user_roles_with_expiration(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test get_user_roles with expired roles."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role
         await rbac_service.create_role(
@@ -216,7 +237,7 @@ class TestRoleExpiration:
             user_id=user_id,
             role_name="expired_role",
             granted_by=user_id,
-            expires_at=datetime.now(timezone.utc) - timedelta(days=1),
+            expires_at=datetime.now(UTC) - timedelta(days=1),
         )
         await async_db_session.commit()
 
@@ -236,10 +257,10 @@ class TestPermissionRevocation:
 
     @pytest.mark.asyncio
     async def test_permission_revoke_override(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test that direct permission revoke overrides role permissions."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role with permission
         await rbac_service.create_role(
@@ -275,10 +296,10 @@ class TestPermissionRevocation:
 
     @pytest.mark.asyncio
     async def test_revoke_permission_not_granted(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test revoking a permission that was never granted."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Try to revoke permission that was never granted
         await rbac_service.revoke_permission_from_user(
@@ -298,7 +319,7 @@ class TestRoleCRUDErrors:
     """Test role CRUD error conditions."""
 
     @pytest.mark.asyncio
-    async def test_create_duplicate_role(self, rbac_service, async_db_session):
+    async def test_create_duplicate_role(self, rbac_service, async_db_session, test_user):
         """Test creating duplicate role raises error."""
         await rbac_service.create_role(
             name="duplicate",
@@ -314,7 +335,7 @@ class TestRoleCRUDErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_create_permission_duplicate(self, rbac_service, async_db_session):
+    async def test_create_permission_duplicate(self, rbac_service, async_db_session, test_user):
         """Test creating duplicate permission raises error."""
         await rbac_service.create_permission(
             name="test.permission",
@@ -332,7 +353,7 @@ class TestRoleCRUDErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_create_role_with_parent(self, rbac_service, async_db_session):
+    async def test_create_role_with_parent(self, rbac_service, async_db_session, test_user):
         """Test creating role with parent role."""
         # Create parent role
         await rbac_service.create_role(
@@ -352,7 +373,7 @@ class TestRoleCRUDErrors:
         assert child_role.parent_id is not None
 
     @pytest.mark.asyncio
-    async def test_create_role_with_invalid_parent(self, rbac_service, async_db_session):
+    async def test_create_role_with_invalid_parent(self, rbac_service, async_db_session, test_user):
         """Test creating role with non-existent parent."""
         with pytest.raises(AuthorizationError, match="Parent role"):
             await rbac_service.create_role(
@@ -362,7 +383,7 @@ class TestRoleCRUDErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_create_permission_with_parent(self, rbac_service, async_db_session):
+    async def test_create_permission_with_parent(self, rbac_service, async_db_session, test_user):
         """Test creating permission with parent permission."""
         # Create parent permission
         await rbac_service.create_permission(
@@ -384,7 +405,7 @@ class TestRoleCRUDErrors:
         assert child_perm.parent_id is not None
 
     @pytest.mark.asyncio
-    async def test_create_permission_with_invalid_parent(self, rbac_service, async_db_session):
+    async def test_create_permission_with_invalid_parent(self, rbac_service, async_db_session, test_user):
         """Test creating permission with non-existent parent."""
         with pytest.raises(AuthorizationError, match="Parent permission"):
             await rbac_service.create_permission(
@@ -400,9 +421,9 @@ class TestRoleAssignmentErrors:
     """Test role assignment error conditions."""
 
     @pytest.mark.asyncio
-    async def test_assign_nonexistent_role(self, rbac_service, async_db_session):
+    async def test_assign_nonexistent_role(self, rbac_service, async_db_session, test_user):
         """Test assigning non-existent role raises error."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         with pytest.raises(AuthorizationError, match="not found"):
             await rbac_service.assign_role_to_user(
@@ -412,9 +433,9 @@ class TestRoleAssignmentErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_assign_role_already_assigned(self, rbac_service, async_db_session):
+    async def test_assign_role_already_assigned(self, rbac_service, async_db_session, test_user):
         """Test assigning role that's already assigned."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role
         await rbac_service.create_role(
@@ -444,9 +465,9 @@ class TestRoleAssignmentErrors:
         assert len(roles) == 1
 
     @pytest.mark.asyncio
-    async def test_revoke_nonexistent_role(self, rbac_service, async_db_session):
+    async def test_revoke_nonexistent_role(self, rbac_service, async_db_session, test_user):
         """Test revoking non-existent role raises error."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         with pytest.raises(AuthorizationError, match="not found"):
             await rbac_service.revoke_role_from_user(
@@ -456,9 +477,9 @@ class TestRoleAssignmentErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_grant_nonexistent_permission(self, rbac_service, async_db_session):
+    async def test_grant_nonexistent_permission(self, rbac_service, async_db_session, test_user):
         """Test granting non-existent permission raises error."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         with pytest.raises(AuthorizationError, match="not found"):
             await rbac_service.grant_permission_to_user(
@@ -468,9 +489,9 @@ class TestRoleAssignmentErrors:
             )
 
     @pytest.mark.asyncio
-    async def test_revoke_nonexistent_permission(self, rbac_service, async_db_session):
+    async def test_revoke_nonexistent_permission(self, rbac_service, async_db_session, test_user):
         """Test revoking non-existent permission raises error."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         with pytest.raises(AuthorizationError, match="not found"):
             await rbac_service.revoke_permission_from_user(
@@ -481,11 +502,11 @@ class TestRoleAssignmentErrors:
 
     @pytest.mark.asyncio
     async def test_grant_permission_with_expiration(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test granting permission with expiration."""
-        user_id = uuid4()
-        expires_at = datetime.now(timezone.utc) + timedelta(days=7)
+        user_id = test_user.id
+        expires_at = datetime.now(UTC) + timedelta(days=7)
 
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
@@ -501,10 +522,10 @@ class TestRoleAssignmentErrors:
 
     @pytest.mark.asyncio
     async def test_update_existing_permission_grant(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test updating an existing permission grant."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Grant permission first time
         await rbac_service.grant_permission_to_user(
@@ -516,7 +537,7 @@ class TestRoleAssignmentErrors:
         await async_db_session.commit()
 
         # Grant again with different expiration (update)
-        new_expires = datetime.now(timezone.utc) + timedelta(days=30)
+        new_expires = datetime.now(UTC) + timedelta(days=30)
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
             permission_name="ticket.read",
@@ -535,9 +556,9 @@ class TestCachingBehavior:
     """Test permission caching behavior."""
 
     @pytest.mark.asyncio
-    async def test_permission_cache_hit(self, rbac_service, sample_permissions, async_db_session):
+    async def test_permission_cache_hit(self, rbac_service, sample_permissions, async_db_session, test_user):
         """Test that permission lookups use cache."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         await rbac_service.grant_permission_to_user(
             user_id=user_id,
@@ -557,10 +578,10 @@ class TestCachingBehavior:
 
     @pytest.mark.asyncio
     async def test_cache_invalidation_on_grant(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test that cache is invalidated when permissions change."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Get permissions (empty)
         perms1 = await rbac_service.get_user_permissions(user_id)
@@ -580,10 +601,10 @@ class TestCachingBehavior:
 
     @pytest.mark.asyncio
     async def test_cache_invalidation_on_revoke(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test that cache is invalidated on revoke."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Grant permission
         await rbac_service.grant_permission_to_user(
@@ -616,10 +637,10 @@ class TestServiceEdgeCases:
 
     @pytest.mark.asyncio
     async def test_revoke_role_not_assigned(
-        self, rbac_service, sample_permissions, async_db_session
+        self, rbac_service, sample_permissions, async_db_session, test_user
     ):
         """Test revoking a role that was never assigned (lines 266-268)."""
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role but don't assign it
         await rbac_service.create_role(
@@ -641,14 +662,14 @@ class TestServiceEdgeCases:
         assert len(roles) == 0
 
     @pytest.mark.asyncio
-    async def test_get_permission_by_name_nonexistent(self, rbac_service, async_db_session):
+    async def test_get_permission_by_name_nonexistent(self, rbac_service, async_db_session, test_user):
         """Test getting a permission that doesn't exist."""
         # This tests the _get_permission_by_name method
         result = await rbac_service._get_permission_by_name("nonexistent.permission")
         assert result is None
 
     @pytest.mark.asyncio
-    async def test_get_role_by_name_nonexistent(self, rbac_service, async_db_session):
+    async def test_get_role_by_name_nonexistent(self, rbac_service, async_db_session, test_user):
         """Test getting a role that doesn't exist."""
         # This tests the _get_role_by_name method
         result = await rbac_service._get_role_by_name("nonexistent_role")

@@ -71,7 +71,7 @@ async def list_job_templates(
     _: UserInfo = Depends(require_permission("isp.automation.read")),
 ) -> list[JobTemplate]:
     """List job templates"""
-    return cast(list[JobTemplate], await service.list_job_templates())
+    return await service.list_job_templates()
 
 
 @router.get(
@@ -125,7 +125,7 @@ async def list_jobs(
     _: UserInfo = Depends(require_permission("isp.automation.read")),
 ) -> list[Job]:
     """List jobs"""
-    return cast(list[Job], await service.list_jobs())
+    return await service.list_jobs()
 
 
 @router.get(

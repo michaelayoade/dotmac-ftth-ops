@@ -1,10 +1,11 @@
 """
 Test tenant configuration for single and multi-tenant modes.
 """
-import pytest
 
 import os
 from unittest.mock import patch
+
+import pytest
 
 from dotmac.platform.tenant import (
     TenantConfiguration,

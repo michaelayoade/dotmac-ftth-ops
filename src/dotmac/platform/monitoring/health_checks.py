@@ -402,8 +402,16 @@ class HealthChecker:
                 "resource": {
                     "resource": {
                         "attributes": [
-                            {"key": "service.name", "type": "string", "value": {"stringValue": "dotmac-health"}},
-                            {"key": "deployment.environment", "type": "string", "value": {"stringValue": settings.environment}},
+                            {
+                                "key": "service.name",
+                                "type": "string",
+                                "value": {"stringValue": "dotmac-health"},
+                            },
+                            {
+                                "key": "deployment.environment",
+                                "type": "string",
+                                "value": {"stringValue": settings.environment},
+                            },
                         ]
                     }
                 },

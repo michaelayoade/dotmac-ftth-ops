@@ -4,10 +4,13 @@ Celery Tasks for RADIUS Operations.
 Background tasks for RADIUS session synchronization and maintenance.
 """
 
-import structlog
 from datetime import datetime, timedelta
-from sqlalchemy import select, and_
+
+import structlog
+from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
+
+from typing import Any
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.db import AsyncSessionLocal
@@ -21,7 +24,7 @@ logger = structlog.get_logger(__name__)
 
 @celery_app.task(name="radius.sync_sessions_to_timescaledb", bind=True, max_retries=3)
 def sync_sessions_to_timescaledb(
-    self,
+    self: Any,
     batch_size: int = 100,
     max_age_hours: int = 24,
 ) -> dict:
@@ -54,6 +57,7 @@ def sync_sessions_to_timescaledb(
         }
 
     import asyncio
+
     return asyncio.run(_sync_sessions_async(batch_size, max_age_hours))
 
 
@@ -207,7 +211,7 @@ async def _sync_sessions_async(batch_size: int, max_age_hours: int) -> dict:
 
 
 @celery_app.task(name="radius.cleanup_old_sessions", bind=True)
-def cleanup_old_sessions(self, days_old: int = 90) -> dict:
+def cleanup_old_sessions(self: Any, days_old: int = 90) -> dict:
     """
     Clean up old RADIUS sessions from PostgreSQL.
 
@@ -226,6 +230,7 @@ def cleanup_old_sessions(self, days_old: int = 90) -> dict:
         is working properly before enabling automated cleanup.
     """
     import asyncio
+
     return asyncio.run(_cleanup_old_sessions_async(days_old))
 
 

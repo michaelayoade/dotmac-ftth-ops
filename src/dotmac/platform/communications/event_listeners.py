@@ -5,6 +5,7 @@ This module contains event handlers that react to events from other
 modules (e.g., billing) and trigger appropriate communications.
 """
 
+from datetime import UTC
 from smtplib import SMTPException
 
 import structlog
@@ -453,7 +454,6 @@ async def send_exit_survey_email(event: Event) -> None:
     Args:
         event: Customer churned event
     """
-    from datetime import timezone
 
     from dotmac.platform.communications.models import ExitSurveyResponse
     from dotmac.platform.db import get_session_dependency

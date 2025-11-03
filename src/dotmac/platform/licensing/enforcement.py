@@ -1,15 +1,10 @@
-"""
-Enforcement decorators and middleware for composable licensing framework.
+"""Utilities for licensing enforcement decorators and middleware."""
 
-Provides:
-- Feature entitlement decorators
-- Quota enforcement decorators
-- Middleware for automatic entitlement checking
-"""
+from __future__ import annotations
 
 import functools
-from collections.abc import Callable
-from typing import Any
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any, ParamSpec, TypeVar, cast
 from uuid import UUID
 
 from fastapi import HTTPException, Request, status
@@ -22,12 +17,20 @@ from dotmac.platform.licensing.service_framework import (
     QuotaExceededError,
 )
 
+if TYPE_CHECKING:
+    from dotmac.platform.tenant.models import Tenant
+
+P = ParamSpec("P")
+R = TypeVar("R")
+
 # ========================================================================
 # FEATURE ENTITLEMENT DECORATORS
 # ========================================================================
 
 
-def require_module(module_code: str, capability_code: str | None = None) -> Any:
+def require_module(
+    module_code: str, capability_code: str | None = None
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     Decorator to enforce feature module entitlement.
 
@@ -38,11 +41,11 @@ def require_module(module_code: str, capability_code: str | None = None) -> Any:
             ...
     """
 
-    def decorator(func: Callable) -> Any:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Extract tenant from dependencies
-            tenant = kwargs.get("tenant")
+            tenant = cast("Tenant | None", kwargs.get("tenant"))
             if not tenant:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -50,7 +53,7 @@ def require_module(module_code: str, capability_code: str | None = None) -> Any:
                 )
 
             # Expect database session to be injected by FastAPI dependency
-            db: AsyncSession | None = kwargs.get("db")
+            db = cast(AsyncSession | None, kwargs.get("db"))
             if db is None:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -84,7 +87,9 @@ def require_module(module_code: str, capability_code: str | None = None) -> Any:
     return decorator
 
 
-def check_feature_access(module_code: str, capability_code: str | None = None) -> Any:
+def check_feature_access(
+    module_code: str, capability_code: str | None = None
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     Non-blocking feature check decorator.
 
@@ -104,17 +109,17 @@ def check_feature_access(module_code: str, capability_code: str | None = None) -
                 # Show basic features
     """
 
-    def decorator(func: Callable) -> Any:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Extract tenant from dependencies
-            tenant = kwargs.get("tenant")
+            tenant = cast("Tenant | None", kwargs.get("tenant"))
             if not tenant:
                 kwargs["feature_entitled"] = False
                 return await func(*args, **kwargs)
 
             # Expect database session to be injected; downgrade gracefully if missing
-            db: AsyncSession | None = kwargs.get("db")
+            db = cast(AsyncSession | None, kwargs.get("db"))
             if db is None:
                 kwargs["feature_entitled"] = False
                 return await func(*args, **kwargs)
@@ -143,7 +148,9 @@ def check_feature_access(module_code: str, capability_code: str | None = None) -
 # ========================================================================
 
 
-def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None = None) -> Any:
+def enforce_quota(
+    quota_code: str, quantity: int = 1, metadata_key: str | None = None
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     Decorator to enforce quota limits.
 
@@ -162,11 +169,11 @@ def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None =
         metadata_key: If provided, extract quantity from kwargs[metadata_key]
     """
 
-    def decorator(func: Callable) -> Any:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Extract tenant from dependencies
-            tenant = kwargs.get("tenant")
+            tenant = cast("Tenant | None", kwargs.get("tenant"))
             if not tenant:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
@@ -174,7 +181,7 @@ def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None =
                 )
 
             # Expect database session to be injected by FastAPI dependency
-            db: AsyncSession | None = kwargs.get("db")
+            db = cast(AsyncSession | None, kwargs.get("db"))
             if db is None:
                 raise HTTPException(
                     status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -187,7 +194,18 @@ def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None =
             # Determine quantity to consume
             qty = quantity
             if metadata_key and metadata_key in kwargs:
-                qty = kwargs[metadata_key]
+                qty_value = kwargs[metadata_key]
+                if isinstance(qty_value, int):
+                    qty = qty_value
+                elif isinstance(qty_value, str):
+                    qty = int(qty_value)
+                elif isinstance(qty_value, float):
+                    qty = int(qty_value)
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid quota quantity",
+                    )
 
             # Check and consume quota
             service = LicensingFrameworkService(db)
@@ -216,7 +234,9 @@ def enforce_quota(quota_code: str, quantity: int = 1, metadata_key: str | None =
     return decorator
 
 
-def check_quota(quota_code: str, quantity: int = 1) -> Any:
+def check_quota(
+    quota_code: str, quantity: int = 1
+) -> Callable[[Callable[P, Awaitable[R]]], Callable[P, Awaitable[R]]]:
     """
     Non-blocking quota check decorator.
 
@@ -240,18 +260,18 @@ def check_quota(quota_code: str, quantity: int = 1) -> Any:
                     raise HTTPException(status_code=429, detail="Quota exceeded")
     """
 
-    def decorator(func: Callable) -> Any:
+    def decorator(func: Callable[P, Awaitable[R]]) -> Callable[P, Awaitable[R]]:
         @functools.wraps(func)
-        async def wrapper(*args, **kwargs) -> Any:
+        async def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             # Extract tenant from dependencies
-            tenant = kwargs.get("tenant")
+            tenant = cast("Tenant | None", kwargs.get("tenant"))
             if not tenant:
                 kwargs["quota_available"] = False
                 kwargs["quota_info"] = {}
                 return await func(*args, **kwargs)
 
             # Expect database session to be injected; fallback to False if missing
-            db: AsyncSession | None = kwargs.get("db")
+            db = cast(AsyncSession | None, kwargs.get("db"))
             if db is None:
                 kwargs["quota_available"] = False
                 kwargs["quota_info"] = {}
@@ -301,7 +321,11 @@ class FeatureEntitlementMiddleware:
         )
     """
 
-    def __init__(self, app, route_module_map: dict[str, tuple[str, str | None]]) -> Any:
+    def __init__(
+        self,
+        app: Any,
+        route_module_map: dict[str, tuple[str, str | None]],
+    ) -> None:
         """
         Initialize middleware.
 
@@ -312,7 +336,9 @@ class FeatureEntitlementMiddleware:
         self.app = app
         self.route_module_map = route_module_map
 
-    async def __call__(self, request: Request, call_next) -> Any:
+    async def __call__(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Any]]
+    ) -> Any:
         """Process request."""
         # Check if route requires entitlement
         path = request.url.path
@@ -330,10 +356,11 @@ class FeatureEntitlementMiddleware:
             module_code, capability_code = module_config
 
             # Extract tenant from request state (set by auth middleware)
-            tenant = getattr(request.state, "tenant", None)
+            tenant = cast("Tenant | None", getattr(request.state, "tenant", None))
             if tenant:
                 # Get database session
-                async for db in get_session():
+                async for session in get_session():
+                    db = cast(AsyncSession, session)
                     service = LicensingFrameworkService(db)
                     entitled = await service.check_feature_entitlement(
                         tenant_id=tenant.id,
@@ -345,7 +372,7 @@ class FeatureEntitlementMiddleware:
                         feature_name = (
                             f"{module_code}.{capability_code}" if capability_code else module_code
                         )
-                        return HTTPException(
+                        raise HTTPException(
                             status_code=status.HTTP_403_FORBIDDEN,
                             detail=f"Feature not entitled: {feature_name}. Please upgrade your plan.",
                         )
@@ -364,9 +391,9 @@ class FeatureEntitlementMiddleware:
 async def require_module_dependency(
     module_code: str,
     capability_code: str | None = None,
-    tenant=None,
+    tenant: Tenant | None = None,
     db: AsyncSession | None = None,
-) -> Any:
+) -> None:
     """
     Dependency injection helper for feature entitlement.
 
@@ -376,7 +403,7 @@ async def require_module_dependency(
         @router.get("/radius/auth")
         async def authenticate(
             _: None = Depends(
-                lambda t=Depends(get_current_tenant), db=Depends(get_async_session) -> Any:
+                lambda t=Depends(get_current_tenant), db=Depends(get_async_session) -> None:
                     require_module_dependency("radius_aaa", "radius_authentication", t, db)
             ),
             tenant: Tenant = Depends(get_current_tenant)
@@ -416,9 +443,9 @@ async def require_module_dependency(
 async def check_quota_dependency(
     quota_code: str,
     quantity: int = 1,
-    tenant=None,
-    db: AsyncSession = None,
-) -> dict:
+    tenant: Tenant | None = None,
+    db: AsyncSession | None = None,
+) -> dict[str, Any]:
     """
     Dependency injection helper for quota checking.
 
@@ -428,7 +455,7 @@ async def check_quota_dependency(
         @router.post("/users")
         async def create_user(
             quota_check: dict = Depends(
-                lambda t=Depends(get_current_tenant), db=Depends(get_async_session) -> Any:
+                lambda t=Depends(get_current_tenant), db=Depends(get_async_session) -> dict[str, Any]:
                     check_quota_dependency("staff_users", 1, t, db)
             ),
             tenant: Tenant = Depends(get_current_tenant)
@@ -497,8 +524,8 @@ class QuotaContext:
         quota_code: str,
         db: AsyncSession,
         quantity: int = 1,
-        metadata: dict = None,
-    ) -> Any:
+        metadata: dict[str, Any] | None = None,
+    ) -> None:
         self.tenant_id = tenant_id
         self.quota_code = quota_code
         self.db = db
@@ -506,7 +533,7 @@ class QuotaContext:
         self.metadata = metadata or {}
         self.service = LicensingFrameworkService(db)
 
-    async def __aenter__(self) -> Any:
+    async def __aenter__(self) -> "QuotaContext":
         """Check quota before entering context."""
         try:
             result = await self.service.check_quota(
@@ -526,7 +553,7 @@ class QuotaContext:
             )
         return self
 
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> Any:
+    async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> bool:
         """Consume quota on successful exit."""
         if exc_type is None:
             # No exception, consume quota

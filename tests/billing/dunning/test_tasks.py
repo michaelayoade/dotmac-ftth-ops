@@ -5,18 +5,12 @@ from uuid import uuid4
 
 import pytest
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 class TestProcessPendingActions:
     """Test process_pending_dunning_actions_task."""
-
 
     @patch("dotmac.platform.billing.dunning.tasks._process_pending_actions")
     def test_process_pending_actions_success(self, mock_process):

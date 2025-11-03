@@ -1,6 +1,7 @@
 """
 Unit tests for vendor-specific CoA strategies.
 """
+
 import pytest
 
 from dotmac.platform.radius.vendors import (

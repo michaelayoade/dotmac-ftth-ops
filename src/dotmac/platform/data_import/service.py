@@ -9,10 +9,7 @@ import csv
 import io
 import json
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, BinaryIO
 from uuid import UUID, uuid4
 
@@ -225,11 +222,7 @@ class DataImportService:
 
                     except Exception as e:
                         logger.error(f"Failed to create customer: {e}")
-                        payload_dict = (
-                            customer_data.model_dump()
-                            if hasattr(customer_data, "model_dump")
-                            else customer_data.dict()
-                        )
+                        payload_dict = customer_data.model_dump()  # type: ignore[attr-defined]
                         await self._record_import_failure(
                             job=job,
                             row_number=row_number,
@@ -370,11 +363,7 @@ class DataImportService:
                         logger.error(f"Failed to create customer: {e}")
                         result.failed_records += 1
                         job.failed_records += 1
-                        payload_dict = (
-                            customer_data.model_dump()
-                            if hasattr(customer_data, "model_dump")
-                            else customer_data.dict()
-                        )
+                        payload_dict = customer_data.model_dump()  # type: ignore[attr-defined]
                         result.errors.append(
                             {"row_number": row_number, "error": str(e), "data": payload_dict}
                         )

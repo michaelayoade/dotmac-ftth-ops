@@ -4,7 +4,7 @@ Comprehensive tests for tenant usage-based billing integration.
 Tests integration between tenant usage tracking and billing system.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -25,7 +25,7 @@ class TestUsageBillingIntegration:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test successful usage recording to both systems."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -61,7 +61,7 @@ class TestUsageBillingIntegration:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test usage recording with automatic subscription detection."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -85,7 +85,7 @@ class TestUsageBillingIntegration:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test usage recording when no active subscription exists."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -111,7 +111,7 @@ class TestUsageBillingIntegration:
 
     async def test_record_usage_zero_quantities(self, usage_billing_integration, sample_tenant):
         """Test usage recording with zero quantities (should skip billing)."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -457,7 +457,7 @@ class TestUsageTypeMapping:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test API calls map to correct billing type."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -479,7 +479,7 @@ class TestUsageTypeMapping:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test storage maps to correct billing type."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -501,7 +501,7 @@ class TestUsageTypeMapping:
         self, usage_billing_integration, sample_tenant, mock_subscription_service
     ):
         """Test users map to correct billing type."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,
@@ -527,7 +527,7 @@ class TestErrorHandling:
         """Test usage recording with invalid tenant."""
         from dotmac.platform.tenant.service import TenantNotFoundError
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = TenantUsageCreate(
             period_start=now - timedelta(hours=1),
             period_end=now,

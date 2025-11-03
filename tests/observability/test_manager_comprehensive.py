@@ -6,25 +6,19 @@ import pytest
 from fastapi import FastAPI
 
 from dotmac.platform.observability.manager import (
-
-
     ObservabilityManager,
     ObservabilityMetricsRegistry,
 )
 from dotmac.platform.version import get_version
-
-
 
 pytestmark = pytest.mark.unit
 
 CURRENT_VERSION = get_version()
 
 
-
 @pytest.fixture
 def mock_app():
     """Mock FastAPI application."""
-
 
     return FastAPI(title="Test App")
 

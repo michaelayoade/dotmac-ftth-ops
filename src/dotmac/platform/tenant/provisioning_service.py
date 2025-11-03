@@ -4,10 +4,7 @@ Service layer coordinating tenant infrastructure provisioning jobs.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 
 import structlog
 from sqlalchemy import Select, func, select
@@ -45,7 +42,7 @@ class TenantProvisioningService:
         self.db = db
 
     async def _get_tenant(self, tenant_id: str) -> Tenant:
-        stmt: Select[Tenant] = select(Tenant).where(Tenant.id == tenant_id)
+        stmt: Select[tuple[Tenant]] = select(Tenant).where(Tenant.id == tenant_id)
         result = await self.db.execute(stmt)
         tenant = result.scalar_one_or_none()
         if not tenant:

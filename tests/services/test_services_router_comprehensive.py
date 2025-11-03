@@ -9,15 +9,14 @@ from unittest.mock import AsyncMock, Mock, patch
 from uuid import uuid4
 
 import pytest
-from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
 from dotmac.platform.database import get_async_session
-from dotmac.platform.services.orchestration import OrchestrationService
 
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_user():
@@ -29,6 +28,8 @@ def test_user():
         is_platform_admin=False,
         username="testuser",
     )
+
+
 @pytest.fixture
 def mock_db():
     """Create a mock database session."""
@@ -39,6 +40,8 @@ def mock_db():
     session.refresh = AsyncMock()
     session.execute = AsyncMock()
     return session
+
+
 @pytest.fixture
 def client(test_app, test_user: UserInfo, mock_db: AsyncMock):
     """Create test client with mocked dependencies.
@@ -58,6 +61,8 @@ def client(test_app, test_user: UserInfo, mock_db: AsyncMock):
     yield client
 
     test_app.dependency_overrides.clear()
+
+
 class TestConvertLeadEndpoint:
     """Test lead to customer conversion endpoint."""
 
@@ -83,7 +88,9 @@ class TestConvertLeadEndpoint:
             "conversion_date": datetime.utcnow(),
         }
 
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             payload = {
                 "lead_id": str(lead_id),
                 "accepted_quote_id": str(quote_id),
@@ -111,9 +118,13 @@ class TestConvertLeadEndpoint:
 
         # Create mock service instance
         mock_service = AsyncMock()
-        mock_service.convert_lead_to_customer.side_effect = ValidationError("Lead must be in negotiating status")
+        mock_service.convert_lead_to_customer.side_effect = ValidationError(
+            "Lead must be in negotiating status"
+        )
 
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             payload = {
                 "lead_id": str(lead_id),
                 "accepted_quote_id": str(quote_id),
@@ -138,8 +149,12 @@ class TestConvertLeadEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure convert_lead_to_customer - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
-            mock_service.convert_lead_to_customer.side_effect = NotFoundError(f"Lead {lead_id} not found")
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
+            mock_service.convert_lead_to_customer.side_effect = NotFoundError(
+                f"Lead {lead_id} not found"
+            )
 
             payload = {
                 "lead_id": str(lead_id),
@@ -166,6 +181,8 @@ class TestConvertLeadEndpoint:
         response = client.post("/api/v1/orchestration/leads/convert", json=payload)
 
         assert response.status_code == 422  # Validation error
+
+
 class TestConvertLeadAsyncEndpoint:
     """Test async lead conversion endpoint."""
 
@@ -202,6 +219,8 @@ class TestConvertLeadAsyncEndpoint:
                 accepted_quote_id=str(quote_id),
                 user_id=test_user.user_id,
             )
+
+
 class TestProvisionSubscriberEndpoint:
     """Test subscriber provisioning endpoint."""
 
@@ -218,7 +237,9 @@ class TestProvisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure provision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             from datetime import datetime
 
             from dotmac.platform.subscribers.models import SubscriberStatus
@@ -265,7 +286,9 @@ class TestProvisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure provision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             from datetime import datetime
 
             from dotmac.platform.subscribers.models import SubscriberStatus
@@ -332,8 +355,12 @@ class TestProvisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure provision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
-            mock_service.provision_subscriber.side_effect = NotFoundError(f"Customer {customer_id} not found")
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
+            mock_service.provision_subscriber.side_effect = NotFoundError(
+                f"Customer {customer_id} not found"
+            )
 
             payload = {
                 "customer_id": str(customer_id),
@@ -361,8 +388,12 @@ class TestProvisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure provision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
-            mock_service.provision_subscriber.side_effect = ValidationError("Subscriber with username testuser already exists")
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
+            mock_service.provision_subscriber.side_effect = ValidationError(
+                "Subscriber with username testuser already exists"
+            )
 
             payload = {
                 "customer_id": str(customer_id),
@@ -377,6 +408,8 @@ class TestProvisionSubscriberEndpoint:
 
             assert response.status_code == 400
             assert "already exists" in response.json()["detail"]
+
+
 class TestProvisionSubscriberAsyncEndpoint:
     """Test async subscriber provisioning endpoint."""
 
@@ -402,12 +435,16 @@ class TestProvisionSubscriberAsyncEndpoint:
                 "upload_speed_kbps": 50000,
             }
 
-            response = client.post("/api/v1/orchestration/subscribers/provision/async", json=payload)
+            response = client.post(
+                "/api/v1/orchestration/subscribers/provision/async", json=payload
+            )
 
             assert response.status_code == 202
             data = response.json()
             assert data["task_id"] == "task_67890"
             assert "provisioning started" in data["message"]
+
+
 class TestDeprovisionSubscriberEndpoint:
     """Test subscriber deprovisioning endpoint."""
 
@@ -423,7 +460,9 @@ class TestDeprovisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure deprovision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             from datetime import datetime
 
             from dotmac.platform.subscribers.models import SubscriberStatus
@@ -462,8 +501,12 @@ class TestDeprovisionSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure deprovision_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
-            mock_service.deprovision_subscriber.side_effect = NotFoundError(f"Subscriber {subscriber_id} not found")
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
+            mock_service.deprovision_subscriber.side_effect = NotFoundError(
+                f"Subscriber {subscriber_id} not found"
+            )
 
             payload = {"reason": "Test"}
 
@@ -473,6 +516,8 @@ class TestDeprovisionSubscriberEndpoint:
             )
 
             assert response.status_code == 404
+
+
 class TestSuspendSubscriberEndpoint:
     """Test subscriber suspension endpoint."""
 
@@ -488,7 +533,9 @@ class TestSuspendSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure suspend_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             from datetime import datetime
 
             from dotmac.platform.subscribers.models import SubscriberStatus
@@ -512,6 +559,8 @@ class TestSuspendSubscriberEndpoint:
             data = response.json()
             assert data["subscriber_id"] == subscriber_id
             assert data["status"] == "suspended"
+
+
 class TestReactivateSubscriberEndpoint:
     """Test subscriber reactivation endpoint."""
 
@@ -527,7 +576,9 @@ class TestReactivateSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure reactivate_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             from datetime import datetime
 
             from dotmac.platform.subscribers.models import SubscriberStatus
@@ -561,8 +612,12 @@ class TestReactivateSubscriberEndpoint:
         # Create mock service instance
         mock_service = AsyncMock()
         # Configure reactivate_subscriber - will be set below
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
-            mock_service.reactivate_subscriber.side_effect = ValidationError("Subscriber must be suspended to reactivate")
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
+            mock_service.reactivate_subscriber.side_effect = ValidationError(
+                "Subscriber must be suspended to reactivate"
+            )
 
             response = client.post(
                 f"/api/v1/orchestration/subscribers/{subscriber_id}/reactivate",
@@ -570,6 +625,8 @@ class TestReactivateSubscriberEndpoint:
 
             assert response.status_code == 400
             assert "must be suspended" in response.json()["detail"]
+
+
 class TestTransactionRollback:
     """Test transaction rollback on errors."""
 
@@ -586,7 +643,9 @@ class TestTransactionRollback:
 
         # Configure convert_lead_to_customer - will be set below
 
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             mock_service.convert_lead_to_customer.side_effect = Exception("Unexpected error")
 
             payload = {
@@ -612,7 +671,9 @@ class TestTransactionRollback:
 
         # Configure provision_subscriber - will be set below
 
-        with patch("dotmac.platform.services.router.OrchestrationService", return_value=mock_service):
+        with patch(
+            "dotmac.platform.services.router.OrchestrationService", return_value=mock_service
+        ):
             mock_service.provision_subscriber.side_effect = Exception("RADIUS service unavailable")
 
             payload = {

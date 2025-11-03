@@ -15,9 +15,8 @@ import pytest_asyncio
 from fastapi import FastAPI, status
 from httpx import ASGITransport, AsyncClient
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
@@ -69,7 +68,8 @@ def sample_customer_dict() -> dict[str, Any]:
 @pytest_asyncio.fixture
 async def async_client(monkeypatch):
     """Async HTTP client with customer management router."""
-    from dotmac.platform.auth.core import UserInfo, get_current_user
+    from dotmac.platform.auth.core import UserInfo
+    from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.customer_management.router import get_customer_service
     from dotmac.platform.customer_management.router import router as customer_router
     from dotmac.platform.db import get_session_dependency
@@ -375,7 +375,6 @@ class TestCustomerActivities:
 class TestCustomerNotes:
     """Test customer notes endpoints."""
 
-    @pytest.mark.skip(reason="Service layer validation - needs investigation")
     @pytest.mark.asyncio
     async def test_add_customer_note_success(
         self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
@@ -393,6 +392,7 @@ class TestCustomerNotes:
             is_internal=True,
             created_by_id=None,
             created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
         )
         # Mock customer lookup first
         async_client.mock_service.get_customer.return_value = customer_obj
@@ -413,7 +413,6 @@ class TestCustomerNotes:
         data = response.json()
         assert data["content"] == "Important note content"
 
-    @pytest.mark.skip(reason="Service layer validation - needs investigation")
     @pytest.mark.asyncio
     async def test_get_customer_notes_success(
         self, async_client: AsyncClient, sample_customer_dict: dict[str, Any]
@@ -431,6 +430,7 @@ class TestCustomerNotes:
                 is_internal=False,
                 created_by_id=None,
                 created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow(),
             )
         ]
         # Mock customer lookup first

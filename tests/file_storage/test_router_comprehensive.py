@@ -12,7 +12,7 @@ Tests cover:
 - Authentication and authorization
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -27,11 +27,9 @@ from dotmac.platform.file_storage.router import (
 )
 from dotmac.platform.file_storage.service import FileMetadata
 
-
-
-pytestmark = pytest.mark.integration
-
 # Mock current user for authentication
+
+
 @pytest.fixture
 def mock_user():
     """Mock authenticated user."""
@@ -71,6 +69,19 @@ def mock_storage_service():
     service.move_file = AsyncMock(return_value=True)
     service.copy_file = AsyncMock(return_value="file-456")
     return service
+
+
+@pytest.fixture(autouse=True)
+def _patch_router_storage_service(mock_storage_service):
+    """Ensure router uses the mocked storage service during tests."""
+    from dotmac.platform.file_storage import router as router_module
+
+    original_service = router_module.storage_service
+    router_module.storage_service = mock_storage_service
+    try:
+        yield mock_storage_service
+    finally:
+        router_module.storage_service = original_service
 
 
 class TestFileUploadEndpoint:
@@ -239,9 +250,7 @@ class TestFileDownloadEndpoint:
         from dotmac.platform.file_storage.router import download_file
 
         with pytest.raises(HTTPException) as exc_info:
-            await download_file(
-                request=mock_request, file_id="nonexistent", current_user=mock_user
-            )
+            await download_file(request=mock_request, file_id="nonexistent", current_user=mock_user)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in exc_info.value.detail.lower()
@@ -271,9 +280,7 @@ class TestFileDownloadEndpoint:
         from dotmac.platform.file_storage.router import download_file
 
         with pytest.raises(HTTPException) as exc_info:
-            await download_file(
-                request=mock_request, file_id="file-123", current_user=mock_user
-            )
+            await download_file(request=mock_request, file_id="file-123", current_user=mock_user)
 
         assert exc_info.value.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
         assert "download failed" in exc_info.value.detail.lower()
@@ -287,9 +294,7 @@ class TestFileDeleteEndpoint:
         """Test successful file deletion."""
         from dotmac.platform.file_storage.router import delete_file
 
-        result = await delete_file(
-            request=mock_request, file_id="file-123", current_user=mock_user
-        )
+        result = await delete_file(request=mock_request, file_id="file-123", current_user=mock_user)
 
         assert "deleted successfully" in result["message"]
         assert "deleted_at" in result
@@ -304,9 +309,7 @@ class TestFileDeleteEndpoint:
         from dotmac.platform.file_storage.router import delete_file
 
         with pytest.raises(HTTPException) as exc_info:
-            await delete_file(
-                request=mock_request, file_id="nonexistent", current_user=mock_user
-            )
+            await delete_file(request=mock_request, file_id="nonexistent", current_user=mock_user)
 
         assert exc_info.value.status_code == status.HTTP_404_NOT_FOUND
         assert "not found" in exc_info.value.detail.lower()
@@ -337,14 +340,14 @@ class TestListFilesEndpoint:
                 file_name="test1.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             ),
             FileMetadata(
                 file_id="file-2",
                 file_name="test2.txt",
                 file_size=200,
                 content_type="text/plain",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             ),
         ]
         mock_storage_service.list_files = AsyncMock(return_value=mock_files)

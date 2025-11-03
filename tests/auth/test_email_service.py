@@ -1,6 +1,6 @@
 """Tests for the simplified auth email helpers."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -12,22 +12,17 @@ from dotmac.platform.auth.email_service import (
     verify_reset_token,
 )
 
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class InMemoryRedis:
     """Very small in-memory stand-in for redis client."""
-
 
     def __init__(self):
         self.store = {}
 
     def setex(self, key, ttl, value):  # pragma: no cover - trivial setter
-        expires_at = datetime.now(timezone.utc) + timedelta(seconds=ttl)
+        expires_at = datetime.now(UTC) + timedelta(seconds=ttl)
         self.store[key] = (value, expires_at)
 
     def get(self, key):
@@ -35,7 +30,7 @@ class InMemoryRedis:
         if not record:
             return None
         value, expires_at = record
-        if expires_at < datetime.now(timezone.utc):
+        if expires_at < datetime.now(UTC):
             del self.store[key]
             return None
         return value

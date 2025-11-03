@@ -1,6 +1,7 @@
 """
 Unit tests for vendor-specific bandwidth attribute builders.
 """
+
 import pytest
 
 from dotmac.platform.radius.vendors import (

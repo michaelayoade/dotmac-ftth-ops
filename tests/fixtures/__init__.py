@@ -1,18 +1,16 @@
 """Convenient exports for commonly used test fixtures."""
 
-from __future__ import annotations
-
-from importlib import import_module
-from typing import Iterable
+from collections.abc import Iterable
+from importlib import import_module as _import_module
 
 __all__: list[str] = []
-_exported: set[str] = set()
+_EXPORTED: set[str] = set()
 
 
 def _export(module_name: str, names: Iterable[str] | None = None) -> None:
     """Import a fixture module and expose selected names at package level."""
     try:
-        module = import_module(module_name)
+        module = _import_module(module_name)
     except Exception:
         return
 
@@ -25,9 +23,9 @@ def _export(module_name: str, names: Iterable[str] | None = None) -> None:
         if not hasattr(module, name):
             continue
         globals()[name] = getattr(module, name)
-        if name not in _exported:
+        if name not in _EXPORTED:
             __all__.append(name)
-            _exported.add(name)
+            _EXPORTED.add(name)
 
 
 _MANUAL_EXPORTS: dict[str, tuple[str, ...]] = {
@@ -57,14 +55,5 @@ _MODULE_EXPORTS: tuple[str, ...] = (
 
 for module_name, names in _MANUAL_EXPORTS.items():
     _export(module_name, names)
-
 for module_name in _MODULE_EXPORTS:
     _export(module_name)
-
-# Clean up internal helpers from namespace
-del import_module
-del Iterable
-del _export
-del _exported
-del _MANUAL_EXPORTS
-del _MODULE_EXPORTS

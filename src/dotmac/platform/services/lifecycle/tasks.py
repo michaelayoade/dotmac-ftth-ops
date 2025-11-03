@@ -6,14 +6,13 @@ provisioning workflows, scheduled terminations, and automated health checks.
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-from typing import Any
+from datetime import UTC, datetime, timedelta
+from typing import Any, AsyncContextManager, cast
 from uuid import UUID
 
 from celery import Task
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.db import get_async_session_context
@@ -24,6 +23,11 @@ from dotmac.platform.services.lifecycle.models import (
     ServiceStatus,
 )
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
+
+
+def _session_context() -> AsyncContextManager[AsyncSession]:
+    """Typed wrapper for get_async_session_context."""
+    return cast(AsyncContextManager[AsyncSession], get_async_session_context())
 
 
 def _run_async(coro: Any) -> Any:
@@ -57,7 +61,7 @@ async def _execute_provisioning_workflow(
     Returns:
         dict with execution results
     """
-    async with get_async_session_context() as session:
+    async with _session_context() as session:
         service = LifecycleOrchestrationService(session)
 
         service_id = UUID(service_instance_id)
@@ -344,7 +348,7 @@ def process_scheduled_terminations_task(self: Task) -> dict[str, Any]:
         successful = 0
         failed = 0
 
-        async with get_async_session_context() as session:
+        async with _session_context() as session:
             service = LifecycleOrchestrationService(session)
 
             # Find services scheduled for termination
@@ -365,7 +369,9 @@ def process_scheduled_terminations_task(self: Task) -> dict[str, Any]:
                 processed += 1
 
                 # Check if termination date has passed
-                termination_date_str = service_instance.metadata.get("scheduled_termination_date")
+                termination_date_str = service_instance.service_metadata.get(
+                    "scheduled_termination_date"
+                )
                 if not termination_date_str:
                     continue
 
@@ -420,7 +426,7 @@ def process_auto_resume_task(self: Task) -> dict[str, Any]:
         successful = 0
         failed = 0
 
-        async with get_async_session_context() as session:
+        async with _session_context() as session:
             service = LifecycleOrchestrationService(session)
 
             # Find suspended services with auto-resume date
@@ -496,7 +502,7 @@ def perform_health_checks_task(self: Task) -> dict[str, Any]:
         degraded = 0
         unhealthy = 0
 
-        async with get_async_session_context() as session:
+        async with _session_context() as session:
             service = LifecycleOrchestrationService(session)
 
             # Find active services that need health check
@@ -580,7 +586,7 @@ def process_scheduled_activations_task(self: Task) -> dict[str, Any]:
         successful = 0
         failed = 0
 
-        async with get_async_session_context() as session:
+        async with _session_context() as session:
             service = LifecycleOrchestrationService(session)
 
             # Find services due for activation
@@ -649,7 +655,7 @@ def rollback_failed_workflows_task(self: Task, tenant_id: str | None = None) -> 
         failed = 0
         rollback_details = []
 
-        async with get_async_session_context() as session:
+        async with _session_context() as session:
             service_obj = LifecycleOrchestrationService(session)
 
             # Find all tenants if not specified
@@ -705,7 +711,7 @@ def rollback_failed_workflows_task(self: Task, tenant_id: str | None = None) -> 
                                     "service_instance_id": str(workflow.service_instance_id),
                                     "workflow_id": workflow.workflow_id,
                                     "status": "failed",
-                                    "error": rollback_result.get("error"),
+                                    "error": str(rollback_result.get("error") or "unknown_error"),
                                 }
                             )
 

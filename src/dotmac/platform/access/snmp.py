@@ -10,9 +10,9 @@ from __future__ import annotations
 
 import asyncio
 import base64
+from collections.abc import Awaitable, Callable, Mapping
 from dataclasses import dataclass
-from typing import Any, Awaitable, Callable, Mapping
-
+from typing import Any
 
 DEFAULT_HUAWEI_SNMP_OIDS: dict[str, str] = {
     # These OIDs align with common Huawei MA5800/MA5600 series counters.
@@ -130,8 +130,11 @@ def _hooked_collector(hooks: Mapping[str, Any] | None) -> CollectorCallable | No
         if asyncio.iscoroutinefunction(candidate):
             return candidate  # type: ignore[return-value]
         if callable(candidate):
-            async def _async_wrapper(**kwargs: Any) -> Mapping[str, Any]:
-                return await asyncio.to_thread(candidate, **kwargs)
+
+            async def _async_wrapper(
+                _candidate: Any = candidate, **kwargs: Any
+            ) -> Mapping[str, Any]:
+                return await asyncio.to_thread(_candidate, **kwargs)
 
             return _async_wrapper
     return None
@@ -165,10 +168,7 @@ async def _pysnmp_collect(
 
     engine = SnmpEngine()
     try:
-        request_args = [
-            ObjectType(ObjectIdentity(oid))
-            for oid in oids.values()
-        ]
+        request_args = [ObjectType(ObjectIdentity(oid)) for oid in oids.values()]
         error_indication, error_status, error_index, var_binds = await getCmd(
             engine,
             CommunityData(community),
@@ -180,11 +180,11 @@ async def _pysnmp_collect(
             raise SNMPCollectionError(str(error_indication))
         if error_status:
             raise SNMPCollectionError(
-                f"{error_status.prettyPrint()} at {error_index and request_args[int(error_index)-1][0] or '?'}"
+                f"{error_status.prettyPrint()} at {error_index and request_args[int(error_index) - 1][0] or '?'}"
             )
 
         values: dict[str, Any] = {}
-        for (name, value), metric_key in zip(var_binds, oids.keys()):
+        for (_name, value), metric_key in zip(var_binds, oids.keys(), strict=False):
             values[metric_key] = _normalize_snmp_value(value)
         return values
     finally:  # pragma: no branch - ensure dispatcher is closed

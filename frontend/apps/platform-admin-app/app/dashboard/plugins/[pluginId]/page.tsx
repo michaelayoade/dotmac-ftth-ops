@@ -411,7 +411,7 @@ function PluginDetailsPageContent() {
 
 export default function PluginDetailsPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <PluginDetailsPageContent />
     </RouteGuard>
   );

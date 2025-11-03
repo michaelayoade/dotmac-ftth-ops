@@ -415,7 +415,7 @@ function AuditPageContent() {
 
 export default function AuditPage() {
   return (
-    <RouteGuard requiredPermission="security.audit.read">
+    <RouteGuard permission="security.audit.read">
       <AuditPageContent />
     </RouteGuard>
   );

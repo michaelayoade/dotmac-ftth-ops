@@ -17,7 +17,6 @@ These tests prevent regressions like:
 - Broken health checks
 """
 
-import json
 import shutil
 import subprocess
 from pathlib import Path
@@ -25,7 +24,6 @@ from typing import Any
 
 import pytest
 import yaml
-
 
 pytestmark = pytest.mark.infra
 
@@ -165,23 +163,17 @@ class TestDockerComposeConfiguration:
                 "not set",
                 "variable",
             ]
-            has_acceptable_error = any(
-                err in result.stderr.lower() for err in acceptable_errors
-            )
+            has_acceptable_error = any(err in result.stderr.lower() for err in acceptable_errors)
 
             # Also check if it's complaining about compose plugin
-            is_compose_plugin_error = (
-                "'compose' is not a docker command" in result.stderr.lower()
-            )
+            is_compose_plugin_error = "'compose' is not a docker command" in result.stderr.lower()
 
             if is_compose_plugin_error:
                 pytest.skip(
                     "Docker Compose v2 plugin not available (install: docker compose or use docker-compose)"
                 )
 
-            assert has_acceptable_error, (
-                f"Unexpected docker compose config error:\n{result.stderr}"
-            )
+            assert has_acceptable_error, f"Unexpected docker compose config error:\n{result.stderr}"
 
     def test_isp_compose_config_valid_yaml(self, project_root: Path):
         """Test docker-compose.isp.yml is valid YAML and can be validated by docker compose."""
@@ -206,23 +198,17 @@ class TestDockerComposeConfiguration:
                 "not set",
                 "variable",
             ]
-            has_acceptable_error = any(
-                err in result.stderr.lower() for err in acceptable_errors
-            )
+            has_acceptable_error = any(err in result.stderr.lower() for err in acceptable_errors)
 
             # Also check if it's complaining about compose plugin
-            is_compose_plugin_error = (
-                "'compose' is not a docker command" in result.stderr.lower()
-            )
+            is_compose_plugin_error = "'compose' is not a docker command" in result.stderr.lower()
 
             if is_compose_plugin_error:
                 pytest.skip(
                     "Docker Compose v2 plugin not available (install: docker compose or use docker-compose)"
                 )
 
-            assert has_acceptable_error, (
-                f"Unexpected docker compose config error:\n{result.stderr}"
-            )
+            assert has_acceptable_error, f"Unexpected docker compose config error:\n{result.stderr}"
 
 
 class TestBaseComposeServices:
@@ -243,10 +229,10 @@ class TestBaseComposeServices:
     def test_required_platform_services_defined(self, base_compose_config: dict[str, Any]):
         """Test all required platform services are defined in base compose."""
         required_services = {
-            "app",            # FastAPI application
-            "postgres",       # PostgreSQL database
-            "redis",          # Cache and session store
-            "flower",         # Celery monitor
+            "app",  # FastAPI application
+            "postgres",  # PostgreSQL database
+            "redis",  # Cache and session store
+            "flower",  # Celery monitor
             "celery-worker",  # Celery worker
         }
 
@@ -498,9 +484,11 @@ class TestNetworkConfiguration:
 
         # Both should resolve to same name pattern
         # Allow for ${COMPOSE_PROJECT_NAME} variable
-        assert "${COMPOSE_PROJECT_NAME}" in base_name or "${COMPOSE_PROJECT_NAME}" in isp_name or base_name == isp_name, (
-            f"Network name mismatch: base={base_name}, isp={isp_name}"
-        )
+        assert (
+            "${COMPOSE_PROJECT_NAME}" in base_name
+            or "${COMPOSE_PROJECT_NAME}" in isp_name
+            or base_name == isp_name
+        ), f"Network name mismatch: base={base_name}, isp={isp_name}"
 
     def test_services_use_correct_network(self, base_compose_config: dict[str, Any]):
         """Test services in base compose use the dotmac network."""
@@ -618,9 +606,7 @@ class TestEnvironmentVariableCoverage:
         }
 
         missing = critical_vars - env_example
-        assert not missing, (
-            f"Critical env vars not documented in .env.example: {missing}"
-        )
+        assert not missing, f"Critical env vars not documented in .env.example: {missing}"
 
     def test_compose_uses_documented_env_vars(
         self, base_compose_config: dict[str, Any], env_example: set[str]
@@ -634,7 +620,8 @@ class TestEnvironmentVariableCoverage:
 
         # Find ${VAR_NAME} patterns
         import re
-        env_refs = re.findall(r'\$\{([A-Z_][A-Z0-9_]*)[:\-}]', compose_str)
+
+        env_refs = re.findall(r"\$\{([A-Z_][A-Z0-9_]*)[:\-}]", compose_str)
         env_refs = set(env_refs)
 
         # Allow some standard Docker Compose vars
@@ -649,8 +636,10 @@ class TestEnvironmentVariableCoverage:
         # Warn if undocumented vars exist (not fail, as some may be optional)
         if undocumented:
             import warnings
+
             warnings.warn(
-                f"Environment variables referenced but not in .env.example: {undocumented}"
+                f"Environment variables referenced but not in .env.example: {undocumented}",
+                stacklevel=2,
             )
 
 
@@ -699,15 +688,10 @@ class TestPortConflicts:
                     port_usage[host_port].append((filename, service_name))
 
         # Find conflicts
-        conflicts = {
-            port: services
-            for port, services in port_usage.items()
-            if len(services) > 1
-        }
+        conflicts = {port: services for port, services in port_usage.items() if len(services) > 1}
 
-        assert not conflicts, (
-            f"Port conflicts detected:\n" +
-            "\n".join(f"  Port {port}: {services}" for port, services in conflicts.items())
+        assert not conflicts, "Port conflicts detected:\n" + "\n".join(
+            f"  Port {port}: {services}" for port, services in conflicts.items()
         )
 
 

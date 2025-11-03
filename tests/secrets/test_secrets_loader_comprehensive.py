@@ -216,9 +216,7 @@ class TestLoadSecretsFromVault:
         # Verify settings were updated
         assert mock_settings.database.password == "new_db_password"
         assert mock_settings.jwt.secret_key == "new_jwt_secret"
-        assert (
-            mock_settings.observability.alertmanager_webhook_secret == "vault-webhook"
-        )
+        assert mock_settings.observability.alertmanager_webhook_secret == "vault-webhook"
 
     async def test_load_secrets_with_dict_without_value_key(self):
         """Test loading secrets when dict doesn't have 'value' key."""

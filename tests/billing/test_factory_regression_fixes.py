@@ -6,12 +6,12 @@ This test verifies:
 2. payment_factory creates invoice linkage via PaymentInvoiceEntity
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 from sqlalchemy import select
 
 from dotmac.platform.billing.core.entities import PaymentInvoiceEntity
-
 
 pytestmark = pytest.mark.unit
 
@@ -82,7 +82,6 @@ async def test_invoice_factory_status_enum(async_db_session, invoice_factory):
 @pytest.mark.asyncio
 async def test_payment_factory_creates_invoice_if_not_provided(async_db_session, payment_factory):
     """Verify payment_factory creates invoice if not provided."""
-    from dotmac.platform.billing.core.entities import InvoiceEntity
 
     # Create payment without providing invoice_id
     payment = await payment_factory(amount=Decimal("100.00"))
@@ -93,10 +92,9 @@ async def test_payment_factory_creates_invoice_if_not_provided(async_db_session,
 
     # Verify invoice was created (check via PaymentInvoiceEntity)
     from dotmac.platform.billing.core.entities import PaymentInvoiceEntity
+
     result = await async_db_session.execute(
-        select(PaymentInvoiceEntity).where(
-            PaymentInvoiceEntity.payment_id == payment.payment_id
-        )
+        select(PaymentInvoiceEntity).where(PaymentInvoiceEntity.payment_id == payment.payment_id)
     )
     payment_invoice = result.scalar_one()
 
@@ -107,7 +105,9 @@ async def test_payment_factory_creates_invoice_if_not_provided(async_db_session,
 
 
 @pytest.mark.asyncio
-async def test_payment_factory_uses_provided_invoice(async_db_session, payment_factory, invoice_factory):
+async def test_payment_factory_uses_provided_invoice(
+    async_db_session, payment_factory, invoice_factory
+):
     """Verify payment_factory uses provided invoice_id."""
     from dotmac.platform.billing.core.entities import PaymentInvoiceEntity
 
@@ -115,19 +115,14 @@ async def test_payment_factory_uses_provided_invoice(async_db_session, payment_f
     invoice = await invoice_factory(amount=Decimal("50.00"))
 
     # Create payment with specific invoice_id
-    payment = await payment_factory(
-        invoice_id=invoice.invoice_id,
-        amount=Decimal("50.00")
-    )
+    payment = await payment_factory(invoice_id=invoice.invoice_id, amount=Decimal("50.00"))
 
     # Verify payment was created
     assert payment.payment_id is not None
 
     # Verify linkage to specific invoice
     result = await async_db_session.execute(
-        select(PaymentInvoiceEntity).where(
-            PaymentInvoiceEntity.payment_id == payment.payment_id
-        )
+        select(PaymentInvoiceEntity).where(PaymentInvoiceEntity.payment_id == payment.payment_id)
     )
     payment_invoice = result.scalar_one()
 
@@ -136,7 +131,9 @@ async def test_payment_factory_uses_provided_invoice(async_db_session, payment_f
 
 
 @pytest.mark.asyncio
-async def test_payment_factory_creates_invoice_with_same_customer(async_db_session, payment_factory, customer_factory):
+async def test_payment_factory_creates_invoice_with_same_customer(
+    async_db_session, payment_factory, customer_factory
+):
     """Verify payment_factory creates invoice with same customer."""
     from dotmac.platform.billing.core.entities import InvoiceEntity, PaymentInvoiceEntity
 
@@ -144,24 +141,17 @@ async def test_payment_factory_creates_invoice_with_same_customer(async_db_sessi
     customer = await customer_factory()
 
     # Create payment with specific customer
-    payment = await payment_factory(
-        customer_id=str(customer.id),
-        amount=Decimal("75.00")
-    )
+    payment = await payment_factory(customer_id=str(customer.id), amount=Decimal("75.00"))
 
     # Get linked invoice
     result = await async_db_session.execute(
-        select(PaymentInvoiceEntity).where(
-            PaymentInvoiceEntity.payment_id == payment.payment_id
-        )
+        select(PaymentInvoiceEntity).where(PaymentInvoiceEntity.payment_id == payment.payment_id)
     )
     payment_invoice = result.scalar_one()
 
     # Get invoice
     invoice_result = await async_db_session.execute(
-        select(InvoiceEntity).where(
-            InvoiceEntity.invoice_id == payment_invoice.invoice_id
-        )
+        select(InvoiceEntity).where(InvoiceEntity.invoice_id == payment_invoice.invoice_id)
     )
     invoice = invoice_result.scalar_one()
 

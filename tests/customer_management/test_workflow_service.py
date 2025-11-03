@@ -1,9 +1,8 @@
-
 """
 Tests for the customer management workflow adapter service.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -13,17 +12,12 @@ import pytest
 from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.schemas import CustomerCreate
 from dotmac.platform.customer_management.workflow_service import (
-
-
     CustomerService as WorkflowCustomerService,
 )
 from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class _ScalarResult:
     """Helper to mimic SQLAlchemy AsyncResult.scalar_one_or_none()."""
@@ -75,7 +69,7 @@ async def test_create_from_lead_uses_core_service(monkeypatch):
         last_name="Smith",
         phone="+1234567890",
         company_name="Example Corp",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
 
     workflow_service.customer_service.create_customer = AsyncMock(return_value=created_customer)

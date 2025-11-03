@@ -7,7 +7,7 @@ Handles deployment to on-premises infrastructure using AWX Tower and Ansible.
 import asyncio
 import json
 from datetime import datetime
-from typing import Any
+from typing import Any, Literal, cast, overload
 
 import aiohttp
 
@@ -193,9 +193,13 @@ class AWXAdapter(DeploymentAdapter):
         """Get deployment logs"""
         try:
             # Get most recent job for this instance
-            jobs = await self._api_request("GET", "/api/v2/jobs/", params={"order_by": "-created"})
-            if jobs.get("results"):
-                job_id = jobs["results"][0]["id"]
+            jobs = await self._api_request(
+                "GET", "/api/v2/jobs/", params={"order_by": "-created"}
+            )
+            results = jobs.get("results")
+            if isinstance(results, list) and results:
+                first_job = cast(dict[str, Any], results[0])
+                job_id = int(first_job["id"])
                 return await self._get_job_output(job_id)
             return "No jobs found"
         except Exception as e:
@@ -286,12 +290,12 @@ class AWXAdapter(DeploymentAdapter):
         template = await self._get_job_template(template_name)
         template_id = template["id"]
 
-        launch_data = {"extra_vars": json.dumps(extra_vars)}
+        launch_data: dict[str, Any] = {"extra_vars": json.dumps(extra_vars)}
         if inventory_id:
             launch_data["inventory"] = inventory_id
 
         return await self._api_request(
-            "POST", f"/api/v2/job_templates/{template_id}/launch/", json=launch_data
+            "POST", f"/api/v2/job_templates/{template_id}/launch/", json_body=launch_data
         )
 
     async def _get_job_template(self, template_name: str) -> dict[str, Any]:
@@ -300,7 +304,7 @@ class AWXAdapter(DeploymentAdapter):
             "GET", "/api/v2/job_templates/", params={"name": template_name}
         )
 
-        results = response.get("results", [])
+        results = cast(list[dict[str, Any]], response.get("results", []))
         if not results:
             raise Exception(f"Job template '{template_name}' not found")
 
@@ -323,10 +327,12 @@ class AWXAdapter(DeploymentAdapter):
     async def _get_job_output(self, job_id: int) -> str:
         """Get job output/logs"""
         try:
-            response = await self._api_request(
-                "GET", f"/api/v2/jobs/{job_id}/stdout/", params={"format": "txt"}
+            return await self._api_request(
+                "GET",
+                f"/api/v2/jobs/{job_id}/stdout/",
+                params={"format": "txt"},
+                expect_text=True,
             )
-            return response if isinstance(response, str) else json.dumps(response)
         except Exception as e:
             return f"Failed to get job output: {e}"
 
@@ -335,8 +341,36 @@ class AWXAdapter(DeploymentAdapter):
         extra_vars = job_status.get("extra_vars", {})
         return extra_vars.get("endpoints", {})
 
+    @overload
     async def _api_request(
-        self, method: str, path: str, json: dict | None = None, params: dict | None = None
+        self,
+        method: str,
+        path: str,
+        *,
+        json_body: dict[str, Any] | None = ...,
+        params: dict[str, Any] | None = ...,
+        expect_text: Literal[False] = ...,
+    ) -> dict[str, Any]: ...
+
+    @overload
+    async def _api_request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_body: dict[str, Any] | None = ...,
+        params: dict[str, Any] | None = ...,
+        expect_text: Literal[True],
+    ) -> str: ...
+
+    async def _api_request(
+        self,
+        method: str,
+        path: str,
+        *,
+        json_body: dict[str, Any] | None = None,
+        params: dict[str, Any] | None = None,
+        expect_text: bool = False,
     ) -> dict[str, Any] | str:
         """Make AWX API request"""
         url = f"{self.awx_url}{path}"
@@ -354,7 +388,7 @@ class AWXAdapter(DeploymentAdapter):
             async with session.request(
                 method,
                 url,
-                json=json,
+                json=json_body,
                 params=params,
                 headers=headers,
                 auth=auth,
@@ -362,8 +396,10 @@ class AWXAdapter(DeploymentAdapter):
             ) as response:
                 response.raise_for_status()
 
-                content_type = response.headers.get("Content-Type", "")
-                if "application/json" in content_type:
-                    return await response.json()
-                else:
+                if expect_text:
                     return await response.text()
+
+                data = await response.json()
+                if isinstance(data, dict):
+                    return data
+                raise ValueError("Expected JSON object from AWX API response")

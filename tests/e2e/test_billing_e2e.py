@@ -1,4 +1,3 @@
-
 """
 End-to-End Tests for Billing Module
 
@@ -16,17 +15,12 @@ from uuid import uuid4
 import pytest
 from httpx import AsyncClient
 
-from dotmac.platform.auth.core import create_access_token
-
-
-
 # Note: auth_headers fixture is provided by tests/e2e/conftest.py
 # It includes both Authorization and X-Tenant-ID headers
 
 
-
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
 
 class TestProductCatalogE2E:
     """End-to-end tests for product catalog management."""

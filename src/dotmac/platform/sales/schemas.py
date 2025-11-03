@@ -47,8 +47,8 @@ class OrderItemCreate(BaseModel):
     description: str | None = None
     quantity: int = Field(1, ge=1)
     unit_price: Decimal = Field(..., ge=0)
-    discount_amount: Decimal = Field(0, ge=0)
-    tax_amount: Decimal = Field(0, ge=0)
+    discount_amount: Decimal = Field(default=Decimal("0"), ge=0)
+    tax_amount: Decimal = Field(default=Decimal("0"), ge=0)
     configuration: dict[str, Any] | None = None
     billing_cycle: constr(pattern=r"^(monthly|quarterly|annual|one_time)$") | None = None  # type: ignore[valid-type]
     trial_days: int = Field(0, ge=0, le=365)

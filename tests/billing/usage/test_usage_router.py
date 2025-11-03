@@ -1,6 +1,6 @@
 """Tests for the usage billing router."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID, uuid4
 
@@ -17,18 +17,12 @@ from dotmac.platform.billing.usage.router import router
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def usage_test_client(async_db_session: AsyncSession):
     """Create a test client with dependency overrides."""
-
 
     tenant_id = f"usage-test-tenant-{uuid4().hex[:8]}"
     app = FastAPI()
@@ -95,7 +89,7 @@ async def test_create_usage_record_uses_tenant_currency(
     customer_id = await _create_customer(async_db_session, tenant_id)
     await _set_tenant_currency(async_db_session, tenant_id, "EUR")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "subscription_id": "sub-usage-eur",
         "customer_id": str(customer_id),
@@ -134,7 +128,7 @@ async def test_create_usage_record_allows_currency_override_header(
     customer_id = await _create_customer(async_db_session, tenant_id)
     await _set_tenant_currency(async_db_session, tenant_id, "EUR")
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "subscription_id": "sub-usage-override",
         "customer_id": str(customer_id),

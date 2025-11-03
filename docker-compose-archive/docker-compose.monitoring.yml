@@ -1,7 +1,6 @@
 # Docker Compose for Monitoring Stack
 # Prometheus + Alertmanager + Grafana for error tracking and alerting
 
-version: '3.8'
 
 services:
   # Prometheus - Metrics collection and alerting rules

@@ -1,4 +1,3 @@
-
 """
 Tests for integrations REST API router.
 
@@ -12,9 +11,6 @@ from fastapi import status
 from starlette.testclient import TestClient
 
 from dotmac.platform.integrations import (
-
-
-
     IntegrationConfig,
     IntegrationRegistry,
     IntegrationStatus,
@@ -23,10 +19,8 @@ from dotmac.platform.integrations import (
     TwilioIntegration,
 )
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def integration_registry():
@@ -147,7 +141,7 @@ def test_list_integrations(
 
 def test_list_integrations_requires_auth(test_client: TestClient):
     """Test that listing integrations requires authentication."""
-    response = test_client.get("/api/v1/integrations")
+    response = test_client.get("/api/v1/integrations", headers={"X-Tenant-ID": None})
 
     # Tenant middleware returns 400 for missing tenant ID before auth check
     assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -242,7 +236,9 @@ def test_health_check_integration(
 
 def test_health_check_requires_auth(test_client: TestClient):
     """Test that health check requires authentication."""
-    response = test_client.post("/api/v1/integrations/email/health-check")
+    response = test_client.post(
+        "/api/v1/integrations/email/health-check", headers={"X-Tenant-ID": None}
+    )
 
     # Tenant middleware returns 400 for missing tenant ID before auth check
     assert response.status_code == status.HTTP_400_BAD_REQUEST

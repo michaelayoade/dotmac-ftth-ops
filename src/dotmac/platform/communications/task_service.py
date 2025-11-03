@@ -3,10 +3,7 @@
 import asyncio
 from collections.abc import Callable, Coroutine
 from concurrent.futures import Future
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from smtplib import SMTPException
 from typing import Any, Protocol, TypeVar
 from uuid import uuid4

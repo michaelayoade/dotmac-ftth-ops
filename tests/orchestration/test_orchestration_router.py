@@ -20,9 +20,8 @@ from dotmac.platform.orchestration import router as orchestration_router
 from dotmac.platform.orchestration.models import WorkflowStatus, WorkflowType
 from dotmac.platform.tenant import set_current_tenant_id
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestSubscriberProvisioning:
     """Test subscriber provisioning endpoints."""
@@ -85,9 +84,7 @@ class TestSubscriberProvisioning:
         data = response.json()
         assert "detail" in data
 
-    async def test_provision_subscriber_empty_name(
-        self, authenticated_client, mock_current_user
-    ):
+    async def test_provision_subscriber_empty_name(self, authenticated_client, mock_current_user):
         """Test provision subscriber with empty name.
 
         Uses create_provision_request factory to create test data with empty name.

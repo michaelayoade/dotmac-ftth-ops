@@ -6,22 +6,19 @@ Advanced features moved to optional extensions.
 """
 
 import collections
-import json
 import itertools
+import json
 import operator
 import secrets
 from collections.abc import Callable, Iterable, Iterator
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, TypeVar
 from uuid import UUID
 
 import sqlalchemy as sa
 import structlog
-from sqlalchemy import Select, and_, func, or_, select, text, update
+from sqlalchemy import Select, and_, func, literal, or_, select, text, update
 from sqlalchemy.engine import Result
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -481,7 +478,9 @@ class CustomerService:
                 from sqlalchemy.dialects.postgresql import JSONB
 
                 tag_conditions = [
-                    func.cast(Customer.tags, JSONB).op("@>")(func.cast([tag], JSONB))
+                    sa.cast(Customer.tags, JSONB).op("@>")(
+                        sa.cast(literal([tag]), JSONB)
+                    )
                     for tag in params.tags
                 ]
                 filter_conditions.append(or_(*tag_conditions))
@@ -492,7 +491,9 @@ class CustomerService:
                 for tag in params.tags:
                     # Cast column to text and check if tag appears in JSON array
                     # Tags are stored as ["tag1", "tag2"], so we look for "tag"
-                    tag_conditions.append(func.cast(Customer.tags, sa.String).like(f'%"{tag}"%'))
+                    tag_conditions.append(
+                        sa.cast(Customer.tags, sa.String).like(f'%"{tag}"%')
+                    )
                 filter_conditions.append(or_(*tag_conditions))
 
         # Date range filters
@@ -549,25 +550,29 @@ class CustomerService:
                 # Use PostgreSQL's JSONB text search
                 from sqlalchemy.dialects.postgresql import JSONB
 
+                assigned_devices_json = sa.cast(Customer.assigned_devices, JSONB)
+                json_serial_filter = or_(
+                    assigned_devices_json.op("@>")(
+                        sa.cast(literal({"onu_serial": params.device_serial}), JSONB)
+                    ),
+                    assigned_devices_json.op("@>")(
+                        sa.cast(literal({"router_id": params.device_serial}), JSONB)
+                    ),
+                    assigned_devices_json.op("@>")(
+                        sa.cast(literal({"cpe_mac": params.device_serial}), JSONB)
+                    ),
+                )
+
                 filter_conditions.append(
-                    func.cast(Customer.assigned_devices, JSONB).op("@>")(
-                        func.cast({"onu_serial": params.device_serial}, JSONB)
-                    )
-                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
-                        func.cast({"router_id": params.device_serial}, JSONB)
-                    )
-                    | func.cast(Customer.assigned_devices, JSONB).op("@>")(
-                        func.cast({"cpe_mac": params.device_serial}, JSONB)
-                    )
-                    # Also do a text search for any serial number in the JSON
-                    | func.cast(Customer.assigned_devices, sa.Text).like(
+                    json_serial_filter
+                    | sa.cast(Customer.assigned_devices, sa.Text).like(
                         f"%{params.device_serial}%"
                     )
                 )
             else:
                 # For SQLite, use LIKE on the JSON text representation
                 filter_conditions.append(
-                    func.cast(Customer.assigned_devices, sa.String).like(
+                    sa.cast(Customer.assigned_devices, sa.String).like(
                         f"%{params.device_serial}%"
                     )
                 )
@@ -605,6 +610,8 @@ class CustomerService:
         }
 
         sort_column = sort_column_map.get(params.sort_by, Customer.created_at)
+        if sort_column is None:
+            sort_column = Customer.created_at
 
         if params.sort_order == "asc":
             query = query.order_by(sort_column.asc())
@@ -711,6 +718,7 @@ class CustomerService:
         rows = result.mappings().all()
 
         activities: list[dict[str, Any]] = []
+
         def _normalize_uuid(value: Any) -> str | None:
             """Normalize UUID to standard string format with hyphens."""
             if isinstance(value, str):

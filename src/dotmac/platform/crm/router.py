@@ -323,8 +323,8 @@ async def convert_lead_to_customer(
             "service_plan_speed": conversion_data.service_plan_speed or lead.desired_bandwidth,
             # Metadata
             "metadata": {
-                **lead.metadata,
-                **conversion_data.metadata,
+                **(lead.metadata_ or {}),
+                **(conversion_data.metadata or {}),
                 "converted_from_lead_id": str(lead_id),
                 "lead_source": lead.source.value,
                 "lead_number": lead.lead_number,

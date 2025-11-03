@@ -1,4 +1,3 @@
-
 """
 Tests for Deployment Router
 
@@ -12,13 +11,8 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestDeploymentTemplates:
     """Test deployment template CRUD endpoints."""
@@ -41,9 +35,6 @@ class TestDeploymentTemplates:
         assert data[0]["id"] == 1
         assert data[0]["name"] == "test_template"
 
-    @pytest.mark.skip(
-        reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model"
-    )
     @pytest.mark.asyncio
     async def test_create_template_success(
         self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
@@ -72,9 +63,6 @@ class TestDeploymentTemplates:
         assert data["id"] == 1
         assert data["name"] == "test_template"
 
-    @pytest.mark.skip(
-        reason="Requires SQLAlchemy model initialization - router creates actual DeploymentTemplate model"
-    )
     @pytest.mark.asyncio
     async def test_create_template_duplicate_name(
         self, async_client: AsyncClient, mock_deployment_registry, sample_deployment_template
@@ -576,7 +564,11 @@ class TestDeploymentStatistics:
     ):
         """Test get deployment statistics."""
         # Arrange
-        stats = {"total_instances": 10, "by_state": {"running": 7, "stopped": 2, "failed": 1}}
+        stats = {
+            "total_instances": 10,
+            "states": {"active": 7, "provisioning": 2, "failed": 1, "suspended": 0},
+            "health": {"healthy": 6, "degraded": 3, "unhealthy": 1},
+        }
         mock_deployment_registry.get_deployment_stats.return_value = stats
 
         # Act
@@ -586,6 +578,8 @@ class TestDeploymentStatistics:
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
         assert data["total_instances"] == 10
+        assert data["states"]["active"] == 7
+        assert data["health"]["degraded"] == 3
 
     @pytest.mark.asyncio
     async def test_get_template_usage_stats_success(
@@ -593,7 +587,11 @@ class TestDeploymentStatistics:
     ):
         """Test get template usage statistics."""
         # Arrange
-        stats = {"templates": [{"template_id": 1, "usage_count": 5}]}
+        stats = {
+            "templates": [{"template_name": "default", "display_name": "Default", "instances": 5}],
+            "total_templates": 1,
+            "total_instances": 5,
+        }
         mock_deployment_registry.get_template_usage_stats.return_value = stats
 
         # Act
@@ -602,7 +600,8 @@ class TestDeploymentStatistics:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "templates" in data
+        assert data["total_templates"] == 1
+        assert data["templates"][0]["instances"] == 5
 
     @pytest.mark.asyncio
     async def test_get_resource_allocation_success(
@@ -610,7 +609,7 @@ class TestDeploymentStatistics:
     ):
         """Test get resource allocation statistics."""
         # Arrange
-        stats = {"total_cpu": "10000m", "total_memory": "20Gi"}
+        stats = {"total_cpu": 48, "total_memory": 192, "total_storage": 512}
         mock_deployment_registry.get_resource_allocation.return_value = stats
 
         # Act
@@ -619,7 +618,7 @@ class TestDeploymentStatistics:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         data = response.json()
-        assert "total_cpu" in data
+        assert data["total_cpu"] == 48
 
 
 class TestScheduledDeployments:

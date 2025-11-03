@@ -5,30 +5,26 @@ Tests PDF generation, layout customization, locale formatting,
 batch processing, and error handling.
 """
 
-import pytest
-import io
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import mock_open, patch
 
+import pytest
 from moneyed import Money
-from reportlab.lib.pagesizes import A4, LETTER
-from reportlab.lib import colors
+from reportlab.lib.pagesizes import LETTER
 
+from dotmac.platform.billing.money_models import (
+    MoneyField,
+    MoneyInvoice,
+    MoneyInvoiceLineItem,
+)
 from dotmac.platform.billing.pdf_generator_reportlab import (
+    DEFAULT_MARGINS,
+    DEFAULT_PAGE_SIZE,
     ReportLabInvoiceGenerator,
     default_reportlab_generator,
     generate_invoice_pdf_reportlab,
-    DEFAULT_PAGE_SIZE,
-    DEFAULT_MARGINS,
 )
-from dotmac.platform.billing.money_models import (
-    MoneyInvoice,
-    MoneyInvoiceLineItem,
-    MoneyField,
-)
-
-
 
 
 def create_test_line_item(
@@ -40,17 +36,19 @@ def create_test_line_item(
 ) -> "MoneyInvoiceLineItem":
     """Helper to create test line items with all required fields."""
     from decimal import Decimal
+
     from moneyed import Money
+
     from dotmac.platform.billing.money_models import MoneyField, MoneyInvoiceLineItem
-    
+
     unit_price = Money(unit_price_amount, currency)
     tax_rate_decimal = Decimal(tax_rate)
-    
+
     # Calculate values
     subtotal = Money(str(Decimal(unit_price_amount) * quantity), currency)
     tax = Money(str(Decimal(str(subtotal.amount)) * tax_rate_decimal), currency)
     total = Money(str(subtotal.amount + tax.amount), currency)
-    
+
     return MoneyInvoiceLineItem(
         description=description,
         quantity=quantity,
@@ -61,6 +59,7 @@ def create_test_line_item(
         discount_percentage=Decimal("0"),
         discount_amount=MoneyField.from_money(Money("0", currency)),
     )
+
 
 @pytest.fixture
 def sample_invoice():
@@ -96,8 +95,8 @@ def sample_invoice():
         currency="USD",
         status="paid",
         payment_status="paid",
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC),
         line_items=line_items,
         subtotal=MoneyField.from_money(Money("149.00", "USD")),
         tax_amount=MoneyField.from_money(Money("14.90", "USD")),
@@ -245,7 +244,7 @@ class TestPDFGeneration:
             currency="USD",
             status="pending",
             payment_status="pending",
-            issue_date=datetime.now(timezone.utc),
+            issue_date=datetime.now(UTC),
             line_items=[],
             subtotal=MoneyField.from_money(Money("100.00", "USD")),
             tax_amount=MoneyField.from_money(Money("0.00", "USD")),
@@ -309,7 +308,7 @@ class TestSaveToFile:
         """Test that save writes correct bytes to file."""
         generator = ReportLabInvoiceGenerator()
 
-        pdf_bytes = generator.generate_invoice_pdf(
+        generator.generate_invoice_pdf(
             invoice=sample_invoice,
             output_path="/fake/path/invoice.pdf",
         )
@@ -408,7 +407,7 @@ class TestLineItemsTable:
             currency="USD",
             status="pending",
             payment_status="pending",
-            issue_date=datetime.now(timezone.utc),
+            issue_date=datetime.now(UTC),
             line_items=[
                 MoneyInvoiceLineItem(
                     description="Taxable Item",
@@ -456,7 +455,7 @@ class TestTotalsSection:
             currency="USD",
             status="pending",
             payment_status="pending",
-            issue_date=datetime.now(timezone.utc),
+            issue_date=datetime.now(UTC),
             line_items=[],
             subtotal=MoneyField.from_money(Money("100.00", "USD")),
             tax_amount=MoneyField.from_money(Money("0.00", "USD")),
@@ -480,7 +479,7 @@ class TestTotalsSection:
             currency="USD",
             status="pending",
             payment_status="pending",
-            issue_date=datetime.now(timezone.utc),
+            issue_date=datetime.now(UTC),
             line_items=[],
             subtotal=MoneyField.from_money(Money("100.00", "USD")),
             tax_amount=MoneyField.from_money(Money("0.00", "USD")),
@@ -557,7 +556,7 @@ class TestBatchGeneration:
                 currency="USD",
                 status="pending",
                 payment_status="pending",
-                issue_date=datetime.now(timezone.utc),
+                issue_date=datetime.now(UTC),
                 line_items=[],
                 subtotal=MoneyField.from_money(Money("100.00", "USD")),
                 tax_amount=MoneyField.from_money(Money("0.00", "USD")),
@@ -594,7 +593,7 @@ class TestBatchGeneration:
                 currency="USD",
                 status="pending",
                 payment_status="pending",
-                issue_date=datetime.now(timezone.utc),
+                issue_date=datetime.now(UTC),
                 line_items=[],
                 subtotal=MoneyField.from_money(Money("50.00", "USD")),
                 tax_amount=MoneyField.from_money(Money("0.00", "USD")),

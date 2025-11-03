@@ -25,6 +25,7 @@ from reportlab.platypus import (
 )
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import AsyncContextManager, Callable
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
@@ -34,18 +35,21 @@ from dotmac.platform.billing.payment_methods.models import (
     PaymentMethodResponse,
 )
 from dotmac.platform.billing.payment_methods.service import PaymentMethodService
-from dotmac.platform.billing.pdf_generator_reportlab import ReportLabInvoiceGenerator
 from dotmac.platform.customer_management.models import Customer
 from dotmac.platform.database import get_async_session
 from dotmac.platform.radius.models import RadAcct
 from dotmac.platform.settings import settings
 
 # TimescaleDB imports (optional - will fallback to PostgreSQL if not available)
+TimeSeriesSessionFactory = Callable[[], AsyncContextManager[AsyncSession]]
+
 try:
-    from dotmac.platform.timeseries import TimeSeriesSessionLocal
-    from dotmac.platform.timeseries.repository import RadiusTimeSeriesRepository
+    from dotmac.platform.timeseries import TimeSeriesSessionLocal as _TimeSeriesSessionLocal
+
+    TimeSeriesSessionLocal: TimeSeriesSessionFactory | None = _TimeSeriesSessionLocal
     TIMESCALEDB_AVAILABLE = True
 except ImportError:
+    TimeSeriesSessionLocal = None
     TIMESCALEDB_AVAILABLE = False
 
 logger = structlog.get_logger(__name__)
@@ -144,7 +148,10 @@ async def calculate_usage_from_radius(
     # Try TimescaleDB first for 10-100x better performance
     if TIMESCALEDB_AVAILABLE and settings.timescaledb.is_configured:
         try:
-            async with TimeSeriesSessionLocal() as ts_session:
+            session_factory = TimeSeriesSessionLocal
+            if session_factory is None:
+                raise RuntimeError("Timescale session factory unavailable")
+            async with session_factory() as ts_session:
                 from sqlalchemy import text
 
                 query = """
@@ -165,7 +172,7 @@ async def calculate_usage_from_radius(
                         "username": username,
                         "start_date": start_date,
                         "end_date": end_date,
-                    }
+                    },
                 )
                 row = result.first()
 
@@ -233,7 +240,10 @@ async def get_daily_usage_breakdown(
     # Try TimescaleDB continuous aggregate (pre-computed daily stats - MUCH faster)
     if TIMESCALEDB_AVAILABLE and settings.timescaledb.is_configured:
         try:
-            async with TimeSeriesSessionLocal() as ts_session:
+            session_factory = TimeSeriesSessionLocal
+            if session_factory is None:
+                raise RuntimeError("Timescale session factory unavailable")
+            async with session_factory() as ts_session:
                 from sqlalchemy import text
 
                 # Use the daily continuous aggregate view
@@ -258,7 +268,7 @@ async def get_daily_usage_breakdown(
                         "username": username,
                         "start_date": start_date,
                         "end_date": end_date,
-                    }
+                    },
                 )
 
                 daily_data = []
@@ -342,7 +352,10 @@ async def get_hourly_usage_breakdown(
     # Try TimescaleDB first for 10-100x better performance
     if TIMESCALEDB_AVAILABLE and settings.timescaledb.is_configured:
         try:
-            async with TimeSeriesSessionLocal() as ts_session:
+            session_factory = TimeSeriesSessionLocal
+            if session_factory is None:
+                raise RuntimeError("Timescale session factory unavailable")
+            async with session_factory() as ts_session:
                 from sqlalchemy import text
 
                 query = """
@@ -703,18 +716,10 @@ async def download_invoice_pdf(
         customer = await get_customer_from_user(user, db)
 
         # Initialize invoice service
-        invoice_service = MoneyInvoiceService(db, customer.tenant_id)
+        invoice_service = MoneyInvoiceService(db)
 
         # Get invoice
-        try:
-            invoice_uuid = UUID(invoice_id)
-        except ValueError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid invoice ID format",
-            )
-
-        invoice = await invoice_service.get_invoice(invoice_uuid)
+        invoice = await invoice_service.get_money_invoice(customer.tenant_id, invoice_id)
 
         if not invoice:
             raise HTTPException(
@@ -728,9 +733,6 @@ async def download_invoice_pdf(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You don't have permission to access this invoice",
             )
-
-        # Generate PDF
-        pdf_generator = ReportLabInvoiceGenerator()
 
         # Prepare company info (you may want to load this from settings)
         company_info = {
@@ -753,8 +755,9 @@ async def download_invoice_pdf(
             "name": f"{customer.first_name} {customer.last_name}",
         }
 
-        pdf_bytes = pdf_generator.generate_invoice_pdf(
-            invoice=invoice,
+        pdf_bytes = await invoice_service.generate_invoice_pdf(
+            tenant_id=customer.tenant_id,
+            invoice_id=invoice_id,
             company_info=company_info,
             customer_info=customer_info,
             locale="en_US",
@@ -951,8 +954,8 @@ async def set_default_payment_method(
         # Set as default
         payment_method = await service.set_default_payment_method(
             payment_method_id=payment_method_id,
-            tenant_id=customer.tenant_id,
-            updated_by_user_id=user.user_id,
+            tenant_id=str(customer.tenant_id),
+            set_by_user_id=user.user_id,
         )
 
         await db.commit()
@@ -1007,8 +1010,8 @@ async def remove_payment_method(
         # Remove payment method
         await service.remove_payment_method(
             payment_method_id=payment_method_id,
-            tenant_id=customer.tenant_id,
-            deleted_by_user_id=user.user_id,
+            tenant_id=str(customer.tenant_id),
+            removed_by_user_id=user.user_id,
         )
 
         await db.commit()

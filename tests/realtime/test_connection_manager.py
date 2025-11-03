@@ -1,4 +1,3 @@
-
 """
 Tests for WebSocket Connection Manager.
 
@@ -18,17 +17,12 @@ from fastapi import WebSocket
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.realtime.connection_manager import (
-
-
     ConnectionInfo,
     WebSocketConnectionManager,
 )
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestConnectionInfo:
     """Test ConnectionInfo class."""

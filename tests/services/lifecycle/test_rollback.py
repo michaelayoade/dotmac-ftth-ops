@@ -1,4 +1,3 @@
-
 """
 Tests for provisioning workflow rollback mechanisms.
 
@@ -6,15 +5,18 @@ Tests the ability to rollback failed provisioning workflows and
 clean up allocated resources.
 """
 
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 import pytest_asyncio
 
+from dotmac.platform.customer_management.models import (
+    Customer,
+    CustomerStatus,
+    CustomerTier,
+    CustomerType,
+)
 from dotmac.platform.services.lifecycle.models import (
-
-
-
     ProvisioningStatus,
     ProvisioningWorkflow,
     ServiceInstance,
@@ -22,9 +24,6 @@ from dotmac.platform.services.lifecycle.models import (
     ServiceType,
 )
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
-
-
-
 
 pytestmark = pytest.mark.integration
 
@@ -34,15 +33,63 @@ def _unique_code(prefix: str) -> str:
     return f"{prefix}-{uuid4().hex[:6].upper()}"
 
 
+async def _create_customer_with_id(
+    async_session, tenant_id: str, *, customer_id: UUID | None = None
+) -> Customer:
+    """Create a simple customer record ensuring FK constraints pass."""
+    cid = customer_id or uuid4()
+    customer = Customer(
+        id=cid,
+        tenant_id=tenant_id,
+        customer_number=f"CUST-{uuid4().hex[:8]}",
+        first_name="Rollback",
+        last_name="Customer",
+        status=CustomerStatus.ACTIVE,
+        customer_type=CustomerType.INDIVIDUAL,
+        tier=CustomerTier.STANDARD,
+        email=f"rollback-{cid.hex[:6]}@example.com",
+    )
+    async_session.add(customer)
+    await async_session.flush()
+    return customer
+
+
 @pytest.fixture
 def lifecycle_tenant_id() -> str:
     """Provide a unique tenant ID per test."""
     return f"tenant-rollback-{uuid4().hex[:8]}"
 
+
+@pytest_asyncio.fixture
+async def rollback_customer(async_session, lifecycle_tenant_id: str) -> Customer:
+    """Create test customer for rollback tests."""
+    customer = Customer(
+        id=uuid4(),
+        tenant_id=lifecycle_tenant_id,
+        customer_number=f"CUST-{uuid4().hex[:8]}",
+        first_name="Rollback",
+        last_name="Customer",
+        status=CustomerStatus.ACTIVE,
+        customer_type=CustomerType.INDIVIDUAL,
+        tier=CustomerTier.STANDARD,
+        email="rollback.test@example.com",
+        phone="+1234567890",
+        address_line1="123 Test St",
+        city="Test City",
+        state_province="TS",
+        postal_code="12345",
+        country="US",
+    )
+    async_session.add(customer)
+    await async_session.flush()
+    return customer
+
+
 @pytest_asyncio.fixture
 async def failed_service_with_workflow(
     async_session,
     lifecycle_tenant_id: str,
+    rollback_customer: Customer,
 ) -> tuple[ServiceInstance, ProvisioningWorkflow]:
     """Create a failed service instance with a failed provisioning workflow."""
     service = ServiceInstance(
@@ -51,7 +98,7 @@ async def failed_service_with_workflow(
         service_identifier=_unique_code("SVC-FAILED"),
         service_name="Failed Test Service",
         service_type=ServiceType.FIBER_INTERNET,
-        customer_id=uuid4(),
+        customer_id=rollback_customer.id,
         status=ServiceStatus.PROVISIONING_FAILED,
         provisioning_status=ProvisioningStatus.FAILED,
         service_config={},
@@ -85,7 +132,7 @@ async def failed_service_with_workflow(
     )
 
     async_session.add(workflow)
-    await async_session.commit()
+    await async_session.flush()
     await async_session.refresh(service)
     await async_session.refresh(workflow)
 
@@ -165,20 +212,22 @@ async def test_rollback_no_failed_workflow(async_session, lifecycle_tenant_id: s
     service_obj = LifecycleOrchestrationService(async_session)
 
     # Create a service without a failed workflow
+    customer = await _create_customer_with_id(async_session, lifecycle_tenant_id)
+
     service = ServiceInstance(
         id=uuid4(),
         tenant_id=lifecycle_tenant_id,
         service_identifier=_unique_code("SVC-OK"),
         service_name="Service Without Failed Workflow",
         service_type=ServiceType.FIBER_INTERNET,
-        customer_id=uuid4(),
+        customer_id=customer.id,
         status=ServiceStatus.ACTIVE,
         service_config={},
         service_metadata={},
     )
 
     async_session.add(service)
-    await async_session.commit()
+    await async_session.flush()
 
     result = await service_obj.rollback_provisioning_workflow(
         service_instance_id=service.id,
@@ -240,13 +289,15 @@ async def test_rollback_partial_resources(async_session, lifecycle_tenant_id: st
     service_obj = LifecycleOrchestrationService(async_session)
 
     # Create service with only IP allocated (no VLAN or equipment)
+    customer = await _create_customer_with_id(async_session, lifecycle_tenant_id)
+
     service = ServiceInstance(
         id=uuid4(),
         tenant_id=lifecycle_tenant_id,
         service_identifier=_unique_code("SVC-PARTIAL"),
         service_name="Partially Provisioned Service",
         service_type=ServiceType.FIBER_INTERNET,
-        customer_id=uuid4(),
+        customer_id=customer.id,
         status=ServiceStatus.PROVISIONING_FAILED,
         provisioning_status=ProvisioningStatus.FAILED,
         service_config={},
@@ -278,7 +329,7 @@ async def test_rollback_partial_resources(async_session, lifecycle_tenant_id: st
     )
 
     async_session.add(workflow)
-    await async_session.commit()
+    await async_session.flush()
 
     # Execute rollback
     result = await service_obj.rollback_provisioning_workflow(
@@ -308,13 +359,15 @@ async def test_rollback_multiple_workflows(async_session, lifecycle_tenant_id: s
     services_and_workflows = []
 
     for i in range(3):
+        customer = await _create_customer_with_id(async_session, lifecycle_tenant_id)
+
         service = ServiceInstance(
             id=uuid4(),
             tenant_id=lifecycle_tenant_id,
             service_identifier=_unique_code("SVC-MULTI"),
             service_name=f"Failed Service {i}",
             service_type=ServiceType.FIBER_INTERNET,
-            customer_id=uuid4(),
+            customer_id=customer.id,
             status=ServiceStatus.PROVISIONING_FAILED,
             provisioning_status=ProvisioningStatus.FAILED,
             service_config={},
@@ -343,7 +396,7 @@ async def test_rollback_multiple_workflows(async_session, lifecycle_tenant_id: s
         async_session.add(workflow)
         services_and_workflows.append((service, workflow))
 
-    await async_session.commit()
+    await async_session.flush()
 
     # Get all failed workflows
     failed_workflows = await service_obj.get_failed_workflows_for_rollback(
@@ -377,13 +430,16 @@ async def test_rollback_tenant_isolation(async_session):
     # Create failed services for different tenants
     tenant1_id = f"tenant-{uuid4().hex[:6]}"
     tenant2_id = f"tenant-{uuid4().hex[:6]}"
+    tenant1_customer = await _create_customer_with_id(async_session, tenant1_id)
+    tenant2_customer = await _create_customer_with_id(async_session, tenant2_id)
+
     tenant1_service = ServiceInstance(
         id=uuid4(),
         tenant_id=tenant1_id,
         service_identifier=_unique_code("SVC-T1-FAIL"),
         service_name="Tenant 1 Failed Service",
         service_type=ServiceType.FIBER_INTERNET,
-        customer_id=uuid4(),
+        customer_id=tenant1_customer.id,
         status=ServiceStatus.PROVISIONING_FAILED,
         provisioning_status=ProvisioningStatus.FAILED,
         service_config={},
@@ -397,7 +453,7 @@ async def test_rollback_tenant_isolation(async_session):
         service_identifier=_unique_code("SVC-T2-FAIL"),
         service_name="Tenant 2 Failed Service",
         service_type=ServiceType.FIBER_INTERNET,
-        customer_id=uuid4(),
+        customer_id=tenant2_customer.id,
         status=ServiceStatus.PROVISIONING_FAILED,
         provisioning_status=ProvisioningStatus.FAILED,
         service_config={},
@@ -426,7 +482,7 @@ async def test_rollback_tenant_isolation(async_session):
         )
         async_session.add(workflow)
 
-    await async_session.commit()
+    await async_session.flush()
 
     # Get failed workflows for tenant-1 only
     tenant1_workflows = await service_obj.get_failed_workflows_for_rollback(

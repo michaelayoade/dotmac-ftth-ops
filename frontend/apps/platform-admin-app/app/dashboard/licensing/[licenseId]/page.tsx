@@ -532,7 +532,7 @@ function LicenseDetailsPageContent() {
 
 export default function LicenseDetailsPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <LicenseDetailsPageContent />
     </RouteGuard>
   );

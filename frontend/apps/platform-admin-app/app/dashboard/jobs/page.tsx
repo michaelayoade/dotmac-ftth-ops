@@ -92,9 +92,9 @@ function JobsPageContent() {
       if (!response.ok) throw new Error("Failed to fetch jobs");
       return response.json();
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh if there are running or pending jobs
-      if (data?.jobs && data.jobs.some((j: Job) => j.status === "running" || j.status === "pending")) {
+      if (query?.state?.data?.jobs && query.state.data.jobs.some((j: Job) => j.status === "running" || j.status === "pending")) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -465,7 +465,7 @@ function JobsPageContent() {
 
 export default function JobsPage() {
   return (
-    <RouteGuard requiredPermission="jobs:read">
+    <RouteGuard permission="jobs:read">
       <JobsPageContent />
     </RouteGuard>
   );

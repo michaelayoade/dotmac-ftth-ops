@@ -560,7 +560,7 @@ function InstanceDetailsPageContent() {
 
 export default function InstanceDetailsPage() {
   return (
-    <RouteGuard requiredPermission="deployment.instance.read">
+    <RouteGuard permission="deployment.instance.read">
       <InstanceDetailsPageContent />
     </RouteGuard>
   );

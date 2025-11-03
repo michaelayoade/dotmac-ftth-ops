@@ -42,7 +42,8 @@ def get_plan_service(
 ) -> InternetPlanService:
     """Get internet plan service instance."""
     _, tenant = tenant_access
-    return InternetPlanService(session, tenant.id)
+    tenant_uuid = tenant.id if isinstance(tenant.id, UUID) else UUID(str(tenant.id))
+    return InternetPlanService(session, tenant_uuid)
 
 
 # ============================================================================

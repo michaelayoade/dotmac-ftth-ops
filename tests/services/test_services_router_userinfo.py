@@ -8,14 +8,8 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.services import router as services_router
 from dotmac.platform.services.router import ConvertLeadRequest
 
-
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class DummySession:
     async def commit(self) -> None:  # pragma: no cover - simple stub

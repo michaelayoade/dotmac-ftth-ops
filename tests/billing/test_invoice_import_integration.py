@@ -1,4 +1,3 @@
-
 """
 Tests for invoice import integration with data_transfer module.
 
@@ -10,7 +9,7 @@ Verifies that:
 5. Integration with InvoiceService is correct
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -19,13 +18,8 @@ import pytest
 from dotmac.platform.billing.invoicing.mappers import InvoiceImportSchema, InvoiceMapper
 from dotmac.platform.data_import.models import ImportJobType
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 class TestInvoiceImportSchema:
@@ -253,7 +247,7 @@ class TestInvoiceMapper:
         assert "issue_date" in model_data
         assert isinstance(model_data["issue_date"], datetime)
         # Should be very recent (within last minute)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         time_diff = (now - model_data["issue_date"]).total_seconds()
         assert time_diff < 60
 

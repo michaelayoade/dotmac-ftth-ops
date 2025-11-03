@@ -1,4 +1,3 @@
-
 """
 Tests for NetBox Client
 
@@ -12,13 +11,8 @@ import pytest
 
 from dotmac.platform.netbox.client import NetBoxClient
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.mark.asyncio
 class TestNetBoxClient:

@@ -18,6 +18,7 @@ from dotmac.platform.fault_management.models import AlarmStatus as FMAlarmStatus
 from dotmac.platform.fault_management.schemas import AlarmQueryParams
 from dotmac.platform.fault_management.service import AlarmService
 from dotmac.platform.genieacs.client import GenieACSClient
+from dotmac.platform.monitoring.prometheus_client import PrometheusClient, PrometheusQueryError
 from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.network_monitoring.schemas import (
     AlertSeverity,
@@ -32,7 +33,6 @@ from dotmac.platform.network_monitoring.schemas import (
     ONUMetrics,
     TrafficStatsResponse,
 )
-from dotmac.platform.monitoring.prometheus_client import PrometheusClient, PrometheusQueryError
 from dotmac.platform.tenant.oss_config import OSSService, ServiceConfig, get_service_config
 
 logger = structlog.get_logger(__name__)
@@ -176,9 +176,7 @@ class NetworkMonitoringService:
         query = query.replace("<<device>>", device_id)
         return query
 
-    async def _execute_prometheus_query(
-        self, client: PrometheusClient, query: str
-    ) -> float:
+    async def _execute_prometheus_query(self, client: PrometheusClient, query: str) -> float:
         if not query:
             return 0.0
 
@@ -694,7 +692,7 @@ class NetworkMonitoringService:
             values = await asyncio.gather(
                 *[self._execute_prometheus_query(client, query) for _, query in query_items]
             )
-            results = {name: value for (name, _), value in zip(query_items, values)}
+            results = {name: value for (name, _), value in zip(query_items, values, strict=False)}
 
         def _metric(name: str) -> float:
             value = results.get(name, 0.0)

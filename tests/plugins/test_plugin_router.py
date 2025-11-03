@@ -8,12 +8,7 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.plugins.router import get_registry
-
-pytestmark = pytest.mark.integration
-
 from dotmac.platform.plugins.schema import (
-
-
     FieldSpec,
     FieldType,
     PluginConfig,
@@ -21,6 +16,8 @@ from dotmac.platform.plugins.schema import (
     PluginStatus,
     PluginType,
 )
+
+pytestmark = pytest.mark.integration
 
 
 class TestPluginRouterFunctions:

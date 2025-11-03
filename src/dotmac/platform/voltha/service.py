@@ -5,7 +5,9 @@ Business logic for PON network management via VOLTHA.
 """
 
 import base64
+from collections.abc import Mapping
 from datetime import datetime, timezone
+from typing import Any
 
 # Python 3.9/3.10 compatibility: UTC was added in 3.11
 UTC = timezone.utc
@@ -59,6 +61,19 @@ def _decode_maybe_base64(payload: bytes | str) -> bytes:
 
 class VOLTHAService:
     """Service for VOLTHA PON management"""
+
+    @staticmethod
+    def _coerce_mapping(payload: Any) -> dict[str, Any]:
+        if isinstance(payload, Mapping):
+            return dict(payload)
+        return {}
+
+    @staticmethod
+    def _coerce_int(value: Any) -> int | None:
+        try:
+            return int(value)  # type: ignore[arg-type]
+        except (TypeError, ValueError):
+            return None
 
     def __init__(
         self,
@@ -187,6 +202,10 @@ class VOLTHAService:
         """Delete device"""
         result = await self.client.delete_device(device_id)
         return bool(result)
+
+    async def delete_onu(self, device_id: str) -> bool:
+        """Backward-compatible alias for deleting an ONU device."""
+        return await self.delete_device(device_id)
 
     # =========================================================================
     # Logical Device Operations (OLTs)
@@ -323,8 +342,9 @@ class VOLTHAService:
         from datetime import datetime
 
         discovered_onus: list[DiscoveredONU] = []
-        devices = await self.client.get_devices()
-        devices_by_parent: dict[str, list[dict[str, object]]] = {}
+        devices_raw = await self.client.get_devices()
+        devices = [self._coerce_mapping(device) for device in devices_raw]
+        devices_by_parent: dict[str, list[dict[str, Any]]] = {}
 
         for device in devices:
             parent_id = device.get("parent_id")
@@ -335,10 +355,10 @@ class VOLTHAService:
 
         # Get all logical devices (OLTs) or specific OLT
         if olt_device_id:
-            olt = await self.client.get_logical_device(olt_device_id)
-            olts = [olt] if olt else []
+            olt_raw = await self.client.get_logical_device(olt_device_id)
+            olts = [self._coerce_mapping(olt_raw)] if olt_raw else []
         else:
-            olts = await self.client.get_logical_devices()
+            olts = [self._coerce_mapping(olt) for olt in await self.client.get_logical_devices()]
 
         for olt in olts:
             olt_id = olt.get("id")
@@ -350,12 +370,16 @@ class VOLTHAService:
                 continue
 
             # Get ports for this OLT
-            ports = await self.client.get_logical_device_ports(olt_id)
+            ports = [self._coerce_mapping(port) for port in await self.client.get_logical_device_ports(olt_id)]
             olt_devices = devices_by_parent.get(str(root_device_id), [])
 
             for port in ports:
                 port_no = port.get("device_port_no")
                 if port_no is None:
+                    continue
+                try:
+                    port_no_int = int(port_no)
+                except (TypeError, ValueError):
                     continue
 
                 # Find ONUs connected to this port that are discovered but not provisioned
@@ -364,8 +388,16 @@ class VOLTHAService:
                     parent_id = device.get("parent_id")
                     parent_port = device.get("parent_port_no")
 
-                    if parent_id == olt.get("root_device_id") and parent_port == port_no:
-                        serial = device.get("serial_number")
+                    parent_port_int = self._coerce_int(parent_port)
+                    if parent_port_int is None:
+                        continue
+
+                    if (
+                        str(parent_id) == str(olt.get("root_device_id"))
+                        and parent_port_int == port_no_int
+                    ):
+                        serial_value = device.get("serial_number")
+                        serial = str(serial_value) if serial_value is not None else ""
                         admin_state = device.get("admin_state")
                         oper_status = device.get("oper_status")
 
@@ -376,14 +408,17 @@ class VOLTHAService:
                             vendor_id = serial[:4] if len(serial) >= 4 else None
                             vendor_specific = serial[4:] if len(serial) > 4 else None
 
+                            proxy_address = self._coerce_mapping(device.get("proxy_address"))
+                            onu_id = proxy_address.get("onu_id")
+
                             discovered_onus.append(
                                 DiscoveredONU(
                                     serial_number=serial,
                                     vendor_id=vendor_id,
                                     vendor_specific=vendor_specific,
                                     olt_device_id=str(parent_id),
-                                    pon_port=port_no,
-                                    onu_id=device.get("proxy_address", {}).get("onu_id"),
+                                    pon_port=port_no_int,
+                                    onu_id=onu_id,
                                     discovered_at=datetime.now(UTC).isoformat(),
                                     status="discovered",
                                 )
@@ -401,7 +436,11 @@ class VOLTHAService:
             olt_device_id=olt_device_id,
         )
 
-    async def provision_onu(self, provision_request: ONUProvisionRequest) -> ONUProvisionResponse:
+    async def provision_onu(
+        self,
+        provision_request: ONUProvisionRequest | dict[str, Any] | None = None,
+        **kwargs: Any,
+    ) -> ONUProvisionResponse:
         """
         Provision a discovered ONU.
 
@@ -413,20 +452,32 @@ class VOLTHAService:
         Returns:
             ONUProvisionResponse with provisioning result
         """
+        if provision_request is None:
+            if not kwargs:
+                raise ValueError("provision_request or keyword arguments required")
+            provision_request = ONUProvisionRequest(**kwargs)
+        elif not isinstance(provision_request, ONUProvisionRequest):
+            provision_request = ONUProvisionRequest(**provision_request)
+
         try:
             # Find the device by serial number
-            devices = await self.client.get_devices()
-            target_device = None
+            devices_raw = await self.client.get_devices()
+            target_device: dict[str, Any] | None = None
 
-            for device in devices:
+            for raw_device in devices_raw:
+                device = self._coerce_mapping(raw_device)
                 if device.get("serial_number") == provision_request.serial_number:
                     parent_id = device.get("parent_id")
                     parent_port = device.get("parent_port_no")
 
+                    parent_port_int = self._coerce_int(parent_port)
+                    if parent_port_int is None:
+                        continue
+
                     # Verify OLT and port match
                     if (
-                        parent_id == provision_request.olt_device_id
-                        and parent_port == provision_request.pon_port
+                        str(parent_id) == str(provision_request.olt_device_id)
+                        and parent_port_int == provision_request.pon_port
                     ):
                         target_device = device
                         break
@@ -441,7 +492,11 @@ class VOLTHAService:
                     pon_port=provision_request.pon_port,
                 )
 
-            device_id = target_device.get("id")
+            device_id_value = target_device.get("id")
+            if not device_id_value:
+                raise ValueError("ONU device missing identifier")
+
+            device_id = str(device_id_value)
 
             # Enable the device
             await self.client.enable_device(device_id)

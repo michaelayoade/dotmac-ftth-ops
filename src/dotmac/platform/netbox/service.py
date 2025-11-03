@@ -100,15 +100,13 @@ class NetBoxService:
             tenant_id: Tenant ID for multi-tenancy support
         """
         if isinstance(client_or_session, AsyncSession):
-            self.session = client_or_session
-            resolved_client = client or NetBoxClient(tenant_id=tenant_id)
+            self.session: AsyncSession | None = client_or_session
+            candidate_client: NetBoxClient | None = client
         else:
             self.session = None
-            resolved_client = client_or_session if isinstance(client_or_session, NetBoxClient) else client
-            if resolved_client is None:
-                resolved_client = NetBoxClient(tenant_id=tenant_id)
+            candidate_client = client_or_session if isinstance(client_or_session, NetBoxClient) else client
 
-        self.client = resolved_client
+        self.client: NetBoxClient = candidate_client or NetBoxClient(tenant_id=tenant_id)
         self.tenant_id = tenant_id
 
         # In-memory stores to support lightweight/testing scenarios
@@ -382,6 +380,31 @@ class NetBoxService:
                 await self.release_ip(ip_id=key)
                 return True
         return False
+
+    async def allocate_subscriber_ip(
+        self,
+        *,
+        tenant_id: str,
+        subscriber_id: str,
+        site_id: str | None = None,
+        prefix_id: int | None = None,
+        address: str | None = None,
+    ) -> dict[str, Any]:
+        """Allocate an IP address specifically for a subscriber."""
+
+        tags: list[str] = ["subscriber"]
+        if site_id:
+            tags.append(site_id)
+
+        allocation_request = IPAllocationRequest(
+            prefix_id=prefix_id,
+            address=address,
+            tenant=tenant_id,
+            description=f"Subscriber {subscriber_id}",
+            tags=tags,
+        )
+
+        return await self.allocate_ip(allocation_request)
 
     async def list_prefixes(
         self,

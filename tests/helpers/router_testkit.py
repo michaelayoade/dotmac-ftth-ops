@@ -5,7 +5,8 @@ Provides reusable test scaffolding for FastAPI router testing with
 tenant-scoped users, dependency overrides, and background task fixtures.
 """
 
-from typing import Any, AsyncGenerator, Callable
+from collections.abc import AsyncGenerator, Callable
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
@@ -17,11 +18,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class RouterTestKit:
     """
@@ -84,7 +82,9 @@ class RouterTestKit:
             user_id=user_id or self.user_id,
             tenant_id=tenant_id or self.tenant_id,
             email=email or self.email,
-            is_platform_admin=is_platform_admin if is_platform_admin is not None else self.is_platform_admin,
+            is_platform_admin=is_platform_admin
+            if is_platform_admin is not None
+            else self.is_platform_admin,
             **extra_fields,
         )
 
@@ -102,7 +102,8 @@ class RouterTestKit:
         """
         if not callable(override):
             # If override is not callable, wrap it in a lambda
-            override = lambda: override
+            def override():
+                return override
 
         self.app.dependency_overrides[dependency] = override
         self._dependency_overrides[dependency] = override
@@ -182,7 +183,7 @@ class RouterTestKit:
         """
         return TestClient(self.app)
 
-    async def create_async_client(self) -> AsyncGenerator[AsyncClient, None]:
+    async def create_async_client(self) -> AsyncGenerator[AsyncClient]:
         """
         Create an AsyncClient for async tests.
 
@@ -320,8 +321,7 @@ def assert_response_ok(response: Any, expected_status: int = 200) -> None:
         expected_status: Expected HTTP status code
     """
     assert response.status_code == expected_status, (
-        f"Expected status {expected_status}, got {response.status_code}. "
-        f"Response: {response.text}"
+        f"Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
     )
 
 
@@ -339,8 +339,7 @@ def assert_response_error(
         expected_detail: Expected error detail (optional)
     """
     assert response.status_code == expected_status, (
-        f"Expected status {expected_status}, got {response.status_code}. "
-        f"Response: {response.text}"
+        f"Expected status {expected_status}, got {response.status_code}. Response: {response.text}"
     )
 
     if expected_detail:

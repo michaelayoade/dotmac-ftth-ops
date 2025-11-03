@@ -1,4 +1,3 @@
-
 """
 Tests for service discovery HTTP client.
 """
@@ -13,17 +12,11 @@ from tenacity import RetryError
 from dotmac.platform.service_registry.client import ServiceClient
 from dotmac.platform.service_registry.consul_registry import ConsulServiceInfo
 
-
-
-
-
-
-
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio,
 ]
+
 
 class TestServiceClient:
     """Test ServiceClient HTTP client with service discovery."""

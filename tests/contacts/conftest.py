@@ -2,7 +2,7 @@
 Shared fixtures for contact service tests.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import uuid4
 
@@ -88,8 +88,8 @@ def sample_contact(tenant_id, customer_id, user_id):
     contact.preferred_contact_method = ContactMethodType.EMAIL
     contact.preferred_language = "en"
     contact.timezone = "America/New_York"
-    contact.created_at = datetime.now(timezone.utc)
-    contact.updated_at = datetime.now(timezone.utc)
+    contact.created_at = datetime.now(UTC)
+    contact.updated_at = datetime.now(UTC)
     contact.last_contacted_at = None
     contact.deleted_at = None
     contact.deleted_by = None
@@ -112,8 +112,8 @@ def sample_contact_method(sample_contact):
     method.is_public = True
     method.display_order = 0
     method.metadata_ = {}
-    method.created_at = datetime.now(timezone.utc)
-    method.updated_at = datetime.now(timezone.utc)
+    method.created_at = datetime.now(UTC)
+    method.updated_at = datetime.now(UTC)
     method.address_line1 = None
     method.address_line2 = None
     method.city = None
@@ -140,8 +140,8 @@ def sample_label_definition(tenant_id, user_id):
     label.is_system = False
     label.is_default = False
     label.metadata_ = {}
-    label.created_at = datetime.now(timezone.utc)
-    label.updated_at = datetime.now(timezone.utc)
+    label.created_at = datetime.now(UTC)
+    label.updated_at = datetime.now(UTC)
     label.created_by = user_id
     return label
 
@@ -172,8 +172,8 @@ def sample_field_definition(tenant_id, user_id):
     field.is_system = False
     field.is_encrypted = False
     field.metadata_ = {}
-    field.created_at = datetime.now(timezone.utc)
-    field.updated_at = datetime.now(timezone.utc)
+    field.created_at = datetime.now(UTC)
+    field.updated_at = datetime.now(UTC)
     field.created_by = user_id
     return field
 
@@ -187,12 +187,12 @@ def sample_activity(sample_contact, user_id):
     activity.activity_type = "call"
     activity.subject = "Follow-up call"
     activity.description = "Discussed quarterly review"
-    activity.activity_date = datetime.now(timezone.utc)
+    activity.activity_date = datetime.now(UTC)
     activity.duration_minutes = 30
     activity.status = "completed"
     activity.outcome = "positive"
     activity.performed_by = user_id
     activity.metadata_ = {}
-    activity.created_at = datetime.now(timezone.utc)
-    activity.updated_at = datetime.now(timezone.utc)
+    activity.created_at = datetime.now(UTC)
+    activity.updated_at = datetime.now(UTC)
     return activity

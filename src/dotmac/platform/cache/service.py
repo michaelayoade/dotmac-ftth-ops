@@ -8,10 +8,7 @@ import hashlib
 import json
 import zlib
 from dataclasses import asdict, is_dataclass
-from datetime import date, datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, date, datetime
 from enum import Enum
 from typing import Any, TypedDict, cast
 
@@ -48,13 +45,10 @@ class CacheService:
             import redis.asyncio as aioredis
 
             redis_url = settings.redis.redis_url
-            self.redis = cast(
-                RedisClientType,
-                aioredis.from_url(
-                    redis_url,
-                    encoding="utf-8",
-                    decode_responses=False,  # We'll handle encoding
-                ),
+            self.redis = aioredis.from_url(
+                redis_url,
+                encoding="utf-8",
+                decode_responses=False,  # We'll handle encoding
             )
         return self.redis
 

@@ -4,9 +4,8 @@ import pytest
 
 from dotmac.platform.services.orchestration import OrchestrationService
 
-
-
 pytestmark = pytest.mark.integration
+
 
 def test_orchestration_service_init_without_radius_type_error():
     """Ensure default construction no longer raises missing-arg errors."""

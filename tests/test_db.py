@@ -1,9 +1,8 @@
 """Tests for database module."""
 
 import os
-from contextlib import asynccontextmanager
-from datetime import timezone, datetime
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from datetime import UTC, datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sqlalchemy import Column, Integer, String
@@ -93,7 +92,7 @@ class TestDatabaseModels:
         assert model.is_deleted is False
 
         # Test soft delete
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         model.deleted_at = now
         assert model.is_deleted is True
 
@@ -143,7 +142,7 @@ class TestDatabaseConnection:
         # First call creates engine
         engine1 = get_sync_engine()
         assert engine1 is not None
-        assert hasattr(engine1, 'connect')  # Verify it's an engine
+        assert hasattr(engine1, "connect")  # Verify it's an engine
 
         # Second call returns cached engine
         engine2 = get_sync_engine()
@@ -160,7 +159,7 @@ class TestDatabaseConnection:
         engine = get_async_engine()
         assert engine is not None
         # Verify it's an async engine
-        assert hasattr(engine, 'begin')
+        assert hasattr(engine, "begin")
 
 
 @pytest.mark.integration
@@ -213,6 +212,27 @@ class TestDatabaseUrls:
         url = get_async_database_url()
         assert url is not None
         assert isinstance(url, str)
+
+    def test_settings_sqlalchemy_url_prefers_env(self):
+        """Ensure settings.database.sqlalchemy_url honours test overrides."""
+        with patch.dict(
+            os.environ,
+            {
+                "DOTMAC_DATABASE_URL_ASYNC": "sqlite+aiosqlite:///:memory:",
+                "DOTMAC_DATABASE_URL": "sqlite:///:memory:",
+                "DATABASE_URL": "sqlite:///:memory:",
+            },
+        ):
+            import dotmac.platform.settings as settings_module
+
+            settings_module.reset_settings()
+            fresh_settings = settings_module.get_settings()
+            assert fresh_settings.database.sqlalchemy_url == "sqlite+aiosqlite:///:memory:"
+
+        import dotmac.platform.settings as settings_module
+
+        settings_module.reset_settings()
+        settings_module.settings = settings_module.get_settings()
 
 
 @pytest.mark.integration
@@ -292,8 +312,8 @@ class TestSessionManagement:
         """Test get_db context manager success case."""
         with get_db() as session:
             assert session is not None
-            assert hasattr(session, 'commit')
-            assert hasattr(session, 'rollback')
+            assert hasattr(session, "commit")
+            assert hasattr(session, "rollback")
 
     def test_get_db_exception(self):
         """Test get_db context manager exception handling."""
@@ -308,8 +328,8 @@ class TestSessionManagement:
         """Test get_async_db async context manager success case."""
         async with get_async_db() as session:
             assert session is not None
-            assert hasattr(session, 'commit')
-            assert hasattr(session, 'rollback')
+            assert hasattr(session, "commit")
+            assert hasattr(session, "rollback")
 
     @pytest.mark.asyncio
     async def test_get_async_db_exception(self):
@@ -325,11 +345,11 @@ class TestSessionManagement:
         async_gen = get_async_session()
         session = await async_gen.__anext__()
         assert session is not None
-        assert hasattr(session, 'execute')
+        assert hasattr(session, "execute")
         # Clean up
         try:
             await async_gen.aclose()
-        except:
+        except Exception:
             pass
 
     @pytest.mark.asyncio
@@ -342,7 +362,7 @@ class TestSessionManagement:
         # Clean up
         try:
             await async_gen.aclose()
-        except:
+        except Exception:
             pass
 
 
@@ -356,8 +376,8 @@ class TestSessionDependency:
         # Test with real implementation
         async for session in get_session_dependency():
             assert session is not None
-            assert hasattr(session, 'execute')
-            assert hasattr(session, 'commit')
+            assert hasattr(session, "execute")
+            assert hasattr(session, "commit")
             break
 
     @pytest.mark.asyncio

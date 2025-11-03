@@ -4,10 +4,7 @@ Communications router.
 FastAPI router for communications services.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from smtplib import SMTPException
 from typing import Any
 
@@ -126,7 +123,8 @@ async def send_email_endpoint(
         # Update communication status if we have a log entry
         if log_entry:
             try:
-                async with get_async_session_context() as db:
+                session_ctx = get_async_session_context()
+                async for db in session_ctx:
                     metrics_service = get_metrics_service(db)
                     status = (
                         CommunicationStatus.SENT
@@ -138,6 +136,7 @@ async def send_email_endpoint(
                         status=status,
                         provider_message_id=response.id,
                     )
+                    break
             except (SQLAlchemyError, RuntimeError) as db_error:
                 logger.warning("Could not update communication status", error=str(db_error))
 
@@ -172,15 +171,15 @@ async def queue_email_endpoint(
     try:
         user_id, tenant_id = _safe_user_context(current_user)
         task_id = queue_email(
-            to=request.to,
+            to=[str(addr) for addr in request.to],
             subject=request.subject,
             text_body=request.text_body,
             html_body=request.html_body,
             from_email=request.from_email,
             from_name=request.from_name,
             reply_to=request.reply_to,
-            cc=request.cc,
-            bcc=request.bcc,
+            cc=[str(addr) for addr in request.cc],
+            bcc=[str(addr) for addr in request.bcc],
         )
 
         logger.info(
@@ -550,7 +549,8 @@ async def get_communication_stats(
     user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real stats from database if available
     try:
-        async with get_async_session_context() as db:
+        session_ctx = get_async_session_context()
+        async for db in session_ctx:
             metrics_service = get_metrics_service(db)
 
             stats_data = await metrics_service.get_stats(tenant_id=tenant_id)
@@ -593,7 +593,8 @@ async def get_recent_activity(
     user_id, tenant_id = _safe_user_context(current_user)
     # Try to get real activity from database if available
     try:
-        async with get_async_session_context() as db:
+        session_ctx = get_async_session_context()
+        async for db in session_ctx:
             metrics_service = get_metrics_service(db)
 
             # Parse type filter if provided

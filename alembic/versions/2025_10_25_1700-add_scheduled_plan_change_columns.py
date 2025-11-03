@@ -12,9 +12,9 @@ This allows operators to schedule plan changes (upgrades/downgrades) to take eff
 at a future date, rather than applying immediately.
 """
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "f7g8h9i0j1k2"

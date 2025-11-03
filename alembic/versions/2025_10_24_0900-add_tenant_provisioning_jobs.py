@@ -5,8 +5,9 @@ Add tenant_provisioning_jobs table to track dedicated infra provisioning.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "2025_10_24_0900"
 down_revision: str = "2025_10_23_0900"

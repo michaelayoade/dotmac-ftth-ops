@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, metrics, event bus)
 Focus: Test invoice lifecycle, validation, status transitions in isolation
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -109,8 +109,8 @@ class TestInvoiceCreation:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -200,8 +200,8 @@ class TestInvoiceFinalization:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -262,8 +262,8 @@ class TestInvoiceVoiding:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -340,8 +340,8 @@ class TestInvoicePayment:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,
@@ -411,8 +411,8 @@ class TestCreditApplication:
             customer_id="cust_123",
             billing_email="customer@example.com",
             billing_address={},
-            issue_date=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            issue_date=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             currency="USD",
             subtotal=100,
             tax_amount=0,

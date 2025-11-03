@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
 from ..models import NotificationChannel
+
+if TYPE_CHECKING:
+    from ..channels.base import NotificationChannelProvider
 
 
 class NotificationChannelPlugin(Protocol):
@@ -12,11 +15,12 @@ class NotificationChannelPlugin(Protocol):
 
     plugin_id: str
     channel: NotificationChannel
+    provider_class: type["NotificationChannelProvider"]
 
     def build_config(self) -> dict[str, Any]:
         """Return provider configuration derived from settings/environment."""
 
-    def create_provider(self, config: dict[str, Any]):
+    def create_provider(self, config: dict[str, Any]) -> "NotificationChannelProvider":
         """Instantiate and return a NotificationChannelProvider."""
 
 

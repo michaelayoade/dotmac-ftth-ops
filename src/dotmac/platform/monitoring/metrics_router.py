@@ -5,10 +5,7 @@ Provides comprehensive monitoring statistics endpoints for system health,
 performance metrics, and observability data.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -28,7 +25,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 MONITORING_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(prefix="", tags=["Monitoring Metrics"])
+router = APIRouter(prefix="/metrics/monitoring", tags=["Monitoring Metrics"])
 
 
 # ============================================================================

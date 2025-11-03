@@ -7,7 +7,7 @@ This module provides:
 - Common test entities (customers, payment methods)
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -16,8 +16,6 @@ import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
-
-
     InvoiceEntity,
     PaymentEntity,
     PaymentMethodEntity,
@@ -35,8 +33,8 @@ from dotmac.platform.billing.models import Invoice, Payment, PaymentMethod
 # =============================================================================
 
 
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_stripe_provider():
@@ -142,13 +140,13 @@ def mock_payment_providers(mock_stripe_provider, mock_paypal_provider):
 @pytest.fixture
 def test_tenant_id():
     """Test tenant ID."""
-    return f"test-tenant-{uuid4().hex[:8]}"
+    return str(uuid4())
 
 
 @pytest.fixture
 def test_customer_id():
     """Test customer ID."""
-    return f"test-customer-{uuid4().hex[:8]}"
+    return str(uuid4())
 
 
 # =============================================================================
@@ -215,8 +213,8 @@ async def sample_draft_invoice(async_db_session: AsyncSession, test_tenant_id, t
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=10000,  # $100.00 in cents
         tax_amount=1000,  # $10.00
@@ -245,8 +243,8 @@ async def sample_open_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=25000,  # $250.00
         tax_amount=2500,  # $25.00
@@ -275,8 +273,8 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc) - timedelta(days=5),
-        due_date=datetime.now(timezone.utc) + timedelta(days=25),
+        issue_date=datetime.now(UTC) - timedelta(days=5),
+        due_date=datetime.now(UTC) + timedelta(days=25),
         currency="USD",
         subtotal=50000,  # $500.00
         tax_amount=5000,  # $50.00
@@ -287,7 +285,7 @@ async def sample_paid_invoice(async_db_session: AsyncSession, test_tenant_id, te
         credit_applications=[],
         status=InvoiceStatus.PAID,
         payment_status=PaymentStatus.SUCCEEDED,
-        paid_at=datetime.now(timezone.utc) - timedelta(days=3),
+        paid_at=datetime.now(UTC) - timedelta(days=3),
         created_by="test-system",
     )
     async_db_session.add(invoice)
@@ -306,8 +304,8 @@ def invoice_entity(test_tenant_id, test_customer_id):
         customer_id=test_customer_id,
         billing_email=f"{test_customer_id}@example.com",
         billing_address={"street": "123 Test St"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=10000,
         tax_amount=1000,
@@ -351,7 +349,7 @@ async def sample_successful_payment(
         provider_payment_id="pi_test_123",
         provider_fee=30,
         retry_count=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -385,7 +383,7 @@ async def sample_failed_payment(
         provider_fee=0,
         failure_reason="Your card was declined.",
         retry_count=1,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -408,7 +406,7 @@ def payment_entity(test_tenant_id, test_customer_id):
         provider="stripe",
         provider_payment_id="pi_test_123",
         retry_count=0,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
         extra_data={},
     )
 

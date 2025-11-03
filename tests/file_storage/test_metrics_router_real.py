@@ -8,18 +8,19 @@ Uses the fake implementation pattern:
 """
 
 import sys
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 
 import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
+# Patch cached_result BEFORE importing the router
 
 
 pytestmark = pytest.mark.integration
 
-# Patch cached_result BEFORE importing the router
+
 def mock_cached_result(*args, **kwargs):
     """Pass-through decorator that doesn't cache."""
 
@@ -112,7 +113,7 @@ def app_with_router(fake_storage_service):
     app = FastAPI()
     app.dependency_overrides[get_current_user] = mock_current_user
     app.dependency_overrides[get_storage_service] = lambda: fake_storage_service
-    app.include_router(router, prefix="/api/v1/metrics/files")
+    app.include_router(router, prefix="/api/v1")
     return app
 
 
@@ -187,7 +188,7 @@ class TestFileStatsResponse:
 
     def test_response_model_validation(self):
         """Test response model with valid data."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         response = FileStatsResponse(
             total_files=100,
@@ -227,7 +228,7 @@ class TestFileStatsResponse:
             other_size_mb=0.0,
             avg_file_size_mb=0.0,
             period="7d",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         assert response.total_files == 0
@@ -250,7 +251,7 @@ class TestFileStatsResponse:
             other_size_mb=100.0,
             avg_file_size_mb=10.0,  # 1000 / 100
             period="30d",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         # Verify totals
@@ -290,7 +291,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_with_image_files(self, client, fake_storage_service):
         """Test stats with image files."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add 3 image files (1MB each)
         for i in range(3):
@@ -317,7 +318,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_with_mixed_file_types(self, client, fake_storage_service):
         """Test stats with mixed file types."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add different file types
         fake_storage_service.add_file(
@@ -349,7 +350,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_filters_by_period(self, client, fake_storage_service):
         """Test that stats filters files by time period."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add files at different times
         fake_storage_service.add_file(
@@ -383,7 +384,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_calculates_averages(self, client, fake_storage_service):
         """Test average file size calculation."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add 4 files with different sizes (total 10 MB)
         sizes = [1048576, 2097152, 3145728, 4194304]  # 1, 2, 3, 4 MB
@@ -420,7 +421,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_tenant_isolation(self, client, fake_storage_service):
         """Test that stats are isolated per tenant."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Add files for different tenants
         fake_storage_service.add_file(
@@ -442,7 +443,7 @@ class TestFileStorageStatsEndpoint:
 
     def test_get_stats_size_conversions(self, client, fake_storage_service):
         """Test byte to MB conversions."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # 1 MB = 1048576 bytes
         fake_storage_service.add_file("file1", "1mb.bin", 1048576, "application/octet-stream", now)

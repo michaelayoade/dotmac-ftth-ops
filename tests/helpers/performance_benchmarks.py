@@ -24,15 +24,15 @@ Features:
 """
 
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any
 
 import pytest
 
-
-
 pytestmark = pytest.mark.unit
+
 
 class PerformanceTracker:
     """Tracks test performance metrics."""
@@ -73,9 +73,7 @@ class PerformanceTracker:
             }
 
         test_data = self.data["tests"][test_name]
-        test_data["executions"].append(
-            {"timestamp": time.time(), "duration_ms": duration_ms}
-        )
+        test_data["executions"].append({"timestamp": time.time(), "duration_ms": duration_ms})
 
         # Keep only last 100 executions
         test_data["executions"] = test_data["executions"][-100:]
@@ -93,9 +91,7 @@ class PerformanceTracker:
     def get_slowest_tests(self, limit: int = 10) -> list[tuple[str, float]]:
         """Get slowest tests by average execution time."""
         tests = self.data.get("tests", {})
-        sorted_tests = sorted(
-            tests.items(), key=lambda x: x[1]["avg_ms"], reverse=True
-        )
+        sorted_tests = sorted(tests.items(), key=lambda x: x[1]["avg_ms"], reverse=True)
         return [(name, stats["avg_ms"]) for name, stats in sorted_tests[:limit]]
 
 
@@ -164,11 +160,7 @@ def pytest_sessionfinish(session, exitstatus):
             print(f"{i:2d}. {test_name:50s} {avg_ms:8.2f}ms")
         print("=" * 60)
 
-
 # pytest plugin registration
 def pytest_configure(config):
     """Register pytest plugin."""
     config.pluginmanager.register(sys.modules[__name__])
-
-
-import sys

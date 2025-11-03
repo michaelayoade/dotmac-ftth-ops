@@ -7,15 +7,13 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog
 from celery import Task
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from dotmac.platform.ansible.client import AWXClient
@@ -69,7 +67,7 @@ def _create_awx_service() -> AWXService:
     return AWXService(client=client)
 
 
-async def _load_job(session, job_id: str) -> TenantProvisioningJob | None:
+async def _load_job(session: AsyncSession, job_id: str) -> TenantProvisioningJob | None:
     stmt = (
         select(TenantProvisioningJob)
         .where(TenantProvisioningJob.id == job_id)

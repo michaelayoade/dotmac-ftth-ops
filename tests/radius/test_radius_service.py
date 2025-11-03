@@ -1,4 +1,3 @@
-
 """
 Tests for RADIUS Service Layer
 
@@ -8,9 +7,6 @@ Tests business logic for RADIUS operations.
 import pytest
 
 from dotmac.platform.radius.schemas import (
-
-
-
     BandwidthProfileCreate,
     NASCreate,
     RADIUSSubscriberCreate,
@@ -18,10 +14,8 @@ from dotmac.platform.radius.schemas import (
 )
 from dotmac.platform.radius.service import RADIUSService
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestRADIUSService:
@@ -32,7 +26,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -40,7 +33,7 @@ class TestRADIUSService:
         subscriber = await service.create_subscriber(data)
 
         assert subscriber.username == "testuser@isp"
-        assert subscriber.subscriber_id == "sub-001"
+        assert subscriber.subscriber_id is None
         assert subscriber.tenant_id == test_tenant.id
 
     async def test_create_subscriber_with_bandwidth_profile(self, async_db_session, test_tenant):
@@ -57,7 +50,6 @@ class TestRADIUSService:
 
         # Create subscriber with profile
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
             bandwidth_profile_id=profile.id,
@@ -72,7 +64,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
             framed_ip_address="10.0.0.100",
@@ -87,7 +78,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
             session_timeout=3600,
@@ -104,7 +94,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -114,7 +103,6 @@ class TestRADIUSService:
 
         # Try to create duplicate
         data2 = RADIUSSubscriberCreate(
-            subscriber_id="sub-002",
             username="testuser@isp",
             password="SecurePass456!",
         )
@@ -128,7 +116,6 @@ class TestRADIUSService:
 
         # Create subscriber
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -147,7 +134,6 @@ class TestRADIUSService:
         # Create multiple subscribers
         for i in range(5):
             data = RADIUSSubscriberCreate(
-                subscriber_id=f"sub-{i:03d}",
                 username=f"user{i}@isp",
                 password=f"Pass{i}123!",
             )
@@ -163,7 +149,6 @@ class TestRADIUSService:
 
         # Create subscriber
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="OldPass123!",
         )
@@ -179,6 +164,7 @@ class TestRADIUSService:
         # Verify new password is bcrypt-hashed and can be verified
         assert radcheck.value.startswith("bcrypt:$2b$")
         from dotmac.platform.auth.core import pwd_context
+
         stored_hash = radcheck.value.replace("bcrypt:", "")
         assert pwd_context.verify("NewPass456!", stored_hash)
 
@@ -199,7 +185,6 @@ class TestRADIUSService:
 
         # Create subscriber with profile1
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
             bandwidth_profile_id=profile1.id,
@@ -218,7 +203,6 @@ class TestRADIUSService:
 
         # Create subscriber
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -238,7 +222,6 @@ class TestRADIUSService:
 
         # Create subscriber
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -308,7 +291,6 @@ class TestRADIUSService:
 
         # Create subscriber with profile
         subscriber_data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
             bandwidth_profile_id=profile.id,
@@ -341,7 +323,6 @@ class TestRADIUSService:
 
         # Create subscriber in tenant 1
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="testuser@isp",
             password="SecurePass123!",
         )
@@ -372,7 +353,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-ipv6",
             username="ipv6user@isp",
             password="SecurePass123!",
             framed_ipv6_address="2001:db8::1",
@@ -394,7 +374,6 @@ class TestRADIUSService:
         service = RADIUSService(async_db_session, test_tenant.id)
 
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-prefix",
             username="prefixuser@isp",
             password="SecurePass123!",
             delegated_ipv6_prefix="2001:db8::/56",
@@ -417,7 +396,6 @@ class TestRADIUSService:
 
         # Create subscriber
         data = RADIUSSubscriberCreate(
-            subscriber_id="sub-001",
             username="updateipv6@isp",
             password="SecurePass123!",
         )

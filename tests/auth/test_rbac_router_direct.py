@@ -5,7 +5,7 @@ These tests call router functions directly without TestClient
 to avoid async/greenlet issues and improve coverage.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -22,13 +22,31 @@ from dotmac.platform.auth.rbac_router import (
     list_roles,
 )
 from dotmac.platform.auth.rbac_service import RBACService
+from dotmac.platform.user_management.models import User
 
 
 @pytest_asyncio.fixture
-async def mock_admin_user():
+async def test_user(async_db_session: AsyncSession):
+    """Create a test user in the database."""
+    user = User(
+        id=uuid4(),
+        tenant_id="test-tenant",
+        username="test_user",
+        email="test@example.com",
+        password_hash="hashed_password",
+        is_active=True,
+    )
+    async_db_session.add(user)
+    await async_db_session.commit()
+    await async_db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def mock_admin_user(test_user):
     """Mock admin user."""
     return UserInfo(
-        user_id=str(uuid4()),
+        user_id=str(test_user.id),
         email="admin@test.com",
         tenant_id="test",
         roles=["admin"],
@@ -161,12 +179,12 @@ class TestUserPermissionEndpointsDirect:
 
     @pytest.mark.asyncio
     async def test_get_user_permissions_direct(
-        self, async_db_session: AsyncSession, mock_admin_user
+        self, async_db_session: AsyncSession, mock_admin_user, test_user
     ):
         """Test getting user permissions directly."""
         from dotmac.platform.auth.rbac_router import get_user_permissions
 
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create and grant permission
         perm = Permission(
@@ -198,12 +216,12 @@ class TestUserPermissionEndpointsDirect:
 
     @pytest.mark.asyncio
     async def test_revoke_permission_from_user_direct(
-        self, async_db_session: AsyncSession, mock_admin_user
+        self, async_db_session: AsyncSession, mock_admin_user, test_user
     ):
         """Test revoking permission directly."""
         from dotmac.platform.auth.rbac_router import revoke_permission_from_user
 
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create and grant permission
         perm = Permission(
@@ -236,12 +254,12 @@ class TestUserPermissionEndpointsDirect:
 
     @pytest.mark.asyncio
     async def test_revoke_role_from_user_direct(
-        self, async_db_session: AsyncSession, mock_admin_user
+        self, async_db_session: AsyncSession, mock_admin_user, test_user
     ):
         """Test revoking role from user directly."""
         from dotmac.platform.auth.rbac_router import revoke_role_from_user
 
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create role
         rbac = RBACService(async_db_session)
@@ -384,7 +402,7 @@ class TestRoleCRUDEndpointsDirect:
 
     @pytest.mark.asyncio
     async def test_grant_permission_to_user_direct(
-        self, async_db_session: AsyncSession, mock_admin_user
+        self, async_db_session: AsyncSession, mock_admin_user, test_user
     ):
         """Test granting permission via endpoint."""
         from dotmac.platform.auth.rbac_router import (
@@ -392,7 +410,7 @@ class TestRoleCRUDEndpointsDirect:
             grant_permission_to_user,
         )
 
-        user_id = uuid4()
+        user_id = test_user.id
 
         # Create permission
         perm = Permission(
@@ -408,7 +426,7 @@ class TestRoleCRUDEndpointsDirect:
 
         request = PermissionGrantRequest(
             permission_name="grant.test",
-            expires_at=datetime.now(timezone.utc) + timedelta(days=30),
+            expires_at=datetime.now(UTC) + timedelta(days=30),
             reason="Test grant",
         )
 
@@ -426,12 +444,12 @@ class TestRoleCRUDEndpointsDirect:
 
     @pytest.mark.asyncio
     async def test_assign_role_to_user_not_found(
-        self, async_db_session: AsyncSession, mock_admin_user
+        self, async_db_session: AsyncSession, mock_admin_user, test_user
     ):
         """Test assigning non-existent role."""
         from dotmac.platform.auth.rbac_router import assign_role_to_user
 
-        user_id = uuid4()
+        user_id = test_user.id
         fake_role_id = uuid4()
         rbac = RBACService(async_db_session)
 

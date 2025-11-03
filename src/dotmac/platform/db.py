@@ -6,22 +6,23 @@ Simple, standard SQLAlchemy setup replacing the custom database module.
 
 import inspect
 import os
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager
-from datetime import UTC, datetime
 from dataclasses import dataclass
-from typing import Any, Callable
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock
 from urllib.parse import quote_plus
-from uuid import uuid4, UUID
+from uuid import UUID, uuid4
 
 import structlog
-from sqlalchemy import Boolean, DateTime, String, create_engine, TypeDecorator, CHAR
+from sqlalchemy import CHAR, Boolean, DateTime, String, TypeDecorator, create_engine
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
-from sqlalchemy.engine import make_url
+from sqlalchemy.engine import Dialect, make_url
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 from sqlalchemy.pool import StaticPool
+from sqlalchemy.sql.type_api import TypeEngine
 
 from dotmac.platform.settings import settings
 
@@ -33,41 +34,36 @@ logger = structlog.get_logger(__name__)
 # ==========================================
 
 
-class GUID(TypeDecorator):
+class GUID(TypeDecorator[UUID]):
     """Platform-independent GUID type.
 
     Uses PostgreSQL's UUID type when available, otherwise uses CHAR(36)
     storing as stringified hex values for SQLite compatibility.
     """
+
     impl = CHAR
     cache_ok = True
 
-    def load_dialect_impl(self, dialect):
-        if dialect.name == 'postgresql':
+    def load_dialect_impl(self, dialect: Dialect) -> TypeEngine[Any]:
+        if dialect.name == "postgresql":
             return dialect.type_descriptor(PostgresUUID(as_uuid=True))
         else:
             return dialect.type_descriptor(CHAR(36))
 
-    def process_bind_param(self, value, dialect):
+    def process_bind_param(self, value: UUID | str | None, dialect: Dialect) -> str | None:
         if value is None:
-            return value
-        elif dialect.name == 'postgresql':
+            return None
+        if isinstance(value, UUID):
             return str(value)
-        else:
-            if not isinstance(value, uuid4.__class__):
-                from uuid import UUID as PyUUID
-                return str(PyUUID(str(value)))
-            else:
-                return str(value)
+        return str(UUID(str(value)))
 
-    def process_result_value(self, value, dialect):
+    def process_result_value(self, value: Any, dialect: Dialect) -> UUID | None:
         if value is None:
+            return None
+        if isinstance(value, UUID):
             return value
-        else:
-            from uuid import UUID as PyUUID
-            if not isinstance(value, PyUUID):
-                return PyUUID(str(value))
-            return value
+        return UUID(str(value))
+
 
 # ==========================================
 # Database URLs from settings
@@ -358,7 +354,13 @@ def snapshot_database_state() -> DatabaseState:
 def restore_database_state(state: DatabaseState) -> None:
     """Restore database wiring to a previously captured snapshot."""
 
-    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+    global \
+        _sync_engine, \
+        _async_engine, \
+        SyncSessionLocal, \
+        AsyncSessionLocal, \
+        _async_session_maker, \
+        async_session_maker
 
     _sync_engine = state.sync_engine
     _async_engine = state.async_engine
@@ -377,7 +379,13 @@ def configure_database_for_testing(
 ) -> None:
     """Override engines or session factories for test scenarios."""
 
-    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+    global \
+        _sync_engine, \
+        _async_engine, \
+        SyncSessionLocal, \
+        AsyncSessionLocal, \
+        _async_session_maker, \
+        async_session_maker
 
     if sync_engine is not None:
         _sync_engine = sync_engine
@@ -536,7 +544,8 @@ def _ensure_billing_products_constraints() -> None:
         return
 
     try:
-        from sqlalchemy import inspect as sa_inspect, text as sa_text
+        from sqlalchemy import inspect as sa_inspect
+        from sqlalchemy import text as sa_text
     except ImportError:
         return
 
@@ -624,6 +633,7 @@ __all__ = [
     # Mixins
     "TimestampMixin",
     "TenantMixin",
+    "StrictTenantMixin",
     "SoftDeleteMixin",
     "AuditMixin",
     # Session management

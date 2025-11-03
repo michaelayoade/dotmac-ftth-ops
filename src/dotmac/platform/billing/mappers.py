@@ -4,10 +4,7 @@ Data mappers for billing domain.
 Transforms between database models, API schemas, and import formats.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 

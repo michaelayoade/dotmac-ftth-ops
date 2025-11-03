@@ -5,10 +5,7 @@ Provides file storage statistics endpoints for monitoring
 storage usage, upload/download counts, and file distribution.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import structlog
@@ -25,7 +22,7 @@ logger = structlog.get_logger(__name__)
 # Cache TTL (in seconds)
 FILES_STATS_CACHE_TTL = 300  # 5 minutes
 
-router = APIRouter(prefix="", tags=["File Storage Metrics"])
+router = APIRouter(prefix="/metrics/files", tags=["File Storage Metrics"])
 
 
 # ============================================================================

@@ -12,18 +12,15 @@ The ``FixtureFactory`` and ``ModelFactory`` base classes live in
 cleanup utilities that these examples build upon.
 """
 
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from unittest.mock import AsyncMock
 
 import pytest
-import pytest_asyncio
-
-from dataclasses import dataclass, field
 
 from tests.helpers.fixture_factories import FixtureFactory, ModelFactory
-
 
 # =============================================================================
 # QUICK START: Working In-Memory Factory
@@ -59,8 +56,8 @@ class ExampleInvoiceFactory(FixtureFactory):
             amount=amount,
             status=status,
             customer_id=customer_id,
-            created_at=datetime.now(timezone.utc),
-            due_date=datetime.now(timezone.utc) + timedelta(days=30),
+            created_at=datetime.now(UTC),
+            due_date=datetime.now(UTC) + timedelta(days=30),
             extras=dict(kwargs),
         )
         self.track(invoice)
@@ -85,6 +82,7 @@ async def example_invoice_factory():
 # EXAMPLE 1: Simple Dictionary Factory
 # =============================================================================
 
+
 @pytest.fixture
 def invoice_dict_factory():
     """Factory for creating invoice test dictionaries.
@@ -108,8 +106,8 @@ def invoice_dict_factory():
             "amount": amount,
             "status": status,
             "customer_id": customer_id,
-            "created_at": datetime.now(timezone.utc),
-            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
+            "created_at": datetime.now(UTC),
+            "due_date": datetime.now(UTC) + timedelta(days=30),
             **kwargs,
         }
 
@@ -147,8 +145,8 @@ class InvoiceFactory(ModelFactory):
             "amount": Decimal("100.00"),
             "status": "pending",
             "customer_id": "cust_test",
-            "due_date": datetime.now(timezone.utc) + timedelta(days=30),
-            "created_at": datetime.now(timezone.utc),
+            "due_date": datetime.now(UTC) + timedelta(days=30),
+            "created_at": datetime.now(UTC),
         }
 
 
@@ -176,7 +174,7 @@ class SubscriptionFactory(ModelFactory):
             "plan_id": "basic",
             "status": "trial",
             "customer_id": "cust_test",
-            "start_date": datetime.now(timezone.utc),
+            "start_date": datetime.now(UTC),
             "billing_cycle": "monthly",
         }
 
@@ -477,9 +475,7 @@ class BillingTestContext(FixtureFactory):
             Payment result
         """
         # Use mock gateway
-        result = await self.payment_gateway.charge(
-            amount=invoice["amount"], **kwargs
-        )
+        result = await self.payment_gateway.charge(amount=invoice["amount"], **kwargs)
         return result
 
     async def cleanup_instance(self, instance: Any) -> None:

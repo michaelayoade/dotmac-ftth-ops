@@ -353,7 +353,7 @@ function WorkflowsPageContent() {
 
 export default function WorkflowsPage() {
   return (
-    <RouteGuard requiredPermission="workflows:read">
+    <RouteGuard permission="workflows:read">
       <WorkflowsPageContent />
     </RouteGuard>
   );

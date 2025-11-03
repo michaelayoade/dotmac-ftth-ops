@@ -1,9 +1,8 @@
-
 """
 Comprehensive router tests for customer management to achieve 90% coverage.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -52,11 +51,10 @@ from dotmac.platform.customer_management.schemas import (
 from dotmac.platform.customer_management.service import CustomerService
 from tests.customer_management.conftest import _build_customer_kwargs
 
+# Fixtures are now in conftest.py
 
 
 pytestmark = pytest.mark.integration
-
-# Fixtures are now in conftest.py
 
 
 @pytest.fixture
@@ -91,9 +89,8 @@ def sample_customers():
     return customers
 
 
-
-
 pytestmark = pytest.mark.asyncio
+
 
 class TestRouterDependencies:
     """Test router dependencies."""
@@ -320,7 +317,7 @@ class TestCustomerActivities:
             title="Profile Updated",
             description="Customer updated their profile",
             metadata_={},  # Add required metadata field
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_service.add_activity.return_value = mock_activity
@@ -353,7 +350,7 @@ class TestCustomerActivities:
                 activity_type=ActivityType.CREATED,
                 title=f"Activity {i}",
                 metadata_={},  # Add required metadata field
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
             for i in range(3)
         ]
@@ -394,8 +391,8 @@ class TestCustomerNotes:
             tenant_id="test-tenant",
             subject="Support Request",
             content="Customer needs help with billing",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         mock_service.add_note.return_value = mock_note
@@ -427,8 +424,8 @@ class TestCustomerNotes:
                 subject=f"Note {i}",
                 content=f"Content {i}",
                 is_internal=i % 2 == 0,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
             for i in range(3)
         ]
@@ -547,8 +544,8 @@ class TestCustomerSegments:
             is_dynamic=False,
             priority=0,
             member_count=0,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         mock_service.create_segment.return_value = mock_segment

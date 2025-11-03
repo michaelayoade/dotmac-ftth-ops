@@ -11,17 +11,11 @@ import pytest
 from dotmac.platform.data_import.models import ImportJobStatus
 from dotmac.platform.data_import.service import DataImportService, ImportResult
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestImportResult:
     """Test ImportResult class."""
-
 
     def test_result_creation(self):
         """Test import result initialization."""

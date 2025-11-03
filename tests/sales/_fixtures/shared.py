@@ -18,8 +18,8 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.auth.rbac_service import RBACService, get_rbac_service
 from dotmac.platform.db import Base
 from dotmac.platform.dependencies import (
-    get_deployment_service,
     get_db,
+    get_deployment_service,
     get_email_service,
     get_event_bus,
     get_notification_service,
@@ -94,6 +94,7 @@ def mock_event_bus():
 @pytest.fixture
 def client(test_client, db_session):
     """Provide sync test client for API tests"""
+
     class _MockTenantService:
         def create_tenant(self, tenant_data):
             tenant_id = f"tenant-{uuid4().hex[:8]}"

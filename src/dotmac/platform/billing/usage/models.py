@@ -19,10 +19,9 @@ from sqlalchemy import (
     Text,
 )
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
+from dotmac.platform.db import AuditMixin, Base, GUID, TenantMixin, TimestampMixin
 
 
 class UsageType(str, Enum):
@@ -58,11 +57,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
 
     __tablename__ = "usage_records"
 
-    id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4,
-    )
+    id: Mapped[UUID] = mapped_column(GUID, primary_key=True, default=uuid4)
 
     # Foreign keys
     subscription_id: Mapped[str] = mapped_column(
@@ -72,7 +67,7 @@ class UsageRecord(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignor
         comment="Related subscription",
     )
     customer_id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         ForeignKey("customers.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
@@ -203,11 +198,7 @@ class UsageAggregate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]  
 
     __tablename__ = "usage_aggregates"
 
-    id: Mapped[UUID] = mapped_column(
-        PostgresUUID(as_uuid=True),
-        primary_key=True,
-        default=uuid4,
-    )
+    id: Mapped[UUID] = mapped_column(GUID, primary_key=True, default=uuid4)
 
     # Aggregation dimensions
     tenant_id: Mapped[str] = mapped_column(
@@ -222,7 +213,7 @@ class UsageAggregate(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]  
         comment="Subscription-level aggregate (null = tenant-level)",
     )
     customer_id: Mapped[UUID | None] = mapped_column(
-        PostgresUUID(as_uuid=True),
+        GUID,
         nullable=True,
         index=True,
         comment="Customer-level aggregate",

@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import warnings
 from contextlib import suppress
-from typing import List
 
 import pytest
 
@@ -20,7 +19,7 @@ AsyncFixture = pytest_asyncio.fixture if pytest_asyncio else pytest.fixture
 @AsyncFixture
 async def async_cleanup():
     """Track async tasks and ensure they are cancelled after the test."""
-    tasks: List[asyncio.Task] = []
+    tasks: list[asyncio.Task] = []
 
     def track_task(task: asyncio.Task) -> None:
         tasks.append(task)

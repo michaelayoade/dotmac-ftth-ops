@@ -96,7 +96,6 @@ if HAS_FAKEREDIS:
             await client.flushdb()
 
 else:
-
     _LOGGED_FAKEREDIS_WARNING = False
 
     @pytest.fixture

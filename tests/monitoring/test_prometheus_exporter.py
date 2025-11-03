@@ -94,9 +94,7 @@ class TestPrometheusExporter:
 
     def test_export_metrics_traffic(self, mock_metrics):
         """Test exporting traffic metrics."""
-        with patch(
-            "dotmac.platform.monitoring.prometheus_exporter.bandwidth_ipv4_mbps"
-        ) as mock_bw:
+        with patch("dotmac.platform.monitoring.prometheus_exporter.bandwidth_ipv4_mbps") as mock_bw:
             mock_gauge = MagicMock()
             mock_bw.labels.return_value = mock_gauge
 
@@ -212,9 +210,7 @@ class TestPrometheusExporter:
             mock_counter_obj = MagicMock()
             mock_counter.labels.return_value = mock_counter_obj
 
-            PrometheusExporter.record_ip_allocation_failure(
-                "test-tenant", "ipv4", "pool_exhausted"
-            )
+            PrometheusExporter.record_ip_allocation_failure("test-tenant", "ipv4", "pool_exhausted")
 
             mock_counter.labels.assert_called_with(
                 tenant_id="test-tenant", ip_version="ipv4", reason="pool_exhausted"
@@ -294,14 +290,10 @@ class TestPrometheusExporterIntegration:
         """Test that export_metrics sets all metric fields."""
         with (
             patch("dotmac.platform.monitoring.prometheus_exporter.subscriber_total") as m1,
-            patch(
-                "dotmac.platform.monitoring.prometheus_exporter.subscriber_dual_stack"
-            ) as m2,
+            patch("dotmac.platform.monitoring.prometheus_exporter.subscriber_dual_stack") as m2,
             patch("dotmac.platform.monitoring.prometheus_exporter.subscriber_ipv4_only") as m3,
             patch("dotmac.platform.monitoring.prometheus_exporter.subscriber_ipv6_only") as m4,
-            patch(
-                "dotmac.platform.monitoring.prometheus_exporter.dual_stack_percentage"
-            ) as m5,
+            patch("dotmac.platform.monitoring.prometheus_exporter.dual_stack_percentage") as m5,
         ):
             # Setup mock gauges
             for mock_metric in [m1, m2, m3, m4, m5]:

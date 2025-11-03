@@ -1,4 +1,3 @@
-
 """
 Tests for API Versioning System.
 
@@ -12,8 +11,6 @@ from fastapi import APIRouter, FastAPI, Request
 from fastapi.testclient import TestClient
 
 from dotmac.platform.versioning import (
-
-
     APIVersion,
     APIVersionMiddleware,
     VersionConfig,
@@ -23,11 +20,8 @@ from dotmac.platform.versioning import (
     parse_version,
 )
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def version_config():

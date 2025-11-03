@@ -15,14 +15,11 @@ import asyncio
 import functools
 import logging
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, TypeVar, cast
+from typing import Any, AsyncIterator, ParamSpec, TypeVar, cast
 
 import structlog
 from pydantic import BaseModel, ValidationError
@@ -44,6 +41,7 @@ structured_logger = structlog.get_logger(__name__)
 prometheus = PrometheusIntegration()
 
 # Type variable for generic function return types
+P = ParamSpec("P")
 T = TypeVar("T")
 
 
@@ -77,7 +75,7 @@ class RetryConfig(BaseModel):
 class MetricsCollector:
     """Collects performance metrics for workflow operations."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._metrics: dict[str, dict[str, Any]] = {}
 
     def record_execution(
@@ -86,7 +84,7 @@ class MetricsCollector:
         duration: float,
         success: bool,
         error: str | None = None,
-    ):
+    ) -> None:
         """Record an operation execution."""
         if operation not in self._metrics:
             self._metrics[operation] = {
@@ -130,7 +128,7 @@ class MetricsCollector:
             result[op] = self.get_metrics(op)
         return result
 
-    def reset(self, operation: str | None = None):
+    def reset(self, operation: str | None = None) -> None:
         """Reset metrics for an operation or all operations."""
         if operation:
             self._metrics.pop(operation, None)
@@ -146,7 +144,7 @@ class CircuitBreaker:
     and giving them time to recover.
     """
 
-    def __init__(self, name: str, config: CircuitBreakerConfig | None = None):
+    def __init__(self, name: str, config: CircuitBreakerConfig | None = None) -> None:
         self.name = name
         self.config = config or CircuitBreakerConfig()
         self.state = CircuitState.CLOSED
@@ -182,7 +180,7 @@ class CircuitBreaker:
 
         return False
 
-    def record_success(self):
+    def record_success(self) -> None:
         """Record a successful call."""
         if self.state == CircuitState.HALF_OPEN:
             self.success_count += 1
@@ -196,7 +194,7 @@ class CircuitBreaker:
             # Reset failure count on success
             self.failure_count = 0
 
-    def record_failure(self):
+    def record_failure(self) -> None:
         """Record a failed call."""
         self.last_failure_time = datetime.utcnow()
 
@@ -215,7 +213,12 @@ class CircuitBreaker:
                 )
                 self.state = CircuitState.OPEN
 
-    async def call(self, func: Callable[..., T], *args, **kwargs) -> T:
+    async def call(
+        self,
+        func: Callable[..., Awaitable[T]],
+        *args: Any,
+        **kwargs: Any,
+    ) -> T:
         """
         Execute a function with circuit breaker protection.
 
@@ -266,7 +269,7 @@ class WorkflowServiceBase:
         retry_config: RetryConfig | None = None,
         tenant_id: str | None = None,
         user_id: str | None = None,
-    ):
+    ) -> None:
         """
         Initialize workflow service.
 
@@ -290,8 +293,8 @@ class WorkflowServiceBase:
     async def _create_audit_log(
         self,
         action: str,
-        activity_type: str = "api.request",
-        severity: str = "low",
+        activity_type: ActivityType = ActivityType.API_REQUEST,
+        severity: ActivitySeverity = ActivitySeverity.LOW,
         resource_type: str | None = None,
         resource_id: str | None = None,
         details: dict[str, Any] | None = None,
@@ -427,10 +430,10 @@ class WorkflowServiceBase:
 
     async def with_retry(
         self,
-        operation: Callable[..., T],
-        *args,
+        operation: Callable[..., Awaitable[T]],
+        *args: Any,
         operation_name: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> T:
         """
         Execute a database operation with automatic retry on transient failures.
@@ -447,7 +450,7 @@ class WorkflowServiceBase:
             Exception: If all retry attempts fail
         """
         op_name = operation_name or operation.__name__
-        last_exception = None
+        last_exception: Exception | None = None
 
         for attempt in range(1, self.retry_config.max_attempts + 1):
             try:
@@ -520,7 +523,7 @@ class WorkflowServiceBase:
         ) from last_exception
 
     @asynccontextmanager
-    async def transaction(self, operation_name: str = "transaction"):
+    async def transaction(self, operation_name: str = "transaction") -> AsyncIterator[AsyncSession]:
         """
         Context manager for database transactions with automatic rollback on error.
 
@@ -554,7 +557,7 @@ class WorkflowServiceBase:
             await self.db.rollback()
             raise
 
-    def log_request(self, method: str, params: dict[str, Any]):
+    def log_request(self, method: str, params: dict[str, Any]) -> None:
         """
         Log workflow method request.
 
@@ -582,7 +585,7 @@ class WorkflowServiceBase:
         success: bool = True,
         error: str | None = None,
         resource_id: str | None = None,
-    ):
+    ) -> None:
         """
         Log workflow method response and record metrics.
 
@@ -616,7 +619,7 @@ class WorkflowServiceBase:
 
         # Create audit log
         severity = ActivitySeverity.LOW if success else ActivitySeverity.HIGH
-        details = {
+        details: dict[str, Any] = {
             "duration_seconds": duration,
             "success": success,
         }
@@ -680,7 +683,7 @@ class WorkflowServiceBase:
             "tax_id",
         }
 
-        sanitized = {}
+        sanitized: dict[str, Any] = {}
         for key, value in params.items():
             if any(sensitive in key.lower() for sensitive in sensitive_keys):
                 sanitized[key] = "***REDACTED***"
@@ -691,7 +694,11 @@ class WorkflowServiceBase:
 
         return sanitized
 
-    def operation(self, method_name: str | None = None):
+    @classmethod
+    def operation(
+        cls: type["WorkflowServiceBase"],
+        method_name: str | None = None,
+    ) -> Callable[[Callable[P, Awaitable[T]]], Callable[P, Awaitable[T]]]:
         """
         Decorator for workflow operations.
 
@@ -709,21 +716,24 @@ class WorkflowServiceBase:
                 pass
         """
 
-        def decorator(func: Callable[..., T]) -> Callable[..., T]:
+        def decorator(func: Callable[P, Awaitable[T]]) -> Callable[P, Awaitable[T]]:
             op_name = method_name or func.__name__
 
             @functools.wraps(func)
-            async def wrapper(*args, **kwargs) -> T:
+            async def wrapper(*args: P.args, **kwargs: P.kwargs) -> T:
+                if not args:
+                    raise RuntimeError("Operation decorator requires instance method invocation")
+                service = cast("WorkflowServiceBase", args[0])
+
                 # Extract parameters for logging
-                params = {}
-                if args:
-                    # Skip self (first arg)
-                    params["args"] = args[1:] if len(args) > 1 else ()
+                params: dict[str, Any] = {}
+                if len(args) > 1:
+                    params["args"] = args[1:]
                 if kwargs:
                     params["kwargs"] = kwargs
 
                 # Log request
-                self.log_request(op_name, params)
+                service.log_request(op_name, params)
 
                 # Track execution time
                 start_time = time.time()
@@ -745,7 +755,7 @@ class WorkflowServiceBase:
                         )
 
                     # Log success (with monitoring integration)
-                    await self.log_response(
+                    await service.log_response(
                         op_name, result, duration, success=True, resource_id=resource_id
                     )
 
@@ -757,11 +767,13 @@ class WorkflowServiceBase:
 
                     # Log failure (with monitoring integration)
                     error_msg = f"{type(e).__name__}: {str(e)}"
-                    await self.log_response(op_name, None, duration, success=False, error=error_msg)
+                    await service.log_response(
+                        op_name, None, duration, success=False, error=error_msg
+                    )
 
                     raise
 
-            return cast(Callable[..., T], wrapper)
+            return cast(Callable[..., Awaitable[T]], wrapper)
 
         return decorator
 

@@ -253,9 +253,7 @@ class TestDunningCampaignCreateSchema:
             name="Test",
             trigger_after_days=0,
             actions=[
-                DunningActionConfig(
-                    type=DunningActionType.EMAIL, delay_days=0, template="reminder"
-                )
+                DunningActionConfig(type=DunningActionType.EMAIL, delay_days=0, template="reminder")
             ],
         )
         assert campaign.trigger_after_days == 0

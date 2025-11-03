@@ -109,7 +109,9 @@ class ServiceSuspensionRequest(BaseModel):
     auto_resume_at: datetime | None = Field(None, description="Scheduled automatic resumption date")
     send_notification: bool = Field(True, description="Send suspension notification to customer")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    suspension_note: str | None = Field(None, description="Suspension note", alias="suspension_note")
+    suspension_note: str | None = Field(
+        None, description="Suspension note", alias="suspension_note"
+    )
 
 
 class ServiceResumptionRequest(BaseModel):
@@ -149,7 +151,9 @@ class ServiceTerminationRequest(BaseModel):
     return_equipment: bool = Field(True, description="Whether equipment needs to be returned")
     send_notification: bool = Field(True, description="Send termination notification to customer")
     metadata: dict[str, Any] = Field(default_factory=dict, description="Additional metadata")
-    termination_note: str | None = Field(None, description="Termination note", alias="termination_note")
+    termination_note: str | None = Field(
+        None, description="Termination note", alias="termination_note"
+    )
 
 
 class ServiceModificationRequest(BaseModel):

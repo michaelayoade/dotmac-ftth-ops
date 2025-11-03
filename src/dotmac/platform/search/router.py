@@ -84,6 +84,16 @@ class _SearchBackendState:
 _backend_state = _SearchBackendState()
 
 
+def _require_tenant_id(user: UserInfo) -> str:
+    tenant_id = user.tenant_id
+    if tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context is required for search operations.",
+        )
+    return tenant_id
+
+
 def _build_index_name(entity_type: str, tenant_id: str) -> str:
     sanitized_type = entity_type.strip().lower() or "document"
     return f"dotmac_{sanitized_type}_{tenant_id}"
@@ -149,10 +159,11 @@ async def search(
     Searches within the current tenant's data using the configured search backend.
     Uses in-memory search for development; configure Elasticsearch/MeiliSearch for production.
     """
+    tenant_id = _require_tenant_id(current_user)
     logger.info(
         f"search.request user={current_user.user_id} query={q}",
         user_id=current_user.user_id,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         query=q,
         type_filter=type,
     )
@@ -177,7 +188,7 @@ async def search(
         # Determine which indices to search
         if type:
             _backend_state.register_type(type)
-        indices_to_search = list(_backend_state.iter_indices(current_user.tenant_id, type))
+        indices_to_search = list(_backend_state.iter_indices(tenant_id, type))
 
         # Aggregate results from all indices
         all_results: list[SearchResult] = []
@@ -208,7 +219,7 @@ async def search(
 
             for result in response.results:
                 # Convert internal result to API result format
-                entity_type = _extract_entity_type(index_name, current_user.tenant_id)
+                entity_type = _extract_entity_type(index_name, tenant_id)
                 _backend_state.register_type(entity_type)
                 all_results.append(
                     SearchResult(
@@ -267,6 +278,7 @@ async def index_content(
     content: dict[str, Any], current_user: UserInfo = Depends(get_current_user)
 ) -> dict[str, Any]:
     """Index new content for search."""
+    tenant_id = _require_tenant_id(current_user)
     if not isinstance(content, dict):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -277,7 +289,7 @@ async def index_content(
 
     doc_type = str(content.get("type", "document")).strip().lower() or "document"
     doc_id = str(content.get("id") or uuid4())
-    index_name = _build_index_name(doc_type, current_user.tenant_id)
+    index_name = _build_index_name(doc_type, tenant_id)
 
     _backend_state.register_type(doc_type)
 
@@ -304,13 +316,13 @@ async def index_content(
             )
 
     document = dict(content)
-    document["tenant_id"] = current_user.tenant_id
+    document["tenant_id"] = tenant_id
     document.setdefault("type", doc_type)
 
     logger.info(
         "search.index.request",
         user_id=current_user.user_id,
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         index=index_name,
         doc_id=doc_id,
     )
@@ -334,9 +346,10 @@ async def remove_from_index(
     type: str | None = Query(None, description="Optional type hint to speed up deletion"),
 ) -> dict[str, Any]:
     """Remove content from search index."""
+    tenant_id = _require_tenant_id(current_user)
     search_backend = await _backend_state.get_backend()
 
-    indices_to_check = list(_backend_state.iter_indices(current_user.tenant_id, type))
+    indices_to_check = list(_backend_state.iter_indices(tenant_id, type))
     removed_from: list[str] = []
 
     for index_name in indices_to_check:
@@ -358,7 +371,7 @@ async def remove_from_index(
             logger.info(
                 "search.index.remove",
                 user_id=current_user.user_id,
-                tenant_id=current_user.tenant_id,
+                tenant_id=tenant_id,
                 doc_id=content_id,
                 index=index_name,
             )
