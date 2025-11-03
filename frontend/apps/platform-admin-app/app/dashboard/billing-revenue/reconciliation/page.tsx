@@ -21,7 +21,6 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +54,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { platformConfig } from '@/lib/config';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 interface ReconciliationSession {
@@ -213,6 +213,7 @@ const getDiscrepancyColor = (amount: number): string => {
 export default function ReconciliationPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
@@ -252,12 +253,12 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation session created successfully');
+      toast({ title: 'Reconciliation session created successfully' });
       setIsCreateDialogOpen(false);
       resetCreateForm();
     },
     onError: (error: Error) => {
-      toast.error(`Failed to create reconciliation: ${error.message}`);
+      toast({ title: `Failed to create reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -266,10 +267,10 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation completed successfully');
+      toast({ title: 'Reconciliation completed successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to complete reconciliation: ${error.message}`);
+      toast({ title: `Failed to complete reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -278,10 +279,10 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation approved successfully');
+      toast({ title: 'Reconciliation approved successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to approve reconciliation: ${error.message}`);
+      toast({ title: `Failed to approve reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -314,7 +315,7 @@ export default function ReconciliationPage() {
   };
 
   return (
-    <RouteGuard permissions={['billing:write']}>
+    <RouteGuard permission={['billing:write']}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

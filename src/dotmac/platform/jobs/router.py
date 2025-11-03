@@ -70,6 +70,12 @@ async def create_job(
     - `report_generation` - Generate reports
     - `custom` - Custom job type
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required to create a job",
+        )
+
     job = await service.create_job(
         tenant_id=current_user.tenant_id,
         created_by=current_user.user_id,
@@ -104,6 +110,12 @@ async def list_jobs(
     - Use `page` and `page_size` for pagination
     - Response includes `has_more` to indicate if there are more results
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     return await service.list_jobs(
         tenant_id=current_user.tenant_id,
         job_type=job_type,
@@ -126,6 +138,12 @@ async def get_job_statistics(
     """
     Get aggregated job statistics for dashboards.
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     return await service.get_statistics(current_user.tenant_id)
 
 
@@ -145,6 +163,12 @@ async def get_job(
 
     Returns complete job details including progress, errors, and results.
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     job = await service.get_job(job_id, current_user.tenant_id)
     if not job:
         raise HTTPException(
@@ -182,6 +206,12 @@ async def update_job_progress(
     - `error_message` - Set error message if job fails
     - `result` - Set final result data
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     job = await service.update_progress(
         job_id=job_id,
         tenant_id=current_user.tenant_id,
@@ -213,10 +243,16 @@ async def cancel_job(
     stop processing it. Already completed, failed, or cancelled jobs
     cannot be cancelled again.
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     job = await service.cancel_job(
         job_id=job_id,
         tenant_id=current_user.tenant_id,
-        cancelled_by=current_user.user_id,
+        cancelled_by=current_user.user_id or "unknown",
     )
     if not job:
         raise HTTPException(
@@ -227,7 +263,7 @@ async def cancel_job(
         id=job.id,
         status=job.status,
         cancelled_at=job.cancelled_at,
-        cancelled_by=job.cancelled_by,
+        cancelled_by=job.cancelled_by or "unknown",
         message=f"Job {job_id} cancelled successfully",
     )
 
@@ -254,6 +290,12 @@ async def retry_failed_items(
     - Original job must have failed items recorded
     - Original job must be in a terminal state (completed, failed, or cancelled)
     """
+    if current_user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     retry_job = await service.retry_failed_items(
         job_id=job_id,
         tenant_id=current_user.tenant_id,

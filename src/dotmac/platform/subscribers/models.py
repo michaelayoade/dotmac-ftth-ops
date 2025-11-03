@@ -85,8 +85,8 @@ def hash_radius_password(
     elif method == PasswordHashingMethod.BCRYPT:
         # Bcrypt with salt (recommended for strongest security)
         salt = bcrypt.gensalt(rounds=12)
-        hashed = bcrypt.hashpw(password.encode(), salt)
-        return f"bcrypt:{hashed.decode('utf-8')}"
+        hashed_bytes: bytes = bcrypt.hashpw(password.encode(), salt)
+        return f"bcrypt:{hashed_bytes.decode('utf-8')}"
     else:
         # Default to SHA256
         hashed = hashlib.sha256(password.encode()).hexdigest()

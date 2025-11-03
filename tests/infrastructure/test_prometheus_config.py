@@ -18,7 +18,6 @@ from typing import Any
 import pytest
 import yaml
 
-
 pytestmark = pytest.mark.infra
 
 
@@ -116,17 +115,17 @@ class TestPrometheusConfiguration:
             assert "job_name" in job, f"Scrape job missing job_name: {job}"
 
             # Should have static_configs or service discovery
-            has_targets = any([
-                "static_configs" in job,
-                "kubernetes_sd_configs" in job,
-                "consul_sd_configs" in job,
-                "dns_sd_configs" in job,
-                "ec2_sd_configs" in job,
-            ])
-
-            assert has_targets, (
-                f"Scrape job '{job.get('job_name')}' has no target configuration"
+            has_targets = any(
+                [
+                    "static_configs" in job,
+                    "kubernetes_sd_configs" in job,
+                    "consul_sd_configs" in job,
+                    "dns_sd_configs" in job,
+                    "ec2_sd_configs" in job,
+                ]
             )
+
+            assert has_targets, f"Scrape job '{job.get('job_name')}' has no target configuration"
 
     def test_expected_scrape_jobs_exist(self, prometheus_config: dict[str, Any]):
         """Test expected scrape jobs are defined."""
@@ -139,21 +138,11 @@ class TestPrometheusConfiguration:
         }
 
         # Platform jobs (may or may not exist depending on deployment)
-        optional_jobs = {
-            "dotmac-api",
-            "dotmac-platform",
-            "postgres",
-            "redis",
-            "node-exporter",
-            "cadvisor",
-        }
 
         missing_required = expected_jobs - job_names
 
         # At minimum, Prometheus should monitor itself
-        assert not missing_required, (
-            f"Missing required scrape jobs: {missing_required}"
-        )
+        assert not missing_required, f"Missing required scrape jobs: {missing_required}"
 
     def test_static_targets_not_empty(self, prometheus_config: dict[str, Any]):
         """Test static_configs have non-empty targets."""
@@ -167,9 +156,7 @@ class TestPrometheusConfiguration:
                 targets = config.get("targets", [])
 
                 # Targets should not be empty list
-                assert len(targets) > 0, (
-                    f"Job '{job_name}' has empty targets in static_configs"
-                )
+                assert len(targets) > 0, f"Job '{job_name}' has empty targets in static_configs"
 
                 # Each target should be a string with host:port format
                 for target in targets:
@@ -194,6 +181,7 @@ class TestPrometheusConfiguration:
             if scrape_interval:
                 # Parse interval (e.g., "15s", "1m", "5m")
                 import re
+
                 match = re.match(r"(\d+)([smh])", scrape_interval)
 
                 assert match, (
@@ -214,21 +202,19 @@ class TestPrometheusConfiguration:
 
     def test_global_section_exists(self, prometheus_config: dict[str, Any]):
         """Test Prometheus has global configuration section."""
-        assert "global" in prometheus_config, (
-            "Prometheus config should have global section"
-        )
+        assert "global" in prometheus_config, "Prometheus config should have global section"
 
         global_config = prometheus_config["global"]
 
         # Should have scrape_interval or evaluation_interval
-        has_intervals = any([
-            "scrape_interval" in global_config,
-            "evaluation_interval" in global_config,
-        ])
-
-        assert has_intervals, (
-            "Global config should have scrape_interval or evaluation_interval"
+        has_intervals = any(
+            [
+                "scrape_interval" in global_config,
+                "evaluation_interval" in global_config,
+            ]
         )
+
+        assert has_intervals, "Global config should have scrape_interval or evaluation_interval"
 
 
 class TestPrometheusRulesConfiguration:
@@ -269,7 +255,6 @@ class TestPrometheusRulesConfiguration:
                 continue
 
             # Resolve glob pattern
-            import glob
 
             # Try multiple base paths
             possible_bases = [
@@ -289,9 +274,11 @@ class TestPrometheusRulesConfiguration:
             if not found and not rule_file_pattern.startswith("/"):
                 # Not critical - rules might be deployed separately
                 import warnings
+
                 warnings.warn(
                     f"Rule file pattern '{rule_file_pattern}' not found "
-                    f"(might be deployed separately in production)"
+                    f"(might be deployed separately in production)",
+                    stacklevel=2,
                 )
 
 
@@ -334,23 +321,21 @@ class TestPrometheusAlertmanagerConfig:
 
         for alertmanager in alertmanagers:
             # Should have static_configs or service discovery
-            has_targets = any([
-                "static_configs" in alertmanager,
-                "kubernetes_sd_configs" in alertmanager,
-                "consul_sd_configs" in alertmanager,
-            ])
-
-            assert has_targets, (
-                "Alertmanager config should have target configuration"
+            has_targets = any(
+                [
+                    "static_configs" in alertmanager,
+                    "kubernetes_sd_configs" in alertmanager,
+                    "consul_sd_configs" in alertmanager,
+                ]
             )
+
+            assert has_targets, "Alertmanager config should have target configuration"
 
             # Check static configs if present
             static_configs = alertmanager.get("static_configs", [])
             for config in static_configs:
                 targets = config.get("targets", [])
-                assert len(targets) > 0, (
-                    "Alertmanager static_configs should have targets"
-                )
+                assert len(targets) > 0, "Alertmanager static_configs should have targets"
 
 
 class TestPrometheusMetricsEndpoint:
@@ -380,10 +365,8 @@ class TestPrometheusMetricsEndpoint:
             assert not text.startswith("{"), "Metrics should not be JSON"
 
             # Should have HELP and TYPE comments or metric lines
-            has_metrics = any([
-                line.startswith("#") or " " in line
-                for line in text.split("\n")
-                if line.strip()
-            ])
+            has_metrics = any(
+                line.startswith("#") or " " in line for line in text.split("\n") if line.strip()
+            )
 
             assert has_metrics, "Metrics response should contain metric data"

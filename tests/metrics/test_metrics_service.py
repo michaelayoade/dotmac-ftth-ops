@@ -1,5 +1,5 @@
 import asyncio
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -8,8 +8,6 @@ import pytest
 from dotmac.platform.billing.core.entities import InvoiceEntity
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.metrics.schemas import (
-
-
     DashboardMetrics,
     NetworkMetrics,
     RevenueMetrics,
@@ -17,7 +15,6 @@ from dotmac.platform.metrics.schemas import (
     SupportMetrics,
 )
 from dotmac.platform.metrics.service import MetricsService
-
 from dotmac.platform.radius.models import NAS, RadAcct, RadiusBandwidthProfile
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 from dotmac.platform.tenant.models import Tenant
@@ -28,11 +25,8 @@ from dotmac.platform.ticketing.models import (
     TicketStatus,
 )
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class DummyRedis:
     def __init__(self):
@@ -186,7 +180,7 @@ async def test_get_dashboard_metrics_uses_cache(monkeypatch):
         revenue_metrics=RevenueMetrics(
             mrr=100.0, arr=1200.0, outstanding_ar=0.0, overdue_30_days=0.0
         ),
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         cache_ttl_seconds=300,
     )
     cache_key = "metrics:dashboard:tenant-789"
@@ -233,7 +227,7 @@ async def test_get_subscriber_metrics_and_kpis_real_data(async_db_session):
         upload_rate_kbps=20_000,
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     subscribers = [
         Subscriber(
             tenant_id=tenant_id,
@@ -339,7 +333,7 @@ async def test_get_network_metrics_real_data(async_db_session):
         secret="shared",
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     subscribers = [
         Subscriber(
             tenant_id=tenant_id,
@@ -400,7 +394,7 @@ async def test_get_support_metrics_real_data(async_db_session):
     tenant_id = "metrics-tenant"
     service = MetricsService(session=async_db_session, redis_client=None)
 
-    base_time = datetime.now(timezone.utc)
+    base_time = datetime.now(UTC)
     tickets = [
         Ticket(
             tenant_id=tenant_id,
@@ -482,10 +476,10 @@ async def test_get_revenue_metrics_real_data(async_db_session):
         username="billing-active",
         password="secret",
         status=SubscriberStatus.ACTIVE,
-        activation_date=datetime.now(timezone.utc) - timedelta(days=20),
+        activation_date=datetime.now(UTC) - timedelta(days=20),
     )
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     invoices = [
         InvoiceEntity(
             tenant_id=tenant_id,

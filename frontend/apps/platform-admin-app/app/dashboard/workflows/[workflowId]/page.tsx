@@ -85,9 +85,9 @@ function WorkflowDetailsPageContent() {
       return data.executions || [];
     },
     enabled: !!workflowId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh if there are running executions
-      if (data && data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
+      if (query?.state?.data && query.state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
         return 5000; // Refresh every 5 seconds
       }
       return false;
@@ -435,7 +435,7 @@ function WorkflowDetailsPageContent() {
 
 export default function WorkflowDetailsPage() {
   return (
-    <RouteGuard requiredPermission="workflows:read">
+    <RouteGuard permission="workflows:read">
       <WorkflowDetailsPageContent />
     </RouteGuard>
   );

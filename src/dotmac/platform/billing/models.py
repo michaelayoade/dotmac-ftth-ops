@@ -4,10 +4,8 @@ Base billing models and database tables.
 Provides foundation for all billing system components.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 from uuid import uuid4
 
@@ -78,24 +76,26 @@ class BillingProductTable(BillingSQLModel):
     product_id: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
 
     # Product identification
-    sku = Column(String(100), nullable=False)
-    name = Column(String(255), nullable=False)
-    description = Column(Text, nullable=True)
+    sku: Mapped[str] = mapped_column(String(100), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Categorization
-    category = Column(String(100), nullable=False)
+    category: Mapped[str] = mapped_column(String(100), nullable=False)
 
     # Product type and pricing
-    product_type = Column(String(20), nullable=False)  # one_time, subscription, usage_based, hybrid
-    base_price = Column(Numeric(15, 2), nullable=False)
-    currency = Column(String(3), nullable=False, default="USD")
+    product_type: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # one_time, subscription, usage_based, hybrid
+    base_price: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
+    currency: Mapped[str] = mapped_column(String(3), nullable=False, default="USD")
 
     # Tax classification
-    tax_class = Column(String(20), nullable=False, default="standard")
+    tax_class: Mapped[str] = mapped_column(String(20), nullable=False, default="standard")
 
     # Usage-based configuration
-    usage_type = Column(String(50), nullable=True)
-    usage_unit_name = Column(String(50), nullable=True)
+    usage_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    usage_unit_name: Mapped[str | None] = mapped_column(String(50), nullable=True)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -253,31 +253,33 @@ class BillingPricingRuleTable(BillingSQLModel):
     __tablename__ = "billing_pricing_rules"
 
     # Primary key
-    rule_id = Column(String(50), primary_key=True)
+    rule_id: Mapped[str] = mapped_column(String(50), primary_key=True)
 
     # Rule details
-    name = Column(String(255), nullable=False)
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Rule targeting (JSON arrays)
-    applies_to_product_ids = Column(JSON, nullable=False, default=list)
-    applies_to_categories = Column(JSON, nullable=False, default=list)
-    applies_to_all = Column(Boolean, nullable=False, default=False)
+    applies_to_product_ids: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    applies_to_categories: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
+    applies_to_all: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
 
     # Simple conditions
-    min_quantity = Column(Numeric(10, 0), nullable=True)
-    customer_segments = Column(JSON, nullable=False, default=list)
+    min_quantity: Mapped[Decimal | None] = mapped_column(Numeric(10, 0), nullable=True)
+    customer_segments: Mapped[list[str]] = mapped_column(JSON, nullable=False, default=list)
 
     # Discount configuration
-    discount_type = Column(String(20), nullable=False)  # percentage, fixed_amount, fixed_price
-    discount_value = Column(Numeric(15, 2), nullable=False)
+    discount_type: Mapped[str] = mapped_column(
+        String(20), nullable=False
+    )  # percentage, fixed_amount, fixed_price
+    discount_value: Mapped[Decimal] = mapped_column(Numeric(15, 2), nullable=False)
 
     # Time constraints
-    starts_at = Column(DateTime(timezone=True), nullable=True)
-    ends_at = Column(DateTime(timezone=True), nullable=True)
+    starts_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Usage limits
-    max_uses = Column(Numeric(10, 0), nullable=True)
-    current_uses = Column(Numeric(10, 0), nullable=False, default=0)
+    max_uses: Mapped[Decimal | None] = mapped_column(Numeric(10, 0), nullable=True)
+    current_uses: Mapped[Decimal] = mapped_column(Numeric(10, 0), nullable=False, default=0)
 
     # Status
     is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
@@ -411,15 +413,17 @@ class BillingSettingsTable(BillingSQLModel):
 
     __tablename__ = "billing_settings"
 
-    settings_id = Column(String(50), primary_key=True, default=lambda: str(uuid4()))
-    company_info = Column(JSON, nullable=False, default=dict)
-    tax_settings = Column(JSON, nullable=False, default=dict)
-    payment_settings = Column(JSON, nullable=False, default=dict)
-    invoice_settings = Column(JSON, nullable=False, default=dict)
-    notification_settings = Column(JSON, nullable=False, default=dict)
-    features_enabled = Column(JSON, nullable=False, default=dict)
-    custom_settings = Column(JSON, nullable=False, default=dict)
-    api_settings = Column(JSON, nullable=False, default=dict)
+    settings_id: Mapped[str] = mapped_column(
+        String(50), primary_key=True, default=lambda: str(uuid4())
+    )
+    company_info: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    tax_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    payment_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    invoice_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    notification_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    features_enabled: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    custom_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    api_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
     __table_args__ = (
         UniqueConstraint("tenant_id", name="uq_billing_settings_tenant"),

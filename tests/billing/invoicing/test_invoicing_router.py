@@ -12,9 +12,10 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-
+from dotmac.platform.billing.core.exceptions import InvoiceNotFoundError
 
 pytestmark = pytest.mark.integration
+
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
@@ -201,14 +202,26 @@ class TestInvoiceLifecycle:
         assert data["invoice_id"] == "inv-123"
         assert data["status"] == "open"
 
-    @pytest.mark.skip(reason="Custom exception handling - service layer dependency")
     @pytest.mark.asyncio
     async def test_finalize_invoice_not_found(
         self, async_client: AsyncClient, mock_invoice_service
     ):
         """Test finalize non-existent invoice."""
-        # Note: Skipped due to custom exception initialization in service
-        pass
+        # Arrange
+        invoice_id = "inv-missing"
+        mock_invoice_service.finalize_invoice.side_effect = InvoiceNotFoundError("Invoice not found")
+
+        # Act
+        response = await async_client.post(
+            f"/api/v1/billing/invoices/{invoice_id}/finalize",
+            json={"send_email": False},
+            headers={"X-Tenant-ID": "tenant-1"},
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json()["detail"] == "Invoice not found"
+        mock_invoice_service.finalize_invoice.assert_awaited_once_with("tenant-1", invoice_id)
 
     @pytest.mark.asyncio
     async def test_void_invoice_success(
@@ -301,14 +314,28 @@ class TestInvoiceCredits:
         assert data["total_credits_applied"] == 2000
         assert data["remaining_balance"] == 8800
 
-    @pytest.mark.skip(reason="Custom exception handling - service layer dependency")
     @pytest.mark.asyncio
     async def test_apply_credit_invoice_not_found(
         self, async_client: AsyncClient, mock_invoice_service
     ):
         """Test applying credit to non-existent invoice."""
-        # Note: Skipped due to custom exception initialization in service
-        pass
+        # Arrange
+        invoice_id = "inv-missing"
+        mock_invoice_service.apply_credit_to_invoice.side_effect = InvoiceNotFoundError("Invoice not found")
+
+        # Act
+        response = await async_client.post(
+            f"/api/v1/billing/invoices/{invoice_id}/apply-credit",
+            json={"credit_amount": 1000, "credit_application_id": "cred-001"},
+            headers={"X-Tenant-ID": "tenant-1"},
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.json()["detail"] == "Invoice not found"
+        mock_invoice_service.apply_credit_to_invoice.assert_awaited_once_with(
+            "tenant-1", invoice_id, 1000, "cred-001"
+        )
 
 
 class TestInvoiceUtilities:

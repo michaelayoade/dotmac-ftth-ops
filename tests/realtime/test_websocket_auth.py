@@ -1,4 +1,3 @@
-
 """
 Tests for WebSocket Authentication and Tenant Isolation.
 
@@ -17,8 +16,6 @@ from fastapi import WebSocket, status
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.realtime.auth import (
-
-
     AuthenticatedWebSocketConnection,
     WebSocketAuthError,
     accept_websocket_with_auth,
@@ -28,11 +25,8 @@ from dotmac.platform.realtime.auth import (
     validate_tenant_isolation,
 )
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestTokenExtraction:
     """Test token extraction from various sources."""

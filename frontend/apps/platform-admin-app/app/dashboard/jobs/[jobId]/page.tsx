@@ -70,9 +70,9 @@ function JobDetailsPageContent() {
       return response.json();
     },
     enabled: !!jobId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh while job is running or pending
-      if (data && (data.status === "running" || data.status === "pending")) {
+      if (query?.state?.data && (query.state.data.status === "running" || query.state.data.status === "pending")) {
         return 3000; // Refresh every 3 seconds
       }
       return false;
@@ -460,7 +460,7 @@ function JobDetailsPageContent() {
 
 export default function JobDetailsPage() {
   return (
-    <RouteGuard requiredPermission="jobs:read">
+    <RouteGuard permission="jobs:read">
       <JobDetailsPageContent />
     </RouteGuard>
   );

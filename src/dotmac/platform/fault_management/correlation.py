@@ -53,33 +53,36 @@ class CorrelationEngine:
             time_window = int(conditions["time_window_minutes"]) * 60
 
         # Already normalized structure
-        if "parent" in conditions or "child" in conditions:
-            parent = conditions.get("parent") or {}
-            child = conditions.get("child") or {}
-            return {"parent": parent, "child": child}, time_window
+        parent_filters: dict[str, Any]
+        child_filters: dict[str, Any]
 
-        parent: dict[str, Any] = {}
-        child: dict[str, Any] = {}
+        if "parent" in conditions or "child" in conditions:
+            parent_filters = conditions.get("parent") or {}
+            child_filters = conditions.get("child") or {}
+            return {"parent": parent_filters, "child": child_filters}, time_window
+
+        parent_filters = {}
+        child_filters = {}
 
         if parent_alarm_type := conditions.get("parent_alarm_type"):
-            parent["alarm_type"] = parent_alarm_type
+            parent_filters["alarm_type"] = parent_alarm_type
         if parent_resource_type := conditions.get("parent_resource_type"):
-            parent["resource_type"] = parent_resource_type
+            parent_filters["resource_type"] = parent_resource_type
         if parent_resource_id := conditions.get("parent_resource_id"):
-            parent["resource_id"] = parent_resource_id
+            parent_filters["resource_id"] = parent_resource_id
         if parent_pattern := conditions.get("parent_pattern"):
-            parent["title"] = re.compile(parent_pattern, re.IGNORECASE)
+            parent_filters["title"] = re.compile(parent_pattern, re.IGNORECASE)
 
         if child_alarm_type := conditions.get("child_alarm_type"):
-            child["alarm_type"] = child_alarm_type
+            child_filters["alarm_type"] = child_alarm_type
         if child_resource_type := conditions.get("child_resource_type"):
-            child["resource_type"] = child_resource_type
+            child_filters["resource_type"] = child_resource_type
         if child_resource_id := conditions.get("child_resource_id"):
-            child["resource_id"] = child_resource_id
+            child_filters["resource_id"] = child_resource_id
         if child_pattern := conditions.get("child_pattern"):
-            child["title"] = re.compile(child_pattern, re.IGNORECASE)
+            child_filters["title"] = re.compile(child_pattern, re.IGNORECASE)
 
-        return {"parent": parent, "child": child}, time_window
+        return {"parent": parent_filters, "child": child_filters}, time_window
 
     def _matches_fields(self, alarm: Alarm, criteria: dict[str, Any]) -> bool:
         """Check whether an alarm matches the provided criteria."""
@@ -563,8 +566,8 @@ class CorrelationEngine:
 
         # Reset correlation
         for alarm in alarms:
-            alarm.correlation_id = None
-            alarm.parent_alarm_id = None
+            alarm.correlation_id = None  # type: ignore[assignment]
+            alarm.parent_alarm_id = None  # type: ignore[assignment]
             alarm.is_root_cause = False
             alarm.correlation_action = CorrelationAction.NONE
 

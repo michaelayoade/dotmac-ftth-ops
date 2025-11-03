@@ -1,4 +1,3 @@
-
 """
 Tests for Licensing Router
 
@@ -17,11 +16,6 @@ from fastapi import FastAPI, status
 from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.version import get_version
-
-
-
-
-
 
 pytestmark = pytest.mark.integration
 

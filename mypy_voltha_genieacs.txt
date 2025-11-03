@@ -1,0 +1,33 @@
+src/dotmac/platform/voltha/service.py: note: In member "discover_onus" of class "VOLTHAService":
+src/dotmac/platform/voltha/service.py:378:41: error: Value of type "object" is
+not indexable  [index]
+                                vendor_id = serial[:4] if len(serial) >= 4...
+                                            ^~~~~~~~~~
+src/dotmac/platform/voltha/service.py:378:59: error: Argument 1 to "len" has
+incompatible type "object"; expected "Sized"  [arg-type]
+    ...                   vendor_id = serial[:4] if len(serial) >= 4 else Non...
+                                                        ^~~~~~
+src/dotmac/platform/voltha/service.py:379:47: error: Value of type "object" is
+not indexable  [index]
+                                vendor_specific = serial[4:] if len(serial...
+                                                  ^~~~~~~~~~
+src/dotmac/platform/voltha/service.py:379:65: error: Argument 1 to "len" has
+incompatible type "object"; expected "Sized"  [arg-type]
+    ...             vendor_specific = serial[4:] if len(serial) > 4 else None
+                                                        ^~~~~~
+src/dotmac/platform/voltha/service.py:388:44: error: "object" has no attribute
+"get"  [attr-defined]
+                                        onu_id=device.get("proxy_address",...
+                                               ^~~~~~~~~~~~~~~~~~~~~~~~~~~...
+src/dotmac/platform/voltha/service.py: note: In member "provision_onu" of class "VOLTHAService":
+src/dotmac/platform/voltha/service.py:460:45: error: Argument 1 to
+"enable_device" of "VOLTHAClient" has incompatible type "Any | None"; expected
+"str"  [arg-type]
+                await self.client.enable_device(device_id)
+                                                ^~~~~~~~~
+src/dotmac/platform/voltha/service.py:468:35: error: Argument "device_id" to
+"_configure_onu_service" of "VOLTHAService" has incompatible type "Any | None";
+expected "str"  [arg-type]
+                            device_id=device_id,
+                                      ^~~~~~~~~
+Found 7 errors in 1 file (checked 2 source files)

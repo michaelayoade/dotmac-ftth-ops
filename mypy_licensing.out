@@ -1,0 +1,110 @@
+src/dotmac/platform/licensing/service.py: note: In member "transfer_license" of class "LicensingService":
+src/dotmac/platform/licensing/service.py:288:35: error: Incompatible types in
+assignment (expression has type "str | None", variable has type
+"SQLCoreOperations[UUID | None] | UUID | None")  [assignment]
+            license_obj.customer_id = data.new_customer_id
+                                      ^~~~~~~~~~~~~~~~~~~~
+src/dotmac/platform/licensing/service.py: note: In member "create_template" of class "LicensingService":
+src/dotmac/platform/licensing/service.py:679:20: error: Incompatible return
+value type (got "SimpleNamespace", expected "LicenseTemplate")  [return-value]
+                return template_stub
+                       ^~~~~~~~~~~~~
+src/dotmac/platform/licensing/service.py: note: In member "create_order" of class "LicensingService":
+src/dotmac/platform/licensing/service.py:809:20: error: Incompatible return
+value type (got "SimpleNamespace", expected "LicenseOrder")  [return-value]
+                return order_stub
+                       ^~~~~~~~~~
+src/dotmac/platform/licensing/enforcement.py: note: In function "require_module":
+src/dotmac/platform/licensing/enforcement.py:43:9: error: Function is missing a
+type annotation for one or more arguments  [no-untyped-def]
+            async def wrapper(*args, **kwargs) -> Any:
+            ^
+src/dotmac/platform/licensing/enforcement.py: note: In function "check_feature_access":
+src/dotmac/platform/licensing/enforcement.py:109:9: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+            async def wrapper(*args, **kwargs) -> Any:
+            ^
+src/dotmac/platform/licensing/enforcement.py: note: In function "enforce_quota":
+src/dotmac/platform/licensing/enforcement.py:167:9: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+            async def wrapper(*args, **kwargs) -> Any:
+            ^
+src/dotmac/platform/licensing/enforcement.py: note: In function "check_quota":
+src/dotmac/platform/licensing/enforcement.py:245:9: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+            async def wrapper(*args, **kwargs) -> Any:
+            ^
+src/dotmac/platform/licensing/enforcement.py: note: In member "__init__" of class "FeatureEntitlementMiddleware":
+src/dotmac/platform/licensing/enforcement.py:304:5: error: The return type of
+"__init__" must be None  [misc]
+        def __init__(self, app, route_module_map: dict[str, tuple[str, str...
+        ^
+src/dotmac/platform/licensing/enforcement.py:304:5: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+        def __init__(self, app, route_module_map: dict[str, tuple[str, str...
+        ^
+src/dotmac/platform/licensing/enforcement.py: note: In member "__call__" of class "FeatureEntitlementMiddleware":
+src/dotmac/platform/licensing/enforcement.py:315:5: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+        async def __call__(self, request: Request, call_next) -> Any:
+        ^
+src/dotmac/platform/licensing/enforcement.py: note: In function "require_module_dependency":
+src/dotmac/platform/licensing/enforcement.py:364:1: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+    async def require_module_dependency(
+    ^
+src/dotmac/platform/licensing/enforcement.py: note: In function "check_quota_dependency":
+src/dotmac/platform/licensing/enforcement.py:416:1: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+    async def check_quota_dependency(
+    ^
+src/dotmac/platform/licensing/enforcement.py:420:24: error: Incompatible
+default for argument "db" (default has type "None", argument has type
+"AsyncSession")  [assignment]
+        db: AsyncSession = None,
+                           ^~~~
+src/dotmac/platform/licensing/enforcement.py:420:24: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+src/dotmac/platform/licensing/enforcement.py:420:24: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+src/dotmac/platform/licensing/enforcement.py: note: In member "__init__" of class "QuotaContext":
+src/dotmac/platform/licensing/enforcement.py:494:5: error: The return type of
+"__init__" must be None  [misc]
+        def __init__(
+        ^
+src/dotmac/platform/licensing/enforcement.py:500:26: error: Incompatible
+default for argument "metadata" (default has type "None", argument has type
+"dict[Any, Any]")  [assignment]
+            metadata: dict = None,
+                             ^~~~
+src/dotmac/platform/licensing/enforcement.py:500:26: note: PEP 484 prohibits implicit Optional. Accordingly, mypy has changed its default to no_implicit_optional=True
+src/dotmac/platform/licensing/enforcement.py:500:26: note: Use https://github.com/hauntsaninja/no_implicit_optional to automatically upgrade your codebase
+src/dotmac/platform/licensing/enforcement.py: note: In member "__aexit__" of class "QuotaContext":
+src/dotmac/platform/licensing/enforcement.py:529:5: error: Function is missing
+a type annotation for one or more arguments  [no-untyped-def]
+        async def __aexit__(self, exc_type, exc_val, exc_tb) -> Any:
+        ^
+src/dotmac/platform/licensing/workflow_service.py: note: In member "__init__" of class "LicenseService":
+src/dotmac/platform/licensing/workflow_service.py:44:5: error: The return type
+of "__init__" must be None  [misc]
+        def __init__(self, db: AsyncSession) -> Any:
+        ^
+src/dotmac/platform/licensing/router_framework.py: note: In function "create_feature_module":
+src/dotmac/platform/licensing/router_framework.py:118:19: error: Unexpected
+keyword argument "permissions" for "add_module_capability" of
+"LicensingFrameworkService"  [call-arg]
+                await service.add_module_capability(
+                      ^
+src/dotmac/platform/licensing/service_framework.py:109:5: note: "add_module_capability" of "LicensingFrameworkService" defined here
+src/dotmac/platform/licensing/router_framework.py: note: In function "add_module_capability":
+src/dotmac/platform/licensing/router_framework.py:239:24: error: Unexpected
+keyword argument "permissions" for "add_module_capability" of
+"LicensingFrameworkService"  [call-arg]
+        capability = await service.add_module_capability(
+                           ^
+src/dotmac/platform/licensing/router_framework.py: note: In function "create_quota_definition":
+src/dotmac/platform/licensing/router_framework.py:271:19: error: Unexpected
+keyword argument "config" for "create_quota_definition" of
+"LicensingFrameworkService"  [call-arg]
+        quota = await service.create_quota_definition(
+                      ^
+src/dotmac/platform/licensing/service_framework.py:185:5: note: "create_quota_definition" of "LicensingFrameworkService" defined here
+Found 20 errors in 4 files (checked 12 source files)

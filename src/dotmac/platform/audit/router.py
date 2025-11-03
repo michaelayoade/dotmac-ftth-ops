@@ -2,21 +2,19 @@
 FastAPI router for audit and activity endpoints.
 """
 
+from collections.abc import Callable
 from datetime import timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
 from typing import Any
 from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..auth.core import UserInfo, get_current_user, get_current_user_optional
 from ..auth.platform_admin import is_platform_admin
 from ..auth.rbac_dependencies import require_security_audit_read
-from ..db import get_async_session
+from ..db import async_session_maker, get_async_session
 from ..tenant import get_current_tenant_id
 from .models import (
     ActivitySeverity,
@@ -31,6 +29,9 @@ from .models import (
 from .service import AuditService, log_api_activity
 
 logger = structlog.get_logger(__name__)
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = timezone.utc
 
 # Sentinel tenant ID used when platform administrators submit frontend logs without
 # specifying a target tenant. This keeps the logs queryable via the existing API.
@@ -144,7 +145,7 @@ def _register_dual_route(
     *,
     methods: list[str],
     **kwargs: Any,
-):
+) -> Callable[[Any], Any]:
     """
     Register the same endpoint under both `/audit/...` and `/...`.
 
@@ -591,90 +592,101 @@ async def create_frontend_logs(
             FrontendLogLevel.DEBUG: ActivitySeverity.LOW,
         }
 
-        service = AuditService(session)
         logs_stored = 0
         ingested_tenants: set[str] = set()
 
-        # Process each log entry
-        for log_entry in logs_request.logs:
-            try:
-                # Extract client metadata
-                user_agent = log_entry.metadata.get("userAgent")
-                client_url = log_entry.metadata.get("url")
-                timestamp_str = log_entry.metadata.get("timestamp")
+        bind = getattr(session, "bind", None)
+        engine = getattr(bind, "engine", None)
+        writer_factory = (
+            async_sessionmaker(bind=engine, expire_on_commit=False)
+            if engine is not None
+            else async_session_maker
+        )
 
-                # Determine tenant_id (handle anonymous users and platform admins)
-                resolved_tenant_id = None
+        # Use dedicated session to ensure commits persist outside request rollback scope
+        async with writer_factory() as write_session:
+            service = AuditService(write_session)
 
-                if current_user:
-                    try:
-                        resolved_tenant_id = get_current_tenant_id()
-                    except Exception:
-                        # If tenant resolution fails, use user's tenant_id
-                        resolved_tenant_id = (
-                            current_user.tenant_id if hasattr(current_user, "tenant_id") else None
-                        )
+            # Process each log entry
+            for log_entry in logs_request.logs:
+                try:
+                    # Extract client metadata
+                    user_agent = log_entry.metadata.get("userAgent")
+                    client_url = log_entry.metadata.get("url")
+                    timestamp_str = log_entry.metadata.get("timestamp")
 
-                    # For platform admins without tenant context, prefer explicit header,
-                    # otherwise fall back to sentinel so logs remain queryable.
-                    if not resolved_tenant_id and is_platform_admin(current_user):
-                        header_tenant = request.headers.get("X-Target-Tenant-ID")
-                        if header_tenant:
-                            logger.debug(
-                                "Using X-Target-Tenant-ID for platform admin frontend log",
-                                tenant_id=header_tenant,
+                    # Determine tenant_id (handle anonymous users and platform admins)
+                    resolved_tenant_id = None
+
+                    if current_user:
+                        try:
+                            resolved_tenant_id = get_current_tenant_id()
+                        except Exception:
+                            # If tenant resolution fails, use user's tenant_id
+                            resolved_tenant_id = (
+                                current_user.tenant_id if hasattr(current_user, "tenant_id") else None
                             )
-                            resolved_tenant_id = header_tenant
 
-                # Handle users without tenant context
-                if not resolved_tenant_id:
-                    if current_user and is_platform_admin(current_user):
-                        # For platform admins, use sentinel value to preserve logs
-                        resolved_tenant_id = PLATFORM_ADMIN_TENANT_ID
-                        logger.info(
-                            "Storing platform admin frontend log without tenant context",
-                            user_id=current_user.user_id,
-                            message=log_entry.message[:50],
-                        )
-                    else:
-                        # For anonymous users, use anonymous tenant to allow error tracking
-                        resolved_tenant_id = ANONYMOUS_TENANT_ID
-                        logger.debug(
-                            "Storing anonymous frontend log with default tenant",
-                            message=log_entry.message[:50],
-                            authenticated=current_user is not None,
-                        )
+                        # For platform admins without tenant context, prefer explicit header,
+                        # otherwise fall back to sentinel so logs remain queryable.
+                        if not resolved_tenant_id and is_platform_admin(current_user):
+                            header_tenant = request.headers.get("X-Target-Tenant-ID")
+                            if header_tenant:
+                                logger.debug(
+                                    "Using X-Target-Tenant-ID for platform admin frontend log",
+                                    tenant_id=header_tenant,
+                                )
+                                resolved_tenant_id = header_tenant
 
-                # Create audit activity
-                await service.log_activity(
-                    activity_type=ActivityType.FRONTEND_LOG,
-                    action=f"frontend.{log_entry.level.lower()}",
-                    description=log_entry.message,
-                    severity=severity_map.get(log_entry.level, ActivitySeverity.LOW),
-                    details={
-                        "service": log_entry.service,
-                        "level": log_entry.level,
-                        "url": client_url,
-                        "timestamp": timestamp_str,
-                        **log_entry.metadata,  # Include all metadata
-                    },
-                    user_id=current_user.user_id if current_user else None,
-                    tenant_id=resolved_tenant_id,
-                    ip_address=request.client.host if request.client else None,
-                    user_agent=user_agent,
-                )
-                if resolved_tenant_id:
-                    ingested_tenants.add(resolved_tenant_id)
-                logs_stored += 1
+                    # Handle users without tenant context
+                    if not resolved_tenant_id:
+                        if current_user and is_platform_admin(current_user):
+                            # For platform admins, use sentinel value to preserve logs
+                            resolved_tenant_id = PLATFORM_ADMIN_TENANT_ID
+                            logger.info(
+                                "Storing platform admin frontend log without tenant context",
+                                user_id=current_user.user_id,
+                                message=log_entry.message[:50],
+                            )
+                        else:
+                            # For anonymous users, use anonymous tenant to allow error tracking
+                            resolved_tenant_id = ANONYMOUS_TENANT_ID
+                            logger.debug(
+                                "Storing anonymous frontend log with default tenant",
+                                message=log_entry.message[:50],
+                                authenticated=current_user is not None,
+                            )
 
-            except Exception as log_error:
-                # Log individual entry failures but continue processing
-                logger.warning(
-                    "Failed to store individual frontend log entry",
-                    error=str(log_error),
-                    log_level=log_entry.level,
-                    log_message=log_entry.message[:100],  # Truncate for logging
-                )
+                    # Create audit activity
+                    await service.log_activity(
+                        activity_type=ActivityType.FRONTEND_LOG,
+                        action=f"frontend.{log_entry.level.lower()}",
+                        description=log_entry.message,
+                        severity=severity_map.get(log_entry.level, ActivitySeverity.LOW),
+                        details={
+                            "service": log_entry.service,
+                            "level": log_entry.level,
+                            "url": client_url,
+                            "timestamp": timestamp_str,
+                            **log_entry.metadata,  # Include all metadata
+                        },
+                        user_id=current_user.user_id if current_user else None,
+                        tenant_id=resolved_tenant_id,
+                        ip_address=request.client.host if request.client else None,
+                        user_agent=user_agent,
+                    )
+                    if resolved_tenant_id:
+                        ingested_tenants.add(resolved_tenant_id)
+                    logs_stored += 1
+
+                except Exception as log_error:
+                    # Log individual entry failures but continue processing
+                    logger.warning(
+                        "Failed to store individual frontend log entry",
+                        error=str(log_error),
+                        log_level=log_entry.level,
+                        log_message=log_entry.message[:100],  # Truncate for logging
+                    )
 
         # Log the batch ingestion
         logger.info(

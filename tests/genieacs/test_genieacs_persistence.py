@@ -2,7 +2,7 @@
 Tests for GenieACS durable job storage and replay behaviour.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -20,7 +20,7 @@ from dotmac.platform.genieacs.tasks import (
 )
 from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
-UTC = timezone.utc
+UTC = UTC
 
 
 class StubGenieACSClient:

@@ -108,10 +108,10 @@ def background_job(
                     async for session in get_async_session():
                         from dotmac.platform.jobs.models import Job
 
-                        job = await session.get(Job, job_id)
-                        if job:
-                            job.status = JobStatus.RUNNING.value
-                            job.started_at = datetime.now(UTC)
+                        job_record = cast(Job | None, await session.get(Job, job_id))
+                        if job_record:
+                            job_record.status = JobStatus.RUNNING.value
+                            job_record.started_at = datetime.now(UTC)
                             await session.commit()
                         break
 
@@ -122,11 +122,11 @@ def background_job(
                     async for session in get_async_session():
                         from dotmac.platform.jobs.models import Job
 
-                        job = await session.get(Job, job_id)
-                        if job:
-                            job.status = JobStatus.COMPLETED.value
-                            job.completed_at = datetime.now(UTC)
-                            job.result = {"success": True, "data": result}
+                        job_record = cast(Job | None, await session.get(Job, job_id))
+                        if job_record:
+                            job_record.status = JobStatus.COMPLETED.value
+                            job_record.completed_at = datetime.now(UTC)
+                            job_record.result = {"success": True, "data": result}
                             await session.commit()
                         break
 
@@ -140,12 +140,12 @@ def background_job(
 
                         from dotmac.platform.jobs.models import Job
 
-                        job = await session.get(Job, job_id)
-                        if job:
-                            job.status = JobStatus.FAILED.value
-                            job.error_message = str(e)
-                            job.error_traceback = traceback.format_exc()
-                            job.completed_at = datetime.now(UTC)
+                        job_record = cast(Job | None, await session.get(Job, job_id))
+                        if job_record:
+                            job_record.status = JobStatus.FAILED.value
+                            job_record.error_message = str(e)
+                            job_record.error_traceback = traceback.format_exc()
+                            job_record.completed_at = datetime.now(UTC)
                             await session.commit()
                         break
 

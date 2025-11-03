@@ -4,14 +4,12 @@ Contact Management Service Layer
 Provides business logic for contact operations with caching and validation.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
 import structlog
+from pydantic import ValidationError
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -33,11 +31,10 @@ from dotmac.platform.contacts.schemas import (
     ContactLabelDefinitionCreate,
     ContactMethodCreate,
     ContactMethodUpdate,
-    ContactUpdate,
     ContactResponse,
+    ContactUpdate,
 )
 from dotmac.platform.core.caching import cache_delete, cache_get, cache_set
-from pydantic import ValidationError
 
 logger = structlog.get_logger(__name__)
 
@@ -216,6 +213,8 @@ class ContactService:
         if not contact:
             return None
 
+        contact = cast(Contact, contact)
+
         # Update fields if provided
         update_fields = contact_data.model_dump(exclude_unset=True)
 
@@ -257,6 +256,8 @@ class ContactService:
         )
         if not contact:
             return False
+
+        contact = cast(Contact, contact)
 
         if hard_delete:
             await self.db.delete(contact)

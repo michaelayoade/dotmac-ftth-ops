@@ -5,18 +5,16 @@ Provides workflow-compatible methods for customer management operations.
 """
 
 import logging
+from collections.abc import Iterator
 from contextlib import contextmanager
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.customer_management.models import CustomerStatus
+from dotmac.platform.customer_management.models import Customer, CustomerStatus
 from dotmac.platform.customer_management.schemas import CustomerCreate, CustomerUpdate
 from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
@@ -37,7 +35,7 @@ class CustomerService:
         self.customer_service = CoreCustomerService(db)
 
     @contextmanager
-    def _tenant_context(self, tenant_id: str | None):
+    def _tenant_context(self, tenant_id: str | None) -> Iterator[None]:
         """Temporarily override the tenant context for service operations."""
         previous_tenant = get_current_tenant_id()
         if tenant_id is not None:
@@ -52,7 +50,7 @@ class CustomerService:
         tenant_id: str,
         customer_data: CustomerCreate,
         status: CustomerStatus | None = None,
-    ):
+    ) -> Customer:
         """Create a customer while ensuring the correct tenant context."""
         with self._tenant_context(tenant_id):
             customer = await self.customer_service.create_customer(data=customer_data)
@@ -249,7 +247,7 @@ class CustomerService:
 
             partner_workflow = PartnerWorkflowService(self.db)
             quota_check = await partner_workflow.check_license_quota(
-                partner_id=partner_uuid,
+                partner_id=str(partner_uuid),
                 requested_licenses=1,
                 tenant_id=tenant_id,
             )

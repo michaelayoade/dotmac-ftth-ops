@@ -9,20 +9,14 @@ from strawberry.fastapi.context import BaseContext
 
 from dotmac.platform.graphql.schema import schema
 from dotmac.platform.network_monitoring.schemas import (
-
-
-
     AlertSeverity,
     DeviceType,
     NetworkAlertResponse,
     NetworkOverviewResponse,
 )
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 def _build_overview(tenant_id: str) -> NetworkOverviewResponse:
     return NetworkOverviewResponse(

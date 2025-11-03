@@ -7,14 +7,15 @@ Comprehensive exception classes for the DotMac authentication system.
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
-try:
+if TYPE_CHECKING:
     from jwt import ExpiredSignatureError as JWTExpiredSignatureError
-except ImportError:  # pragma: no cover - fallback when PyJWT is unavailable
+else:
+    try:
+        from jwt import ExpiredSignatureError as JWTExpiredSignatureError
+    except ImportError:  # pragma: no cover - fallback when PyJWT is unavailable
 
-    class _FallbackExpiredSignatureError(Exception):
-        """Fallback ExpiredSignatureError used when PyJWT is missing."""
-
-    JWTExpiredSignatureError = _FallbackExpiredSignatureError
+        class JWTExpiredSignatureError(Exception):
+            """Fallback ExpiredSignatureError used when PyJWT is missing."""
 
 if TYPE_CHECKING:
 
@@ -23,7 +24,7 @@ if TYPE_CHECKING:
     ExpiredSignatureErrorBase = _ExpiredSignatureError
 else:  # pragma: no cover - runtime path uses actual implementation
     ExpiredSignatureErrorBase = JWTExpiredSignatureError
-from pydantic import ValidationError as PydanticValidationError
+from pydantic_core import ValidationError as PydanticValidationError
 
 
 class AuthError(Exception):

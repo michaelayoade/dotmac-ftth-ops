@@ -7,7 +7,7 @@ High-level service for managing workflows and orchestrations.
 
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock
 from uuid import uuid4
 
@@ -86,7 +86,7 @@ class WorkflowListResult(list[WorkflowResponse]):
 class OrchestrationService:
     """Service for orchestrating multi-system operations."""
 
-    def __init__(self, db: Session, tenant_id: str):
+    def __init__(self, db: Session | AsyncSession, tenant_id: str):
         """
         Initialize orchestration service.
 
@@ -94,7 +94,7 @@ class OrchestrationService:
             db: Database session
             tenant_id: Tenant identifier for isolation
         """
-        self.db = db
+        self.db: Session | AsyncSession = db
         self.tenant_id = tenant_id
         self.saga = SagaOrchestrator(db)
         self._is_async = isinstance(db, AsyncSession)
@@ -112,26 +112,26 @@ class OrchestrationService:
 
     async def _commit(self) -> None:
         if self._is_async:
-            await self.db.commit()
+            await cast(AsyncSession, self.db).commit()
         else:
-            self.db.commit()
+            cast(Session, self.db).commit()
 
     async def _refresh(self, instance: Any) -> None:
         if self._is_async:
-            await self.db.refresh(instance)
+            await cast(AsyncSession, self.db).refresh(instance)
         else:
-            self.db.refresh(instance)
+            cast(Session, self.db).refresh(instance)
 
-    async def _execute(self, stmt):
+    async def _execute(self, stmt: Any) -> Any:
         if self._is_async:
-            return await self.db.execute(stmt)
-        return self.db.execute(stmt)
+            return await cast(AsyncSession, self.db).execute(stmt)
+        return cast(Session, self.db).execute(stmt)
 
     async def _flush(self) -> None:
         if self._is_async:
-            await self.db.flush()
+            await cast(AsyncSession, self.db).flush()
         else:
-            self.db.flush()
+            cast(Session, self.db).flush()
 
     async def provision_subscriber(
         self,

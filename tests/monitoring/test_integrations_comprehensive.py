@@ -10,7 +10,7 @@ Tests cover:
 - Performance considerations
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 
 import pytest
 
@@ -32,11 +32,11 @@ class TestMetricData:
         assert metric.value == 42.5
         assert metric.labels == {}
         assert isinstance(metric.timestamp, datetime)
-        assert metric.timestamp.tzinfo == timezone.utc
+        assert metric.timestamp.tzinfo == UTC
 
     def test_metric_data_creation_with_custom_values(self):
         """Test metric data creation with custom values."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         labels = {"service": "api", "method": "GET"}
 
         metric = MetricData(
@@ -50,9 +50,9 @@ class TestMetricData:
 
     def test_metric_data_post_init_timestamp(self):
         """Test that timestamp is auto-generated if not provided."""
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         metric = MetricData(name="test", value=1)
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
 
         assert before <= metric.timestamp <= after
 
@@ -237,9 +237,9 @@ class TestPrometheusIntegration:
 
     def test_record_metric_overwrites_timestamp(self, prometheus_integration):
         """Test that record_metric creates metrics with current timestamp."""
-        before_recording = datetime.now(timezone.utc)
+        before_recording = datetime.now(UTC)
         prometheus_integration.record_metric("timestamped_metric", 1)
-        after_recording = datetime.now(timezone.utc)
+        after_recording = datetime.now(UTC)
 
         metrics = prometheus_integration.get_metrics()
         assert len(metrics) == 1

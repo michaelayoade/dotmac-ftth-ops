@@ -2,7 +2,7 @@
 Fixtures and helpers for Payment Methods Service tests.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -62,8 +62,8 @@ def create_payment_method_orm(
     pm.details = details
 
     pm.metadata_ = {}
-    pm.created_at = datetime.now(timezone.utc)
-    pm.updated_at = datetime.now(timezone.utc)
+    pm.created_at = datetime.now(UTC)
+    pm.updated_at = datetime.now(UTC)
     pm.last_used_at = None
     pm.deleted_at = None
     pm.deleted_reason = None
@@ -122,7 +122,7 @@ def create_payment_method_response(id=None, is_default=True):
         billing_country="NG",
         is_verified=True,
         auto_pay_enabled=False,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
         expires_at=None,
     )

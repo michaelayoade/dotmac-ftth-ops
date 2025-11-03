@@ -428,7 +428,7 @@ function DevicesPageContent() {
 
 export default function DevicesPage() {
   return (
-    <RouteGuard requiredPermission="devices.read">
+    <RouteGuard permission="devices.read">
       <DevicesPageContent />
     </RouteGuard>
   );

@@ -6,9 +6,8 @@ Create Date: 2025-10-28 10:01:04.460174
 
 """
 
-from alembic import op
-import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "c9fa6cb000e2"
@@ -144,7 +143,6 @@ def downgrade() -> None:
         """)
 
         # Add back UUID columns
-        from sqlalchemy.dialects import postgresql
 
         op.execute(f"""
             DO $$

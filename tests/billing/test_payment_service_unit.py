@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, payment providers, event bus)
 Focus: Test business rules, validation, error handling in isolation
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -32,7 +32,6 @@ class TestPaymentServiceHappyPath:
     def mock_db(self):
         """Mock database session."""
         import uuid
-        from datetime import timezone
 
         db = AsyncMock(spec=AsyncSession)
         db.commit = AsyncMock()
@@ -45,9 +44,9 @@ class TestPaymentServiceHappyPath:
             if not hasattr(entity, "retry_count") or entity.retry_count is None:
                 entity.retry_count = 0
             if not hasattr(entity, "created_at") or entity.created_at is None:
-                entity.created_at = datetime.now(timezone.utc)
+                entity.created_at = datetime.now(UTC)
             if not hasattr(entity, "updated_at") or entity.updated_at is None:
-                entity.updated_at = datetime.now(timezone.utc)
+                entity.updated_at = datetime.now(UTC)
 
         db.add = MagicMock(side_effect=mock_add)
         return db
@@ -250,7 +249,6 @@ class TestPaymentServiceIdempotency:
 
     async def test_idempotency_returns_existing_payment(self, payment_service):
         """Test that same idempotency key returns existing payment."""
-        from datetime import timezone
 
         existing_payment = PaymentEntity(
             payment_id="pay_123",
@@ -263,7 +261,7 @@ class TestPaymentServiceIdempotency:
             payment_method_details={},
             provider="stripe",
             retry_count=0,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
             extra_data={},
         )
 
@@ -290,7 +288,6 @@ class TestPaymentServiceProviderFailure:
     @pytest.fixture
     def payment_service(self):
         """Create payment service with mock provider."""
-        from datetime import timezone
         from uuid import uuid4
 
         mock_db = AsyncMock(spec=AsyncSession)
@@ -304,7 +301,7 @@ class TestPaymentServiceProviderFailure:
             if not hasattr(obj, "retry_count") or obj.retry_count is None:
                 obj.retry_count = 0
             if not hasattr(obj, "created_at") or obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
 
         mock_db.refresh = AsyncMock(side_effect=populate_fields)
 
@@ -405,7 +402,6 @@ class TestPaymentServiceBusinessRules:
     @pytest.fixture
     def payment_service(self):
         """Create payment service."""
-        from datetime import timezone
         from uuid import uuid4
 
         mock_db = AsyncMock(spec=AsyncSession)
@@ -419,7 +415,7 @@ class TestPaymentServiceBusinessRules:
             if not hasattr(obj, "retry_count") or obj.retry_count is None:
                 obj.retry_count = 0
             if not hasattr(obj, "created_at") or obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
 
         mock_db.refresh = AsyncMock(side_effect=populate_fields)
 
@@ -511,7 +507,11 @@ class TestPaymentServiceBusinessRules:
                             )
 
                             # Verify payment succeeded
-                            assert result.status == PaymentStatus.SUCCEEDED, f"Payment status was {result.status}"
+                            assert result.status == PaymentStatus.SUCCEEDED, (
+                                f"Payment status was {result.status}"
+                            )
 
                             # Transaction should be created
-                            assert mock_transaction.called, "Transaction was not created for successful payment"
+                            assert mock_transaction.called, (
+                                "Transaction was not created for successful payment"
+                            )

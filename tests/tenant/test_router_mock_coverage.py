@@ -4,11 +4,11 @@ Mock-based tests for tenant router to achieve 90%+ coverage.
 Following Dev B's successful approach with dependency overrides and mocks.
 Targets uncovered error handlers and edge cases.
 """
-import pytest
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
@@ -46,8 +46,8 @@ class TestTenantRouterPropertyAssignments:
         mock_tenant.current_users = 5
         mock_tenant.current_api_calls = 500
         mock_tenant.current_storage_gb = 5.0
-        mock_tenant.created_at = datetime.now(timezone.utc)
-        mock_tenant.updated_at = datetime.now(timezone.utc)
+        mock_tenant.created_at = datetime.now(UTC)
+        mock_tenant.updated_at = datetime.now(UTC)
         mock_tenant.deleted_at = None
         mock_tenant.trial_ends_at = None
         mock_tenant.subscription_starts_at = None

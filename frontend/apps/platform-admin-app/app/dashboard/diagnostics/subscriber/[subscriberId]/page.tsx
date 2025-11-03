@@ -166,9 +166,9 @@ function SubscriberDiagnosticsContent() {
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
       return response.json();
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if any diagnostic is running
-      const hasRunning = data?.items?.some(
+      const hasRunning = query?.state?.data?.items?.some(
         (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
       );
       return hasRunning ? 5000 : false;
@@ -187,9 +187,9 @@ function SubscriberDiagnosticsContent() {
       return response.json();
     },
     enabled: !!latestRunId,
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if diagnostic is running or pending
-      return data && (data.status === DiagnosticStatus.RUNNING || data.status === DiagnosticStatus.PENDING)
+      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
         ? 5000
         : false;
     },
@@ -198,7 +198,7 @@ function SubscriberDiagnosticsContent() {
   // Update latestRunId when runs data changes
   useEffect(() => {
     if (runsData?.items && runsData.items.length > 0) {
-      setLatestRunId(runsData.items[0].id);
+      setLatestRunId(runsData.items[0]?.id ?? null);
     }
   }, [runsData]);
 
@@ -658,7 +658,7 @@ function SubscriberDiagnosticsContent() {
 
 export default function SubscriberDiagnosticsPage() {
   return (
-    <RouteGuard requiredPermission="isp.diagnostics.read">
+    <RouteGuard permission="isp.diagnostics.read">
       <SubscriberDiagnosticsContent />
     </RouteGuard>
   );

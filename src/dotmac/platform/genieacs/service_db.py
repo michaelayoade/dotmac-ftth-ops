@@ -5,10 +5,7 @@ Production-ready service with database persistence, Celery tasks,
 and Prometheus metrics.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
 
@@ -70,6 +67,12 @@ class GenieACSServiceDB(GenieACSService):
         super().__init__(client=client, tenant_id=tenant_id)
 
         self.session = session
+
+    def _require_tenant_id(self) -> str:
+        """Return the tenant identifier or raise if unavailable."""
+        if self.tenant_id is None:
+            raise ValueError("Tenant ID is required for GenieACS operations")
+        return self.tenant_id
 
     # =========================================================================
     # Scheduled Firmware Upgrades
@@ -375,7 +378,7 @@ class GenieACSServiceDB(GenieACSService):
         await self.session.commit()
 
         # Record metrics
-        if not request.dry_run:
+        if not request.dry_run and self.tenant_id is not None:
             record_mass_config_created(self.tenant_id)
             set_mass_config_job_status(self.tenant_id, job_id, "pending", 1.0)
 
@@ -424,7 +427,8 @@ class GenieACSServiceDB(GenieACSService):
 
         # Update active jobs metric
         active_count = sum(1 for j in jobs if j.status in ("pending", "running"))
-        set_mass_config_active_jobs(self.tenant_id, active_count)
+        if self.tenant_id is not None:
+            set_mass_config_active_jobs(self.tenant_id, active_count)
 
         return MassConfigJobList(
             jobs=[
@@ -519,7 +523,8 @@ class GenieACSServiceDB(GenieACSService):
         await self.session.commit()
 
         # Update metrics
-        set_mass_config_job_status(self.tenant_id, job_id, "cancelled", 1.0)
+        if self.tenant_id is not None:
+            set_mass_config_job_status(self.tenant_id, job_id, "cancelled", 1.0)
 
         logger.info(
             "mass_config.cancelled_db",
@@ -540,12 +545,13 @@ class GenieACSServiceDB(GenieACSService):
             MassConfigResponse with initial status
         """
         from dotmac.platform.genieacs.tasks import execute_mass_config
+        tenant_id = self._require_tenant_id()
 
         # Verify job exists
         result = await self.session.execute(
             select(MassConfigJob).where(
                 MassConfigJob.job_id == job_id,
-                MassConfigJob.tenant_id == self.tenant_id,
+                MassConfigJob.tenant_id == tenant_id,
             )
         )
 
@@ -563,7 +569,7 @@ class GenieACSServiceDB(GenieACSService):
         job.failed_devices = 0
         job.pending_devices = job.total_devices
         await self.session.commit()
-        set_mass_config_job_status(self.tenant_id, job_id, "queued", 1.0)
+        set_mass_config_job_status(tenant_id, job_id, "queued", 1.0)
 
         # Queue Celery task
         execute_mass_config.delay(job_id)
@@ -571,7 +577,7 @@ class GenieACSServiceDB(GenieACSService):
         logger.info(
             "mass_config.queued",
             job_id=job_id,
-            tenant_id=self.tenant_id,
+            tenant_id=tenant_id,
         )
 
         # Return current state

@@ -3,10 +3,7 @@ Receipt service for generating and managing payment receipts
 """
 
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import uuid4
 
@@ -122,9 +119,9 @@ class ReceiptService:
         if invoices:
             collected_notes = [inv.notes for inv in invoices if getattr(inv, "notes", None)]
             if collected_notes:
-                notes = "\n".join(cast(str, note) for note in collected_notes if note)
+                notes = "\n".join(note for note in collected_notes if note)
         if not notes:
-            notes = cast(str | None, payment_extra.get("notes"))
+            notes = payment_extra.get("notes")
 
         receipt_extra: dict[str, Any] = {}
         if invoice_ids:

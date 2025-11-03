@@ -5,7 +5,7 @@ Tests caching layer for product catalog service including cache hits/misses,
 invalidation, and cache warming strategies.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -62,8 +62,8 @@ def sample_product_dict():
         "base_price": "99.99",
         "currency": "USD",
         "is_active": True,
-        "created_at": datetime.now(timezone.utc).isoformat(),
-        "updated_at": datetime.now(timezone.utc).isoformat(),
+        "created_at": datetime.now(UTC).isoformat(),
+        "updated_at": datetime.now(UTC).isoformat(),
     }
 
 
@@ -257,8 +257,8 @@ class TestCreateProductInvalidation:
             base_price="49.99",
             currency="USD",
             is_active=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         with patch.object(

@@ -19,10 +19,7 @@ import os
 import ssl
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 from uuid import uuid4
@@ -797,7 +794,7 @@ class ServiceMesh:
             headers=call_headers,
             data=body,
             timeout=client_timeout,
-            ssl=ssl_context,
+            ssl=ssl_context if ssl_context is not None else True,
         ) as response:
             response_body = await response.read()
 

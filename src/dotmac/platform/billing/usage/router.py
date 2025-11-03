@@ -18,8 +18,10 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.billing.settings.service import BillingSettingsService
 from dotmac.platform.billing.usage.service import UsageBillingService
-from dotmac.platform.database import get_async_session
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
+from dotmac.platform.database import get_async_session
+
+import structlog
 
 from .models import BilledStatus, UsageAggregate, UsageRecord, UsageType
 from .schemas import (
@@ -28,7 +30,6 @@ from .schemas import (
     UsageRecordResponse,
     UsageRecordUpdate,
     UsageStats,
-    UsageSummary,
 )
 
 # ============================================================================
@@ -37,6 +38,7 @@ from .schemas import (
 
 router = APIRouter(prefix="/usage", tags=["Billing - Usage"])
 
+logger = structlog.get_logger(__name__)
 
 OVERRIDE_CURRENCY_HEADERS = ("X-Currency", "X-Currency-Code")
 OVERRIDE_CURRENCY_QUERY_PARAM = "currency"
@@ -198,6 +200,10 @@ async def create_usage_record(
         ) from exc
     except Exception as e:
         await db.rollback()
+        logger.exception(
+            "Failed to create usage record",
+            tenant_id=tenant_id,
+        )
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create usage record: {str(e)}",

@@ -372,9 +372,9 @@ class CustomerEventPublisher:
 
 async def example_publish_network_status():
     """Example: Publish network status update."""
-    from dotmac.platform.redis_client import get_redis_client
+    from dotmac.platform.redis_client import redis_manager
 
-    redis = await get_redis_client()
+    redis = redis_manager.get_client()
     publisher = CustomerEventPublisher(redis)
 
     await publisher.publish_network_status_update(
@@ -395,9 +395,9 @@ async def example_publish_network_status():
 
 async def example_publish_device_status():
     """Example: Publish device status change."""
-    from dotmac.platform.redis_client import get_redis_client
+    from dotmac.platform.redis_client import redis_manager
 
-    redis = await get_redis_client()
+    redis = redis_manager.get_client()
     publisher = CustomerEventPublisher(redis)
 
     await publisher.publish_device_update(
@@ -422,9 +422,9 @@ async def example_publish_device_status():
 
 async def example_publish_ticket_created():
     """Example: Publish ticket creation."""
-    from dotmac.platform.redis_client import get_redis_client
+    from dotmac.platform.redis_client import redis_manager
 
-    redis = await get_redis_client()
+    redis = redis_manager.get_client()
     publisher = CustomerEventPublisher(redis)
 
     await publisher.publish_ticket_update(

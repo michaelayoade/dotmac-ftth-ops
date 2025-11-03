@@ -1,9 +1,8 @@
-
 """
 Direct router function tests for better coverage.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -11,8 +10,6 @@ from fastapi import HTTPException
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.router import (
-
-
     BulkEmailRequest,
     EmailRequest,
     QuickRenderRequest,
@@ -36,14 +33,10 @@ from dotmac.platform.communications.router import (
 )
 from dotmac.platform.communications.template_service import RenderedTemplate, TemplateData
 
-
-
-
-
-
 pytestmark = pytest.mark.integration
 
 pytestmark = pytest.mark.asyncio
+
 
 class TestEmailEndpointsDirect:
     """Direct tests of email endpoints."""
@@ -128,7 +121,7 @@ class TestTemplateEndpointsDirect:
                 variables=["name"],
             )
             template.id = "tpl_123"
-            template.created_at = datetime.now(timezone.utc)
+            template.created_at = datetime.now(UTC)
             mock_create.return_value = template
 
             result = await create_template_endpoint(request)
@@ -159,7 +152,7 @@ class TestTemplateEndpointsDirect:
                 name="test", subject_template="Subject", text_template="Body", variables=[]
             )
             template.id = "tpl_1"
-            template.created_at = datetime.now(timezone.utc)
+            template.created_at = datetime.now(UTC)
             mock_service.list_templates.return_value = [template]
             mock_get_service.return_value = mock_service
 
@@ -178,7 +171,7 @@ class TestTemplateEndpointsDirect:
                 name="test", subject_template="Subject", text_template="Body", variables=[]
             )
             template.id = "tpl_abc"
-            template.created_at = datetime.now(timezone.utc)
+            template.created_at = datetime.now(UTC)
             mock_service.get_template.return_value = template
             mock_get_service.return_value = mock_service
 
@@ -481,7 +474,7 @@ class TestStatsActivityEndpointsDirect:
                 mock_log.recipient = "user@example.com"
                 mock_log.subject = "Test"
                 mock_log.status = Mock(value="sent")
-                mock_log.created_at = datetime.now(timezone.utc)
+                mock_log.created_at = datetime.now(UTC)
                 mock_log.metadata_ = {}
 
                 mock_metrics = AsyncMock()

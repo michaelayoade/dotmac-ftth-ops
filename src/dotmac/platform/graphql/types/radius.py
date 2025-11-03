@@ -34,8 +34,8 @@ class Subscriber:
     enabled: bool
     framed_ip_address: str | None
     bandwidth_profile_id: str | None
-    created_at: datetime
-    updated_at: datetime
+    created_at: datetime | None
+    updated_at: datetime | None
 
     # Related sessions will be loaded via DataLoader
     sessions: list[Session] = strawberry.field(default_factory=list)

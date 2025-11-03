@@ -23,6 +23,11 @@ async def require_auth(user: UserInfo = Depends(get_current_user)) -> UserInfo:
     return user
 
 
+async def require_user(user: UserInfo = Depends(get_current_user)) -> UserInfo:
+    """Backward-compatible alias for authenticated user requirement."""
+    return user
+
+
 def require_admin(user: UserInfo = Depends(get_current_user)) -> UserInfo:
     """Require admin role."""
     if "admin" not in user.roles:
@@ -61,6 +66,7 @@ CurrentUser = UserInfo
 
 __all__ = [
     "require_auth",
+    "require_user",
     "require_admin",
     "require_scopes",
     "require_roles",

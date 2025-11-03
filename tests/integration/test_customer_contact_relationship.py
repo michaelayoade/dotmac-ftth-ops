@@ -1,4 +1,3 @@
-
 """
 Regression test for CustomerContactLink ORM relationship.
 
@@ -39,6 +38,7 @@ pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio,
 ]
+
 
 @pytest_asyncio.fixture
 async def test_tenant(async_db_session):
@@ -107,7 +107,9 @@ class TestCustomerContactRelationship:
         assert loaded_link.contact_id == contact.id
         assert loaded_link.role == ContactRole.PRIMARY
 
-    async def test_foreign_key_constraint_enforced(self, async_db_session, postgres_only, test_tenant):
+    async def test_foreign_key_constraint_enforced(
+        self, async_db_session, postgres_only, test_tenant
+    ):
         """Test that foreign key constraints are enforced.
 
         Requires PostgreSQL - SQLite doesn't enforce FK constraints by default.

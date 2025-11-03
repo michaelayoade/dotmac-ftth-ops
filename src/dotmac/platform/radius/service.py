@@ -5,12 +5,12 @@ Business logic for RADIUS operations.
 Handles subscriber management, session tracking, and usage monitoring.
 """
 
-from datetime import datetime, timedelta, timezone
 import os
 import secrets
 import string
+from datetime import UTC, datetime
 from types import SimpleNamespace
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import structlog
@@ -32,8 +32,8 @@ from dotmac.platform.radius.schemas import (
     RADIUSUsageQuery,
     RADIUSUsageResponse,
 )
-from dotmac.platform.subscribers.models import PasswordHashingMethod
 from dotmac.platform.services.lifecycle.models import ServiceInstance
+from dotmac.platform.subscribers.models import PasswordHashingMethod
 
 logger = structlog.get_logger(__name__)
 
@@ -223,9 +223,13 @@ class RADIUSService:
         if not radcheck:
             return None
 
-        username = radcheck.username
-        existing_replies = await self.repository.get_radreplies_by_username(self.tenant_id, username)
-        if not any(reply.attribute == "Auth-Type" and reply.value == "Reject" for reply in existing_replies):
+        username = cast(str, radcheck.username)
+        existing_replies = await self.repository.get_radreplies_by_username(
+            self.tenant_id, username
+        )
+        if not any(
+            reply.attribute == "Auth-Type" and reply.value == "Reject" for reply in existing_replies
+        ):
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=subscriber_id,
@@ -243,7 +247,7 @@ class RADIUSService:
         if not radcheck:
             return None
 
-        username = radcheck.username
+        username = cast(str, radcheck.username)
         deleted = await self.repository.delete_radreply(self.tenant_id, username, "Auth-Type")
         if deleted:
             await self.session.commit()
@@ -271,7 +275,7 @@ class RADIUSService:
                     if cached:
                         return cached
                     return None
-                resolved_username = radcheck.username
+                resolved_username = cast(str, radcheck.username)
 
         radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, resolved_username)
         if not radcheck:
@@ -281,7 +285,9 @@ class RADIUSService:
             return None
 
         # Get reply attributes
-        radreplies = await self.repository.get_radreplies_by_username(self.tenant_id, resolved_username)
+        radreplies = await self.repository.get_radreplies_by_username(
+            self.tenant_id, resolved_username
+        )
 
         # Extract common attributes
         framed_ipv4 = None
@@ -347,6 +353,19 @@ class RADIUSService:
     def _get_subscriber_id_by_username(self, username: str) -> str | None:
         return self._subscriber_username_to_id.get(username)
 
+    async def _resolve_subscriber_id(self, username: str) -> str | None:
+        subscriber_id = self._get_subscriber_id_by_username(username)
+        if subscriber_id is not None:
+            return subscriber_id
+
+        radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
+        if not radcheck or radcheck.subscriber_id is None:
+            return None
+
+        subscriber_id = cast(str, radcheck.subscriber_id)
+        self._subscriber_username_to_id[username] = subscriber_id
+        return subscriber_id
+
     def _build_session_response(self, record: dict[str, Any]) -> RADIUSSessionResponse:
         total_bytes = (record.get("acctinputoctets") or 0) + (record.get("acctoutputoctets") or 0)
         return RADIUSSessionResponse(
@@ -385,7 +404,7 @@ class RADIUSService:
     ) -> RADIUSSessionResponse:
         """Start (record) a new RADIUS session."""
         acctsessionid = session_id or f"sess_{uuid4().hex[:16]}"
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         record = {
             "radacctid": self._session_counter,
@@ -435,7 +454,7 @@ class RADIUSService:
         if acct_output_octets is not None:
             record["acctoutputoctets"] = acct_output_octets
 
-        record["last_update"] = datetime.now(timezone.utc)
+        record["last_update"] = datetime.now(UTC)
 
         return self._build_session_response(record)
 
@@ -460,7 +479,7 @@ class RADIUSService:
             acct_output_octets=acct_output_octets,
         )
 
-        record["acct_stop_time"] = datetime.now(timezone.utc)
+        record["acct_stop_time"] = datetime.now(UTC)
         record["acct_terminate_cause"] = acct_terminate_cause
         record["is_active"] = False
 
@@ -597,7 +616,7 @@ class RADIUSService:
                 )
                 if not radcheck:
                     return None
-                resolved_username = radcheck.username
+                resolved_username = cast(str, radcheck.username)
 
         username = resolved_username
         # Update password if provided
@@ -610,86 +629,101 @@ class RADIUSService:
             # Delete existing and create new
             await self.repository.delete_radreply(self.tenant_id, username, "Framed-IP-Address")
             if data.framed_ipv4_address:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Framed-IP-Address",
-                    value=data.framed_ipv4_address,
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Framed-IP-Address",
+                        value=data.framed_ipv4_address,
+                    )
 
         # IPv6 address
         if data.framed_ipv6_address is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Framed-IPv6-Address")
             if data.framed_ipv6_address:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Framed-IPv6-Address",
-                    value=data.framed_ipv6_address,
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Framed-IPv6-Address",
+                        value=data.framed_ipv6_address,
+                    )
 
         # IPv6 prefix for subscriber interface
         if data.framed_ipv6_prefix is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Framed-IPv6-Prefix")
             if data.framed_ipv6_prefix:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Framed-IPv6-Prefix",
-                    value=data.framed_ipv6_prefix,
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Framed-IPv6-Prefix",
+                        value=data.framed_ipv6_prefix,
+                    )
 
         # IPv6 prefix delegation
         if data.delegated_ipv6_prefix is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Delegated-IPv6-Prefix")
             if data.delegated_ipv6_prefix:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Delegated-IPv6-Prefix",
-                    value=data.delegated_ipv6_prefix,
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Delegated-IPv6-Prefix",
+                        value=data.delegated_ipv6_prefix,
+                    )
 
         if data.session_timeout is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Session-Timeout")
             if data.session_timeout:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Session-Timeout",
-                    value=str(data.session_timeout),
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Session-Timeout",
+                        value=str(data.session_timeout),
+                    )
 
         if data.idle_timeout is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Idle-Timeout")
             if data.idle_timeout:
-                radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-                await self.repository.create_radreply(
-                    tenant_id=self.tenant_id,
-                    subscriber_id=radcheck.subscriber_id,
-                    username=username,
-                    attribute="Idle-Timeout",
-                    value=str(data.idle_timeout),
-                )
+                subscriber_ref = await self._resolve_subscriber_id(username)
+                if subscriber_ref is not None:
+                    await self.repository.create_radreply(
+                        tenant_id=self.tenant_id,
+                        subscriber_id=subscriber_ref,
+                        username=username,
+                        attribute="Idle-Timeout",
+                        value=str(data.idle_timeout),
+                    )
 
         # Update bandwidth profile
         if data.bandwidth_profile_id:
             radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
-            await self.apply_bandwidth_profile(
-                username=username,
-                subscriber_id=radcheck.subscriber_id,
-                profile_id=data.bandwidth_profile_id,
-            )
+            if not radcheck:
+                logger.warning(
+                    "radius_subscriber_not_found_for_profile_update",
+                    tenant_id=self.tenant_id,
+                    username=username,
+                    profile_id=data.bandwidth_profile_id,
+                )
+            else:
+                subscriber_ref = cast(str | None, radcheck.subscriber_id)
+                await self.apply_bandwidth_profile(
+                    username=username,
+                    subscriber_id=subscriber_ref,
+                    profile_id=data.bandwidth_profile_id,
+                )
 
         # Handle enable/disable
         if data.enabled is not None:
@@ -714,7 +748,7 @@ class RADIUSService:
             )
             if not radcheck:
                 return False
-            username = radcheck.username
+            username = cast(str, radcheck.username)
         elif subscriber_id is not None:
             # Verify the subscriber matches the username if both provided
             radcheck = await self.repository.get_radcheck_by_subscriber(
@@ -812,13 +846,14 @@ class RADIUSService:
             nas_ip = str(sessions[0].nasipaddress)
             nas = await self.repository.get_nas_by_name(self.tenant_id, nas_ip)
             if nas and hasattr(nas, "vendor"):
+                vendor_value = cast(str, nas.vendor) if nas.vendor is not None else default_vendor
                 logger.debug(
                     "Resolved NAS vendor from active session",
                     username=username,
-                    vendor=nas.vendor,
+                    vendor=vendor_value,
                     nas_ip=nas_ip,
                 )
-                return nas.vendor
+                return vendor_value
 
         # Fallback to default vendor from settings
         default_vendor = settings.radius.default_vendor
@@ -872,7 +907,7 @@ class RADIUSService:
             )
             return None
 
-        subscriber_id = subscriber_id or radcheck.subscriber_id
+        effective_subscriber_id = subscriber_id or cast(str | None, radcheck.subscriber_id)
 
         # Determine NAS vendor (auto-detect if not provided)
         if not nas_vendor:
@@ -958,7 +993,7 @@ class RADIUSService:
         for attr_spec in attributes:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
-                subscriber_id=subscriber_id,
+                subscriber_id=effective_subscriber_id,
                 username=username,
                 attribute=attr_spec.attribute,
                 value=attr_spec.value,
@@ -968,7 +1003,7 @@ class RADIUSService:
         # Add tracking attribute to mark these as bandwidth-profile-managed
         await self.repository.create_radreply(
             tenant_id=self.tenant_id,
-            subscriber_id=subscriber_id,
+            subscriber_id=effective_subscriber_id,
             username=username,
             attribute="X-Bandwidth-Profile-ID",
             value=profile_id,  # Store UUID for tracking/debugging
@@ -1038,7 +1073,7 @@ class RADIUSService:
         if not effective_subscriber_id and username:
             radcheck = await self.repository.get_radcheck_by_username(self.tenant_id, username)
             if radcheck:
-                effective_subscriber_id = radcheck.subscriber_id
+                effective_subscriber_id = cast(str | None, radcheck.subscriber_id)
 
         if not effective_subscriber_id:
             logger.warning(
@@ -1111,7 +1146,7 @@ class RADIUSService:
                 None,
             )
             if session:
-                username = session.username
+                username = str(session.username)
                 nas_ip = nas_ip or str(session.nasipaddress)
             else:
                 logger.warning(
@@ -1217,7 +1252,7 @@ class RADIUSService:
                 response.server_ip = data.server_ip
             return response
         except Exception:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             nas_id = self._nas_counter
             self._nas_counter += 1
             entry = {
@@ -1261,7 +1296,7 @@ class RADIUSService:
                 entry["secret_configured"] = bool(updates["secret"])
                 entry["secret"] = updates["secret"]
             entry.update({k: v for k, v in updates.items() if v is not None})
-            entry["updated_at"] = datetime.now(timezone.utc)
+            entry["updated_at"] = datetime.now(UTC)
             self._nas_store[nas_id] = entry
             return self._nas_to_response(entry)
 
@@ -1308,8 +1343,8 @@ class RADIUSService:
                 community=nas.get("community"),
                 description=nas.get("description"),
                 server_ip=nas.get("server_ip") or nas.get("nasname"),
-                created_at=nas.get("created_at", datetime.now(timezone.utc)),
-                updated_at=nas.get("updated_at", datetime.now(timezone.utc)),
+                created_at=nas.get("created_at", datetime.now(UTC)),
+                updated_at=nas.get("updated_at", datetime.now(UTC)),
             )
 
         return NASResponse(

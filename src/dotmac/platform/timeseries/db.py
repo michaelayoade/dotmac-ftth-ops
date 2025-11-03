@@ -1,20 +1,26 @@
 """TimescaleDB Database Connection."""
 
+from collections.abc import AsyncIterator
+from typing import Optional
+
 import structlog
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
-from typing import AsyncIterator
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 
 # Globals
-timescaledb_engine = None
-TimeSeriesSessionLocal = None
+timescaledb_engine: Optional[AsyncEngine] = None
+TimeSeriesSessionLocal: Optional[async_sessionmaker[AsyncSession]] = None
 
 
-def init_timescaledb():
+def init_timescaledb() -> None:
     """Initialize TimescaleDB connection."""
     global timescaledb_engine, TimeSeriesSessionLocal
 
@@ -40,16 +46,15 @@ def init_timescaledb():
     )
 
     # Create session factory
-    TimeSeriesSessionLocal = sessionmaker(
+    TimeSeriesSessionLocal = async_sessionmaker(
         bind=timescaledb_engine,
-        class_=AsyncSession,
         expire_on_commit=False,
     )
 
     logger.info("timescaledb.init.complete")
 
 
-async def shutdown_timescaledb():
+async def shutdown_timescaledb() -> None:
     """Shutdown TimescaleDB connection."""
     global timescaledb_engine
 

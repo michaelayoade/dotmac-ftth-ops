@@ -6,7 +6,8 @@ Provides fast lookups and state management.
 """
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Any, Awaitable, Callable
 
 from sqlalchemy import and_, desc, func, or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -112,7 +113,7 @@ class DeploymentRegistry:
         logger.info(f"Created deployment instance {instance.id} for tenant {instance.tenant_id}")
         return instance
 
-    def update_instance(self, instance_id: int, **updates) -> DeploymentInstance | None:
+    def update_instance(self, instance_id: int, **updates: Any) -> DeploymentInstance | None:
         """Update deployment instance"""
         instance = self.get_instance(instance_id)
         if not instance:
@@ -189,7 +190,7 @@ class DeploymentRegistry:
         logger.info(f"Created deployment template {template.name}")
         return template
 
-    def update_template(self, template_id: int, **updates) -> DeploymentTemplate | None:
+    def update_template(self, template_id: int, **updates: Any) -> DeploymentTemplate | None:
         """Update deployment template"""
         template = self.get_template(template_id)
         if not template:
@@ -222,7 +223,7 @@ class DeploymentRegistry:
             .first()
         )
 
-    def update_execution(self, execution_id: int, **updates) -> DeploymentExecution | None:
+    def update_execution(self, execution_id: int, **updates: Any) -> DeploymentExecution | None:
         """Update execution record"""
         execution = self.get_execution(execution_id)
         if not execution:
@@ -233,7 +234,11 @@ class DeploymentRegistry:
                 setattr(execution, key, value)
 
         # Calculate duration if completed
-        if "completed_at" in updates and execution.started_at:
+        if (
+            "completed_at" in updates
+            and execution.started_at is not None
+            and execution.completed_at is not None
+        ):
             execution.duration_seconds = int(
                 (execution.completed_at - execution.started_at).total_seconds()
             )
@@ -347,7 +352,7 @@ class DeploymentRegistry:
 
     # Statistics
 
-    def get_deployment_stats(self, tenant_id: int | None = None) -> dict:
+    def get_deployment_stats(self, tenant_id: int | None = None) -> dict[str, Any]:
         """Get deployment statistics"""
         query = self.db.query(DeploymentInstance)
 
@@ -381,7 +386,7 @@ class DeploymentRegistry:
             },
         }
 
-    def get_template_usage_stats(self) -> list[dict]:
+    def get_template_usage_stats(self) -> dict[str, Any]:
         """Get usage statistics by template"""
         results = (
             self.db.query(
@@ -396,12 +401,22 @@ class DeploymentRegistry:
             .all()
         )
 
-        return [
-            {"template_name": r.name, "display_name": r.display_name, "instances": r.instance_count}
+        templates: list[dict[str, Any]] = [
+            {
+                "template_name": r.name,
+                "display_name": r.display_name,
+                "instances": int(r.instance_count),
+            }
             for r in results
         ]
 
-    def get_resource_allocation(self, tenant_id: int | None = None) -> dict:
+        return {
+            "templates": templates,
+            "total_templates": len(templates),
+            "total_instances": sum(t["instances"] for t in templates),
+        }
+
+    def get_resource_allocation(self, tenant_id: int | None = None) -> dict[str, Any]:
         """Get total resource allocation"""
         query = self.db.query(DeploymentInstance).filter(
             DeploymentInstance.state.in_([DeploymentState.ACTIVE, DeploymentState.PROVISIONING])
@@ -410,18 +425,20 @@ class DeploymentRegistry:
         if tenant_id:
             query = query.filter(DeploymentInstance.tenant_id == tenant_id)
 
-        total_cpu = query.with_entities(func.sum(DeploymentInstance.allocated_cpu)).scalar() or 0
-        total_memory = (
+        total_cpu = int(
+            query.with_entities(func.sum(DeploymentInstance.allocated_cpu)).scalar() or 0
+        )
+        total_memory = int(
             query.with_entities(func.sum(DeploymentInstance.allocated_memory_gb)).scalar() or 0
         )
-        total_storage = (
+        total_storage = int(
             query.with_entities(func.sum(DeploymentInstance.allocated_storage_gb)).scalar() or 0
         )
 
         return {
-            "total_cpu_cores": total_cpu,
-            "total_memory_gb": total_memory,
-            "total_storage_gb": total_storage,
+            "total_cpu": total_cpu,
+            "total_memory": total_memory,
+            "total_storage": total_storage,
         }
 
     # Bulk Operations
@@ -469,25 +486,22 @@ class AsyncDeploymentRegistry:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def _run(self, method_name: str, *args, **kwargs):
+    async def _run(self, method_name: str, *args: Any, **kwargs: Any) -> Any:
         """Execute DeploymentRegistry method within sync session context."""
 
-        def sync_call(sync_session: Session):
+        def sync_call(sync_session: Session) -> Any:
             registry = DeploymentRegistry(sync_session)
             method = getattr(registry, method_name)
             return method(*args, **kwargs)
 
         return await self.db.run_sync(sync_call)
 
-    def __getattr__(self, name: str):
+    def __getattr__(self, name: str) -> Callable[..., Awaitable[Any]]:
         attr = getattr(DeploymentRegistry, name, None)
         if attr is None or not callable(attr):
             raise AttributeError(name)
 
-        async def async_wrapper(*args, **kwargs):
+        async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             return await self._run(name, *args, **kwargs)
 
         return async_wrapper
-
-
-from datetime import timedelta  # noqa: E402 - import at end to avoid circular import issues

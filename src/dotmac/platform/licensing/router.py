@@ -4,6 +4,7 @@ Licensing API Router.
 REST API endpoints for software licensing, activation, and compliance.
 """
 
+from datetime import UTC
 from typing import Annotated, Any
 
 import structlog
@@ -77,6 +78,12 @@ def _serialize_template(template: LicenseTemplate) -> LicenseTemplateResponse:
     elif not isinstance(pricing_raw, dict):
         pricing_raw = pricing_raw.model_dump()
 
+    auto_renewal = getattr(template, "auto_renewal_enabled", False)
+    trial_allowed = getattr(template, "trial_allowed", False)
+    active_value = getattr(template, "active", None)
+    if active_value is None:
+        active_value = True
+
     payload = {
         "id": template.id,
         "template_name": template.template_name,
@@ -89,11 +96,11 @@ def _serialize_template(template: LicenseTemplate) -> LicenseTemplateResponse:
         "features": features_raw,
         "restrictions": restrictions_raw,
         "pricing": pricing_raw,
-        "auto_renewal_enabled": getattr(template, "auto_renewal_enabled", False),
-        "trial_allowed": getattr(template, "trial_allowed", False),
+        "auto_renewal_enabled": bool(auto_renewal),
+        "trial_allowed": bool(trial_allowed),
         "trial_duration_days": getattr(template, "trial_duration_days", 0),
         "grace_period_days": getattr(template, "grace_period_days", 0),
-        "active": getattr(template, "active", True),
+        "active": bool(active_value),
         "created_at": getattr(template, "created_at", None),
         "updated_at": getattr(template, "updated_at", None),
     }
@@ -771,10 +778,10 @@ async def generate_emergency_code(
 ) -> Any:
     """Generate emergency override code."""
     import secrets
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     emergency_code = secrets.token_hex(8).upper()
-    valid_until = datetime.now(timezone.utc) + timedelta(hours=24)
+    valid_until = datetime.now(UTC) + timedelta(hours=24)
 
     return {
         "data": EmergencyCodeResponse(

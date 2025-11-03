@@ -1,6 +1,6 @@
 """Test logs endpoint to reproduce and fix 500 error."""
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -14,9 +14,8 @@ from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.db import get_session_dependency
 from dotmac.platform.monitoring.logs_router import logs_router
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():
@@ -62,7 +61,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),  # Convert to string for SQLite compatibility
             action="login",  # Required field
             ip_address="192.168.1.1",  # Use the correct ip_address field
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         AuditActivity(
             id=uuid4(),
@@ -73,7 +72,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),
             action="payment_process",
             ip_address="10.0.0.1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
         AuditActivity(
             id=uuid4(),
@@ -84,7 +83,7 @@ async def sample_audit_logs(async_db_session: AsyncSession):
             tenant_id=str(uuid4()),
             action="api_request",
             ip_address="172.16.0.1",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         ),
     ]
 
@@ -103,7 +102,9 @@ class TestLogsEndpoint:
         """Test basic logs retrieval."""
         response = await client.get("/api/v1/monitoring/logs")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         assert "logs" in data
@@ -120,7 +121,9 @@ class TestLogsEndpoint:
         """Test logs filtering by level."""
         response = await client.get("/api/v1/monitoring/logs?level=ERROR")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         # Should return only HIGH severity (ERROR level)
@@ -132,7 +135,9 @@ class TestLogsEndpoint:
         """Test logs search functionality."""
         response = await client.get("/api/v1/monitoring/logs?search=payment")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         assert len(data["logs"]) == 1
@@ -143,7 +148,9 @@ class TestLogsEndpoint:
         """Test logs pagination."""
         response = await client.get("/api/v1/monitoring/logs?page=1&page_size=2")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         assert len(data["logs"]) == 2
@@ -156,7 +163,9 @@ class TestLogsEndpoint:
         """Test logs retrieval when no logs exist."""
         response = await client.get("/api/v1/monitoring/logs")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         assert data["logs"] == []
@@ -167,7 +176,9 @@ class TestLogsEndpoint:
         """Test log statistics endpoint."""
         response = await client.get("/api/v1/monitoring/logs/stats")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         data = response.json()
 
         assert "total" in data
@@ -185,7 +196,9 @@ class TestLogsEndpoint:
         """Test available services endpoint."""
         response = await client.get("/api/v1/monitoring/logs/services")
 
-        assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+        assert response.status_code == 200, (
+            f"Expected 200, got {response.status_code}: {response.text}"
+        )
         services = response.json()
 
         assert isinstance(services, list)
@@ -203,7 +216,9 @@ class TestLogsEndpointErrors:
         response = await client.get("/api/v1/monitoring/logs?level=INVALID")
 
         # Should return 422 validation error
-        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
+        assert response.status_code == 422, (
+            f"Expected 422, got {response.status_code}: {response.text}"
+        )
 
     @pytest.mark.asyncio
     async def test_invalid_page_number(self, client):
@@ -211,7 +226,9 @@ class TestLogsEndpointErrors:
         response = await client.get("/api/v1/monitoring/logs?page=0")
 
         # Should return 422 validation error
-        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
+        assert response.status_code == 422, (
+            f"Expected 422, got {response.status_code}: {response.text}"
+        )
 
     @pytest.mark.asyncio
     async def test_page_size_too_large(self, client):
@@ -219,4 +236,6 @@ class TestLogsEndpointErrors:
         response = await client.get("/api/v1/monitoring/logs?page_size=2000")
 
         # Should return 422 validation error
-        assert response.status_code == 422, f"Expected 422, got {response.status_code}: {response.text}"
+        assert response.status_code == 422, (
+            f"Expected 422, got {response.status_code}: {response.text}"
+        )

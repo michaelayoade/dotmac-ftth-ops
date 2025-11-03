@@ -6,10 +6,7 @@ REST API endpoints for wireless network infrastructure management.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
@@ -181,7 +178,7 @@ async def delete_device(
     device_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
     _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
-):
+) -> None:
     """Delete wireless device"""
     success = service.delete_device(device_id)
     if not success:
@@ -336,7 +333,7 @@ async def delete_radio(
     radio_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
     _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
-):
+) -> None:
     """Delete wireless radio"""
     success = service.delete_radio(radio_id)
     if not success:
@@ -470,7 +467,7 @@ async def delete_coverage_zone(
     zone_id: UUID,
     service: WirelessService = Depends(get_wireless_service),
     _: UserInfo = Depends(require_permission("isp.network.wireless.write")),
-):
+) -> None:
     """Delete coverage zone"""
     success = service.delete_coverage_zone(zone_id)
     if not success:

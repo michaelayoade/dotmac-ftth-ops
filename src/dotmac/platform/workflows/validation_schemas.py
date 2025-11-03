@@ -8,7 +8,7 @@ These schemas ensure type safety and input validation across all workflow servic
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, FieldValidationInfo, field_validator
 
 # ============================================================================
 # Notification Workflow Schemas
@@ -176,7 +176,7 @@ class ScheduleMaintenanceInput(BaseModel):
 
     @field_validator("scheduled_end")
     @classmethod
-    def validate_end_time(cls, v: datetime, info) -> datetime:
+    def validate_end_time(cls, v: datetime, info: FieldValidationInfo) -> datetime:
         """Validate end time is after start time"""
         if "scheduled_start" in info.data and v <= info.data["scheduled_start"]:
             raise ValueError("scheduled_end must be after scheduled_start")

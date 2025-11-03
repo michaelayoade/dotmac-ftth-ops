@@ -7,10 +7,7 @@ Provides TOTP-based two-factor authentication using pyotp.
 import base64
 import io
 import uuid
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 
 import pyotp
 import qrcode

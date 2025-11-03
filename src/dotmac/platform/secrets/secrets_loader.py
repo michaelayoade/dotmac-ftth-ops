@@ -473,7 +473,7 @@ async def get_vault_secret_async(path: str) -> dict[str, Any] | None:
 
         async with client:
             secret = await client.get_secret(path)
-            return cast(dict[str, Any], secret)
+            return secret
     except VaultError as e:
         logger.error(f"Failed to fetch secret from {path}: {e}")
         return None

@@ -56,13 +56,14 @@ async def clean_rbac_tables(async_db_engine):
     # Clean up after test using a separate session to avoid ordering issues
     from sqlalchemy import delete
     from sqlalchemy.ext.asyncio import async_sessionmaker
+
     from dotmac.platform.auth.models import (
+        Permission,
+        PermissionGrant,
+        Role,
+        role_permissions,
         user_permissions,
         user_roles,
-        role_permissions,
-        PermissionGrant,
-        Permission,
-        Role,
     )
     from dotmac.platform.user_management.models import (
         BackupCode,

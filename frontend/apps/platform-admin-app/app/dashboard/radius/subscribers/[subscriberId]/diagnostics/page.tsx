@@ -97,7 +97,7 @@ function DiagnosticsPageContent() {
   });
 
   // Individual check mutations
-  const createCheckMutation = (endpoint: string, checkName: string) =>
+  const useCreateCheckMutation = (endpoint: string, checkName: string) =>
     useMutation({
       mutationFn: async () => {
         setRunningChecks((prev) => new Set([...prev, checkName]));
@@ -136,12 +136,12 @@ function DiagnosticsPageContent() {
       },
     });
 
-  const connectivityCheck = createCheckMutation("connectivity", "Connectivity Check");
-  const radiusSessionCheck = createCheckMutation("radius-sessions", "RADIUS Session Check");
-  const onuStatusCheck = createCheckMutation("onu-status", "ONU Status Check");
-  const cpeStatusCheck = createCheckMutation("cpe-status", "CPE Status Check");
-  const ipVerificationCheck = createCheckMutation("ip-verification", "IP Verification");
-  const cpeRestartCheck = createCheckMutation("restart-cpe", "CPE Restart");
+  const connectivityCheck = useCreateCheckMutation("connectivity", "Connectivity Check");
+  const radiusSessionCheck = useCreateCheckMutation("radius-sessions", "RADIUS Session Check");
+  const onuStatusCheck = useCreateCheckMutation("onu-status", "ONU Status Check");
+  const cpeStatusCheck = useCreateCheckMutation("cpe-status", "CPE Status Check");
+  const ipVerificationCheck = useCreateCheckMutation("ip-verification", "IP Verification");
+  const cpeRestartCheck = useCreateCheckMutation("restart-cpe", "CPE Restart");
 
   const getStatusBadge = (status: string) => {
     const badges = {
@@ -422,7 +422,7 @@ function DiagnosticsPageContent() {
 
 export default function DiagnosticsPage() {
   return (
-    <RouteGuard requiredPermission="radius.read">
+    <RouteGuard permission="radius.read">
       <DiagnosticsPageContent />
     </RouteGuard>
   );

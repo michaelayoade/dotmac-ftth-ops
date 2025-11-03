@@ -7,6 +7,10 @@ Sets up a test FastAPI app with auth routers and properly configured dependencie
 from unittest.mock import patch
 
 import pytest
+from fastapi import FastAPI
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import StaticPool
 
 pytestmark = pytest.mark.integration
 
@@ -18,10 +22,6 @@ def error_handling_test_environment(monkeypatch):
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
     monkeypatch.setenv("TESTING", "1")
 
-from fastapi import FastAPI
-from fastapi.testclient import TestClient
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
-from sqlalchemy.pool import StaticPool
 
 @pytest.fixture(scope="function")
 def async_db_engine():

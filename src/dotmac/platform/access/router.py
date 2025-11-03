@@ -146,10 +146,7 @@ async def get_device_alarms(device_id: str, service: AccessServiceDep) -> VOLTHA
     active = sum(1 for alarm in filtered if alarm.state != "CLEARED")
     cleared = sum(1 for alarm in filtered if alarm.state == "CLEARED")
     return VOLTHAAlarmListResponse(
-        alarms=filtered,
-        total=len(filtered),
-        active=active,
-        cleared=cleared
+        alarms=filtered, total=len(filtered), active=active, cleared=cleared
     )
 
 

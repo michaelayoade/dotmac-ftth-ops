@@ -8,9 +8,9 @@ generating usage reports for metered ISP services.
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from decimal import Decimal, ROUND_HALF_UP
-from typing import Sequence
+from collections.abc import Sequence
+from datetime import UTC, datetime
+from decimal import ROUND_HALF_UP, Decimal
 from uuid import UUID
 
 import structlog
@@ -34,7 +34,7 @@ from dotmac.platform.billing.usage.schemas import (
 )
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 
-UTC = timezone.utc
+UTC = UTC
 logger = structlog.get_logger(__name__)
 
 
@@ -98,7 +98,12 @@ class UsageBillingService:
         return record
 
     async def update_usage_record(
-        self, tenant_id: str, record_id: UUID, update: UsageRecordUpdate, *, updated_by: str | None = None
+        self,
+        tenant_id: str,
+        record_id: UUID,
+        update: UsageRecordUpdate,
+        *,
+        updated_by: str | None = None,
     ) -> UsageRecord:
         """Update an existing usage record."""
         record = await self.get_usage_record(record_id, tenant_id)

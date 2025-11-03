@@ -4,10 +4,12 @@ GraphQL queries for Orchestration Service.
 Provides queries for workflows, provisioning status, and statistics.
 """
 
-from typing import cast
+from typing import Any, cast
 
 import strawberry
 import structlog
+
+from sqlalchemy import func, select
 
 from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.orchestration import (
@@ -56,20 +58,13 @@ class OrchestrationQueries:
         tenant_id = current_user.tenant_id
 
         try:
-            # Query workflow with steps
-            workflow_model = (
-                db.query(WorkflowModel)
-                .filter(
-                    WorkflowModel.workflow_id == workflow_id,
-                    WorkflowModel.tenant_id == tenant_id,
-                )
-                .first()
-            )
+            service = OrchestrationService(db=db, tenant_id=tenant_id)
+            workflow_response = await service.get_workflow(workflow_id)
 
-            if not workflow_model:
+            if not workflow_response:
                 return None
 
-            return Workflow.from_model(workflow_model)
+            return Workflow.from_response(workflow_response)
 
         except Exception as e:
             logger.error("Error fetching workflow", workflow_id=workflow_id, error=str(e))
@@ -117,16 +112,7 @@ class OrchestrationQueries:
             )
 
             # Convert to GraphQL types
-            workflows = []
-            for wf_response in result.workflows:
-                # Fetch full model for conversion
-                workflow_model = (
-                    db.query(WorkflowModel)
-                    .filter(WorkflowModel.workflow_id == wf_response.workflow_id)
-                    .first()
-                )
-                if workflow_model:
-                    workflows.append(Workflow.from_model(workflow_model))
+            workflows = [Workflow.from_response(wf) for wf in result.workflows]
 
             return WorkflowConnection(
                 workflows=workflows,
@@ -205,16 +191,9 @@ class OrchestrationQueries:
         tenant_id = current_user.tenant_id
 
         try:
-            count = cast(
-                int,
-                db.query(WorkflowModel)
-                .filter(
-                    WorkflowModel.tenant_id == tenant_id,
-                    WorkflowModel.status == DBWorkflowStatus.RUNNING,
-                )
-                .count(),
-            )
-            return count
+            service = OrchestrationService(db=db, tenant_id=tenant_id)
+            stats = await service.get_workflow_statistics()
+            return stats.running_workflows
 
         except Exception as e:
             logger.error("Error counting running workflows", error=str(e))
@@ -244,26 +223,25 @@ class OrchestrationQueries:
         tenant_id = current_user.tenant_id
 
         try:
-            from sqlalchemy import func
-
-            # Check for running workflows where input_data contains customer_id
-            count_result = cast(
-                int | None,
-                db.query(func.count(WorkflowModel.id))
-                .filter(
-                    WorkflowModel.tenant_id == tenant_id,
-                    WorkflowModel.status.in_(
+            status_column = cast(Any, WorkflowModel.status)
+            stmt = (
+                select(func.count(WorkflowModel.id))
+                .where(WorkflowModel.tenant_id == tenant_id)
+                .where(
+                    status_column.in_(
                         [
                             DBWorkflowStatus.PENDING,
                             DBWorkflowStatus.RUNNING,
                         ]
-                    ),
-                    WorkflowModel.input_data["customer_id"].astext == customer_id,
+                    )
                 )
-                .scalar(),
+                .where(WorkflowModel.input_data["customer_id"].astext == customer_id)
             )
 
-            return bool(count_result and count_result > 0)
+            result = await db.execute(stmt)
+            count_result = result.scalar_one_or_none() or 0
+
+            return count_result > 0
 
         except Exception as e:
             logger.error("Error checking running workflows", customer_id=customer_id, error=str(e))

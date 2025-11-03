@@ -97,7 +97,7 @@ async def get_redis_client() -> RedisClientType | None:
     if _redis_client is None:
         try:
             redis_url = settings.redis.redis_url
-            _redis_client = cast(RedisClientType, redis.from_url(redis_url))
+            _redis_client = redis.from_url(redis_url)
             # Test the connection
             await _redis_client.ping()
         except Exception as e:

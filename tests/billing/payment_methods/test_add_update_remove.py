@@ -1,9 +1,8 @@
-
 """
 Tests for Payment Methods Service - Add, Update, Remove operations.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 from uuid import uuid4
 
@@ -11,8 +10,6 @@ import pytest
 
 from dotmac.platform.billing.exceptions import PaymentMethodError
 from dotmac.platform.billing.payment_methods.models import (
-
-
     CardBrand,
     PaymentMethodResponse,
     PaymentMethodStatus,
@@ -21,11 +18,8 @@ from dotmac.platform.billing.payment_methods.models import (
 from dotmac.platform.billing.payment_methods.service import PaymentMethodService
 from tests.billing.payment_methods.conftest import build_mock_result
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.integration
 class TestAddPaymentMethod:
@@ -223,8 +217,8 @@ class TestUpdatePaymentMethod:
                 billing_country="NG",
                 is_verified=True,
                 auto_pay_enabled=False,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
                 expires_at=None,
             ),
         ):

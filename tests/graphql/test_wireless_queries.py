@@ -1,4 +1,3 @@
-
 """
 Integration Tests for Wireless GraphQL Query Resolvers
 
@@ -12,6 +11,7 @@ Tests all 14 wireless query resolvers with:
 """
 
 from datetime import datetime, timedelta
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -20,9 +20,6 @@ from dotmac.platform.graphql.schema import schema
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.user_management.models import User
 from dotmac.platform.wireless.models import (
-
-
-
     CoverageType,
     DeviceStatus,
     DeviceType,
@@ -43,9 +40,8 @@ from dotmac.platform.wireless.models import (
 # ============================================================================
 
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def graphql_client():
@@ -79,9 +75,10 @@ async def graphql_context(async_db_session, test_user: User):
 @pytest_asyncio.fixture
 async def test_tenant(async_db_session) -> Tenant:
     """Create a test tenant."""
+    slug_suffix = uuid4().hex[:8]
     tenant = Tenant(
         name="Test ISP",
-        slug="test-isp",
+        slug=f"test-isp-{slug_suffix}",
         is_active=True,
     )
     async_db_session.add(tenant)

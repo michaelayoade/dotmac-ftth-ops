@@ -5,6 +5,7 @@ Add error_traceback column to jobs table.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "2025_10_22_1530"

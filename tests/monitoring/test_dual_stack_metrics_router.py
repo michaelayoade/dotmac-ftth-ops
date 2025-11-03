@@ -1,4 +1,3 @@
-
 """
 Tests covering tenant scoping for the dual-stack metrics router.
 """
@@ -16,19 +15,14 @@ from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_async_session
 from dotmac.platform.monitoring.dual_stack_metrics import (
-
-
-
     DualStackMetrics,
     DualStackMetricsCollector,
     MetricsAggregator,
 )
 from dotmac.platform.monitoring.dual_stack_metrics_router import router as dual_stack_router
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 def _tenant_user(tenant_id: str) -> UserInfo:
     return UserInfo(

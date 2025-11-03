@@ -6,9 +6,12 @@ Provides GraphQL representations of workflows and related types.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import strawberry
+
+if TYPE_CHECKING:
+    from dotmac.platform.orchestration.schemas import WorkflowResponse, WorkflowStepResponse
 
 # ============================================================================
 # Enums
@@ -68,7 +71,7 @@ class WorkflowStep:
     step_id: str
     step_name: str
     step_order: int
-    target_system: str
+    target_system: str | None = None
     status: WorkflowStepStatus
     started_at: datetime | None = None
     completed_at: datetime | None = None
@@ -82,18 +85,42 @@ class WorkflowStep:
         """Convert database model to GraphQL type."""
         import json
 
+        status_value = getattr(step.status, "value", step.status)
         return WorkflowStep(
             step_id=step.step_id,
             step_name=step.step_name,
             step_order=step.step_order,
             target_system=step.target_system,
-            status=WorkflowStepStatus(step.status.value),
+            status=WorkflowStepStatus(status_value),
             started_at=step.started_at,
             completed_at=step.completed_at,
             failed_at=step.failed_at,
             error_message=step.error_message,
             retry_count=step.retry_count,
             output_data=json.dumps(step.output_data) if step.output_data else None,
+        )
+
+    @staticmethod
+    def from_response(step: "WorkflowStepResponse") -> "WorkflowStep":
+        """Convert workflow step response to GraphQL type."""
+        import json
+
+        status_value = getattr(step.status, "value", step.status)
+        step_order = getattr(step, "step_order", getattr(step, "sequence_number", 0))
+        output_payload = step.output_data if getattr(step, "output_data", None) else None
+
+        return WorkflowStep(
+            step_id=getattr(step, "step_id", None) or step.step_name,
+            step_name=step.step_name,
+            step_order=step_order,
+            target_system=getattr(step, "target_system", None),
+            status=WorkflowStepStatus(status_value),
+            started_at=getattr(step, "started_at", None),
+            completed_at=getattr(step, "completed_at", None),
+            failed_at=getattr(step, "failed_at", None),
+            error_message=getattr(step, "error_message", None),
+            retry_count=getattr(step, "retry_count", 0),
+            output_data=json.dumps(output_payload) if output_payload else None,
         )
 
 
@@ -144,10 +171,12 @@ class Workflow:
     @staticmethod
     def from_model(workflow: Any) -> "Workflow":
         """Convert database model to GraphQL type."""
+        status_value = getattr(workflow.status, "value", workflow.status)
+        workflow_type_value = getattr(workflow.workflow_type, "value", workflow.workflow_type)
         return Workflow(
             workflow_id=workflow.workflow_id,
-            workflow_type=WorkflowType(workflow.workflow_type.value),
-            status=WorkflowStatus(workflow.status.value),
+            workflow_type=WorkflowType(workflow_type_value),
+            status=WorkflowStatus(status_value),
             started_at=workflow.started_at,
             completed_at=workflow.completed_at,
             failed_at=workflow.failed_at,
@@ -156,14 +185,31 @@ class Workflow:
             steps=[WorkflowStep.from_model(step) for step in workflow.steps],
         )
 
+    @staticmethod
+    def from_response(workflow: "WorkflowResponse") -> "Workflow":
+        """Convert workflow response to GraphQL type."""
+        status_value = getattr(workflow.status, "value", workflow.status)
+        workflow_type_value = getattr(workflow.workflow_type, "value", workflow.workflow_type)
+        return Workflow(
+            workflow_id=workflow.workflow_id,
+            workflow_type=WorkflowType(workflow_type_value),
+            status=WorkflowStatus(status_value),
+            started_at=workflow.started_at,
+            completed_at=workflow.completed_at,
+            failed_at=workflow.failed_at,
+            error_message=workflow.error_message,
+            retry_count=workflow.retry_count or 0,
+            steps=[WorkflowStep.from_response(step) for step in getattr(workflow, "steps", [])],
+        )
+
 
 @strawberry.type(description="Subscriber provisioning result")
 class ProvisionSubscriberResult:
     """GraphQL type for subscriber provisioning result."""
 
     workflow_id: str
-    subscriber_id: str
-    customer_id: str
+    subscriber_id: str | None = None
+    customer_id: str | None = None
     status: WorkflowStatus
 
     # Created resources
@@ -175,11 +221,11 @@ class ProvisionSubscriberResult:
     service_id: str | None = None
 
     # Workflow details
-    steps_completed: int
-    total_steps: int
+    steps_completed: int | None = None
+    total_steps: int | None = None
     error_message: str | None = None
 
-    created_at: datetime
+    created_at: datetime | None = None
     completed_at: datetime | None = None
 
     @strawberry.field(description="Is provisioning successful")
@@ -191,10 +237,10 @@ class ProvisionSubscriberResult:
     async def workflow(self, info: strawberry.Info) -> Workflow | None:
         """Fetch full workflow details."""
         from dotmac.platform.orchestration.service import OrchestrationService
-        from dotmac.platform.tenant.tenant import get_tenant_id
 
-        db = info.context.db
-        tenant_id = get_tenant_id(info.context.request)
+        context = info.context
+        db = context.db
+        tenant_id = context.get_active_tenant_id()
 
         service = OrchestrationService(db=db, tenant_id=tenant_id)
         workflow_response = await service.get_workflow(self.workflow_id)
@@ -202,16 +248,7 @@ class ProvisionSubscriberResult:
         if not workflow_response:
             return None
 
-        # Convert to GraphQL type
-        from dotmac.platform.orchestration.models import (
-            OrchestrationWorkflow as WorkflowModel,
-        )
-
-        workflow_model = (
-            db.query(WorkflowModel).filter(WorkflowModel.workflow_id == self.workflow_id).first()
-        )
-
-        return Workflow.from_model(workflow_model) if workflow_model else None
+        return Workflow.from_response(workflow_response)
 
 
 @strawberry.type(description="Workflow list with pagination")

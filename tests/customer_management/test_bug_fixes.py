@@ -1,4 +1,3 @@
-
 """
 Tests for customer management bug fixes.
 
@@ -10,16 +9,15 @@ This module contains tests for specific bug fixes:
 5. All search filters implementation
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
+import pytest_asyncio
 from sqlalchemy import select
 
 from dotmac.platform.customer_management.models import (
-
-
     ActivityType,
     Customer,
     CustomerStatus,
@@ -35,16 +33,13 @@ from dotmac.platform.customer_management.schemas import (
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.tenant import set_current_tenant_id
 
-
-
-
-
 pytestmark = pytest.mark.integration
 
-@pytest.fixture(autouse=True)
-def set_tenant_context():
+
+@pytest_asyncio.fixture(autouse=True)
+async def set_tenant_context(test_tenant):
     """Automatically set tenant context for all tests."""
-    set_current_tenant_id("test-tenant")
+    set_current_tenant_id(test_tenant.id)
     yield
     set_current_tenant_id(None)
 
@@ -53,12 +48,15 @@ def set_tenant_context():
 class TestActivityMetadataFix:
     """Test fix for POST activities metadata TypeError (Bug #1)."""
 
-    async def test_add_activity_with_metadata(self, async_session, sample_customer):
+    async def test_add_activity_with_metadata(self, async_session, sample_customer, test_tenant):
         """Test that adding activity with metadata doesn't raise TypeError."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
         await async_session.refresh(sample_customer)
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -79,7 +77,7 @@ class TestActivityMetadataFix:
         activity = await service.add_activity(
             customer_id=sample_customer.id,
             data=activity_data,
-            performed_by=str(uuid4()),
+            performed_by=None,  # Set to None to avoid FK constraint
         )
 
         # Assert
@@ -94,12 +92,15 @@ class TestActivityMetadataFix:
             "follow_up_required": False,
         }
 
-    async def test_add_activity_with_empty_metadata(self, async_session, sample_customer):
+    async def test_add_activity_with_empty_metadata(self, async_session, sample_customer, test_tenant):
         """Test that adding activity with empty metadata works."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
         await async_session.refresh(sample_customer)
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -114,16 +115,20 @@ class TestActivityMetadataFix:
         activity = await service.add_activity(
             customer_id=sample_customer.id,
             data=activity_data,
+            performed_by=None,  # Set to None to avoid FK constraint
         )
 
         # Assert
         assert activity.metadata_ == {}
 
-    async def test_activity_metadata_persisted_correctly(self, async_session, sample_customer):
+    async def test_activity_metadata_persisted_correctly(self, async_session, sample_customer, test_tenant):
         """Test that metadata is persisted and retrieved correctly."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -139,7 +144,7 @@ class TestActivityMetadataFix:
                 "priority": "high",
                 "tags": ["urgent", "refund"],
             },
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         activity_data = CustomerActivityCreate(
@@ -152,6 +157,7 @@ class TestActivityMetadataFix:
         activity = await service.add_activity(
             customer_id=sample_customer.id,
             data=activity_data,
+            performed_by=None,  # Set to None to avoid FK constraint
         )
 
         # Retrieve activity from database
@@ -167,11 +173,14 @@ class TestActivityMetadataFix:
 class TestEagerLoadingFix:
     """Test fix for eager loading InvalidRequestError (Bug #2)."""
 
-    async def test_get_customer_with_include_activities_param(self, async_session, sample_customer):
+    async def test_get_customer_with_include_activities_param(self, async_session, sample_customer, test_tenant):
         """Test that get_customer doesn't raise InvalidRequestError with include_activities=True."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -185,11 +194,14 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_with_include_notes_param(self, async_session, sample_customer):
+    async def test_get_customer_with_include_notes_param(self, async_session, sample_customer, test_tenant):
         """Test that get_customer doesn't raise InvalidRequestError with include_notes=True."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -203,11 +215,14 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_with_both_includes(self, async_session, sample_customer):
+    async def test_get_customer_with_both_includes(self, async_session, sample_customer, test_tenant):
         """Test that get_customer works with both include flags."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -222,11 +237,14 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_by_number_with_activities(self, async_session, sample_customer):
+    async def test_get_customer_by_number_with_activities(self, async_session, sample_customer, test_tenant):
         """Test get_customer_by_number doesn't raise with include_activities."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -240,11 +258,14 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.customer_number == sample_customer.customer_number
 
-    async def test_get_customer_by_email_with_activities(self, async_session, sample_customer):
+    async def test_get_customer_by_email_with_activities(self, async_session, sample_customer, test_tenant):
         """Test get_customer_by_email doesn't raise with include_activities."""
         # Setup
         async_session.add(sample_customer)
-        await async_session.commit()
+        await async_session.flush()
+
+        # Set tenant context for this test
+        set_current_tenant_id(test_tenant.id)
 
         service = CustomerService(async_session)
 
@@ -625,7 +646,7 @@ class TestSearchFiltersImplementation:
             await service.create_customer(customer_data)
 
         # Act - filter for customers created today
-        today_start = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0)
+        today_start = datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0)
         params = CustomerSearchParams(created_after=today_start)
         results, _ = await service.search_customers(params, limit=50, offset=0)
 

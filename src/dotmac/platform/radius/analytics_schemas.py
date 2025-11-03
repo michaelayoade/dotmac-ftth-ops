@@ -5,7 +5,7 @@ Pydantic models for RADIUS analytics API endpoints.
 """
 
 from datetime import datetime
-from typing import Optional, List
+
 from pydantic import BaseModel, Field
 
 
@@ -14,7 +14,7 @@ class UsageQueryParams(BaseModel):
 
     start_date: datetime = Field(..., description="Start date for usage query")
     end_date: datetime = Field(..., description="End date for usage query")
-    subscriber_id: Optional[str] = Field(None, description="Filter by subscriber ID")
+    subscriber_id: str | None = Field(None, description="Filter by subscriber ID")
 
 
 class SubscriberUsageResponse(BaseModel):
@@ -28,7 +28,9 @@ class SubscriberUsageResponse(BaseModel):
     total_duration_seconds: int = Field(..., description="Total session duration (seconds)")
     total_duration_hours: float = Field(..., description="Total session duration (hours)")
     session_count: int = Field(..., description="Number of sessions")
-    avg_session_duration_seconds: float = Field(..., description="Average session duration (seconds)")
+    avg_session_duration_seconds: float = Field(
+        ..., description="Average session duration (seconds)"
+    )
     peak_bandwidth_bytes: int = Field(..., description="Peak single session bandwidth (bytes)")
 
     class Config:
@@ -90,11 +92,11 @@ class HourlyBandwidthPoint(BaseModel):
 class HourlyBandwidthResponse(BaseModel):
     """Hourly bandwidth analytics response."""
 
-    subscriber_id: Optional[str] = Field(None, description="Subscriber ID (if filtered)")
+    subscriber_id: str | None = Field(None, description="Subscriber ID (if filtered)")
     tenant_id: str = Field(..., description="Tenant ID")
     start_date: datetime = Field(..., description="Query start date")
     end_date: datetime = Field(..., description="Query end date")
-    data_points: List[HourlyBandwidthPoint] = Field(..., description="Hourly data points")
+    data_points: list[HourlyBandwidthPoint] = Field(..., description="Hourly data points")
 
     class Config:
         json_schema_extra = {
@@ -136,11 +138,11 @@ class DailyBandwidthPoint(BaseModel):
 class DailyBandwidthResponse(BaseModel):
     """Daily bandwidth analytics response."""
 
-    subscriber_id: Optional[str] = Field(None, description="Subscriber ID (if filtered)")
+    subscriber_id: str | None = Field(None, description="Subscriber ID (if filtered)")
     tenant_id: str = Field(..., description="Tenant ID")
     start_date: datetime = Field(..., description="Query start date")
     end_date: datetime = Field(..., description="Query end date")
-    data_points: List[DailyBandwidthPoint] = Field(..., description="Daily data points")
+    data_points: list[DailyBandwidthPoint] = Field(..., description="Daily data points")
 
     class Config:
         json_schema_extra = {
@@ -182,7 +184,7 @@ class TopSubscriberEntry(BaseModel):
     """Single entry in top subscribers list."""
 
     subscriber_id: str = Field(..., description="Subscriber ID")
-    username: Optional[str] = Field(None, description="Username")
+    username: str | None = Field(None, description="Username")
     total_bandwidth_bytes: int = Field(..., description="Total bandwidth (bytes)")
     total_bandwidth_gb: float = Field(..., description="Total bandwidth (GB)")
     total_duration_seconds: int = Field(..., description="Total duration (seconds)")
@@ -196,4 +198,4 @@ class TopSubscribersResponse(BaseModel):
     start_date: datetime = Field(..., description="Query start date")
     end_date: datetime = Field(..., description="Query end date")
     metric: str = Field(..., description="Metric used for sorting")
-    top_subscribers: List[TopSubscriberEntry] = Field(..., description="Top subscribers list")
+    top_subscribers: list[TopSubscriberEntry] = Field(..., description="Top subscribers list")

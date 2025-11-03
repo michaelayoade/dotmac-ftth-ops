@@ -1,4 +1,3 @@
-
 """
 Demo test showing new fixture factory patterns.
 
@@ -14,11 +13,8 @@ from decimal import Decimal
 
 import pytest
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestFixtureFactoryDemo:
     """Demo tests using new fixture factory patterns."""
@@ -92,9 +88,7 @@ class TestFixtureFactoryDemo:
         assert sub2["status"] == "trial"  # Custom
         assert sub3["status"] == "active"  # Custom
 
-    def test_multiple_factories_together(
-        self, invoice_dict_factory, subscription_dict_factory
-    ):
+    def test_multiple_factories_together(self, invoice_dict_factory, subscription_dict_factory):
         """Test using multiple factories in one test.
 
         This shows how you can combine different factories to create
@@ -206,9 +200,7 @@ class TestFactoryPatternBenefits:
 class TestRealWorldScenario:
     """Real-world scenario test using factories."""
 
-    def test_billing_cycle_scenario(
-        self, invoice_dict_factory, subscription_dict_factory
-    ):
+    def test_billing_cycle_scenario(self, invoice_dict_factory, subscription_dict_factory):
         """Test a complete billing cycle scenario.
 
         This shows how factories make complex scenarios easy to set up.

@@ -4,7 +4,7 @@ Comprehensive tests for tenant management system.
 Tests all tenant CRUD operations, settings, usage tracking, and invitations.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -153,17 +153,13 @@ class TestTenantCRUD:
             await tenant_service.create_tenant(tenant_data)
 
         # List first page
-        tenants, total = await tenant_service.list_tenants(
-            page=1, page_size=3, search=batch_id
-        )
+        tenants, total = await tenant_service.list_tenants(page=1, page_size=3, search=batch_id)
 
         assert len(tenants) == 3
         assert total == 5
 
         # List second page
-        tenants, total = await tenant_service.list_tenants(
-            page=2, page_size=3, search=batch_id
-        )
+        tenants, total = await tenant_service.list_tenants(page=2, page_size=3, search=batch_id)
 
         assert len(tenants) == 2
         assert total == 5
@@ -351,8 +347,8 @@ class TestTenantUsage:
     async def test_record_usage(self, tenant_service, sample_tenant):
         """Test recording usage metrics."""
         usage_data = TenantUsageCreate(
-            period_start=datetime.now(timezone.utc) - timedelta(hours=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(hours=1),
+            period_end=datetime.now(UTC),
             api_calls=1000,
             storage_gb=5.5,
             active_users=10,
@@ -372,8 +368,8 @@ class TestTenantUsage:
         # Record multiple usage periods
         for i in range(3):
             usage_data = TenantUsageCreate(
-                period_start=datetime.now(timezone.utc) - timedelta(days=i + 1),
-                period_end=datetime.now(timezone.utc) - timedelta(days=i),
+                period_start=datetime.now(UTC) - timedelta(days=i + 1),
+                period_end=datetime.now(UTC) - timedelta(days=i),
                 api_calls=1000 * (i + 1),
                 storage_gb=float(i + 1),
                 active_users=5 * (i + 1),
@@ -387,7 +383,7 @@ class TestTenantUsage:
 
     async def test_get_usage_with_date_range(self, tenant_service, sample_tenant):
         """Test getting usage with date filters."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Record usage for different periods
         past_usage = TenantUsageCreate(
@@ -455,11 +451,11 @@ class TestTenantInvitations:
         assert invitation.token is not None
         # Normalize datetime for comparison (SQLite returns naive datetimes)
         expires_at = (
-            invitation.expires_at.replace(tzinfo=timezone.utc)
+            invitation.expires_at.replace(tzinfo=UTC)
             if invitation.expires_at.tzinfo is None
             else invitation.expires_at
         )
-        assert expires_at > datetime.now(timezone.utc)
+        assert expires_at > datetime.now(UTC)
 
     async def test_accept_invitation(self, tenant_service, sample_tenant):
         """Test accepting an invitation."""
@@ -484,7 +480,7 @@ class TestTenantInvitations:
         )
 
         # Manually expire it
-        invitation.expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+        invitation.expires_at = datetime.now(UTC) - timedelta(days=1)
         async_session.add(invitation)
         await async_session.commit()
 

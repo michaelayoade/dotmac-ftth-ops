@@ -2,16 +2,15 @@
 Test fixtures for fault management tests
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.db import Base
 from dotmac.platform.fault_management.models import (
-
-
     Alarm,
     AlarmRule,
     AlarmSeverity,
@@ -22,9 +21,37 @@ from dotmac.platform.fault_management.models import (
     SLAStatus,
 )
 
-
-
 pytestmark = pytest.mark.integration
+
+_FAULT_TABLE_NAMES = [
+    "alarms",
+    "alarm_notes",
+    "alarm_rules",
+    "sla_definitions",
+    "sla_instances",
+    "sla_breaches",
+    "maintenance_windows",
+    "oncall_schedules",
+    "oncall_rotations",
+]
+
+
+@pytest_asyncio.fixture(autouse=True)
+async def ensure_fault_management_tables(async_db_engine):
+    """Ensure fault management tables exist for each test run."""
+    async with async_db_engine.begin() as conn:
+        fault_tables = [
+            Base.metadata.tables[name]
+            for name in _FAULT_TABLE_NAMES
+            if name in Base.metadata.tables
+        ]
+        if fault_tables:
+            await conn.run_sync(
+                lambda sync_conn: Base.metadata.create_all(
+                    sync_conn, tables=fault_tables, checkfirst=True
+                )
+            )
+
 
 @pytest.fixture
 def session(async_db_session):
@@ -136,8 +163,8 @@ async def sample_alarm(session: AsyncSession, test_tenant: str) -> Alarm:
         subscriber_count=10,
         correlation_id=uuid4(),
         is_root_cause=True,
-        first_occurrence=datetime.now(timezone.utc),
-        last_occurrence=datetime.now(timezone.utc),
+        first_occurrence=datetime.now(UTC),
+        last_occurrence=datetime.now(UTC),
         occurrence_count=1,
     )
     session.add(alarm)
@@ -206,7 +233,7 @@ async def sample_sla_instance(
         service_name="Internet 100Mbps",
         status=SLAStatus.COMPLIANT,
         enabled=True,
-        start_date=datetime.now(timezone.utc),
+        start_date=datetime.now(UTC),
         current_availability=99.95,
         total_downtime=0,
         unplanned_downtime=0,
@@ -235,8 +262,8 @@ async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm
             resource_id="device-001",
             resource_name="Device 1",
             subscriber_count=50,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(hours=2),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(hours=2),
+            first_occurrence=datetime.now(UTC) - timedelta(hours=2),
+            last_occurrence=datetime.now(UTC) - timedelta(hours=2),
             occurrence_count=1,
         ),
         # Major service alarm
@@ -252,8 +279,8 @@ async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm
             resource_id="service-001",
             resource_name="Service 1",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(hours=1),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(hours=1),
+            first_occurrence=datetime.now(UTC) - timedelta(hours=1),
+            last_occurrence=datetime.now(UTC) - timedelta(hours=1),
             occurrence_count=1,
         ),
         # Minor monitoring alarm
@@ -269,8 +296,8 @@ async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm
             resource_id="device-002",
             resource_name="Device 2",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(minutes=30),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(minutes=30),
+            first_occurrence=datetime.now(UTC) - timedelta(minutes=30),
+            last_occurrence=datetime.now(UTC) - timedelta(minutes=30),
             occurrence_count=1,
         ),
         # Cleared alarm
@@ -286,9 +313,9 @@ async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm
             resource_id="cpe-001",
             resource_name="CPE 1",
             subscriber_count=1,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(days=1),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(days=1),
-            cleared_at=datetime.now(timezone.utc) - timedelta(hours=12),
+            first_occurrence=datetime.now(UTC) - timedelta(days=1),
+            last_occurrence=datetime.now(UTC) - timedelta(days=1),
+            cleared_at=datetime.now(UTC) - timedelta(hours=12),
             occurrence_count=1,
         ),
     ]
@@ -307,4 +334,4 @@ async def multiple_alarms(session: AsyncSession, test_tenant: str) -> list[Alarm
 @pytest.fixture
 def test_tenant() -> str:
     """Test tenant ID"""
-    return "test-tenant-001"
+    return f"test-tenant-{uuid4().hex[:8]}"

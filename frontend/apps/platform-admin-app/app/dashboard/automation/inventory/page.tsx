@@ -263,7 +263,7 @@ function InventoryDashboardContent() {
 
 export default function InventoryDashboardPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <InventoryDashboardContent />
     </RouteGuard>
   );

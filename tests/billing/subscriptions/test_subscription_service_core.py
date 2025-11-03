@@ -1,4 +1,3 @@
-
 """
 Core Subscription Service Tests - Phase 1 Coverage Improvement
 
@@ -14,17 +13,16 @@ Tests critical subscription service workflows:
 Target: Increase subscription service coverage from 11.40% to 70%+
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from uuid import uuid4
 
 from dotmac.platform.billing.exceptions import (
-
-
     PlanNotFoundError,
     SubscriptionNotFoundError,
 )
@@ -41,22 +39,23 @@ from dotmac.platform.billing.subscriptions.models import (
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def tenant_id() -> str:
     """Test tenant ID."""
-    return "test-tenant-sub"
+    from uuid import uuid4
+
+    return str(uuid4())
 
 
 @pytest.fixture
 def customer_id() -> str:
     """Test customer ID."""
-    return "cust_sub_123"
+    from uuid import uuid4
+
+    return str(uuid4())
 
 
 @pytest.fixture
@@ -675,7 +674,7 @@ class TestSubscriptionRenewal:
 
         # Mock to create subscription with past period
 
-        past_time = datetime.now(timezone.utc) - timedelta(days=5)
+        past_time = datetime.now(UTC) - timedelta(days=5)
         with patch("dotmac.platform.billing.subscriptions.service.datetime") as mock_dt:
             mock_dt.now.return_value = past_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)

@@ -1,6 +1,6 @@
 """Tests for billing payments router."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -13,8 +13,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
-import pytest_asyncio
-
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.models import PaymentMethodType, PaymentStatus
 from dotmac.platform.billing.payments.router import router
@@ -47,7 +45,7 @@ def client(async_db_session: AsyncSession):
 async def sample_failed_payments(async_db_session: AsyncSession):
     """Create sample failed payments for testing."""
     payments = []
-    base_time = datetime.now(timezone.utc)
+    base_time = datetime.now(UTC)
 
     for i in range(3):
         payment = PaymentEntity(
@@ -80,7 +78,7 @@ async def sample_successful_payments(async_db_session: AsyncSession):
         status=PaymentStatus.SUCCEEDED,
         payment_method_type=PaymentMethodType.CARD,
         provider="stripe",
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     async_db_session.add(payment)
     await async_db_session.commit()
@@ -146,7 +144,7 @@ class TestGetFailedPayments:
             status=PaymentStatus.FAILED,
             payment_method_type=PaymentMethodType.CARD,
             provider="stripe",
-            created_at=datetime.now(timezone.utc) - timedelta(days=31),
+            created_at=datetime.now(UTC) - timedelta(days=31),
         )
         async_db_session.add(old_payment)
 
@@ -160,7 +158,7 @@ class TestGetFailedPayments:
             status=PaymentStatus.FAILED,
             payment_method_type=PaymentMethodType.CARD,
             provider="stripe",
-            created_at=datetime.now(timezone.utc) - timedelta(days=5),
+            created_at=datetime.now(UTC) - timedelta(days=5),
         )
         async_db_session.add(recent_payment)
         await async_db_session.commit()
@@ -224,6 +222,8 @@ class TestGetFailedPayments:
 
         # Should fail without authentication
         assert response.status_code in [401, 422]  # Unauthorized or validation error
+
+
 @pytest_asyncio.fixture(autouse=True)
 async def _clean_payment_tables(async_db_session: AsyncSession):
     """Ensure payment table starts empty for each test."""

@@ -30,6 +30,7 @@ from dotmac.platform.licensing.framework import (
     QuotaDefinition,
     ServicePlan,
     SubscriptionModule,
+    SubscriptionQuotaUsage,
     TenantSubscription,
 )
 from dotmac.platform.licensing.schemas_framework import (
@@ -396,8 +397,8 @@ async def create_service_plan(
         result = await db.execute(
             select(ServicePlan)
             .options(
-                selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-                selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+                selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+                selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
             )
             .where(ServicePlan.id == plan.id)
         )
@@ -421,8 +422,8 @@ async def list_service_plans(
 ) -> Any:
     """List all service plans."""
     query = select(ServicePlan).options(
-        selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-        selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+        selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+        selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
     )
 
     if is_template is not None:
@@ -452,8 +453,8 @@ async def get_service_plan(
     result = await db.execute(
         select(ServicePlan)
         .options(
-            selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-            selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+            selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+            selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
         )
         .where(ServicePlan.id == plan_id)
     )
@@ -492,8 +493,8 @@ async def update_service_plan(
     result = await db.execute(
         select(ServicePlan)
         .options(
-            selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-            selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+            selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+            selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
         )
         .where(ServicePlan.id == plan_id)
     )
@@ -527,8 +528,8 @@ async def duplicate_service_plan(
         result = await db.execute(
             select(ServicePlan)
             .options(
-                selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-                selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+                selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+                selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
             )
             .where(ServicePlan.id == new_plan.id)
         )
@@ -609,8 +610,8 @@ async def create_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.modules).selectinload(SubscriptionModule.module),
-                selectinload(TenantSubscription.quotas).selectinload(SubscriptionModule.quota),
+                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.quota_usage).selectinload(SubscriptionQuotaUsage.quota),
             )
             .where(TenantSubscription.id == subscription.id)
         )
@@ -637,8 +638,8 @@ async def get_current_subscription(
         select(TenantSubscription)
         .options(
             selectinload(TenantSubscription.plan),
-            selectinload(TenantSubscription.modules).selectinload(SubscriptionModule.module),
-            selectinload(TenantSubscription.quotas),
+            selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
+            selectinload(TenantSubscription.quota_usage),
         )
         .where(
             TenantSubscription.tenant_id == tenant.id,
@@ -713,8 +714,8 @@ async def add_addon_to_current_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.modules).selectinload(SubscriptionModule.module),
-                selectinload(TenantSubscription.quotas),
+                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.quota_usage),
             )
             .where(TenantSubscription.id == subscription.id)
         )
@@ -776,7 +777,7 @@ async def remove_addon_from_current_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
                 selectinload(TenantSubscription.quotas),
             )
             .where(TenantSubscription.id == subscription.id)

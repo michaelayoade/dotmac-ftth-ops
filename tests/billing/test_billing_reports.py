@@ -2,7 +2,7 @@
 Tests for billing reports functionality
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -254,23 +254,23 @@ class TestBillingReportService:
         """Test date range calculation for this month"""
 
         with patch("dotmac.platform.billing.reports.service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
+            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
 
             start, end = billing_report_service._calculate_date_range(ReportPeriod.THIS_MONTH)
 
-            assert start == datetime(2024, 3, 1, 0, 0, 0, tzinfo=timezone.utc)
-            assert end == datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
+            assert start == datetime(2024, 3, 1, 0, 0, 0, tzinfo=UTC)
+            assert end == datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
 
     def test_calculate_date_range_last_month(self, billing_report_service):
         """Test date range calculation for last month"""
 
         with patch("dotmac.platform.billing.reports.service.datetime") as mock_dt:
-            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=timezone.utc)
+            mock_dt.now.return_value = datetime(2024, 3, 15, 10, 30, 0, tzinfo=UTC)
 
             start, end = billing_report_service._calculate_date_range(ReportPeriod.LAST_MONTH)
 
-            assert start == datetime(2024, 2, 1, 0, 0, 0, tzinfo=timezone.utc)
-            assert end == datetime(2024, 3, 1, 0, 0, 0, tzinfo=timezone.utc)
+            assert start == datetime(2024, 2, 1, 0, 0, 0, tzinfo=UTC)
+            assert end == datetime(2024, 3, 1, 0, 0, 0, tzinfo=UTC)
 
     def test_calculate_date_range_custom(self, billing_report_service):
         """Test date range calculation for custom period"""

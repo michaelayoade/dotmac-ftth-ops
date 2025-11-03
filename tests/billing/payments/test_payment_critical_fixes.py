@@ -8,7 +8,7 @@ This module tests the fixes for:
 4. Fractional currency truncation in offline payments
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -51,8 +51,8 @@ class TestCustomerIdValidation:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment_method)
@@ -90,8 +90,8 @@ class TestCustomerIdValidation:
             is_active=True,
             brand="Visa",
             last_four="4242",
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment_method)
@@ -145,8 +145,8 @@ class TestRefundUnitMismatch:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -190,8 +190,8 @@ class TestRefundUnitMismatch:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -239,8 +239,8 @@ class TestTransactionLoggingForRefunds:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         setup_mock_db_result(mock_db, scalar_value=payment)
@@ -291,8 +291,8 @@ class TestTransactionLoggingForRefunds:
             refund_amount=None,
             payment_method_type=PaymentMethodType.CARD,
             payment_method_details={"brand": "Visa", "last_four": "4242"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         created_transactions = []

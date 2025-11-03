@@ -5,7 +5,7 @@ Pytest fixtures for billing invoicing router tests.
 """
 
 import hashlib
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -28,7 +28,7 @@ from dotmac.platform.billing.invoicing.service import InvoiceService
 
 
 def _build_invoice_number(tenant_id: str, year: int | None = None, sequence: int = 1) -> str:
-    year = year or datetime.now(timezone.utc).year
+    year = year or datetime.now(UTC).year
     suffix = hashlib.sha1(tenant_id.encode()).hexdigest()[:4].upper()
     return f"INV-{suffix}-{year}-{sequence:06d}"
 
@@ -140,8 +140,8 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
         "postal_code": "94105",
         "country": "US",
     }
-    entity.issue_date = datetime.now(timezone.utc)
-    entity.due_date = datetime.now(timezone.utc) + timedelta(days=30)
+    entity.issue_date = datetime.now(UTC)
+    entity.due_date = datetime.now(UTC) + timedelta(days=30)
     entity.currency = "USD"
     entity.subtotal = 17500
     entity.tax_amount = 1750
@@ -157,8 +157,8 @@ def mock_invoice_entity(sample_tenant_id, sample_customer_id):
     entity.notes = None
     entity.internal_notes = None
     entity.extra_data = {}
-    entity.created_at = datetime.now(timezone.utc)
-    entity.updated_at = datetime.now(timezone.utc)
+    entity.created_at = datetime.now(UTC)
+    entity.updated_at = datetime.now(UTC)
     entity.updated_by = "system"
     entity.paid_at = None
     entity.voided_at = None
@@ -301,7 +301,7 @@ def mock_rbac_service():
 async def async_client(mock_invoice_service, mock_current_user, mock_rbac_service, monkeypatch):
     """Async HTTP client with billing invoicing router registered and dependencies mocked."""
     import dotmac.platform.auth.rbac_dependencies
-    from dotmac.platform.auth.core import get_current_user
+    from dotmac.platform.auth.dependencies import get_current_user
     from dotmac.platform.billing.dependencies import get_tenant_id
     from dotmac.platform.billing.invoicing.router import router as invoicing_router
     from dotmac.platform.dependencies import get_db

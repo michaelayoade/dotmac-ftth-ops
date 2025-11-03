@@ -5,7 +5,7 @@ High-level service layer for workflow management and execution.
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -375,8 +375,13 @@ class WorkflowService:
         rows = result.all()
 
         stats = {
-            "total": sum(row.count for row in rows),
-            "by_status": {row.status.value: row.count for row in rows},
+            "total": sum(int(cast(int, row._mapping["count"])) for row in rows),
+            "by_status": {
+                cast(WorkflowStatus, row._mapping["status"]).value: int(
+                    cast(int, row._mapping["count"])
+                )
+                for row in rows
+            },
         }
 
         return stats

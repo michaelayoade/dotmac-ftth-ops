@@ -7,6 +7,7 @@ Decorators for fine-grained rate limiting on specific endpoints.
 from collections.abc import Callable
 from functools import wraps
 from typing import Any
+from uuid import UUID
 
 from fastapi import HTTPException, Request, status
 
@@ -56,7 +57,16 @@ def rate_limit(
 
             # Extract request info
             endpoint = request.url.path
-            user_id = getattr(request.state, "user_id", None)
+            raw_user_id = getattr(request.state, "user_id", None)
+            user_id: UUID | None = None
+            if raw_user_id is not None:
+                if isinstance(raw_user_id, UUID):
+                    user_id = raw_user_id
+                else:
+                    try:
+                        user_id = UUID(str(raw_user_id))
+                    except (TypeError, ValueError):
+                        user_id = None
             tenant_id = getattr(request.state, "tenant_id", None) or "public"
             ip_address = _get_client_ip(request)
             api_key_id = getattr(request.state, "api_key_id", None)
@@ -83,7 +93,12 @@ def rate_limit(
 
                 # Determine identifier
                 identifier = service._get_identifier(
-                    scope, user_id, ip_address, api_key_id, endpoint
+                    scope,
+                    tenant_id,
+                    user_id,
+                    ip_address,
+                    api_key_id,
+                    endpoint,
                 )
 
                 if identifier is None:

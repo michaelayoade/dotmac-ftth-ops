@@ -1,4 +1,3 @@
-
 """
 Invoice edge cases tests - Migrated to use shared helpers.
 
@@ -6,7 +5,7 @@ BEFORE: 147 lines with repetitive mock setup
 AFTER: ~100 lines using shared helpers (32% reduction)
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -16,12 +15,8 @@ from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
 from dotmac.platform.billing.invoicing.service import InvoiceService
 from tests.helpers import build_mock_db_session, build_not_found_result, build_success_result
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestInvoiceServiceEdgeCases:
@@ -56,8 +51,8 @@ class TestInvoiceServiceEdgeCases:
 
         def mock_refresh_entity(entity, attribute_names=None):
             entity.invoice_id = str(uuid4())
-            entity.created_at = datetime.now(timezone.utc)
-            entity.updated_at = datetime.now(timezone.utc)
+            entity.created_at = datetime.now(UTC)
+            entity.updated_at = datetime.now(UTC)
             entity.total_credits_applied = 0
             entity.credit_applications = []
             if hasattr(entity, "line_items"):

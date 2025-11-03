@@ -5,10 +5,8 @@ Provides efficient user queries with conditional loading of roles,
 permissions, teams, and profile history via DataLoaders.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
+from typing import cast
 
 import strawberry
 from sqlalchemy import func, or_, select
@@ -18,6 +16,7 @@ from dotmac.platform.graphql.context import Context
 from dotmac.platform.graphql.types.user import (
     Permission,
     PermissionCategoryEnum,
+    PermissionModel,
     PermissionsByCategory,
     ProfileChangeRecord,
     Role,
@@ -25,9 +24,10 @@ from dotmac.platform.graphql.types.user import (
     TeamMembership,
     User,
     UserConnection,
+    UserModel as UserProtocol,
     UserOverviewMetrics,
 )
-from dotmac.platform.user_management.models import User as UserModel
+from dotmac.platform.user_management.models import User as UserTable
 
 
 @strawberry.type
@@ -65,17 +65,18 @@ class UserQueries:
         db: AsyncSession = context.db
 
         # Fetch user
-        stmt = select(UserModel).where(
-            UserModel.id == str(id),
-            UserModel.tenant_id == tenant_id,
+        stmt = select(UserTable).where(
+            UserTable.id == str(id),
+            UserTable.tenant_id == tenant_id,
         )
         result = await db.execute(stmt)
-        user_model = result.scalar_one_or_none()
+        user_row = result.scalar_one_or_none()
 
-        if not user_model:
+        if not user_row:
             return None
 
         # Convert to GraphQL type
+        user_model = cast(UserProtocol, user_row)
         user = User.from_model(user_model, include_metadata=include_metadata)
 
         # Conditionally load roles
@@ -163,28 +164,28 @@ class UserQueries:
         offset = (page - 1) * page_size
 
         # Build base query (only active users in tenant)
-        stmt = select(UserModel).where(UserModel.tenant_id == tenant_id)
+        stmt = select(UserTable).where(UserTable.tenant_id == tenant_id)
 
         # Apply filters
         if is_active is not None:
-            stmt = stmt.where(UserModel.is_active == is_active)
+            stmt = stmt.where(UserTable.is_active == is_active)
 
         if is_verified is not None:
-            stmt = stmt.where(UserModel.is_verified == is_verified)
+            stmt = stmt.where(UserTable.is_verified == is_verified)
 
         if is_superuser is not None:
-            stmt = stmt.where(UserModel.is_superuser == is_superuser)
+            stmt = stmt.where(UserTable.is_superuser == is_superuser)
 
         if is_platform_admin is not None:
-            stmt = stmt.where(UserModel.is_platform_admin == is_platform_admin)
+            stmt = stmt.where(UserTable.is_platform_admin == is_platform_admin)
 
         if search:
             search_pattern = f"%{search}%"
             stmt = stmt.where(
                 or_(
-                    UserModel.username.ilike(search_pattern),
-                    UserModel.email.ilike(search_pattern),
-                    UserModel.full_name.ilike(search_pattern),
+                    UserTable.username.ilike(search_pattern),
+                    UserTable.email.ilike(search_pattern),
+                    UserTable.full_name.ilike(search_pattern),
                 )
             )
 
@@ -194,11 +195,12 @@ class UserQueries:
         total_count = total_count_result.scalar() or 0
 
         # Apply sorting and pagination
-        stmt = stmt.order_by(UserModel.created_at.desc()).limit(page_size).offset(offset)
+        stmt = stmt.order_by(UserTable.created_at.desc()).limit(page_size).offset(offset)
 
         # Execute query
         result = await db.execute(stmt)
-        user_models = result.scalars().all()
+        user_rows = result.scalars().all()
+        user_models = [cast(UserProtocol, row) for row in user_rows]
 
         # Convert to GraphQL types
         users = [User.from_model(u, include_metadata=include_metadata) for u in user_models]
@@ -262,21 +264,21 @@ class UserQueries:
 
         # Get status counts
         status_stmt = select(
-            func.count(UserModel.id).label("total"),
-            func.count(func.case((UserModel.is_active == True, 1))).label("active"),  # noqa: E712
-            func.count(func.case((UserModel.is_active == False, 1))).label(  # noqa: E712
+            func.count(UserTable.id).label("total"),
+            func.count(func.case((UserTable.is_active == True, 1))).label("active"),  # noqa: E712
+            func.count(func.case((UserTable.is_active == False, 1))).label(  # noqa: E712
                 "suspended"
             ),
-            func.count(func.case((UserModel.is_verified == False, 1))).label(  # noqa: E712
+            func.count(func.case((UserTable.is_verified == False, 1))).label(  # noqa: E712
                 "invited"
             ),
-            func.count(func.case((UserModel.is_verified == True, 1))).label(  # noqa: E712
+            func.count(func.case((UserTable.is_verified == True, 1))).label(  # noqa: E712
                 "verified"
             ),
-            func.count(func.case((UserModel.mfa_enabled == True, 1))).label(  # noqa: E712
+            func.count(func.case((UserTable.mfa_enabled == True, 1))).label(  # noqa: E712
                 "mfa_enabled"
             ),
-        ).where(UserModel.tenant_id == tenant_id)
+        ).where(UserTable.tenant_id == tenant_id)
 
         status_result = await db.execute(status_stmt)
         status_row = status_result.one()
@@ -284,22 +286,22 @@ class UserQueries:
 
         # Get role distribution
         role_stmt = select(
-            func.count(func.case((UserModel.is_platform_admin == True, 1))).label(  # noqa: E712
+            func.count(func.case((UserTable.is_platform_admin == True, 1))).label(  # noqa: E712
                 "platform_admins"
             ),
-            func.count(func.case((UserModel.is_superuser == True, 1))).label(  # noqa: E712
+            func.count(func.case((UserTable.is_superuser == True, 1))).label(  # noqa: E712
                 "superusers"
             ),
             func.count(
                 func.case(
                     (
-                        (UserModel.is_platform_admin == False)  # noqa: E712
-                        & (UserModel.is_superuser == False),  # noqa: E712
+                        (UserTable.is_platform_admin == False)  # noqa: E712
+                        & (UserTable.is_superuser == False),  # noqa: E712
                         1,
                     )
                 )
             ).label("regular_users"),
-        ).where(UserModel.tenant_id == tenant_id)
+        ).where(UserTable.tenant_id == tenant_id)
 
         role_result = await db.execute(role_stmt)
         role_row = role_result.one()
@@ -312,11 +314,11 @@ class UserQueries:
         month_ago = now - timedelta(days=30)
 
         activity_stmt = select(
-            func.count(func.case((UserModel.last_login >= day_ago, 1))).label("day_24h"),
-            func.count(func.case((UserModel.last_login >= week_ago, 1))).label("day_7d"),
-            func.count(func.case((UserModel.last_login >= month_ago, 1))).label("day_30d"),
-            func.count(func.case((UserModel.last_login.is_(None), 1))).label("never"),
-        ).where(UserModel.tenant_id == tenant_id)
+            func.count(func.case((UserTable.last_login >= day_ago, 1))).label("day_24h"),
+            func.count(func.case((UserTable.last_login >= week_ago, 1))).label("day_7d"),
+            func.count(func.case((UserTable.last_login >= month_ago, 1))).label("day_30d"),
+            func.count(func.case((UserTable.last_login.is_(None), 1))).label("never"),
+        ).where(UserTable.tenant_id == tenant_id)
 
         activity_result = await db.execute(activity_stmt)
         activity_row = activity_result.one()
@@ -327,19 +329,19 @@ class UserQueries:
         last_month_start = (this_month_start - timedelta(days=1)).replace(day=1)
 
         growth_stmt = select(
-            func.count(func.case((UserModel.created_at >= this_month_start, 1))).label(
+            func.count(func.case((UserTable.created_at >= this_month_start, 1))).label(
                 "this_month"
             ),
             func.count(
                 func.case(
                     (
-                        (UserModel.created_at >= last_month_start)
-                        & (UserModel.created_at < this_month_start),
+                        (UserTable.created_at >= last_month_start)
+                        & (UserTable.created_at < this_month_start),
                         1,
                     )
                 )
             ).label("last_month"),
-        ).where(UserModel.tenant_id == tenant_id)
+        ).where(UserTable.tenant_id == tenant_id)
 
         growth_result = await db.execute(growth_stmt)
         growth_row = growth_result.one()
@@ -458,29 +460,30 @@ class UserQueries:
         db: AsyncSession = info.context.db
 
         # Import here to avoid circular imports
-        from dotmac.platform.auth.models import Permission as PermissionModel
+        from dotmac.platform.auth.models import Permission as PermissionORM
 
         # Build query
-        stmt = select(PermissionModel).where(PermissionModel.is_active == True)  # noqa: E712
+        stmt = select(PermissionORM).where(PermissionORM.is_active == True)  # noqa: E712
 
         if category:
             from dotmac.platform.auth.models import PermissionCategory
 
-            stmt = stmt.where(PermissionModel.category == PermissionCategory(category.value))
+            stmt = stmt.where(PermissionORM.category == PermissionCategory(category.value))
 
-        stmt = stmt.order_by(PermissionModel.category, PermissionModel.name)
+        stmt = stmt.order_by(PermissionORM.category, PermissionORM.name)
 
         # Execute query
         result = await db.execute(stmt)
-        perm_models = result.scalars().all()
+        perm_rows = result.scalars().all()
+        perm_models = [cast(PermissionModel, row) for row in perm_rows]
 
         # Group by category
         grouped: dict[PermissionCategoryEnum, list[Permission]] = {}
-        for perm in perm_models:
-            cat_enum = PermissionCategoryEnum(perm.category.value)
+        for perm_model in perm_models:
+            cat_enum = PermissionCategoryEnum(perm_model.category.value)
             if cat_enum not in grouped:
                 grouped[cat_enum] = []
-            grouped[cat_enum].append(Permission.from_model(perm))
+            grouped[cat_enum].append(Permission.from_model(perm_model))
 
         # Convert to response format
         return [

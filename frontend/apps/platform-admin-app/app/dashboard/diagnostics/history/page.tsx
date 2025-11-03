@@ -456,7 +456,7 @@ function DiagnosticHistoryContent() {
 
 export default function DiagnosticHistoryPage() {
   return (
-    <RouteGuard requiredPermission="isp.diagnostics.read">
+    <RouteGuard permission="isp.diagnostics.read">
       <DiagnosticHistoryContent />
     </RouteGuard>
   );

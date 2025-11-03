@@ -1,4 +1,3 @@
-
 """
 Additional tests for auth router to reach 75% coverage target.
 
@@ -12,7 +11,7 @@ Focuses on:
 - Profile edge cases
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from io import BytesIO
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -27,13 +26,8 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import BackupCode, User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def test_user(async_db_session: AsyncSession):
@@ -53,8 +47,8 @@ async def test_user(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -80,8 +74,8 @@ async def mfa_user(async_db_session: AsyncSession):
         mfa_secret="JBSWY3DPEHPK3PXP",
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -402,8 +396,8 @@ async def test_update_profile_email_conflict(router_app: FastAPI, async_db_sessi
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     user2 = User(
         id=uuid4(),
@@ -413,8 +407,8 @@ async def test_update_profile_email_conflict(router_app: FastAPI, async_db_sessi
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add_all([user1, user2])
     await async_db_session.commit()
@@ -465,8 +459,8 @@ async def test_update_profile_username_conflict(router_app: FastAPI, async_db_se
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     user2 = User(
         id=uuid4(),
@@ -476,8 +470,8 @@ async def test_update_profile_username_conflict(router_app: FastAPI, async_db_se
         tenant_id="test-tenant",
         is_active=True,
         is_verified=True,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add_all([user1, user2])
     await async_db_session.commit()
@@ -596,7 +590,7 @@ async def test_get_backup_codes(router_app: FastAPI, mfa_user: User, async_db_se
             code_hash=hash_password(f"CODE{i}"),
             used=i == 0,  # First one is used
             tenant_id=mfa_user.tenant_id,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_db_session.add(code)
     await async_db_session.commit()

@@ -5,12 +5,9 @@ Comprehensive service instance lifecycle management for ISP operations including
 provisioning, activation, suspension, and termination workflows.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any, Type, TypeVar
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -34,6 +31,11 @@ from dotmac.platform.db import (
     TenantMixin,
     TimestampMixin,
 )
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 
 class ServiceType(str, Enum):
@@ -152,7 +154,19 @@ class LifecycleEventType(str, Enum):
     ERROR_RESOLVED = "error_resolved"
 
 
-class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
+EnumT = TypeVar("EnumT", bound=Enum)
+
+
+def _enum(enum_cls: Type[EnumT], *, name: str) -> SQLEnum:
+    """Create SQLAlchemy Enum that persists Enum values instead of names."""
+    return SQLEnum(
+        enum_cls,
+        name=name,
+        values_callable=lambda members: [member.value for member in members],
+    )
+
+
+class ServiceInstance(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Service instance representing a provisioned service for a customer.
 
@@ -186,7 +200,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     )
 
     service_type: Mapped[ServiceType] = mapped_column(
-        SQLEnum(ServiceType),
+        _enum(ServiceType, name="servicetype"),
         nullable=False,
         index=True,
         comment="Type of service",
@@ -216,7 +230,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
 
     # Service Status
     status: Mapped[ServiceStatus] = mapped_column(
-        SQLEnum(ServiceStatus),
+        _enum(ServiceStatus, name="servicestatus"),
         default=ServiceStatus.PENDING,
         nullable=False,
         index=True,
@@ -224,7 +238,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     )
 
     provisioning_status: Mapped[ProvisioningStatus | None] = mapped_column(
-        SQLEnum(ProvisioningStatus),
+        _enum(ProvisioningStatus, name="provisioningstatus"),
         nullable=True,
         comment="Detailed provisioning workflow status",
     )
@@ -451,7 +465,7 @@ class ServiceInstance(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     )
 
 
-class LifecycleEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class LifecycleEvent(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Lifecycle event tracking for service instances.
 
@@ -480,7 +494,7 @@ class LifecycleEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     # Event Information
     event_type: Mapped[LifecycleEventType] = mapped_column(
-        SQLEnum(LifecycleEventType),
+        _enum(LifecycleEventType, name="lifecycleeventtype"),
         nullable=False,
         index=True,
         comment="Type of lifecycle event",
@@ -496,13 +510,13 @@ class LifecycleEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
 
     # Previous and New States
     previous_status: Mapped[ServiceStatus | None] = mapped_column(
-        SQLEnum(ServiceStatus),
+        _enum(ServiceStatus, name="servicestatus"),
         nullable=True,
         comment="Service status before this event",
     )
 
     new_status: Mapped[ServiceStatus | None] = mapped_column(
-        SQLEnum(ServiceStatus),
+        _enum(ServiceStatus, name="servicestatus"),
         nullable=True,
         comment="Service status after this event",
     )
@@ -597,7 +611,7 @@ class LifecycleEvent(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     )
 
 
-class ProvisioningWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class ProvisioningWorkflow(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Tracks multi-step provisioning workflows.
 
@@ -641,7 +655,7 @@ class ProvisioningWorkflow(Base, TimestampMixin, TenantMixin):  # type: ignore[m
 
     # Workflow Status
     status: Mapped[ProvisioningStatus] = mapped_column(
-        SQLEnum(ProvisioningStatus),
+        _enum(ProvisioningStatus, name="provisioningstatus"),
         default=ProvisioningStatus.PENDING,
         nullable=False,
         index=True,

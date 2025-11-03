@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for billing webhooks router.
 """
@@ -9,20 +8,15 @@ import pytest
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-
-
-
-
-pytestmark = pytest.mark.integration
-
 # ============================================================================
 # Fixtures
 # ============================================================================
 
 
-
+pytestmark = pytest.mark.integration
 
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def mock_db_session():

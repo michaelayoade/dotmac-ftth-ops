@@ -2,12 +2,9 @@
 Audit and activity tracking models for the DotMac platform.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
@@ -15,8 +12,14 @@ from sqlalchemy import JSON, DateTime, Index, String, Text
 from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from ..db import Base, StrictTenantMixin, TimestampMixin
+from ..db import Base as BaseRuntime
+from ..db import StrictTenantMixin, TimestampMixin
 
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 class ActivityType(str, Enum):
     """Types of activities that can be audited."""

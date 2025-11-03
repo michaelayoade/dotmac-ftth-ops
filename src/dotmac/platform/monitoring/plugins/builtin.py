@@ -102,14 +102,16 @@ def _format_discord_message(alert: AlertType, channel: AlertChannelType) -> dict
     else:
         color = 0x3498DB
 
+    fields: list[dict[str, Any]] = [
+        {"name": "Severity", "value": alert.severity.upper(), "inline": True},
+        {"name": "Status", "value": alert.status.upper(), "inline": True},
+    ]
+
     embed = {
         "title": f"{alert.alertname} ({alert.status.upper()})",
         "description": alert.description,
         "color": color,
-        "fields": [
-            {"name": "Severity", "value": alert.severity.upper(), "inline": True},
-            {"name": "Status", "value": alert.status.upper(), "inline": True},
-        ],
+        "fields": fields,
         "timestamp": alert.startsAt,
     }
 
@@ -117,9 +119,9 @@ def _format_discord_message(alert: AlertType, channel: AlertChannelType) -> dict
         embed["url"] = alert.generatorURL
 
     if alert.tenant_id:
-        embed["fields"].append({"name": "Tenant", "value": alert.tenant_id, "inline": True})
+        fields.append({"name": "Tenant", "value": alert.tenant_id, "inline": True})
     if instance := alert.labels.get("instance"):
-        embed["fields"].append({"name": "Instance", "value": instance, "inline": True})
+        fields.append({"name": "Instance", "value": instance, "inline": True})
 
     return {
         "username": channel.discord_username,

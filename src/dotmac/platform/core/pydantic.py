@@ -13,7 +13,8 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, field_serializer
+from pydantic import BaseModel, ConfigDict
+from pydantic.functional_serializers import field_serializer
 
 
 class AppBaseModel(BaseModel):  # BaseModel resolves to Any in isolation

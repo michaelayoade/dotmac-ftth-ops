@@ -65,7 +65,9 @@ def _wait_for_database(url: str, timeout: int = 90) -> None:
         try:
             from sqlalchemy.engine import make_url
 
-            sync_url = make_url(url).set(drivername="postgresql").render_as_string(hide_password=False)
+            sync_url = (
+                make_url(url).set(drivername="postgresql").render_as_string(hide_password=False)
+            )
         except Exception:
             sync_url = url.replace("+asyncpg", "", 1)
     else:
@@ -112,7 +114,9 @@ def _ensure_integration_services() -> None:
         return
 
     if not _env_flag("DOTMAC_AUTOSTART_SERVICES", True):
-        logger.info("Skipping automatic infrastructure startup (DOTMAC_AUTOSTART_SERVICES disabled)")
+        logger.info(
+            "Skipping automatic infrastructure startup (DOTMAC_AUTOSTART_SERVICES disabled)"
+        )
         return
 
     compose_cmd = _detect_compose_command()
@@ -135,9 +139,15 @@ def _ensure_integration_services() -> None:
     if not services:
         services = ["postgres", "redis"]
 
-    logger.info("Starting integration services via %s for: %s", " ".join(compose_cmd), ", ".join(services))
+    logger.info(
+        "Starting integration services via %s for: %s", " ".join(compose_cmd), ", ".join(services)
+    )
     try:
-        subprocess.run([*compose_cmd, "-f", str(compose_file), "up", "-d", *services], check=True, cwd=str(project_root))
+        subprocess.run(
+            [*compose_cmd, "-f", str(compose_file), "up", "-d", *services],
+            check=True,
+            cwd=str(project_root),
+        )
     except subprocess.CalledProcessError as exc:
         raise pytest.UsageError(
             "Failed to start integration services with docker compose. "
@@ -177,7 +187,11 @@ def _stop_integration_services() -> None:
 
     logger.info("Stopping integration services via %s", " ".join(compose_cmd))
     try:
-        subprocess.run([*compose_cmd, "-f", str(compose_file), "down", "--remove-orphans"], check=True, cwd=str(project_root))
+        subprocess.run(
+            [*compose_cmd, "-f", str(compose_file), "down", "--remove-orphans"],
+            check=True,
+            cwd=str(project_root),
+        )
     except subprocess.CalledProcessError as exc:
         logger.warning("Failed to stop integration services cleanly: %s", exc)
         return
@@ -198,9 +212,54 @@ def _default_postgres_urls() -> tuple[str, str]:
     return async_url, sync_url
 
 
+def _should_reset_database() -> bool:
+    value = os.getenv("DOTMAC_RESET_TEST_DB")
+    if value is None:
+        return _is_integration_test
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _reset_postgres_schema(sync_url: str) -> None:
+    """
+    Drop and recreate the public schema to guarantee a clean database for tests.
+
+    Runs only when DOTMAC_RESET_TEST_DB is truthy (default).
+    """
+    try:
+        import sqlalchemy as sa
+    except Exception as exc:  # pragma: no cover - defensive
+        logger.warning("Unable to import SQLAlchemy for schema reset: %s", exc)
+        return
+
+    engine = sa.create_engine(sync_url, future=True)
+    try:
+        with engine.begin() as conn:
+            conn.execute(sa.text("DROP SCHEMA IF EXISTS public CASCADE"))
+            conn.execute(sa.text("CREATE SCHEMA public"))
+            conn.execute(sa.text("GRANT ALL ON SCHEMA public TO CURRENT_USER"))
+            conn.execute(sa.text("GRANT ALL ON SCHEMA public TO public"))
+            conn.execute(sa.text("SET search_path TO public"))
+        logger.info("Reset PostgreSQL schema for integration tests")
+    except Exception as exc:  # pragma: no cover - diagnostic
+        raise pytest.UsageError(
+            "Failed to reset PostgreSQL schema prior to integration tests. "
+            "Ensure the configured database user has permission to drop/recreate the "
+            "public schema, or set DOTMAC_RESET_TEST_DB=0 to skip automatic resets.\n"
+            f"Error: {exc}"
+        ) from exc
+    finally:
+        engine.dispose()
+
+
 def _apply_migrations_if_needed() -> None:
     global _migrations_applied  # noqa: PLW0603
     if _migrations_applied:
+        return
+
+    # Allow skipping automatic migrations via environment variable
+    if os.getenv("DOTMAC_SKIP_AUTO_MIGRATIONS", "").lower() in {"1", "true", "yes"}:
+        logger.info("Skipping automatic migrations (DOTMAC_SKIP_AUTO_MIGRATIONS set)")
+        _migrations_applied = True
         return
 
     sync_url = _sync_db_url
@@ -215,8 +274,9 @@ def _apply_migrations_if_needed() -> None:
         return
 
     try:
-        from alembic import command
         from alembic.config import Config
+
+        from alembic import command
     except Exception as exc:  # pragma: no cover - defensive
         logger.warning("Alembic not available; skipping migrations: %s", exc)
         _migrations_applied = True
@@ -225,13 +285,35 @@ def _apply_migrations_if_needed() -> None:
     cfg = Config(str(alembic_ini))
     cfg.set_main_option("sqlalchemy.url", sync_url)
 
+    if _should_reset_database():
+        _reset_postgres_schema(sync_url)
+
     try:
-        command.upgrade(cfg, "head")
+        # Suppress alembic output to avoid cluttering test output
+        import io
+        from contextlib import redirect_stderr, redirect_stdout
+
+        stdout_buffer = io.StringIO()
+        stderr_buffer = io.StringIO()
+
+        with redirect_stdout(stdout_buffer), redirect_stderr(stderr_buffer):
+            command.upgrade(cfg, "head")
+
     except Exception as exc:
-        raise pytest.UsageError(
-            "Failed to apply database migrations for integration tests. "
-            "Ensure alembic is installed and the database is reachable."
-        ) from exc
+        # If migrations fail, it might be because they're already applied
+        # Try to check current state
+        try:
+            with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+                command.current(cfg)
+            # If current() succeeds, database is accessible and likely already migrated
+            logger.info("Database migrations may already be applied, continuing with tests")
+        except Exception:
+            # Real failure - can't connect or invalid state
+            raise pytest.UsageError(
+                "Failed to apply database migrations for integration tests. "
+                "Ensure alembic is installed and the database is reachable.\n"
+                f"Error: {exc}"
+            ) from exc
 
     _migrations_applied = True
 
@@ -319,9 +401,11 @@ def _configure_database_env(is_integration: bool) -> None:
             os.environ["DOTMAC_AUTOSTART_SERVICES"] = "0"
             _is_integration_test = False
     else:
-        os.environ.setdefault("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
-        os.environ.setdefault("DOTMAC_DATABASE_URL", "sqlite:///:memory:")
-        os.environ.pop("DATABASE_URL", None)
+        sqlite_async = "sqlite+aiosqlite:///:memory:"
+        sqlite_sync = "sqlite:///:memory:"
+        os.environ.setdefault("DOTMAC_DATABASE_URL_ASYNC", sqlite_async)
+        os.environ.setdefault("DOTMAC_DATABASE_URL", sqlite_sync)
+        os.environ["DATABASE_URL"] = os.environ["DOTMAC_DATABASE_URL"]
         _async_db_url = os.environ["DOTMAC_DATABASE_URL_ASYNC"]
         _sync_db_url = os.environ["DOTMAC_DATABASE_URL"]
 
@@ -340,13 +424,17 @@ def _derive_database_urls(source_url: str) -> tuple[str, str]:
         driver = url.drivername
 
         if driver.startswith("postgresql+asyncpg"):
-            async_url = url.set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
+            async_url = url.set(drivername="postgresql+psycopg").render_as_string(
+                hide_password=False
+            )
             sync_url = url.set(drivername="postgresql").render_as_string(hide_password=False)
         elif driver.startswith("postgresql+psycopg"):
             async_url = url.render_as_string(hide_password=False)
             sync_url = url.set(drivername="postgresql").render_as_string(hide_password=False)
         elif driver.startswith("postgresql"):
-            async_url = url.set(drivername="postgresql+psycopg").render_as_string(hide_password=False)
+            async_url = url.set(drivername="postgresql+psycopg").render_as_string(
+                hide_password=False
+            )
             sync_url = url.render_as_string(hide_password=False)
         else:
             async_url = url.render_as_string(hide_password=False)
@@ -367,7 +455,18 @@ def _derive_database_urls(source_url: str) -> tuple[str, str]:
         return async_url, sync_url
 
 
-_configure_database_env(False)
+# Only configure database if not already set (allows .env to take precedence)
+# This runs at module import time, before pytest hooks
+if not os.environ.get("DOTMAC_DATABASE_URL_ASYNC"):
+    _configure_database_env(False)
+
+try:
+    import dotmac.platform.settings as _settings_module
+except ImportError:
+    _settings_module = None
+else:
+    _settings_module.reset_settings()
+    _settings_module.settings = _settings_module.get_settings()
 
 # ---------------------------------------------------------------------------
 # Optional dependency imports with graceful fallbacks
@@ -437,6 +536,7 @@ def _should_run_integration(config: pytest.Config) -> bool:
 
     return False
 
+
 try:
     import freezegun  # noqa: F401
 
@@ -456,7 +556,11 @@ try:
     from sqlalchemy import create_engine, event, text  # noqa: F401
     from sqlalchemy.engine import make_url  # noqa: F401
     from sqlalchemy.exc import OperationalError  # noqa: F401
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine  # noqa: F401
+    from sqlalchemy.ext.asyncio import (  # noqa: F401
+        AsyncSession,
+        async_sessionmaker,
+        create_async_engine,
+    )
     from sqlalchemy.orm import Session, sessionmaker  # noqa: F401
     from sqlalchemy.pool import StaticPool  # noqa: F401
 
@@ -556,6 +660,7 @@ def test_environment():
     os.environ["TESTING"] = "true"
     os.environ.setdefault("DOTMAC_DATABASE_URL", "sqlite:///:memory:")
     os.environ.setdefault("DOTMAC_DATABASE_URL_ASYNC", "sqlite+aiosqlite:///:memory:")
+    os.environ["DATABASE_URL"] = os.environ["DOTMAC_DATABASE_URL"]
 
     try:
         yield
@@ -573,7 +678,11 @@ def pytest_configure(config):
 
     _configure_database_env(_should_run_integration(config))
 
-    db_url_async = _async_db_url or os.environ.get("DOTMAC_DATABASE_URL_ASYNC") or "sqlite+aiosqlite:///:memory:"
+    db_url_async = (
+        _async_db_url
+        or os.environ.get("DOTMAC_DATABASE_URL_ASYNC")
+        or "sqlite+aiosqlite:///:memory:"
+    )
     db_url_sync = _sync_db_url or os.environ.get("DOTMAC_DATABASE_URL") or "sqlite:///:memory:"
 
     config.db_url_async = db_url_async

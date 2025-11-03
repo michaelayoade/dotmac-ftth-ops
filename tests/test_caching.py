@@ -1,8 +1,9 @@
 """Tests for caching module."""
-import pytest
 
 import json
 from unittest.mock import MagicMock, Mock, patch
+
+import pytest
 
 # Import the entire module to ensure coverage tracking
 from dotmac.platform.core.caching import (

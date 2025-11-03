@@ -17,8 +17,6 @@ import json
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, ValidationError
-
 
 class OpenAPIValidator:
     """Validates API responses against OpenAPI specifications."""
@@ -79,7 +77,7 @@ class OpenAPIValidator:
 
         # Validate against schema
         try:
-            response_data = response.json()
+            response.json()
             # Could use jsonschema or convert to Pydantic for validation
             # For now, just check basic structure
             return True, None
@@ -109,7 +107,7 @@ class OpenAPIValidator:
         if len(actual_parts) != len(spec_parts):
             return False
 
-        for actual, spec in zip(actual_parts, spec_parts):
+        for actual, spec in zip(actual_parts, spec_parts, strict=False):
             if spec.startswith("{") and spec.endswith("}"):
                 continue  # Parameter, matches anything
             if actual != spec:

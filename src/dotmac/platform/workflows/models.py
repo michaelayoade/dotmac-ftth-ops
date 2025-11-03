@@ -1,15 +1,24 @@
-"""
-Workflow Models
+"""Workflow Models
 
 Data models for workflow orchestration and execution tracking.
 """
 
+from __future__ import annotations
+
 import enum
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
+from sqlalchemy import JSON, Boolean, DateTime, Enum, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..db import Base, TimestampMixin
+from ..db import Base as BaseRuntime
+from ..db import TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 
 class WorkflowStatus(str, enum.Enum):
@@ -41,16 +50,16 @@ class Workflow(Base, TimestampMixin):
 
     __tablename__ = "workflows"
 
-    id = Column(Integer, primary_key=True)
-    name = Column(String(255), unique=True, nullable=False, index=True)
-    description = Column(Text)
-    definition = Column(JSON, nullable=False)  # Workflow steps and configuration
-    is_active = Column(Boolean, default=True, nullable=False)
-    version = Column(String(20), default="1.0.0")
-    tags = Column(JSON)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    name: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    definition: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    version: Mapped[str] = mapped_column(String(20), default="1.0.0")
+    tags: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    executions = relationship(
+    executions: Mapped[list["WorkflowExecution"]] = relationship(
         "WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan"
     )
 
@@ -67,25 +76,33 @@ class WorkflowExecution(Base, TimestampMixin):
 
     __tablename__ = "workflow_executions"
 
-    id = Column(Integer, primary_key=True)
-    workflow_id = Column(Integer, ForeignKey("workflows.id"), nullable=False, index=True)
-    status = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    workflow_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("workflows.id"), nullable=False, index=True
+    )
+    status: Mapped[WorkflowStatus] = mapped_column(
         Enum(WorkflowStatus), default=WorkflowStatus.PENDING, nullable=False, index=True
     )
-    context = Column(JSON)  # Input data
-    result = Column(JSON)  # Output data
-    error_message = Column(Text)
-    started_at = Column(DateTime)
-    completed_at = Column(DateTime)
+    context: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    result: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Trigger information
-    trigger_type = Column(String(50))  # "manual", "event", "scheduled", "api"
-    trigger_source = Column(String(255))  # Event name, user ID, or API endpoint
-    tenant_id = Column(String(255), ForeignKey("tenants.id"), index=True)
+    trigger_type: Mapped[str | None] = mapped_column(
+        String(50), nullable=True
+    )  # "manual", "event", "scheduled", "api"
+    trigger_source: Mapped[str | None] = mapped_column(
+        String(255), nullable=True
+    )  # Event name, user ID, or API endpoint
+    tenant_id: Mapped[str | None] = mapped_column(String(255), ForeignKey("tenants.id"), index=True)
 
     # Relationships
-    workflow = relationship("Workflow", back_populates="executions")
-    steps = relationship("WorkflowStep", back_populates="execution", cascade="all, delete-orphan")
+    workflow: Mapped["Workflow"] = relationship("Workflow", back_populates="executions")
+    steps: Mapped[list["WorkflowStep"]] = relationship(
+        "WorkflowStep", back_populates="execution", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<WorkflowExecution {self.id} status={self.status.value}>"
@@ -100,26 +117,32 @@ class WorkflowStep(Base, TimestampMixin):
 
     __tablename__ = "workflow_steps"
 
-    id = Column(Integer, primary_key=True)
-    execution_id = Column(Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True)
-    step_name = Column(String(255), nullable=False)
-    step_type = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    execution_id: Mapped[int] = mapped_column(
+        Integer, ForeignKey("workflow_executions.id"), nullable=False, index=True
+    )
+    step_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    step_type: Mapped[str] = mapped_column(
         String(50), nullable=False
     )  # "service_call", "condition", "transform", "wait"
-    sequence_number = Column(Integer, nullable=False)
-    status = Column(Enum(StepStatus), default=StepStatus.PENDING, nullable=False, index=True)
-    input_data = Column(JSON)
-    output_data = Column(JSON)
-    error_message = Column(Text)
-    error_details = Column(JSON)
-    retry_count = Column(Integer, default=0)
-    max_retries = Column(Integer, default=3)
-    started_at = Column(DateTime)
-    completed_at = Column(DateTime)
-    duration_seconds = Column(Integer)
+    sequence_number: Mapped[int] = mapped_column(Integer, nullable=False)
+    status: Mapped[StepStatus] = mapped_column(
+        Enum(StepStatus), default=StepStatus.PENDING, nullable=False, index=True
+    )
+    input_data: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    output_data: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_details: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    max_retries: Mapped[int] = mapped_column(Integer, default=3, nullable=False)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
-    execution = relationship("WorkflowExecution", back_populates="steps")
+    execution: Mapped["WorkflowExecution"] = relationship(
+        "WorkflowExecution", back_populates="steps"
+    )
 
     def __repr__(self) -> str:
         return f"<WorkflowStep {self.step_name} status={self.status.value}>"

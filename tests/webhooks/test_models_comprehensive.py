@@ -1,7 +1,7 @@
 """Comprehensive tests for webhook models."""
 
 import uuid
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 
 import pytest
 from pydantic import ValidationError
@@ -225,10 +225,10 @@ class TestWebhookSubscriptionResponse:
             "timeout_seconds": 30,
             "success_count": 10,
             "failure_count": 2,
-            "last_triggered_at": datetime.now(timezone.utc),
-            "last_success_at": datetime.now(timezone.utc),
+            "last_triggered_at": datetime.now(UTC),
+            "last_success_at": datetime.now(UTC),
             "last_failure_at": None,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "updated_at": None,
             "custom_metadata": {},
         }
@@ -254,7 +254,7 @@ class TestWebhookSubscriptionResponse:
             "last_triggered_at": None,
             "last_success_at": None,
             "last_failure_at": None,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "updated_at": None,
             "custom_metadata": {},
         }
@@ -279,7 +279,7 @@ class TestWebhookDeliveryResponse:
             "error_message": None,
             "attempt_number": 1,
             "duration_ms": 150,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "next_retry_at": None,
         }
         response = WebhookDeliveryResponse(**data)
@@ -301,7 +301,7 @@ class TestWebhookDeliveryResponse:
             "error_message": None,
             "attempt_number": 1,
             "duration_ms": None,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "next_retry_at": None,
         }
         response = WebhookDeliveryResponse(**data)
@@ -329,7 +329,7 @@ class TestWebhookEventPayload:
 
     def test_event_payload_full(self):
         """Test creating payload with all fields."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         payload = WebhookEventPayload(
             id="evt_123",
             type="invoice.created",
@@ -350,7 +350,7 @@ class TestWebhookEventPayload:
             data={},
         )
         # Timestamp should be recent
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         assert (now - payload.timestamp).total_seconds() < 1
 
 

@@ -4,7 +4,7 @@ Elasticsearch Backend.
 Elasticsearch implementation of the SearchBackend interface.
 """
 
-from typing import Any
+from typing import Any, Sequence
 
 import structlog
 from elasticsearch import AsyncElasticsearch, NotFoundError
@@ -287,7 +287,7 @@ class ElasticsearchBackend:
 
     def _build_query(self, query: SearchQuery) -> dict[str, Any]:
         """Build Elasticsearch query from SearchQuery."""
-        must_clauses = []
+        must_clauses: list[dict[str, Any]] = []
 
         # Search type specific query
         if query.search_type == SearchType.FULL_TEXT:
@@ -349,7 +349,12 @@ class ElasticsearchBackend:
                     {"bool": {"must_not": [{"term": {filter_spec.field: filter_spec.value}}]}}
                 )
             elif filter_spec.operator == "in":
-                must_clauses.append({"terms": {filter_spec.field: filter_spec.value}})
+                values = filter_spec.value
+                if isinstance(values, Sequence) and not isinstance(values, (str, bytes)):
+                    terms = list(values)
+                else:
+                    terms = [values]
+                must_clauses.append({"terms": {filter_spec.field: terms}})
             elif filter_spec.operator == "gt":
                 must_clauses.append({"range": {filter_spec.field: {"gt": filter_spec.value}}})
             elif filter_spec.operator == "gte":

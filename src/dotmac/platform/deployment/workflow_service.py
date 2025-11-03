@@ -262,10 +262,12 @@ class WorkflowDeploymentService:
 
         logger.info(
             "Scheduling deployment for order",
-            order_id=order_id,
-            customer_id=customer_id,
-            priority=priority,
-            scheduled_date=scheduled_date,
+            extra={
+                "order_id": order_id,
+                "customer_id": customer_id,
+                "priority": priority,
+                "scheduled_date": scheduled_date,
+            },
         )
 
         try:
@@ -293,6 +295,8 @@ class WorkflowDeploymentService:
 
             customer_service = CustomerService(self.db)
             customer = await customer_service.get_customer(int(customer_id))
+            if customer is None:
+                raise ValueError(f"Customer {customer_id} not found")
             tenant_id = customer.tenant_id
 
             # Create deployment schedule using DeploymentService
@@ -314,9 +318,11 @@ class WorkflowDeploymentService:
 
             logger.info(
                 "Deployment scheduled successfully",
-                schedule_id=schedule_result["schedule_id"],
-                order_id=order_id,
-                scheduled_at=scheduled_at.isoformat(),
+                extra={
+                    "schedule_id": schedule_result["schedule_id"],
+                    "order_id": order_id,
+                    "scheduled_at": scheduled_at.isoformat(),
+                },
             )
 
             return {
@@ -335,9 +341,11 @@ class WorkflowDeploymentService:
         except Exception as e:
             logger.error(
                 "Failed to schedule deployment",
-                order_id=order_id,
-                customer_id=customer_id,
-                error=str(e),
+                extra={
+                    "order_id": order_id,
+                    "customer_id": customer_id,
+                    "error": str(e),
+                },
             )
             raise RuntimeError(f"Failed to schedule deployment: {e}") from e
 

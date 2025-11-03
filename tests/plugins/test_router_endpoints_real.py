@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for plugin router endpoints using fake pattern.
 
@@ -6,7 +5,7 @@ This test suite achieves 90%+ coverage on plugins/router.py by testing
 all API endpoints with realistic data and minimal mocking.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -17,7 +16,6 @@ from fastapi.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.plugins.interfaces import NotificationProvider
 from dotmac.platform.plugins.router import router as plugin_router
-
 
 # Mark all tests as integration - they test real router endpoints with full app
 from dotmac.platform.plugins.schema import (  # noqa: E402
@@ -32,9 +30,8 @@ from dotmac.platform.plugins.schema import (  # noqa: E402
 # Fake implementations for testing
 
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class FakeNotificationPlugin(NotificationProvider):
     """Fake notification plugin for router testing."""
@@ -85,7 +82,7 @@ class FakeNotificationPlugin(NotificationProvider):
             status="healthy" if self.configured else "unhealthy",
             message="Plugin is configured" if self.configured else "Not configured",
             details={"configured": self.configured},
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
         )
 
     async def test_connection(self, config: dict) -> PluginTestResult:

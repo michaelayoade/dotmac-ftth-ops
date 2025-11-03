@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import AsyncIterator
 from contextlib import suppress
-from typing import Any, AsyncIterator
+from typing import Any
 
 import pytest
 
@@ -13,16 +14,24 @@ from tests.fixtures.environment import HAS_FASTAPI, _is_integration_test
 if not HAS_FASTAPI:  # pragma: no cover - FastAPI optional in some environments
     __all__: list[str] = []
 else:
-    from fastapi import FastAPI, HTTPException, Request, status
+    from fastapi import FastAPI, HTTPException, Request
     from fastapi.testclient import TestClient
     from httpx import ASGITransport, AsyncClient
-    from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
+    from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 
-    from dotmac.platform.auth.core import TokenType, UserInfo, _claims_to_user_info, jwt_service
+    from dotmac.platform.auth.core import (
+        TokenType,
+        UserInfo,
+        _claims_to_user_info,
+        get_current_user as core_get_current_user,
+        get_current_user_optional as core_get_current_user_optional,
+        jwt_service,
+    )
     from dotmac.platform.auth.dependencies import (
         get_current_user,
         get_current_user_optional,
     )
+    from dotmac.platform.db import get_async_session, get_session_dependency
     from dotmac.platform.redis_client import get_redis_client
     from dotmac.platform.routers import register_routers
     from dotmac.platform.tenant import (
@@ -32,9 +41,8 @@ else:
         get_current_tenant_id,
         set_tenant_config,
     )
-    from dotmac.platform.db import get_async_session, get_session_dependency
-
     from tests.fixtures.app_stubs import create_mock_redis, start_infrastructure_patchers
+    from tests.fixtures.database import _session_scope
 
     try:
         import pytest_asyncio
@@ -97,6 +105,10 @@ else:
 
         app.dependency_overrides[get_current_user] = override_get_current_user
         app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
+        app.dependency_overrides[core_get_current_user] = override_get_current_user
+        app.dependency_overrides[
+            core_get_current_user_optional
+        ] = override_get_current_user_optional
 
     def _override_tenant_dependency(app: FastAPI) -> None:
         def override_get_current_tenant_id(request: Request) -> str:
@@ -107,16 +119,12 @@ else:
 
         app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
 
-    def _override_db_dependency(app: FastAPI, async_session_factory: async_sessionmaker[AsyncSession]) -> None:
+    def _override_db_dependency(
+        app: FastAPI, async_db_engine: AsyncEngine
+    ) -> None:
         async def override_session_dependency() -> AsyncIterator[AsyncSession]:
-            async with async_session_factory() as session:
-                try:
-                    yield session
-                except Exception:
-                    await session.rollback()
-                    raise
-                finally:
-                    await session.close()
+            async with _session_scope(async_db_engine) as session:
+                yield session
 
         app.dependency_overrides[get_async_session] = override_session_dependency
         app.dependency_overrides[get_session_dependency] = override_session_dependency
@@ -199,8 +207,7 @@ else:
             _override_auth_dependencies(app)
         _override_tenant_dependency(app)
 
-        SessionMaker = async_sessionmaker(async_db_engine, expire_on_commit=False)
-        _override_db_dependency(app, SessionMaker)
+        _override_db_dependency(app, async_db_engine)
         _override_rbac_and_cache(app)
         _include_all_routers(app)
 
@@ -276,13 +283,22 @@ else:
             self._default_tenant = "test-tenant"
 
         def _apply_tenant_header(self, headers: dict[str, Any] | None) -> dict[str, Any]:
-            """Ensure every request carries a tenant header."""
+            """Ensure every request carries a tenant header unless explicitly disabled."""
             merged: dict[str, Any] = {}
+            disable_default = False
+
             if headers:
                 merged.update(headers)
-            header_keys = {key.lower() for key in merged}
-            if self._tenant_header.lower() not in header_keys:
-                merged[self._tenant_header] = self._default_tenant
+                for key, value in list(merged.items()):
+                    if key.lower() == self._tenant_header.lower() and value is None:
+                        merged.pop(key)
+                        disable_default = True
+
+            if not disable_default:
+                header_keys = {key.lower() for key in merged}
+                if self._tenant_header.lower() not in header_keys:
+                    merged[self._tenant_header] = self._default_tenant
+
             return merged
 
         def _make_request(self, method: str, *args: Any, **kwargs: Any) -> _HybridResponse:
@@ -349,7 +365,11 @@ else:
         app.dependency_overrides[get_async_session] = override_session
 
         transport = ASGITransport(app=app)
-        async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+        async with AsyncClient(
+            transport=transport,
+            base_url="http://testserver",
+            headers={"X-Tenant-ID": "test-tenant"},
+        ) as client:
             yield client
 
     __all__ = [

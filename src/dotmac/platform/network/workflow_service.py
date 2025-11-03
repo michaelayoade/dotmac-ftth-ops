@@ -130,8 +130,8 @@ class NetworkService:
             netbox_client = NetBoxClient(tenant_id=tenant_id)
 
             # Check if NetBox is available
-            ping = await netbox_client.ping()
-            if ping:
+            is_healthy = await netbox_client.health_check()
+            if is_healthy:
                 allocation_method = "netbox"
 
                 # Use static IP if provided

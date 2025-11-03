@@ -8,10 +8,7 @@ Handles payment processing, refunds, and payment verification through Paystack A
 from __future__ import annotations
 
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 
 from dotmac.platform.plugins.interfaces import PaymentProvider
@@ -186,13 +183,23 @@ class PaystackPaymentPlugin(PaymentProvider):
             response_time_ms = (end_time - start_time).total_seconds() * 1000
 
             if response and response.get("status"):
+                secret_key = self.secret_key
+                if secret_key is None:
+                    return PluginHealthCheck(
+                        plugin_instance_id=None,
+                        status="unhealthy",
+                        message="Secret key missing after configuration",
+                        details={"configured": True},
+                        timestamp=datetime.now(UTC).isoformat(),
+                        response_time_ms=round(response_time_ms, 2),
+                    )
                 return PluginHealthCheck(
                     plugin_instance_id=None,
                     status="healthy",
                     message="Paystack API connection successful",
                     details={
                         "api_reachable": True,
-                        "is_live_mode": self.secret_key.startswith("sk_live_"),
+                        "is_live_mode": secret_key.startswith("sk_live_"),
                         "response_time_ms": round(response_time_ms, 2),
                     },
                     timestamp=datetime.now(UTC).isoformat(),

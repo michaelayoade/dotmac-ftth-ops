@@ -137,7 +137,15 @@ async def get_device(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Device {device_id} not found",
         )
-    return device
+    if isinstance(device, DeviceResponse):
+        return device
+    try:
+        return DeviceResponse.model_validate(device)
+    except Exception as exc:  # pragma: no cover - defensive serialization
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to parse device response: {exc}",
+        ) from exc
 
 
 @router.delete(
@@ -228,7 +236,19 @@ async def set_parameters(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Set device parameters"""
-    return await service.set_parameters(request, return_task_response=True)
+    result = await service.set_parameters(request, return_task_response=True)
+    if isinstance(result, TaskResponse):
+        return result
+    if isinstance(result, str):
+        return TaskResponse(
+            success=True,
+            message=f"Set parameters task created for device {request.device_id}",
+            task_id=result,
+        )
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Failed to create set-parameters task",
+    )
 
 
 @router.post(
@@ -243,7 +263,14 @@ async def get_parameters(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Get device parameters"""
-    return await service.get_parameters(request, return_task_response=True)
+    result = await service.get_parameters(request, return_task_response=True)
+    if isinstance(result, TaskResponse):
+        return result
+    return TaskResponse(
+        success=True,
+        message=f"Retrieved parameters for device {request.device_id}",
+        details=result,
+    )
 
 
 @router.post(
@@ -258,7 +285,19 @@ async def reboot_device(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Reboot device"""
-    return await service.reboot_device(request, return_task_response=True)
+    result = await service.reboot_device(request, return_task_response=True)
+    if isinstance(result, TaskResponse):
+        return result
+    if isinstance(result, str):
+        return TaskResponse(
+            success=True,
+            message=f"Reboot task created for device {request.device_id}",
+            task_id=result,
+        )
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Failed to create reboot task",
+    )
 
 
 @router.post(
@@ -273,7 +312,19 @@ async def factory_reset(
     _: UserInfo = Depends(require_permission("isp.cpe.write")),
 ) -> TaskResponse:
     """Factory reset device"""
-    return await service.factory_reset(request, return_task_response=True)
+    result = await service.factory_reset(request, return_task_response=True)
+    if isinstance(result, TaskResponse):
+        return result
+    if isinstance(result, str):
+        return TaskResponse(
+            success=True,
+            message=f"Factory reset task created for device {request.device_id}",
+            task_id=result,
+        )
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Failed to create factory reset task",
+    )
 
 
 @router.post(
@@ -327,7 +378,7 @@ async def list_presets(
     _: UserInfo = Depends(require_permission("isp.cpe.read")),
 ) -> list[PresetResponse]:
     """List presets"""
-    return cast(list[PresetResponse], await service.list_presets())
+    return await service.list_presets()
 
 
 @router.get(
@@ -432,7 +483,7 @@ async def list_provisions(
     _: UserInfo = Depends(require_permission("isp.cpe.read")),
 ) -> list[ProvisionResponse]:
     """List provisions"""
-    return cast(list[ProvisionResponse], await service.list_provisions())
+    return await service.list_provisions()
 
 
 @router.get(
@@ -472,7 +523,7 @@ async def list_files(
     _: UserInfo = Depends(require_permission("isp.cpe.read")),
 ) -> list[FileResponse]:
     """List files"""
-    return cast(list[FileResponse], await service.list_files())
+    return await service.list_files()
 
 
 @router.get(
@@ -536,10 +587,7 @@ async def list_faults(
     _: UserInfo = Depends(require_permission("isp.cpe.read")),
 ) -> list[FaultResponse]:
     """List faults"""
-    return cast(
-        list[FaultResponse],
-        await service.list_faults(device_id=device_id, skip=skip, limit=limit),
-    )
+    return await service.list_faults(device_id=device_id, skip=skip, limit=limit)
 
 
 @router.delete(
@@ -658,7 +706,7 @@ async def cancel_firmware_upgrade_schedule(
     """Cancel a pending or running firmware upgrade schedule."""
     try:
         result = await service.cancel_firmware_upgrade_schedule(schedule_id)
-        return cast(dict[str, Any], result)
+        return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -794,7 +842,7 @@ async def cancel_mass_config_job(
     """Cancel a pending or running mass configuration job."""
     try:
         result = await service.cancel_mass_config_job(job_id)
-        return cast(dict[str, Any], result)
+        return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

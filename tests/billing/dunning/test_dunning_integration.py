@@ -23,7 +23,7 @@ from dotmac.platform.billing.dunning.schemas import (
     DunningExclusionRules,
 )
 from dotmac.platform.billing.dunning.service import DunningService
-from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
+from dotmac.platform.core.exceptions import EntityNotFoundError
 from dotmac.platform.customer_management.models import Customer
 
 
@@ -132,7 +132,7 @@ class TestDunningCampaignManagement:
         from pydantic import ValidationError as PydanticValidationError
 
         with pytest.raises(PydanticValidationError):
-            invalid_data = DunningCampaignCreate(
+            DunningCampaignCreate(
                 name="Invalid Campaign",
                 trigger_after_days=7,
                 actions=[],  # Empty actions should fail

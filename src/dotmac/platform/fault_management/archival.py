@@ -7,10 +7,7 @@ before deletion for compliance, historical analysis, and data retention.
 
 import gzip
 import json
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from io import BytesIO
 from typing import Any
 from uuid import UUID

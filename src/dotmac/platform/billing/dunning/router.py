@@ -8,8 +8,8 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import ValidationError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
@@ -67,8 +67,13 @@ async def create_campaign(
         errors = exc.errors()
         actions_errors = [err for err in errors if err.get("loc", [])[0] == "actions"]
         if actions_errors and len(errors) == len(actions_errors):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Campaign must have at least one action") from exc
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=errors) from exc
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Campaign must have at least one action",
+            ) from exc
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=errors
+        ) from exc
 
     service = DunningService(db_session)
     try:

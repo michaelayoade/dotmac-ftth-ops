@@ -5,10 +5,7 @@ Connects tenant usage metrics with usage-based billing to automatically
 track and bill for resource consumption.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any, TypedDict
 

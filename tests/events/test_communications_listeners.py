@@ -14,14 +14,11 @@ from dotmac.platform.events import get_event_bus, reset_event_bus
 # Mark all tests as integration - these test cross-module event handling
 
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestCommunicationsEventListeners:
     """Test communications module event listeners."""
-
 
     @pytest.fixture(autouse=True)
     def setup(self):

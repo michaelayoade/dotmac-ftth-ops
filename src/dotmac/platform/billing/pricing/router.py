@@ -4,10 +4,7 @@ Pricing engine API router.
 Provides REST endpoints for managing pricing rules and calculating prices.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status

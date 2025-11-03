@@ -1,4 +1,3 @@
-
 """
 Additional tests to boost admin settings router coverage.
 
@@ -12,16 +11,10 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-from dotmac.platform.admin.settings.models import SettingsCategory
 from dotmac.platform.auth.core import UserInfo
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_admin_user():
@@ -111,7 +104,10 @@ class TestUpdateValidationFailures:
         """Test getting settings for non-existent category triggers ValueError (lines 83-84)."""
         response = test_client.get("/api/v1/admin/settings/category/nonexistent_category_xyz")
 
-        assert response.status_code in [status.HTTP_404_NOT_FOUND, status.HTTP_422_UNPROCESSABLE_ENTITY]
+        assert response.status_code in [
+            status.HTTP_404_NOT_FOUND,
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        ]
 
 
 class TestBulkUpdateCoverage:

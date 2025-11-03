@@ -11,7 +11,7 @@ Tests the complete subscription lifecycle including:
 - Renewal processing
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -179,7 +179,7 @@ class TestSubscriptionLifecycle:
         assert subscription.trial_end is not None
 
         # Trial should be 14 days from now
-        expected_trial_end = datetime.now(timezone.utc) + timedelta(days=14)
+        expected_trial_end = datetime.now(UTC) + timedelta(days=14)
         assert abs((subscription.trial_end - expected_trial_end).total_seconds()) < 60
 
         # Verify in database using query instead of get (composite PK issue)

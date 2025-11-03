@@ -5,9 +5,8 @@ from uuid import uuid4
 
 import pytest
 
+from dotmac.platform.customer_management.models import Customer, CustomerStatus
 from dotmac.platform.partner_management.models import (
-
-
     CommissionModel,
     CommissionStatus,
     PartnerStatus,
@@ -23,20 +22,15 @@ from dotmac.platform.partner_management.schemas import (
 )
 from dotmac.platform.partner_management.service import PartnerService
 
-
-
-
-
-
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.asyncio,
 ]
 
+
 @pytest.mark.asyncio
 class TestPartnerServiceCRUD:
     """Test basic CRUD operations."""
-
 
     async def test_create_partner_success(self, async_db_session, test_tenant_id):
         """Test creating a new partner."""
@@ -136,11 +130,23 @@ class TestPartnerAccounts:
             PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
         )
 
+        # Create a real customer first
+        customer = Customer(
+            id=uuid4(),
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+            first_name="Test",
+            last_name="Customer",
+            email="customer@example.com",
+            status=CustomerStatus.ACTIVE,
+            tenant_id=test_tenant_id,
+        )
+        async_db_session.add(customer)
+        await async_db_session.commit()  # Commit so FK constraint can be satisfied
+
         # Create account assignment
-        customer_id = uuid4()
         account_data = PartnerAccountCreate(
             partner_id=partner.id,
-            customer_id=customer_id,
+            customer_id=customer.id,
             engagement_type="direct",
             custom_commission_rate=Decimal("0.20"),
         )
@@ -148,7 +154,7 @@ class TestPartnerAccounts:
         account = await service.create_partner_account(account_data)
 
         assert account.partner_id == partner.id
-        assert account.customer_id == customer_id
+        assert account.customer_id == customer.id
         assert account.custom_commission_rate == Decimal("0.20")
         assert account.is_active is True
 
@@ -165,12 +171,24 @@ class TestPartnerAccounts:
             PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
         )
 
-        # Create multiple accounts
-        for _i in range(3):
+        # Create multiple customers and accounts
+        for i in range(3):
+            customer = Customer(
+                id=uuid4(),
+                customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+                first_name=f"Test{i}",
+                last_name="Customer",
+                email=f"customer{i}@example.com",
+                status=CustomerStatus.ACTIVE,
+                tenant_id=test_tenant_id,
+            )
+            async_db_session.add(customer)
+            await async_db_session.commit()  # Commit so FK constraint can be satisfied
+
             await service.create_partner_account(
                 PartnerAccountCreate(
                     partner_id=partner.id,
-                    customer_id=uuid4(),
+                    customer_id=customer.id,
                     engagement_type="direct",
                 ),
             )
@@ -199,13 +217,25 @@ class TestCommissionTracking:
             ),
         )
 
+        # Create a real customer first
+        customer = Customer(
+            id=uuid4(),
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+            first_name="Test",
+            last_name="Customer",
+            email="customer@example.com",
+            status=CustomerStatus.ACTIVE,
+            tenant_id=test_tenant_id,
+        )
+        async_db_session.add(customer)
+        await async_db_session.commit()  # Commit so FK constraint can be satisfied
+
         # Create commission event
-        customer_id = uuid4()
         base_amount = Decimal("1000.00")
         commission_rate = Decimal("0.15")
         commission_data = PartnerCommissionEventCreate(
             partner_id=partner.id,
-            customer_id=customer_id,
+            customer_id=customer.id,
             event_type="revenue_share",
             commission_amount=base_amount * commission_rate,
             base_amount=base_amount,
@@ -237,13 +267,36 @@ class TestCommissionTracking:
             ),
         )
 
+        # Create customers for commission events
+        customer1 = Customer(
+            id=uuid4(),
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+            first_name="Customer1",
+            last_name="Test",
+            email="customer1@example.com",
+            status=CustomerStatus.ACTIVE,
+            tenant_id=test_tenant_id,
+        )
+        customer2 = Customer(
+            id=uuid4(),
+            customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+            first_name="Customer2",
+            last_name="Test",
+            email="customer2@example.com",
+            status=CustomerStatus.ACTIVE,
+            tenant_id=test_tenant_id,
+        )
+        async_db_session.add(customer1)
+        async_db_session.add(customer2)
+        await async_db_session.commit()  # Commit so FK constraint can be satisfied
+
         # Commission with default rate
         base1 = Decimal("1000.00")
         rate1 = Decimal("0.10")
         event1 = await service.create_commission_event(
             PartnerCommissionEventCreate(
                 partner_id=partner.id,
-                customer_id=uuid4(),
+                customer_id=customer1.id,
                 event_type="revenue_share",
                 commission_amount=base1 * rate1,
                 base_amount=base1,
@@ -257,7 +310,7 @@ class TestCommissionTracking:
         event2 = await service.create_commission_event(
             PartnerCommissionEventCreate(
                 partner_id=partner.id,
-                customer_id=uuid4(),
+                customer_id=customer2.id,
                 event_type="revenue_share",
                 commission_amount=base2 * rate2,
                 base_amount=base2,
@@ -346,13 +399,30 @@ class TestPartnerMetrics:
             PartnerCreate(company_name="Test Partner", primary_email="test@partner.com"),
         )
 
+        # Create customers for commission events
+        customers = []
+        for i, amount in enumerate([Decimal("1000"), Decimal("2000"), Decimal("3000")]):
+            customer = Customer(
+                id=uuid4(),
+                customer_number=f"CUST-{uuid4().hex[:8].upper()}",
+                first_name=f"Customer{i}",
+                last_name="Test",
+                email=f"customer{i}@example.com",
+                status=CustomerStatus.ACTIVE,
+                tenant_id=test_tenant_id,
+            )
+            async_db_session.add(customer)
+            customers.append((customer, amount))
+
+        await async_db_session.commit()  # Commit so FK constraint can be satisfied
+
         # Create commission events
-        for amount in [Decimal("1000"), Decimal("2000"), Decimal("3000")]:
+        for customer, amount in customers:
             rate = Decimal("0.10")
             await service.create_commission_event(
                 PartnerCommissionEventCreate(
                     partner_id=partner.id,
-                    customer_id=uuid4(),
+                    customer_id=customer.id,
                     event_type="revenue_share",
                     commission_amount=amount * rate,
                     base_amount=amount,

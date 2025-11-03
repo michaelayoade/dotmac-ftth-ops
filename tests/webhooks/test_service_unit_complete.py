@@ -5,7 +5,7 @@ Tests all CRUD operations, statistics, secret management, and delivery logs
 with mocked database to achieve high coverage.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, Mock
 from uuid import UUID, uuid4
 
@@ -69,8 +69,8 @@ def sample_subscription(tenant_id):
         is_active=True,
         success_count=10,
         failure_count=2,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
 
@@ -570,7 +570,7 @@ class TestDeliveryLogs:
             tenant_id=tenant_id,
             event_type="user.registered",
             status=DeliveryStatus.SUCCESS,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         delivery2 = WebhookDelivery(
             id=uuid4(),
@@ -578,7 +578,7 @@ class TestDeliveryLogs:
             tenant_id=tenant_id,
             event_type="user.updated",
             status=DeliveryStatus.FAILED,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_result = Mock()
@@ -602,7 +602,7 @@ class TestDeliveryLogs:
             tenant_id=tenant_id,
             event_type="user.registered",
             status=DeliveryStatus.SUCCESS,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_result = Mock()
@@ -644,7 +644,7 @@ class TestDeliveryLogs:
             tenant_id=tenant_id,
             event_type="payment.succeeded",
             status=DeliveryStatus.SUCCESS,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_result = Mock()
@@ -667,7 +667,7 @@ class TestDeliveryLogs:
             tenant_id=tenant_id,
             event_type="user.deleted",
             status=DeliveryStatus.SUCCESS,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         mock_result = Mock()

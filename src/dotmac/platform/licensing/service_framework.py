@@ -10,7 +10,7 @@ Provides business logic for:
 """
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy import and_, select
@@ -114,6 +114,7 @@ class LicensingFrameworkService:
         description: str,
         api_endpoints: list[str],
         ui_routes: list[str],
+        permissions: list[str],
         config: dict[str, Any],
     ) -> ModuleCapability:
         """Add a capability to a feature module."""
@@ -125,7 +126,9 @@ class LicensingFrameworkService:
             description=description,
             api_endpoints=api_endpoints,
             ui_routes=ui_routes,
+            permissions=permissions,
             config=config,
+            is_active=True,
         )
         self.db.add(capability)
         await self.db.commit()
@@ -188,11 +191,12 @@ class LicensingFrameworkService:
         quota_name: str,
         description: str,
         unit_name: str,
-        unit_plural: str,
         pricing_model: PricingModel,
+        unit_plural: str | None = None,
         overage_rate: float | None = None,
         is_metered: bool = False,
         reset_period: str | None = None,
+        config: dict[str, Any] | None = None,
     ) -> QuotaDefinition:
         """Create a new reusable quota definition."""
         quota = QuotaDefinition(
@@ -201,12 +205,13 @@ class LicensingFrameworkService:
             quota_name=quota_name,
             description=description,
             unit_name=unit_name,
-            unit_plural=unit_plural,
+            unit_plural=unit_plural or f"{unit_name}s",
             pricing_model=pricing_model,
             overage_rate=overage_rate,
             is_metered=is_metered,
             reset_period=reset_period,
             is_active=True,
+            extra_metadata=config or {},
         )
         self.db.add(quota)
         await self.db.commit()
@@ -321,7 +326,10 @@ class LicensingFrameworkService:
         # Load source plan with relationships
         result = await self.db.execute(
             select(ServicePlan)
-            .options(selectinload(ServicePlan.modules), selectinload(ServicePlan.quotas))
+            .options(
+                selectinload(ServicePlan.included_modules),
+                selectinload(ServicePlan.included_quotas),
+            )
             .where(ServicePlan.id == source_plan_id)
         )
         source = result.scalar_one_or_none()
@@ -389,7 +397,9 @@ class LicensingFrameworkService:
         # Load plan with modules
         result = await self.db.execute(
             select(ServicePlan)
-            .options(selectinload(ServicePlan.modules).selectinload(PlanModule.module))
+            .options(
+                selectinload(ServicePlan.included_modules).selectinload(PlanModule.module)
+            )
             .where(ServicePlan.id == plan_id)
         )
         plan = result.scalar_one_or_none()
@@ -400,7 +410,7 @@ class LicensingFrameworkService:
         base_monthly = plan.base_price_monthly
 
         # Add module prices (included modules)
-        for pm in plan.modules:
+        for pm in plan.included_modules:
             if pm.included_by_default and not pm.trial_only:
                 price = pm.override_price if pm.override_price else pm.module.base_price
                 base_monthly += price
@@ -420,15 +430,19 @@ class LicensingFrameworkService:
                         )
                     )
                 )
-                pm = result.scalar_one_or_none()
-                if pm:
-                    price = pm.override_price if pm.override_price else pm.module.base_price
+                addon_module = result.scalar_one_or_none()
+                if addon_module:
+                    price = (
+                        addon_module.override_price
+                        if addon_module.override_price
+                        else addon_module.module.base_price
+                    )
                     addon_price += price
 
         total_monthly = base_monthly + addon_price
 
         # Apply annual discount
-        if billing_cycle == BillingCycle.ANNUAL:
+        if billing_cycle == BillingCycle.ANNUALLY:
             annual_price = total_monthly * 12
             discount_amount = annual_price * (plan.annual_discount_percent / 100)
             total_annual = annual_price - discount_amount
@@ -465,8 +479,8 @@ class LicensingFrameworkService:
         result = await self.db.execute(
             select(ServicePlan)
             .options(
-                selectinload(ServicePlan.modules).selectinload(PlanModule.module),
-                selectinload(ServicePlan.quotas).selectinload(PlanQuotaAllocation.quota),
+                selectinload(ServicePlan.included_modules).selectinload(PlanModule.module),
+                selectinload(ServicePlan.included_quotas).selectinload(PlanQuotaAllocation.quota),
             )
             .where(ServicePlan.id == plan_id)
         )
@@ -510,7 +524,7 @@ class LicensingFrameworkService:
         await self.db.flush()
 
         # Activate modules
-        for pm in plan.modules:
+        for pm in plan.included_modules:
             # Include module if it's default, or if it's trial-only and we're in trial
             if pm.included_by_default or (pm.trial_only and start_trial):
                 sub_module = SubscriptionModule(
@@ -539,9 +553,13 @@ class LicensingFrameworkService:
                         )
                     )
                 )
-                pm = result.scalar_one_or_none()
-                if pm:
-                    addon_price = pm.override_price if pm.override_price else pm.module.base_price
+                addon_pm = result.scalar_one_or_none()
+                if addon_pm is not None:
+                    addon_price = (
+                        addon_pm.override_price
+                        if addon_pm.override_price
+                        else addon_pm.module.base_price
+                    )
                     sub_module = SubscriptionModule(
                         id=uuid4(),
                         subscription_id=subscription.id,
@@ -550,12 +568,12 @@ class LicensingFrameworkService:
                         source="ADDON",
                         addon_price=addon_price,
                         expires_at=None,
-                        config=pm.config or {},
+                        config=addon_pm.config or {},
                     )
                     self.db.add(sub_module)
 
         # Initialize quota usage tracking
-        for qa in plan.quotas:
+        for qa in plan.included_quotas:
             usage = SubscriptionQuotaUsage(
                 id=uuid4(),
                 subscription_id=subscription.id,
@@ -588,12 +606,10 @@ class LicensingFrameworkService:
         await self.db.refresh(subscription)
         return subscription
 
-    def _calculate_quota_period_end(
-        self, start: datetime, reset_period: str | None
-    ) -> datetime | None:
+    def _calculate_quota_period_end(self, start: datetime, reset_period: str | None) -> datetime:
         """Calculate when quota period ends based on reset period."""
         if not reset_period:
-            return None  # No reset = lifetime quota
+            return start  # Treat as no-op period; effectively unlimited
 
         if reset_period == "MONTHLY":
             # Next month, same day
@@ -612,7 +628,7 @@ class LicensingFrameworkService:
         elif reset_period == "ANNUAL":
             return start.replace(year=start.year + 1)
 
-        return None
+        return start
 
     async def add_addon_to_subscription(
         self,
@@ -643,9 +659,10 @@ class LicensingFrameworkService:
                 )
             )
         )
-        pm = result.scalar_one_or_none()
-        if not pm:
+        addon_module = result.scalar_one_or_none()
+        if addon_module is None:
             raise ValueError(f"Module {module_id} is not available as add-on for this plan")
+        pm = cast(PlanModule, addon_module)
 
         # Check if already activated
         result = await self.db.execute(
@@ -656,7 +673,7 @@ class LicensingFrameworkService:
                 )
             )
         )
-        existing = result.scalar_one_or_none()
+        existing = cast(SubscriptionModule | None, result.scalar_one_or_none())
         if existing:
             if existing.is_enabled:
                 raise ValueError("Module already activated")
@@ -819,7 +836,7 @@ class LicensingFrameworkService:
         result = await self.db.execute(
             select(TenantSubscription)
             .options(
-                selectinload(TenantSubscription.modules)
+                selectinload(TenantSubscription.active_modules)
                 .selectinload(SubscriptionModule.module)
                 .selectinload(FeatureModule.capabilities)
             )
@@ -844,7 +861,7 @@ class LicensingFrameworkService:
         now = datetime.utcnow()
         capabilities = {}
 
-        for sub_module in subscription.modules:
+        for sub_module in subscription.active_modules:
             if not sub_module.is_enabled:
                 continue
             if sub_module.expires_at and sub_module.expires_at < now:
@@ -941,7 +958,7 @@ class LicensingFrameworkService:
                 )
             )
         )
-        usage = result.scalar_one_or_none()
+        usage = cast(SubscriptionQuotaUsage | None, result.scalar_one_or_none())
         if not usage:
             # Initialize usage tracking
             usage = SubscriptionQuotaUsage(
@@ -957,6 +974,8 @@ class LicensingFrameworkService:
             )
             self.db.add(usage)
             await self.db.flush()
+
+        assert usage is not None
 
         # Check if quota period needs reset
         now = datetime.utcnow()
@@ -1063,8 +1082,8 @@ class LicensingFrameworkService:
                 )
             )
         )
-        usage = result.scalar_one_or_none()
-        if not usage:
+        usage = cast(SubscriptionQuotaUsage | None, result.scalar_one_or_none())
+        if usage is None:
             raise ValueError(f"Quota usage for '{quota_code}' not found")
 
         # Update usage
@@ -1140,8 +1159,8 @@ class LicensingFrameworkService:
                 )
             )
         )
-        usage = result.scalar_one_or_none()
-        if not usage:
+        usage = cast(SubscriptionQuotaUsage | None, result.scalar_one_or_none())
+        if usage is None:
             return
 
         # Decrease usage

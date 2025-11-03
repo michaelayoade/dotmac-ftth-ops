@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for Ansible automation integration.
 
@@ -11,12 +10,11 @@ from uuid import uuid4
 
 import pytest
 import pytest_asyncio
+from sqlalchemy import delete
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.ansible.client import AWXClient
 from dotmac.platform.ansible.device_provisioning import (
-
-
-
     DeviceProvisioningService,
     DeviceType,
     ProvisioningStatus,
@@ -24,19 +22,14 @@ from dotmac.platform.ansible.device_provisioning import (
 from dotmac.platform.ansible.lifecycle_integration import AnsibleLifecycleIntegration
 from dotmac.platform.ansible.playbook_library import PlaybookLibrary, PlaybookType
 from dotmac.platform.ansible.router_management import RouterManagementService
-from sqlalchemy import delete
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from dotmac.platform.services.lifecycle.models import (
     ServiceInstance,
     ServiceStatus,
     ServiceType,
 )
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestPlaybookLibrary:
     """Test Playbook Library functionality"""

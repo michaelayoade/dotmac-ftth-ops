@@ -4,7 +4,7 @@ Comprehensive tests for customer management mappers.
 Tests data transformation between import, model, and export formats.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -191,7 +191,7 @@ class TestCustomerExportSchema:
             lifetime_value=1000.50,
             total_purchases=10,
             average_order_value=100.05,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         assert export_data.id == "123e4567-e89b-12d3-a456-426614174000"
@@ -303,7 +303,7 @@ class TestCustomerMapper:
 
     def test_from_model_to_export(self):
         """Test mapping model to export format."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Create a mock customer model
         customer = Customer(
@@ -372,7 +372,7 @@ class TestCustomerMapper:
 
     def test_from_model_to_export_with_none_values(self):
         """Test mapping model with None values to export."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         customer = Customer(
             id=UUID("123e4567-e89b-12d3-a456-426614174000"),

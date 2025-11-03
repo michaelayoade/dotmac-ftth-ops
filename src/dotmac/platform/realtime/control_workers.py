@@ -7,14 +7,13 @@ for jobs and campaigns (cancel, pause, resume).
 
 import asyncio
 import json
-from contextlib import suppress
 
 import structlog
 from redis.asyncio.client import PubSub
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.dunning.service import DunningService
-from dotmac.platform.db import get_async_session
+from dotmac.platform.db import get_async_session_context
 from dotmac.platform.jobs.service import JobService
 from dotmac.platform.redis_client import RedisClientManager, RedisClientType
 
@@ -582,31 +581,26 @@ async def start_control_workers() -> None:
     redis_manager = RedisClientManager()
     redis_client = await redis_manager.get_client()
 
-    session_iter = get_async_session()
-    session = await anext(session_iter)
+    async with get_async_session_context() as session:
+        job_worker = JobControlWorker(redis_client, session)
+        campaign_worker = CampaignControlWorker(redis_client, session)
 
-    job_worker = JobControlWorker(redis_client, session)
-    campaign_worker = CampaignControlWorker(redis_client, session)
-
-    try:
-        await asyncio.gather(
-            job_worker.start(),
-            campaign_worker.start(),
-        )
-    except KeyboardInterrupt:
-        logger.info("control_workers.shutting_down")
-        await job_worker.stop()
-        await campaign_worker.stop()
-    except Exception as e:
-        logger.error(
-            "control_workers.error",
-            error=str(e),
-            error_type=type(e).__name__,
-        )
-        raise
-    finally:
-        with suppress(Exception):
-            await session_iter.aclose()
+        try:
+            await asyncio.gather(
+                job_worker.start(),
+                campaign_worker.start(),
+            )
+        except KeyboardInterrupt:
+            logger.info("control_workers.shutting_down")
+            await job_worker.stop()
+            await campaign_worker.stop()
+        except Exception as e:
+            logger.error(
+                "control_workers.error",
+                error=str(e),
+                error_type=type(e).__name__,
+            )
+            raise
 
 
 if __name__ == "__main__":

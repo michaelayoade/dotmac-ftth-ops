@@ -302,7 +302,9 @@ class TestRefundProcessing:
 
         # Cancel immediately (should trigger refund)
         canceled = await service.cancel_subscription(
-            subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=False  # Cancel immediately
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+            at_period_end=False,  # Cancel immediately
         )
 
         # Immediate cancellation sets status to ENDED
@@ -488,7 +490,9 @@ async def test_complete_payment_workflow(async_db_session, mock_payment_gateway)
     # Step 6: Cancel with refund
     print("\n🛑 Step 6: Canceling subscription with refund...")
     await service.cancel_subscription(
-        subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=False  # Cancel immediately
+        subscription_id=subscription.subscription_id,
+        tenant_id=tenant_id,
+        at_period_end=False,  # Cancel immediately
     )
 
     # Calculate prorated refund

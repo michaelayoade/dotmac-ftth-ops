@@ -11,6 +11,7 @@ Revises: 2025_10_24_1200
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+
 from alembic import op
 
 revision: str = "2025_10_25_1400"

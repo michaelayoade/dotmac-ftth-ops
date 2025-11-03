@@ -8,13 +8,8 @@ from dotmac.platform.file_storage.factory import get_storage_backend
 from dotmac.platform.file_storage.plugins import register_plugin
 from dotmac.platform.file_storage.service import FileStorageService
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class _DummyStorageBackend:
     async def store(self, *args, **kwargs):  # pragma: no cover - interface stub

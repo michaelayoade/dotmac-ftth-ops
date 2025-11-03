@@ -72,7 +72,6 @@ class IPUpdateRequest(IPAddressUpdate):
     """Alias for backwards compatibility with simplified naming."""
 
 
-
 class IPAddressResponse(BaseModel):  # BaseModel resolves to Any in isolation
     """IP address response from NetBox"""
 
@@ -386,10 +385,13 @@ class BulkIPAllocationRequest(BaseModel):  # BaseModel resolves to Any in isolat
     model_config = ConfigDict()
 
     prefix_id: int = Field(..., description="Prefix ID to allocate from")
-    count: int = Field(..., ge=1, le=1024, description="Number of IPs to allocate")
+    count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate")
     tenant: str | int | None = Field(None, description="Tenant identifier")
     role: str | None = Field(None, description="IP role")
     description: str | None = Field(None, max_length=200, description="Description")
+    description_prefix: str | None = Field(
+        None, max_length=100, description="Prefix to prepend to each IP description"
+    )
     tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
@@ -695,20 +697,6 @@ class DualStackAllocationResponse(BaseModel):
     allocated_at: datetime = Field(
         default_factory=datetime.utcnow, description="Allocation timestamp"
     )
-
-
-class BulkIPAllocationRequest(BaseModel):
-    """Request to allocate multiple IPs from a prefix"""
-
-    model_config = ConfigDict()
-
-    prefix_id: int = Field(..., description="Prefix ID to allocate from")
-    count: int = Field(..., ge=1, le=100, description="Number of IPs to allocate")
-    tenant: str | int | None = Field(None, description="Tenant identifier")
-    role: str | None = Field(None, description="IP role")
-    description: str | None = Field(None, max_length=200, description="Description")
-    description_prefix: str | None = Field(None, max_length=100, description="Prefix to prepend to each IP description")
-    tags: list[str] | None = Field(default_factory=list, description="Tags")
 
 
 class BulkIPAllocationResponse(BaseModel):

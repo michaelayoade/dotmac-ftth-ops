@@ -1,4 +1,3 @@
-
 """
 Core Invoice Service Tests - Phase 1 Coverage Improvement
 
@@ -16,16 +15,15 @@ Tests critical invoice service workflows:
 Target: Increase invoice service coverage from 9.97% to 70%+
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.enums import (
-
-
     InvoiceStatus,
 )
 from dotmac.platform.billing.core.exceptions import (
@@ -34,11 +32,8 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.invoicing.service import InvoiceService
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def tenant_id() -> str:
@@ -161,7 +156,7 @@ class TestInvoiceCreation:
         sample_line_items: list[dict],
     ):
         """Test invoice with custom due date."""
-        custom_due_date = datetime.now(timezone.utc) + timedelta(days=60)
+        custom_due_date = datetime.now(UTC) + timedelta(days=60)
 
         invoice = await invoice_service.create_invoice(
             tenant_id=tenant_id,
@@ -266,7 +261,7 @@ class TestInvoiceRetrieval:
         """Test getting non-existent invoice."""
         invoice = await invoice_service.get_invoice(
             tenant_id=tenant_id,
-            invoice_id="nonexistent_invoice",
+            invoice_id=str(uuid4()),
         )
         assert invoice is None
 
@@ -423,7 +418,7 @@ class TestInvoiceLifecycle:
         with pytest.raises(InvoiceNotFoundError):
             await invoice_service.finalize_invoice(
                 tenant_id=tenant_id,
-                invoice_id="nonexistent",
+                invoice_id=str(uuid4()),
             )
 
     async def test_finalize_already_finalized_invoice(
@@ -496,7 +491,7 @@ class TestInvoiceLifecycle:
         with pytest.raises(InvoiceNotFoundError):
             await invoice_service.void_invoice(
                 tenant_id=tenant_id,
-                invoice_id="nonexistent",
+                invoice_id=str(uuid4()),
                 reason="Test",
             )
 
@@ -526,7 +521,7 @@ class TestInvoiceLifecycle:
         await invoice_service.mark_invoice_paid(
             tenant_id=tenant_id,
             invoice_id=finalized.invoice_id,
-            payment_id="pay_123",
+            payment_id=str(uuid4()),
         )
 
         # Try to void paid invoice
@@ -568,7 +563,7 @@ class TestInvoicePayment:
         paid = await invoice_service.mark_invoice_paid(
             tenant_id=tenant_id,
             invoice_id=finalized.invoice_id,
-            payment_id="pay_123",
+            payment_id=str(uuid4()),
         )
 
         assert paid.status == InvoiceStatus.PAID
@@ -667,7 +662,7 @@ class TestOverdueInvoices:
     ):
         """Test checking for overdue invoices."""
         # Create invoice with past due date
-        past_due_date = datetime.now(timezone.utc) - timedelta(days=10)
+        past_due_date = datetime.now(UTC) - timedelta(days=10)
 
         invoice = await invoice_service.create_invoice(
             tenant_id=tenant_id,
@@ -752,7 +747,7 @@ class TestTenantIsolation:
         from unittest.mock import patch
 
         # Mock datetime to return a different year for second invoice
-        future_time = datetime(2026, 1, 1, tzinfo=timezone.utc)
+        future_time = datetime(2026, 1, 1, tzinfo=UTC)
         with patch("dotmac.platform.billing.invoicing.service.datetime") as mock_dt:
             mock_dt.now.return_value = future_time
             mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)

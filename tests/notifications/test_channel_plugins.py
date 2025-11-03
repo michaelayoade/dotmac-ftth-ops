@@ -18,12 +18,8 @@ from dotmac.platform.notifications.models import (
 )
 from dotmac.platform.notifications.plugins import get_plugin, register_plugin
 
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class _DummyProvider(NotificationChannelProvider):
     channel_name = "dummy"

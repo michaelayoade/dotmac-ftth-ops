@@ -1,4 +1,3 @@
-
 """
 Tests for admin settings management functionality.
 """
@@ -8,9 +7,6 @@ import json
 import pytest
 
 from dotmac.platform.admin.settings.models import (
-
-
-
     SettingsCategory,
     SettingsCategoryInfo,
     SettingsResponse,
@@ -19,14 +15,11 @@ from dotmac.platform.admin.settings.models import (
 )
 from dotmac.platform.admin.settings.service import SettingsManagementService
 
-
-
-
-
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.asyncio,
 ]
+
 
 @pytest.fixture
 def service() -> SettingsManagementService:

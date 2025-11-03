@@ -4,10 +4,11 @@ CLI management commands for DotMac Platform Services.
 """
 
 import asyncio
+from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any, Callable, Protocol
+from typing import Any, Protocol
 
 import click
 from sqlalchemy import text
@@ -15,13 +16,10 @@ from sqlalchemy import text
 from dotmac.platform.auth.core import hash_password
 from dotmac.platform.db import get_session, init_db
 
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
-
 
 class AsyncSessionManager(Protocol):
     async def __aenter__(self) -> Any: ...  # pragma: no cover - protocol definition
-    async def __aexit__(self, exc_type, exc, tb) -> Any: ...  # pragma: no cover
+    async def __aexit__(self, exc_type: Any, exc: Any, tb: Any) -> Any: ...  # pragma: no cover
 
 
 @dataclass
@@ -42,6 +40,7 @@ def _get_cli_dependencies() -> CLIDependencies:
     import subprocess
 
     import httpx
+
     from dotmac.platform.core.caching import redis_client
 
     return CLIDependencies(

@@ -13,7 +13,7 @@ Tests webhook event emission and delivery for subscription lifecycle:
 import hashlib
 import hmac
 import json
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -82,7 +82,7 @@ class TestWebhookEventEmission:
         plan = await service.create_plan(plan_data=plan_data, tenant_id=tenant_id)
 
         # Mock webhook service
-        with patch("dotmac.platform.webhooks.service.WebhookService") as MockWebhook:
+        with patch("dotmac.platform.webhooks.service.WebhookSubscriptionService") as MockWebhook:
             mock_webhook_service = MockWebhook.return_value
             mock_webhook_service.emit = AsyncMock()
 
@@ -99,7 +99,7 @@ class TestWebhookEventEmission:
             # For now, we test the structure
             webhook_payload = {
                 "event": "subscription.created",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "data": {
                     "subscription_id": subscription.subscription_id,
                     "customer_id": subscription.customer_id,
@@ -172,7 +172,7 @@ class TestWebhookEventEmission:
         # Expected webhook payload
         {
             "event": "subscription.plan_changed",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "data": {
                 "subscription_id": upgraded.subscription_id,
                 "old_plan_id": basic_plan.plan_id,
@@ -217,13 +217,15 @@ class TestWebhookEventEmission:
 
         # Cancel subscription
         canceled = await service.cancel_subscription(
-            subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
+            subscription_id=subscription.subscription_id,
+            tenant_id=tenant_id,
+            at_period_end=True,  # Cancel at period end
         )
 
         # Expected webhook payload
         webhook_payload = {
             "event": "subscription.canceled",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "data": {
                 "subscription_id": canceled.subscription_id,
                 "canceled_at": canceled.canceled_at.isoformat(),
@@ -247,7 +249,7 @@ class TestWebhookDelivery:
         """Test successful webhook delivery."""
         webhook_payload = {
             "event": "subscription.created",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "data": {
                 "subscription_id": str(uuid4()),
                 "customer_id": str(uuid4()),
@@ -578,7 +580,7 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
 
     webhook_payload = {
         "event": "subscription.created",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "data": {
             "subscription_id": subscription.subscription_id,
             "plan_id": plan.plan_id,
@@ -607,12 +609,14 @@ async def test_complete_webhook_workflow(async_db_session, webhook_endpoint, moc
     # Step 5: Cancel subscription (would emit webhook)
     print("\n❌ Step 5: Canceling subscription...")
     canceled = await service.cancel_subscription(
-        subscription_id=subscription.subscription_id, tenant_id=tenant_id, at_period_end=True  # Cancel at period end
+        subscription_id=subscription.subscription_id,
+        tenant_id=tenant_id,
+        at_period_end=True,  # Cancel at period end
     )
 
     {
         "event": "subscription.canceled",
-        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "timestamp": datetime.now(UTC).isoformat(),
         "data": {
             "subscription_id": canceled.subscription_id,
             "canceled_at": canceled.canceled_at.isoformat(),

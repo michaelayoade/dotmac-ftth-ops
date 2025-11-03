@@ -9,13 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-pytestmark = pytest.mark.integration
-
-
-@pytest.fixture(autouse=True)
-def dunning_test_environment(monkeypatch):
-    monkeypatch.setenv("TESTING", "1")
-
 from dotmac.platform.billing.dunning.models import (
     DunningActionType,
 )
@@ -25,6 +18,13 @@ from dotmac.platform.billing.dunning.schemas import (
     DunningExclusionRules,
 )
 from dotmac.platform.db import Base
+
+pytestmark = pytest.mark.integration
+
+
+@pytest.fixture(autouse=True)
+def dunning_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
 
 
 @pytest_asyncio.fixture
@@ -105,7 +105,13 @@ async def async_session():
 @pytest.fixture
 def test_tenant_id():
     """Test tenant ID."""
-    return "test-tenant-001"
+    return str(uuid4())
+
+
+@pytest.fixture
+def tenant_id(test_tenant_id):
+    """Override shared tenant_id fixture to align with dunning fixtures."""
+    return test_tenant_id
 
 
 @pytest.fixture

@@ -4,10 +4,7 @@ GraphQL queries for Customer Management.
 Provides efficient customer queries with batched loading of activities and notes.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import TYPE_CHECKING, Any
 from uuid import UUID

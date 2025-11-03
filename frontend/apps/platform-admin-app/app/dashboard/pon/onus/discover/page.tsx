@@ -403,7 +403,7 @@ function ONUDiscoverPageContent() {
 
 export default function ONUDiscoverPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.write">
+    <RouteGuard permission="isp.network.pon.write">
       <ONUDiscoverPageContent />
     </RouteGuard>
   );

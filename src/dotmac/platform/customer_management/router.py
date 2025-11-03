@@ -21,6 +21,7 @@ from dotmac.platform.auth.rbac_dependencies import (
     require_customer_manage_status,
     require_customer_reset_password,
 )
+from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.schemas import (
     CustomerActivityCreate,
     CustomerActivityResponse,
@@ -35,9 +36,8 @@ from dotmac.platform.customer_management.schemas import (
     CustomerSegmentResponse,
     CustomerUpdate,
 )
-from dotmac.platform.customer_management.models import CustomerStatus
 from dotmac.platform.customer_management.service import CustomerService
-from dotmac.platform.db import get_async_db, get_session_dependency
+from dotmac.platform.db import get_session_dependency
 
 logger = structlog.get_logger(__name__)
 
@@ -45,16 +45,17 @@ router = APIRouter(prefix="", tags=["Customer Management"])
 
 
 def _convert_customer_to_response(customer: Any) -> CustomerResponse:
-    """Convert Customer model to CustomerResponse, handling metadata_ field."""
-    # Create a dict from the customer model
-    customer_dict: dict[str, Any] = {}
-    for key in CustomerResponse.model_fields:
-        if key == "metadata":
-            # Map metadata_ to metadata
-            customer_dict["metadata"] = customer.metadata_ if hasattr(customer, "metadata_") else {}
-        elif hasattr(customer, key):
-            customer_dict[key] = getattr(customer, key)
-    return CustomerResponse.model_validate(customer_dict)
+    """Convert a customer ORM/dict object into a response schema."""
+    if isinstance(customer, dict):
+        response = CustomerResponse.model_validate(customer)
+        metadata = customer.get("metadata")
+    else:
+        response = CustomerResponse.model_validate(customer, from_attributes=True)
+        metadata = getattr(customer, "metadata_", None)
+
+    if metadata is not None:
+        response.metadata = metadata
+    return response
 
 
 # Dependency for customer service
@@ -98,6 +99,7 @@ async def _handle_status_lifecycle_events(
     new_status: str,
     customer_email: str,
     session: AsyncSession,
+    initiated_by: str | None = None,
 ) -> None:
     """
     Handle service lifecycle events based on customer status changes.
@@ -111,7 +113,10 @@ async def _handle_status_lifecycle_events(
     """
     try:
         # Handle suspension events
-        if new_status == CustomerStatus.SUSPENDED.value and old_status != CustomerStatus.SUSPENDED.value:
+        if (
+            new_status == CustomerStatus.SUSPENDED.value
+            and old_status != CustomerStatus.SUSPENDED.value
+        ):
             logger.info(
                 "Customer suspended - triggering service suspension",
                 customer_id=str(customer_id),
@@ -120,18 +125,21 @@ async def _handle_status_lifecycle_events(
 
             # Implement service suspension logic
             from sqlalchemy import select
+
             from dotmac.platform.billing.models import BillingSubscriptionTable
-            from dotmac.platform.billing.subscriptions.service import SubscriptionService
             from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
+            from dotmac.platform.billing.subscriptions.service import SubscriptionService
             from dotmac.platform.events.bus import get_event_bus
 
             # Query customer's active subscriptions
             subscription_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.customer_id == str(customer_id),
-                BillingSubscriptionTable.status.in_([
-                    SubscriptionStatus.ACTIVE.value,
-                    SubscriptionStatus.TRIALING.value,
-                ])
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE.value,
+                        SubscriptionStatus.TRIALING.value,
+                    ]
+                ),
             )
             subscription_result = await session.execute(subscription_stmt)
             active_subscriptions = subscription_result.scalars().all()
@@ -145,9 +153,12 @@ async def _handle_status_lifecycle_events(
 
                     # Update subscription to suspended
                     from sqlalchemy import update
+
                     update_stmt = (
                         update(BillingSubscriptionTable)
-                        .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
+                        .where(
+                            BillingSubscriptionTable.subscription_id == subscription.subscription_id
+                        )
                         .values(
                             status=SubscriptionStatus.PAUSED.value,
                             metadata_json={
@@ -156,8 +167,8 @@ async def _handle_status_lifecycle_events(
                                     "suspended_at": datetime.now(UTC).isoformat(),
                                     "original_status": original_status,
                                     "reason": "customer_suspended",
-                                }
-                            }
+                                },
+                            },
                         )
                     )
                     await session.execute(update_stmt)
@@ -189,7 +200,10 @@ async def _handle_status_lifecycle_events(
             )
 
         # Handle reactivation events
-        elif new_status == CustomerStatus.ACTIVE.value and old_status == CustomerStatus.SUSPENDED.value:
+        elif (
+            new_status == CustomerStatus.ACTIVE.value
+            and old_status == CustomerStatus.SUSPENDED.value
+        ):
             logger.info(
                 "Customer reactivated - triggering service restoration",
                 customer_id=str(customer_id),
@@ -198,6 +212,7 @@ async def _handle_status_lifecycle_events(
 
             # Implement service reactivation logic
             from sqlalchemy import select, update
+
             from dotmac.platform.billing.models import BillingSubscriptionTable
             from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
             from dotmac.platform.events.bus import get_event_bus
@@ -205,7 +220,7 @@ async def _handle_status_lifecycle_events(
             # Query customer's suspended subscriptions
             subscription_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.customer_id == str(customer_id),
-                BillingSubscriptionTable.status == SubscriptionStatus.PAUSED.value
+                BillingSubscriptionTable.status == SubscriptionStatus.PAUSED.value,
             )
             subscription_result = await session.execute(subscription_stmt)
             suspended_subscriptions = subscription_result.scalars().all()
@@ -215,7 +230,9 @@ async def _handle_status_lifecycle_events(
                     # Restore original status from metadata or default to ACTIVE
                     metadata = subscription.metadata_json or {}
                     suspension_info = metadata.get("suspension", {})
-                    original_status = suspension_info.get("original_status", SubscriptionStatus.ACTIVE.value)
+                    original_status = suspension_info.get(
+                        "original_status", SubscriptionStatus.ACTIVE.value
+                    )
 
                     # Remove suspension info from metadata
                     updated_metadata = {**metadata}
@@ -228,11 +245,10 @@ async def _handle_status_lifecycle_events(
                     # Update subscription to restored status
                     update_stmt = (
                         update(BillingSubscriptionTable)
-                        .where(BillingSubscriptionTable.subscription_id == subscription.subscription_id)
-                        .values(
-                            status=original_status,
-                            metadata_json=updated_metadata
+                        .where(
+                            BillingSubscriptionTable.subscription_id == subscription.subscription_id
                         )
+                        .values(status=original_status, metadata_json=updated_metadata)
                     )
                     await session.execute(update_stmt)
 
@@ -274,6 +290,7 @@ async def _handle_status_lifecycle_events(
 
             # Implement churn handling logic
             from sqlalchemy import select, update
+
             from dotmac.platform.billing.models import BillingSubscriptionTable
             from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
             from dotmac.platform.billing.subscriptions.service import SubscriptionService
@@ -282,11 +299,13 @@ async def _handle_status_lifecycle_events(
             # Query customer's active subscriptions
             subscription_stmt = select(BillingSubscriptionTable).where(
                 BillingSubscriptionTable.customer_id == str(customer_id),
-                BillingSubscriptionTable.status.in_([
-                    SubscriptionStatus.ACTIVE.value,
-                    SubscriptionStatus.TRIALING.value,
-                    SubscriptionStatus.PAUSED.value,
-                ])
+                BillingSubscriptionTable.status.in_(
+                    [
+                        SubscriptionStatus.ACTIVE.value,
+                        SubscriptionStatus.TRIALING.value,
+                        SubscriptionStatus.PAUSED.value,
+                    ]
+                ),
             )
             subscription_result = await session.execute(subscription_stmt)
             active_subscriptions = subscription_result.scalars().all()
@@ -299,13 +318,17 @@ async def _handle_status_lifecycle_events(
                     try:
                         # Use the cancel_subscription service method
                         # This handles proper cancellation logic including proration
-                        tenant_id = subscription.tenant_id if hasattr(subscription, 'tenant_id') else "default"
+                        tenant_id = (
+                            subscription.tenant_id
+                            if hasattr(subscription, "tenant_id")
+                            else "default"
+                        )
 
                         await subscription_service.cancel_subscription(
-                            subscription_id=subscription.subscription_id,
-                            tenant_id=tenant_id,
-                            cancel_immediately=False,  # Cancel at period end for churned customers
-                            reason=f"Customer churned - status changed to {new_status}",
+                            subscription_id=str(subscription.subscription_id),
+                            tenant_id=str(tenant_id),
+                            at_period_end=True,
+                            user_id=initiated_by,
                         )
 
                         canceled_count += 1
@@ -633,32 +656,17 @@ async def add_customer_activity(
 
 
 def _convert_activity_to_response(activity: Any) -> CustomerActivityResponse:
-    """Convert CustomerActivity model to CustomerActivityResponse, handling metadata_ field."""
-    activity_dict: dict[str, Any] = {}
-    source: dict[str, Any]
-
+    """Convert customer activity model/dict to response schema."""
     if isinstance(activity, dict):
-        source = activity
+        response = CustomerActivityResponse.model_validate(activity)
+        metadata = activity.get("metadata")
     else:
-        source = {}
-        for key in CustomerActivityResponse.model_fields:
-            if key == "metadata":
-                if hasattr(activity, "metadata_"):
-                    source["metadata"] = getattr(activity, "metadata_")
-                continue
-            if hasattr(activity, key):
-                source[key] = getattr(activity, key)
-        if "metadata" not in source:
-            source["metadata"] = getattr(activity, "metadata_") if hasattr(activity, "metadata_") else {}
+        response = CustomerActivityResponse.model_validate(activity, from_attributes=True)
+        metadata = getattr(activity, "metadata_", None)
 
-    for key in CustomerActivityResponse.model_fields:
-        if key == "metadata":
-            value = source.get("metadata") or {}
-        else:
-            value = source.get(key)
-        activity_dict[key] = value
-
-    return CustomerActivityResponse.model_validate(activity_dict)
+    if metadata is not None:
+        response.metadata = metadata
+    return response
 
 
 @router.get("/{customer_id}/activities", response_model=list[CustomerActivityResponse])
@@ -726,12 +734,10 @@ async def add_customer_note(
 
 
 def _convert_note_to_response(note: Any) -> CustomerNoteResponse:
-    """Convert CustomerNote model to CustomerNoteResponse."""
-    note_dict: dict[str, Any] = {}
-    for key in CustomerNoteResponse.model_fields:
-        if hasattr(note, key):
-            note_dict[key] = getattr(note, key)
-    return CustomerNoteResponse.model_validate(note_dict)
+    """Convert customer note model/dict to response schema."""
+    if isinstance(note, dict):
+        return CustomerNoteResponse.model_validate(note)
+    return CustomerNoteResponse.model_validate(note, from_attributes=True)
 
 
 @router.get("/{customer_id}/notes", response_model=list[CustomerNoteResponse])
@@ -922,14 +928,16 @@ async def impersonate_customer(
             "impersonation": True,
         }
         access_token = jwt_service.create_access_token(
-            data=token_data,
-            expires_minutes=60,  # 1 hour for impersonation
+            subject=str(customer.id),
+            additional_claims=token_data,
+            expire_minutes=60,  # 1 hour for impersonation
         )
 
         # Log the impersonation action
         await log_user_activity(
             session=service.session,
             user_id=current_user.user_id,
+            action="impersonate_customer",
             tenant_id=current_user.tenant_id,
             activity_type=ActivityType.USER_IMPERSONATION,
             severity=ActivitySeverity.MEDIUM,
@@ -1017,6 +1025,7 @@ async def update_customer_status(
         await log_user_activity(
             session=service.session,
             user_id=current_user.user_id,
+            action="update_customer_status",
             tenant_id=current_user.tenant_id,
             activity_type=ActivityType.CUSTOMER_STATUS_CHANGE,
             severity=ActivitySeverity.MEDIUM,
@@ -1037,6 +1046,7 @@ async def update_customer_status(
             new_status=new_status,
             customer_email=customer.email,
             session=service.session,
+            initiated_by=str(current_user.user_id),
         )
 
         logger.info(
@@ -1114,6 +1124,7 @@ async def admin_reset_customer_password(
         await log_user_activity(
             session=service.session,
             user_id=current_user.user_id,
+            action="reset_customer_password",
             tenant_id=current_user.tenant_id,
             activity_type=ActivityType.PASSWORD_RESET_ADMIN,
             severity=ActivitySeverity.MEDIUM,

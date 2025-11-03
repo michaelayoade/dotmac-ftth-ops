@@ -4,10 +4,7 @@ Billing reports service - Main orchestrator for all billing reports
 
 import asyncio
 import logging
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, cast
 
@@ -114,7 +111,7 @@ class BillingReportService:
                 return f"${numeric}"
             return f"{currency_code} {numeric}"
 
-        summary = {
+        summary: dict[str, Any] = {
             "report_type": "executive_summary",
             "tenant_id": tenant_id,
             "period": {

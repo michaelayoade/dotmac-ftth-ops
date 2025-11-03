@@ -11,12 +11,10 @@ from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from tests.helpers.contract_testing import (
-
-
     ContractTestCase,
     MockDataFactory,
     SchemaValidator,
@@ -27,11 +25,11 @@ from tests.helpers.router_base import (
     RouterWithServiceTestBase,
 )
 
-
 # Example schemas (would normally be in app code)
 
 
 pytestmark = pytest.mark.integration
+
 
 class Product(BaseModel):
     id: str
@@ -246,9 +244,7 @@ class TestContractPatterns(RouterTestBase, ContractTestCase):
         assert product.id is not None
 
         # Generate with overrides
-        mock_data = MockDataFactory.create(
-            Product, id="custom-id", name="Custom Product"
-        )
+        mock_data = MockDataFactory.create(Product, id="custom-id", name="Custom Product")
         assert mock_data["id"] == "custom-id"
         assert mock_data["name"] == "Custom Product"
 
@@ -315,8 +311,9 @@ class TestErrorHandlingPatterns(RouterTestBase):
 
     def test_missing_tenant_header(self, test_app):
         """Test that requests without tenant header are rejected."""
-        from dotmac.platform.auth.core import UserInfo, get_current_user
         from starlette.testclient import TestClient
+
+        from dotmac.platform.auth.core import UserInfo, get_current_user
 
         # Override auth but don't add tenant header
         test_app.dependency_overrides[get_current_user] = lambda: UserInfo(
@@ -357,9 +354,7 @@ class TestErrorHandlingPatterns(RouterTestBase):
 # ======================================================================
 
 
-@pytest.mark.skipif(
-    True, reason="Example test - would require real fixtures"
-)
+@pytest.mark.skipif(True, reason="Example test - would require real fixtures")
 class TestRealFixtureIntegration(RouterTestBase):
     """
     Demonstrates how to integrate with actual app fixtures.

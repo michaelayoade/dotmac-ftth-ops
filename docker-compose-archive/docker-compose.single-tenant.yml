@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Single-Tenant White-Label Deployment
 # Only tenant app mounted at /api/v1
 

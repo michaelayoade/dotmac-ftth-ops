@@ -7,6 +7,7 @@ to WebSocket connections.
 
 import json
 from collections.abc import AsyncGenerator
+from typing import cast
 
 import strawberry
 import structlog
@@ -54,8 +55,11 @@ class NetworkSubscriptions:
         Yields:
             DeviceUpdate: Real-time device status and metrics updates
         """
-        redis: Redis = info.context.redis
-        tenant_id = info.context.tenant_id
+        redis_client = getattr(info.context, "redis", None)
+        if redis_client is None:
+            raise RuntimeError("Redis client not configured for subscriptions")
+        redis: Redis = cast(Redis, redis_client)
+        tenant_id = info.context.get_active_tenant_id()
 
         # Build channel pattern for filtering
         if device_type and status:
@@ -176,8 +180,11 @@ class NetworkSubscriptions:
         Yields:
             NetworkAlertUpdate: Real-time alert notifications with action type
         """
-        redis: Redis = info.context.redis
-        tenant_id = info.context.tenant_id
+        redis_client = getattr(info.context, "redis", None)
+        if redis_client is None:
+            raise RuntimeError("Redis client not configured for subscriptions")
+        redis: Redis = cast(Redis, redis_client)
+        tenant_id = info.context.get_active_tenant_id()
 
         # Build channel name for filtering
         if device_id:

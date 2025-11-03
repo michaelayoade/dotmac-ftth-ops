@@ -8,10 +8,7 @@ and mass configuration jobs.
 import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, cast
 
 import redis.asyncio as aioredis
@@ -19,18 +16,18 @@ import structlog
 from celery import Task
 from sqlalchemy import select
 
-from dotmac.platform.celery_app import celery_app
 from dotmac.platform import db as db_module
+from dotmac.platform.celery_app import celery_app
 from dotmac.platform.genieacs.client import GenieACSClient
+from dotmac.platform.genieacs.metrics import (
+    set_firmware_upgrade_schedule_status,
+    set_mass_config_job_status,
+)
 from dotmac.platform.genieacs.models import (
     FirmwareUpgradeResult,
     FirmwareUpgradeSchedule,
     MassConfigJob,
     MassConfigResult,
-)
-from dotmac.platform.genieacs.metrics import (
-    set_firmware_upgrade_schedule_status,
-    set_mass_config_job_status,
 )
 from dotmac.platform.redis_client import RedisClientType
 from dotmac.platform.tenant.oss_config import OSSService, get_service_config
@@ -74,10 +71,7 @@ async def get_redis_client() -> RedisClientType:
     # Use Celery broker URL as default for background task pub/sub
     # This ensures consistency with task queue Redis instance
     redis_url = settings.celery.broker_url
-    return cast(
-        RedisClientType,
-        aioredis.from_url(redis_url, decode_responses=True),
-    )
+    return aioredis.from_url(redis_url, decode_responses=True)
 
 
 async def publish_progress(

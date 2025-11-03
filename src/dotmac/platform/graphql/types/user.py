@@ -276,7 +276,7 @@ class User:
     id: strawberry.ID
     username: str
     email: str
-    tenant_id: str
+    tenant_id: str | None
 
     # Profile fields
     full_name: str | None

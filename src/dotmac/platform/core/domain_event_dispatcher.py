@@ -11,7 +11,7 @@ from __future__ import annotations
 import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
-from typing import TypeVar, cast, overload
+from typing import Any, Protocol, TypeVar, cast, overload
 
 import structlog
 
@@ -19,9 +19,28 @@ from dotmac.platform.core.events import DomainEvent
 
 logger = structlog.get_logger(__name__)
 
+
 # Type aliases
-DomainEventHandler = Callable[[DomainEvent], Awaitable[None]]
+EventContra = TypeVar("EventContra", bound=DomainEvent, contravariant=True)
 T = TypeVar("T", bound=DomainEvent)
+
+
+class EventHandler(Protocol[EventContra]):
+    """Protocol for async domain event handlers."""
+
+    def __call__(self, __event: EventContra) -> Awaitable[None]:
+        ...
+
+
+DomainEventHandler = EventHandler[DomainEvent]
+
+
+def _handler_name(handler: EventHandler[Any]) -> str:
+    """Best-effort retrieval of a handler's name for logging."""
+    name = getattr(handler, "__name__", None)
+    if isinstance(name, str):
+        return name
+    return handler.__class__.__name__
 
 
 class DomainEventDispatcher:
@@ -58,7 +77,7 @@ class DomainEventDispatcher:
     def subscribe(
         self,
         event_type: type[T],
-    ) -> Callable[[Callable[[T], Awaitable[None]]], Callable[[T], Awaitable[None]]]: ...
+    ) -> Callable[[EventHandler[T]], EventHandler[T]]: ...
 
     @overload
     def subscribe(
@@ -69,7 +88,7 @@ class DomainEventDispatcher:
     def subscribe(
         self,
         event_type: type[T] | str,
-    ) -> Callable[[DomainEventHandler], DomainEventHandler]:
+    ) -> Callable[[EventHandler[Any]], EventHandler[Any]]:
         """
         Decorator to subscribe a handler to an event type.
 
@@ -94,7 +113,7 @@ class DomainEventDispatcher:
                 logger.info(
                     "Domain event handler registered",
                     event_type=type_name,
-                    handler=handler.__name__,
+                    handler=_handler_name(handler),
                     total_handlers=len(self._handlers[type_name]),
                 )
 
@@ -102,20 +121,20 @@ class DomainEventDispatcher:
 
             return decorator_str
 
-        def decorator(handler: Callable[[T], Awaitable[None]]) -> Callable[[T], Awaitable[None]]:
+        def decorator(handler: EventHandler[T]) -> EventHandler[T]:
             type_name = event_type.__name__
             self._handlers[type_name].append(cast(DomainEventHandler, handler))
 
             logger.info(
                 "Domain event handler registered",
                 event_type=type_name,
-                handler=handler.__name__,
+                handler=_handler_name(handler),
                 total_handlers=len(self._handlers[type_name]),
             )
 
             return handler
 
-        return decorator
+        return cast(Callable[[EventHandler[Any]], EventHandler[Any]], decorator)
 
     def subscribe_all(
         self,
@@ -132,7 +151,7 @@ class DomainEventDispatcher:
         self._global_handlers.append(handler)
         logger.info(
             "Global domain event handler registered",
-            handler=handler.__name__,
+            handler=_handler_name(handler),
         )
 
     def unsubscribe(
@@ -158,13 +177,13 @@ class DomainEventDispatcher:
                 logger.info(
                     "Domain event handler unsubscribed",
                     event_type=type_name,
-                    handler=handler.__name__,
+                    handler=_handler_name(handler),
                 )
             except ValueError:
                 logger.warning(
                     "Handler not found for unsubscribe",
                     event_type=type_name,
-                    handler=handler.__name__,
+                    handler=_handler_name(handler),
                 )
 
     async def dispatch(self, event: DomainEvent) -> None:
@@ -209,7 +228,7 @@ class DomainEventDispatcher:
                     "Domain event handler failed",
                     event_type=event.event_type,
                     event_id=event.event_id,
-                    handler=handler.__name__,
+                    handler=_handler_name(handler),
                     error=str(result),
                     exc_info=result,
                 )
@@ -256,7 +275,7 @@ class DomainEventDispatcher:
                 "Domain event handler completed",
                 event_type=event.event_type,
                 event_id=event.event_id,
-                handler=handler.__name__,
+                handler=_handler_name(handler),
             )
 
         except Exception as e:
@@ -264,7 +283,7 @@ class DomainEventDispatcher:
                 "Domain event handler failed",
                 event_type=event.event_type,
                 event_id=event.event_id,
-                handler=handler.__name__,
+                handler=_handler_name(handler),
                 error=str(e),
                 exc_info=True,
             )

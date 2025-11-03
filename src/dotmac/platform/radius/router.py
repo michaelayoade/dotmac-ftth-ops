@@ -114,7 +114,7 @@ async def list_subscribers(
 ) -> list[RADIUSSubscriberResponse]:
     """List RADIUS subscribers with pagination"""
     result = await service.list_subscribers(skip=skip, limit=limit)
-    return cast(list[RADIUSSubscriberResponse], result)
+    return result
 
 
 @router.patch(
@@ -240,7 +240,7 @@ async def get_active_sessions(
 ) -> list[RADIUSSessionResponse]:
     """Get active RADIUS sessions"""
     result = await service.get_active_sessions(username=username)
-    return cast(list[RADIUSSessionResponse], result)
+    return result
 
 
 @router.get(
@@ -264,7 +264,7 @@ async def get_subscriber_sessions(
         skip=skip,
         limit=limit,
     )
-    return cast(list[RADIUSSessionResponse], result)
+    return result
 
 
 @router.post(
@@ -300,7 +300,7 @@ async def disconnect_session(
         nas_ip=data.nasipaddress,
     )
 
-    return cast(dict[str, Any], result)
+    return result
 
 
 # =============================================================================
@@ -393,7 +393,7 @@ async def list_nas_devices(
 ) -> list[NASResponse]:
     """List NAS devices"""
     result = await service.list_nas_devices(skip=skip, limit=limit)
-    return cast(list[NASResponse], result)
+    return result
 
 
 @router.patch(
@@ -511,7 +511,7 @@ async def list_bandwidth_profiles(
 ) -> list[BandwidthProfileResponse]:
     """List bandwidth profiles"""
     result = await service.list_bandwidth_profiles(skip=skip, limit=limit)
-    return cast(list[BandwidthProfileResponse], result)
+    return result
 
 
 @router.patch(

@@ -581,7 +581,7 @@ function DiagnosticsPageContent() {
 
 export default function DiagnosticsPage() {
   return (
-    <RouteGuard requiredPermission="devices.diagnostics">
+    <RouteGuard permission="devices.diagnostics">
       <DiagnosticsPageContent />
     </RouteGuard>
   );

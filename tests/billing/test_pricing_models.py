@@ -4,7 +4,7 @@ Comprehensive tests for pricing models and validators.
 Tests pricing rule models, validation logic, and price calculation models.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -48,8 +48,8 @@ class TestPricingRuleModel:
             customer_segments=["vip"],
             priority=10,
             is_active=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.rule_id == "rule_123"
@@ -66,8 +66,8 @@ class TestPricingRuleModel:
                 name="Invalid discount",
                 discount_type=DiscountType.PERCENTAGE,
                 discount_value=Decimal("-10"),  # Negative
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
 
         assert "Discount value cannot be negative" in str(exc_info.value)
@@ -82,8 +82,8 @@ class TestPricingRuleModel:
                 discount_type=DiscountType.PERCENTAGE,
                 discount_value=Decimal("10"),
                 min_quantity=0,  # Invalid
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
 
         assert "Minimum quantity must be positive" in str(exc_info.value)
@@ -98,8 +98,8 @@ class TestPricingRuleModel:
                 discount_type=DiscountType.PERCENTAGE,
                 discount_value=Decimal("10"),
                 min_quantity=-5,  # Invalid
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
 
         assert "Minimum quantity must be positive" in str(exc_info.value)
@@ -114,8 +114,8 @@ class TestPricingRuleModel:
                 discount_type=DiscountType.PERCENTAGE,
                 discount_value=Decimal("10"),
                 max_uses=0,  # Invalid
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
 
         assert "Max uses must be positive" in str(exc_info.value)
@@ -133,8 +133,8 @@ class TestPricingRuleMethods:
             discount_type=DiscountType.PERCENTAGE,
             discount_value=Decimal("10"),
             is_active=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.is_currently_active() is True
@@ -148,15 +148,15 @@ class TestPricingRuleMethods:
             discount_type=DiscountType.PERCENTAGE,
             discount_value=Decimal("10"),
             is_active=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.is_currently_active() is False
 
     def test_is_currently_active_before_start_date(self):
         """Test rule is not active before start date."""
-        future = datetime.now(timezone.utc) + timedelta(days=1)
+        future = datetime.now(UTC) + timedelta(days=1)
         rule = PricingRule(
             rule_id="rule_123",
             tenant_id="tenant_123",
@@ -165,15 +165,15 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             is_active=True,
             starts_at=future,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.is_currently_active() is False
 
     def test_is_currently_active_after_end_date(self):
         """Test rule is not active after end date."""
-        past = datetime.now(timezone.utc) - timedelta(days=1)
+        past = datetime.now(UTC) - timedelta(days=1)
         rule = PricingRule(
             rule_id="rule_123",
             tenant_id="tenant_123",
@@ -182,16 +182,16 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             is_active=True,
             ends_at=past,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.is_currently_active() is False
 
     def test_is_currently_active_within_date_range(self):
         """Test rule is active within date range."""
-        past = datetime.now(timezone.utc) - timedelta(days=1)
-        future = datetime.now(timezone.utc) + timedelta(days=1)
+        past = datetime.now(UTC) - timedelta(days=1)
+        future = datetime.now(UTC) + timedelta(days=1)
         rule = PricingRule(
             rule_id="rule_123",
             tenant_id="tenant_123",
@@ -201,8 +201,8 @@ class TestPricingRuleMethods:
             is_active=True,
             starts_at=past,
             ends_at=future,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.is_currently_active() is True
@@ -217,8 +217,8 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             max_uses=None,
             current_uses=1000,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.has_usage_remaining() is True
@@ -233,8 +233,8 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             max_uses=100,
             current_uses=50,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.has_usage_remaining() is True
@@ -249,8 +249,8 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             max_uses=100,
             current_uses=100,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.has_usage_remaining() is False
@@ -267,8 +267,8 @@ class TestPricingRuleMethods:
             min_quantity=5,
             max_uses=100,
             current_uses=50,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.can_be_applied(quantity=10) is True
@@ -282,8 +282,8 @@ class TestPricingRuleMethods:
             discount_type=DiscountType.PERCENTAGE,
             discount_value=Decimal("10"),
             is_active=False,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.can_be_applied() is False
@@ -298,8 +298,8 @@ class TestPricingRuleMethods:
             discount_value=Decimal("10"),
             is_active=True,
             min_quantity=10,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.can_be_applied(quantity=5) is False
@@ -315,8 +315,8 @@ class TestPricingRuleMethods:
             is_active=True,
             max_uses=10,
             current_uses=10,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         assert rule.can_be_applied() is False
@@ -349,7 +349,7 @@ class TestPricingRuleCreateRequest:
 
     def test_end_date_before_start_date_fails(self):
         """Test end date before start date fails."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         future = now + timedelta(days=7)
 
         with pytest.raises(ValidationError) as exc_info:
@@ -365,7 +365,7 @@ class TestPricingRuleCreateRequest:
 
     def test_valid_date_range(self):
         """Test valid date range passes validation."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         future = now + timedelta(days=7)
 
         request = PricingRuleCreateRequest(

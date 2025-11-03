@@ -4,10 +4,7 @@ Logs API router.
 Provides REST endpoints for application log retrieval and filtering.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, cast
 
@@ -437,7 +434,7 @@ class LogsService:
             }
             by_service: dict[str, int] = {}
 
-            for severity, activity_type, created_at in rows:
+            for severity, activity_type, _created_at in rows:
                 level = {
                     ActivitySeverity.LOW.value: "INFO",
                     ActivitySeverity.MEDIUM.value: "WARNING",

@@ -122,7 +122,7 @@ async def get_available_plans_for_tenant(
             user_id=current_user.user_id,
         )
 
-        return plans
+        return [service._plan_to_response(plan) for plan in plans]
 
     except Exception as e:
         logger.error(

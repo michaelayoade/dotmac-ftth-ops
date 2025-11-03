@@ -10,11 +10,6 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import StaticPool
 
-@pytest.fixture(autouse=True)
-def billing_catalog_test_environment(monkeypatch):
-    monkeypatch.setenv("TESTING", "1")
-    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
-
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.billing import models as billing_models  # noqa: F401
 
@@ -24,6 +19,12 @@ from dotmac.platform.billing.catalog import models as catalog_models  # noqa: F4
 # Import billing models to ensure they're registered with Base.metadata
 from dotmac.platform.db import Base
 from dotmac.platform.main import app
+
+
+@pytest.fixture(autouse=True)
+def billing_catalog_test_environment(monkeypatch):
+    monkeypatch.setenv("TESTING", "1")
+    monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
 
 @pytest_asyncio.fixture(scope="function")

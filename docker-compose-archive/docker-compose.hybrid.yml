@@ -1,5 +1,3 @@
-version: '3.8'
-
 # Hybrid Multi-Region Deployment
 # Control Plane + Tenant Instances
 

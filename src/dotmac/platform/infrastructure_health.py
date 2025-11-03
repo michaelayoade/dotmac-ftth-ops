@@ -9,9 +9,10 @@ import logging
 import os
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional
 
 import httpx
+
+from dotmac.platform.settings import settings
 
 logger = logging.getLogger(__name__)
 
@@ -63,13 +64,13 @@ class HealthCheckResult:
     service: str
     status: HealthStatus
     message: str
-    response_time_ms: Optional[float] = None
-    details: Optional[Dict] = None
+    response_time_ms: float | None = None
+    details: dict | None = None
 
 
 # Infrastructure services to check
 # Note: Will use localhost when running locally, Docker service names when in container
-def get_infrastructure_services() -> List[ServiceHealthCheck]:
+def get_infrastructure_services() -> list[ServiceHealthCheck]:
     """Get infrastructure services with environment-aware hostnames."""
     return [
         # Core Database
@@ -162,8 +163,9 @@ def get_infrastructure_services() -> List[ServiceHealthCheck]:
         ),
     ]
 
+
 # ISP-specific services (docker-compose.isp.yml)
-def get_isp_services() -> List[ServiceHealthCheck]:
+def get_isp_services() -> list[ServiceHealthCheck]:
     """Get ISP services with environment-aware hostnames."""
     return [
         # MongoDB for GenieACS
@@ -245,13 +247,13 @@ async def check_tcp_connectivity(host: str, port: int, timeout: float) -> tuple[
         writer.close()
         await writer.wait_closed()
         elapsed_ms = (time.time() - start_time) * 1000
-        return True, f"TCP connection successful", elapsed_ms
-    except asyncio.TimeoutError:
+        return True, "TCP connection successful", elapsed_ms
+    except TimeoutError:
         elapsed_ms = (time.time() - start_time) * 1000
         return False, f"Connection timeout after {timeout}s", elapsed_ms
     except ConnectionRefusedError:
         elapsed_ms = (time.time() - start_time) * 1000
-        return False, f"Connection refused", elapsed_ms
+        return False, "Connection refused", elapsed_ms
     except Exception as e:
         elapsed_ms = (time.time() - start_time) * 1000
         return False, f"Connection error: {str(e)}", elapsed_ms
@@ -267,7 +269,10 @@ async def check_http_endpoint(
     start_time = time.time()
 
     try:
-        async with httpx.AsyncClient(timeout=timeout, verify=False) as client:
+        # Only disable SSL verification for HTTPS in non-production environments
+        # Production deployments should use valid SSL certificates
+        verify_ssl = protocol != "https" or settings.is_production
+        async with httpx.AsyncClient(timeout=timeout, verify=verify_ssl) as client:
             response = await client.get(url)
             elapsed_ms = (time.time() - start_time) * 1000
 
@@ -333,7 +338,7 @@ async def check_service_health(service: ServiceHealthCheck) -> HealthCheckResult
 
 async def check_all_infrastructure_health(
     include_isp_services: bool = False,
-) -> List[HealthCheckResult]:
+) -> list[HealthCheckResult]:
     """Check health of all infrastructure services."""
     services_to_check = get_infrastructure_services()
 
@@ -351,7 +356,7 @@ async def check_all_infrastructure_health(
     return list(results)
 
 
-def format_health_report(results: List[HealthCheckResult]) -> str:
+def format_health_report(results: list[HealthCheckResult]) -> str:
     """Format health check results as a readable report."""
     lines = ["", "=" * 70, "Infrastructure Health Check Report", "=" * 70, ""]
 
@@ -396,7 +401,7 @@ def format_health_report(results: List[HealthCheckResult]) -> str:
 
 async def check_required_services_healthy(
     include_isp_services: bool = False,
-) -> tuple[bool, List[HealthCheckResult]]:
+) -> tuple[bool, list[HealthCheckResult]]:
     """Check if all required services are healthy.
 
     Returns:

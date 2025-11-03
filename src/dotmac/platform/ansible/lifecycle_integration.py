@@ -155,20 +155,61 @@ class AnsibleLifecycleIntegration:
         Returns:
             dict with job execution results
         """
+        wan_ip = router_config.get("wan_ip")
+        if not isinstance(wan_ip, str) or not wan_ip:
+            raise ValueError("Router configuration requires a WAN IP address")
+
+        wan_gateway = router_config.get("wan_gateway")
+        if not isinstance(wan_gateway, str) or not wan_gateway:
+            raise ValueError("Router configuration requires a WAN gateway")
+
+        wan_netmask = router_config.get("wan_netmask", "255.255.255.0")
+        if not isinstance(wan_netmask, str) or not wan_netmask:
+            raise ValueError("WAN netmask must be a non-empty string")
+
+        lan_ip = router_config.get("lan_ip", "192.168.1.1")
+        if not isinstance(lan_ip, str) or not lan_ip:
+            raise ValueError("LAN IP must be a non-empty string")
+
+        lan_netmask = router_config.get("lan_netmask", "255.255.255.0")
+        if not isinstance(lan_netmask, str) or not lan_netmask:
+            raise ValueError("LAN netmask must be a non-empty string")
+
+        lan_network = router_config.get("lan_network", "192.168.1.0")
+        if not isinstance(lan_network, str) or not lan_network:
+            raise ValueError("LAN network must be a non-empty string")
+
+        wifi_ssid = router_config.get("wifi_ssid")
+        if wifi_ssid is not None and not isinstance(wifi_ssid, str):
+            raise ValueError("wifi_ssid must be a string when provided")
+
+        wifi_password = router_config.get("wifi_password")
+        if wifi_password is not None and not isinstance(wifi_password, str):
+            raise ValueError("wifi_password must be a string when provided")
+
+        dns_servers_raw = router_config.get("dns_servers")
+        dns_servers: list[str] | None
+        if dns_servers_raw is None:
+            dns_servers = None
+        else:
+            if not isinstance(dns_servers_raw, list):
+                raise ValueError("dns_servers must be a list of strings when provided")
+            dns_servers = [str(server) for server in dns_servers_raw]
+
         extra_vars = PlaybookLibrary.build_router_config_vars(
             router_id=router_id,
             customer_id=str(service_instance.customer_id),
             service_id=str(service_instance.id),
-            wan_ip=router_config.get("wan_ip"),
-            wan_netmask=router_config.get("wan_netmask", "255.255.255.0"),
-            wan_gateway=router_config.get("wan_gateway"),
-            lan_ip=router_config.get("lan_ip", "192.168.1.1"),
-            lan_netmask=router_config.get("lan_netmask", "255.255.255.0"),
-            lan_network=router_config.get("lan_network", "192.168.1.0"),
+            wan_ip=wan_ip,
+            wan_netmask=wan_netmask,
+            wan_gateway=wan_gateway,
+            lan_ip=lan_ip,
+            lan_netmask=lan_netmask,
+            lan_network=lan_network,
             vlan_id=service_instance.vlan_id,
-            wifi_ssid=router_config.get("wifi_ssid"),
-            wifi_password=router_config.get("wifi_password"),
-            dns_servers=router_config.get("dns_servers"),
+            wifi_ssid=wifi_ssid,
+            wifi_password=wifi_password,
+            dns_servers=dns_servers,
             callback_url=self.callback_base_url,
             api_token=self.api_token,
         )

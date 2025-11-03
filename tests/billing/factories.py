@@ -16,16 +16,17 @@ All factories use flush() instead of commit(), allowing the async_db_session
 fixture to rollback all changes automatically at test teardown.
 """
 
-import pytest_asyncio
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from uuid import uuid4
-from sqlalchemy.ext.asyncio import AsyncSession
 
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # ============================================================================
 # Customer Factories
 # ============================================================================
+
 
 @pytest_asyncio.fixture
 async def customer_factory(async_db_session: AsyncSession, tenant_id: str):
@@ -46,7 +47,7 @@ async def customer_factory(async_db_session: AsyncSession, tenant_id: str):
         first_name: str = "Test",
         last_name: str = "Customer",
         _commit: bool = False,
-        **kwargs
+        **kwargs,
     ):
         # Generate proper UUID for customer_id
         customer_id = customer_id or uuid4()
@@ -59,7 +60,7 @@ async def customer_factory(async_db_session: AsyncSession, tenant_id: str):
             email=email,
             first_name=first_name,
             last_name=last_name,
-            **kwargs
+            **kwargs,
         )
         async_db_session.add(customer)
 
@@ -80,6 +81,7 @@ async def customer_factory(async_db_session: AsyncSession, tenant_id: str):
 # Subscription Factories
 # ============================================================================
 
+
 @pytest_asyncio.fixture
 async def subscription_plan_factory(async_db_session: AsyncSession, tenant_id: str):
     """
@@ -93,6 +95,7 @@ async def subscription_plan_factory(async_db_session: AsyncSession, tenant_id: s
     """
     try:
         from dotmac.platform.billing.models import BillingSubscriptionPlanTable
+
         HAS_SUBSCRIPTIONS = True
     except ImportError:
         HAS_SUBSCRIPTIONS = False
@@ -107,7 +110,7 @@ async def subscription_plan_factory(async_db_session: AsyncSession, tenant_id: s
         price: Decimal = Decimal("29.99"),
         billing_cycle: str = "MONTHLY",
         _commit: bool = False,
-        **kwargs
+        **kwargs,
     ):
         # Generate plan_id string (not UUID)
         plan_id = plan_id or f"plan_{str(uuid4())[:8]}"
@@ -122,7 +125,7 @@ async def subscription_plan_factory(async_db_session: AsyncSession, tenant_id: s
             price=price,
             currency=kwargs.pop("currency", "USD"),
             is_active=kwargs.pop("is_active", True),
-            **kwargs
+            **kwargs,
         )
         async_db_session.add(plan)
 
@@ -141,10 +144,7 @@ async def subscription_plan_factory(async_db_session: AsyncSession, tenant_id: s
 
 @pytest_asyncio.fixture
 async def subscription_factory(
-    async_db_session: AsyncSession,
-    tenant_id: str,
-    customer_factory,
-    subscription_plan_factory
+    async_db_session: AsyncSession, tenant_id: str, customer_factory, subscription_plan_factory
 ):
     """
     Factory for creating test subscriptions.
@@ -159,6 +159,7 @@ async def subscription_factory(
     """
     try:
         from dotmac.platform.billing.models import BillingSubscriptionTable
+
         HAS_SUBSCRIPTIONS = True
     except ImportError:
         HAS_SUBSCRIPTIONS = False
@@ -172,7 +173,7 @@ async def subscription_factory(
         customer_id: str | None = None,
         plan_id: str | None = None,
         status: str = "active",
-        **kwargs
+        **kwargs,
     ):
         # Generate subscription_id string (not UUID)
         subscription_id = subscription_id or f"sub_{str(uuid4())[:8]}"
@@ -193,15 +194,9 @@ async def subscription_factory(
             customer_id=customer_id,
             plan_id=plan_id,
             status=status,
-            current_period_start=kwargs.pop(
-                "current_period_start",
-                datetime.now(timezone.utc)
-            ),
-            current_period_end=kwargs.pop(
-                "current_period_end",
-                datetime.now(timezone.utc)
-            ),
-            **kwargs
+            current_period_start=kwargs.pop("current_period_start", datetime.now(UTC)),
+            current_period_end=kwargs.pop("current_period_end", datetime.now(UTC)),
+            **kwargs,
         )
         async_db_session.add(subscription)
         await async_db_session.flush()
@@ -216,12 +211,9 @@ async def subscription_factory(
 # Invoice Factories
 # ============================================================================
 
+
 @pytest_asyncio.fixture
-async def invoice_factory(
-    async_db_session: AsyncSession,
-    tenant_id: str,
-    customer_factory
-):
+async def invoice_factory(async_db_session: AsyncSession, tenant_id: str, customer_factory):
     """
     Factory for creating test invoices.
 
@@ -234,6 +226,7 @@ async def invoice_factory(
     try:
         from dotmac.platform.billing.core.entities import InvoiceEntity
         from dotmac.platform.billing.core.enums import InvoiceStatus, PaymentStatus
+
         HAS_INVOICING = True
     except ImportError:
         HAS_INVOICING = False
@@ -248,7 +241,7 @@ async def invoice_factory(
         amount: Decimal = Decimal("100.00"),
         status: str | InvoiceStatus = "draft",
         _commit: bool = False,
-        **kwargs
+        **kwargs,
     ):
         # Generate invoice_id string (UUID format)
         invoice_id = invoice_id or str(uuid4())
@@ -287,10 +280,12 @@ async def invoice_factory(
             customer_id=customer_id,
             invoice_number=kwargs.pop("invoice_number", f"INV-{str(uuid4())[:8].upper()}"),
             billing_email=kwargs.pop("billing_email", f"test-{str(uuid4())[:8]}@example.com"),
-            billing_address=kwargs.pop("billing_address", {"street": "123 Test St", "city": "Test City"}),
+            billing_address=kwargs.pop(
+                "billing_address", {"street": "123 Test St", "city": "Test City"}
+            ),
             currency=kwargs.pop("currency", "USD"),
-            issue_date=kwargs.pop("issue_date", datetime.now(timezone.utc)),
-            due_date=kwargs.pop("due_date", datetime.now(timezone.utc)),
+            issue_date=kwargs.pop("issue_date", datetime.now(UTC)),
+            due_date=kwargs.pop("due_date", datetime.now(UTC)),
             subtotal=kwargs.pop("subtotal", amount_cents),
             tax_amount=kwargs.pop("tax_amount", 0),
             discount_amount=kwargs.pop("discount_amount", 0),
@@ -298,7 +293,7 @@ async def invoice_factory(
             remaining_balance=kwargs.pop("remaining_balance", amount_cents),
             status=invoice_status,
             payment_status=kwargs.pop("payment_status", PaymentStatus.PENDING),
-            **kwargs
+            **kwargs,
         )
         async_db_session.add(invoice)
 
@@ -319,12 +314,9 @@ async def invoice_factory(
 # Payment Factories
 # ============================================================================
 
+
 @pytest_asyncio.fixture
-async def payment_method_factory(
-    async_db_session: AsyncSession,
-    tenant_id: str,
-    customer_factory
-):
+async def payment_method_factory(async_db_session: AsyncSession, tenant_id: str, customer_factory):
     """
     Factory for creating test payment methods.
 
@@ -336,7 +328,8 @@ async def payment_method_factory(
     """
     try:
         from dotmac.platform.billing.core.entities import PaymentMethodEntity
-        from dotmac.platform.billing.core.enums import PaymentMethodType, PaymentMethodStatus
+        from dotmac.platform.billing.core.enums import PaymentMethodStatus, PaymentMethodType
+
         HAS_PAYMENT_METHODS = True
     except ImportError:
         HAS_PAYMENT_METHODS = False
@@ -350,7 +343,7 @@ async def payment_method_factory(
         customer_id: str | None = None,
         method_type: str = "card",
         is_default: bool = False,
-        **kwargs
+        **kwargs,
     ):
         # Generate payment_method_id string (UUID format)
         payment_method_id = payment_method_id or str(uuid4())
@@ -364,18 +357,19 @@ async def payment_method_factory(
             payment_method_id=payment_method_id,
             tenant_id=tenant_id,
             customer_id=customer_id,
-            type=PaymentMethodType.CARD if method_type == "card" else PaymentMethodType.BANK_ACCOUNT,
+            type=PaymentMethodType.CARD
+            if method_type == "card"
+            else PaymentMethodType.BANK_ACCOUNT,
             status=kwargs.pop("status", PaymentMethodStatus.ACTIVE),
             provider=kwargs.pop("provider", "stripe"),
             provider_payment_method_id=kwargs.pop(
-                "provider_payment_method_id",
-                f"pm_{str(uuid4()).replace('-', '')[:24]}"
+                "provider_payment_method_id", f"pm_{str(uuid4()).replace('-', '')[:24]}"
             ),
             display_name=kwargs.pop("display_name", f"Test {method_type.title()}"),
             last_four=kwargs.pop("last_four", "4242"),
             brand=kwargs.pop("brand", "visa" if method_type == "card" else None),
             is_default=is_default,
-            **kwargs
+            **kwargs,
         )
         async_db_session.add(payment_method)
         await async_db_session.flush()
@@ -388,10 +382,7 @@ async def payment_method_factory(
 
 @pytest_asyncio.fixture
 async def payment_factory(
-    async_db_session: AsyncSession,
-    tenant_id: str,
-    customer_factory,
-    invoice_factory
+    async_db_session: AsyncSession, tenant_id: str, customer_factory, invoice_factory
 ):
     """
     Factory for creating test payments.
@@ -404,7 +395,8 @@ async def payment_factory(
     """
     try:
         from dotmac.platform.billing.core.entities import PaymentEntity, PaymentInvoiceEntity
-        from dotmac.platform.billing.core.enums import PaymentStatus, PaymentMethodType
+        from dotmac.platform.billing.core.enums import PaymentMethodType, PaymentStatus
+
         HAS_PAYMENTS = True
     except ImportError:
         HAS_PAYMENTS = False
@@ -420,7 +412,7 @@ async def payment_factory(
         amount: Decimal = Decimal("100.00"),
         status: str = "succeeded",
         _commit: bool = False,
-        **kwargs
+        **kwargs,
     ):
         # Generate payment_id string (UUID format)
         payment_id = payment_id or str(uuid4())
@@ -444,13 +436,21 @@ async def payment_factory(
             customer_id=customer_id,
             amount=amount_cents,
             currency=kwargs.pop("currency", "USD"),
-            status=PaymentStatus.SUCCEEDED if status == "succeeded" else PaymentStatus.FAILED if status == "failed" else PaymentStatus.PENDING,
+            status=PaymentStatus.SUCCEEDED
+            if status == "succeeded"
+            else PaymentStatus.FAILED
+            if status == "failed"
+            else PaymentStatus.PENDING,
             payment_method_type=kwargs.pop("payment_method_type", PaymentMethodType.CARD),
             payment_method_details=kwargs.pop("payment_method_details", {}),
             provider=kwargs.pop("provider", "stripe"),
-            provider_payment_id=kwargs.pop("provider_payment_id", f"pi_{str(uuid4()).replace('-', '')[:24]}"),
-            processed_at=kwargs.pop("processed_at", datetime.now(timezone.utc) if status == "succeeded" else None),
-            **kwargs
+            provider_payment_id=kwargs.pop(
+                "provider_payment_id", f"pi_{str(uuid4()).replace('-', '')[:24]}"
+            ),
+            processed_at=kwargs.pop(
+                "processed_at", datetime.now(UTC) if status == "succeeded" else None
+            ),
+            **kwargs,
         )
         async_db_session.add(payment)
 
@@ -459,7 +459,7 @@ async def payment_factory(
             payment_id=payment_id,
             invoice_id=invoice_id,
             amount_applied=amount_cents,
-            applied_at=datetime.now(timezone.utc)
+            applied_at=datetime.now(UTC),
         )
         async_db_session.add(payment_invoice)
 

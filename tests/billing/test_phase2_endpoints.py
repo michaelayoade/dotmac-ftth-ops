@@ -4,25 +4,24 @@ Comprehensive tests for Phase 2 operational monitoring endpoints.
 Tests expiring subscriptions and auth metrics endpoints with proper mocking.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-
-pytestmark = pytest.mark.integration
-
 from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.metrics_router import (
-    AuthMetricsResponse,
-    get_auth_metrics,
-)
+from dotmac.platform.auth.metrics_router import AuthMetricsResponse, get_auth_metrics
 from dotmac.platform.billing.metrics_router import (
-
-
     ExpiringSubscriptionsResponse,
     get_expiring_subscriptions,
 )
+
+try:
+    UTC = datetime.UTC  # type: ignore[attr-defined]
+except AttributeError:  # pragma: no cover - older Python versions
+    UTC = timezone.utc  # noqa: UP017 - fallback for Python <3.11
+
+pytestmark = pytest.mark.integration
 
 
 @pytest.fixture(autouse=True)
@@ -70,7 +69,7 @@ class TestExpiringSubscriptionsEndpoint:
     @pytest.mark.asyncio
     async def test_get_expiring_subscriptions_with_data(self, mock_session, mock_user):
         """Test expiring subscriptions with data."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Mock subscriptions expiring in next 30 days
         mock_subscriptions = [
@@ -122,7 +121,7 @@ class TestExpiringSubscriptionsEndpoint:
     @pytest.mark.asyncio
     async def test_get_expiring_subscriptions_custom_threshold(self, mock_session, mock_user):
         """Test expiring subscriptions with custom days threshold."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         mock_subscriptions = [
             Mock(

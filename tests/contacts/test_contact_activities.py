@@ -1,4 +1,3 @@
-
 """
 Contact activities tests - Migrated to use shared helpers.
 
@@ -15,12 +14,8 @@ from dotmac.platform.contacts.schemas import ContactActivityCreate
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import build_mock_db_session
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestContactActivities:

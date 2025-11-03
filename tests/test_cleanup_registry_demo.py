@@ -1,4 +1,3 @@
-
 """
 Demo test showing cleanup registry in action.
 
@@ -13,11 +12,8 @@ The cleanup_registry fixture is automatically available in ALL tests!
 
 import pytest
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestCleanupRegistryDemo:
     """Demo tests showing cleanup registry features."""
@@ -80,7 +76,9 @@ class TestCleanupRegistryDemo:
         )
 
         cleanup_registry.register(
-            cleanup_cache, priority=CleanupPriority.CACHE, name="cache"  # 20 - runs second
+            cleanup_cache,
+            priority=CleanupPriority.CACHE,
+            name="cache",  # 20 - runs second
         )
 
         # Verify all registered
@@ -185,9 +183,7 @@ class TestCleanupRegistryDemo:
             working_cleanup_1, priority=CleanupPriority.DATABASE, name="working_1"
         )
 
-        cleanup_registry.register(
-            failing_cleanup, priority=CleanupPriority.CACHE, name="failing"
-        )
+        cleanup_registry.register(failing_cleanup, priority=CleanupPriority.CACHE, name="failing")
 
         cleanup_registry.register(
             working_cleanup_2, priority=CleanupPriority.FASTAPI_APPS, name="working_2"
@@ -232,7 +228,7 @@ class TestCleanupVsTraditionalApproach:
             for res in resources:
                 try:
                     res.close()
-                except Exception as e:
+                except Exception:
                     pass  # Ignore errors
 
         # Lots of boilerplate!
@@ -273,8 +269,8 @@ class TestRealWorldCleanupScenario:
 
     def test_api_integration_with_cleanup(self, cleanup_registry):
         """Test simulating API integration with proper cleanup."""
+
         from tests.helpers.cleanup_registry import CleanupPriority
-        from unittest.mock import AsyncMock
 
         # Simulate creating various resources for API test
         class MockAPIClient:
@@ -320,9 +316,7 @@ class TestRealWorldCleanupScenario:
         )
 
         # Cache depends on nothing, clean after files
-        cleanup_registry.register(
-            cache.clear, priority=CleanupPriority.CACHE, name="cache"
-        )
+        cleanup_registry.register(cache.clear, priority=CleanupPriority.CACHE, name="cache")
 
         # API client might use cache, clean last
         # Note: We need to use a lambda for async functions in this simple example

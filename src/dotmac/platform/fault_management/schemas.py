@@ -5,10 +5,13 @@ Request and response schemas for fault management API.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
+
+ALIAS_START_DATE = cast(Any, AliasChoices("start_date", "period_start"))
+ALIAS_END_DATE = cast(Any, AliasChoices("end_date", "period_end"))
 
 from dotmac.platform.fault_management.models import (
     AlarmSeverity,
@@ -312,8 +315,8 @@ class SLAInstanceCreate(BaseModel):  # BaseModel resolves to Any in isolation
     service_id: UUID | None = None
     service_name: str | None = None
     subscription_id: str | None = None
-    start_date: datetime = Field(..., validation_alias=AliasChoices("start_date", "period_start"))
-    end_date: datetime | None = Field(None, validation_alias=AliasChoices("end_date", "period_end"))
+    start_date: datetime = Field(default=..., validation_alias=ALIAS_START_DATE)
+    end_date: datetime | None = Field(default=None, validation_alias=ALIAS_END_DATE)
 
 
 class SLAInstanceResponse(BaseModel):  # BaseModel resolves to Any in isolation

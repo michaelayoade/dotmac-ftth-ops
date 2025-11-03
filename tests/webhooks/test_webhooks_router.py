@@ -3,7 +3,7 @@ import uuid
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
-from httpx import AsyncClient, ASGITransport
+from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
@@ -11,14 +11,8 @@ from dotmac.platform.db import get_async_db
 from dotmac.platform.webhooks.models import DeliveryStatus, WebhookDelivery
 from dotmac.platform.webhooks.router import router
 
-
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def webhooks_app(async_db_session, monkeypatch):
@@ -147,9 +141,7 @@ async def test_list_deliveries_for_subscription(webhooks_app, webhooks_client):
     session.add(delivery)
     await session.commit()
 
-    list_response = await webhooks_client.get(
-        f"/api/v1/webhooks/subscriptions/{sub_id}/deliveries"
-    )
+    list_response = await webhooks_client.get(f"/api/v1/webhooks/subscriptions/{sub_id}/deliveries")
     assert list_response.status_code == 200
     deliveries = list_response.json()
     assert len(deliveries) == 1

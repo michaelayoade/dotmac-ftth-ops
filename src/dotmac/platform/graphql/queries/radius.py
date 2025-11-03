@@ -62,18 +62,20 @@ class RadiusQueries:
         rad_checks = result.scalars().all()
 
         # Convert to GraphQL Subscriber type
-        subscribers = []
+        subscribers: list[Subscriber] = []
         for rad_check in rad_checks:
             # Create subscriber
+            created_at = getattr(rad_check, "created_at", None)
+            updated_at = getattr(rad_check, "updated_at", None)
             subscriber = Subscriber(
-                id=rad_check.id,
-                subscriber_id=str(rad_check.id),
-                username=rad_check.username,
+                id=int(getattr(rad_check, "id")),
+                subscriber_id=str(getattr(rad_check, "id")),
+                username=str(getattr(rad_check, "username")),
                 enabled=True,  # Placeholder
                 framed_ip_address=None,
                 bandwidth_profile_id=None,
-                created_at=rad_check.created_at if hasattr(rad_check, "created_at") else None,
-                updated_at=rad_check.updated_at if hasattr(rad_check, "updated_at") else None,
+                created_at=created_at,
+                updated_at=updated_at,
             )
             subscribers.append(subscriber)
 
@@ -89,15 +91,15 @@ class RadiusQueries:
             for subscriber, sessions in zip(subscribers, sessions_by_username, strict=False):
                 subscriber.sessions = [
                     Session(
-                        radacctid=s.radacctid,
-                        username=s.username,
-                        nasipaddress=s.nasipaddress,
-                        acctsessionid=s.acctsessionid,
-                        acctsessiontime=s.acctsessiontime,
-                        acctinputoctets=s.acctinputoctets,
-                        acctoutputoctets=s.acctoutputoctets,
-                        acctstarttime=s.acctstarttime,
-                        acctstoptime=s.acctstoptime,
+                        radacctid=int(getattr(s, "radacctid")),
+                        username=str(getattr(s, "username")),
+                        nasipaddress=str(getattr(s, "nasipaddress")),
+                        acctsessionid=str(getattr(s, "acctsessionid")),
+                        acctsessiontime=getattr(s, "acctsessiontime", None),
+                        acctinputoctets=getattr(s, "acctinputoctets", None),
+                        acctoutputoctets=getattr(s, "acctoutputoctets", None),
+                        acctstarttime=getattr(s, "acctstarttime", None),
+                        acctstoptime=getattr(s, "acctstoptime", None),
                     )
                     for s in sessions
                 ]
@@ -157,15 +159,15 @@ class RadiusQueries:
         # Convert to GraphQL Session type
         sessions = [
             Session(
-                radacctid=s.radacctid,
-                username=s.username,
-                nasipaddress=s.nasipaddress,
-                acctsessionid=s.acctsessionid,
-                acctsessiontime=s.acctsessiontime,
-                acctinputoctets=s.acctinputoctets,
-                acctoutputoctets=s.acctoutputoctets,
-                acctstarttime=s.acctstarttime,
-                acctstoptime=s.acctstoptime,
+                radacctid=int(getattr(s, "radacctid")),
+                username=str(getattr(s, "username")),
+                nasipaddress=str(getattr(s, "nasipaddress")),
+                acctsessionid=str(getattr(s, "acctsessionid")),
+                acctsessiontime=getattr(s, "acctsessiontime", None),
+                acctinputoctets=getattr(s, "acctinputoctets", None),
+                acctoutputoctets=getattr(s, "acctoutputoctets", None),
+                acctstarttime=getattr(s, "acctstarttime", None),
+                acctstoptime=getattr(s, "acctstoptime", None),
             )
             for s in rad_sessions
         ]

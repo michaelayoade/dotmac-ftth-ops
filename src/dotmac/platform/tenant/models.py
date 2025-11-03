@@ -9,16 +9,11 @@ Provides comprehensive tenant management with:
 - Tenant settings
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum as PyEnum
+from types import ModuleType
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
-
-if TYPE_CHECKING:  # pragma: no cover
-    pass
 
 from sqlalchemy import (
     JSON,
@@ -34,14 +29,21 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
-from ..db import AuditMixin, Base, SoftDeleteMixin, TimestampMixin
+from ..db import AuditMixin, Base as BaseRuntime, SoftDeleteMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 # Ensure optional RADIUS models are registered with SQLAlchemy when available.
+_radius_models: ModuleType | None
 try:  # pragma: no cover - optional dependency
     import dotmac.platform.radius.models as _radius_models
 except ImportError:
     _radius_models = None
-else:
+
+if _radius_models is not None:
     Base.registry._class_registry.setdefault("RadCheck", _radius_models.RadCheck)
     Base.registry._class_registry.setdefault("NAS", _radius_models.NAS)
 

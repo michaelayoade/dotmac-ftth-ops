@@ -439,7 +439,7 @@ function SalesOrdersPageContent() {
 
 export default function SalesOrdersPage() {
   return (
-    <RouteGuard requiredPermission="order.read">
+    <RouteGuard permission="order.read">
       <SalesOrdersPageContent />
     </RouteGuard>
   );

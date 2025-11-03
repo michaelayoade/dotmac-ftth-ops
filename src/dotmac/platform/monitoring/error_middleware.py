@@ -7,7 +7,7 @@ Automatically tracks HTTP errors, exceptions, and request metrics using Promethe
 from __future__ import annotations
 
 import time
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 
 import structlog
 from fastapi import Request, Response
@@ -29,7 +29,9 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
         """Initialize middleware."""
         super().__init__(app)
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Process request and track errors."""
         start_time = time.time()
         response: Response | None = None
@@ -41,7 +43,8 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
             # Track HTTP errors (4xx, 5xx)
             if response.status_code >= 400:
                 # Extract tenant_id from request if available
-                tenant_id = getattr(request.state, "tenant_id", None)
+                tenant_id_raw = getattr(request.state, "tenant_id", None)
+                tenant_id = tenant_id_raw if isinstance(tenant_id_raw, str) else "unknown"
 
                 # Track the error
                 track_http_error(
@@ -65,7 +68,8 @@ class ErrorTrackingMiddleware(BaseHTTPMiddleware):
 
         except Exception as e:
             # Track unhandled exception
-            tenant_id = getattr(request.state, "tenant_id", None)
+            tenant_id_raw = getattr(request.state, "tenant_id", None)
+            tenant_id = tenant_id_raw if isinstance(tenant_id_raw, str) else "unknown"
 
             track_exception(
                 exception=e,
@@ -111,7 +115,9 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
             buckets=[0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0],
         )
 
-    async def dispatch(self, request: Request, call_next: Callable) -> Response:
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         """Track request metrics."""
         start_time = time.time()
 
@@ -120,7 +126,8 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
             duration = time.time() - start_time
 
             # Extract tenant_id
-            tenant_id = getattr(request.state, "tenant_id", None) or "unknown"
+            tenant_id_raw = getattr(request.state, "tenant_id", None)
+            tenant_id = tenant_id_raw if isinstance(tenant_id_raw, str) else "unknown"
 
             # Track metrics
             self.requests_total.labels(
@@ -140,7 +147,8 @@ class RequestMetricsMiddleware(BaseHTTPMiddleware):
 
         except Exception:
             duration = time.time() - start_time
-            tenant_id = getattr(request.state, "tenant_id", None) or "unknown"
+            tenant_id_raw = getattr(request.state, "tenant_id", None)
+            tenant_id = tenant_id_raw if isinstance(tenant_id_raw, str) else "unknown"
 
             # Track as 500 error
             self.requests_total.labels(

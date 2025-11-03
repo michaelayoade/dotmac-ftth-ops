@@ -87,7 +87,8 @@ class SessionLoader:
             # Group sessions by username
             grouped: dict[str, list[Any]] = defaultdict(list)
             for session in all_sessions:
-                grouped[session.username].append(session)
+                username_value = str(getattr(session, "username"))
+                grouped[username_value].append(session)
 
             # Limit each user to 20 sessions and cache
             for username in uncached_usernames:
@@ -600,7 +601,8 @@ class SubscriptionPlanLoader:
 
         if uncached_ids:
             # Query all plans at once
-            stmt = select(SubscriptionPlan).where(SubscriptionPlan.plan_id.in_(uncached_ids))
+            plan_id_column = cast(Any, getattr(SubscriptionPlan, "plan_id"))
+            stmt = select(SubscriptionPlan).where(plan_id_column.in_(uncached_ids))
 
             result = await self.db.execute(stmt)
             plans = result.scalars().all()

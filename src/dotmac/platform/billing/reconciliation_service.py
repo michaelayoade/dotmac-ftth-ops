@@ -4,10 +4,7 @@ Billing reconciliation service.
 Orchestrates payment reconciliation, retry logic, circuit breaking, and recovery workflows.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -15,6 +12,7 @@ import structlog
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.audit import ActivityType
 from dotmac.platform.audit.service import AuditService
 from dotmac.platform.billing.bank_accounts.entities import (
     CompanyBankAccount,
@@ -135,6 +133,8 @@ class ReconciliationService:
         await self.audit_service.log_activity(
             tenant_id=tenant_id,
             user_id=user_id,
+            activity_type=ActivityType.API_REQUEST,
+            description="Reconciliation session started",
             action="reconciliation.started",
             resource_type="payment_reconciliation",
             resource_id=str(reconciliation.id),
@@ -297,6 +297,8 @@ class ReconciliationService:
         await self.audit_service.log_activity(
             tenant_id=tenant_id,
             user_id=user_id,
+            activity_type=ActivityType.API_REQUEST,
+            description="Reconciliation completed",
             action="reconciliation.completed",
             resource_type="payment_reconciliation",
             resource_id=str(reconciliation_id),
@@ -357,6 +359,8 @@ class ReconciliationService:
         await self.audit_service.log_activity(
             tenant_id=tenant_id,
             user_id=user_id,
+            activity_type=ActivityType.API_REQUEST,
+            description="Reconciliation approved",
             action="reconciliation.approved",
             resource_type="payment_reconciliation",
             resource_id=str(reconciliation_id),
@@ -516,6 +520,8 @@ class ReconciliationService:
             await self.audit_service.log_activity(
                 tenant_id=tenant_id,
                 user_id=user_id,
+                activity_type=ActivityType.API_REQUEST,
+                description="Payment retry succeeded during reconciliation",
                 action="payment.retry.success",
                 resource_type="manual_payment",
                 resource_id=str(payment_id),
@@ -566,6 +572,8 @@ class ReconciliationService:
         await self.audit_service.log_activity(
             tenant_id=tenant_id,
             user_id=user_id,
+            activity_type=ActivityType.API_REQUEST,
+            description=f"Idempotent execution for operation '{operation}'",
             action=f"{operation}.idempotent",
             resource_type="billing_operation",
             resource_id=idempotency_key,

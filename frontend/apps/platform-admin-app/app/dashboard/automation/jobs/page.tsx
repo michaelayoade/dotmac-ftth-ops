@@ -67,9 +67,9 @@ function JobsPageContent() {
       }
       return response.json();
     },
-    refetchInterval: (data) => {
+    refetchInterval: (query) => {
       // Auto-refresh every 10 seconds if any jobs are running
-      const hasRunningJobs = data?.some(
+      const hasRunningJobs = query?.state?.data?.some(
         (job) => job.status === "running" || job.status === "pending"
       );
       return hasRunningJobs ? 10000 : false;
@@ -389,7 +389,7 @@ function JobsPageContent() {
 
 export default function JobsPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <JobsPageContent />
     </RouteGuard>
   );

@@ -9,15 +9,10 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-
-pytestmark = pytest.mark.integration
-
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.plugins.router import router
 from dotmac.platform.plugins.schema import (
-
-
     PluginConfig,
     PluginHealthCheck,
     PluginInstance,
@@ -25,6 +20,8 @@ from dotmac.platform.plugins.schema import (
     PluginTestResult,
     PluginType,
 )
+
+pytestmark = pytest.mark.integration
 
 
 def mock_current_user():

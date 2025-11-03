@@ -10,9 +10,8 @@ from fastapi.testclient import TestClient
 from dotmac.platform.billing.receipts.models import Receipt
 from dotmac.platform.billing.receipts.router import router
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():

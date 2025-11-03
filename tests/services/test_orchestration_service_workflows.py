@@ -5,8 +5,7 @@ Tests each workflow method in isolation with mocked dependencies to ensure
 correct multi-system coordination and error handling.
 """
 
-from datetime import datetime
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock
 from uuid import UUID, uuid4
 
 import pytest
@@ -15,7 +14,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.core.exceptions import NotFoundError, ValidationError
 from dotmac.platform.crm.models import Lead, LeadStatus, Quote, QuoteStatus
 from dotmac.platform.customer_management.models import Customer, CustomerStatus
-from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.services.orchestration import OrchestrationService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 

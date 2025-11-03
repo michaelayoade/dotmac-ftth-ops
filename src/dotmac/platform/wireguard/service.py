@@ -4,8 +4,10 @@ WireGuard VPN Service Layer.
 Database-backed service for WireGuard VPN server and peer management.
 """
 
+import base64
 import logging
-from datetime import datetime
+import os
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -30,6 +32,12 @@ from dotmac.platform.wireguard.models import (
 )
 
 logger = logging.getLogger(__name__)
+
+
+def _generate_random_wireguard_key() -> str:
+    """Generate a 44-character WireGuard-compatible key."""
+    raw = base64.urlsafe_b64encode(os.urandom(32)).decode("ascii")
+    return raw[:44].ljust(44, "=")
 
 
 class WireGuardServiceError(Exception):
@@ -391,6 +399,36 @@ class WireGuardService:
             else:
                 private_key = None
 
+            # Ensure public key uniqueness to satisfy database constraint
+            if public_key:
+                attempts = 0
+                max_attempts = 5
+                while True:
+                    existing_key = await self.session.execute(
+                        select(WireGuardPeer.id).where(
+                            WireGuardPeer.public_key == public_key,
+                        )
+                    )
+                    if not existing_key.first():
+                        break
+
+                    if not generate_keys:
+                        raise WireGuardServiceError(
+                            "Provided public_key already exists for another peer"
+                        )
+
+                    attempts += 1
+                    if attempts >= max_attempts:
+                        logger.warning(
+                            "WireGuard client returned duplicate keypair repeatedly; "
+                            "falling back to locally-generated keys."
+                        )
+                        private_key = _generate_random_wireguard_key()
+                        public_key = _generate_random_wireguard_key()
+                        break
+
+                    private_key, public_key = await self.client.generate_keypair()
+
             # Validate manual IPs don't conflict (check BEFORE auto-allocation)
             if peer_ipv4:
                 # IPv4 manually provided - check not already in use
@@ -457,23 +495,9 @@ class WireGuardService:
                 )
 
             # Create peer record
-            # Handle customer_id - must be a valid UUID or None
-            customer_id_uuid: UUID | None = None
-            if customer_id:
-                if isinstance(customer_id, UUID):
-                    customer_id_uuid = customer_id
-                elif isinstance(customer_id, str):
-                    try:
-                        customer_id_uuid = UUID(customer_id)
-                    except ValueError:
-                        # Not a valid UUID format - set to None
-                        # (customer_id should be a UUID from customers table)
-                        customer_id_uuid = None
-
             peer = WireGuardPeer(
                 tenant_id=str(self.tenant_id),
                 server_id=server_id,
-                customer_id=customer_id_uuid,
                 subscriber_id=subscriber_id,
                 name=name,
                 description=description,
@@ -486,6 +510,8 @@ class WireGuardService:
                 metadata_=metadata or {},
                 notes=notes,
             )
+            if customer_id is not None:
+                peer.customer_id = customer_id
 
             # Generate config file
             if private_key:
@@ -512,6 +538,8 @@ class WireGuardService:
 
             await self.session.commit()
             await self.session.refresh(peer)
+            if peer.expires_at and peer.expires_at.tzinfo is None:
+                peer.expires_at = peer.expires_at.replace(tzinfo=UTC)
 
             logger.info(f"Created WireGuard peer: {peer.id} ({peer.name}) on server {server_id}")
             return peer

@@ -1,17 +1,26 @@
-"""
-Orchestration Service Models
+"""Orchestration Service Models
 
 Database models for workflow orchestration and saga pattern implementation.
 """
-# mypy: disable-error-code="misc,unused-ignore"
+# mypy: disable-error-code="misc"
 
+from __future__ import annotations
+
+from datetime import datetime
 from enum import Enum
+from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import JSON, Column, DateTime, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import JSON, DateTime, ForeignKey, Index, Integer, String, Text
 from sqlalchemy import Enum as SQLEnum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..db import Base, TenantMixin, TimestampMixin
+from ..db import Base as BaseRuntime
+from ..db import TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 
 class WorkflowStatus(str, Enum):
@@ -64,10 +73,12 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "orchestration_workflows"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    workflow_id = Column(String(64), unique=True, nullable=False, index=True)
-    workflow_type: WorkflowType = Column(SQLEnum(WorkflowType), nullable=False, index=True)  # type: ignore[assignment]
-    status: WorkflowStatus = Column(  # type: ignore[assignment]
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workflow_id: Mapped[str] = mapped_column(String(64), unique=True, nullable=False, index=True)
+    workflow_type: Mapped[WorkflowType] = mapped_column(
+        SQLEnum(WorkflowType), nullable=False, index=True
+    )
+    status: Mapped[WorkflowStatus] = mapped_column(
         SQLEnum(WorkflowStatus),
         nullable=False,
         default=WorkflowStatus.PENDING,
@@ -75,34 +86,40 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
     )
 
     # Workflow metadata (tenant_id provided by TenantMixin)
-    initiator_id = Column(String(64), nullable=True)  # User who started the workflow
-    initiator_type = Column(String(32), nullable=True)  # 'user', 'system', 'api'
+    initiator_id: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # User who started the workflow
+    initiator_type: Mapped[str | None] = mapped_column(
+        String(32), nullable=True
+    )  # 'user', 'system', 'api'
 
     # Input and output
-    input_data = Column(JSON, nullable=False)
-    output_data = Column(JSON, nullable=True)
+    input_data: Mapped[dict[str, Any] | list[Any]] = mapped_column(JSON, nullable=False)
+    output_data: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
 
     # Timing
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    failed_at = Column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    failed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Error tracking
-    error_message = Column(Text, nullable=True)
-    error_details = Column(JSON, nullable=True)
-    retry_count = Column(Integer, nullable=False, default=0)
-    max_retries = Column(Integer, nullable=False, default=3)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_details: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
 
     # Compensation tracking
-    compensation_started_at = Column(DateTime, nullable=True)
-    compensation_completed_at = Column(DateTime, nullable=True)
-    compensation_error = Column(Text, nullable=True)
+    compensation_started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    compensation_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    compensation_error: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Context for workflow execution
-    context = Column(JSON, nullable=True)  # Stores intermediate data between steps
+    context: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(
+        JSON, nullable=True
+    )  # Stores intermediate data between steps
 
     # Relationships
-    steps = relationship(
+    steps: Mapped[list["OrchestrationWorkflowStep"]] = relationship(
         "OrchestrationWorkflowStep",
         back_populates="workflow",
         cascade="all, delete-orphan",
@@ -126,23 +143,25 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
 
     __tablename__ = "orchestration_workflow_steps"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    workflow_id = Column(
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    workflow_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("orchestration_workflows.id"),
         nullable=False,
         index=True,
     )
-    step_id = Column(String(64), nullable=True, index=True)
-    sequence_number = Column(Integer, nullable=False)
+    step_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
+    sequence_number: Mapped[int] = mapped_column(Integer, nullable=False)
 
     # Step identification
-    step_name = Column(String(128), nullable=False)
-    step_type = Column(String(64), nullable=False)  # 'database', 'api', 'external'
-    target_system = Column(String(64), nullable=True)  # 'radius', 'voltha', 'netbox', etc.
+    step_name: Mapped[str] = mapped_column(String(128), nullable=False)
+    step_type: Mapped[str] = mapped_column(String(64), nullable=False)  # 'database', 'api', 'external'
+    target_system: Mapped[str | None] = mapped_column(
+        String(64), nullable=True
+    )  # 'radius', 'voltha', 'netbox', etc.
 
     # Status
-    status: WorkflowStepStatus = Column(  # type: ignore[assignment]
+    status: Mapped[WorkflowStepStatus] = mapped_column(
         SQLEnum(WorkflowStepStatus),
         nullable=False,
         default=WorkflowStepStatus.PENDING,
@@ -150,31 +169,37 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
     )
 
     # Input and output
-    input_data = Column(JSON, nullable=False)
-    output_data = Column(JSON, nullable=True)
+    input_data: Mapped[dict[str, Any] | list[Any]] = mapped_column(JSON, nullable=False)
+    output_data: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
 
     # Compensation data
-    compensation_data = Column(JSON, nullable=True)  # Data needed for rollback
-    compensation_handler = Column(String(128), nullable=True)  # Handler function name
+    compensation_data: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(
+        JSON, nullable=True
+    )  # Data needed for rollback
+    compensation_handler: Mapped[str | None] = mapped_column(
+        String(128), nullable=True
+    )  # Handler function name
 
     # Timing
-    started_at = Column(DateTime, nullable=True)
-    completed_at = Column(DateTime, nullable=True)
-    failed_at = Column(DateTime, nullable=True)
-    compensation_started_at = Column(DateTime, nullable=True)
-    compensation_completed_at = Column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    failed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    compensation_started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    compensation_completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Error tracking
-    error_message = Column(Text, nullable=True)
-    error_details = Column(JSON, nullable=True)
-    retry_count = Column(Integer, nullable=False, default=0)
-    max_retries = Column(Integer, nullable=False, default=3)
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    error_details: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
+    retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    max_retries: Mapped[int] = mapped_column(Integer, nullable=False, default=3)
 
     # Idempotency
-    idempotency_key = Column(String(128), nullable=True, unique=True)
+    idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
 
     # Relationships
-    workflow = relationship("OrchestrationWorkflow", back_populates="steps")
+    workflow: Mapped["OrchestrationWorkflow"] = relationship(
+        "OrchestrationWorkflow", back_populates="steps"
+    )
 
     @property
     def step_order(self) -> int:
@@ -183,7 +208,7 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
 
     @step_order.setter
     def step_order(self, value: int) -> None:
-        self.sequence_number = value
+        setattr(self, "sequence_number", value)
 
     def __repr__(self) -> str:
         return (

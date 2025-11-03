@@ -1,4 +1,3 @@
-
 """
 Integration tests for Fiber Infrastructure REST API.
 
@@ -13,8 +12,6 @@ from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.fiber.models import (
-
-
     CableInstallationType,
     FiberCable,
     FiberCableStatus,
@@ -23,15 +20,13 @@ from dotmac.platform.fiber.models import (
     ServiceAreaType,
 )
 
-
 # ============================================================================
 # Fixtures
 # ============================================================================
 
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def fiber_cable(db_session: AsyncSession, test_tenant_id: str) -> FiberCable:

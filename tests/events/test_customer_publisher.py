@@ -3,24 +3,18 @@
 import json
 from datetime import datetime
 from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
 
 from dotmac.platform.events.customer_publisher import CustomerEventPublisher
 
-
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestCustomerEventPublisher:
     """Test CustomerEventPublisher class."""
-
 
     @pytest.fixture
     def mock_redis(self):

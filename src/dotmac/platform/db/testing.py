@@ -6,12 +6,14 @@ database engines and session factories with lightweight in-memory variants.
 """
 
 from __future__ import annotations
-from collections.abc import AsyncIterator, Iterator
+
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from types import TracebackType
-from typing import Any, Callable, Iterable, cast
+from typing import Any
 
+from sqlalchemy import create_engine
 from sqlalchemy.engine import URL, make_url
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
@@ -21,19 +23,17 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import DeclarativeBase, Session, sessionmaker
 from sqlalchemy.pool import StaticPool
-from sqlalchemy import create_engine
 
 from dotmac.platform import db as db_module
+
 SyncSessionFactory = sessionmaker[Session]
 AsyncSessionFactory = async_sessionmaker[AsyncSession]
 
-_get_database_url = cast(Callable[[], str], getattr(db_module, "get_database_url"))
-_get_async_database_url = cast(Callable[[], str], getattr(db_module, "get_async_database_url"))
-_snapshot_database_state = cast(Callable[[], Any], getattr(db_module, "snapshot_database_state"))
-_configure_database_for_testing = cast(
-    Callable[..., None], getattr(db_module, "configure_database_for_testing")
-)
-_restore_database_state = cast(Callable[[Any], None], getattr(db_module, "restore_database_state"))
+_get_database_url: Callable[[], str] = db_module.get_database_url
+_get_async_database_url: Callable[[], str] = db_module.get_async_database_url
+_snapshot_database_state: Callable[[], Any] = db_module.snapshot_database_state
+_configure_database_for_testing: Callable[..., None] = db_module.configure_database_for_testing
+_restore_database_state: Callable[[Any], None] = db_module.restore_database_state
 
 
 def _resolve_sync_url(requested_url: str | None) -> str:
@@ -99,15 +99,21 @@ class DatabaseTestContext:
     sync_session_factory: SyncSessionFactory | None = field(init=False, default=None)
     async_session_factory: AsyncSessionFactory | None = field(init=False, default=None)
 
-    def __enter__(self) -> "DatabaseTestContext":
+    def __enter__(self) -> DatabaseTestContext:
         sync_url = _resolve_sync_url(self.sync_url)
         async_url = _resolve_async_url(sync_url, self.async_url)
 
         self._snapshot = _snapshot_database_state()
-        self._sync_engine = _build_sync_engine(sync_url, echo=self.echo, extra_args=self.sync_engine_kwargs)
-        self._async_engine = _build_async_engine(async_url, echo=self.echo, extra_args=self.async_engine_kwargs)
+        self._sync_engine = _build_sync_engine(
+            sync_url, echo=self.echo, extra_args=self.sync_engine_kwargs
+        )
+        self._async_engine = _build_async_engine(
+            async_url, echo=self.echo, extra_args=self.async_engine_kwargs
+        )
 
-        self.sync_session_factory = sessionmaker(bind=self._sync_engine, class_=Session, autoflush=False)
+        self.sync_session_factory = sessionmaker(
+            bind=self._sync_engine, class_=Session, autoflush=False
+        )
         self.async_session_factory = async_sessionmaker(
             bind=self._async_engine,
             class_=AsyncSession,

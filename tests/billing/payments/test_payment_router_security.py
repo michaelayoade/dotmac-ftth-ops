@@ -5,7 +5,7 @@ This module tests:
 1. Tenant isolation in failed-payments endpoint
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -29,8 +29,8 @@ class TestFailedPaymentsTenantIsolation:
         mock_row._mapping = {
             "count": 5,
             "total_amount": 5000,
-            "oldest": datetime.now(timezone.utc) - timedelta(days=15),
-            "newest": datetime.now(timezone.utc),
+            "oldest": datetime.now(UTC) - timedelta(days=15),
+            "newest": datetime.now(UTC),
         }
         mock_result = MagicMock()
         mock_result.one = MagicMock(return_value=mock_row)
@@ -107,8 +107,8 @@ class TestFailedPaymentsTenantIsolation:
         tenant1_data._mapping = {
             "count": 3,
             "total_amount": 3000,
-            "oldest": datetime.now(timezone.utc) - timedelta(days=10),
-            "newest": datetime.now(timezone.utc) - timedelta(days=1),
+            "oldest": datetime.now(UTC) - timedelta(days=10),
+            "newest": datetime.now(UTC) - timedelta(days=1),
         }
 
         # Tenant 2 data
@@ -116,8 +116,8 @@ class TestFailedPaymentsTenantIsolation:
         tenant2_data._mapping = {
             "count": 7,
             "total_amount": 9500,
-            "oldest": datetime.now(timezone.utc) - timedelta(days=20),
-            "newest": datetime.now(timezone.utc),
+            "oldest": datetime.now(UTC) - timedelta(days=20),
+            "newest": datetime.now(UTC),
         }
 
         # Test Tenant 1
@@ -199,8 +199,8 @@ class TestFailedPaymentsTenantIsolation:
         mock_row._mapping = {
             "count": 2,
             "total_amount": 2000,
-            "oldest": datetime.now(timezone.utc) - timedelta(days=25),
-            "newest": datetime.now(timezone.utc) - timedelta(days=5),
+            "oldest": datetime.now(UTC) - timedelta(days=25),
+            "newest": datetime.now(UTC) - timedelta(days=5),
         }
         mock_result = MagicMock()
         mock_result.one = MagicMock(return_value=mock_row)
@@ -231,7 +231,7 @@ class TestFailedPaymentsTenantIsolation:
         # Verify all returned timestamps are within range
         assert result.oldest_failure is not None
         assert result.newest_failure is not None
-        time_diff = datetime.now(timezone.utc) - result.oldest_failure
+        time_diff = datetime.now(UTC) - result.oldest_failure
         assert time_diff.days <= 30  # Within 30 days
 
     @pytest.mark.asyncio
@@ -243,8 +243,8 @@ class TestFailedPaymentsTenantIsolation:
         mock_row._mapping = {
             "count": 4,
             "total_amount": 4000,
-            "oldest": datetime.now(timezone.utc) - timedelta(days=10),
-            "newest": datetime.now(timezone.utc),
+            "oldest": datetime.now(UTC) - timedelta(days=10),
+            "newest": datetime.now(UTC),
         }
         mock_result = MagicMock()
         mock_result.one = MagicMock(return_value=mock_row)

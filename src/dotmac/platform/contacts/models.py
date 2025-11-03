@@ -6,7 +6,7 @@ Comprehensive contact management with configurable labels and custom fields.
 
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -29,6 +29,11 @@ from sqlalchemy.sql import func
 
 from dotmac.platform.db import Base
 from dotmac.platform.db.types import JSONBCompat
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 # Association table for many-to-many contact labels
 contact_to_labels = Table(
@@ -110,7 +115,7 @@ class ContactFieldType(str, Enum):
     JSON = "json"
 
 
-class Contact(Base):  # type: ignore[misc]
+class Contact(BaseModel):  # type: ignore[misc]
     """
     Core contact entity representing a person or organization
     """
@@ -244,7 +249,7 @@ class Contact(Base):  # type: ignore[misc]
         )
 
 
-class ContactMethod(Base):  # type: ignore[misc]
+class ContactMethod(BaseModel):  # type: ignore[misc]
     """
     Individual contact method (email, phone, address, etc.)
     """

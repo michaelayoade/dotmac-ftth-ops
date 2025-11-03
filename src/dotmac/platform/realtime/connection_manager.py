@@ -117,7 +117,8 @@ class WebSocketConnectionManager:
         self._connections[connection_id] = conn_info
 
         # Index by tenant
-        self._tenant_connections[user_info.tenant_id].add(connection_id)
+        if user_info.tenant_id is not None:
+            self._tenant_connections[user_info.tenant_id].add(connection_id)
 
         # Index by user
         self._user_connections[user_info.user_id].add(connection_id)
@@ -150,7 +151,8 @@ class WebSocketConnectionManager:
             return
 
         # Remove from all indexes
-        self._tenant_connections[conn_info.tenant_id].discard(connection_id)
+        if conn_info.tenant_id is not None:
+            self._tenant_connections[conn_info.tenant_id].discard(connection_id)
         self._user_connections[conn_info.user_id].discard(connection_id)
 
         if conn_info.resource_type and conn_info.resource_id:

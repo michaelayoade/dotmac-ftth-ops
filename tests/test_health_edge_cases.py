@@ -20,6 +20,7 @@ from dotmac.platform.monitoring.health_checks import (
     HealthChecker,
     ServiceHealth,
     ServiceStatus,
+    _is_production_environment,
     check_startup_dependencies,
     ensure_infrastructure_running,
 )
@@ -293,6 +294,76 @@ class TestHealthCheckerEdgeCases:
             assert result.name == "observability"
             assert result.status == expected_status
             assert result.message == expected_message_part
+
+    @patch("dotmac.platform.monitoring.health_checks.httpx.Client")
+    @patch("dotmac.platform.monitoring.health_checks.socket.socket")
+    def test_check_radius_server_healthy(self, mock_socket, mock_httpx, health_checker):
+        """RADIUS health check should mark healthy when ports respond."""
+        socket_instance = MagicMock()
+        socket_instance.connect.return_value = None
+        mock_socket.return_value.__enter__.return_value = socket_instance
+
+        http_client = MagicMock()
+        response = MagicMock()
+        response.status_code = 200
+        http_client.get.return_value = response
+        mock_httpx.return_value.__enter__.return_value = http_client
+
+        result = health_checker.check_radius_server()
+
+        assert result.name == "radius_server"
+        assert result.status == ServiceStatus.HEALTHY
+        assert "healthy" in result.message.lower()
+
+    @patch("dotmac.platform.monitoring.health_checks.httpx.Client")
+    @patch("dotmac.platform.monitoring.health_checks.socket.socket")
+    def test_check_radius_server_degraded_when_unreachable(
+        self, mock_socket, mock_httpx, health_checker
+    ):
+        """RADIUS health check should degrade when UDP port is unreachable."""
+        socket_instance = MagicMock()
+        socket_instance.connect.side_effect = TimeoutError("timed out")
+        mock_socket.return_value.__enter__.return_value = socket_instance
+
+        http_client = MagicMock()
+        response = MagicMock()
+        response.status_code = 503
+        http_client.get.return_value = response
+        mock_httpx.return_value.__enter__.return_value = http_client
+
+        result = health_checker.check_radius_server()
+
+        assert result.name == "radius_server"
+        assert result.status == ServiceStatus.DEGRADED
+        assert "unreachable" in result.message.lower()
+
+    @patch("dotmac.platform.monitoring.health_checks.settings")
+    def test_is_production_environment_true_when_flag_set(self, mock_settings):
+        mock_settings.is_production = True
+        mock_settings.environment = None
+        with patch.dict(os.environ, {}, clear=True):
+            assert _is_production_environment() is True
+
+    @patch("dotmac.platform.monitoring.health_checks.settings")
+    def test_is_production_environment_true_for_prod_string(self, mock_settings):
+        mock_settings.is_production = None
+        mock_settings.environment = "production"
+        with patch.dict(os.environ, {}, clear=True):
+            assert _is_production_environment() is True
+
+    @patch("dotmac.platform.monitoring.health_checks.settings")
+    def test_is_production_environment_uses_environment_variable(self, mock_settings):
+        mock_settings.is_production = None
+        mock_settings.environment = "development"
+        with patch.dict(os.environ, {"ENVIRONMENT": "prod"}, clear=True):
+            assert _is_production_environment() is True
+
+    @patch("dotmac.platform.monitoring.health_checks.settings")
+    def test_is_production_environment_false_by_default(self, mock_settings):
+        mock_settings.is_production = None
+        mock_settings.environment = "development"
+        with patch.dict(os.environ, {}, clear=True):
+            assert _is_production_environment() is False
 
     def test_run_all_checks_preserves_order(self, health_checker):
         """Test that run_all_checks returns services in expected order."""

@@ -1,4 +1,3 @@
-
 """
 Integration tests for File Storage API.
 
@@ -20,7 +19,7 @@ For true e2e file storage tests, see tests/integration/test_file_storage_integra
 """
 
 import io
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from uuid import uuid4
 
@@ -32,16 +31,15 @@ import pytest
 # It includes both Authorization and X-Tenant-ID headers
 
 
-
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.integration]
+
 
 @pytest.fixture
 def mock_storage_service():
     """Mock storage service for testing."""
+    from dotmac.platform.file_storage import router as file_storage_router
     from dotmac.platform.file_storage.service import get_storage_service
     from dotmac.platform.main import app
-    from dotmac.platform.file_storage import router as file_storage_router
 
     class MockStorageService:
         def __init__(self):
@@ -146,7 +144,7 @@ class TestFileUploadE2E:
         call_args = mock_storage_service.store_file.call_args
         path = call_args.kwargs["path"]
         assert f"uploads/e2e-test-tenant/{user_id}" in path
-        assert datetime.now(timezone.utc).strftime("%Y/%m/%d") in path
+        assert datetime.now(UTC).strftime("%Y/%m/%d") in path
 
     @pytest.mark.asyncio
     async def test_upload_file_too_large(self, mock_storage_service, async_client, auth_headers):
@@ -402,7 +400,7 @@ class TestFileListE2E:
                 file_name="file1.txt",
                 file_size=100,
                 content_type="text/plain",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
                 path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
             FileMetadata(
@@ -410,7 +408,7 @@ class TestFileListE2E:
                 file_name="file2.pdf",
                 file_size=200,
                 content_type="application/pdf",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
                 path=f"uploads/e2e-test-tenant/{user_id}/documents",
             ),
         ]
@@ -513,7 +511,7 @@ class TestFileMetadataE2E:
             "file_name": "document.pdf",
             "file_size": 1024,
             "content_type": "application/pdf",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "checksum": "abc123def456",
             "custom_field": "custom_value",
             "tenant_id": tenant_id,  # Required for tenant validation
@@ -812,7 +810,7 @@ class TestCompleteWorkflowE2E:
                 file_name=f"file{i}.txt",
                 file_size=10,
                 content_type="text/plain",
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
             for i, fid in enumerate(file_ids)
         ]

@@ -12,7 +12,7 @@ Benefits over mocks:
 - Easy to add test-specific helpers
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
 from uuid import uuid4
@@ -68,6 +68,7 @@ class FakePaymentGateway:
         """
         if self._should_fail:
             from dotmac.platform.billing.exceptions import PaymentError
+
             raise PaymentError(self._failure_reason)
 
         charge = {
@@ -78,7 +79,7 @@ class FakePaymentGateway:
             "status": "success",
             "description": description,
             "metadata": metadata or {},
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
         }
         self.charges.append(charge)
         return charge
@@ -104,6 +105,7 @@ class FakePaymentGateway:
         charge = next((c for c in self.charges if c["id"] == charge_id), None)
         if not charge:
             from dotmac.platform.billing.exceptions import PaymentError
+
             raise PaymentError(f"Charge {charge_id} not found")
 
         refund_amount = amount or charge["amount"]
@@ -114,7 +116,7 @@ class FakePaymentGateway:
             "amount": refund_amount,
             "status": "success",
             "reason": reason,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
         }
         self.refunds.append(refund)
         return refund
@@ -147,6 +149,7 @@ class FakePaymentGateway:
         pm = self.payment_methods.get(payment_method_id)
         if not pm:
             from dotmac.platform.billing.exceptions import PaymentError
+
             raise PaymentError(f"Payment method {payment_method_id} not found")
 
         return {
@@ -256,7 +259,7 @@ class FakeEmailService:
             "attachments": attachments or [],
             "template_id": template_id,
             "template_data": template_data,
-            "sent_at": datetime.now(timezone.utc),
+            "sent_at": datetime.now(UTC),
         }
         self.sent_emails.append(email)
 
@@ -349,7 +352,7 @@ class FakeSMSService:
             "to": to,
             "from": from_number,
             "body": body,
-            "sent_at": datetime.now(timezone.utc),
+            "sent_at": datetime.now(UTC),
             "status": "sent",
         }
         self.sent_messages.append(message)
@@ -491,7 +494,7 @@ class FakeCache:
         """Get value from cache."""
         # Check TTL
         if key in self.ttls:
-            if datetime.now(timezone.utc) > self.ttls[key]:
+            if datetime.now(UTC) > self.ttls[key]:
                 del self.data[key]
                 del self.ttls[key]
                 return None
@@ -504,9 +507,7 @@ class FakeCache:
 
         self.data[key] = value
         if ttl:
-            self.ttls[key] = datetime.now(timezone.utc).replace(
-                microsecond=0
-            ) + timedelta(seconds=ttl)
+            self.ttls[key] = datetime.now(UTC).replace(microsecond=0) + timedelta(seconds=ttl)
 
     async def delete(self, key: str) -> None:
         """Delete key from cache."""

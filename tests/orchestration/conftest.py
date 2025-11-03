@@ -5,6 +5,7 @@ Pytest fixtures for orchestration router tests.
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -12,8 +13,6 @@ from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 from dotmac.platform.orchestration.models import (
-
-
     OrchestrationWorkflow,
     OrchestrationWorkflowStep,
     WorkflowStatus,
@@ -21,7 +20,6 @@ from dotmac.platform.orchestration.models import (
     WorkflowType,
 )
 from dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
-
 
 # ============================================================================
 # Domain-Specific Fixture Factories
@@ -31,8 +29,8 @@ from dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 # This prevents test pollution from fixture mutations and makes test data explicit.
 
 
-
 pytestmark = pytest.mark.integration
+
 
 def create_provision_request(**kwargs: Any) -> dict[str, Any]:
     """Factory function to create a provision subscriber request with sensible defaults.
@@ -430,10 +428,11 @@ def sample_workflow_stats():
 @pytest_asyncio.fixture
 async def test_tenant(async_db_session):
     """Create a test tenant for orchestration tests."""
+    unique_suffix = uuid4().hex[:8]
     tenant = Tenant(
-        id="tenant-orchestration-test",
+        id=f"tenant-orchestration-test-{unique_suffix}",
         name="Test ISP Orchestration",
-        slug="test-orch",
+        slug=f"test-orch-{unique_suffix}",
         status=TenantStatus.ACTIVE,
         plan_type=TenantPlanType.PROFESSIONAL,
     )
@@ -445,10 +444,11 @@ async def test_tenant(async_db_session):
 @pytest_asyncio.fixture
 async def test_tenant_2(async_db_session):
     """Create a second test tenant for isolation tests."""
+    unique_suffix = uuid4().hex[:8]
     tenant = Tenant(
-        id="tenant-orchestration-test-2",
+        id=f"tenant-orchestration-test-2-{unique_suffix}",
         name="Test ISP Orchestration 2",
-        slug="test-orch-2",
+        slug=f"test-orch-2-{unique_suffix}",
         status=TenantStatus.ACTIVE,
         plan_type=TenantPlanType.PROFESSIONAL,
     )
@@ -461,7 +461,7 @@ async def test_tenant_2(async_db_session):
 async def authenticated_client(mock_current_user, mock_orchestration_service):
     """Async HTTP client with orchestration router registered and dependencies mocked."""
     from dotmac.platform.auth.core import get_current_user
-    from dotmac.platform.db import get_db
+    from dotmac.platform.db import get_async_session, get_db
     from dotmac.platform.orchestration.router import (
         get_orchestration_service,
     )
@@ -478,11 +478,21 @@ async def authenticated_client(mock_current_user, mock_orchestration_service):
     def override_get_db():
         return MagicMock()  # Mock database session
 
+    async def override_get_async_session():
+        """Mock async session for permission checks."""
+        mock_session = AsyncMock()
+        # Mock execute to return an async result
+        mock_result = MagicMock()
+        mock_result.scalars.return_value.all.return_value = []
+        mock_session.execute = AsyncMock(return_value=mock_result)
+        return mock_session
+
     def override_get_orchestration_service():
         return mock_orchestration_service
 
     app.dependency_overrides[get_current_user] = override_get_current_user
     app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_async_session] = override_get_async_session
     app.dependency_overrides[get_orchestration_service] = override_get_orchestration_service
 
     app.include_router(orchestration_router, prefix="/api/v1")

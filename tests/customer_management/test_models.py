@@ -7,7 +7,7 @@ Covers all model classes, relationships, constraints, and validation logic.
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -26,6 +26,7 @@ from dotmac.platform.customer_management.models import (
     CustomerTier,
     CustomerType,
 )
+from dotmac.platform.tenant.models import Tenant
 
 
 @pytest.mark.integration
@@ -116,13 +117,10 @@ class TestCustomerModel:
         assert customer.preferred_channel == CommunicationChannel.SMS
 
     @pytest.mark.asyncio
-    async def test_customer_database_constraints(self, async_db_session: AsyncSession):
+    async def test_customer_database_constraints(self, async_db_session: AsyncSession, test_tenant):
         """Test database constraints and unique fields."""
-        if async_db_session.bind.dialect.name.startswith("sqlite"):
-            pytest.skip("Requires full database schema with unique indexes available")
-
         base_customer_kwargs = {
-            "tenant_id": "test-tenant",
+            "tenant_id": test_tenant.id,
             "first_name": "John",
             "last_name": "Doe",
             "email": "john.doe@example.com",
@@ -134,7 +132,7 @@ class TestCustomerModel:
 
         customer2 = Customer(
             customer_number="CUST001",
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,  # Use test_tenant.id instead of hardcoded
             first_name="Jane",
             last_name="Smith",
             email="jane.smith@example.com",
@@ -149,7 +147,7 @@ class TestCustomerModel:
         customer_primary = Customer(customer_number="CUST002", **base_customer_kwargs)
         customer_duplicate_email = Customer(
             customer_number="CUST003",
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,  # Use test_tenant.id instead of hardcoded
             first_name="Jane",
             last_name="Smith",
             email="john.doe@example.com",
@@ -320,9 +318,6 @@ class TestCustomerTag:
     @pytest.mark.asyncio
     async def test_tag_uniqueness(self, async_db_session: AsyncSession):
         """Test unique constraint on customer_id + tag_name."""
-        if async_db_session.bind.dialect.name.startswith("sqlite"):
-            pytest.skip("Requires full database schema with unique indexes available")
-
         customer_id = uuid4()
 
         tag1 = CustomerTag(
@@ -345,7 +340,6 @@ class TestCustomerTag:
         await async_db_session.rollback()
 
 
-@pytest.mark.skip(reason="Integration test - requires full database schema with relationships")
 @pytest.mark.integration
 class TestModelRelationships:
     """Test relationships between models."""
@@ -378,9 +372,9 @@ class TestModelRelationships:
 
         # The activities should be accessible through the relationship
         activities_count = await async_db_session.scalar(
-            select(CustomerActivity)
+            select(func.count())
+            .select_from(CustomerActivity)
             .where(CustomerActivity.customer_id == loaded_customer.id)
-            .count()
         )
         assert activities_count == 1
 
@@ -402,14 +396,16 @@ class TestModelRelationships:
             tenant_id="test-tenant",
             subject="Test Note",
             content="Test content",
-            created_by_id=uuid4(),
+            created_by_id=None,
         )
         async_db_session.add(note)
         await async_db_session.flush()
 
         # Verify relationship
         notes_count = await async_db_session.scalar(
-            select(CustomerNote).where(CustomerNote.customer_id == customer.id).count()
+            select(func.count())
+            .select_from(CustomerNote)
+            .where(CustomerNote.customer_id == customer.id)
         )
         assert notes_count == 1
 
@@ -427,6 +423,11 @@ class TestModelRelationships:
         - CASCADE behavior on delete
         - ORM relationship loading
         """
+        if async_db_session.bind.dialect.name.startswith("sqlite"):
+            pytest.skip("Requires PostgreSQL backend with full contact relationships")
+
+        await ensure_tenant(async_db_session)
+
         # Create a customer
         customer = Customer(
             customer_number="CUST001",
@@ -441,12 +442,22 @@ class TestModelRelationships:
         # Create a contact
         contact = Contact(
             tenant_id="test-tenant",
+            display_name="Jane Smith",
             first_name="Jane",
             last_name="Smith",
-            email="jane.smith@example.com",
         )
         async_db_session.add(contact)
         await async_db_session.flush()
+
+        # Ensure records persisted before creating link
+        customer_exists = await async_db_session.scalar(
+            select(func.count()).select_from(Customer).where(Customer.id == customer.id)
+        )
+        contact_exists = await async_db_session.scalar(
+            select(func.count()).select_from(Contact).where(Contact.id == contact.id)
+        )
+        assert customer_exists == 1
+        assert contact_exists == 1
 
         # Create the link between customer and contact
         link = CustomerContactLink(
@@ -478,13 +489,15 @@ class TestModelRelationships:
 
         # Link should be deleted
         link_count = await async_db_session.scalar(
-            select(CustomerContactLink).where(CustomerContactLink.id == link.id).count()
+            select(func.count())
+            .select_from(CustomerContactLink)
+            .where(CustomerContactLink.id == link.id)
         )
         assert link_count == 0
 
     @pytest.mark.asyncio
     async def test_customer_contact_link_foreign_key_constraints(
-        self, async_db_session: AsyncSession
+        self, async_db_session: AsyncSession, test_tenant
     ):
         """
         Test that foreign key constraints are properly enforced.
@@ -494,10 +507,13 @@ class TestModelRelationships:
         2. Cannot create link with non-existent contact_id
         3. Foreign keys have ondelete='CASCADE' configured
         """
+        if async_db_session.bind.dialect.name.startswith("sqlite"):
+            pytest.skip("Requires PostgreSQL backend with full contact relationships")
+
         # Create a valid customer
         customer = Customer(
             customer_number="CUST001",
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             first_name="John",
             last_name="Doe",
             email="john.doe@example.com",
@@ -510,7 +526,7 @@ class TestModelRelationships:
         link = CustomerContactLink(
             customer_id=customer.id,
             contact_id=invalid_contact_id,  # Non-existent
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             role=ContactRole.PRIMARY,
         )
         async_db_session.add(link)
@@ -521,21 +537,28 @@ class TestModelRelationships:
 
         await async_db_session.rollback()
 
-        # Try with non-existent customer_id
+        # Recreate customer and contact for next assertion
+        customer = Customer(
+            customer_number="CUST002",
+            tenant_id=test_tenant.id,
+            first_name="John",
+            last_name="Doe",
+            email="john.doe@example.com",
+        )
         contact = Contact(
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
+            display_name="Jane Smith",
             first_name="Jane",
             last_name="Smith",
-            email="jane.smith@example.com",
         )
-        async_db_session.add(contact)
+        async_db_session.add_all([customer, contact])
         await async_db_session.flush()
 
         invalid_customer_id = uuid4()
         link2 = CustomerContactLink(
             customer_id=invalid_customer_id,  # Non-existent
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             role=ContactRole.PRIMARY,
         )
         async_db_session.add(link2)
@@ -544,7 +567,7 @@ class TestModelRelationships:
             await async_db_session.flush()
 
     @pytest.mark.asyncio
-    async def test_customer_contact_multiple_roles(self, async_db_session: AsyncSession):
+    async def test_customer_contact_multiple_roles(self, async_db_session: AsyncSession, test_tenant):
         """
         Test that a single contact can have multiple roles with the same customer.
 
@@ -553,19 +576,22 @@ class TestModelRelationships:
         - Role field works correctly with ContactRole enum
         - is_primary_for_role flag works correctly
         """
+        if async_db_session.bind.dialect.name.startswith("sqlite"):
+            pytest.skip("Requires PostgreSQL backend with full contact relationships")
+
         # Create customer and contact
         customer = Customer(
             customer_number="CUST001",
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             first_name="John",
             last_name="Doe",
             email="john.doe@example.com",
         )
         contact = Contact(
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
+            display_name="Jane Smith",
             first_name="Jane",
             last_name="Smith",
-            email="jane.smith@example.com",
         )
         async_db_session.add(customer)
         async_db_session.add(contact)
@@ -575,14 +601,14 @@ class TestModelRelationships:
         link1 = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             role=ContactRole.PRIMARY,
             is_primary_for_role=True,
         )
         link2 = CustomerContactLink(
             customer_id=customer.id,
             contact_id=contact.id,
-            tenant_id="test-tenant",
+            tenant_id=test_tenant.id,
             role=ContactRole.TECHNICAL,
             is_primary_for_role=True,
         )
@@ -592,9 +618,9 @@ class TestModelRelationships:
 
         # Verify both links exist
         links_count = await async_db_session.scalar(
-            select(CustomerContactLink)
+            select(func.count())
+            .select_from(CustomerContactLink)
             .where(CustomerContactLink.customer_id == customer.id)
-            .count()
         )
         assert links_count == 2
 

@@ -1,4 +1,3 @@
-
 """
 Integration Tests for Billing Routers (API Endpoints).
 
@@ -6,7 +5,7 @@ Strategy: Use REAL database, mock ONLY external APIs (payment providers, event b
 Focus: Test API contracts, authentication, validation, database integration
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import AsyncMock
 from uuid import uuid4
@@ -15,21 +14,16 @@ import pytest
 from fastapi import status
 from httpx import AsyncClient
 
-from dotmac.platform.billing.core.enums import PaymentStatus
 from dotmac.platform.billing.subscriptions.models import (
-
-
     BillingCycle,
     SubscriptionStatus,
 )
 
-
-
 # Reset rate limiter before each test to prevent state leakage
 
 
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture(autouse=True)
 def reset_rate_limiter():
@@ -57,7 +51,7 @@ class TestPaymentsRouter:
         # Create test failed payments using factory with _commit=True
         # This makes data visible to router's separate session
         # Let factory create customers automatically to avoid FK violations
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         await payment_factory(
             amount=Decimal("100.00"),
@@ -65,7 +59,7 @@ class TestPaymentsRouter:
             status="failed",  # Factory expects lowercase, converts to enum
             provider="stripe",
             created_at=now - timedelta(days=5),
-            _commit=True  # Makes data visible to HTTP request
+            _commit=True,  # Makes data visible to HTTP request
         )
 
         await payment_factory(
@@ -74,7 +68,7 @@ class TestPaymentsRouter:
             status="failed",  # Factory expects lowercase, converts to enum
             provider="stripe",
             created_at=now - timedelta(days=2),
-            _commit=True  # Makes data visible to HTTP request
+            _commit=True,  # Makes data visible to HTTP request
         )
 
         # Call API - router can now see committed data
@@ -201,7 +195,7 @@ class TestSubscriptionsRouter:
         plan_id = f"plan_{uuid4().hex[:8]}"
         product_id = f"prod_{uuid4().hex[:8]}"
 
-        plan = await subscription_plan_factory(
+        await subscription_plan_factory(
             plan_id=plan_id,  # ← Unique per test
             product_id=product_id,  # ← Unique per test
             name=f"Test Plan {plan_id}",  # ← Unique name
@@ -210,7 +204,7 @@ class TestSubscriptionsRouter:
             price=Decimal("29.99"),
             currency="usd",
             is_active=True,
-            _commit=True  # ← Makes data visible to HTTP request
+            _commit=True,  # ← Makes data visible to HTTP request
         )
 
         # Call API - router can now see committed data
@@ -239,7 +233,7 @@ class TestSubscriptionsRouter:
         plan_id = f"plan_{uuid4().hex[:8]}"
         product_id = f"prod_{uuid4().hex[:8]}"
 
-        plan = await subscription_plan_factory(
+        await subscription_plan_factory(
             plan_id=plan_id,  # ← Unique per test
             product_id=product_id,  # ← Unique per test
             name=f"Premium Plan {plan_id}",  # ← Unique name
@@ -248,12 +242,12 @@ class TestSubscriptionsRouter:
             price=Decimal("299.99"),
             currency="usd",
             is_active=True,
-            _commit=True  # ← Makes data visible to HTTP request
+            _commit=True,  # ← Makes data visible to HTTP request
         )
 
         # Call API - router can now see committed data
         response = await router_client.get(
-            f"/api/v1/billing/subscriptions/subscriptions/{plan_id}",  # ← Use dynamic ID
+            f"/api/v1/billing/subscriptions/subscriptions/plans/{plan_id}",  # ← Use dynamic ID
             headers=auth_headers,
         )
 
@@ -267,7 +261,7 @@ class TestSubscriptionsRouter:
     async def test_get_nonexistent_plan_returns_404(self, router_client: AsyncClient, auth_headers):
         """Test getting non-existent plan returns 404."""
         response = await router_client.get(
-            "/api/v1/billing/subscriptions/subscriptions/plan_nonexistent",
+            "/api/v1/billing/subscriptions/subscriptions/plans/plan_nonexistent",
             headers=auth_headers,
         )
 

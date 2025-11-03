@@ -2,7 +2,7 @@
 Tests for Alarm Correlation Engine
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -16,8 +16,12 @@ from dotmac.platform.fault_management.models import (
     AlarmStatus,
 )
 
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.usefixtures("override_db_session_for_services"),
+]
 
-@pytest.mark.integration
+
 class TestTopologyCorrelation:
     """Test topology-based alarm correlation"""
 
@@ -63,8 +67,8 @@ class TestTopologyCorrelation:
             resource_id="olt-001",
             resource_name="OLT 1",
             subscriber_count=100,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -92,8 +96,8 @@ class TestTopologyCorrelation:
             resource_id="ont-001",
             resource_name="ONT 1",
             subscriber_count=1,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -149,8 +153,8 @@ class TestTopologyCorrelation:
             resource_type="switch",
             resource_id="switch-001",
             subscriber_count=200,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -172,8 +176,8 @@ class TestTopologyCorrelation:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=50,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -232,8 +236,8 @@ class TestTimeBasedCorrelation:
             resource_type="facility",
             resource_id="facility-001",
             subscriber_count=500,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -254,8 +258,8 @@ class TestTimeBasedCorrelation:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=100,
-            first_occurrence=datetime.now(timezone.utc) + timedelta(minutes=2),
-            last_occurrence=datetime.now(timezone.utc) + timedelta(minutes=2),
+            first_occurrence=datetime.now(UTC) + timedelta(minutes=2),
+            last_occurrence=datetime.now(UTC) + timedelta(minutes=2),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -308,8 +312,8 @@ class TestTimeBasedCorrelation:
             resource_type="facility",
             resource_id="facility-002",
             subscriber_count=500,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(minutes=10),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(minutes=10),
+            first_occurrence=datetime.now(UTC) - timedelta(minutes=10),
+            last_occurrence=datetime.now(UTC) - timedelta(minutes=10),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -330,8 +334,8 @@ class TestTimeBasedCorrelation:
             resource_type="device",
             resource_id="device-002",
             subscriber_count=100,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -389,8 +393,8 @@ class TestPatternBasedCorrelation:
             resource_type="fiber",
             resource_id="fiber-segment-001",
             subscriber_count=150,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -412,8 +416,8 @@ class TestPatternBasedCorrelation:
             resource_type="cpe",
             resource_id="cpe-001",
             subscriber_count=1,
-            first_occurrence=datetime.now(timezone.utc) + timedelta(minutes=1),
-            last_occurrence=datetime.now(timezone.utc) + timedelta(minutes=1),
+            first_occurrence=datetime.now(UTC) + timedelta(minutes=1),
+            last_occurrence=datetime.now(UTC) + timedelta(minutes=1),
             occurrence_count=1,
         )
         session.add(child_alarm)
@@ -452,8 +456,8 @@ class TestDuplicateDetection:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm1)
@@ -472,8 +476,8 @@ class TestDuplicateDetection:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc) + timedelta(minutes=1),
-            last_occurrence=datetime.now(timezone.utc) + timedelta(minutes=1),
+            first_occurrence=datetime.now(UTC) + timedelta(minutes=1),
+            last_occurrence=datetime.now(UTC) + timedelta(minutes=1),
             occurrence_count=1,
         )
         session.add(alarm2)
@@ -508,8 +512,8 @@ class TestDuplicateDetection:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(seconds=30),
-            last_occurrence=datetime.now(timezone.utc) - timedelta(seconds=30),
+            first_occurrence=datetime.now(UTC) - timedelta(seconds=30),
+            last_occurrence=datetime.now(UTC) - timedelta(seconds=30),
             occurrence_count=1,
         )
         session.add(alarm1)
@@ -530,8 +534,8 @@ class TestDuplicateDetection:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm2)
@@ -572,8 +576,8 @@ class TestFlappingDetection:
             resource_type="interface",
             resource_id="eth0",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc) - timedelta(minutes=10),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC) - timedelta(minutes=10),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=6,  # Multiple occurrences in short time
         )
         session.add(alarm)
@@ -632,8 +636,8 @@ class TestSuppressionRules:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=0,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(alarm)
@@ -672,8 +676,8 @@ class TestRecorrelation:
             resource_type="device",
             resource_id="device-001",
             subscriber_count=50,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -688,8 +692,8 @@ class TestRecorrelation:
             resource_type="service",
             resource_id="service-001",
             subscriber_count=10,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
 
@@ -722,8 +726,8 @@ class TestRecorrelation:
             resource_type="olt",
             resource_id="olt-001",
             subscriber_count=100,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(parent_alarm)
@@ -742,8 +746,8 @@ class TestRecorrelation:
             resource_type="ont",
             resource_id="ont-001",
             subscriber_count=1,
-            first_occurrence=datetime.now(timezone.utc),
-            last_occurrence=datetime.now(timezone.utc),
+            first_occurrence=datetime.now(UTC),
+            last_occurrence=datetime.now(UTC),
             occurrence_count=1,
         )
         session.add(child_alarm)

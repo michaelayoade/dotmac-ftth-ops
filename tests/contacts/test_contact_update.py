@@ -1,4 +1,3 @@
-
 """
 Contact update tests - Migrated to use shared helpers.
 
@@ -14,17 +13,12 @@ import pytest
 from dotmac.platform.contacts.schemas import ContactUpdate
 from dotmac.platform.contacts.service import ContactService
 from tests.helpers import (
-
-
     assert_entity_updated,
     build_mock_db_session,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestContactUpdate:

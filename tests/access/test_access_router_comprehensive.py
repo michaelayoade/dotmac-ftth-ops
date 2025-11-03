@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for Access Network Router.
 
@@ -6,7 +5,7 @@ Tests OLT management, ONU provisioning, and driver operations through the
 FastAPI router layer. Covers success, error, and edge cases.
 """
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 from uuid import uuid4
 
 import pytest
@@ -14,16 +13,12 @@ from fastapi import FastAPI
 from starlette.testclient import TestClient
 
 from dotmac.platform.access.drivers import (
-
-
     DeviceDiscovery,
     OLTAlarm,
     OltMetrics,
-    ONUProvisionRequest,
     ONUProvisionResult,
 )
-from dotmac.platform.access.router import configure_access_service, get_access_service
-
+from dotmac.platform.access.router import get_access_service
 from dotmac.platform.access.service import AccessNetworkService, OLTOverview
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.voltha.schemas import (
@@ -36,10 +31,8 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAHealthResponse,
 )
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_access_service():
@@ -86,12 +79,12 @@ def client(test_app: FastAPI, mock_access_service: AsyncMock, test_user: UserInf
 
     def request_with_tenant(method, url, **kwargs):
         # Add tenant header if not already present
-        headers = kwargs.get('headers')
+        headers = kwargs.get("headers")
         if headers is None:
             headers = {}
-        if 'X-Tenant-ID' not in headers and 'x-tenant-id' not in headers:
-            headers['X-Tenant-ID'] = 'test-tenant'
-        kwargs['headers'] = headers
+        if "X-Tenant-ID" not in headers and "x-tenant-id" not in headers:
+            headers["X-Tenant-ID"] = "test-tenant"
+        kwargs["headers"] = headers
         return original_request(method, url, **kwargs)
 
     test_client.request = request_with_tenant

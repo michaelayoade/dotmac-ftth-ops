@@ -30,7 +30,10 @@ class TestCompleteProvisioningWorkflow:
         client = MagicMock(spec=WireGuardClient)
 
         async def mock_generate_keypair():
-            return ("mock_private_key", "mock_public_key")
+            unique_suffix = uuid4().hex[:32]
+            private_key = f"priv{unique_suffix}".ljust(44, "=")[:44]
+            public_key = f"pub{unique_suffix}".ljust(44, "=")[:44]
+            return (private_key, public_key)
 
         # Mock IP allocation to return sequential IPs
         ip_counter = {"ipv4": 2, "ipv6": 2}
@@ -56,12 +59,12 @@ class TestCompleteProvisioningWorkflow:
             return f"""[Interface]
 PrivateKey = {peer_private_key}
 Address = {peer_address}
-DNS = {', '.join(dns_servers) if dns_servers else ''}
+DNS = {", ".join(dns_servers) if dns_servers else ""}
 
 [Peer]
 PublicKey = {server_public_key}
 Endpoint = {server_endpoint}
-AllowedIPs = {', '.join(allowed_ips)}
+AllowedIPs = {", ".join(allowed_ips)}
 PersistentKeepalive = 25
 """
 
@@ -73,7 +76,9 @@ PersistentKeepalive = 25
         client.get_peer_stats = AsyncMock(return_value=None)
         return client
 
-    async def test_complete_dual_stack_provisioning_e2e(self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client):
+    async def test_complete_dual_stack_provisioning_e2e(
+        self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client
+    ):
         """
         Test complete subscriber provisioning with all systems.
 
@@ -150,7 +155,11 @@ PersistentKeepalive = 25
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # 3. Create WireGuard VPN access
-            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="smoke-test-tenant")
+            wg_service = WireGuardService(
+                session=async_db_session,
+                client=mock_wireguard_client,
+                tenant_id="smoke-test-tenant",
+            )
 
             # First create server if not exists
             wg_server = await wg_service.create_server(
@@ -189,7 +198,9 @@ PersistentKeepalive = 25
             assert retrieved is not None
             assert retrieved.framed_ipv4_address == subscriber_ipv4
 
-    async def test_provisioning_with_auto_allocation_e2e(self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client):
+    async def test_provisioning_with_auto_allocation_e2e(
+        self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client
+    ):
         """
         Test provisioning with automatic IP allocation everywhere.
 
@@ -254,7 +265,11 @@ PersistentKeepalive = 25
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # WireGuard with auto VPN IPs
-            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="smoke-test-tenant")
+            wg_service = WireGuardService(
+                session=async_db_session,
+                client=mock_wireguard_client,
+                tenant_id="smoke-test-tenant",
+            )
 
             server = await wg_service.create_server(
                 name="Auto Alloc Server",
@@ -276,7 +291,9 @@ PersistentKeepalive = 25
             assert peer.peer_ipv4 is not None
             assert peer.peer_ipv6 is not None
 
-    async def test_provisioning_ipv4_only_legacy_support(self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client):
+    async def test_provisioning_ipv4_only_legacy_support(
+        self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client
+    ):
         """
         Test backward compatibility with IPv4-only provisioning.
         """
@@ -309,7 +326,11 @@ PersistentKeepalive = 25
             radius_sub = await radius_service.create_subscriber(radius_data)
 
             # WireGuard IPv4-only
-            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="smoke-test-tenant")
+            wg_service = WireGuardService(
+                session=async_db_session,
+                client=mock_wireguard_client,
+                tenant_id="smoke-test-tenant",
+            )
 
             server = await wg_service.create_server(
                 name="IPv4-Only Server",
@@ -330,7 +351,9 @@ PersistentKeepalive = 25
             assert peer.peer_ipv4 is not None
             assert peer.peer_ipv6 is None
 
-    async def test_deprovisioning_cleanup_e2e(self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client):
+    async def test_deprovisioning_cleanup_e2e(
+        self, async_db_session, smoke_test_tenant, subscriber_factory, mock_wireguard_client
+    ):
         """
         Test complete cleanup when deprovisioning subscriber.
 
@@ -370,7 +393,11 @@ PersistentKeepalive = 25
 
             radius_sub = await radius_service.create_subscriber(radius_data)
 
-            wg_service = WireGuardService(session=async_db_session, client=mock_wireguard_client, tenant_id="smoke-test-tenant")
+            wg_service = WireGuardService(
+                session=async_db_session,
+                client=mock_wireguard_client,
+                tenant_id="smoke-test-tenant",
+            )
 
             server = await wg_service.create_server(
                 name="Deprov Server",
@@ -406,7 +433,9 @@ PersistentKeepalive = 25
             await netbox.delete_ip_address(ip_id=200)  # IPv6
 
             # 3. Verify cleanup
-            deleted_sub = await radius_service.get_subscriber(subscriber_id=radius_data.subscriber_id)
+            deleted_sub = await radius_service.get_subscriber(
+                subscriber_id=radius_data.subscriber_id
+            )
             assert deleted_sub is None
 
             deleted_peer = await wg_service.get_peer(peer.id)
@@ -442,7 +471,9 @@ PersistentKeepalive = 25
             )
             assert new_peer.peer_ipv4 == vpn_ipv4
 
-    async def test_multi_tenant_provisioning_isolation(self, async_db_session, smoke_test_tenant, subscriber_factory):
+    async def test_multi_tenant_provisioning_isolation(
+        self, async_db_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test tenant isolation across all provisioning systems.
         """
@@ -505,7 +536,9 @@ PersistentKeepalive = 25
             tenant_a_view = await radius_a.get_subscriber(subscriber_id=sub_b_data.subscriber_id)
             assert tenant_a_view is None
 
-    async def test_bulk_provisioning_performance(self, async_db_session, smoke_test_tenant, subscriber_factory):
+    async def test_bulk_provisioning_performance(
+        self, async_db_session, smoke_test_tenant, subscriber_factory
+    ):
         """
         Test bulk provisioning of 100 subscribers.
         """
@@ -549,7 +582,9 @@ PersistentKeepalive = 25
             assert elapsed < 60  # Less than 60 seconds for 100 subscribers
 
             # Verify all created
-            first_sub = await radius_service.get_subscriber(subscriber_id=f"bulk{base_unique_id}001")
+            first_sub = await radius_service.get_subscriber(
+                subscriber_id=f"bulk{base_unique_id}001"
+            )
             last_sub = await radius_service.get_subscriber(subscriber_id=f"bulk{base_unique_id}100")
 
             assert first_sub is not None

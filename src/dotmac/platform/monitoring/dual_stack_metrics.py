@@ -151,46 +151,46 @@ class DualStackMetricsCollector:
 
     async def collect_subscriber_metrics(self, metrics: DualStackMetrics) -> None:
         """Collect subscriber allocation metrics."""
-        from dotmac.platform.radius.models import RADIUSSubscriber
+        from dotmac.platform.subscribers.models import Subscriber
 
         # Build base query with tenant filter if provided
         filters = []
         if self.tenant_id:
-            filters.append(RADIUSSubscriber.tenant_id == self.tenant_id)
+            filters.append(Subscriber.tenant_id == self.tenant_id)
 
         # Total subscribers
         result = await self.session.execute(
-            select(func.count(RADIUSSubscriber.subscriber_id)).where(*filters)
+            select(func.count(Subscriber.subscriber_id)).where(*filters)
         )
         metrics.total_subscribers = result.scalar() or 0
 
         # Dual-stack subscribers (both IPv4 and IPv6)
         dual_stack_filters = filters + [
-            RADIUSSubscriber.framed_ipv4_address.isnot(None),
-            RADIUSSubscriber.framed_ipv6_address.isnot(None),
+            Subscriber.framed_ipv4_address.isnot(None),
+            Subscriber.framed_ipv6_address.isnot(None),
         ]
         result = await self.session.execute(
-            select(func.count(RADIUSSubscriber.subscriber_id)).where(*dual_stack_filters)
+            select(func.count(Subscriber.subscriber_id)).where(*dual_stack_filters)
         )
         metrics.dual_stack_subscribers = result.scalar() or 0
 
         # IPv4-only subscribers
         ipv4_only_filters = filters + [
-            RADIUSSubscriber.framed_ipv4_address.isnot(None),
-            RADIUSSubscriber.framed_ipv6_address.is_(None),
+            Subscriber.framed_ipv4_address.isnot(None),
+            Subscriber.framed_ipv6_address.is_(None),
         ]
         result = await self.session.execute(
-            select(func.count(RADIUSSubscriber.subscriber_id)).where(*ipv4_only_filters)
+            select(func.count(Subscriber.subscriber_id)).where(*ipv4_only_filters)
         )
         metrics.ipv4_only_subscribers = result.scalar() or 0
 
         # IPv6-only subscribers
         ipv6_only_filters = filters + [
-            RADIUSSubscriber.framed_ipv4_address.is_(None),
-            RADIUSSubscriber.framed_ipv6_address.isnot(None),
+            Subscriber.framed_ipv4_address.is_(None),
+            Subscriber.framed_ipv6_address.isnot(None),
         ]
         result = await self.session.execute(
-            select(func.count(RADIUSSubscriber.subscriber_id)).where(*ipv6_only_filters)
+            select(func.count(Subscriber.subscriber_id)).where(*ipv6_only_filters)
         )
         metrics.ipv6_only_subscribers = result.scalar() or 0
 

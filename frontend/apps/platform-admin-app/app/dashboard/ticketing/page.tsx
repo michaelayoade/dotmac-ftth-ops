@@ -403,7 +403,7 @@ function TicketingPageContent() {
 
 export default function TicketingPage() {
   return (
-    <RouteGuard requiredPermission="tickets:read">
+    <RouteGuard permission="tickets:read">
       <TicketingPageContent />
     </RouteGuard>
   );

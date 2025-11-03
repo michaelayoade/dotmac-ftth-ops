@@ -1,4 +1,3 @@
-
 """
 Comprehensive integration tests for Billing Catalog Router.
 
@@ -6,8 +5,8 @@ Tests all product catalog router endpoints following the Two-Tier Testing Strate
 Coverage Target: 85%+ for router endpoints
 """
 
-from uuid import uuid4
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 from fastapi.testclient import TestClient
@@ -15,13 +14,8 @@ from fastapi.testclient import TestClient
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.main import app
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def test_client(db_session, mock_tenant_dependency):

@@ -196,6 +196,55 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/HealthResponse'
+  /api/v1/deployment/stats:
+    get:
+      summary: Get deployment statistics summary
+      tags: [Deployment]
+      parameters:
+        - in: query
+          name: tenant_id
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filter statistics for a specific tenant
+      responses:
+        '200':
+          description: Aggregated deployment statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentStatsResponse'
+  /api/v1/deployment/stats/templates:
+    get:
+      summary: Get deployment template usage metrics
+      tags: [Deployment]
+      responses:
+        '200':
+          description: Template usage summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentTemplateUsageResponse'
+  /api/v1/deployment/stats/resources:
+    get:
+      summary: Get resource allocation totals
+      tags: [Deployment]
+      parameters:
+        - in: query
+          name: tenant_id
+          required: false
+          schema:
+            type: integer
+            format: int64
+          description: Filter allocation totals for a specific tenant
+      responses:
+        '200':
+          description: Aggregated resource allocation totals
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeploymentResourceAllocationResponse'
 components:
   parameters:
     SessionIdParam:
@@ -436,3 +485,94 @@ components:
         total:
           type: integer
           format: int32
+    DeploymentStatsResponse:
+      type: object
+      required: [total_instances, states, health]
+      properties:
+        total_instances:
+          type: integer
+          format: int64
+          minimum: 0
+        states:
+          type: object
+          required: [active, provisioning, failed, suspended]
+          properties:
+            active:
+              type: integer
+              format: int64
+              minimum: 0
+            provisioning:
+              type: integer
+              format: int64
+              minimum: 0
+            failed:
+              type: integer
+              format: int64
+              minimum: 0
+            suspended:
+              type: integer
+              format: int64
+              minimum: 0
+        health:
+          type: object
+          required: [healthy, degraded, unhealthy]
+          properties:
+            healthy:
+              type: integer
+              format: int64
+              minimum: 0
+            degraded:
+              type: integer
+              format: int64
+              minimum: 0
+            unhealthy:
+              type: integer
+              format: int64
+              minimum: 0
+    DeploymentTemplateUsageEntry:
+      type: object
+      required: [template_name, display_name, instances]
+      properties:
+        template_name:
+          type: string
+        display_name:
+          type: string
+        instances:
+          type: integer
+          format: int64
+          minimum: 0
+    DeploymentTemplateUsageResponse:
+      type: object
+      required: [templates, total_templates, total_instances]
+      properties:
+        templates:
+          type: array
+          items:
+            $ref: '#/components/schemas/DeploymentTemplateUsageEntry'
+        total_templates:
+          type: integer
+          format: int64
+          minimum: 0
+        total_instances:
+          type: integer
+          format: int64
+          minimum: 0
+    DeploymentResourceAllocationResponse:
+      type: object
+      required: [total_cpu, total_memory, total_storage]
+      properties:
+        total_cpu:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total allocated CPU cores
+        total_memory:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total allocated memory in GiB
+        total_storage:
+          type: integer
+          format: int64
+          minimum: 0
+          description: Total allocated storage in GiB

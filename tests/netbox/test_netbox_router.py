@@ -1,4 +1,3 @@
-
 """
 Tests for NetBox router dependencies.
 """
@@ -10,13 +9,8 @@ import pytest
 
 from dotmac.platform.netbox.router import get_netbox_service
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 async def test_get_netbox_service_includes_tenant_id():

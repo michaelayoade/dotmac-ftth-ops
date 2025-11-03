@@ -90,8 +90,8 @@ function ProvisionPageContent() {
       if (!response.ok) return [];
       return response.json();
     },
-    refetchInterval: (data) =>
-      data?.some((job) => job.status === "pending" || job.status === "processing") ? 5000 : false,
+    refetchInterval: (query) =>
+      query?.state?.data?.some((job) => job.status === "pending" || job.status === "processing") ? 5000 : false,
   });
 
   // Single device provision
@@ -404,7 +404,7 @@ function ProvisionPageContent() {
                     <table className="w-full text-sm">
                       <thead className="bg-muted">
                         <tr>
-                          {csvPreview[0].map((header, i) => (
+                          {(csvPreview[0] || []).map((header, i) => (
                             <th key={i} className="px-4 py-2 text-left font-medium">
                               {header}
                             </th>
@@ -560,7 +560,7 @@ function ProvisionPageContent() {
 
 export default function ProvisionPage() {
   return (
-    <RouteGuard requiredPermission="devices.write">
+    <RouteGuard permission="devices.write">
       <ProvisionPageContent />
     </RouteGuard>
   );

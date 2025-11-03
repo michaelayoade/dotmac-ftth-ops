@@ -1,7 +1,6 @@
 """TimescaleDB Time-Series Models."""
 
-from datetime import datetime
-from sqlalchemy import BigInteger, Column, Integer, String, TIMESTAMP
+from sqlalchemy import TIMESTAMP, BigInteger, Column, Integer, String
 from sqlalchemy.dialects.postgresql import INET
 from sqlalchemy.ext.declarative import declarative_base
 

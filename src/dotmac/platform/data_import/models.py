@@ -4,12 +4,9 @@ Database models for data import tracking.
 Stores import job metadata, status, and failure records.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -27,6 +24,11 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import Base, TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 
 class ImportJobType(str, Enum):
@@ -52,7 +54,7 @@ class ImportJobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class ImportJob(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class ImportJob(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track import jobs and their progress."""
 
     __tablename__ = "data_import_jobs"
@@ -156,7 +158,7 @@ class ImportJob(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
         return (end_time - self.started_at).total_seconds()
 
 
-class ImportFailure(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class ImportFailure(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """Track individual import failures for debugging and reprocessing."""
 
     __tablename__ = "data_import_failures"

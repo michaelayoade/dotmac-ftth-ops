@@ -4,7 +4,7 @@ Tests for CachedPricingEngine.
 Tests caching behavior for pricing rules and calculations.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, patch
 
@@ -48,10 +48,10 @@ def sample_pricing_rule():
                 {"min_quantity": 50, "discount_percentage": 20},
             ]
         },
-        valid_from=datetime.now(timezone.utc),
+        valid_from=datetime.now(UTC),
         valid_until=None,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
 
 
@@ -244,7 +244,7 @@ class TestCalculatePrice:
             "total_discount_amount": 100.00,
             "final_price": 900.00,
             "applied_adjustments": [],
-            "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
+            "calculation_timestamp": datetime.now(UTC).isoformat(),
         }
         mock_cache.get.return_value = cached_result
 
@@ -389,7 +389,7 @@ class TestBatchOperations:
                 "total_discount_amount": 100.00,
                 "final_price": 900.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
+                "calculation_timestamp": datetime.now(UTC).isoformat(),
             },
             None,  # Miss
             {  # Hit
@@ -401,7 +401,7 @@ class TestBatchOperations:
                 "total_discount_amount": 200.00,
                 "final_price": 1800.00,
                 "applied_adjustments": [],
-                "calculation_timestamp": datetime.now(timezone.utc).isoformat(),
+                "calculation_timestamp": datetime.now(UTC).isoformat(),
             },
         ]
         mock_cache.get.side_effect = cache_responses

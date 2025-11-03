@@ -6,6 +6,7 @@ Uses Redis pub/sub for broadcasting updates to WebSocket connections.
 
 import json
 from collections.abc import AsyncGenerator
+from typing import cast
 
 import strawberry
 import structlog
@@ -21,6 +22,13 @@ from dotmac.platform.graphql.types.customer_subscriptions import (
 )
 
 logger = structlog.get_logger(__name__)
+
+
+def _require_redis(context: Context) -> Redis:
+    redis_client = getattr(context, "redis", None)
+    if redis_client is None:
+        raise RuntimeError("Redis client not configured for subscriptions")
+    return cast(Redis, redis_client)
 
 
 @strawberry.type
@@ -49,7 +57,7 @@ class CustomerSubscriptions:
         Yields:
             CustomerNetworkStatusUpdate: Real-time network status updates
         """
-        redis: Redis = info.context.redis
+        redis = _require_redis(info.context)
         channel_name = f"customer:{customer_id}:network_status"
 
         logger.info(
@@ -138,7 +146,7 @@ class CustomerSubscriptions:
         Yields:
             CustomerDeviceUpdate: Real-time device status updates
         """
-        redis: Redis = info.context.redis
+        redis = _require_redis(info.context)
         channel_name = f"customer:{customer_id}:devices"
 
         logger.info(
@@ -222,7 +230,7 @@ class CustomerSubscriptions:
         Yields:
             CustomerTicketUpdate: Real-time ticket updates with action type
         """
-        redis: Redis = info.context.redis
+        redis = _require_redis(info.context)
         channel_name = f"customer:{customer_id}:tickets"
 
         logger.info(
@@ -315,7 +323,7 @@ class CustomerSubscriptions:
         Yields:
             CustomerActivityUpdate: New activity notifications
         """
-        redis: Redis = info.context.redis
+        redis = _require_redis(info.context)
         channel_name = f"customer:{customer_id}:activities"
 
         pubsub = redis.pubsub()
@@ -369,7 +377,7 @@ class CustomerSubscriptions:
         Yields:
             CustomerNoteUpdate: Note update notifications
         """
-        redis: Redis = info.context.redis
+        redis = _require_redis(info.context)
         channel_name = f"customer:{customer_id}:notes"
 
         pubsub = redis.pubsub()

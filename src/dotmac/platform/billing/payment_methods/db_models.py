@@ -5,10 +5,7 @@ This module defines the database models for tenant payment methods,
 mapping to the billing_payment_methods table created in migration 25eed1ceec2d.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 

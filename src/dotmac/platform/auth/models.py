@@ -2,9 +2,11 @@
 RBAC (Role-Based Access Control) Database Models
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -24,7 +26,12 @@ from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.sql import func
 
-from dotmac.platform.db import Base
+from dotmac.platform.db import Base as BaseRuntime
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 # Association tables
 user_roles = Table(
@@ -115,7 +122,7 @@ class PermissionCategory(str, Enum):
     CPE = "cpe"
 
 
-class Permission(Base):  # type: ignore[misc]  # Base has type Any
+class Permission(Base):
     """Individual permission that can be granted"""
 
     __tablename__ = "permissions"
@@ -161,7 +168,7 @@ def _users_table() -> Any:
     return User.__table__
 
 
-class Role(Base):  # type: ignore[misc]  # Base has type Any
+class Role(Base):
     """Role that groups permissions"""
 
     __tablename__ = "roles"
@@ -234,7 +241,7 @@ class Role(Base):  # type: ignore[misc]  # Base has type Any
         return f"<Role(name='{self.name}', priority={self.priority})>"
 
 
-class RoleHierarchy(Base):  # type: ignore[misc]  # Base has type Any
+class RoleHierarchy(Base):
     """Explicit role inheritance relationships (alternative to parent_id)"""
 
     __tablename__ = "role_hierarchy"
@@ -256,7 +263,7 @@ class RoleHierarchy(Base):  # type: ignore[misc]  # Base has type Any
     )
 
 
-class PermissionGrant(Base):  # type: ignore[misc]  # Base has type Any
+class PermissionGrant(Base):
     """Audit trail for permission grants/revokes"""
 
     __tablename__ = "permission_grants"

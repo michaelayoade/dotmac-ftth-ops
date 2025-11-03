@@ -10,9 +10,10 @@ Adds tables for tenant self-service billing:
 - billing_payment_methods: Payment methods (cards, bank accounts)
 """
 
-from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "25eed1ceec2d"

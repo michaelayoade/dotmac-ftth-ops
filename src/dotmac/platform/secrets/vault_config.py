@@ -7,7 +7,7 @@ This module provides utilities to configure and connect to Vault/OpenBao backend
 import asyncio
 import inspect
 import os
-from typing import Any
+from typing import Any, Coroutine, cast
 
 import httpx
 import structlog
@@ -306,11 +306,12 @@ class VaultConnectionManager:
             else:
                 result = self._async_client.close()
                 if inspect.isawaitable(result):
+                    coroutine = cast(Coroutine[Any, Any, Any], result)
                     try:
-                        asyncio.run(result)
+                        asyncio.run(coroutine)
                     except RuntimeError:
                         loop = asyncio.get_running_loop()
-                        loop.create_task(result)
+                        loop.create_task(coroutine)
             self._async_client = None
 
 

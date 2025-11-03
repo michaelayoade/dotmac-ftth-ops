@@ -4,7 +4,7 @@ CRM Service Layer.
 Provides business logic for lead management, quote generation, and site surveys.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
@@ -146,13 +146,13 @@ class LeadService:
 
         # Validate status transitions
         if new_status == LeadStatus.QUALIFIED and lead.status == LeadStatus.NEW:
-            lead.qualified_at = datetime.now(timezone.utc)
+            lead.qualified_at = datetime.now(UTC)
         elif new_status == LeadStatus.DISQUALIFIED:
-            lead.disqualified_at = datetime.now(timezone.utc)
+            lead.disqualified_at = datetime.now(UTC)
         elif new_status == LeadStatus.WON:
             if not lead.converted_to_customer_id:
                 raise ValidationError("Cannot mark lead as won without customer conversion")
-            lead.converted_at = datetime.now(timezone.utc)
+            lead.converted_at = datetime.now(UTC)
 
         lead.status = new_status
         if updated_by_id:
@@ -183,7 +183,7 @@ class LeadService:
         lead = await self.get_lead(tenant_id, lead_id)
         lead.status = LeadStatus.DISQUALIFIED
         lead.disqualification_reason = reason
-        lead.disqualified_at = datetime.now(timezone.utc)
+        lead.disqualified_at = datetime.now(UTC)
         if updated_by_id:
             lead.updated_by = str(updated_by_id)
 
@@ -203,7 +203,7 @@ class LeadService:
         """Update lead serviceability status."""
         lead = await self.get_lead(tenant_id, lead_id)
         lead.is_serviceable = serviceability
-        lead.serviceability_checked_at = datetime.now(timezone.utc)
+        lead.serviceability_checked_at = datetime.now(UTC)
         if notes:
             lead.serviceability_notes = notes
         if updated_by_id:
@@ -228,7 +228,7 @@ class LeadService:
             raise ValidationError(f"Lead {lead_id} already converted to customer")
 
         lead.converted_to_customer_id = customer.id
-        lead.converted_at = datetime.now(timezone.utc)
+        lead.converted_at = datetime.now(UTC)
         lead.status = LeadStatus.WON
         if updated_by_id:
             lead.updated_by = str(updated_by_id)
@@ -271,7 +271,7 @@ class LeadService:
 
     async def _generate_lead_number(self, tenant_id: str) -> str:
         """Generate unique lead number for tenant."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         suffix = uuid4().hex[:6].upper()
         return f"LEAD-{year}-{suffix}"
 
@@ -320,7 +320,7 @@ class QuoteService:
         total_upfront_cost = installation_fee + equipment_fee + activation_fee
 
         # Set validity period
-        valid_until = datetime.now(timezone.utc) + timedelta(days=valid_days)
+        valid_until = datetime.now(UTC) + timedelta(days=valid_days)
 
         quote = Quote(
             id=uuid4(),
@@ -386,7 +386,7 @@ class QuoteService:
             raise ValidationError(f"Quote {quote_id} cannot be sent in {quote.status} status")
 
         quote.status = QuoteStatus.SENT
-        quote.sent_at = datetime.now(timezone.utc)
+        quote.sent_at = datetime.now(UTC)
         if updated_by_id:
             quote.updated_by = str(updated_by_id)
 
@@ -409,7 +409,7 @@ class QuoteService:
 
         if quote.status == QuoteStatus.SENT and not quote.viewed_at:
             quote.status = QuoteStatus.VIEWED
-            quote.viewed_at = datetime.now(timezone.utc)
+            quote.viewed_at = datetime.now(UTC)
             await self.db.flush()
             await self.db.refresh(quote)
 
@@ -428,11 +428,11 @@ class QuoteService:
         if quote.status not in [QuoteStatus.SENT, QuoteStatus.VIEWED]:
             raise ValidationError(f"Quote {quote_id} cannot be accepted in {quote.status} status")
 
-        if quote.valid_until < datetime.now(timezone.utc):
+        if quote.valid_until < datetime.now(UTC):
             raise ValidationError(f"Quote {quote_id} has expired")
 
         quote.status = QuoteStatus.ACCEPTED
-        quote.accepted_at = datetime.now(timezone.utc)
+        quote.accepted_at = datetime.now(UTC)
         quote.signature_data = signature_data
         if updated_by_id:
             quote.updated_by = str(updated_by_id)
@@ -457,7 +457,7 @@ class QuoteService:
         quote = await self.get_quote(tenant_id, quote_id)
 
         quote.status = QuoteStatus.REJECTED
-        quote.rejected_at = datetime.now(timezone.utc)
+        quote.rejected_at = datetime.now(UTC)
         quote.rejection_reason = rejection_reason
         if updated_by_id:
             quote.updated_by = str(updated_by_id)
@@ -552,7 +552,7 @@ class QuoteService:
         total_upfront_cost = Decimal("0.00")
 
         # Set validity period
-        valid_until = datetime.now(timezone.utc) + timedelta(days=valid_days)
+        valid_until = datetime.now(UTC) + timedelta(days=valid_days)
 
         # Create line items for renewal
         line_items = [
@@ -599,12 +599,12 @@ class QuoteService:
             email=customer.email,
             phone=customer.phone,
             company_name=customer.company_name,
-            service_address_line1=customer.service_address_line1 or customer.address_line1,
+            service_address_line1=customer.service_address_line1 or customer.address_line1 or "",
             service_address_line2=customer.service_address_line2 or customer.address_line2,
-            service_city=customer.service_city or customer.city,
-            service_state_province=customer.service_state_province or customer.state_province,
-            service_postal_code=customer.service_postal_code or customer.postal_code,
-            service_country=customer.service_country or customer.country,
+            service_city=customer.service_city or customer.city or "",
+            service_state_province=customer.service_state_province or customer.state_province or "",
+            service_postal_code=customer.service_postal_code or customer.postal_code or "",
+            service_country=customer.service_country or customer.country or "US",
             source=LeadSource.OTHER,
             priority=2,  # Medium priority for renewals
             metadata={"renewal": True, "customer_id": str(customer_id)},
@@ -646,7 +646,7 @@ class QuoteService:
 
     async def _generate_quote_number(self, tenant_id: str) -> str:
         """Generate unique quote number for tenant."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         suffix = uuid4().hex[:6].upper()
         return f"QUOT-{year}-{suffix}"
 
@@ -773,7 +773,7 @@ class SiteSurveyService:
             )
 
         survey.status = SiteSurveyStatus.COMPLETED
-        survey.completed_date = datetime.now(timezone.utc)
+        survey.completed_date = datetime.now(UTC)
         survey.serviceability = serviceability
         survey.nearest_fiber_distance_meters = nearest_fiber_distance_meters
         survey.requires_fiber_extension = requires_fiber_extension
@@ -795,7 +795,7 @@ class SiteSurveyService:
         # Update lead serviceability
         lead = survey.lead
         lead.is_serviceable = serviceability
-        lead.serviceability_checked_at = datetime.now(timezone.utc)
+        lead.serviceability_checked_at = datetime.now(UTC)
         lead.serviceability_notes = f"Site survey {survey.survey_number} completed"
 
         if lead.status == LeadStatus.SITE_SURVEY_SCHEDULED:
@@ -855,6 +855,6 @@ class SiteSurveyService:
 
     async def _generate_survey_number(self, tenant_id: str) -> str:
         """Generate unique survey number for tenant."""
-        year = datetime.now(timezone.utc).year
+        year = datetime.now(UTC).year
         suffix = uuid4().hex[:6].upper()
         return f"SURV-{year}-{suffix}"

@@ -1,4 +1,3 @@
-
 """
 Tests for Backup Code functionality.
 
@@ -19,13 +18,8 @@ from dotmac.platform.auth.mfa_service import mfa_service
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import BackupCode, User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():

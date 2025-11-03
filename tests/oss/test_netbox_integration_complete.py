@@ -1,4 +1,3 @@
-
 """
 Comprehensive NetBox Integration Tests
 
@@ -12,9 +11,6 @@ import pytest
 
 from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.netbox.schemas import (
-
-
-
     CableCreate,
     CircuitCreate,
     CircuitProviderCreate,
@@ -25,10 +21,8 @@ from dotmac.platform.netbox.schemas import (
 )
 from dotmac.platform.netbox.service import NetBoxService
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def mock_netbox_client():

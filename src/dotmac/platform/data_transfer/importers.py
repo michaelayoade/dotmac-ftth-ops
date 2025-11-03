@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import importlib
-import xml.etree.ElementTree as ET
 from collections.abc import AsyncGenerator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Protocol, cast
 
 import pandas as pd
+from defusedxml import ElementTree as ET
 
 from .core import (
     BaseImporter,

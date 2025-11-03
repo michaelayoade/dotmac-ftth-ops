@@ -23,7 +23,7 @@ except ImportError:
 
 try:
     from dotmac.platform.auth.core import JWTService
-    from dotmac.platform.secrets.factory import SecretsManager, SecretsManagerFactory
+    from dotmac.platform.secrets.factory import SecretsManagerFactory
 
     HAS_SECRETS_AUTH = True
 except ImportError:
@@ -109,6 +109,7 @@ class TestSecretsAuthIntegration:
         """Test JWT service can retrieve keys from secrets manager."""
         # Use real local secrets manager with temporary directory
         import os
+
         os.environ["SECRETS_BACKEND"] = "local"
         os.environ["LOCAL_SECRETS_PATH"] = str(tmp_path)
 
@@ -137,8 +138,7 @@ class TestSecretsAuthIntegration:
 
         # Create token with user claims
         token = jwt_service.create_access_token(
-            subject="user123",
-            additional_claims={"tenant_id": "test-tenant"}
+            subject="user123", additional_claims={"tenant_id": "test-tenant"}
         )
         assert token is not None
         assert isinstance(token, str)
@@ -175,7 +175,7 @@ class TestDataTransferStorageIntegration:
             # This represents the workflow: storage -> data transfer
             assert file_info["file_id"] == "123"
             # Verify importer has a process method (interface check)
-            assert hasattr(importer, 'process') or hasattr(importer, '__call__')
+            assert hasattr(importer, "process") or callable(importer)
 
     @pytest.mark.skipif(not HAS_DATA_STORAGE, reason="Data Transfer/Storage modules not available")
     @pytest.mark.asyncio
@@ -306,8 +306,8 @@ class TestEndToEndIntegration:
         # 3. Service authorization (checking permissions)
         required_permission = "read"
         has_permission = (
-            required_permission in mock_user_info.permissions or
-            "*" in mock_user_info.permissions  # Wildcard permission
+            required_permission in mock_user_info.permissions
+            or "*" in mock_user_info.permissions  # Wildcard permission
         )
         assert has_permission is True
 

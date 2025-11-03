@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Iterable
 from contextlib import suppress
-from typing import Any, Iterable
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 logger = logging.getLogger(__name__)
@@ -239,4 +240,3 @@ def start_infrastructure_patchers() -> list[Any]:
         logger.debug("No infrastructure patchers were started for the test app fixtures.")
 
     return patchers
-

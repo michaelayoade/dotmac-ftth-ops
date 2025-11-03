@@ -1,7 +1,7 @@
 """Tests for user management API router."""
 
 import uuid
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 from urllib.parse import urlencode
 
@@ -18,9 +18,8 @@ from dotmac.platform.user_management.router import (
 )
 from dotmac.platform.user_management.service import UserService
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def mock_user_service():
@@ -42,8 +41,8 @@ def sample_user():
         is_verified=True,
         is_superuser=False,
         mfa_enabled=False,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
         tenant_id="tenant-123",
     )
 

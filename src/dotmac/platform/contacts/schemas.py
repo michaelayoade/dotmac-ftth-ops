@@ -5,10 +5,12 @@ Request/response models for contact management.
 """
 
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
+
+METADATA_ALIAS = cast(Any, AliasChoices("metadata_", "metadata"))
 
 from dotmac.platform.contacts.models import (
     ContactFieldType,
@@ -32,7 +34,9 @@ class ContactMethodBase(BaseModel):  # BaseModel resolves to Any in isolation
     is_public: bool = True
     display_order: int = 0
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
     # Address fields
@@ -62,7 +66,9 @@ class ContactMethodUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     is_public: bool | None = None
     display_order: int | None = None
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
     # Address fields
@@ -119,7 +125,9 @@ class ContactBase(BaseModel):  # BaseModel resolves to Any in isolation
     tags: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
     # Important dates
@@ -200,7 +208,9 @@ class ContactUpdate(BaseModel):  # BaseModel resolves to Any in isolation
     tags: list[str] | None = None
     custom_fields: dict[str, Any] | None = None
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
     # Important dates
@@ -269,7 +279,9 @@ class ContactLabelDefinitionBase(BaseModel):  # BaseModel resolves to Any in iso
     is_system: bool = False
     is_default: bool = False
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
 
@@ -295,7 +307,9 @@ class ContactLabelDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in i
     is_visible: bool | None = None
     is_default: bool | None = None
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
 
@@ -337,7 +351,9 @@ class ContactFieldDefinitionBase(BaseModel):  # BaseModel resolves to Any in iso
     is_system: bool = False
     is_encrypted: bool = False
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
 
@@ -371,7 +387,9 @@ class ContactFieldDefinitionUpdate(BaseModel):  # BaseModel resolves to Any in i
     required_permission: str | None = Field(None, max_length=100)
     is_encrypted: bool | None = None
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
 
@@ -403,7 +421,9 @@ class ContactActivityBase(BaseModel):  # BaseModel resolves to Any in isolation
     status: str = Field(min_length=1, max_length=50)
     outcome: str | None = Field(None, max_length=100)
     metadata: dict[str, Any] | None = Field(
-        None, validation_alias=AliasChoices("metadata_", "metadata"), serialization_alias="metadata"
+        default=None,
+        validation_alias=METADATA_ALIAS,
+        serialization_alias="metadata",
     )
 
 

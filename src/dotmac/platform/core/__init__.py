@@ -80,16 +80,24 @@ def ensure_pydantic_v2() -> None:
         ImportError: If Pydantic v1 is detected
     """
     try:
-        from pydantic import VERSION
+        import pydantic
+    except ImportError as exc:  # pragma: no cover - defensive guard
+        raise ImportError("Pydantic is required but is not installed.") from exc
 
-        major_version = int(VERSION.split(".")[0])
-        if major_version < 2:
-            raise ImportError(
-                f"Pydantic v2 is required, but v{VERSION} is installed. "
-                "Please upgrade: pip install 'pydantic>=2.0'"
-            )
-    except (ImportError, AttributeError, ValueError) as e:
-        raise ImportError(f"Failed to verify Pydantic version: {e}")
+    version_str = getattr(pydantic, "__version__", None)
+    if version_str is None:
+        raise ImportError("Unable to determine installed Pydantic version.")
+
+    try:
+        major_version = int(version_str.split(".")[0])
+    except (TypeError, ValueError) as exc:  # pragma: no cover - defensive guard
+        raise ImportError(f"Failed to parse Pydantic version '{version_str}'.") from exc
+
+    if major_version < 2:
+        raise ImportError(
+            f"Pydantic v2 is required, but v{version_str} is installed. "
+            "Please upgrade: pip install 'pydantic>=2.0'"
+        )
 
 
 __all__ = [

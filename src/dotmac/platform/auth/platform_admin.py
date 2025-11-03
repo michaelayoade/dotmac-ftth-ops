@@ -8,6 +8,7 @@ Provides capabilities for SaaS platform administrators to:
 - Generate cross-tenant reports
 """
 
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 import structlog
@@ -61,14 +62,18 @@ def is_platform_admin(user: UserInfo) -> bool:
         >>>     # User can access all tenants
         >>>     pass
     """
-    permissions = set(user.permissions or [])
-
     # Check explicit flag
     if user.is_platform_admin:
         return True
 
+    permissions = set(user.permissions or [])
+
     # Check for platform admin permission
     if PLATFORM_ADMIN_PERMISSION in permissions:
+        return True
+
+    # Treat global or platform-wide wildcards as platform admin access
+    if "*" in permissions or "platform:*" in permissions:
         return True
 
     return False
@@ -98,19 +103,15 @@ def has_platform_permission(user: UserInfo, permission: str) -> bool:
     if permission in permissions:
         return True
 
-    # Check wildcard permission granting all scopes (platform scopes require admin)
+    # Global wildcard grants all permissions (including platform-scoped)
     if "*" in permissions:
-        if permission.startswith("platform:"):
-            return False
         return True
 
     # Check hierarchical wildcard permissions (e.g., platform:tenants:*)
     parts = permission.split(":")
-    for i in range(len(parts)):
-        wildcard = ":".join(parts[: i + 1]) + ":*"
-        if wildcard in user.permissions:
-            if permission.startswith("platform:") and not is_platform_admin(user):
-                continue
+    for i in range(len(parts), 0, -1):
+        wildcard = ":".join(parts[:i]) + ":*"
+        if wildcard in permissions:
             return True
 
     return False
@@ -188,7 +189,7 @@ async def require_platform_admin(
     return current_user
 
 
-def require_platform_permission(permission: str) -> Any:
+def require_platform_permission(permission: str) -> Callable[..., Awaitable[UserInfo]]:
     """Dependency factory to require specific platform permission.
 
     Args:

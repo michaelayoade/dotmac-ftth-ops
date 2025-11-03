@@ -7,10 +7,7 @@ Provides background workers for executing scheduled dunning actions.
 import asyncio
 from collections.abc import Coroutine
 from concurrent.futures import Future
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -20,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.db import async_session_maker
+from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
 
 from .models import DunningActionType, DunningExecution, DunningExecutionStatus
 from .service import DunningService
@@ -51,6 +49,13 @@ def _run_async[T](coro: Coroutine[Any, Any, T]) -> T:
             future: Future[T] = asyncio.run_coroutine_threadsafe(coro, loop)
             return future.result()
         return loop.run_until_complete(coro)
+
+
+def _set_tenant_context(tenant_id: str) -> str | None:
+    """Set tenant context and return previous."""
+    previous = get_current_tenant_id()
+    set_current_tenant_id(tenant_id)
+    return previous
 
 
 # ---------------------------------------------------------------------------
@@ -385,9 +390,11 @@ async def _send_dunning_email(
             from dotmac.platform.customer_management.service import CustomerService
 
             customer_service = CustomerService(session)
-            customer = await customer_service.get_customer(
-                customer_id=execution.customer_id, tenant_id=execution.tenant_id
-            )
+            previous_tenant = _set_tenant_context(execution.tenant_id)
+            try:
+                customer = await customer_service.get_customer(customer_id=execution.customer_id)
+            finally:
+                set_current_tenant_id(previous_tenant)
 
             if not customer or not customer.email:
                 return {
@@ -463,9 +470,11 @@ async def _send_dunning_sms(
             from dotmac.platform.customer_management.service import CustomerService
 
             customer_service = CustomerService(session)
-            customer = await customer_service.get_customer(
-                customer_id=execution.customer_id, tenant_id=execution.tenant_id
-            )
+            previous_tenant = _set_tenant_context(execution.tenant_id)
+            try:
+                customer = await customer_service.get_customer(customer_id=execution.customer_id)
+            finally:
+                set_current_tenant_id(previous_tenant)
 
             if not customer or not customer.phone:
                 return {
@@ -554,10 +563,16 @@ async def _suspend_service(
             async with async_session_maker() as session:
                 lifecycle_service = LifecycleOrchestrationService(session)
 
-                # Suspend the service via lifecycle orchestration
+                try:
+                    service_instance_uuid = UUID(execution.subscription_id)
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        f"Invalid subscription ID for lifecycle suspend: {execution.subscription_id}"
+                    ) from None
+
                 await lifecycle_service.suspend_service(
-                    subscription_id=execution.subscription_id,
                     tenant_id=execution.tenant_id,
+                    service_instance_id=service_instance_uuid,
                     reason="dunning_non_payment",
                     metadata={
                         "execution_id": str(execution.id),
@@ -584,9 +599,10 @@ async def _suspend_service(
             async with async_session_maker() as session:
                 subscription_service = SubscriptionService(session)
 
-                # Suspend subscription (simplified fallback)
-                await subscription_service.suspend_subscription(
-                    subscription_id=execution.subscription_id, tenant_id=execution.tenant_id
+                await subscription_service.cancel_subscription(
+                    subscription_id=str(execution.subscription_id),
+                    tenant_id=str(execution.tenant_id),
+                    at_period_end=False,
                 )
 
                 await session.commit()
@@ -647,10 +663,16 @@ async def _terminate_service(
             async with async_session_maker() as session:
                 lifecycle_service = LifecycleOrchestrationService(session)
 
-                # Terminate the service via lifecycle orchestration
+                try:
+                    service_instance_uuid = UUID(execution.subscription_id)
+                except (ValueError, TypeError):
+                    raise ValueError(
+                        f"Invalid subscription ID for lifecycle terminate: {execution.subscription_id}"
+                    ) from None
+
                 await lifecycle_service.terminate_service(
-                    subscription_id=execution.subscription_id,
                     tenant_id=execution.tenant_id,
+                    service_instance_id=service_instance_uuid,
                     reason="dunning_final_action",
                     metadata={
                         "execution_id": str(execution.id),
@@ -680,9 +702,9 @@ async def _terminate_service(
 
                 # Cancel subscription (simplified fallback)
                 await subscription_service.cancel_subscription(
-                    subscription_id=execution.subscription_id,
-                    tenant_id=execution.tenant_id,
-                    reason="dunning_non_payment",
+                    subscription_id=str(execution.subscription_id),
+                    tenant_id=str(execution.tenant_id),
+                    at_period_end=False,
                 )
 
                 await session.commit()

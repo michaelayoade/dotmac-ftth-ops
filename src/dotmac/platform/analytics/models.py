@@ -2,14 +2,12 @@
 Analytics request and response models with proper validation.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import ConfigDict, Field, field_serializer, field_validator, model_validator
+from pydantic import ConfigDict, Field, field_validator, model_validator
+from pydantic.functional_serializers import field_serializer
 
 from ..core.models import BaseModel
 

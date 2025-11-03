@@ -1,4 +1,3 @@
-
 """
 Complete tests for usage billing status endpoint to achieve 90%+ router coverage.
 
@@ -6,7 +5,7 @@ Focuses on recommendation generation logic (lines 185-240 in usage_billing_route
 """
 
 from contextlib import asynccontextmanager
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -18,12 +17,8 @@ from dotmac.platform.auth.core import UserInfo
 from src.dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 from src.dotmac.platform.tenant.service import TenantService
 
-
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @asynccontextmanager
 async def create_test_client_with_mock_tenant_service(
@@ -92,8 +87,8 @@ async def create_tenant_with_usage(
         current_api_calls=current_api_calls,
         current_storage_gb=Decimal(str(current_storage_gb)),
         current_users=current_users,
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     return tenant
 

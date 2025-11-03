@@ -14,6 +14,7 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     JSON,
     CheckConstraint,
+    Enum as SQLEnum,
     ForeignKey,
     Index,
     Integer,
@@ -102,13 +103,36 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
     plan_code: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(String(1000))
-    plan_type: Mapped[PlanType] = mapped_column(nullable=False, index=True)
-    status: Mapped[PlanStatus] = mapped_column(default=PlanStatus.DRAFT, index=True)
+    plan_type: Mapped[PlanType] = mapped_column(
+        SQLEnum(
+            PlanType,
+            name="plantype",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        nullable=False,
+        index=True,
+    )
+    status: Mapped[PlanStatus] = mapped_column(
+        SQLEnum(
+            PlanStatus,
+            name="planstatus",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        default=PlanStatus.DRAFT,
+        index=True,
+    )
 
     # Speed configuration
     download_speed: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     upload_speed: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
-    speed_unit: Mapped[SpeedUnit] = mapped_column(default=SpeedUnit.MBPS)
+    speed_unit: Mapped[SpeedUnit] = mapped_column(
+        SQLEnum(
+            SpeedUnit,
+            name="speedunit",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        default=SpeedUnit.MBPS,
+    )
 
     # Burst speed (temporary speed boost)
     burst_download_speed: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
@@ -118,8 +142,21 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
     # Data cap configuration
     has_data_cap: Mapped[bool] = mapped_column(default=False)
     data_cap_amount: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
-    data_cap_unit: Mapped[DataUnit | None] = mapped_column()
-    throttle_policy: Mapped[ThrottlePolicy] = mapped_column(default=ThrottlePolicy.NO_THROTTLE)
+    data_cap_unit: Mapped[DataUnit | None] = mapped_column(
+        SQLEnum(
+            DataUnit,
+            name="dataunit",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        )
+    )
+    throttle_policy: Mapped[ThrottlePolicy] = mapped_column(
+        SQLEnum(
+            ThrottlePolicy,
+            name="throttlepolicy",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        default=ThrottlePolicy.NO_THROTTLE,
+    )
 
     # Throttled speeds (after cap)
     throttled_download_speed: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
@@ -127,12 +164,24 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
 
     # Overage charges
     overage_price_per_unit: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
-    overage_unit: Mapped[DataUnit | None] = mapped_column()
+    overage_unit: Mapped[DataUnit | None] = mapped_column(
+        SQLEnum(
+            DataUnit,
+            name="dataunit",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        )
+    )
 
     # Fair Usage Policy (FUP)
     has_fup: Mapped[bool] = mapped_column(default=False)
     fup_threshold: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
-    fup_threshold_unit: Mapped[DataUnit | None] = mapped_column()
+    fup_threshold_unit: Mapped[DataUnit | None] = mapped_column(
+        SQLEnum(
+            DataUnit,
+            name="dataunit",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        )
+    )
     fup_throttle_speed: Mapped[Decimal | None] = mapped_column(Numeric(10, 2))
 
     # Time-based restrictions (e.g., unlimited nights)
@@ -150,7 +199,14 @@ class InternetServicePlan(Base, TenantMixin, TimestampMixin, AuditMixin):
     monthly_price: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=False)
     setup_fee: Mapped[Decimal] = mapped_column(Numeric(10, 2), default=Decimal("0.00"))
     currency: Mapped[str] = mapped_column(String(3), default="USD")
-    billing_cycle: Mapped[BillingCycle] = mapped_column(default=BillingCycle.MONTHLY)
+    billing_cycle: Mapped[BillingCycle] = mapped_column(
+        SQLEnum(
+            BillingCycle,
+            name="billingcycle",
+            values_callable=lambda enum_cls: [member.value for member in enum_cls],
+        ),
+        default=BillingCycle.MONTHLY,
+    )
 
     # Availability
     is_public: Mapped[bool] = mapped_column(default=True)

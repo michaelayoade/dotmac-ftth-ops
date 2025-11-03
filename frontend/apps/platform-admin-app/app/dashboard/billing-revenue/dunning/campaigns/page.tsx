@@ -764,7 +764,7 @@ function CampaignManagementContent() {
 
 export default function CampaignManagementPage() {
   return (
-    <RouteGuard requiredPermission="billing:write">
+    <RouteGuard permission="billing:write">
       <CampaignManagementContent />
     </RouteGuard>
   );

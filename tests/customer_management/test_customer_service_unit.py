@@ -5,7 +5,7 @@ Strategy: Mock ALL dependencies (database, tenant context)
 Focus: Test CRUD operations, validation, tenant isolation in isolation
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import UUID, uuid4
 
@@ -139,8 +139,8 @@ class TestCustomerRetrieval:
             last_name="Smith",
             email="jane.smith@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
     async def test_get_customer_by_id(self, customer_service, sample_customer):
@@ -241,8 +241,8 @@ class TestCustomerUpdate:
             last_name="Doe",
             email="john.doe@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
     async def test_update_customer_success(self, customer_service, existing_customer):
@@ -341,8 +341,8 @@ class TestCustomerDeletion:
             last_name="Doe",
             email="john.doe@example.com",
             status=CustomerStatus.ACTIVE,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
     async def test_soft_delete_customer(self, customer_service, existing_customer):

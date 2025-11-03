@@ -305,8 +305,8 @@ function ONUListPageContent() {
                   <div className="flex items-start justify-between">
                     <Wifi className="h-8 w-8 text-primary" />
                     <div className="flex flex-col gap-1 items-end">
-                      {getOperStatusBadge(onu.oper_status)}
-                      {getAdminStateBadge(onu.admin_state)}
+                      {getOperStatusBadge(onu.oper_status || "UNKNOWN")}
+                      {getAdminStateBadge(onu.admin_state || "DISABLED")}
                     </div>
                   </div>
                   <CardTitle className="mt-2 truncate">
@@ -412,7 +412,7 @@ function ONUListPageContent() {
 
 export default function ONUListPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.read">
+    <RouteGuard permission="isp.network.pon.read">
       <ONUListPageContent />
     </RouteGuard>
   );

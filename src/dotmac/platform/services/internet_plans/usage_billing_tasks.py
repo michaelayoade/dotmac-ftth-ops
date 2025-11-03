@@ -7,22 +7,22 @@ their data caps. Integrates TimescaleDB usage data with the billing system.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any
+from typing import Any, AsyncContextManager, cast
 from uuid import UUID
 
 import structlog
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.subscribers.models import Subscriber
-from dotmac.platform.database import async_session_maker
+from dotmac.platform.db import async_session_maker
 from dotmac.platform.services.internet_plans.models import (
     InternetServicePlan,
     PlanSubscription,
 )
 from dotmac.platform.settings import settings
+from dotmac.platform.subscribers.models import Subscriber
 
 # Optional TimescaleDB imports
 try:
@@ -32,6 +32,11 @@ try:
     TIMESCALEDB_AVAILABLE = True
 except ImportError:
     TIMESCALEDB_AVAILABLE = False
+
+
+def _session_context() -> AsyncContextManager[AsyncSession]:
+    """Typed helper for acquiring an async session."""
+    return cast(AsyncContextManager[AsyncSession], async_session_maker())
 
 logger = structlog.get_logger(__name__)
 
@@ -89,6 +94,14 @@ async def query_usage_from_timescaledb(
     if not TIMESCALEDB_AVAILABLE or not settings.timescaledb.is_configured:
         logger.warning(
             "usage_billing.timescaledb_unavailable",
+            tenant_id=tenant_id,
+            subscriber_id=subscriber_id,
+        )
+        return Decimal("0.00")
+
+    if TimeSeriesSessionLocal is None:
+        logger.warning(
+            "usage_billing.timescaledb_uninitialized",
             tenant_id=tenant_id,
             subscriber_id=subscriber_id,
         )
@@ -155,15 +168,16 @@ async def create_overage_invoice(
     """
     try:
         # Import invoice service
-        from dotmac.platform.billing.invoicing.service import InvoiceService
         from dotmac.platform.billing.integration import BillingIntegrationService
+        from dotmac.platform.billing.invoicing.service import InvoiceService
 
         # Get billing details
         integration_service = BillingIntegrationService(session)
-        billing_email, billing_address = (
-            await integration_service._resolve_customer_billing_details(
-                customer_id=str(customer.id), tenant_id=subscription.tenant_id
-            )
+        (
+            billing_email,
+            billing_address,
+        ) = await integration_service._resolve_customer_billing_details(
+            customer_id=str(customer.id), tenant_id=subscription.tenant_id
         )
 
         # Prepare line items for overage charge
@@ -204,7 +218,7 @@ async def create_overage_invoice(
 
         invoice = await invoice_service.create_invoice(
             tenant_id=subscription.tenant_id,
-            customer_id=customer.id,
+            customer_id=str(customer.id),
             billing_email=billing_email,
             billing_address=billing_address,
             line_items=line_items,
@@ -218,16 +232,25 @@ async def create_overage_invoice(
             created_by="system",
         )
 
+        invoice_id = invoice.invoice_id
+
         logger.info(
             "usage_billing.invoice_created",
             tenant_id=subscription.tenant_id,
             customer_id=str(customer.id),
-            invoice_id=str(invoice.id),
+            invoice_id=invoice_id,
             overage_gb=float(overage_gb),
             charge=float(overage_charge),
         )
 
-        return invoice.id
+        try:
+            return UUID(invoice_id) if invoice_id else None
+        except (ValueError, TypeError):
+            logger.warning(
+                "usage_billing.invoice_id_invalid",
+                invoice_id=invoice_id,
+            )
+            return None
 
     except Exception as e:
         logger.error(
@@ -436,7 +459,7 @@ async def process_subscription_overage(
 
 
 @celery_app.task(name="services.process_usage_billing", bind=True, max_retries=3)
-def process_usage_billing(self, batch_size: int = 100) -> dict:
+def process_usage_billing(self: Any, batch_size: int = 100) -> dict[str, Any]:
     """
     Process usage-based billing for ISP plan subscriptions.
 
@@ -466,16 +489,16 @@ def process_usage_billing(self, batch_size: int = 100) -> dict:
             "errors": 0,
         }
 
-        async with async_session_maker() as session:
+        async with _session_context() as session:
             # Query active subscriptions with data caps and overage pricing
             stmt = (
                 select(PlanSubscription)
                 .join(InternetServicePlan)
                 .where(
                     and_(
-                        PlanSubscription.is_active == True,
-                        PlanSubscription.is_suspended == False,
-                        InternetServicePlan.has_data_cap == True,
+                        PlanSubscription.is_active,
+                        PlanSubscription.is_suspended.is_(False),
+                        InternetServicePlan.has_data_cap,
                         InternetServicePlan.overage_price_per_unit > 0,
                     )
                 )
@@ -492,9 +515,7 @@ def process_usage_billing(self, batch_size: int = 100) -> dict:
 
             for subscription in subscriptions:
                 try:
-                    process_result = await process_subscription_overage(
-                        session, subscription
-                    )
+                    process_result = await process_subscription_overage(session, subscription)
 
                     results["total_processed"] += 1
 

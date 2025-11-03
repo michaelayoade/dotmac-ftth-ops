@@ -14,10 +14,7 @@ import json
 import os
 import secrets
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any, cast
 from uuid import UUID
@@ -263,6 +260,22 @@ class JWTService:
 
         expires_delta = timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
         return self._create_token(data, expires_delta)
+
+    # ------------------------------------------------------------------
+    # Compatibility helpers (legacy call sites expect decode_* methods)
+    # ------------------------------------------------------------------
+
+    def decode_access_token(self, token: str) -> dict[str, Any]:
+        """Decode and validate an access token (backwards compatible helper)."""
+        return self.verify_token(token, expected_type=TokenType.ACCESS)
+
+    def decode_refresh_token(self, token: str) -> dict[str, Any]:
+        """Decode and validate a refresh token (backwards compatible helper)."""
+        return self.verify_token(token, expected_type=TokenType.REFRESH)
+
+    def decode_token(self, token: str) -> dict[str, Any]:
+        """Decode a token without enforcing a specific token type."""
+        return self.verify_token(token)
 
     def _create_token(self, data: dict[str, Any], expires_delta: timedelta) -> str:
         """Internal token creation."""

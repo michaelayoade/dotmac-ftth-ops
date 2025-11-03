@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import timezone
+from datetime import UTC
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -10,9 +10,8 @@ import pytest
 from dotmac.platform.wireless.schemas import SignalMeasurementCreate
 from dotmac.platform.wireless.service import WirelessService
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class DummySession:
     """Minimal synchronous session stub to capture interactions."""
@@ -46,5 +45,5 @@ def test_create_signal_measurement_assigns_timezone():
 
     measurement = service.create_signal_measurement(payload)
 
-    assert measurement.measured_at.tzinfo is timezone.utc
+    assert measurement.measured_at.tzinfo is UTC
     assert session.added and session.added[0] is measurement

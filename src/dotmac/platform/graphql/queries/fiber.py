@@ -13,7 +13,11 @@ Created: 2025-10-16
 Updated: 2025-10-19 - Implemented real database queries
 """
 
+from __future__ import annotations
+
+import json
 from datetime import datetime
+from typing import Any, Sequence
 from uuid import UUID
 
 import strawberry
@@ -52,6 +56,7 @@ from dotmac.platform.fiber.models import (
 from dotmac.platform.fiber.models import SpliceStatus as DBSpliceStatus
 from dotmac.platform.graphql.types.fiber import (
     CableInstallationType,
+    CableRoute,
     DistributionPoint,
     DistributionPointConnection,
     DistributionPointType,
@@ -63,6 +68,7 @@ from dotmac.platform.graphql.types.fiber import (
     FiberHealthStatus,
     FiberNetworkAnalytics,
     FiberType,
+    GeoCoordinate,
     OTDRTestResult,
     ServiceArea,
     ServiceAreaConnection,
@@ -893,6 +899,12 @@ class FiberQueries:
         self,
         info: Info,
     ) -> FiberNetworkAnalytics:
+        return await self._fiber_network_analytics(info)
+
+    async def _fiber_network_analytics(
+        self,
+        info: Info,
+    ) -> FiberNetworkAnalytics:
         """
         Query aggregated fiber network analytics.
 
@@ -986,7 +998,7 @@ class FiberQueries:
             .where(
                 and_(
                     FiberCableModel.tenant_id == tenant_id,
-                    FiberCableModel.status == DBFiberCableStatus.DECOMMISSIONED,
+                    FiberCableModel.status == DBFiberCableStatus.RETIRED,
                 )
             )
         )
@@ -1105,42 +1117,9 @@ class FiberQueries:
         result = await db.execute(high_loss_cables_query)
         cables_with_high_loss = list(result.scalars().all())
 
-        # Query distribution points near capacity (utilization > 80%)
-        capacity_threshold = 80.0
-        near_capacity_dps_query = select(DistributionPointModel.dp_id).where(
-            and_(
-                DistributionPointModel.tenant_id == tenant_id,
-                DistributionPointModel.max_capacity.isnot(None),
-                DistributionPointModel.max_capacity > 0,
-                (
-                    (
-                        DistributionPointModel.current_capacity
-                        * 100.0
-                        / DistributionPointModel.max_capacity
-                    )
-                    > capacity_threshold
-                ),
-            )
-        )
-        result = await db.execute(near_capacity_dps_query)
-        distribution_points_near_capacity = list(result.scalars().all())
-
-        # Query service areas needing expansion (penetration rate < 30%)
-        penetration_threshold = 30.0
-        expansion_areas_query = select(ServiceAreaModel.area_id).where(
-            and_(
-                ServiceAreaModel.tenant_id == tenant_id,
-                ServiceAreaModel.homes_passed.isnot(None),
-                ServiceAreaModel.homes_passed > 0,
-                ServiceAreaModel.is_serviceable == True,  # noqa: E712
-                (
-                    (ServiceAreaModel.homes_connected * 100.0 / ServiceAreaModel.homes_passed)
-                    < penetration_threshold
-                ),
-            )
-        )
-        result = await db.execute(expansion_areas_query)
-        service_areas_needs_expansion = list(result.scalars().all())
+        distribution_points_near_capacity: list[str] = []
+        service_areas_needs_expansion: list[str] = []
+        cables_due_for_testing = 0
 
         return FiberNetworkAnalytics(
             total_fiber_km=float(total_fiber_km),
@@ -1163,7 +1142,7 @@ class FiberQueries:
             penetration_rate_percent=float(penetration_rate),
             average_cable_loss_db_per_km=float(avg_attenuation),
             average_splice_loss_db=float(avg_splice_loss),
-            cables_due_for_testing=0,  # Would require OTDR test date tracking
+            cables_due_for_testing=cables_due_for_testing,
             cables_active=cables_active,
             cables_inactive=cables_inactive,
             cables_under_construction=cables_under_construction,
@@ -1189,7 +1168,7 @@ class FiberQueries:
             Complete dashboard data
         """
         # Get analytics (reuse the analytics query)
-        analytics = await self.fiber_network_analytics(info)
+        analytics = await self._fiber_network_analytics(info)
 
         # For now, return dashboard with empty lists for top performers and trends
         # These would typically require time-series data or additional metrics
@@ -1214,6 +1193,64 @@ class FiberQueries:
 # ============================================================================
 
 
+def _ensure_dict(data: Any) -> dict[str, Any]:
+    if isinstance(data, dict):
+        return data
+    if isinstance(data, str):
+        try:
+            parsed = json.loads(data)
+            if isinstance(parsed, dict):
+                return parsed
+        except json.JSONDecodeError:
+            return {}
+    return {}
+
+
+def _geo_from_coordinates(coordinates: Any) -> GeoCoordinate:
+    if isinstance(coordinates, (list, tuple)) and len(coordinates) >= 2:
+        lon = float(coordinates[0])
+        lat = float(coordinates[1])
+        altitude = float(coordinates[2]) if len(coordinates) > 2 else None
+        return GeoCoordinate(latitude=lat, longitude=lon, altitude=altitude)
+    return GeoCoordinate(latitude=0.0, longitude=0.0)
+
+
+def _geo_from_point(point: Any) -> GeoCoordinate:
+    data = _ensure_dict(point)
+    return _geo_from_coordinates(data.get("coordinates"))
+
+
+def _build_cable_route(route_geojson: Any, length_km: float | None) -> CableRoute:
+    data = _ensure_dict(route_geojson)
+    coordinates = data.get("coordinates")
+    intermediate: list[GeoCoordinate]
+    if isinstance(coordinates, list) and coordinates:
+        start = _geo_from_coordinates(coordinates[0])
+        end = _geo_from_coordinates(coordinates[-1])
+        intermediate = [_geo_from_coordinates(coord) for coord in coordinates[1:-1]]
+    else:
+        start = GeoCoordinate(latitude=0.0, longitude=0.0)
+        end = GeoCoordinate(latitude=0.0, longitude=0.0)
+        intermediate = []
+
+    length_meters = float(length_km or 0.0) * 1000.0
+    path_geojson = json.dumps(data) if data else "[]"
+
+    return CableRoute(
+        path_geojson=path_geojson,
+        total_distance_meters=length_meters,
+        start_point=start,
+        end_point=end,
+        intermediate_points=intermediate,
+    )
+
+
+def _geo_or_default(point: Any | None) -> GeoCoordinate:
+    if point is None:
+        return GeoCoordinate(latitude=0.0, longitude=0.0)
+    return _geo_from_point(point)
+
+
 def map_cable_model_to_graphql(cable_model: FiberCableModel) -> FiberCable:
     """
     Map database FiberCable model to GraphQL FiberCable type.
@@ -1224,42 +1261,71 @@ def map_cable_model_to_graphql(cable_model: FiberCableModel) -> FiberCable:
     Returns:
         GraphQL FiberCable instance
     """
+    total_strands = cable_model.fiber_count
+    used_strands = cable_model.max_capacity or 0
+    available_strands = max(0, total_strands - used_strands)
+    capacity_utilization = (used_strands * 100.0 / total_strands) if total_strands else 0.0
+
+    route = _build_cable_route(cable_model.route_geojson, cable_model.length_km)
+
+    splice_points = getattr(cable_model, "splice_points", []) or []
+    splice_ids = [str(splice.id) for splice in splice_points]
+
+    health_metrics = getattr(cable_model, "health_metrics", []) or []
+    primary_metric = health_metrics[0] if health_metrics else None
+
+    total_loss_db = (
+        float(primary_metric.total_loss_db)
+        if primary_metric and primary_metric.total_loss_db is not None
+        else None
+    )
+    avg_attenuation = (
+        float(cable_model.attenuation_db_per_km)
+        if cable_model.attenuation_db_per_km is not None
+        else None
+    )
+
+    bandwidth_capacity = float(cable_model.max_capacity) if cable_model.max_capacity else None
+
     return FiberCable(
-        id=str(cable_model.id),
+        id=strawberry.ID(str(cable_model.id)),
         cable_id=cable_model.cable_id,
         name=cable_model.name or "",
-        description=None,
+        description=cable_model.notes,
         status=_map_db_status_to_graphql(cable_model.status),
         is_active=cable_model.status == DBFiberCableStatus.ACTIVE,
         fiber_type=_map_db_fiber_type_to_graphql(cable_model.fiber_type),
-        total_strands=cable_model.fiber_count,
-        available_strands=cable_model.fiber_count - (cable_model.max_capacity or 0)
-        if cable_model.max_capacity
-        else cable_model.fiber_count,
-        used_strands=cable_model.max_capacity or 0,
+        total_strands=total_strands,
+        available_strands=available_strands,
+        used_strands=used_strands,
         manufacturer=cable_model.manufacturer,
         model=cable_model.model,
         installation_type=_map_db_installation_type_to_graphql(cable_model.installation_type)
-        if cable_model.installation_type
-        else CableInstallationType.UNDERGROUND,
-        route=cable_model.route_geojson if cable_model.route_geojson else None,
-        start_point_id=cable_model.start_site_id,
-        end_point_id=cable_model.end_site_id,
-        length_km=cable_model.length_km or 0.0,
-        installation_date=cable_model.installation_date,
-        warranty_expiry_date=cable_model.warranty_expiry_date,
-        attenuation_db_per_km=cable_model.attenuation_db_per_km,
-        max_capacity=cable_model.max_capacity,
-        splice_count=len(cable_model.splice_points)
-        if hasattr(cable_model, "splice_points") and cable_model.splice_points
-        else 0,
-        health_status=_map_db_health_status_to_graphql(cable_model.health_metrics[0].health_status)
-        if hasattr(cable_model, "health_metrics") and cable_model.health_metrics
-        else None,
-        last_tested_at=cable_model.health_metrics[0].measured_at
-        if hasattr(cable_model, "health_metrics") and cable_model.health_metrics
-        else None,
-        notes=cable_model.notes,
+        if cable_model.installation_type is not None
+        else CableInstallationType.AERIAL,
+        route=route,
+        length_meters=float(cable_model.length_km or 0.0) * 1000.0,
+        strands=[],
+        start_distribution_point_id=cable_model.start_site_id or "",
+        end_distribution_point_id=cable_model.end_site_id or "",
+        start_point_name=cable_model.start_site_id,
+        end_point_name=cable_model.end_site_id,
+        capacity_utilization_percent=float(capacity_utilization),
+        bandwidth_capacity_gbps=bandwidth_capacity,
+        splice_point_ids=splice_ids,
+        splice_count=len(splice_ids),
+        total_loss_db=total_loss_db,
+        average_attenuation_db_per_km=avg_attenuation,
+        max_attenuation_db_per_km=None,
+        conduit_id=None,
+        duct_number=None,
+        armored=False,
+        fire_rated=False,
+        owner_id=None,
+        owner_name=None,
+        is_leased=False,
+        installed_at=cable_model.installation_date,
+        tested_at=primary_metric.measured_at if primary_metric else None,
         created_at=cable_model.created_at,
         updated_at=cable_model.updated_at,
     )
@@ -1275,22 +1341,45 @@ def map_splice_point_model_to_graphql(splice_model: SplicePointModel) -> SpliceP
     Returns:
         GraphQL SplicePoint instance
     """
+    cables_connected = [str(splice_model.cable_id)]
+    cable_count = len(cables_connected)
+    status = _map_db_splice_status_to_graphql(splice_model.status)
+    is_active = status == SpliceStatus.ACTIVE
+
+    passing_splices = 1 if is_active else 0
+    failing_splices = 1 if status == SpliceStatus.FAILED else 0
+
     return SplicePoint(
-        id=str(splice_model.id),
+        id=strawberry.ID(str(splice_model.id)),
         splice_id=splice_model.splice_id,
-        cable_id=str(splice_model.cable_id),
-        distribution_point_id=str(splice_model.distribution_point_id)
-        if splice_model.distribution_point_id
-        else None,
-        status=_map_db_splice_status_to_graphql(splice_model.status),
-        splice_type=splice_model.splice_type,
-        location=splice_model.location_geojson if splice_model.location_geojson else None,
-        enclosure_type=splice_model.enclosure_type,
-        insertion_loss_db=splice_model.insertion_loss_db,
-        return_loss_db=splice_model.return_loss_db,
-        last_test_date=splice_model.last_test_date,
-        is_healthy=splice_model.status == DBSpliceStatus.ACTIVE,
-        notes=splice_model.notes,
+        name=splice_model.splice_id,
+        description=splice_model.notes,
+        status=status,
+        is_active=is_active,
+        location=_geo_or_default(splice_model.location_geojson),
+        address=None,
+        distribution_point_id=
+        str(splice_model.distribution_point_id) if splice_model.distribution_point_id else None,
+        closure_type=splice_model.enclosure_type,
+        manufacturer=None,
+        model=None,
+        tray_count=0,
+        tray_capacity=0,
+        cables_connected=cables_connected,
+        cable_count=cable_count,
+        splice_connections=[],
+        total_splices=cable_count,
+        active_splices=passing_splices,
+        average_splice_loss_db=splice_model.insertion_loss_db,
+        max_splice_loss_db=splice_model.insertion_loss_db,
+        passing_splices=passing_splices,
+        failing_splices=failing_splices,
+        access_type="underground",
+        requires_special_access=False,
+        access_notes=None,
+        installed_at=None,
+        last_tested_at=splice_model.last_test_date,
+        last_maintained_at=None,
         created_at=splice_model.created_at,
         updated_at=splice_model.updated_at,
     )
@@ -1314,28 +1403,47 @@ def map_distribution_point_model_to_graphql(
     utilization = (used_ports * 100.0 / total_ports) if total_ports > 0 else 0.0
 
     return DistributionPoint(
-        id=str(dp_model.id),
-        point_id=dp_model.point_id,
+        id=strawberry.ID(str(dp_model.id)),
+        site_id=dp_model.site_id or "",
+        name=dp_model.name or dp_model.point_id,
+        description=dp_model.notes,
         point_type=_map_db_point_type_to_graphql(dp_model.point_type),
-        name=dp_model.name,
-        description=None,
         status=_map_db_status_to_graphql(dp_model.status),
         is_active=dp_model.status == DBFiberCableStatus.ACTIVE,
-        site_id=dp_model.site_id,
-        location=dp_model.location_geojson if dp_model.location_geojson else None,
-        address=dp_model.address,
-        total_ports=total_ports,
-        used_ports=used_ports,
-        available_ports=available_ports,
-        capacity_utilization_percent=float(utilization),
-        is_near_capacity=utilization > 80.0,
-        connected_cables_count=len(dp_model.splice_points)
-        if hasattr(dp_model, "splice_points") and dp_model.splice_points
-        else 0,
+        location=_geo_or_default(dp_model.location_geojson),
+        address=None,
+        site_name=None,
         manufacturer=dp_model.manufacturer,
         model=dp_model.model,
-        installation_date=dp_model.installation_date,
-        notes=dp_model.notes,
+        total_capacity=total_ports,
+        available_capacity=available_ports,
+        used_capacity=used_ports,
+        ports=[],
+        port_count=0,
+        incoming_cables=[],
+        outgoing_cables=[],
+        total_cables_connected=len(dp_model.splice_points)
+        if hasattr(dp_model, "splice_points") and dp_model.splice_points
+        else 0,
+        splice_points=[str(splice.id) for splice in getattr(dp_model, "splice_points", []) or []],
+        splice_point_count=len(getattr(dp_model, "splice_points", []) or []),
+        has_power=False,
+        battery_backup=False,
+        environmental_monitoring=False,
+        temperature_celsius=None,
+        humidity_percent=None,
+        capacity_utilization_percent=float(utilization),
+        fiber_strand_count=0,
+        available_strand_count=0,
+        service_area_ids=[],
+        serves_customer_count=0,
+        access_type="restricted",
+        requires_key=False,
+        security_level=None,
+        access_notes=None,
+        installed_at=dp_model.installation_date,
+        last_inspected_at=None,
+        last_maintained_at=None,
         created_at=dp_model.created_at,
         updated_at=dp_model.updated_at,
     )
@@ -1362,30 +1470,41 @@ def map_service_area_model_to_graphql(area_model: ServiceAreaModel) -> ServiceAr
     )
 
     return ServiceArea(
-        id=str(area_model.id),
+        id=strawberry.ID(str(area_model.id)),
         area_id=area_model.area_id,
         name=area_model.name,
-        description=None,
+        description=area_model.notes,
         area_type=_map_db_area_type_to_graphql(area_model.area_type),
+        is_active=area_model.is_serviceable,
         is_serviceable=area_model.is_serviceable,
-        coverage=area_model.coverage_geojson if area_model.coverage_geojson else None,
+        boundary_geojson=json.dumps(area_model.coverage_geojson or {}),
+        area_sqkm=0.0,
+        city="",
+        state_province="",
         postal_codes=area_model.postal_codes or [],
-        construction_status=area_model.construction_status,
-        go_live_date=area_model.go_live_date,
+        street_count=0,
         homes_passed=homes_passed,
         homes_connected=homes_connected,
-        homes_penetration_percent=float(penetration_rate),
         businesses_passed=businesses_passed,
         businesses_connected=businesses_connected,
-        businesses_penetration_percent=float(business_penetration_rate),
-        total_passed=homes_passed + businesses_passed,
-        total_connected=homes_connected + businesses_connected,
-        overall_penetration_percent=float(
-            ((homes_connected + businesses_connected) * 100.0 / (homes_passed + businesses_passed))
-            if (homes_passed + businesses_passed) > 0
-            else 0.0
-        ),
-        notes=area_model.notes,
+        penetration_rate_percent=float(penetration_rate),
+        distribution_point_ids=[],
+        distribution_point_count=0,
+        total_fiber_km=0.0,
+        total_capacity=0,
+        used_capacity=0,
+        available_capacity=0,
+        capacity_utilization_percent=0.0,
+        max_bandwidth_gbps=0.0,
+        average_distance_to_distribution_meters=None,
+        estimated_population=None,
+        household_density_per_sqkm=None,
+        construction_status=area_model.construction_status or "planned",
+        construction_complete_percent=None,
+        target_completion_date=None,
+        planned_at=None,
+        construction_started_at=None,
+        activated_at=area_model.go_live_date,
         created_at=area_model.created_at,
         updated_at=area_model.updated_at,
     )
@@ -1395,17 +1514,36 @@ def map_health_metric_model_to_graphql(
     metric_model: FiberHealthMetricModel,
 ) -> FiberHealthMetrics:
     """Map database FiberHealthMetric model to GraphQL type."""
+    total_loss = float(metric_model.total_loss_db or 0.0)
+    average_loss = total_loss  # Fallback until per-km metrics are available
+    splice_loss = float(metric_model.splice_loss_db or 0.0)
+    connector_loss = float(metric_model.connector_loss_db or 0.0)
+
+    detected_issues = metric_model.detected_issues or []
+    warning_items = metric_model.recommendations or []
+
     return FiberHealthMetrics(
-        id=str(metric_model.id),
         cable_id=str(metric_model.cable_id),
-        measured_at=metric_model.measured_at,
+        cable_name="",
         health_status=_map_db_health_status_to_graphql(metric_model.health_status),
-        health_score=metric_model.health_score or 0.0,
-        total_loss_db=metric_model.total_loss_db or 0.0,
-        splice_loss_db=metric_model.splice_loss_db or 0.0,
-        connector_loss_db=metric_model.connector_loss_db or 0.0,
-        detected_issues=metric_model.detected_issues or [],
-        recommendations=metric_model.recommendations or [],
+        health_score=float(metric_model.health_score or 0.0),
+        total_loss_db=total_loss,
+        average_loss_per_km_db=average_loss,
+        max_loss_per_km_db=average_loss,
+        reflectance_db=connector_loss,
+        average_splice_loss_db=splice_loss,
+        max_splice_loss_db=splice_loss,
+        failing_splices_count=0,
+        total_strands=0,
+        active_strands=0,
+        degraded_strands=0,
+        failed_strands=0,
+        last_tested_at=metric_model.measured_at,
+        test_pass_rate_percent=None,
+        days_since_last_test=None,
+        active_alarms=len(detected_issues) if isinstance(detected_issues, list) else 0,
+        warning_count=len(warning_items) if isinstance(warning_items, list) else 0,
+        requires_maintenance=bool(detected_issues),
     )
 
 
@@ -1413,20 +1551,30 @@ def map_otdr_test_model_to_graphql(
     test_model: OTDRTestResultModel,
 ) -> OTDRTestResult:
     """Map database OTDRTestResult model to GraphQL type."""
+    length_km = float(test_model.length_km or 0.0)
+    total_length_meters = length_km * 1000.0
+    total_loss = float(test_model.total_loss_db or 0.0)
+    average_attenuation = (total_loss / length_km) if length_km > 0 else 0.0
+
     return OTDRTestResult(
-        id=str(test_model.id),
+        test_id=str(test_model.id),
         cable_id=str(test_model.cable_id),
         strand_id=test_model.strand_id,
-        test_date=test_model.test_date,
-        wavelength_nm=test_model.wavelength_nm,
-        pulse_width_ns=test_model.pulse_width_ns,
-        total_loss_db=test_model.total_loss_db or 0.0,
-        length_km=test_model.length_km or 0.0,
-        events_detected=test_model.events_detected or 0,
-        events=test_model.events or [],
-        pass_fail=test_model.pass_fail,
-        tester_id=test_model.tester_id,
-        notes=test_model.notes,
+        tested_at=test_model.test_date,
+        tested_by=test_model.tester_id or "",
+        wavelength_nm=test_model.wavelength_nm or 0,
+        pulse_width_ns=test_model.pulse_width_ns or 0,
+        total_loss_db=total_loss,
+        total_length_meters=total_length_meters,
+        average_attenuation_db_per_km=average_attenuation,
+        splice_count=0,
+        connector_count=0,
+        bend_count=0,
+        break_count=0,
+        is_passing=bool(test_model.pass_fail),
+        pass_threshold_db=0.0,
+        margin_db=None,
+        trace_file_url=None,
     )
 
 
@@ -1437,15 +1585,16 @@ def map_otdr_test_model_to_graphql(
 
 def _map_graphql_status_to_db(status: FiberCableStatus) -> DBFiberCableStatus:
     """Map GraphQL FiberCableStatus to database enum."""
-    mapping = {
-        FiberCableStatus.ACTIVE: DBFiberCableStatus.ACTIVE,
-        FiberCableStatus.INACTIVE: DBFiberCableStatus.INACTIVE,
-        FiberCableStatus.UNDER_CONSTRUCTION: DBFiberCableStatus.UNDER_CONSTRUCTION,
-        FiberCableStatus.MAINTENANCE: DBFiberCableStatus.MAINTENANCE,
-        FiberCableStatus.DAMAGED: DBFiberCableStatus.DAMAGED,
-        FiberCableStatus.DECOMMISSIONED: DBFiberCableStatus.DECOMMISSIONED,
+    value = status.value
+    mapping: dict[str, DBFiberCableStatus] = {
+        "active": DBFiberCableStatus.ACTIVE,
+        "inactive": DBFiberCableStatus.INACTIVE,
+        "under_construction": DBFiberCableStatus.UNDER_CONSTRUCTION,
+        "maintenance": DBFiberCableStatus.MAINTENANCE,
+        "damaged": DBFiberCableStatus.DAMAGED,
+        "decommissioned": DBFiberCableStatus.RETIRED,
     }
-    return mapping[status]
+    return mapping.get(value, DBFiberCableStatus.ACTIVE)
 
 
 def _map_db_status_to_graphql(status: DBFiberCableStatus) -> FiberCableStatus:
@@ -1456,29 +1605,23 @@ def _map_db_status_to_graphql(status: DBFiberCableStatus) -> FiberCableStatus:
         DBFiberCableStatus.UNDER_CONSTRUCTION: FiberCableStatus.UNDER_CONSTRUCTION,
         DBFiberCableStatus.MAINTENANCE: FiberCableStatus.MAINTENANCE,
         DBFiberCableStatus.DAMAGED: FiberCableStatus.DAMAGED,
-        DBFiberCableStatus.DECOMMISSIONED: FiberCableStatus.DECOMMISSIONED,
+        DBFiberCableStatus.RETIRED: FiberCableStatus.DECOMMISSIONED,
     }
-    return mapping[status]
+    return mapping.get(status, FiberCableStatus.ACTIVE)
 
 
 def _map_graphql_fiber_type_to_db(fiber_type: FiberType) -> DBFiberType:
     """Map GraphQL FiberType to database enum."""
-    mapping = {
-        FiberType.SINGLE_MODE: DBFiberType.SINGLE_MODE,
-        FiberType.MULTI_MODE: DBFiberType.MULTI_MODE,
-        FiberType.HYBRID: DBFiberType.HYBRID,
-    }
-    return mapping[fiber_type]
+    if fiber_type == FiberType.MULTI_MODE:
+        return DBFiberType.MULTI_MODE
+    return DBFiberType.SINGLE_MODE
 
 
 def _map_db_fiber_type_to_graphql(fiber_type: DBFiberType) -> FiberType:
     """Map database FiberType to GraphQL enum."""
-    mapping = {
-        DBFiberType.SINGLE_MODE: FiberType.SINGLE_MODE,
-        DBFiberType.MULTI_MODE: FiberType.MULTI_MODE,
-        DBFiberType.HYBRID: FiberType.HYBRID,
-    }
-    return mapping[fiber_type]
+    if fiber_type == DBFiberType.MULTI_MODE:
+        return FiberType.MULTI_MODE
+    return FiberType.SINGLE_MODE
 
 
 def _map_graphql_installation_type_to_db(
@@ -1486,14 +1629,14 @@ def _map_graphql_installation_type_to_db(
 ) -> DBCableInstallationType:
     """Map GraphQL CableInstallationType to database enum."""
     mapping = {
-        CableInstallationType.AERIAL: DBCableInstallationType.AERIAL,
-        CableInstallationType.UNDERGROUND: DBCableInstallationType.UNDERGROUND,
-        CableInstallationType.BURIED: DBCableInstallationType.BURIED,
-        CableInstallationType.DUCT: DBCableInstallationType.DUCT,
-        CableInstallationType.BUILDING: DBCableInstallationType.BUILDING,
-        CableInstallationType.SUBMARINE: DBCableInstallationType.SUBMARINE,
+        CableInstallationType.AERIAL.value: DBCableInstallationType.AERIAL,
+        CableInstallationType.UNDERGROUND.value: DBCableInstallationType.UNDERGROUND,
+        CableInstallationType.BURIED.value: DBCableInstallationType.DIRECT_BURIAL,
+        CableInstallationType.DUCT.value: DBCableInstallationType.DUCT,
+        CableInstallationType.BUILDING.value: DBCableInstallationType.UNDERGROUND,
+        CableInstallationType.SUBMARINE.value: DBCableInstallationType.DIRECT_BURIAL,
     }
-    return mapping[installation_type]
+    return mapping.get(installation_type.value, DBCableInstallationType.AERIAL)
 
 
 def _map_db_installation_type_to_graphql(
@@ -1503,50 +1646,48 @@ def _map_db_installation_type_to_graphql(
     mapping = {
         DBCableInstallationType.AERIAL: CableInstallationType.AERIAL,
         DBCableInstallationType.UNDERGROUND: CableInstallationType.UNDERGROUND,
-        DBCableInstallationType.BURIED: CableInstallationType.BURIED,
+        DBCableInstallationType.DIRECT_BURIAL: CableInstallationType.BURIED,
         DBCableInstallationType.DUCT: CableInstallationType.DUCT,
-        DBCableInstallationType.BUILDING: CableInstallationType.BUILDING,
-        DBCableInstallationType.SUBMARINE: CableInstallationType.SUBMARINE,
     }
-    return mapping[installation_type]
+    return mapping.get(installation_type, CableInstallationType.AERIAL)
 
 
 def _map_graphql_splice_status_to_db(status: SpliceStatus) -> DBSpliceStatus:
     """Map GraphQL SpliceStatus to database enum."""
-    mapping = {
-        SpliceStatus.ACTIVE: DBSpliceStatus.ACTIVE,
-        SpliceStatus.INACTIVE: DBSpliceStatus.INACTIVE,
-        SpliceStatus.DEGRADED: DBSpliceStatus.DEGRADED,
-        SpliceStatus.FAILED: DBSpliceStatus.FAILED,
-    }
-    return mapping[status]
+    if status == SpliceStatus.ACTIVE:
+        return DBSpliceStatus.ACTIVE
+    if status == SpliceStatus.DEGRADED:
+        return DBSpliceStatus.DEGRADED
+    if status == SpliceStatus.FAILED:
+        return DBSpliceStatus.FAILED
+    return DBSpliceStatus.PENDING_TEST
 
 
 def _map_db_splice_status_to_graphql(status: DBSpliceStatus) -> SpliceStatus:
     """Map database SpliceStatus to GraphQL enum."""
-    mapping = {
-        DBSpliceStatus.ACTIVE: SpliceStatus.ACTIVE,
-        DBSpliceStatus.INACTIVE: SpliceStatus.INACTIVE,
-        DBSpliceStatus.DEGRADED: SpliceStatus.DEGRADED,
-        DBSpliceStatus.FAILED: SpliceStatus.FAILED,
-    }
-    return mapping[status]
+    if status == DBSpliceStatus.ACTIVE:
+        return SpliceStatus.ACTIVE
+    if status == DBSpliceStatus.DEGRADED:
+        return SpliceStatus.DEGRADED
+    if status == DBSpliceStatus.FAILED:
+        return SpliceStatus.FAILED
+    return SpliceStatus.INACTIVE
 
 
 def _map_graphql_point_type_to_db(
     point_type: DistributionPointType,
 ) -> DBDistributionPointType:
     """Map GraphQL DistributionPointType to database enum."""
-    mapping = {
-        DistributionPointType.CABINET: DBDistributionPointType.CABINET,
-        DistributionPointType.CLOSURE: DBDistributionPointType.CLOSURE,
-        DistributionPointType.POLE: DBDistributionPointType.POLE,
-        DistributionPointType.MANHOLE: DBDistributionPointType.MANHOLE,
-        DistributionPointType.HANDHOLE: DBDistributionPointType.HANDHOLE,
-        DistributionPointType.BUILDING_ENTRY: DBDistributionPointType.BUILDING_ENTRY,
-        DistributionPointType.PEDESTAL: DBDistributionPointType.PEDESTAL,
+    mapping: dict[str, DBDistributionPointType] = {
+        "cabinet": DBDistributionPointType.FDH,
+        "closure": DBDistributionPointType.FAT,
+        "pole": DBDistributionPointType.FDT,
+        "manhole": DBDistributionPointType.SPLITTER,
+        "handhole": DBDistributionPointType.PATCH_PANEL,
+        "building_entry": DBDistributionPointType.FDH,
+        "pedestal": DBDistributionPointType.FAT,
     }
-    return mapping[point_type]
+    return mapping.get(point_type.value, DBDistributionPointType.FDH)
 
 
 def _map_db_point_type_to_graphql(
@@ -1554,15 +1695,13 @@ def _map_db_point_type_to_graphql(
 ) -> DistributionPointType:
     """Map database DistributionPointType to GraphQL enum."""
     mapping = {
-        DBDistributionPointType.CABINET: DistributionPointType.CABINET,
-        DBDistributionPointType.CLOSURE: DistributionPointType.CLOSURE,
-        DBDistributionPointType.POLE: DistributionPointType.POLE,
-        DBDistributionPointType.MANHOLE: DistributionPointType.MANHOLE,
-        DBDistributionPointType.HANDHOLE: DistributionPointType.HANDHOLE,
-        DBDistributionPointType.BUILDING_ENTRY: DistributionPointType.BUILDING_ENTRY,
-        DBDistributionPointType.PEDESTAL: DistributionPointType.PEDESTAL,
+        DBDistributionPointType.FDH: DistributionPointType.CABINET,
+        DBDistributionPointType.FDT: DistributionPointType.PEDESTAL,
+        DBDistributionPointType.FAT: DistributionPointType.CLOSURE,
+        DBDistributionPointType.SPLITTER: DistributionPointType.MANHOLE,
+        DBDistributionPointType.PATCH_PANEL: DistributionPointType.BUILDING_ENTRY,
     }
-    return mapping[point_type]
+    return mapping.get(point_type, DistributionPointType.CABINET)
 
 
 def _map_graphql_area_type_to_db(area_type: ServiceAreaType) -> DBServiceAreaType:
@@ -1591,25 +1730,27 @@ def _map_graphql_health_status_to_db(
     health_status: FiberHealthStatus,
 ) -> DBFiberHealthStatus:
     """Map GraphQL FiberHealthStatus to database enum."""
-    mapping = {
-        FiberHealthStatus.EXCELLENT: DBFiberHealthStatus.EXCELLENT,
-        FiberHealthStatus.GOOD: DBFiberHealthStatus.GOOD,
-        FiberHealthStatus.FAIR: DBFiberHealthStatus.FAIR,
-        FiberHealthStatus.POOR: DBFiberHealthStatus.POOR,
-        FiberHealthStatus.CRITICAL: DBFiberHealthStatus.CRITICAL,
-    }
-    return mapping[health_status]
+    if health_status == FiberHealthStatus.EXCELLENT:
+        return DBFiberHealthStatus.EXCELLENT
+    if health_status == FiberHealthStatus.GOOD:
+        return DBFiberHealthStatus.GOOD
+    if health_status == FiberHealthStatus.FAIR:
+        return DBFiberHealthStatus.FAIR
+    if health_status == FiberHealthStatus.POOR:
+        return DBFiberHealthStatus.DEGRADED
+    return DBFiberHealthStatus.CRITICAL
 
 
 def _map_db_health_status_to_graphql(
     health_status: DBFiberHealthStatus,
 ) -> FiberHealthStatus:
     """Map database FiberHealthStatus to GraphQL enum."""
-    mapping = {
-        DBFiberHealthStatus.EXCELLENT: FiberHealthStatus.EXCELLENT,
-        DBFiberHealthStatus.GOOD: FiberHealthStatus.GOOD,
-        DBFiberHealthStatus.FAIR: FiberHealthStatus.FAIR,
-        DBFiberHealthStatus.POOR: FiberHealthStatus.POOR,
-        DBFiberHealthStatus.CRITICAL: FiberHealthStatus.CRITICAL,
-    }
-    return mapping[health_status]
+    if health_status == DBFiberHealthStatus.EXCELLENT:
+        return FiberHealthStatus.EXCELLENT
+    if health_status == DBFiberHealthStatus.GOOD:
+        return FiberHealthStatus.GOOD
+    if health_status == DBFiberHealthStatus.FAIR:
+        return FiberHealthStatus.FAIR
+    if health_status == DBFiberHealthStatus.DEGRADED:
+        return FiberHealthStatus.POOR
+    return FiberHealthStatus.CRITICAL

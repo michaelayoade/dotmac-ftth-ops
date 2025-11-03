@@ -5,12 +5,12 @@ from __future__ import annotations
 import copy
 import logging
 import threading
-from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, Any, Callable, Dict, Iterable
+from collections.abc import Callable, Iterable, Mapping, Sequence
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
-from tests.fixtures.environment import HAS_FASTAPI, HAS_FAKEREDIS, HAS_SQLALCHEMY
+from tests.fixtures.environment import HAS_FAKEREDIS, HAS_FASTAPI, HAS_SQLALCHEMY
 
 logger = logging.getLogger(__name__)
 CONFIG_LOCK = threading.RLock()
@@ -46,13 +46,16 @@ def _clone_platform_config(config: Any) -> Any:
         try:
             clone = copy.copy(config)
         except Exception:
-            logger.debug("Shallow copy of platform config failed; falling back to shared instance.", exc_info=True)
+            logger.debug(
+                "Shallow copy of platform config failed; falling back to shared instance.",
+                exc_info=True,
+            )
             clone = config
     return clone
 
 
 @pytest.fixture
-def communications_config() -> Dict[str, Any]:
+def communications_config() -> dict[str, Any]:
     """Mock communications configuration for notification tests."""
     return {
         "notifications": {
@@ -120,7 +123,7 @@ def configure_celery_for_tests():
 
 
 @pytest.fixture
-def test_user_factory() -> Callable[..., "UserInfo"]:
+def test_user_factory() -> Callable[..., UserInfo]:
     """Factory for creating configurable tenant users for API authentication."""
     from uuid import uuid4
 
@@ -143,14 +146,16 @@ def test_user_factory() -> Callable[..., "UserInfo"]:
             is_platform_admin=is_platform_admin,
             username=username,
             roles=list(roles) if roles is not None else ["admin"],
-            permissions=list(permissions) if permissions is not None else list(DEFAULT_TEST_USER_PERMISSIONS),
+            permissions=list(permissions)
+            if permissions is not None
+            else list(DEFAULT_TEST_USER_PERMISSIONS),
         )
 
     return factory
 
 
 @pytest.fixture
-def test_user(test_user_factory) -> "UserInfo":
+def test_user(test_user_factory) -> UserInfo:
     """Create a privileged tenant user for API authentication."""
     return test_user_factory()
 

@@ -4,7 +4,7 @@ Comprehensive tests for tenant/service.py to reach 90%+ coverage.
 This test suite specifically targets uncovered lines identified in the coverage report.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 import pytest_asyncio
@@ -142,9 +142,9 @@ class TestTenantCRUDCoverage:
         """Test getting tenant with include_deleted=True."""
         # Lines 157-158: include_deleted branch
         # Manually set deleted_at to avoid soft_delete() is_active issue
-        from datetime import timezone, datetime
+        from datetime import datetime
 
-        sample_tenant.deleted_at = datetime.now(timezone.utc)
+        sample_tenant.deleted_at = datetime.now(UTC)
         await tenant_service.db.commit()
 
         # Should find with include_deleted=True
@@ -157,9 +157,9 @@ class TestTenantCRUDCoverage:
     ):
         """Test getting tenant by slug with include_deleted=True."""
         # Lines 184-185: include_deleted branch in get_tenant_by_slug
-        from datetime import timezone, datetime
+        from datetime import datetime
 
-        sample_tenant.deleted_at = datetime.now(timezone.utc)
+        sample_tenant.deleted_at = datetime.now(UTC)
         await tenant_service.db.commit()
 
         found = await tenant_service.get_tenant_by_slug(sample_tenant.slug, include_deleted=True)
@@ -199,9 +199,9 @@ class TestTenantCRUDCoverage:
         """Test restoring soft-deleted tenant."""
         # Lines 342-349: restore_tenant method calling tenant.restore()
         # First soft-delete the tenant
-        from datetime import timezone, datetime
+        from datetime import datetime
 
-        sample_tenant.deleted_at = datetime.now(timezone.utc)
+        sample_tenant.deleted_at = datetime.now(UTC)
         await tenant_service.db.commit()
 
         # Now restore it
@@ -282,9 +282,9 @@ class TestListTenantsCoverage:
         """Test listing tenants including deleted ones."""
         # Lines 222-223: include_deleted filter
         # Manually mark as deleted
-        from datetime import timezone, datetime
+        from datetime import datetime
 
-        sample_tenant.deleted_at = datetime.now(timezone.utc)
+        sample_tenant.deleted_at = datetime.now(UTC)
         await tenant_service.db.commit()
 
         # Without include_deleted
@@ -377,7 +377,7 @@ class TestUsageTracking:
     ):
         """Test getting usage records with date filters."""
         # Lines 428-439: get_tenant_usage with date filters
-        start = datetime.now(timezone.utc)
+        start = datetime.now(UTC)
         end = start + timedelta(days=30)
 
         # Record usage
@@ -476,7 +476,6 @@ class TestInvitationManagement:
     ):
         """Test accepting already processed invitation fails."""
         # Lines 517-518: Already processed check
-        from datetime import timezone
 
         invitation_data = TenantInvitationCreate(
             email="processed@example.com",
@@ -488,7 +487,7 @@ class TestInvitationManagement:
 
         # Ensure expires_at is timezone-aware
         if created.expires_at.tzinfo is None:
-            created.expires_at = created.expires_at.replace(tzinfo=timezone.utc)
+            created.expires_at = created.expires_at.replace(tzinfo=UTC)
             await tenant_service.db.commit()
 
         # Accept once
@@ -520,7 +519,6 @@ class TestInvitationManagement:
     ):
         """Test revoking an accepted invitation fails."""
         # Lines 537-538: Cannot revoke accepted
-        from datetime import timezone
 
         invitation_data = TenantInvitationCreate(
             email="accepted@example.com",
@@ -532,7 +530,7 @@ class TestInvitationManagement:
 
         # Ensure expires_at is timezone-aware
         if created.expires_at.tzinfo is None:
-            created.expires_at = created.expires_at.replace(tzinfo=timezone.utc)
+            created.expires_at = created.expires_at.replace(tzinfo=UTC)
             await tenant_service.db.commit()
 
         await tenant_service.accept_invitation(created.token)
@@ -820,10 +818,10 @@ class TestEdgeCaseCoverage:
     ):
         """Test getting stats when subscription has end date."""
         # Lines 639-642: Days until expiry calculation
-        from datetime import timezone, datetime, timedelta
+        from datetime import datetime, timedelta
 
         # Set subscription end date
-        sample_tenant.subscription_ends_at = datetime.now(timezone.utc) + timedelta(days=30)
+        sample_tenant.subscription_ends_at = datetime.now(UTC) + timedelta(days=30)
         await tenant_service.db.commit()
 
         stats = await tenant_service.get_tenant_stats(sample_tenant.id)
@@ -896,10 +894,10 @@ class TestEdgeCaseCoverage:
     ):
         """Test getting usage with both start and end date filters."""
         # Lines 430-436: Both date filters
-        from datetime import timezone, datetime, timedelta
+        from datetime import datetime, timedelta
 
-        start = datetime.now(timezone.utc) - timedelta(days=30)
-        end = datetime.now(timezone.utc)
+        start = datetime.now(UTC) - timedelta(days=30)
+        end = datetime.now(UTC)
 
         # Record some usage
         usage_data = TenantUsageCreate(

@@ -6,10 +6,7 @@ Enhanced with comprehensive error handling, retry logic, and metrics.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from sqlalchemy import select
@@ -44,7 +41,7 @@ class LicenseService(WorkflowServiceBase):
     - Transaction management
     """
 
-    def __init__(self, db: AsyncSession) -> Any:
+    def __init__(self, db: AsyncSession) -> None:
         super().__init__(db=db, service_name="LicenseService")
         self.db = db
 

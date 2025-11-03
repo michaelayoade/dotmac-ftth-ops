@@ -10,7 +10,7 @@ Smoke tests are intentionally simple and fast, focusing on the "happy path"
 to ensure all features are wired up correctly.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -34,7 +34,13 @@ from dotmac.platform.billing.usage.models import (
     UsageType,
 )
 from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.ticketing.models import Ticket, TicketActorType, TicketPriority, TicketStatus, TicketType
+from dotmac.platform.ticketing.models import (
+    Ticket,
+    TicketActorType,
+    TicketPriority,
+    TicketStatus,
+    TicketType,
+)
 
 
 @pytest.mark.asyncio
@@ -60,7 +66,7 @@ class TestISPCustomerFieldsSmoke:
             phone="+1234567890",
             # ISP-specific fields
             service_address_line1="123 Main St, Springfield, IL 62701",
-            scheduled_installation_date=datetime.now(timezone.utc) + timedelta(days=7),
+            scheduled_installation_date=datetime.now(UTC) + timedelta(days=7),
             installation_status="scheduled",
             installation_technician_id=user_id,
             installation_notes="Customer prefers morning installation",
@@ -201,7 +207,7 @@ class TestEnhancedTicketingSmoke:
             affected_services=["internet", "voip"],
             device_serial_numbers=["ONT-123456", "ROUTER-789012"],
             # SLA tracking
-            sla_due_date=datetime.now(timezone.utc) + timedelta(hours=4),
+            sla_due_date=datetime.now(UTC) + timedelta(hours=4),
             sla_breached=False,
             # Escalation
             escalation_level=0,
@@ -241,7 +247,7 @@ class TestEnhancedTicketingSmoke:
             origin_type=TicketActorType.CUSTOMER,
             target_type=TicketActorType.TENANT,
             ticket_type=TicketType.TECHNICAL_SUPPORT,
-            sla_due_date=datetime.now(timezone.utc) - timedelta(hours=1),  # Past due
+            sla_due_date=datetime.now(UTC) - timedelta(hours=1),  # Past due
             sla_breached=True,
         )
 
@@ -282,7 +288,7 @@ class TestEnhancedTicketingSmoke:
             target_type=TicketActorType.TENANT,
             ticket_type=TicketType.TECHNICAL_SUPPORT,
             escalation_level=2,  # L2 support
-            escalated_at=datetime.now(timezone.utc),
+            escalated_at=datetime.now(UTC),
             escalated_to_user_id=escalated_to_user,
         )
 
@@ -451,13 +457,15 @@ class TestUsageBillingSmoke:
             unit_price=Decimal("10.00"),  # $0.10 per GB
             total_amount=155,  # $1.55 in cents
             currency="USD",
-            period_start=datetime.now(timezone.utc) - timedelta(days=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=1),
+            period_end=datetime.now(UTC),
             billed_status=BilledStatus.PENDING,
             source_system="radius",
             source_record_id="radius_12345",
             description="Internet data usage",
-            created_by=str(user_id),  # AuditMixin provides created_by (string), not created_by_user_id
+            created_by=str(
+                user_id
+            ),  # AuditMixin provides created_by (string), not created_by_user_id
         )
 
         async_session.add(usage)
@@ -489,8 +497,8 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("10.00"),
             total_amount=100,
-            period_start=datetime.now(timezone.utc) - timedelta(days=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=1),
+            period_end=datetime.now(UTC),
             billed_status=BilledStatus.PENDING,
             source_system="api",
         )
@@ -503,8 +511,8 @@ class TestUsageBillingSmoke:
             unit="minutes",
             unit_price=Decimal("0.05"),
             total_amount=600,
-            period_start=datetime.now(timezone.utc) - timedelta(days=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=1),
+            period_end=datetime.now(UTC),
             billed_status=BilledStatus.PENDING,
             source_system="api",
         )
@@ -540,8 +548,8 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("20.00"),
             total_amount=100,
-            period_start=datetime.now(timezone.utc) - timedelta(days=1),
-            period_end=datetime.now(timezone.utc),
+            period_start=datetime.now(UTC) - timedelta(days=1),
+            period_end=datetime.now(UTC),
             billed_status=BilledStatus.PENDING,
             source_system="radius",
         )
@@ -554,11 +562,11 @@ class TestUsageBillingSmoke:
             unit="GB",
             unit_price=Decimal("10.00"),
             total_amount=100,
-            period_start=datetime.now(timezone.utc) - timedelta(days=2),
-            period_end=datetime.now(timezone.utc) - timedelta(days=1),
+            period_start=datetime.now(UTC) - timedelta(days=2),
+            period_end=datetime.now(UTC) - timedelta(days=1),
             billed_status=BilledStatus.BILLED,
             invoice_id="inv_123",
-            billed_at=datetime.now(timezone.utc),
+            billed_at=datetime.now(UTC),
             source_system="radius",
         )
 
@@ -591,8 +599,8 @@ class TestUsageBillingSmoke:
             subscription_id=subscription_id,
             customer_id=uuid4(),
             usage_type=UsageType.DATA_TRANSFER,
-            period_start=datetime.now(timezone.utc).replace(hour=0, minute=0, second=0, microsecond=0),
-            period_end=datetime.now(timezone.utc).replace(hour=23, minute=59, second=59, microsecond=999999),
+            period_start=datetime.now(UTC).replace(hour=0, minute=0, second=0, microsecond=0),
+            period_end=datetime.now(UTC).replace(hour=23, minute=59, second=59, microsecond=999999),
             period_type="daily",
             total_quantity=Decimal("250.5"),  # Total GB for the day
             total_amount=2505,  # $25.05

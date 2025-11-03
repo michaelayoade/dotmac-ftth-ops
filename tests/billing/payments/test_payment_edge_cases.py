@@ -1,4 +1,3 @@
-
 """
 Tests for payment edge cases and error scenarios.
 """
@@ -8,8 +7,6 @@ from datetime import datetime
 import pytest
 
 from dotmac.platform.billing.core.enums import (
-
-
     PaymentMethodType,
     PaymentStatus,
 )
@@ -19,11 +16,8 @@ from tests.billing.payments.conftest import (
 )
 from tests.fixtures.async_db import create_mock_async_result
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestEdgeCasesAndErrorScenarios:

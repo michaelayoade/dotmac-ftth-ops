@@ -1,4 +1,3 @@
-
 """
 Comprehensive tests for data_import/tasks.py to improve coverage from 64.21%.
 
@@ -12,7 +11,7 @@ Tests cover:
 """
 
 import json
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, mock_open, patch
 from uuid import uuid4
@@ -20,9 +19,6 @@ from uuid import uuid4
 import pytest
 
 from dotmac.platform.data_import.models import (
-
-
-
     ImportJobType,
 )
 from dotmac.platform.data_import.tasks import (
@@ -40,10 +36,8 @@ from dotmac.platform.data_import.tasks import (
     process_import_job,
 )
 
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestGetAsyncSession:
     """Test async session creation."""
@@ -352,7 +346,7 @@ class TestCheckImportHealth:
         mock_result = {
             "status_counts": {},
             "recent_failures": 0,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         for key in expected_keys:

@@ -1,4 +1,3 @@
-
 """
 Extended coverage tests for auth router to push coverage higher.
 
@@ -10,9 +9,9 @@ Focuses on:
 - Helper functions
 """
 
-from datetime import timezone, datetime
-from uuid import uuid4
+from datetime import UTC, datetime
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -24,13 +23,8 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def test_user_extended(async_db_session: AsyncSession):
@@ -49,8 +43,8 @@ async def test_user_extended(async_db_session: AsyncSession):
         mfa_enabled=False,
         roles=["user"],
         permissions=[],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -84,8 +78,8 @@ async def test_enable_2fa_already_enabled(extended_app: FastAPI, async_db_sessio
         is_verified=True,
         mfa_enabled=True,  # Already enabled
         mfa_secret="EXISTING_SECRET",
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -207,8 +201,8 @@ async def test_verify_2fa_wrong_token(extended_app: FastAPI, async_db_session):
         is_verified=True,
         mfa_enabled=True,
         mfa_secret="JBSWY3DPEHPK3PXP",
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -326,8 +320,8 @@ async def test_resend_email_verification(extended_app: FastAPI, async_db_session
         tenant_id="test-tenant",
         is_active=True,
         is_verified=False,  # Not verified yet
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()
@@ -438,8 +432,8 @@ async def test_get_me_with_roles_permissions(extended_app: FastAPI, async_db_ses
         is_verified=True,
         roles=["admin", "user"],
         permissions=["read:all", "write:all"],
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     async_db_session.add(user)
     await async_db_session.commit()

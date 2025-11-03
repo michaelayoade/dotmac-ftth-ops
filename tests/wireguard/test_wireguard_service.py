@@ -6,14 +6,8 @@ from dotmac.platform.secrets import SymmetricEncryptionService, VaultError
 from dotmac.platform.wireguard.models import WireGuardServer
 from dotmac.platform.wireguard.service import WireGuardService
 
-
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class FakeWireGuardClient:
     """Minimal WireGuard client stub for tests."""

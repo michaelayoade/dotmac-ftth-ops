@@ -65,8 +65,8 @@ function JobDetailsPageContent() {
     },
     enabled: !!jobId,
     // Auto-refresh every 5 seconds if job is running or pending
-    refetchInterval: (data) => {
-      return data?.status === "running" || data?.status === "pending" ? 5000 : false;
+    refetchInterval: (query) => {
+      return query?.state?.data?.status === "running" || query?.state?.data?.status === "pending" ? 5000 : false;
     },
   });
 
@@ -430,7 +430,7 @@ function JobDetailsPageContent() {
 
 export default function JobDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.automation.read">
+    <RouteGuard permission="isp.automation.read">
       <JobDetailsPageContent />
     </RouteGuard>
   );

@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -23,16 +23,11 @@ from dotmac.platform.resilience.service_mesh import (
     TrafficRule,
 )
 
-
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestCircuitBreakerStateProperties:
     """Test CircuitBreakerState is_open property."""
-
 
     def test_is_open_when_state_open(self):
         """Test is_open property returns True when state is OPEN."""
@@ -736,7 +731,7 @@ class TestServiceMeshMetrics:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -778,7 +773,7 @@ class TestServiceMeshMetrics:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -855,7 +850,7 @@ class TestServiceMeshHelperMethods:
             path="/test",
             headers={},
             body=None,
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
             trace_id="trace-123",
             span_id="span-456",
         )
@@ -1240,7 +1235,7 @@ class TestServiceCallModel:
             path="/test",
             headers={"X-Custom": "value"},
             body=b"test",
-            timestamp=datetime(2025, 10, 3, 12, 0, 0, tzinfo=timezone.utc),
+            timestamp=datetime(2025, 10, 3, 12, 0, 0, tzinfo=UTC),
             trace_id="trace-123",
             span_id="span-456",
         )

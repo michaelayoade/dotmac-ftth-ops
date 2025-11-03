@@ -1,8 +1,8 @@
 """TimescaleDB Repository for RADIUS Sessions."""
 
 from datetime import datetime
-from typing import Dict, List, Optional
-from sqlalchemy import select, func, text
+
+from sqlalchemy import func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.timeseries.models import RadAcctTimeSeries
@@ -13,11 +13,7 @@ class RadiusTimeSeriesRepository:
 
     @staticmethod
     async def insert_session(
-        session: AsyncSession,
-        tenant_id: str,
-        subscriber_id: str,
-        username: str,
-        session_data: Dict
+        session: AsyncSession, tenant_id: str, subscriber_id: str, username: str, session_data: dict
     ) -> None:
         """Insert completed RADIUS session into TimescaleDB."""
         record = RadAcctTimeSeries(
@@ -46,24 +42,34 @@ class RadiusTimeSeriesRepository:
         tenant_id: str,
         subscriber_id: str,
         start_date: datetime,
-        end_date: datetime
-    ) -> Dict:
+        end_date: datetime,
+    ) -> dict:
         """Get subscriber usage for date range."""
         stmt = select(
             func.coalesce(func.sum(RadAcctTimeSeries.total_bytes), 0).label("total_bandwidth"),
             func.coalesce(func.sum(RadAcctTimeSeries.session_duration), 0).label("total_duration"),
             func.count().label("session_count"),
-            func.coalesce(func.avg(RadAcctTimeSeries.session_duration), 0).label("avg_session_duration"),
-            func.coalesce(func.max(RadAcctTimeSeries.total_bytes), 0).label("peak_bandwidth")
+            func.coalesce(func.avg(RadAcctTimeSeries.session_duration), 0).label(
+                "avg_session_duration"
+            ),
+            func.coalesce(func.max(RadAcctTimeSeries.total_bytes), 0).label("peak_bandwidth"),
         ).where(
             RadAcctTimeSeries.tenant_id == tenant_id,
             RadAcctTimeSeries.subscriber_id == subscriber_id,
             RadAcctTimeSeries.time >= start_date,
-            RadAcctTimeSeries.time < end_date
+            RadAcctTimeSeries.time < end_date,
         )
 
         result = await session.execute(stmt)
         row = result.first()
+        if row is None:
+            return {
+                "total_bandwidth": 0,
+                "total_duration": 0,
+                "session_count": 0,
+                "avg_session_duration": 0.0,
+                "peak_bandwidth": 0,
+            }
 
         return {
             "total_bandwidth": int(row.total_bandwidth or 0),
@@ -75,25 +81,29 @@ class RadiusTimeSeriesRepository:
 
     @staticmethod
     async def get_tenant_usage(
-        session: AsyncSession,
-        tenant_id: str,
-        start_date: datetime,
-        end_date: datetime
-    ) -> Dict:
+        session: AsyncSession, tenant_id: str, start_date: datetime, end_date: datetime
+    ) -> dict:
         """Get tenant-wide usage for date range."""
         stmt = select(
             func.coalesce(func.sum(RadAcctTimeSeries.total_bytes), 0).label("total_bandwidth"),
             func.coalesce(func.sum(RadAcctTimeSeries.session_duration), 0).label("total_duration"),
             func.count().label("session_count"),
-            func.count(func.distinct(RadAcctTimeSeries.subscriber_id)).label("unique_subscribers")
+            func.count(func.distinct(RadAcctTimeSeries.subscriber_id)).label("unique_subscribers"),
         ).where(
             RadAcctTimeSeries.tenant_id == tenant_id,
             RadAcctTimeSeries.time >= start_date,
-            RadAcctTimeSeries.time < end_date
+            RadAcctTimeSeries.time < end_date,
         )
 
         result = await session.execute(stmt)
         row = result.first()
+        if row is None:
+            return {
+                "total_bandwidth": 0,
+                "total_duration": 0,
+                "session_count": 0,
+                "unique_subscribers": 0,
+            }
 
         return {
             "total_bandwidth": int(row.total_bandwidth or 0),
@@ -106,10 +116,10 @@ class RadiusTimeSeriesRepository:
     async def get_hourly_bandwidth(
         session: AsyncSession,
         tenant_id: str,
-        subscriber_id: Optional[str],
+        subscriber_id: str | None,
         start_date: datetime,
-        end_date: datetime
-    ) -> List[Dict]:
+        end_date: datetime,
+    ) -> list[dict]:
         """Get hourly bandwidth data from continuous aggregate."""
         # Use the continuous aggregate view for better performance
         query = """
@@ -157,10 +167,10 @@ class RadiusTimeSeriesRepository:
     async def get_daily_bandwidth(
         session: AsyncSession,
         tenant_id: str,
-        subscriber_id: Optional[str],
+        subscriber_id: str | None,
         start_date: datetime,
-        end_date: datetime
-    ) -> List[Dict]:
+        end_date: datetime,
+    ) -> list[dict]:
         """Get daily bandwidth data from continuous aggregate."""
         # Use the continuous aggregate view for better performance
         query = """
@@ -211,8 +221,8 @@ class RadiusTimeSeriesRepository:
         start_date: datetime,
         end_date: datetime,
         limit: int = 10,
-        metric: str = "bandwidth"
-    ) -> List[Dict]:
+        metric: str = "bandwidth",
+    ) -> list[dict]:
         """
         Get top N subscribers by bandwidth or session duration.
 
@@ -229,19 +239,20 @@ class RadiusTimeSeriesRepository:
             total bandwidth, total duration, and session count
         """
         # Build the query - group by subscriber and aggregate metrics
-        stmt = select(
-            RadAcctTimeSeries.subscriber_id,
-            RadAcctTimeSeries.username,
-            func.sum(RadAcctTimeSeries.total_bytes).label("total_bandwidth"),
-            func.sum(RadAcctTimeSeries.session_duration).label("total_duration"),
-            func.count().label("session_count")
-        ).where(
-            RadAcctTimeSeries.tenant_id == tenant_id,
-            RadAcctTimeSeries.time >= start_date,
-            RadAcctTimeSeries.time < end_date
-        ).group_by(
-            RadAcctTimeSeries.subscriber_id,
-            RadAcctTimeSeries.username
+        stmt = (
+            select(
+                RadAcctTimeSeries.subscriber_id,
+                RadAcctTimeSeries.username,
+                func.sum(RadAcctTimeSeries.total_bytes).label("total_bandwidth"),
+                func.sum(RadAcctTimeSeries.session_duration).label("total_duration"),
+                func.count().label("session_count"),
+            )
+            .where(
+                RadAcctTimeSeries.tenant_id == tenant_id,
+                RadAcctTimeSeries.time >= start_date,
+                RadAcctTimeSeries.time < end_date,
+            )
+            .group_by(RadAcctTimeSeries.subscriber_id, RadAcctTimeSeries.username)
         )
 
         # Order by the requested metric

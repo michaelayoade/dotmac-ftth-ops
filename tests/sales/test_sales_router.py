@@ -1,4 +1,3 @@
-
 """
 Tests for Sales Router
 
@@ -16,13 +15,8 @@ import pytest
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 class MockObject:
     """Helper to convert dict to object with attributes."""
@@ -154,6 +148,7 @@ def test_client(monkeypatch):
 
     # NOW import the router (it will use our mocked models)
     # Import additional dependencies to override
+    from dotmac.platform.db import get_async_session
     from dotmac.platform.dependencies import (
         get_deployment_service,
         get_email_service,
@@ -175,6 +170,7 @@ def test_client(monkeypatch):
     app.dependency_overrides[get_activation_orchestrator] = lambda: mock_activation_orchestrator
     app.dependency_overrides[get_current_user] = lambda: mock_user
     app.dependency_overrides[get_db] = lambda: MagicMock()
+    app.dependency_overrides[get_async_session] = lambda: AsyncMock()  # Mock async session for permission checks
     app.dependency_overrides[get_tenant_service] = lambda: MagicMock()
     app.dependency_overrides[get_deployment_service] = lambda: MagicMock()
     app.dependency_overrides[get_notification_service] = lambda: MagicMock()

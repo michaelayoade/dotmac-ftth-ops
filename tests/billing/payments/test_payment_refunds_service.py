@@ -1,9 +1,8 @@
-
 """
 Tests for payment refund functionality.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -11,8 +10,6 @@ import pytest
 
 from dotmac.platform.billing.core.entities import PaymentEntity
 from dotmac.platform.billing.core.enums import (
-
-
     PaymentMethodType,
     PaymentStatus,
 )
@@ -28,11 +25,8 @@ from tests.billing.payments.conftest import (
 )
 from tests.fixtures.async_db import create_mock_async_result
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.mark.unit
 class TestPaymentRefunds:
@@ -109,7 +103,9 @@ class TestPaymentRefunds:
         setup_mock_db_result(mock_payment_db_session, scalar_value=sample_payment_entity)
 
         # Execute & Verify
-        with pytest.raises(PaymentError, match="Can only refund successful or partially refunded payments"):
+        with pytest.raises(
+            PaymentError, match="Can only refund successful or partially refunded payments"
+        ):
             await payment_service.refund_payment(
                 tenant_id="test-tenant",
                 payment_id="payment_123",
@@ -137,7 +133,7 @@ class TestPaymentRefunds:
     ):
         """Test refund with idempotency key"""
         # Setup
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         existing_refund = MagicMock(spec=PaymentEntity)
         existing_refund.tenant_id = "test-tenant"
         existing_refund.payment_id = "refund_456"

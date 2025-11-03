@@ -6,7 +6,7 @@ Data models for multi-tenant deployment management.
 
 import enum
 from datetime import datetime
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import (
@@ -23,7 +23,13 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..db import Base, TenantMixin, TimestampMixin
+from ..db import Base as BaseRuntime
+from ..db import TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as Base
+else:
+    Base = BaseRuntime
 
 
 class DeploymentBackend(str, enum.Enum):
@@ -116,7 +122,10 @@ class DeploymentTemplate(Base, TimestampMixin):
     tags: Mapped[dict[str, str] | None] = mapped_column(JSON)  # Tags for categorization
 
     # Relationships
-    instances: Mapped[list["DeploymentInstance"]] = relationship(back_populates="template")
+    instances: Mapped[list["DeploymentInstance"]] = relationship(
+        "DeploymentInstance",
+        back_populates="template",
+    )
 
     def __repr__(self) -> str:
         return f"<DeploymentTemplate {self.name} ({self.deployment_type.value})>"
@@ -137,7 +146,10 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
 
     # Template reference
     template_id: Mapped[int] = mapped_column(ForeignKey("deployment_templates.id"))
-    template: Mapped["DeploymentTemplate"] = relationship(back_populates="instances")
+    template: Mapped["DeploymentTemplate"] = relationship(
+        "DeploymentTemplate",
+        back_populates="instances",
+    )
 
     # Environment identification
     environment: Mapped[str] = mapped_column(String(50), index=True)  # prod, staging, dev
@@ -193,10 +205,14 @@ class DeploymentInstance(Base, TenantMixin, TimestampMixin):
 
     # Relationships
     executions: Mapped[list["DeploymentExecution"]] = relationship(
-        back_populates="instance", cascade="all, delete-orphan"
+        "DeploymentExecution",
+        back_populates="instance",
+        cascade="all, delete-orphan",
     )
     health_records: Mapped[list["DeploymentHealth"]] = relationship(
-        back_populates="instance", cascade="all, delete-orphan"
+        "DeploymentHealth",
+        back_populates="instance",
+        cascade="all, delete-orphan",
     )
 
     def __repr__(self) -> str:
@@ -217,7 +233,10 @@ class DeploymentExecution(Base, TimestampMixin):
 
     # Instance reference
     instance_id: Mapped[int] = mapped_column(ForeignKey("deployment_instances.id"))
-    instance: Mapped["DeploymentInstance"] = relationship(back_populates="executions")
+    instance: Mapped["DeploymentInstance"] = relationship(
+        "DeploymentInstance",
+        back_populates="executions",
+    )
 
     # Execution details
     operation: Mapped[str] = mapped_column(
@@ -276,7 +295,10 @@ class DeploymentHealth(Base, TimestampMixin):
 
     # Instance reference
     instance_id: Mapped[int] = mapped_column(ForeignKey("deployment_instances.id"), index=True)
-    instance: Mapped["DeploymentInstance"] = relationship(back_populates="health_records")
+    instance: Mapped["DeploymentInstance"] = relationship(
+        "DeploymentInstance",
+        back_populates="health_records",
+    )
 
     # Health check details
     check_type: Mapped[str] = mapped_column(String(50))  # http, tcp, grpc, custom

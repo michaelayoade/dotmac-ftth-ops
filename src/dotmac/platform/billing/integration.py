@@ -6,10 +6,7 @@ Handles automated billing workflows and subscription lifecycle integration.
 """
 
 import logging
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from typing import Any
 from uuid import UUID
@@ -131,6 +128,7 @@ class BillingIntegrationService:
                 customer_id=subscription.customer_id,
                 customer_segments=[],  # Could be enhanced with customer segments
                 calculation_date=datetime.now(UTC),
+                currency=plan.currency,
             )
 
             pricing_result = await self.pricing_service.calculate_price(pricing_request, tenant_id)
@@ -679,6 +677,7 @@ class BillingIntegrationService:
                             customer_id=customer_id,
                             customer_segments=[],
                             calculation_date=billing_period_end,
+                            currency=product.currency,
                         )
 
                         pricing_result = await self.pricing_service.calculate_price(

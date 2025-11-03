@@ -1,8 +1,11 @@
 """Simplified auth email utilities using communications module directly."""
 
+from __future__ import annotations
+
 import secrets
 
 import structlog
+from pydantic import EmailStr
 
 from dotmac.platform.core.caching import get_redis
 
@@ -48,7 +51,7 @@ The {app_name} Team
 
         # Create message
         message = EmailMessage(
-            to=[email],
+            to=[EmailStr(email)],
             subject=subject,
             text_body=content,
             html_body=content.replace("\n", "<br>"),
@@ -120,7 +123,7 @@ The {app_name} Team
 
         # Create message
         message = EmailMessage(
-            to=[email],
+            to=[EmailStr(email)],
             subject=subject,
             text_body=content,
             html_body=content.replace("\n", "<br>"),
@@ -215,7 +218,7 @@ The {app_name} Team
 """.strip()
 
         message = EmailMessage(
-            to=[email],
+            to=[EmailStr(email)],
             subject=subject,
             text_body=content,
             html_body=html_content,
@@ -266,7 +269,7 @@ The {app_name} Team
 
         # Create message
         message = EmailMessage(
-            to=[email],
+            to=[EmailStr(email)],
             subject=subject,
             text_body=content,
             html_body=content.replace("\n", "<br>"),

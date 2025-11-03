@@ -10,18 +10,27 @@ import pytest_asyncio
 from fastapi import status
 from httpx import AsyncClient
 
+from dotmac.platform.auth.platform_admin import create_platform_admin_token
 from dotmac.platform.tenant.schemas import TenantCreate
 from dotmac.platform.tenant.service import TenantAlreadyExistsError
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture
 async def auth_headers(async_client: AsyncClient) -> dict[str, str]:
     """Provide authentication headers for onboarding API calls."""
+    token = create_platform_admin_token(
+        user_id="onboarding-admin",
+        email="onboarding@test.com",
+        permissions=[
+            "platform:tenants:write",
+            "platform:tenants:read",
+            "tenants:*",
+        ],
+    )
     return {
-        "Authorization": "Bearer test-token",
+        "Authorization": f"Bearer {token}",
         "X-Tenant-ID": "test-tenant",
     }
 

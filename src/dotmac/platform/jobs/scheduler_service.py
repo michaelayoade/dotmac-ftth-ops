@@ -5,10 +5,7 @@ Service for managing scheduled jobs, job chains, and retry logic.
 """
 
 import asyncio
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 from uuid import uuid4
 
@@ -236,6 +233,7 @@ class SchedulerService:
                     setattr(scheduled_job, field, value)
 
         # Recalculate next run if schedule changed (validate before mutating)
+        next_run: datetime | None
         if cron_specified or interval_specified:
             next_run = self._calculate_next_run(new_cron, new_interval)
         else:

@@ -24,6 +24,17 @@ from dotmac.platform.services.tasks import (
 router = APIRouter(prefix="/orchestration", tags=["Orchestration"])
 
 
+def _require_tenant_id(current_user: UserInfo) -> str:
+    """Ensure operations have a tenant context."""
+    tenant_id = current_user.tenant_id
+    if tenant_id is None:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            "Tenant context is required to perform orchestration operations.",
+        )
+    return tenant_id
+
+
 # Request/Response Schemas
 class ConvertLeadRequest(BaseModel):  # BaseModel resolves to Any in isolation
     """Request to convert lead to customer."""
@@ -127,10 +138,11 @@ async def convert_lead_to_customer(
     4. Links customer to quote for billing setup
     """
     service = OrchestrationService(db)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         result = await service.convert_lead_to_customer(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             lead_id=request.lead_id,
             accepted_quote_id=request.accepted_quote_id,
             user_id=UUID(current_user.user_id),
@@ -169,8 +181,9 @@ async def convert_lead_to_customer_background(
 
     Returns immediately with task ID for status tracking.
     """
+    tenant_id = _require_tenant_id(current_user)
     task = convert_lead_to_customer_async.delay(
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         lead_id=str(request.lead_id),
         accepted_quote_id=str(request.accepted_quote_id),
         user_id=current_user.user_id,
@@ -204,10 +217,11 @@ async def provision_subscriber(
     For background processing, use /subscribers/provision/async instead.
     """
     service = OrchestrationService(db)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         result = await service.provision_subscriber(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             customer_id=request.customer_id,
             username=request.username,
             password=request.password,
@@ -257,8 +271,9 @@ async def provision_subscriber_background(
     Returns immediately with task ID. Use /tasks/{task_id} to check status.
     Recommended for production use to avoid timeout issues.
     """
+    tenant_id = _require_tenant_id(current_user)
     task = provision_subscriber_async.delay(
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         customer_id=str(request.customer_id),
         username=request.username,
         password=request.password,
@@ -301,10 +316,11 @@ async def deprovision_subscriber(
     This is a synchronous operation that may take 10-30 seconds.
     """
     service = OrchestrationService(db)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         result = await service.deprovision_subscriber(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             reason=request.reason,
             user_id=UUID(current_user.user_id),
@@ -335,8 +351,9 @@ async def deprovision_subscriber_background(
 
     Returns immediately with task ID.
     """
+    tenant_id = _require_tenant_id(current_user)
     task = deprovision_subscriber_async.delay(
-        tenant_id=current_user.tenant_id,
+        tenant_id=tenant_id,
         subscriber_id=subscriber_id,
         reason=request.reason,
         user_id=current_user.user_id,
@@ -365,10 +382,11 @@ async def suspend_subscriber(
     3. Marks subscriber as suspended
     """
     service = OrchestrationService(db)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         result = await service.suspend_subscriber(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             reason=request.reason,
             user_id=UUID(current_user.user_id),
@@ -403,10 +421,11 @@ async def reactivate_subscriber(
     3. Clears suspension metadata
     """
     service = OrchestrationService(db)
+    tenant_id = _require_tenant_id(current_user)
 
     try:
         result = await service.reactivate_subscriber(
-            tenant_id=current_user.tenant_id,
+            tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             user_id=UUID(current_user.user_id),
         )

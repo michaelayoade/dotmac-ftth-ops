@@ -1,22 +1,16 @@
-
 """
 Integration tests for service lifecycle journey.
 
 Tests service activation, usage, suspension, resumption, and cancellation.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
 import pytest
 
-from dotmac.platform.billing.core.enums import InvoiceStatus
-from dotmac.platform.billing.core.models import Invoice
 from dotmac.platform.billing.models import (
-
-
-
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
@@ -32,10 +26,8 @@ from dotmac.platform.customer_management.schemas import CustomerCreate
 from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.tenant.models import Tenant
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestServiceLifecycleJourney:
@@ -66,7 +58,7 @@ class TestServiceLifecycleJourney:
             first_name="Lifecycle",
             last_name="Test",
             email=f"lifecycle_{uuid4().hex[:8]}@example.com",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(customer)
         await async_session.flush()
@@ -89,7 +81,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Step 1: Activate service
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         subscription = BillingSubscriptionTable(
             subscription_id=str(uuid4()),
             tenant_id=test_tenant.id,
@@ -216,7 +208,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Create subscription using SQLAlchemy table (initial setup)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -302,7 +294,7 @@ class TestServiceLifecycleJourney:
         await async_session.flush()
 
         # Create active subscription
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -321,7 +313,7 @@ class TestServiceLifecycleJourney:
 
         # Pause service (vacation hold) - Direct DB mutation with business logic validation
         # Note: In a full implementation, this would use a pause() service method
-        pause_date = datetime.now(timezone.utc)
+        pause_date = datetime.now(UTC)
 
         # Retrieve subscription for update
         from sqlalchemy import and_, select
@@ -354,7 +346,7 @@ class TestServiceLifecycleJourney:
         print("✅ Service paused")
 
         # Resume service
-        resume_date = datetime.now(timezone.utc)
+        resume_date = datetime.now(UTC)
 
         # Retrieve subscription again
         result = await async_session.execute(stmt)
@@ -429,7 +421,7 @@ class TestServiceLifecycleEdgeCases:
         await async_session.flush()
 
         # Create subscription
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         subscription_id = f"sub-{uuid4().hex[:8]}"
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,

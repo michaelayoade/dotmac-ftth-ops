@@ -1,0 +1,14 @@
+src/dotmac/platform/crm/router.py: note: In function "convert_lead_to_customer":
+src/dotmac/platform/crm/router.py:336:61: error: Argument 1 to
+"create_customer" of "CustomerService" has incompatible type
+"**dict[str, dict[str, Any] | str | Any | datetime | None]"; expected
+"CustomerCreate"  [arg-type]
+    ...    customer = await customer_service.create_customer(**customer_data)
+                                                               ^~~~~~~~~~~~~
+src/dotmac/platform/crm/router.py:336:61: error: Argument 1 to
+"create_customer" of "CustomerService" has incompatible type
+"**dict[str, dict[str, Any] | str | Any | datetime | None]"; expected
+"str | None"  [arg-type]
+    ...    customer = await customer_service.create_customer(**customer_data)
+                                                               ^~~~~~~~~~~~~
+Found 2 errors in 1 file (checked 1 source file)

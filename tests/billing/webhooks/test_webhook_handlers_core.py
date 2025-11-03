@@ -1,4 +1,3 @@
-
 """
 Core Webhook Handlers Tests - Phase 1 Coverage Improvement
 
@@ -23,18 +22,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.billing.config import BillingConfig, PayPalConfig, StripeConfig
 from dotmac.platform.billing.core.enums import InvoiceStatus
 from dotmac.platform.billing.webhooks.handlers import (
-
-
     PayPalWebhookHandler,
     StripeWebhookHandler,
     WebhookHandler,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def mock_db_session():

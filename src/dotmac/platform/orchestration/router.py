@@ -9,7 +9,9 @@ import csv
 import io
 import json
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import datetime
+from typing import Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from sqlalchemy.exc import SQLAlchemyError
@@ -68,10 +70,12 @@ def get_orchestration_service(
 
 def _get_initiator_id(user: UserInfo) -> str | None:
     """Extract initiator identifier from UserInfo or fallback attributes."""
-    if getattr(user, "user_id", None):
-        return str(user.user_id)
-    if getattr(user, "id", None) is not None:
-        return str(user.id)
+    user_id_value = getattr(user, "user_id", None)
+    if user_id_value is not None:
+        return str(user_id_value)
+    fallback_id = getattr(user, "id", None)
+    if fallback_id is not None:
+        return str(fallback_id)
     return None
 
 
@@ -106,8 +110,11 @@ def _has_permissions_local(user: UserInfo, permissions: tuple[str, ...], mode: s
     )
 
 
-def require_permissions_with_cache(*permissions: str):
-    base_checker = require_permissions(*permissions)
+def require_permissions_with_cache(*permissions: str) -> Callable[..., Awaitable[UserInfo]]:
+    base_checker = cast(
+        Callable[..., Awaitable[UserInfo]],
+        require_permissions(*permissions),
+    )
 
     async def dependency(
         current_user: UserInfo = Depends(get_current_user),
@@ -132,12 +139,15 @@ def require_permissions_with_cache(*permissions: str):
     return dependency
 
 
-def require_permission_with_cache(permission: str):
+def require_permission_with_cache(permission: str) -> Callable[..., Awaitable[UserInfo]]:
     return require_permissions_with_cache(permission)
 
 
-def require_any_permission_with_cache(*permissions: str):
-    base_checker = require_any_permission(*permissions)
+def require_any_permission_with_cache(*permissions: str) -> Callable[..., Awaitable[UserInfo]]:
+    base_checker = cast(
+        Callable[..., Awaitable[UserInfo]],
+        require_any_permission(*permissions),
+    )
 
     async def dependency(
         current_user: UserInfo = Depends(get_current_user),
@@ -731,7 +741,7 @@ async def export_workflows_json(
         stats = await service.get_workflow_statistics()
 
         # Build export data structure
-        export_data = {
+        export_data: dict[str, Any] = {
             "generated_at": datetime.now().isoformat(),
             "generated_by": current_user.email,
             "tenant_id": current_user.tenant_id,

@@ -3,13 +3,12 @@ Fixture Factory Utilities
 
 Provides helper functions and base classes for creating fixture factories.
 """
+
 from __future__ import annotations
 
 import logging
 from collections.abc import AsyncIterator, Callable, Iterator
 from typing import Any, TypeVar
-
-import pytest
 
 logger = logging.getLogger(__name__)
 
@@ -100,9 +99,7 @@ class FixtureFactory:
         if not self._created_instances:
             return
 
-        logger.debug(
-            "Cleaning up %d instances from factory", len(self._created_instances)
-        )
+        logger.debug("Cleaning up %d instances from factory", len(self._created_instances))
 
         # Clean up in reverse order (LIFO)
         for instance in reversed(self._created_instances):
@@ -161,9 +158,7 @@ class SyncFixtureFactory:
             try:
                 self.cleanup_instance(instance)
             except Exception as e:
-                logger.error(
-                    "Error cleaning up instance: %s", str(e), exc_info=True
-                )
+                logger.error("Error cleaning up instance: %s", str(e), exc_info=True)
 
         self._created_instances.clear()
 

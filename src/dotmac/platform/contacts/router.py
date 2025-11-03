@@ -9,6 +9,7 @@ from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from pydantic import Field
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -27,8 +28,8 @@ from dotmac.platform.contacts.schemas import (
     ContactListResponse,
     ContactMethodCreate,
     ContactMethodResponse,
-    ContactMethodUpdate,
     ContactMethodType,
+    ContactMethodUpdate,
     ContactResponse,
     ContactSearchRequest,
     ContactUpdate,
@@ -40,7 +41,6 @@ from dotmac.platform.contacts.service import (
 )
 from dotmac.platform.db import get_async_session
 from dotmac.platform.tenant import get_current_tenant_id
-from pydantic import Field
 
 logger = structlog.get_logger(__name__)
 

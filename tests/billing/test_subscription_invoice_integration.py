@@ -11,7 +11,7 @@ Tests integration between subscriptions and invoice generation:
 - Invoice PDF generation
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -82,7 +82,7 @@ class TestSubscriptionInvoiceCreation:
             "subtotal": plan.price,
             "tax": plan.price * invoice_config["tax_rate"],
             "total": plan.price * (1 + invoice_config["tax_rate"]),
-            "due_date": datetime.now(timezone.utc) + timedelta(days=invoice_config["due_days"]),
+            "due_date": datetime.now(UTC) + timedelta(days=invoice_config["due_days"]),
             "status": "pending",
             "line_items": [
                 {
@@ -182,8 +182,8 @@ class TestRenewalInvoices:
             "invoice_number": f"{invoice_config['invoice_prefix']}-002",
             "subscription_id": subscription.subscription_id,
             "billing_reason": "subscription_renewal",
-            "period_start": datetime.now(timezone.utc),
-            "period_end": datetime.now(timezone.utc) + timedelta(days=30),
+            "period_start": datetime.now(UTC),
+            "period_end": datetime.now(UTC) + timedelta(days=30),
             "subtotal": plan.price,
             "tax": plan.price * invoice_config["tax_rate"],
             "total": plan.price * (1 + invoice_config["tax_rate"]),
@@ -472,7 +472,7 @@ class TestRefundInvoices:
         canceled = await service.cancel_subscription(
             subscription_id=subscription.subscription_id,
             tenant_id=tenant_id,
-            at_period_end=False  # Cancel immediately
+            at_period_end=False,  # Cancel immediately
         )
 
         # Calculate refund
@@ -530,8 +530,8 @@ class TestInvoicePDFGeneration:
         # Mock invoice data for PDF
         invoice_data = {
             "invoice_number": f"{invoice_config['invoice_prefix']}-001",
-            "date": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
-            "due_date": (datetime.now(timezone.utc) + timedelta(days=30)).strftime("%Y-%m-%d"),
+            "date": datetime.now(UTC).strftime("%Y-%m-%d"),
+            "due_date": (datetime.now(UTC) + timedelta(days=30)).strftime("%Y-%m-%d"),
             "customer": {
                 "id": customer_id,
                 "name": "Test Customer",
@@ -560,7 +560,7 @@ class TestInvoicePDFGeneration:
             "filename": f"invoice_{invoice_data['invoice_number']}.pdf",
             "size_kb": 42,
             "pages": 1,
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
         }
 
         print("\n📄 Invoice PDF generated:")
@@ -645,7 +645,7 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
         ),
         tenant_id=tenant_id,
     )
-    print(f"✅ Usage recorded: api_calls=12500, storage_gb=125")
+    print("✅ Usage recorded: api_calls=12500, storage_gb=125")
 
     # Step 3: Simulate renewal invoice with usage
     print("\n🔄 Step 3: Renewal invoice with usage...")
@@ -667,7 +667,7 @@ async def test_complete_invoice_workflow(async_db_session, invoice_config):
     await service.cancel_subscription(
         subscription_id=subscription.subscription_id,
         tenant_id=tenant_id,
-        at_period_end=False  # Cancel immediately
+        at_period_end=False,  # Cancel immediately
     )
 
     refund_amount = plan.price * Decimal("0.60")  # 60% refund (18 days remaining)

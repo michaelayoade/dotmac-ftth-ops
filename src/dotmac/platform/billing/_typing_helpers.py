@@ -27,13 +27,13 @@ def shared_task(*args: Any, **kwargs: Any) -> Callable[[Callable[P, R]], Callabl
 def idempotent_task(ttl: int = 3600) -> Callable[[Callable[P, R]], Callable[P, R | None]]:
     """Typed wrapper around the core idempotent task decorator."""
     decorator = _idempotent_task(ttl)
-    return cast(Callable[[Callable[P, R]], Callable[P, R | None]], decorator)
+    return decorator
 
 
 def rate_limit(limit: str) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Typed wrapper around the shared rate limit decorator."""
     decorator = _rate_limit(limit)
-    return cast(Callable[[Callable[P, R]], Callable[P, R]], decorator)
+    return decorator
 
 
 def cached_result(
@@ -45,7 +45,7 @@ def cached_result(
 ) -> Callable[[Callable[P, Awaitable[S]]], Callable[P, Awaitable[S]]]:
     """Typed wrapper around the shared cached_result decorator."""
     decorator = _cached_result(ttl=ttl, key_prefix=key_prefix, key_params=key_params, tier=tier)
-    return cast(Callable[[Callable[P, Awaitable[S]]], Callable[P, Awaitable[S]]], decorator)
+    return decorator
 
 
 __all__ = ["CacheTier", "shared_task", "idempotent_task", "rate_limit", "cached_result"]

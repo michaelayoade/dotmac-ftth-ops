@@ -8,7 +8,7 @@ Tests all customer management router endpoints following the Two-Tier Testing St
 Coverage Target: 85%+ for router endpoints
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
@@ -519,7 +519,7 @@ class TestCustomerActivitiesEndpoints:
             performed_by=str(uuid4()),
             ip_address="192.0.2.10",
             user_agent="pytest-client",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         test_client.mock_customer_service.add_activity.return_value = activity_response  # type: ignore[attr-defined]
@@ -593,8 +593,8 @@ class TestCustomerNotesEndpoints:
             content=note_data["content"],
             is_internal=True,
             created_by_id=str(uuid4()),
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         test_client.mock_customer_service.add_note.return_value = note_response  # type: ignore[attr-defined]
@@ -701,9 +701,9 @@ class TestCustomerSegmentsEndpoints:
             is_dynamic=True,
             priority=10,
             member_count=25,
-            last_calculated=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            last_calculated=datetime.now(UTC),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         test_client.mock_customer_service.create_segment.return_value = segment_response  # type: ignore[attr-defined]
@@ -862,10 +862,12 @@ class TestCustomerManagementPermissions:
 
     def test_impersonate_requires_impersonate_permission(self, test_app):
         """Test POST /customers/{customer_id}/impersonate requires customer.impersonate permission."""
-        from fastapi.testclient import TestClient
         from unittest.mock import patch
         from uuid import uuid4
-        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        from fastapi.testclient import TestClient
+
+        from dotmac.platform.auth.core import UserInfo, get_current_user
 
         # Setup authentication
         test_user = UserInfo(
@@ -886,14 +888,13 @@ class TestCustomerManagementPermissions:
             client = TestClient(test_app)
             response = client.post(
                 f"/api/v1/customers/{uuid4()}/impersonate",
-                headers={"X-Tenant-ID": "test-tenant-123"}
+                headers={"X-Tenant-ID": "test-tenant-123"},
             )
             assert response.status_code == 403
 
             # Verify correct permission was checked
             assert ["customer.impersonate"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
         # Cleanup
@@ -901,10 +902,12 @@ class TestCustomerManagementPermissions:
 
     def test_manage_status_requires_manage_status_permission(self, test_app):
         """Test PATCH /customers/{customer_id}/status requires customer.manage_status permission."""
-        from fastapi.testclient import TestClient
         from unittest.mock import patch
         from uuid import uuid4
-        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        from fastapi.testclient import TestClient
+
+        from dotmac.platform.auth.core import UserInfo, get_current_user
 
         # Setup authentication
         test_user = UserInfo(
@@ -926,14 +929,13 @@ class TestCustomerManagementPermissions:
             response = client.patch(
                 f"/api/v1/customers/{uuid4()}/status",
                 json={"status": "active", "reason": "test"},
-                headers={"X-Tenant-ID": "test-tenant-123"}
+                headers={"X-Tenant-ID": "test-tenant-123"},
             )
             assert response.status_code == 403
 
             # Verify correct permission was checked
             assert ["customer.manage_status"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
         # Cleanup
@@ -941,10 +943,12 @@ class TestCustomerManagementPermissions:
 
     def test_reset_password_requires_reset_password_permission(self, test_app):
         """Test POST /customers/{customer_id}/reset-password requires customer.reset_password permission."""
-        from fastapi.testclient import TestClient
         from unittest.mock import patch
         from uuid import uuid4
-        from dotmac.platform.auth.core import get_current_user, UserInfo
+
+        from fastapi.testclient import TestClient
+
+        from dotmac.platform.auth.core import UserInfo, get_current_user
 
         # Setup authentication
         test_user = UserInfo(
@@ -965,14 +969,13 @@ class TestCustomerManagementPermissions:
             client = TestClient(test_app)
             response = client.post(
                 f"/api/v1/customers/{uuid4()}/reset-password",
-                headers={"X-Tenant-ID": "test-tenant-123"}
+                headers={"X-Tenant-ID": "test-tenant-123"},
             )
             assert response.status_code == 403
 
             # Verify correct permission was checked
             assert ["customer.reset_password"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
         # Cleanup

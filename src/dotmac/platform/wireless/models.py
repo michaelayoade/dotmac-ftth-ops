@@ -10,7 +10,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import JSON, Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
@@ -19,6 +19,11 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 # ============================================================================
 # Enums
@@ -83,7 +88,7 @@ class CoverageType(str, Enum):
 # ============================================================================
 
 
-class WirelessDevice(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
+class WirelessDevice(BaseModel, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Wireless network device (AP, Radio, CPE, etc.)
 
@@ -175,7 +180,7 @@ class WirelessDevice(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ig
     )
 
 
-class WirelessRadio(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class WirelessRadio(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Radio interface on a wireless device
 
@@ -256,7 +261,7 @@ class WirelessRadio(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
     )
 
 
-class CoverageZone(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class CoverageZone(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Wireless coverage zone
 
@@ -323,7 +328,7 @@ class CoverageZone(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
         return self.zone_name
 
 
-class SignalMeasurement(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class SignalMeasurement(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Signal strength measurement
 
@@ -391,7 +396,7 @@ class SignalMeasurement(Base, TimestampMixin, TenantMixin):  # type: ignore[misc
     )
 
 
-class WirelessClient(Base, TimestampMixin, TenantMixin):  # type: ignore[misc]
+class WirelessClient(BaseModel, TimestampMixin, TenantMixin):  # type: ignore[misc]
     """
     Connected wireless client
 

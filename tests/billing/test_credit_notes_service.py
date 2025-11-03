@@ -1,6 +1,6 @@
 """Comprehensive tests for the credit note service."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
@@ -58,8 +58,8 @@ async def _create_invoice(
         customer_id=customer_id,
         billing_email=f"{customer_id}@example.com",
         billing_address={"street": "123 Test St", "city": "Test City", "country": "US"},
-        issue_date=datetime.now(timezone.utc),
-        due_date=datetime.now(timezone.utc) + timedelta(days=30),
+        issue_date=datetime.now(UTC),
+        due_date=datetime.now(UTC) + timedelta(days=30),
         currency="USD",
         subtotal=total,
         tax_amount=0,

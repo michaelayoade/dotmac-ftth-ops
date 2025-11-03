@@ -391,7 +391,7 @@ function IntegrationsPageContent() {
 
 export default function IntegrationsPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <IntegrationsPageContent />
     </RouteGuard>
   );

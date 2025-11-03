@@ -7,12 +7,12 @@ This test verifies that:
 3. No InvalidRequestError is raised
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 from sqlalchemy import select
 
 from dotmac.platform.billing.core.entities import PaymentInvoiceEntity
-
 
 pytestmark = pytest.mark.unit
 
@@ -22,9 +22,7 @@ async def test_customer_factory_transaction_cleanup(async_db_session, customer_f
     """Verify customer factory works with transaction rollback."""
     # Create customer using factory
     customer = await customer_factory(
-        email="test@example.com",
-        first_name="Test",
-        last_name="Customer"
+        email="test@example.com", first_name="Test", last_name="Customer"
     )
 
     # Verify customer was created
@@ -42,10 +40,7 @@ async def test_customer_factory_transaction_cleanup(async_db_session, customer_f
 async def test_invoice_factory_transaction_cleanup(async_db_session, invoice_factory):
     """Verify invoice factory works with transaction rollback."""
     # Create invoice (also creates customer automatically)
-    invoice = await invoice_factory(
-        amount=Decimal("100.00"),
-        status="draft"
-    )
+    invoice = await invoice_factory(amount=Decimal("100.00"), status="draft")
 
     # Verify invoice was created
     assert invoice.invoice_id is not None
@@ -62,10 +57,7 @@ async def test_invoice_factory_transaction_cleanup(async_db_session, invoice_fac
 async def test_payment_factory_transaction_cleanup(async_db_session, payment_factory):
     """Verify payment factory works with transaction rollback."""
     # Create payment (also creates customer and invoice automatically)
-    payment = await payment_factory(
-        amount=Decimal("50.00"),
-        status="succeeded"
-    )
+    payment = await payment_factory(amount=Decimal("50.00"), status="succeeded")
 
     # Verify payment was created
     assert payment.payment_id is not None
@@ -88,26 +80,18 @@ async def test_payment_factory_transaction_cleanup(async_db_session, payment_fac
 
 @pytest.mark.asyncio
 async def test_multiple_factories_in_sequence(
-    async_db_session,
-    customer_factory,
-    invoice_factory,
-    payment_factory
+    async_db_session, customer_factory, invoice_factory, payment_factory
 ):
     """Verify multiple factories can be used together."""
     # Create customer
     customer = await customer_factory(email="multi@test.com")
 
     # Create invoice for customer
-    invoice = await invoice_factory(
-        customer_id=str(customer.id),
-        amount=Decimal("200.00")
-    )
+    invoice = await invoice_factory(customer_id=str(customer.id), amount=Decimal("200.00"))
 
     # Create payment for invoice
     payment = await payment_factory(
-        customer_id=str(customer.id),
-        invoice_id=invoice.invoice_id,
-        amount=Decimal("200.00")
+        customer_id=str(customer.id), invoice_id=invoice.invoice_id, amount=Decimal("200.00")
     )
 
     # Verify relationships

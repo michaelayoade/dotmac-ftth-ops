@@ -402,7 +402,7 @@ function LicensingPageContent() {
 
 export default function LicensingPage() {
   return (
-    <RouteGuard requiredPermission="admin">
+    <RouteGuard permission="admin">
       <LicensingPageContent />
     </RouteGuard>
   );

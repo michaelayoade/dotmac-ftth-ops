@@ -14,9 +14,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
 import pytest
-from fastapi import FastAPI, status
+from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
-
 
 pytestmark = pytest.mark.unit
 
@@ -30,7 +29,7 @@ class TestRADIUSHealthCheckService:
         from dotmac.platform.radius.service import RADIUSService
 
         # Create service with mocked dependencies
-        service = RADIUSService(
+        RADIUSService(
             session=AsyncMock(),
             tenant_id="test-tenant",
         )
@@ -95,7 +94,7 @@ class TestRADIUSHealthCheckService:
         mock_result.scalar.return_value = 5  # 5 active sessions
         mock_session.execute.return_value = mock_result
 
-        service = RADIUSService(
+        RADIUSService(
             session=mock_session,
             tenant_id="test-tenant",
         )
@@ -117,7 +116,8 @@ class TestRADIUSHealthCheckEndpoint:
         from dotmac.platform.auth.dependencies import get_current_user
         from dotmac.platform.auth.rbac_dependencies import PermissionChecker
         from dotmac.platform.db import get_async_session
-        from dotmac.platform.radius.router import get_radius_service, router as radius_router
+        from dotmac.platform.radius.router import get_radius_service
+        from dotmac.platform.radius.router import router as radius_router
         from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
         # Override auth to allow access
@@ -187,10 +187,13 @@ class TestRADIUSHealthCheckEndpoint:
         """Test health endpoint is accessible and returns proper structure."""
         transport = ASGITransport(app=minimal_radius_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            with patch("socket.socket") as mock_socket_class, patch(
-                "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
-                new_callable=AsyncMock,
-                return_value=None,
+            with (
+                patch("socket.socket") as mock_socket_class,
+                patch(
+                    "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
+                    new_callable=AsyncMock,
+                    return_value=None,
+                ),
             ):
                 mock_socket_cm = MagicMock()
                 mock_socket_instance = MagicMock()
@@ -212,10 +215,13 @@ class TestRADIUSHealthCheckEndpoint:
         """Test health endpoint returns JSON structure."""
         transport = ASGITransport(app=minimal_radius_app)
         async with AsyncClient(transport=transport, base_url="http://testserver") as client:
-            with patch("socket.socket") as mock_socket_class, patch(
-                "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
-                new_callable=AsyncMock,
-                return_value=None,
+            with (
+                patch("socket.socket") as mock_socket_class,
+                patch(
+                    "dotmac.platform.auth.rbac_dependencies.PermissionChecker.__call__",
+                    new_callable=AsyncMock,
+                    return_value=None,
+                ),
             ):
                 mock_socket_cm = MagicMock()
                 mock_socket_instance = MagicMock()
@@ -323,7 +329,7 @@ class TestRADIUSHealthCheckIntegration:
 
         mock_session.execute.side_effect = [mock_active_result, mock_nas_result]
 
-        service = RADIUSService(
+        RADIUSService(
             session=mock_session,
             tenant_id="test-tenant",
         )
@@ -341,7 +347,7 @@ class TestRADIUSHealthCheckIntegration:
         mock_session = AsyncMock()
         mock_session.execute.side_effect = Exception("Database connection failed")
 
-        service = RADIUSService(
+        RADIUSService(
             session=mock_session,
             tenant_id="test-tenant",
         )

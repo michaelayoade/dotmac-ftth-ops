@@ -4,13 +4,11 @@ from __future__ import annotations
 
 import logging
 from collections.abc import MutableMapping
-from typing import Any, Set
 from unittest.mock import Mock
 
 import pytest
 
 from tests.fixtures.environment import HAS_FASTAPI
-
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +24,7 @@ def cleanup_fastapi_state(request):
     from fastapi import FastAPI
 
     funcargs = getattr(request.node, "funcargs", {}) or {}
-    seen: Set[int] = set()
+    seen: set[int] = set()
 
     def _clean(obj: object) -> None:
         if obj is None:

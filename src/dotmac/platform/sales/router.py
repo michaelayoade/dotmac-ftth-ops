@@ -284,7 +284,9 @@ def get_public_order_status(
 
 @router.get("", response_model=list[OrderResponse])
 def list_orders(
-    status: OrderStatus | None = Query(None, description="Filter by status"),
+    status_filter: OrderStatus | None = Query(
+        None, alias="status", description="Filter by status"
+    ),
     customer_email: str | None = Query(None, description="Filter by customer email"),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=1000),
@@ -298,7 +300,7 @@ def list_orders(
     """
     try:
         orders = service.list_orders(
-            status=status,
+            status=status_filter,
             customer_email=customer_email,
             skip=skip,
             limit=limit,

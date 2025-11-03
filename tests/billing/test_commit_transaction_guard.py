@@ -9,8 +9,9 @@ Before the fix: InvalidRequestError raised on teardown after commit
 After the fix: Teardown succeeds because rollback is guarded
 """
 
-import pytest
 from decimal import Decimal
+
+import pytest
 
 pytestmark = pytest.mark.integration
 
@@ -29,7 +30,7 @@ class TestTransactionGuardFix:
         plan = await subscription_plan_factory(
             name="Single Commit Test",
             price=Decimal("29.99"),
-            _commit=True  # ← Commits and closes transaction
+            _commit=True,  # ← Commits and closes transaction
         )
 
         assert plan.plan_id is not None
@@ -45,23 +46,11 @@ class TestTransactionGuardFix:
         """Test multiple commits work correctly with guarded rollback."""
 
         # Create multiple plans with commits
-        plan1 = await subscription_plan_factory(
-            name="Plan 1",
-            price=Decimal("19.99"),
-            _commit=True
-        )
+        plan1 = await subscription_plan_factory(name="Plan 1", price=Decimal("19.99"), _commit=True)
 
-        plan2 = await subscription_plan_factory(
-            name="Plan 2",
-            price=Decimal("29.99"),
-            _commit=True
-        )
+        plan2 = await subscription_plan_factory(name="Plan 2", price=Decimal("29.99"), _commit=True)
 
-        plan3 = await subscription_plan_factory(
-            name="Plan 3",
-            price=Decimal("39.99"),
-            _commit=True
-        )
+        plan3 = await subscription_plan_factory(name="Plan 3", price=Decimal("39.99"), _commit=True)
 
         # All plans created successfully
         assert plan1.plan_id is not None
@@ -96,9 +85,7 @@ class TestTransactionGuardFix:
 
         # Commit one plan
         committed_plan = await subscription_plan_factory(
-            name="Committed Plan",
-            price=Decimal("99.99"),
-            _commit=True
+            name="Committed Plan", price=Decimal("99.99"), _commit=True
         )
 
         # Flush another plan (default)

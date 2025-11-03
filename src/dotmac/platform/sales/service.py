@@ -9,12 +9,12 @@ import asyncio
 import inspect
 from datetime import datetime
 from decimal import Decimal
-from typing import Any
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 from sqlalchemy.orm import Session
 
-from ..communications.email_service import EmailService
+from ..communications.email_service import EmailMessage, EmailService
 from ..deployment.models import DeploymentTemplate
 from ..deployment.schemas import ProvisionRequest
 from ..deployment.service import DeploymentService
@@ -153,12 +153,12 @@ class OrderProcessingService:
 
     def _apply_tenant_scope(
         self,
-        query,
+        query: Any,
         tenant_id: str | None,
         is_platform_admin: bool,
         enforce_scope: bool,
         action: str,
-    ):
+    ) -> Any:
         """Apply tenant filtering to a SQLAlchemy query when required."""
         if is_platform_admin:
             return query
@@ -684,7 +684,8 @@ class OrderProcessingService:
         from sqlalchemy import func
 
         # Orders by status
-        status_query = self.db.query(Order.status, func.count(Order.id).label("count"))
+        status_column = cast(Any, Order.status)
+        status_query = self.db.query(status_column, func.count(Order.id).label("count"))
         status_query = self._apply_tenant_scope(
             status_query,
             tenant_id,
@@ -863,21 +864,42 @@ class OrderProcessingService:
         slug = slug.strip("-")
         return slug[:50]
 
+    def _send_email_asyncsafe(self, message: EmailMessage) -> None:
+        """Send email from sync context, awaiting coroutine when needed."""
+        if not self.email_service:
+            return
+
+        async def _send() -> None:
+            await self.email_service.send_email(message)
+
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            asyncio.run(_send())
+            return
+
+        if loop.is_running():
+            loop.create_task(_send())
+        else:
+            loop.run_until_complete(_send())
+
     def _send_order_confirmation(self, order: Order) -> None:
         """Send order confirmation email"""
         try:
-            self.email_service.send_email(
-                to_email=order.customer_email,
-                subject=f"Order Confirmation - {order.order_number}",
-                template_name="order_confirmation",
-                template_data={
-                    "order_number": order.order_number,
-                    "customer_name": order.customer_name,
-                    "company_name": order.company_name,
-                    "total_amount": float(order.total_amount),
-                    "currency": order.currency,
-                },
+            total_amount = float(order.total_amount or 0)
+            body = (
+                f"Hello {order.customer_name},\n\n"
+                f"Thank you for your order {order.order_number}.\n"
+                f"Company: {order.company_name}\n"
+                f"Total Amount: {total_amount:.2f} {order.currency}\n"
+                "We will notify you when provisioning is complete.\n"
             )
+            message = EmailMessage(
+                to=[order.customer_email],
+                subject=f"Order Confirmation - {order.order_number}",
+                text_body=body,
+            )
+            self._send_email_asyncsafe(message)
         except Exception as e:
             # Log but don't fail
             print(f"Failed to send confirmation email: {e}")
@@ -885,33 +907,38 @@ class OrderProcessingService:
     def _send_activation_complete(self, order: Order) -> None:
         """Send activation complete email"""
         try:
-            self.email_service.send_email(
-                to_email=order.customer_email,
-                subject=f"Your Platform is Ready - {order.order_number}",
-                template_name="activation_complete",
-                template_data={
-                    "order_number": order.order_number,
-                    "customer_name": order.customer_name,
-                    "company_name": order.company_name,
-                    "tenant_subdomain": order.organization_slug,
-                },
+            tenant_slug = order.organization_slug or "your tenant"
+            body = (
+                f"Hello {order.customer_name},\n\n"
+                f"Your platform deployment for {order.company_name} is now complete.\n"
+                f"Order Number: {order.order_number}\n"
+                f"Tenant Subdomain: {tenant_slug}\n"
+                "You can now log in and begin onboarding.\n"
             )
+            message = EmailMessage(
+                to=[order.customer_email],
+                subject=f"Your Platform is Ready - {order.order_number}",
+                text_body=body,
+            )
+            self._send_email_asyncsafe(message)
         except Exception as e:
             print(f"Failed to send activation email: {e}")
 
     def _send_order_failed(self, order: Order, error: str) -> None:
         """Send order failure notification"""
         try:
-            self.email_service.send_email(
-                to_email=order.customer_email,
-                subject=f"Order Processing Issue - {order.order_number}",
-                template_name="order_failed",
-                template_data={
-                    "order_number": order.order_number,
-                    "customer_name": order.customer_name,
-                    "error_message": error,
-                },
+            body = (
+                f"Hello {order.customer_name},\n\n"
+                f"We encountered an issue processing order {order.order_number}.\n"
+                f"Error: {error}\n"
+                "Our team has been notified and will follow up shortly.\n"
             )
+            message = EmailMessage(
+                to=[order.customer_email],
+                subject=f"Order Processing Issue - {order.order_number}",
+                text_body=body,
+            )
+            self._send_email_asyncsafe(message)
         except Exception as e:
             print(f"Failed to send failure email: {e}")
 

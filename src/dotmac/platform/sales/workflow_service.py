@@ -82,7 +82,7 @@ class SalesService:
 
         if existing_order:
             if tenant_id and not existing_order.tenant_id:
-                existing_order.tenant_id = tenant_id
+                existing_order.tenant_id = tenant_id  # type: ignore[assignment]
                 await self.db.flush()
             logger.info(f"Order already exists for quote {quote_id}: {existing_order.order_number}")
             return {

@@ -2,12 +2,24 @@
 Integration Tests Configuration
 
 Shared fixtures and configuration for integration tests.
+
+This module automatically starts Docker Compose services (PostgreSQL, Redis, MinIO)
+when running integration tests with `-m integration` or from tests/integration/ directory.
 """
 
 import asyncio
+from contextlib import suppress
+
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
+from redis.exceptions import RedisError
+
+from tests.fixtures.environment import HAS_FAKEREDIS, fakeredis
+
+# Import Docker fixtures to enable automatic service startup
+from tests.integration.docker_fixtures import auto_docker_services, docker_services  # noqa: F401
+
 
 @pytest.fixture(scope="session", autouse=True)
 def integration_test_environment():
@@ -75,16 +87,36 @@ async def init_redis():
     """
     from dotmac.platform.redis_client import redis_manager
 
+    fake_client = None
     try:
         # Initialize Redis with test configuration
         await redis_manager.initialize()
+    except (RedisError, OSError, PermissionError) as exc:
+        if not HAS_FAKEREDIS:
+            pytest.skip(f"Requires Redis backend or fakeredis for fallback ({exc}).")
+
+        print(  # noqa: T201 - provide explicit notice during test setup
+            f"[integration] Redis unavailable ({exc}); using fakeredis fallback."
+        )
+        fake_client = fakeredis.aioredis.FakeRedis(decode_responses=True)
+        await fake_client.flushdb()
+        redis_manager._client = fake_client  # type: ignore[attr-defined]  # noqa: SLF001
+        redis_manager._pool = None  # type: ignore[attr-defined]  # noqa: SLF001
+
+    try:
         yield
     finally:
-        # Clean up Redis connections after all tests
-        try:
-            await redis_manager.close()
-        except Exception:
-            pass
+        if fake_client is not None:
+            with suppress(Exception):
+                await fake_client.flushdb()
+            with suppress(Exception):
+                await fake_client.close()
+            redis_manager._client = None  # type: ignore[attr-defined]  # noqa: SLF001
+            redis_manager._pool = None  # type: ignore[attr-defined]  # noqa: SLF001
+        else:
+            # Clean up Redis connections after all tests
+            with suppress(Exception):
+                await redis_manager.close()
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -126,37 +158,36 @@ async def cleanup_integration_test_data(async_db_session):
     except Exception:
         pass
 
-    # Delete test data from integration tests
-    # Use raw SQL for efficiency and to avoid ORM complications
     from sqlalchemy import text
 
-    cleanup_queries = [
-        # WireGuard cleanup (test tenants and smoke test tenant)
-        "DELETE FROM wireguard_peers WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM wireguard_servers WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
+    from dotmac.platform.db import Base
 
-        # RADIUS cleanup
-        "DELETE FROM subscribers WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%' OR subscriber_id LIKE '%test%'",
-        "DELETE FROM radcheck WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM radreply WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM radacct WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM radpostauth WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM nas WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
-        "DELETE FROM bandwidth_profiles WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
+    # Dynamically purge all known tables in SQLite fallback scenarios. This avoids
+    # per-module cleanup drift and ensures fresh state even when tests reuse
+    # deterministic identifiers (tenant slugs, MAC addresses, etc.).
+    try:
+        existing = await async_db_session.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table'")
+        )
+        existing_tables = {row[0] for row in existing}
+    except Exception:
+        existing_tables = set()
 
-        # Customers cleanup
-        "DELETE FROM customers WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%'",
+    if not existing_tables:
+        # Fallback: rely on metadata listing when PRAGMA query is unavailable
+        existing_tables = {table.name for table in Base.metadata.tables.values()}
 
-        # NetBox/IP allocation cleanup (if exists)
-        "DELETE FROM ip_allocations WHERE tenant_id LIKE 'test-%' OR tenant_id LIKE '%test%' OR subscriber_id LIKE '%test%'",
-    ]
+    # Skip SQLite bookkeeping tables that should persist
+    preserved_tables = {"sqlite_sequence", "alembic_version"}
 
-    for query in cleanup_queries:
+    for table in reversed(Base.metadata.sorted_tables):
+        if table.name in preserved_tables or table.name not in existing_tables:
+            continue
         try:
-            await async_db_session.execute(text(query))
+            await async_db_session.execute(table.delete())
         except Exception:
-            # Table might not exist or query might fail - continue cleanup
-            pass
+            # Ignore tables that aren't present or have incompatible schemas
+            continue
 
     try:
         await async_db_session.commit()
@@ -186,10 +217,11 @@ def test_tenant_id():
 @pytest_asyncio.fixture
 async def test_tenant(async_session, test_tenant_id):
     """Create test tenant in database for integration tests."""
-    from dotmac.platform.tenant.models import Tenant, TenantStatus
-
     # Check if tenant already exists
     from sqlalchemy import select
+
+    from dotmac.platform.tenant.models import Tenant, TenantStatus
+
     stmt = select(Tenant).where(Tenant.id == test_tenant_id)
     result = await async_session.execute(stmt)
     existing_tenant = result.scalar_one_or_none()
@@ -253,6 +285,7 @@ async def smoke_test_tenant(async_session):
     Generates unique tenant for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.tenant.models import Tenant, TenantStatus
 
     # Generate unique ID for this test run
@@ -277,6 +310,7 @@ async def smoke_test_tenant_a(async_session):
     Generates unique tenant for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.tenant.models import Tenant, TenantStatus
 
     # Generate unique ID for this test run
@@ -301,6 +335,7 @@ async def smoke_test_tenant_b(async_session):
     Generates unique tenant for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.tenant.models import Tenant, TenantStatus
 
     # Generate unique ID for this test run
@@ -325,6 +360,7 @@ async def smoke_test_technician(async_session, smoke_test_tenant):
     Generates unique technician for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.user_management.models import User
 
     # Generate unique ID for this technician
@@ -351,6 +387,7 @@ async def smoke_test_customer(async_session, smoke_test_tenant):
     Generates unique customer for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.customer_management.models import Customer
 
     # Generate unique ID for this customer
@@ -395,6 +432,7 @@ async def smoke_test_subscriber(subscriber_factory, smoke_test_tenant, smoke_tes
     Generates unique subscriber for each test run to ensure proper isolation.
     """
     from uuid import uuid4
+
     from dotmac.platform.subscribers.models import SubscriberStatus
 
     # Generate unique ID for this subscriber
@@ -421,14 +459,15 @@ async def async_client(test_tenant_id, test_tenant, mock_user_info, async_sessio
     Adds database session override to use test PostgreSQL database.
     Ensures test tenant exists in database before making requests.
     """
-    from httpx import ASGITransport, AsyncClient
     from fastapi import Request
-    from dotmac.platform.main import app
-    from dotmac.platform.auth.dependencies import get_current_user, get_current_user_optional
+    from httpx import ASGITransport, AsyncClient
+
     from dotmac.platform.auth.core import UserInfo
-    from dotmac.platform.db import get_session_dependency
-    from dotmac.platform.db import get_async_session as get_async_session_db
+    from dotmac.platform.auth.dependencies import get_current_user, get_current_user_optional
     from dotmac.platform.database import get_async_session as get_async_session_database
+    from dotmac.platform.db import get_async_session as get_async_session_db
+    from dotmac.platform.db import get_session_dependency
+    from dotmac.platform.main import app
 
     # Override authentication dependencies for testing
     async def override_get_current_user(request: Request) -> UserInfo:
@@ -448,24 +487,28 @@ async def async_client(test_tenant_id, test_tenant, mock_user_info, async_sessio
         """Override to return test database session (used by billing/dunning modules)."""
         yield async_session
 
-    # Apply dependency overrides
-    app.dependency_overrides[get_current_user] = override_get_current_user
-    app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
-    app.dependency_overrides[get_session_dependency] = override_get_session_dependency
-    # Override BOTH get_async_session patterns (from db.py and database.py)
-    app.dependency_overrides[get_async_session_db] = override_get_async_session
-    app.dependency_overrides[get_async_session_database] = override_get_async_session
+    # Preserve any existing overrides installed by the base test fixture
+    original_overrides = dict(app.dependency_overrides)
 
-    transport = ASGITransport(app=app)
-    async with AsyncClient(
-        transport=transport,
-        base_url="http://test",
-        headers={"X-Tenant-ID": test_tenant_id}
-    ) as client:
-        yield client
+    app.dependency_overrides.update(
+        {
+            get_current_user: override_get_current_user,
+            get_current_user_optional: override_get_current_user_optional,
+            get_session_dependency: override_get_session_dependency,
+            get_async_session_db: override_get_async_session,
+            get_async_session_database: override_get_async_session,
+        }
+    )
 
-    # Clean up overrides after test
-    app.dependency_overrides.clear()
+    try:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(
+            transport=transport, base_url="http://test", headers={"X-Tenant-ID": test_tenant_id}
+        ) as client:
+            yield client
+    finally:
+        app.dependency_overrides.clear()
+        app.dependency_overrides.update(original_overrides)
 
 
 @pytest.fixture

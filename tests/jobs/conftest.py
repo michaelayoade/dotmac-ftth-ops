@@ -15,11 +15,8 @@ from dotmac.platform.db import get_session_dependency
 from dotmac.platform.redis_client import get_redis_client
 from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def db_session(async_db_session: AsyncSession) -> AsyncSession:

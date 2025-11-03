@@ -8,10 +8,7 @@ with intelligent invalidation and multi-tier caching strategies.
 import hashlib
 import json
 from collections.abc import Awaitable, Callable, MutableMapping
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
 from functools import wraps
 from typing import Any, TypeVar

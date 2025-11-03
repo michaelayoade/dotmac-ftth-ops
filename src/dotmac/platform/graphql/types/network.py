@@ -502,18 +502,17 @@ class NetworkOverview:
         if hasattr(overview, "recent_alerts") and overview.recent_alerts:
             recent_alerts = [NetworkAlert.from_model(a) for a in overview.recent_alerts]
 
-        data_source_status = []
+        data_source_status: list[DataSourceStatus] = []
         if hasattr(overview, "data_source_status") and overview.data_source_status:
             raw_status = overview.data_source_status
+            entries: list[tuple[str, str]] = []
             if isinstance(raw_status, dict):
-                iterator = raw_status.items()
-            else:
-                iterator = list(raw_status)
-            data_source_status = [
-                DataSourceStatus.from_dict(item)
-                for item in iterator
-                if isinstance(item, (tuple, list)) and len(item) == 2
-            ]
+                entries = [(str(name), str(status)) for name, status in raw_status.items()]
+            elif isinstance(raw_status, (list, tuple)):
+                for item in raw_status:
+                    if isinstance(item, (tuple, list)) and len(item) == 2:
+                        entries.append((str(item[0]), str(item[1])))
+            data_source_status = [DataSourceStatus.from_dict(entry) for entry in entries]
 
         return cls(
             tenant_id=overview.tenant_id,

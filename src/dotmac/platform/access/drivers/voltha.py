@@ -60,9 +60,7 @@ class VolthaDriver(BaseOLTDriver):
         )
 
     async def discover_onus(self) -> list[DeviceDiscovery]:
-        response = await self.service.discover_onus(
-            olt_device_id=self.olt_device_id, auto_provision=False
-        )
+        response = await self.service.discover_onus(olt_device_id=self.olt_device_id)
         devices = []
         for onu in response.discovered:
             metadata = onu.metadata or {}
@@ -163,17 +161,19 @@ class VolthaDriver(BaseOLTDriver):
                         hooks=self.context.hooks or {},
                     )
                     values = result.values
-                    metrics.pon_ports_total = int(values.get("pon_ports_total", metrics.pon_ports_total) or 0)
-                    metrics.pon_ports_up = int(values.get("pon_ports_up", metrics.pon_ports_up) or 0)
+                    metrics.pon_ports_total = int(
+                        values.get("pon_ports_total", metrics.pon_ports_total) or 0
+                    )
+                    metrics.pon_ports_up = int(
+                        values.get("pon_ports_up", metrics.pon_ports_up) or 0
+                    )
                     metrics.onu_total = int(values.get("onu_total", metrics.onu_total) or 0)
                     metrics.onu_online = int(values.get("onu_online", metrics.onu_online) or 0)
                     metrics.upstream_rate_mbps = _voltha_rate(values, "upstream_rate_mbps")
                     metrics.downstream_rate_mbps = _voltha_rate(values, "downstream_rate_mbps")
                     metrics.raw["snmp"] = {"oids": result.oids, "values": values}
                 except Exception as exc:  # pragma: no cover - fallback path
-                    metrics.raw.setdefault("warnings", []).append(
-                        f"snmp_collection_failed: {exc}"
-                    )
+                    metrics.raw.setdefault("warnings", []).append(f"snmp_collection_failed: {exc}")
 
         return metrics
 

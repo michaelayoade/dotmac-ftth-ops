@@ -28,6 +28,7 @@ def restore_test_environment():
 
     # Cleanup: Reload modules with test environment
     import importlib
+
     from dotmac.platform import settings as settings_module
     from dotmac.platform.auth import core
 

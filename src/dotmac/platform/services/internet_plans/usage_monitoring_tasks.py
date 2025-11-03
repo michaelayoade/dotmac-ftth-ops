@@ -7,8 +7,7 @@ and generate alerts when thresholds are exceeded.
 
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Dict, List
-from uuid import UUID
+from typing import Any, AsyncContextManager, cast
 
 import structlog
 from sqlalchemy import and_, select
@@ -16,8 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.customer_management.models import Customer
-from dotmac.platform.subscribers.models import Subscriber
-from dotmac.platform.database import async_session_maker
+from dotmac.platform.db import async_session_maker
 from dotmac.platform.fault_management.models import AlarmSeverity, AlarmSource
 from dotmac.platform.fault_management.schemas import AlarmCreate
 from dotmac.platform.fault_management.service import AlarmService
@@ -26,6 +24,7 @@ from dotmac.platform.services.internet_plans.models import (
     PlanSubscription,
 )
 from dotmac.platform.settings import settings
+from dotmac.platform.subscribers.models import Subscriber
 
 # Optional TimescaleDB imports
 try:
@@ -35,6 +34,12 @@ try:
     TIMESCALEDB_AVAILABLE = True
 except ImportError:
     TIMESCALEDB_AVAILABLE = False
+
+
+def _session_context() -> AsyncContextManager[AsyncSession]:
+    """Typed helper for acquiring an async session."""
+    session_factory = async_session_maker
+    return cast(AsyncContextManager[AsyncSession], session_factory())
 
 logger = structlog.get_logger(__name__)
 
@@ -108,6 +113,14 @@ async def query_subscriber_usage_gb(
         )
         return Decimal("0.00")
 
+    if TimeSeriesSessionLocal is None:
+        logger.warning(
+            "usage_monitoring.timescaledb_uninitialized",
+            tenant_id=tenant_id,
+            subscriber_id=subscriber_id,
+        )
+        return Decimal("0.00")
+
     try:
         async with TimeSeriesSessionLocal() as ts_session:
             repo = RadiusTimeSeriesRepository()
@@ -169,15 +182,13 @@ async def check_and_create_alert(
     threshold_crossed = None
     severity = None
 
-    for threshold_pct, threshold_severity in sorted(
-        USAGE_THRESHOLDS.items(), reverse=True
-    ):
+    for threshold_pct, threshold_severity in sorted(USAGE_THRESHOLDS.items(), reverse=True):
         if usage_percentage >= threshold_pct:
             threshold_crossed = threshold_pct
             severity = threshold_severity
             break
 
-    if not threshold_crossed:
+    if threshold_crossed is None or severity is None:
         # Usage is below all thresholds, no alert needed
         return
 
@@ -191,14 +202,18 @@ async def check_and_create_alert(
             f"Customer {customer.first_name} {customer.last_name} has exceeded their "
             f"data cap of {cap_gb} GB. Current usage: {usage_gb} GB ({usage_percentage}%)."
         )
-        recommended_action = "Consider upgrading customer to higher plan or applying overage charges."
+        recommended_action = (
+            "Consider upgrading customer to higher plan or applying overage charges."
+        )
     else:
         title = f"Data Cap {threshold_crossed}% Threshold: {customer.email}"
         description = (
             f"Customer {customer.first_name} {customer.last_name} has reached "
             f"{usage_percentage}% of their data cap ({usage_gb} GB / {cap_gb} GB)."
         )
-        recommended_action = f"Monitor usage. Consider notifying customer about approaching data cap limit."
+        recommended_action = (
+            "Monitor usage. Consider notifying customer about approaching data cap limit."
+        )
 
     # Create alarm using fault management service
     alarm_service = AlarmService(session, subscription.tenant_id)
@@ -256,7 +271,7 @@ async def check_and_create_alert(
 async def monitor_subscriber_data_cap(
     session: AsyncSession,
     subscription: PlanSubscription,
-) -> Dict[str, any]:
+) -> dict[str, Any]:
     """
     Monitor data cap for a single subscriber.
 
@@ -391,7 +406,7 @@ async def monitor_subscriber_data_cap(
 
 
 @celery_app.task(name="services.monitor_data_cap_usage", bind=True, max_retries=3)
-def monitor_data_cap_usage(self, batch_size: int = 100) -> dict:
+def monitor_data_cap_usage(self: Any, batch_size: int = 100) -> dict[str, Any]:
     """
     Monitor data cap usage for all active subscriptions with data caps.
 
@@ -420,16 +435,16 @@ def monitor_data_cap_usage(self, batch_size: int = 100) -> dict:
             "errors": 0,
         }
 
-        async with async_session_maker() as session:
+        async with _session_context() as session:
             # Query active subscriptions with data caps
             stmt = (
                 select(PlanSubscription)
                 .join(InternetServicePlan)
                 .where(
                     and_(
-                        PlanSubscription.is_active == True,
-                        PlanSubscription.is_suspended == False,
-                        InternetServicePlan.has_data_cap == True,
+                        PlanSubscription.is_active,
+                        PlanSubscription.is_suspended.is_(False),
+                        InternetServicePlan.has_data_cap,
                     )
                 )
                 .limit(batch_size)

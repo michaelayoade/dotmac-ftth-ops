@@ -3,10 +3,11 @@ Unit tests for analytics router helper functions and utilities.
 
 Tests helper functions, datetime handling, and router configuration.
 """
-import pytest
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from dotmac.platform.analytics.router import (
     _ensure_utc,
@@ -23,31 +24,31 @@ class TestHelperFunctions:
     def test_ensure_utc_with_none(self):
         """Test _ensure_utc with None returns current timezone.utc time."""
         result = _ensure_utc(None)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         # Should be recent (within last second)
-        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
+        assert (datetime.now(UTC) - result).total_seconds() < 1
 
     def test_ensure_utc_with_naive_datetime(self):
         """Test _ensure_utc with naive datetime adds timezone.utc timezone."""
         naive_dt = datetime(2024, 1, 1, 12, 0, 0)
         result = _ensure_utc(naive_dt)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result.year == 2024
         assert result.month == 1
         assert result.day == 1
 
     def test_ensure_utc_with_aware_datetime(self):
         """Test _ensure_utc with aware datetime converts to timezone.utc."""
-        aware_dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        aware_dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         result = _ensure_utc(aware_dt)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result == aware_dt
 
     def test_ensure_utc_with_string_z_suffix(self):
         """Test _ensure_utc with ISO string ending in Z."""
         iso_string = "2024-01-01T12:00:00Z"
         result = _ensure_utc(iso_string)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result.year == 2024
         assert result.month == 1
         assert result.day == 1
@@ -56,27 +57,27 @@ class TestHelperFunctions:
         """Test _ensure_utc with ISO string without Z."""
         iso_string = "2024-01-01T12:00:00"
         result = _ensure_utc(iso_string)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         assert result.year == 2024
 
     def test_ensure_utc_with_invalid_string(self):
         """Test _ensure_utc with invalid string returns current time."""
         invalid_string = "not a datetime"
         result = _ensure_utc(invalid_string)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         # Should be recent (within last second)
-        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
+        assert (datetime.now(UTC) - result).total_seconds() < 1
 
     def test_ensure_utc_with_other_type(self):
         """Test _ensure_utc with non-datetime/string type returns current time."""
         result = _ensure_utc(12345)
-        assert result.tzinfo == timezone.utc
+        assert result.tzinfo == UTC
         # Should be recent (within last second)
-        assert (datetime.now(timezone.utc) - result).total_seconds() < 1
+        assert (datetime.now(UTC) - result).total_seconds() < 1
 
     def test_isoformat_with_datetime(self):
         """Test _isoformat formats datetime correctly."""
-        dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=timezone.utc)
+        dt = datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
         result = _isoformat(dt)
         assert isinstance(result, str)
         assert "2024-01-01" in result

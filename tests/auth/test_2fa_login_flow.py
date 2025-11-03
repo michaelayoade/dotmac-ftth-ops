@@ -1,4 +1,3 @@
-
 """
 Tests for Two-Factor Authentication (2FA) Login Flow.
 
@@ -23,13 +22,8 @@ from dotmac.platform.auth.mfa_service import mfa_service
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import BackupCode, User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest_asyncio.fixture(autouse=True)
 async def cleanup_session_state():

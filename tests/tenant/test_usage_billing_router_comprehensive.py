@@ -1,25 +1,19 @@
-
 """
 Comprehensive tests for Tenant Usage Billing Router.
 
 Tests all endpoints in usage_billing_router.py for 90%+ coverage.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from fastapi import status as http_status
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
 
 pytestmark = pytest.mark.asyncio
+
 
 class TestRecordUsageWithBilling:
     """Test POST /tenants/{tenant_id}/usage/record-with-billing endpoint."""
@@ -32,7 +26,7 @@ class TestRecordUsageWithBilling:
         usage_billing_integration,
     ):
         """Test successful usage recording with billing."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = {
             "period_start": (now - timedelta(hours=1)).isoformat(),
             "period_end": now.isoformat(),
@@ -59,7 +53,7 @@ class TestRecordUsageWithBilling:
         sample_tenant,
     ):
         """Test usage recording with explicit subscription ID."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = {
             "period_start": (now - timedelta(hours=1)).isoformat(),
             "period_end": now.isoformat(),
@@ -81,7 +75,7 @@ class TestRecordUsageWithBilling:
         sample_tenant,
     ):
         """Test recording usage with zero values."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = {
             "period_start": (now - timedelta(hours=1)).isoformat(),
             "period_end": now.isoformat(),
@@ -103,7 +97,7 @@ class TestRecordUsageWithBilling:
         authenticated_client,
     ):
         """Test recording usage for non-existent tenant."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         usage_data = {
             "period_start": (now - timedelta(hours=1)).isoformat(),
             "period_end": now.isoformat(),
@@ -251,8 +245,8 @@ class TestGetUsageOverages:
         sample_tenant,
     ):
         """Test getting overages with specific date range."""
-        start_date = (datetime.now(timezone.utc) - timedelta(days=30)).isoformat()
-        end_date = datetime.now(timezone.utc).isoformat()
+        start_date = (datetime.now(UTC) - timedelta(days=30)).isoformat()
+        end_date = datetime.now(UTC).isoformat()
 
         response = await authenticated_client.get(
             f"/api/v1/tenants/{sample_tenant.id}/usage/overages",
@@ -530,7 +524,7 @@ class TestErrorHandling:
             "record_tenant_usage_with_billing",
             side_effect=Exception("Service error"),
         ):
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             usage_data = {
                 "period_start": (now - timedelta(hours=1)).isoformat(),
                 "period_end": now.isoformat(),

@@ -25,7 +25,11 @@ def single_tenant_config():
 @pytest.fixture
 def multi_tenant_config():
     """Create multi-tenant configuration."""
-    return TenantConfiguration(mode=TenantMode.MULTI, default_tenant_id="default-org")
+    return TenantConfiguration(
+        mode=TenantMode.MULTI,
+        default_tenant_id="default-org",
+        require_tenant_header=True,
+    )
 
 
 @pytest.fixture
@@ -166,7 +170,9 @@ class TestCustomConfiguration:
         with patch.dict(os.environ, {}, clear=False):
             os.environ.pop("TENANT_HEADER_NAME", None)
             os.environ.pop("TENANT_QUERY_PARAM", None)
-            config = TenantConfiguration(mode=TenantMode.MULTI, tenant_header_name="X-Organization-ID")
+            config = TenantConfiguration(
+                mode=TenantMode.MULTI, tenant_header_name="X-Organization-ID"
+            )
             client = create_test_app(config)
 
             # Old header name shouldn't work

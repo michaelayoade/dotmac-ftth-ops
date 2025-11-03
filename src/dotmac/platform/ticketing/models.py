@@ -9,7 +9,7 @@ from __future__ import annotations
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
 from sqlalchemy import JSON, DateTime, ForeignKey, Index, String, Text
@@ -18,6 +18,11 @@ from sqlalchemy.dialects.postgresql import UUID as PostgresUUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from dotmac.platform.db import AuditMixin, Base, TenantMixin, TimestampMixin
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModel
+else:
+    BaseModel = Base
 
 
 class TicketActorType(str, Enum):
@@ -65,7 +70,7 @@ class TicketType(str, Enum):
     CONNECTIVITY_ISSUE = "connectivity_issue"
 
 
-class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
+class Ticket(BaseModel, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Ticket record capturing the high-level support request.
 
@@ -229,7 +234,7 @@ class Ticket(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[mis
         )
 
 
-class TicketMessage(Base, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
+class TicketMessage(BaseModel, TimestampMixin, TenantMixin, AuditMixin):  # type: ignore[misc]
     """
     Threaded message within a ticket conversation.
 

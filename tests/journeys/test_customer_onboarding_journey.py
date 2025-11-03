@@ -1,11 +1,10 @@
-
 """
 Integration tests for complete customer onboarding journey.
 
 Tests the full workflow from user registration to active service.
 """
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -13,9 +12,6 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from dotmac.platform.billing.models import (
-
-
-
     BillingSubscriptionPlanTable,
     BillingSubscriptionTable,
 )
@@ -29,10 +25,8 @@ from dotmac.platform.customer_management.service import CustomerService
 from dotmac.platform.tenant.models import Tenant
 from dotmac.platform.user_management.models import User
 
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.mark.asyncio
 class TestCustomerOnboardingJourney:
@@ -64,7 +58,7 @@ class TestCustomerOnboardingJourney:
             password_hash="$2b$12$test_hash",
             is_active=False,  # Not verified yet
             is_verified=False,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(user)
         await async_session.flush()
@@ -121,7 +115,7 @@ class TestCustomerOnboardingJourney:
 
         # Step 5: Create subscription using service layer
         SubscriptionService(async_session)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
@@ -180,7 +174,7 @@ class TestCustomerOnboardingJourney:
             password_hash="$2b$12$test_hash",
             is_active=True,
             is_verified=True,
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
         async_session.add(user)
         await async_session.flush()
@@ -213,7 +207,7 @@ class TestCustomerOnboardingJourney:
 
         # Create subscription in trial using service layer
         SubscriptionService(async_session)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         # Exercise the actual trial activation logic
         subscription = BillingSubscriptionTable(
@@ -355,7 +349,7 @@ class TestCustomerOnboardingJourneyFailures:
 
         # For now, verify that direct DB insertion works (no FK constraint)
         # but document that service layer should validate
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         subscription = BillingSubscriptionTable(
             tenant_id=test_tenant.id,
             subscription_id=f"sub-{uuid4().hex[:8]}",

@@ -7,6 +7,7 @@ This maintains clean separation between domain and infrastructure layers.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -152,7 +153,6 @@ class InvoiceMapper:
         Returns:
             InvoiceModel for API responses
         """
-        from datetime import datetime, timezone
 
         return InvoiceModel(
             tenant_id=invoice.tenant_id,
@@ -306,6 +306,7 @@ class PaymentMapper:
             invoice_ids=[payment.invoice_id] if payment.invoice_id else [],
             failure_reason=payment.error_message,
             retry_count=0,
+            refund_amount=None,
         )
 
 
@@ -333,7 +334,6 @@ class SubscriptionMapper:
     @staticmethod
     def to_model(subscription: Subscription) -> SubscriptionModel:
         """Convert Subscription aggregate to SubscriptionModel."""
-        from datetime import datetime, timezone
 
         from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
 

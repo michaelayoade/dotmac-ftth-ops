@@ -259,9 +259,7 @@ class HuaweiCLIDriver(BaseOLTDriver):
 
         metrics = await self._collect_cli_metrics()
         if snmp_error:
-            metrics.raw.setdefault("warnings", []).append(
-                f"snmp_collection_failed: {snmp_error}"
-            )
+            metrics.raw.setdefault("warnings", []).append(f"snmp_collection_failed: {snmp_error}")
         return metrics
 
     async def fetch_alarms(self) -> list[OLTAlarm]:

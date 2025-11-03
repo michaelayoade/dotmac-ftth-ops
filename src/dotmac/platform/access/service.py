@@ -367,7 +367,14 @@ class AccessNetworkService:
                     )
                 )
 
-        return VOLTHAAlarmListResponse(alarms=alarms, total=len(alarms))
+        active = sum(1 for alarm in alarms if (alarm.state or "").upper() != "CLEARED")
+        cleared = len(alarms) - active
+        return VOLTHAAlarmListResponse(
+            alarms=alarms,
+            total=len(alarms),
+            active=active,
+            cleared=cleared,
+        )
 
     async def get_olt_overview(self, olt_id: str) -> OLTOverview:
         driver = self._driver(olt_id)

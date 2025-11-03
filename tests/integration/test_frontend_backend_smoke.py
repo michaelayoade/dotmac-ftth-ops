@@ -11,8 +11,8 @@ import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 
-
 pytestmark = [pytest.mark.integration, pytest.mark.parallel_safe]
+
 
 class TestUserManagementEndpoints:
     """Test user management endpoints used by admin UI."""
@@ -292,6 +292,7 @@ class TestCrossModuleIntegration:
 async def async_client():
     """Provide async HTTP client for testing."""
     from httpx import ASGITransport, AsyncClient
+
     from dotmac.platform.main import app  # Import after conftest runs
 
     transport = ASGITransport(app=app)

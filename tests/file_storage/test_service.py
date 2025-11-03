@@ -4,7 +4,7 @@ Tests for file storage service.
 
 import hashlib
 import json
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import Mock, patch
 
 import pytest
@@ -310,7 +310,7 @@ class TestLocalFileStorage:
 
         metadata.setdefault("metadata", {})
         metadata["metadata"]["description"] = "updated"
-        metadata["updated_at"] = datetime.now(timezone.utc).isoformat()
+        metadata["updated_at"] = datetime.now(UTC).isoformat()
 
         assert storage.apply_metadata_update(file_id, metadata) is True
 

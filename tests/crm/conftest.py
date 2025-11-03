@@ -71,9 +71,11 @@ async def async_client(test_app, async_db_session: AsyncSession, test_tenant: Te
     Overrides database session to ensure test data is visible to API.
     """
     from uuid import uuid4
+
     from httpx import ASGITransport, AsyncClient
-    from dotmac.platform.db import get_session_dependency
+
     from dotmac.platform.auth.dependencies import get_current_user
+    from dotmac.platform.db import get_session_dependency
     from dotmac.platform.user_management.models import User
 
     # Create a test user

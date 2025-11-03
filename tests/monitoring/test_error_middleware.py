@@ -1,6 +1,6 @@
 """Tests for error tracking middleware."""
 
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi import FastAPI, Request
@@ -9,7 +9,6 @@ from starlette.testclient import TestClient
 
 from dotmac.platform.monitoring.error_middleware import (
     ErrorTrackingMiddleware,
-    RequestMetricsMiddleware,
 )
 
 
@@ -55,9 +54,7 @@ class TestErrorTrackingMiddleware:
 
     def test_successful_request_no_tracking(self, client):
         """Test successful request doesn't track errors."""
-        with patch(
-            "dotmac.platform.monitoring.error_middleware.track_http_error"
-        ) as mock_track:
+        with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/success")
             assert response.status_code == 200
             # Should not track successful requests
@@ -65,9 +62,7 @@ class TestErrorTrackingMiddleware:
 
     def test_404_error_tracking(self, client):
         """Test 404 error is tracked."""
-        with patch(
-            "dotmac.platform.monitoring.error_middleware.track_http_error"
-        ) as mock_track:
+        with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/not-found")
             assert response.status_code == 404
 
@@ -80,9 +75,7 @@ class TestErrorTrackingMiddleware:
 
     def test_500_error_tracking(self, client):
         """Test 500 error is tracked."""
-        with patch(
-            "dotmac.platform.monitoring.error_middleware.track_http_error"
-        ) as mock_track:
+        with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/server-error")
             assert response.status_code == 500
 
@@ -94,9 +87,7 @@ class TestErrorTrackingMiddleware:
     def test_exception_tracking(self, client):
         """Test unhandled exceptions are tracked."""
         with (
-            patch(
-                "dotmac.platform.monitoring.error_middleware.track_exception"
-            ) as mock_track_exc,
+            patch("dotmac.platform.monitoring.error_middleware.track_exception") as mock_track_exc,
         ):
             # Exception should be raised
             with pytest.raises(ValueError, match="Test exception"):
@@ -122,9 +113,7 @@ class TestErrorTrackingMiddleware:
         app.add_middleware(ErrorTrackingMiddleware)
         client = TestClient(app)
 
-        with patch(
-            "dotmac.platform.monitoring.error_middleware.track_http_error"
-        ) as mock_track:
+        with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/test")
             assert response.status_code == 404
 
@@ -134,9 +123,7 @@ class TestErrorTrackingMiddleware:
 
     def test_tenant_id_none_when_not_in_state(self, client):
         """Test tenant ID is None when not in request state."""
-        with patch(
-            "dotmac.platform.monitoring.error_middleware.track_http_error"
-        ) as mock_track:
+        with patch("dotmac.platform.monitoring.error_middleware.track_http_error") as mock_track:
             response = client.get("/not-found")
             assert response.status_code == 404
 

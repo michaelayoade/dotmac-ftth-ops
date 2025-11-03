@@ -3,8 +3,6 @@
 import pytest
 
 from dotmac.platform.billing.events import (
-
-
     BillingEvents,
     emit_invoice_created,
     emit_invoice_paid,
@@ -14,15 +12,11 @@ from dotmac.platform.billing.events import (
 )
 from dotmac.platform.events import Event, get_event_bus, reset_event_bus
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestBillingEventEmission:
     """Test billing event emission."""
-
 
     @pytest.fixture(autouse=True)
     def setup(self):

@@ -49,7 +49,12 @@ class EmailChannelProvider(NotificationChannelProvider):
         )
 
         # Queue for async delivery via communications service
-        queue_email(email_message)
+        queue_email(
+            to=[context.recipient_email],
+            subject=context.title,
+            text_body=context.message,
+            html_body=html_body,
+        )
 
         self.logger.info(
             "email.notification.queued",

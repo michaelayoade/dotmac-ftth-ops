@@ -4,10 +4,7 @@ On-Call Schedule API Router
 FastAPI router for on-call schedule and rotation management.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
@@ -54,6 +51,12 @@ async def create_oncall_schedule(
 
     Requires `fault:oncall:manage` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
 
     schedule = await service.create_schedule(
@@ -96,6 +99,12 @@ async def list_oncall_schedules(
 
     Requires `fault:oncall:view` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
     schedules = await service.list_schedules(is_active=is_active)
 
@@ -124,6 +133,12 @@ async def get_oncall_schedule(
 
     Requires `fault:oncall:view` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
     schedule = await service.get_schedule(schedule_id)
 
@@ -152,6 +167,12 @@ async def update_oncall_schedule(
 
     Requires `fault:oncall:manage` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
     schedule = await service.get_schedule(schedule_id)
 
@@ -167,7 +188,6 @@ async def update_oncall_schedule(
         setattr(schedule, field, value)
 
     # Update timestamp
-    from datetime import timezone
 
     schedule.updated_at = datetime.now(UTC)
 
@@ -200,6 +220,12 @@ async def delete_oncall_schedule(
 
     Requires `fault:oncall:manage` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
     schedule = await service.get_schedule(schedule_id)
 
@@ -241,6 +267,12 @@ async def create_oncall_rotation(
 
     Requires `fault:oncall:manage` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
 
     # Verify schedule exists
@@ -293,6 +325,12 @@ async def list_oncall_rotations(
 
     Requires `fault:oncall:view` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     service = OnCallScheduleService(db, user.tenant_id)
     rotations = await service.list_rotations(
         schedule_id=schedule_id,
@@ -325,6 +363,12 @@ async def get_current_oncall(
 
     Requires `fault:oncall:view` permission.
     """
+    if user.tenant_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tenant ID is required",
+        )
+
     from sqlalchemy import and_, select
 
     service = OnCallScheduleService(db, user.tenant_id)

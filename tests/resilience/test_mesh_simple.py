@@ -8,13 +8,11 @@ from dotmac.platform.resilience.service_mesh import (
     ServiceRegistry,
 )
 
-
-
 pytestmark = pytest.mark.unit
+
 
 class TestLoadBalancerAdditional:
     """Additional load balancer tests."""
-
 
     def test_weighted_zero_weight(self):
         """Test weighted selection with zero weights."""

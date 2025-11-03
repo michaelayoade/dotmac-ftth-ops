@@ -3,7 +3,7 @@
 import asyncio
 import json
 import tempfile
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock
 
@@ -74,7 +74,7 @@ class TestCheckpointData:
 
     def test_checkpoint_data_with_timestamp(self, progress_info):
         """Test creating checkpoint data with custom timestamp."""
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         state = {"key": "value"}
         checkpoint = CheckpointData("op-123", progress_info, state, timestamp)
 
@@ -369,8 +369,8 @@ class TestProgressTracker:
         tracker._progress.total_records = 1000
         tracker._progress.processed_records = 250
         # Set start time to 4 seconds ago
-        tracker._progress.start_time = datetime.now(timezone.utc) - timedelta(seconds=4)
-        tracker._progress.last_update = datetime.now(timezone.utc)
+        tracker._progress.start_time = datetime.now(UTC) - timedelta(seconds=4)
+        tracker._progress.last_update = datetime.now(UTC)
 
         tracker._estimate_completion()
         assert tracker._progress.estimated_completion is not None
@@ -727,10 +727,10 @@ class TestUtilityFunctions:
 
         # Create old and new progress
         old_progress = ProgressInfo(operation_id="old-op")
-        old_progress.last_update = datetime.now(timezone.utc) - timedelta(days=10)
+        old_progress.last_update = datetime.now(UTC) - timedelta(days=10)
 
         new_progress = ProgressInfo(operation_id="new-op")
-        new_progress.last_update = datetime.now(timezone.utc)
+        new_progress.last_update = datetime.now(UTC)
 
         await store.save("old-op", old_progress)
         await store.save("new-op", new_progress)

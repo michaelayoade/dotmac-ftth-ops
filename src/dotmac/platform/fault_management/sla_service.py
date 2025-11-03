@@ -4,10 +4,7 @@ SLA Monitoring Service
 Real-time SLA tracking, breach detection, and compliance reporting.
 """
 
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
 import structlog
@@ -536,6 +533,7 @@ class SLAMonitoringService:
             deviation=f"{deviation_percent:.1f}%",
         )
 
+        await self.session.flush()
         return breach
 
     # Reporting

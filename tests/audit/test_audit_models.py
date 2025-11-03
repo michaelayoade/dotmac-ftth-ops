@@ -7,7 +7,7 @@ This test file applies the fake implementation pattern by:
 3. Avoiding over-mocking that produces 0% coverage
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from uuid import uuid4
 
 import pytest
@@ -42,7 +42,7 @@ class TestAuditModels:
             tenant_id="tenant456",
             action="login",
             description="User logged in",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         assert activity.activity_type == ActivityType.USER_LOGIN
@@ -85,9 +85,9 @@ class TestAuditModels:
             tenant_id="tenant456",
             action="upload",
             description="File uploaded",
-            timestamp=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         response = AuditActivityResponse.model_validate(activity)
@@ -139,9 +139,9 @@ class TestAuditModels:
             tenant_id="tenant123",  # Required by StrictTenantMixin
             action="login",
             description="User login",
-            timestamp=datetime.now(timezone.utc),
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         async_db_session.add(activity)
@@ -179,7 +179,7 @@ class TestAuditModels:
                 severity=ActivitySeverity.LOW.value,
                 user_id="user123",
                 tenant_id="tenant456",
-                timestamp=datetime.now(timezone.utc),
+                timestamp=datetime.now(UTC),
                 resource_type=None,
                 resource_id=None,
                 action="login",

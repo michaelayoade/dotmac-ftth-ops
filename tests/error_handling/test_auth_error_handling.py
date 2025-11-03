@@ -1,4 +1,3 @@
-
 """
 Authentication and Authorization Error Handling Tests.
 
@@ -7,13 +6,11 @@ Tests comprehensive error scenarios for the auth module.
 
 import pytest
 
-
 # Mark all tests as integration - they test real error scenarios with full app
 
 
-
-
 pytestmark = pytest.mark.integration
+
 
 class TestAuthenticationErrors:
     """Test authentication error handling."""

@@ -1,4 +1,3 @@
-
 """
 Tests for avatar upload endpoint.
 """
@@ -15,13 +14,8 @@ from dotmac.platform.auth.core import create_access_token, hash_password
 from dotmac.platform.auth.router import auth_router
 from dotmac.platform.user_management.models import User
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app():
@@ -100,11 +94,17 @@ async def client(app, async_db_session):
     app.dependency_overrides[get_session_dependency] = override_get_session
     app.dependency_overrides[get_auth_session] = override_get_session
 
-    # Mock audit logging to prevent database transaction conflicts
-    with patch("dotmac.platform.audit.log_user_activity", new=AsyncMock()):
+    storage_mock = AsyncMock()
+    storage_mock.store_file = AsyncMock(return_value="mock-file-id")
+    storage_mock.delete_file = AsyncMock(return_value=None)
+
+    with patch("dotmac.platform.file_storage.service.get_storage_service", return_value=storage_mock), patch(
+        "dotmac.platform.audit.log_user_activity", new=AsyncMock()
+    ):
         # Use ASGITransport instead of app parameter (httpx API change)
         transport = ASGITransport(app=app)
         async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            ac.storage_mock = storage_mock  # type: ignore[attr-defined]
             yield ac
 
 

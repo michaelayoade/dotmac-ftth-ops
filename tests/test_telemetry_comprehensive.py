@@ -13,11 +13,11 @@ Tests cover:
 - Span context creation
 - Test environment detection
 """
-import pytest
 
 import os
 from unittest.mock import Mock, patch
 
+import pytest
 from fastapi import FastAPI
 
 from dotmac.platform.telemetry import (

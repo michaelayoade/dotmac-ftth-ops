@@ -1,11 +1,10 @@
-
 """
 Comprehensive tests for webhooks router.
 
 Covers all webhook subscription and delivery endpoints.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,15 +14,10 @@ from httpx import ASGITransport, AsyncClient
 from dotmac.platform.auth.rbac_dependencies import require_permission
 from dotmac.platform.webhooks.router import router
 
-
-
-
-
-
-
 pytestmark = pytest.mark.integration
 
 pytestmark = pytest.mark.asyncio
+
 
 def _override_webhook_permissions(app: FastAPI, mock_user):
     permission_dependency = require_permission("webhooks:manage")
@@ -55,7 +49,7 @@ def mock_subscription_service():
     """Mock WebhookSubscriptionService."""
     service = MagicMock()
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
 
     # Create mock objects with attributes (not dicts)
     def make_subscription(**overrides):
@@ -97,7 +91,7 @@ def mock_subscription_service():
             "error_message": None,
             "attempt_number": 1,
             "duration_ms": 150,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "next_retry_at": None,
         }
         defaults.update(overrides)
@@ -134,7 +128,7 @@ def mock_delivery_service():
             "event_type": "invoice.created",
             "status": "success",
             "response_status": 200,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
         }
         defaults.update(overrides)
         for key, value in defaults.items():

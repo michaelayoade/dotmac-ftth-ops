@@ -5,26 +5,20 @@ from unittest.mock import patch
 import pytest
 
 from dotmac.platform.admin.settings.models import (
-
-
     SettingsCategory,
     SettingsUpdateRequest,
 )
 from dotmac.platform.admin.settings.service import SettingsManagementService
-
-
-
-
 
 pytestmark = [
     pytest.mark.unit,
     pytest.mark.asyncio,
 ]
 
+
 @pytest.fixture(autouse=True)
 def restore_category_mapping():
     """Fixture to ensure CATEGORY_MAPPING is restored after each test."""
-
 
     # Save original mapping before test
     original_mapping = SettingsManagementService.CATEGORY_MAPPING.copy()
@@ -105,16 +99,16 @@ class TestValidationEdgeCases:
     @pytest.mark.asyncio
     async def test_validate_settings_generic_exception(self):
         """Test validation with generic exception (lines 232-234)."""
-        from unittest.mock import PropertyMock
 
         service = SettingsManagementService()
 
         # Mock the settings object's model_dump to raise exception during validation
         # Need to mock at a deeper level to trigger the exception in _run_validation_checks
-        original_database = service.settings.database
 
         with patch.object(
-            type(service.settings.database), "model_dump", side_effect=RuntimeError("Unexpected error")
+            type(service.settings.database),
+            "model_dump",
+            side_effect=RuntimeError("Unexpected error"),
         ):
             result = service.validate_settings(
                 category=SettingsCategory.DATABASE, updates={"url": "test"}
@@ -292,6 +286,7 @@ class TestBackupEdgeCases:
 
         # Verify it was called with AdminSettingsStore, not AdminSettingsAuditEntry
         from dotmac.platform.admin.settings.models import AdminSettingsStore
+
         call_args = mock_session.add.call_args[0][0]
         assert isinstance(call_args, AdminSettingsStore), (
             "Expected session.add to be called with AdminSettingsStore when there are no changes"

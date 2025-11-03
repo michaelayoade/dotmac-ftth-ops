@@ -1,8 +1,8 @@
 """Tests for the celery_app module."""
-import pytest
 
 from unittest.mock import Mock, patch
 
+import pytest
 from celery import Celery
 
 # Import the entire module to ensure coverage tracking

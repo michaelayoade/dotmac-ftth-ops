@@ -478,7 +478,7 @@ function PlanDetailsPageContent() {
 
 export default function PlanDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.plans.read">
+    <RouteGuard permission="isp.plans.read">
       <PlanDetailsPageContent />
     </RouteGuard>
   );

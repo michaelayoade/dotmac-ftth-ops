@@ -1,11 +1,10 @@
-
 """
 E2E tests for Platform Admin features.
 
 Tests cross-tenant administration, impersonation, analytics, and system management.
 """
 
-from datetime import timezone
+from datetime import UTC
 
 import pytest
 import pytest_asyncio
@@ -18,11 +17,8 @@ from dotmac.platform.db import get_async_session, get_session_dependency
 from dotmac.platform.main import app
 from dotmac.platform.tenant import get_current_tenant_id
 
-
-
-
-
 pytestmark = [pytest.mark.asyncio, pytest.mark.e2e]
+
 
 @pytest.fixture
 def platform_admin_id():
@@ -174,7 +170,7 @@ async def seed_multi_tenant_data(db_session):
             current_users=tenant_data["users"],
             current_api_calls=0,
             current_storage_gb=0,
-            created_at=datetime.now(timezone.utc) - timedelta(days=30),
+            created_at=datetime.now(UTC) - timedelta(days=30),
         )
         db_session.add(tenant)
 
@@ -186,7 +182,7 @@ async def seed_multi_tenant_data(db_session):
                 password_hash="hashed_password",
                 tenant_id=tenant_data["tenant_id"],
                 is_active=True,
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
             db_session.add(user)
 
@@ -198,7 +194,7 @@ async def seed_multi_tenant_data(db_session):
                 last_name="Test",
                 email=f"customer{i}@{tenant_data['slug']}.com",
                 tenant_id=tenant_data["tenant_id"],
-                created_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
             )
             db_session.add(customer)
 
@@ -210,7 +206,7 @@ async def seed_multi_tenant_data(db_session):
         status=TenantStatus.ACTIVE,
         plan_type=TenantPlanType.ENTERPRISE,
         billing_cycle=BillingCycle.YEARLY,
-        created_at=datetime.now(timezone.utc) - timedelta(days=365),
+        created_at=datetime.now(UTC) - timedelta(days=365),
     )
     db_session.add(admin_tenant)
 
@@ -222,7 +218,7 @@ async def seed_multi_tenant_data(db_session):
         tenant_id="platform-admin-tenant",
         is_active=True,
         is_platform_admin=True,
-        created_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
     )
     db_session.add(platform_admin)
 
@@ -431,7 +427,9 @@ class TestTenantListing:
     @pytest.mark.asyncio
     async def test_non_admin_cannot_get_tenant_detail(self, async_client, auth_headers):
         """Test non-admin user cannot get tenant details."""
-        response = await async_client.get("/api/v1/admin/platform/tenants/tenant-alpha", headers=auth_headers)
+        response = await async_client.get(
+            "/api/v1/admin/platform/tenants/tenant-alpha", headers=auth_headers
+        )
 
         assert response.status_code in [401, 403]
 
@@ -702,10 +700,14 @@ class TestSystemManagement:
     @pytest.mark.asyncio
     async def test_non_admin_cannot_manage_system(self, async_client, auth_headers):
         """Test non-admin user cannot access system management."""
-        response = await async_client.post("/api/v1/admin/platform/system/cache/clear", headers=auth_headers)
+        response = await async_client.post(
+            "/api/v1/admin/platform/system/cache/clear", headers=auth_headers
+        )
         assert response.status_code in [401, 403]
 
-        response = await async_client.get("/api/v1/admin/platform/system/config", headers=auth_headers)
+        response = await async_client.get(
+            "/api/v1/admin/platform/system/config", headers=auth_headers
+        )
         assert response.status_code in [401, 403]
 
 

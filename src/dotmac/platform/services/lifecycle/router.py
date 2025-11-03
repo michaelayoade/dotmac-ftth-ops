@@ -5,7 +5,7 @@ REST API endpoints for service lifecycle management including provisioning,
 activation, suspension, resumption, and termination operations.
 """
 
-from typing import Any, cast
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -18,6 +18,7 @@ from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_async_session
 from dotmac.platform.services.lifecycle.models import (
     LifecycleEventType,
+    ServiceInstance,
     ServiceStatus,
     ServiceType,
 )
@@ -45,6 +46,39 @@ router = APIRouter(prefix="/lifecycle", tags=["Services - Lifecycle"])
 
 # Rate limiting
 limiter = Limiter(key_func=get_remote_address)
+
+
+def _coerce_uuid(value: UUID | str | None) -> UUID | None:
+    """Convert a user identifier to UUID when possible."""
+    if value is None or isinstance(value, UUID):
+        return value
+    try:
+        return UUID(str(value))
+    except ValueError:
+        return None
+
+
+def _ensure_operation_result(
+    result: ServiceOperationResult | ServiceInstance | Any, operation: str
+) -> ServiceOperationResult:
+    """Normalize service responses to ServiceOperationResult."""
+    if isinstance(result, ServiceOperationResult):
+        return result
+    if isinstance(result, ServiceInstance):
+        return ServiceOperationResult(
+            success=True,
+            service_instance_id=result.id,
+            operation=operation,
+            message="Operation completed successfully",
+        )
+
+    service_instance_id = getattr(result, "service_instance_id", None)
+    return ServiceOperationResult(
+        success=True,
+        service_instance_id=service_instance_id,
+        operation=operation,
+        message="Operation completed successfully",
+    )
 
 
 # ==========================================
@@ -83,11 +117,11 @@ async def provision_service(
         result = await service.provision_service(
             tenant_id=tenant_id,
             data=provision_data,
-            created_by_user_id=current_user.user_id,
+            created_by_user_id=_coerce_uuid(current_user.user_id),
         )
 
         response = ServiceProvisioningResponse.model_validate(result)
-        return cast(dict[str, Any], response.model_dump(mode="json"))
+        return response.model_dump(mode="json")
 
     except ValueError as e:
         raise HTTPException(
@@ -129,11 +163,15 @@ async def activate_service(
     # Override service_instance_id from path
     activation_data.service_instance_id = service_instance_id
 
-    result = await service.activate_service(
+    actor_id = _coerce_uuid(current_user.user_id)
+
+    service_result = await service.activate_service(
         tenant_id=tenant_id,
         data=activation_data,
-        activated_by_user_id=current_user.user_id,
+        activated_by_user_id=actor_id,
     )
+
+    result = _ensure_operation_result(service_result, "activate")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -148,7 +186,7 @@ async def activate_service(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -185,11 +223,15 @@ async def suspend_service(
     # Override service_instance_id from path
     suspension_data.service_instance_id = service_instance_id
 
-    result = await service.suspend_service(
+    suspended_by = _coerce_uuid(current_user.user_id)
+
+    service_result = await service.suspend_service(
         tenant_id=tenant_id,
         data=suspension_data,
-        suspended_by_user_id=current_user.user_id,
+        suspended_by_user_id=suspended_by,
     )
+
+    result = _ensure_operation_result(service_result, "suspend")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -204,7 +246,7 @@ async def suspend_service(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 @router.post(
@@ -235,11 +277,15 @@ async def resume_service(
     # Override service_instance_id from path
     resumption_data.service_instance_id = service_instance_id
 
-    result = await service.resume_service(
+    resumed_by = _coerce_uuid(current_user.user_id)
+
+    service_result = await service.resume_service(
         tenant_id=tenant_id,
         data=resumption_data,
-        resumed_by_user_id=current_user.user_id,
+        resumed_by_user_id=resumed_by,
     )
+
+    result = _ensure_operation_result(service_result, "resume")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -254,7 +300,7 @@ async def resume_service(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -290,11 +336,15 @@ async def terminate_service(
     # Override service_instance_id from path
     termination_data.service_instance_id = service_instance_id
 
-    result = await service.terminate_service(
+    terminated_by = _coerce_uuid(current_user.user_id)
+
+    service_result = await service.terminate_service(
         tenant_id=tenant_id,
         data=termination_data,
-        terminated_by_user_id=current_user.user_id,
+        terminated_by_user_id=terminated_by,
     )
+
+    result = _ensure_operation_result(service_result, "terminate")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -309,7 +359,7 @@ async def terminate_service(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -345,11 +395,15 @@ async def modify_service(
     # Override service_instance_id from path
     modification_data.service_instance_id = service_instance_id
 
-    result = await service.modify_service(
+    modified_by = _coerce_uuid(current_user.user_id)
+
+    service_result = await service.modify_service(
         tenant_id=tenant_id,
         data=modification_data,
-        modified_by_user_id=current_user.user_id,
+        modified_by_user_id=modified_by,
     )
+
+    result = _ensure_operation_result(service_result, "modify")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -364,7 +418,7 @@ async def modify_service(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -400,7 +454,9 @@ async def perform_health_check(
     # Override service_instance_id from path
     health_check_data.service_instance_id = service_instance_id
 
-    result = await service.perform_health_check(tenant_id, health_check_data)
+    service_result = await service.perform_health_check(tenant_id, health_check_data)
+
+    result = _ensure_operation_result(service_result, "health_check")
 
     if not result.success:
         if result.error == "NOT_FOUND":
@@ -415,7 +471,7 @@ async def perform_health_check(
             )
 
     response = ServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -450,11 +506,11 @@ async def bulk_service_operation(
     result = await service.bulk_service_operation(
         tenant_id=tenant_id,
         data=bulk_data,
-        user_id=current_user.user_id,
+        user_id=_coerce_uuid(current_user.user_id),
     )
 
     response = BulkServiceOperationResult.model_validate(result)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 # ==========================================
@@ -502,7 +558,7 @@ async def list_services(
     )
 
     return [
-        cast(dict[str, Any], ServiceInstanceSummary.model_validate(s).model_dump(mode="json"))
+        ServiceInstanceSummary.model_validate(s).model_dump(mode="json")
         for s in services
     ]
 
@@ -538,7 +594,7 @@ async def get_service(
         )
 
     response = ServiceInstanceResponse.model_validate(service_instance)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")
 
 
 @router.get(
@@ -575,7 +631,7 @@ async def get_service_events(
     )
 
     return [
-        cast(dict[str, Any], LifecycleEventResponse.model_validate(e).model_dump(mode="json"))
+        LifecycleEventResponse.model_validate(e).model_dump(mode="json")
         for e in events
     ]
 
@@ -611,4 +667,4 @@ async def get_statistics(
     stats = await service.get_statistics(tenant_id)
 
     response = ServiceStatistics.model_validate(stats)
-    return cast(dict[str, Any], response.model_dump(mode="json"))
+    return response.model_dump(mode="json")

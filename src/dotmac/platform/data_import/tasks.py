@@ -6,10 +6,7 @@ Handles chunked processing of large import files with progress tracking.
 
 import csv
 import json
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -391,64 +388,117 @@ async def _process_data_chunk(
 ) -> dict[str, Any]:
     """Process a chunk of data records."""
 
+    if job_type == ImportJobType.CUSTOMERS:
+        return await _process_customer_chunk(
+            session=session,
+            job=job,
+            chunk_data=chunk_data,
+            tenant_id=tenant_id,
+        )
+    if job_type == ImportJobType.INVOICES:
+        return await _process_invoice_chunk(
+            session=session,
+            job=job,
+            chunk_data=chunk_data,
+            tenant_id=tenant_id,
+        )
+
+    # Add other job types as needed
+    raise ValueError(f"Unsupported job type: {job_type}")
+
+
+async def _process_customer_chunk(
+    *,
+    session: AsyncSession,
+    job: ImportJob,
+    chunk_data: list[dict[str, Any]],
+    tenant_id: str,
+) -> dict[str, Any]:
+    """Process customer import records."""
+
+    service = CustomerService(session)
     successful = 0
     failed = 0
     errors: list[dict[str, Any]] = []
-
-    # Create service based on job type
-    if job_type == ImportJobType.CUSTOMERS:
-        service = CustomerService(session)
-        mapper = CustomerMapper
-    elif job_type == ImportJobType.INVOICES:
-        from dotmac.platform.billing.invoicing.mappers import InvoiceMapper
-        from dotmac.platform.billing.invoicing.service import InvoiceService
-
-        service = InvoiceService(session)
-        mapper = InvoiceMapper
-    else:
-        # Add other job types as needed
-        raise ValueError(f"Unsupported job type: {job_type}")
 
     for item in chunk_data:
         row_number = item["row_number"]
         row_data = item["data"]
 
         try:
-            # Validate and transform data
-            validated_data = mapper.validate_import_row(row_data, row_number)
+            validated_data = CustomerMapper.validate_import_row(row_data, row_number)
 
-            # Check if validation was successful (returns schema) or failed (returns error dict)
-            from dotmac.platform.billing.invoicing.mappers import InvoiceImportSchema
-
-            if isinstance(validated_data, (CustomerImportSchema, InvoiceImportSchema)):
-                # Validation successful - create the entity
-                if job_type == ImportJobType.CUSTOMERS:
-                    model_data = mapper.from_import_to_model(
-                        validated_data, tenant_id, generate_customer_number=True
-                    )
-                    await service.create_customer(**model_data)
-                elif job_type == ImportJobType.INVOICES:
-                    model_data = mapper.from_import_to_model(
-                        validated_data, tenant_id, generate_invoice_number=True
-                    )
-                    await service.create_invoice(**model_data)
-
+            if isinstance(validated_data, CustomerImportSchema):
+                model_data = CustomerMapper.from_import_to_model(
+                    validated_data, tenant_id, generate_customer_number=True
+                )
+                await service.create_customer(**model_data)
                 successful += 1
             else:
-                # Validation failed - record the error
-                error_detail = validated_data
                 failed += 1
-                errors.append(error_detail)
+                errors.append(validated_data)
                 await _record_failure(
                     session,
                     job,
                     row_number,
                     "validation",
-                    error_detail.get("error", "Validation failed"),
+                    validated_data.get("error", "Validation failed"),
                     row_data,
                     tenant_id,
                 )
+        except Exception as e:
+            failed += 1
+            error_msg = str(e)
+            errors.append({"row_number": row_number, "error": error_msg, "data": row_data})
+            await _record_failure(
+                session, job, row_number, "creation", error_msg, row_data, tenant_id
+            )
 
+    return {"successful": successful, "failed": failed, "errors": errors}
+
+
+async def _process_invoice_chunk(
+    *,
+    session: AsyncSession,
+    job: ImportJob,
+    chunk_data: list[dict[str, Any]],
+    tenant_id: str,
+) -> dict[str, Any]:
+    """Process invoice import records."""
+
+    from dotmac.platform.billing.invoicing.mappers import InvoiceImportSchema, InvoiceMapper
+    from dotmac.platform.billing.invoicing.service import InvoiceService
+
+    service = InvoiceService(session)
+    successful = 0
+    failed = 0
+    errors: list[dict[str, Any]] = []
+
+    for item in chunk_data:
+        row_number = item["row_number"]
+        row_data = item["data"]
+
+        try:
+            validated_data = InvoiceMapper.validate_import_row(row_data, row_number)
+
+            if isinstance(validated_data, InvoiceImportSchema):
+                model_data = InvoiceMapper.from_import_to_model(
+                    validated_data, tenant_id, generate_invoice_number=True
+                )
+                await service.create_invoice(**model_data)
+                successful += 1
+            else:
+                failed += 1
+                errors.append(validated_data)
+                await _record_failure(
+                    session,
+                    job,
+                    row_number,
+                    "validation",
+                    validated_data.get("error", "Validation failed"),
+                    row_data,
+                    tenant_id,
+                )
         except Exception as e:
             failed += 1
             error_msg = str(e)

@@ -5,10 +5,7 @@ Provides REST endpoints for file storage operations.
 """
 
 import posixpath
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 
 import structlog

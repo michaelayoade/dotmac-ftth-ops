@@ -1,6 +1,6 @@
 """Tests for analytics service to improve coverage."""
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -65,8 +65,8 @@ class TestAnalyticsService:
         """Test querying metrics."""
         result = await analytics_service.query_metrics(
             metric_name="api",
-            start_time=datetime.now(timezone.utc),
-            end_time=datetime.now(timezone.utc),
+            start_time=datetime.now(UTC),
+            end_time=datetime.now(UTC),
         )
 
         assert result is not None

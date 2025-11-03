@@ -1,4 +1,3 @@
-
 """
 Test webhook handlers for payment providers
 """
@@ -13,17 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.billing.config import BillingConfig, StripeConfig
 from dotmac.platform.billing.core.enums import PaymentStatus
 from dotmac.platform.billing.webhooks.handlers import (
-
-
     PayPalWebhookHandler,
     StripeWebhookHandler,
 )
 
-
-
-
-
 pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def mock_db():
@@ -200,14 +194,14 @@ class TestStripeWebhookHandler:
         assert result["status"] == "processed"
         assert result["amount_refunded"] == 500
 
-        # Verify service call (handler converts cents to dollars: 500 cents = 5.00 dollars)
+        # Verify service call (handler keeps Stripe minor units to match stored payment amounts)
         from decimal import Decimal
 
         stripe_handler.payment_service.process_refund_notification.assert_called_once()
         call_args = stripe_handler.payment_service.process_refund_notification.call_args[1]
         assert call_args["tenant_id"] == "tenant1"
         assert call_args["payment_id"] == "pay_123"
-        assert call_args["refund_amount"] == Decimal("5.00")
+        assert call_args["refund_amount"] == Decimal("500")
         assert "reason" in call_args
 
     @pytest.mark.asyncio

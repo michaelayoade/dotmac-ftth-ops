@@ -6,6 +6,7 @@ and invitation management.
 """
 
 import math
+from collections.abc import Awaitable, Callable
 from datetime import datetime
 from typing import Any
 
@@ -112,7 +113,7 @@ def _ensure_can_write_tenant(user: UserInfo, tenant_id: str) -> None:
     )
 
 
-def require_tenant_permission(permission: str) -> Any:
+def require_tenant_permission(permission: str) -> Callable[..., Awaitable[UserInfo]]:
     """Wrapper dependency that honours legacy tenant:* permission aliases."""
 
     platform_checker = require_platform_permission(permission)

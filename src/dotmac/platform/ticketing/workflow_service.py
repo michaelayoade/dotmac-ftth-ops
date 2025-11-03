@@ -5,10 +5,7 @@ Provides workflow-compatible methods for ticketing operations.
 """
 
 import logging
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -263,7 +260,7 @@ class TicketingService:
         Raises:
             ValueError: If customer not found or invalid date format
         """
-        from datetime import timedelta, timezone
+        from datetime import timedelta
 
         logger.info(f"Scheduling installation for customer {customer_id} at {installation_address}")
 

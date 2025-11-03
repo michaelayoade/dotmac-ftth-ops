@@ -6,10 +6,7 @@ Redis-backed rate limiting with sliding window algorithm.
 
 import hashlib
 import re
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
@@ -66,13 +63,10 @@ class RateLimitService:
             import redis.asyncio as aioredis
 
             redis_url = settings.redis.redis_url
-            self.redis = cast(
-                RedisClientType,
-                await aioredis.from_url(
-                    redis_url,
-                    encoding="utf-8",
-                    decode_responses=True,
-                ),
+            self.redis = await aioredis.from_url(
+                redis_url,
+                encoding="utf-8",
+                decode_responses=True,
             )
         return self.redis
 

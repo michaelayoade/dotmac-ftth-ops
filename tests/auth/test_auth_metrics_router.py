@@ -1,6 +1,6 @@
 """Tests for auth metrics router."""
 
-from datetime import timezone, datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from unittest.mock import patch
 from uuid import uuid4
 
@@ -19,9 +19,8 @@ from dotmac.platform.auth.metrics_router import (
 from dotmac.platform.auth.metrics_router import router as metrics_router
 from dotmac.platform.user_management.models import User
 
-
-
 pytestmark = pytest.mark.integration
+
 
 @pytest.fixture
 def app_with_metrics():
@@ -47,7 +46,7 @@ def mock_user_info():
 @pytest_asyncio.fixture
 async def sample_users(async_db_session: AsyncSession):
     """Create sample users for testing."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     users = [
         User(
             id=uuid4(),
@@ -73,7 +72,7 @@ async def sample_users(async_db_session: AsyncSession):
 @pytest_asyncio.fixture
 async def sample_audit_activities(async_db_session: AsyncSession):
     """Create sample audit activities for login tracking."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     activities = []
 
     # Successful logins
@@ -294,7 +293,7 @@ class TestAuthMetricsEndpoint:
                 "account_lockouts": 2,
                 "unique_active_users": 80,
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = client.get("/api/v1/metrics/auth?period_days=30")
@@ -334,7 +333,7 @@ class TestAuthMetricsEndpoint:
                 "account_lockouts": 1,
                 "unique_active_users": 45,
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = client.get("/api/v1/metrics/auth")
@@ -372,7 +371,7 @@ class TestAuthMetricsEndpoint:
                 "account_lockouts": 1,
                 "unique_active_users": 45,
                 "period": "7d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = client.get("/api/v1/metrics/auth?period_days=7")
@@ -435,7 +434,7 @@ class TestAuthMetricsEndpoint:
                 "account_lockouts": 1,
                 "unique_active_users": 45,
                 "period": "30d",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
             }
 
             response = client.get("/api/v1/metrics/auth?period_days=30")
@@ -471,7 +470,7 @@ class TestAuthMetricsResponse:
             account_lockouts=2,
             unique_active_users=80,
             period="30d",
-            timestamp=datetime.now(timezone.utc),
+            timestamp=datetime.now(UTC),
         )
 
         assert response.total_users == 100
@@ -480,7 +479,7 @@ class TestAuthMetricsResponse:
 
     def test_response_model_dict(self):
         """Test response model can be converted to dict."""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         response = AuthMetricsResponse(
             total_users=100,
             active_users=75,

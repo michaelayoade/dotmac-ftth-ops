@@ -4,12 +4,10 @@ Add-on service layer for business logic.
 Handles add-on purchases, cancellations, and quantity management for tenants.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from decimal import ROUND_HALF_UP, Decimal
 from inspect import isawaitable
+from typing import TYPE_CHECKING, cast
 from uuid import uuid4
 
 import structlog
@@ -27,6 +25,9 @@ from .models import (
     AddonType,
     TenantAddonResponse,
 )
+
+if TYPE_CHECKING:
+    from dotmac.platform.billing.models import BillingSubscriptionTable
 
 logger = structlog.get_logger(__name__)
 
@@ -55,7 +56,9 @@ class AddonService:
         quantized = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
         return int(quantized * Decimal("100"))
 
-    async def _get_subscription(self, tenant_id: str, subscription_id: str):
+    async def _get_subscription(
+        self, tenant_id: str, subscription_id: str
+    ) -> "BillingSubscriptionTable | None":
         """Fetch a subscription and validate tenant ownership."""
         from dotmac.platform.billing.models import BillingSubscriptionTable
 
@@ -67,7 +70,9 @@ class AddonService:
         result = await self.db.execute(stmt)
         return await self._resolve(result.scalar_one_or_none())
 
-    async def _get_latest_active_subscription(self, tenant_id: str):
+    async def _get_latest_active_subscription(
+        self, tenant_id: str
+    ) -> "BillingSubscriptionTable | None":
         """Return the most recent active/trialing subscription for the tenant."""
         from dotmac.platform.billing.models import BillingSubscriptionTable
         from dotmac.platform.billing.subscriptions.models import SubscriptionStatus
@@ -385,17 +390,17 @@ class AddonService:
             raise ValueError("This add-on does not support quantity adjustments")
 
         subscription = None
-        plan_id = None
+        plan_id: str | None = None
 
         if subscription_id:
             subscription = await self._get_subscription(tenant_id, subscription_id)
             if not subscription:
                 raise ValueError(f"Subscription {subscription_id} not found for tenant {tenant_id}")
-            plan_id = subscription.plan_id
+            plan_id = str(subscription.plan_id)
         else:
             subscription = await self._get_latest_active_subscription(tenant_id)
             if subscription:
-                plan_id = subscription.plan_id
+                plan_id = str(subscription.plan_id)
 
         if not addon.compatible_with_all_plans:
             allowed_plan_ids = set(addon.compatible_plan_ids or [])
@@ -410,13 +415,13 @@ class AddonService:
 
         # Calculate billing period based on subscription or addon billing type
         current_period_start = now
-        current_period_end = None
+        current_period_end: datetime | None = None
 
         if subscription:
             if subscription.current_period_start:
-                current_period_start = subscription.current_period_start
+                current_period_start = cast(datetime, subscription.current_period_start)
             if subscription.current_period_end:
-                current_period_end = subscription.current_period_end
+                current_period_end = cast(datetime | None, subscription.current_period_end)
 
         # Create TenantAddon record
         tenant_addon_row = BillingTenantAddonTable(
@@ -455,9 +460,9 @@ class AddonService:
         )
 
         # Get customer information from subscription or use tenant as customer
-        customer_id = tenant_id
+        customer_id = str(tenant_id)
         if subscription and subscription.customer_id:
-            customer_id = subscription.customer_id
+            customer_id = str(subscription.customer_id)
 
         # Resolve real billing contact data (email + address)
         from dotmac.platform.billing.integration import BillingIntegrationService

@@ -14,8 +14,6 @@ These tests validate the integration documented in:
 - docs/ALERTMANAGER_WEBHOOK_SETUP.md
 """
 
-import json
-from datetime import datetime, timezone
 from unittest.mock import patch
 
 import pytest
@@ -37,7 +35,9 @@ def disable_alertmanager_rate_limit(monkeypatch):
 @pytest_asyncio.fixture
 async def async_client():
     """Provide ASGI test client for Alertmanager E2E tests."""
-    from httpx import ASGITransport, AsyncClient as HttpxAsyncClient
+    from httpx import ASGITransport
+    from httpx import AsyncClient as HttpxAsyncClient
+
     from dotmac.platform.main import app
 
     transport = ASGITransport(app=app)
@@ -120,7 +120,9 @@ class TestAlertmanagerWebhookE2E:
             )
 
             # Should accept webhook
-            assert response.status_code == 202, f"Expected 202, got {response.status_code}: {response.text}"
+            assert response.status_code == 202, (
+                f"Expected 202, got {response.status_code}: {response.text}"
+            )
 
             data = response.json()
             assert "alerts_processed" in data
@@ -246,8 +248,12 @@ class TestAlertmanagerWebhookE2E:
             successful = [r for r in responses if r == 202]
             rate_limited = [r for r in responses if r == 429]
 
-            assert len(successful) >= 5, f"Expected at least 5 successful requests, got {len(successful)}"
-            assert len(rate_limited) >= 1, f"Expected at least 1 rate limited request, got {len(rate_limited)}"
+            assert len(successful) >= 5, (
+                f"Expected at least 5 successful requests, got {len(successful)}"
+            )
+            assert len(rate_limited) >= 1, (
+                f"Expected at least 1 rate limited request, got {len(rate_limited)}"
+            )
 
     async def test_webhook_processes_resolved_alerts(
         self,
@@ -500,6 +506,7 @@ class TestAlertmanagerWebhookLogging:
 
             # Enable logging capture
             import logging
+
             caplog.set_level(logging.INFO)
 
             response = await async_client.post(
@@ -532,6 +539,7 @@ class TestAlertmanagerWebhookLogging:
             }
 
             import logging
+
             caplog.set_level(logging.WARNING)
 
             response = await async_client.post(

@@ -5,7 +5,7 @@ Tests bank account CRUD operations, primary account management,
 and payment reconciliation features.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
@@ -49,9 +49,9 @@ def mock_db_session():
         if not hasattr(obj, "id") or obj.id is None:
             obj.id = 123
         if not hasattr(obj, "created_at") or obj.created_at is None:
-            obj.created_at = datetime.now(timezone.utc)
+            obj.created_at = datetime.now(UTC)
         if not hasattr(obj, "updated_at") or obj.updated_at is None:
-            obj.updated_at = datetime.now(timezone.utc)
+            obj.updated_at = datetime.now(UTC)
         if not hasattr(obj, "reconciled") or obj.reconciled is None:
             obj.reconciled = False
         # Bank account specific fields
@@ -131,9 +131,9 @@ class TestCreateBankAccount:
             if not hasattr(obj, "status") or obj.status is None:
                 obj.status = BankAccountStatus.PENDING
             if not hasattr(obj, "created_at") or obj.created_at is None:
-                obj.created_at = datetime.now(timezone.utc)
+                obj.created_at = datetime.now(UTC)
             if not hasattr(obj, "updated_at") or obj.updated_at is None:
-                obj.updated_at = datetime.now(timezone.utc)
+                obj.updated_at = datetime.now(UTC)
             if not hasattr(obj, "is_active") or obj.is_active is None:
                 obj.is_active = True  # Default to active
             # Ensure account_type is preserved (service doesn't set it as enum)
@@ -213,8 +213,8 @@ class TestGetBankAccounts:
                 status=BankAccountStatus.VERIFIED,
                 is_primary=True,
                 accepts_deposits=True,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
         ]
         mock_db_session.execute.return_value = mock_result
@@ -264,8 +264,8 @@ class TestUpdateBankAccount:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         mock_result = MagicMock()
@@ -308,8 +308,8 @@ class TestDeleteBankAccount:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         mock_result = MagicMock()
@@ -336,7 +336,7 @@ class TestRecordManualPayment:
             customer_id=str(uuid4()),
             amount=Decimal("100.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             received_by="user-1",
             notes="Cash payment received",
         )
@@ -356,7 +356,7 @@ class TestRecordManualPayment:
             customer_id=str(uuid4()),
             amount=Decimal("500.00"),
             currency="USD",
-            payment_date=datetime.now(timezone.utc),
+            payment_date=datetime.now(UTC),
             bank_account_id=123,
             reference_number="TRF12345",
             notes="Wire transfer",
@@ -380,8 +380,8 @@ class TestPaymentSearch:
         from dotmac.platform.billing.bank_accounts.models import PaymentSearchFilters
 
         filters = PaymentSearchFilters(
-            start_date=datetime(2025, 1, 1, tzinfo=timezone.utc),
-            end_date=datetime(2025, 12, 31, tzinfo=timezone.utc),
+            start_date=datetime(2025, 1, 1, tzinfo=UTC),
+            end_date=datetime(2025, 12, 31, tzinfo=UTC),
         )
 
         mock_result = MagicMock()
@@ -437,8 +437,8 @@ class TestBankAccountSummary:
             is_active=True,
             status=BankAccountStatus.VERIFIED,
             accepts_deposits=True,
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
 
         mock_account_result = MagicMock()
@@ -501,8 +501,8 @@ class TestHelperMethods:
                 is_active=True,
                 status=BankAccountStatus.VERIFIED,
                 accepts_deposits=True,
-                created_at=datetime.now(timezone.utc),
-                updated_at=datetime.now(timezone.utc),
+                created_at=datetime.now(UTC),
+                updated_at=datetime.now(UTC),
             )
         ]
         mock_db_session.execute.return_value = mock_result

@@ -4,12 +4,9 @@ ISP/Telecom SaaS Licensing Models.
 Subscription-tier and feature-group based licensing for multi-tenant ISP platform.
 """
 
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -31,7 +28,12 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from ..db import BaseModel
+from ..db import BaseModel as BaseModelRuntime
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import DeclarativeBase as BaseModelType
+else:
+    BaseModelType = BaseModelRuntime
 
 # ==================== Enums ====================
 
@@ -134,7 +136,7 @@ class QuotaType(str, Enum):
 # ==================== Models ====================
 
 
-class SubscriptionPlan(BaseModel):
+class SubscriptionPlan(BaseModelType):
     """Subscription plan/tier definition."""
 
     __tablename__ = "subscription_plans"
@@ -196,7 +198,7 @@ class SubscriptionPlan(BaseModel):
     )
 
 
-class PlanFeature(BaseModel):
+class PlanFeature(BaseModelType):
     """Features included in a subscription plan."""
 
     __tablename__ = "plan_features"
@@ -241,7 +243,7 @@ class PlanFeature(BaseModel):
     )
 
 
-class PlanQuota(BaseModel):
+class PlanQuota(BaseModelType):
     """Resource quotas for a subscription plan."""
 
     __tablename__ = "plan_quotas"
@@ -284,7 +286,7 @@ class PlanQuota(BaseModel):
     )
 
 
-class TenantSubscription(BaseModel):
+class TenantSubscription(BaseModelType):
     """Tenant's active subscription."""
 
     __tablename__ = "tenant_subscriptions"
@@ -365,7 +367,7 @@ class TenantSubscription(BaseModel):
     )
 
 
-class TenantFeatureOverride(BaseModel):
+class TenantFeatureOverride(BaseModelType):
     """Tenant-specific feature overrides (add-ons or custom negotiated features)."""
 
     __tablename__ = "tenant_feature_overrides"
@@ -425,7 +427,7 @@ class TenantFeatureOverride(BaseModel):
     )
 
 
-class TenantQuotaUsage(BaseModel):
+class TenantQuotaUsage(BaseModelType):
     """Current quota usage for tenant."""
 
     __tablename__ = "tenant_quota_usage"
@@ -479,7 +481,7 @@ class TenantQuotaUsage(BaseModel):
     )
 
 
-class FeatureUsageLog(BaseModel):
+class FeatureUsageLog(BaseModelType):
     """Feature usage tracking for analytics."""
 
     __tablename__ = "feature_usage_logs"
@@ -523,7 +525,7 @@ class FeatureUsageLog(BaseModel):
     )
 
 
-class SubscriptionEvent(BaseModel):
+class SubscriptionEvent(BaseModelType):
     """Subscription lifecycle events."""
 
     __tablename__ = "subscription_events"

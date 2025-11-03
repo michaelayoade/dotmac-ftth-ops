@@ -1,11 +1,10 @@
-
 """
 Unit tests for Diagnostics Service
 
 Tests network troubleshooting and diagnostic operations.
 """
 
-from datetime import timezone, datetime
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 from uuid import uuid4
 
@@ -13,19 +12,14 @@ import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.diagnostics.models import (
-
-
     DiagnosticRun,
     DiagnosticType,
 )
 from dotmac.platform.diagnostics.service import DiagnosticsService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
 
-
-
-
-
 pytestmark = pytest.mark.unit
+
 
 @pytest.fixture
 def tenant_id():
@@ -429,7 +423,7 @@ class TestDiagnosticsServiceCPECheck:
             # Mock GenieACS device status
             mock_genieacs_service.get_device_status.return_value = {
                 "status": "online",
-                "last_inform": datetime.now(timezone.utc),
+                "last_inform": datetime.now(UTC),
                 "software_version": "1.2.3",
                 "uptime": 86400,
             }

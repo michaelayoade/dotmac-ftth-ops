@@ -17,10 +17,7 @@ Security features:
 import asyncio
 import hashlib
 import secrets
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import dns.resolver

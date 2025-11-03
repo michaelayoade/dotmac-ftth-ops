@@ -347,7 +347,7 @@ function ONUDetailsPageContent() {
 
 export default function ONUDetailsPage() {
   return (
-    <RouteGuard requiredPermission="isp.network.pon.read">
+    <RouteGuard permission="isp.network.pon.read">
       <ONUDetailsPageContent />
     </RouteGuard>
   );

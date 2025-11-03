@@ -5,8 +5,9 @@ Add billing_settings table for persisting tenant billing configuration.
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "2025_10_24_1200"
 down_revision: str = "2025_10_24_0900"
