@@ -85,7 +85,13 @@ function WorkflowDetailsPageContent() {
       return data.executions || [];
     },
     enabled: !!workflowId,
-    refetchInterval: 5000,
+    refetchInterval: (query) => {
+      // Auto-refresh if there are running executions
+      if (query?.state?.data && query.state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
+        return 5000; // Refresh every 5 seconds
+      }
+      return false;
+    },
   });
 
   // Execute workflow mutation
@@ -181,7 +187,7 @@ function WorkflowDetailsPageContent() {
       <div className="flex flex-col items-center justify-center h-96">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
         <h2 className="text-xl font-semibold mb-2">Workflow Not Found</h2>
-        <p className="text-muted-foreground mb-4">The workflow you're looking for doesn't exist.</p>
+        <p className="text-muted-foreground mb-4">The workflow you&apos;re looking for doesn&apos;t exist.</p>
         <Button asChild>
           <Link href="/dashboard/workflows">
             <ArrowLeft className="h-4 w-4 mr-2" />

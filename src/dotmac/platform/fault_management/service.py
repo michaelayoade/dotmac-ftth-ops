@@ -509,7 +509,7 @@ class AlarmService:
 
         # Map alarm priority to ticket priority
         priority_mapping = {
-            "critical": TicketPriority.CRITICAL,
+            "critical": TicketPriority.URGENT,
             "major": TicketPriority.HIGH,
             "minor": TicketPriority.NORMAL,
             "warning": TicketPriority.LOW,
@@ -518,7 +518,10 @@ class AlarmService:
 
         # Use provided priority or map from alarm severity
         if priority:
-            ticket_priority = TicketPriority(priority)
+            try:
+                ticket_priority = TicketPriority(priority)
+            except ValueError:
+                ticket_priority = priority_mapping.get(priority.lower(), TicketPriority.NORMAL)
         else:
             ticket_priority = priority_mapping.get(alarm.severity.value, TicketPriority.NORMAL)
 

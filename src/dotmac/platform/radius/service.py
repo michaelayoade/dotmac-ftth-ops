@@ -839,6 +839,8 @@ class RADIUSService:
         """
         from dotmac.platform.settings import settings
 
+        default_vendor = settings.radius.default_vendor
+
         # Try to get vendor from subscriber's active session
         sessions = await self.repository.get_active_sessions(self.tenant_id, username)
         if sessions:
@@ -856,7 +858,6 @@ class RADIUSService:
                 return vendor_value
 
         # Fallback to default vendor from settings
-        default_vendor = settings.radius.default_vendor
         logger.debug(
             "Using default NAS vendor",
             username=username,

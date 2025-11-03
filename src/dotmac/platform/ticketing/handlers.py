@@ -5,6 +5,8 @@ This module provides event handlers for ticket lifecycle events, handling
 notifications, audit logging, and analytics updates.
 """
 
+from typing import Final
+
 import structlog
 
 from dotmac.platform.audit.models import ActivitySeverity, ActivityType
@@ -18,6 +20,10 @@ logger = structlog.get_logger(__name__)
 # Initialize services
 audit_service = AuditService()
 email_service = EmailService()
+
+RESOURCE_CREATED: Final[ActivityType] = ActivityType("resource.created")
+RESOURCE_UPDATED: Final[ActivityType] = ActivityType("resource.updated")
+ANALYTICS_EVENT: Final[ActivityType] = ActivityType("analytics.event")
 
 
 # Ticket Creation Handlers
@@ -92,7 +98,7 @@ Please review and respond at your earliest convenience.
     # Create audit log entry
     try:
         await audit_service.log_activity(
-            activity_type=ActivityType.RESOURCE_CREATED,
+            activity_type=RESOURCE_CREATED,
             action="ticket.created",
             description=f"New ticket created: {ticket_number} - {subject}",
             tenant_id=event.metadata.tenant_id,
@@ -175,7 +181,7 @@ Please log in to view and respond to the message.
     # Create audit log entry
     try:
         await audit_service.log_activity(
-            activity_type=ActivityType.RESOURCE_UPDATED,
+            activity_type=RESOURCE_UPDATED,
             action="ticket.message.added",
             description=f"Message added to ticket {ticket_number}",
             tenant_id=event.metadata.tenant_id,
@@ -233,10 +239,15 @@ async def handle_ticket_status_changed(event: Event) -> None:
             "waiting": "Your ticket is waiting for additional information.",
         }
 
+        status_key = (new_status or "").lower()
+        normalized_status = status_key.replace("_", " ").title() if status_key else "Unknown"
         notification_subject = (
-            f"Ticket {ticket_number} Status Update: {new_status.replace('_', ' ').title()}"
+            f"Ticket {ticket_number} Status Update: {normalized_status}"
         )
-        status_message = status_messages.get(new_status, f"Ticket status changed to {new_status}")
+        status_message = status_messages.get(
+            status_key,
+            f"Ticket status changed to {normalized_status}",
+        )
 
         notification_message = EmailMessage(
             to=["support@example.com"],
@@ -245,7 +256,7 @@ async def handle_ticket_status_changed(event: Event) -> None:
 Ticket {ticket_number} status has been updated.
 
 Previous Status: {old_status}
-New Status: {new_status}
+New Status: {normalized_status}
 
 {status_message}
             """.strip(),
@@ -253,7 +264,7 @@ New Status: {new_status}
 <h2>Ticket Status Update</h2>
 <p><strong>Ticket Number:</strong> {ticket_number}</p>
 <p><strong>Previous Status:</strong> {old_status}</p>
-<p><strong>New Status:</strong> {new_status}</p>
+<p><strong>New Status:</strong> {normalized_status}</p>
 <p>{status_message}</p>
             """.strip(),
         )
@@ -281,7 +292,7 @@ New Status: {new_status}
             else ActivitySeverity.MEDIUM
         )
         await audit_service.log_activity(
-            activity_type=ActivityType.RESOURCE_UPDATED,
+            activity_type=RESOURCE_UPDATED,
             action="ticket.status_changed",
             description=f"Ticket {ticket_number} status changed from {old_status} to {new_status}",
             tenant_id=event.metadata.tenant_id,
@@ -354,7 +365,7 @@ Please review the ticket and respond at your earliest convenience.
     # Create audit log entry
     try:
         await audit_service.log_activity(
-            activity_type=ActivityType.RESOURCE_UPDATED,
+            activity_type=RESOURCE_UPDATED,
             action="ticket.assigned",
             description=f"Ticket {ticket_number} assigned to user",
             tenant_id=event.metadata.tenant_id,
@@ -435,7 +446,7 @@ Please review the ticket details and respond as soon as possible.
     # Create audit log entry
     try:
         await audit_service.log_activity(
-            activity_type=ActivityType.RESOURCE_UPDATED,
+            activity_type=RESOURCE_UPDATED,
             action="ticket.escalated.to_partner",
             description=f"Ticket {ticket_number} escalated to partner",
             tenant_id=event.metadata.tenant_id,
@@ -480,7 +491,7 @@ async def track_ticket_creation_analytics(event: Event) -> None:
     # Create analytics audit log
     try:
         await audit_service.log_activity(
-            activity_type=ActivityType.ANALYTICS,
+            activity_type=ANALYTICS_EVENT,
             action="ticket.created.analytics",
             description=f"Ticket creation tracked for analytics: {ticket_number}",
             tenant_id=event.metadata.tenant_id,
@@ -530,7 +541,7 @@ async def track_ticket_resolution_analytics(event: Event) -> None:
         # Create analytics audit log for resolution
         try:
             await audit_service.log_activity(
-                activity_type=ActivityType.ANALYTICS,
+                activity_type=ANALYTICS_EVENT,
                 action="ticket.resolved.analytics",
                 description=f"Ticket resolution tracked for analytics: {ticket_number}",
                 tenant_id=event.metadata.tenant_id,

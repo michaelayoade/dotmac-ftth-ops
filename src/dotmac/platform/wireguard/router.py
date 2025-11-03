@@ -7,6 +7,7 @@ FastAPI router for WireGuard VPN management endpoints.
 import logging
 from typing import Annotated
 from uuid import UUID
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
@@ -57,7 +58,8 @@ async def get_wireguard_service(
     """Get WireGuard service instance for the active tenant (Pure Vault mode in production)."""
     from dotmac.platform.settings import settings
 
-    tenant = tenant_access.tenant
+    current_user, tenant = tenant_access
+    tenant_uuid = tenant.id if isinstance(tenant.id, UUID) else UUID(str(tenant.id))
 
     # Initialize WireGuard client
     client = WireGuardClient(
@@ -108,7 +110,7 @@ async def get_wireguard_service(
     return WireGuardService(
         session=session,
         client=client,
-        tenant_id=tenant.id,
+        tenant_id=tenant_uuid,
         encryption_service=encryption_service,
         vault_client=vault_client,
     )

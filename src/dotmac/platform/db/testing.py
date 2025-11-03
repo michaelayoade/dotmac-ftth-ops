@@ -11,7 +11,7 @@ from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass, field
 from types import TracebackType
-from typing import Any
+from typing import Any, Protocol, cast
 
 from sqlalchemy import create_engine
 from sqlalchemy.engine import URL, make_url
@@ -26,14 +26,38 @@ from sqlalchemy.pool import StaticPool
 
 from dotmac.platform import db as db_module
 
+
+class _DatabaseModule(Protocol):
+    def get_database_url(self) -> str: ...
+
+    def get_async_database_url(self) -> str: ...
+
+    def snapshot_database_state(self) -> Any: ...
+
+    def configure_database_for_testing(
+        self,
+        *,
+        sync_engine: Any,
+        async_engine: Any,
+        sync_session_factory: sessionmaker[Session],
+        async_session_factory: async_sessionmaker[AsyncSession],
+    ) -> None: ...
+
+    def restore_database_state(self, state: Any) -> None: ...
+
+
+db_module_typed = cast(_DatabaseModule, db_module)
+
 SyncSessionFactory = sessionmaker[Session]
 AsyncSessionFactory = async_sessionmaker[AsyncSession]
 
-_get_database_url: Callable[[], str] = db_module.get_database_url
-_get_async_database_url: Callable[[], str] = db_module.get_async_database_url
-_snapshot_database_state: Callable[[], Any] = db_module.snapshot_database_state
-_configure_database_for_testing: Callable[..., None] = db_module.configure_database_for_testing
-_restore_database_state: Callable[[Any], None] = db_module.restore_database_state
+_get_database_url: Callable[[], str] = db_module_typed.get_database_url
+_get_async_database_url: Callable[[], str] = db_module_typed.get_async_database_url
+_snapshot_database_state: Callable[[], Any] = db_module_typed.snapshot_database_state
+_configure_database_for_testing: Callable[..., None] = (
+    db_module_typed.configure_database_for_testing
+)
+_restore_database_state: Callable[[Any], None] = db_module_typed.restore_database_state
 
 
 def _resolve_sync_url(requested_url: str | None) -> str:

@@ -89,7 +89,11 @@ async def _sync_sessions_async(batch_size: int, max_age_hours: int) -> dict:
 
     try:
         async with AsyncSessionLocal() as pg_session:
-            async with TimeSeriesSessionLocal() as ts_session:
+            session_factory = TimeSeriesSessionLocal
+            if session_factory is None:
+                raise RuntimeError("TimescaleDB session not initialized")
+
+            async with session_factory() as ts_session:
                 # Query for completed sessions not yet in TimescaleDB
                 # We'll process in batches
                 offset = 0

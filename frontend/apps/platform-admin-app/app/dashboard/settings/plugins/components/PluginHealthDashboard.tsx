@@ -81,7 +81,7 @@ export const PluginHealthDashboard = ({
     } catch (error) {
       // Handle refresh errors gracefully
       console.error("Failed to refresh health checks:", error);
-      // Error is logged but doesn't crash the UI
+      // Error is logged but doesn&apos;t crash the UI
       // Could add toast notification here in the future
     } finally {
       setLoading(false);

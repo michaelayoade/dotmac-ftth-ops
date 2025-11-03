@@ -324,7 +324,7 @@ export default function RolesPage() {
     }
   };
 
-  // Show access denied if user doesn't have permission
+  // Show access denied if user doesn&apos;t have permission
   if (!canManageRoles) {
     return (
       <div className="space-y-6">

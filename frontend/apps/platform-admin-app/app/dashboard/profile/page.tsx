@@ -9,7 +9,7 @@ export default function ProfilePage() {
     redirect("/dashboard/settings/profile");
   }, []);
 
-  // Fallback in case redirect doesn't work immediately
+  // Fallback in case redirect doesn&apos;t work immediately
   if (typeof window !== "undefined") {
     window.location.href = "/dashboard/settings/profile";
   }

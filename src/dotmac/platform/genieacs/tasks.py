@@ -134,7 +134,7 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
 
         # Update schedule status
-        schedule.status = "running"
+        setattr(schedule, "status", "running")
         schedule.started_at = datetime.now(UTC)
         await session.commit()
         set_firmware_upgrade_schedule_status(
@@ -189,10 +189,10 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
 
                 if device_id in result_map:
                     result_obj = result_map[device_id]
-                    result_obj.status = "pending"
-                    result_obj.error_message = None
-                    result_obj.started_at = None
-                    result_obj.completed_at = None
+                    setattr(result_obj, "status", "pending")
+                    setattr(result_obj, "error_message", None)
+                    setattr(result_obj, "started_at", None)
+                    setattr(result_obj, "completed_at", None)
                 else:
                     result_obj = FirmwareUpgradeResult(
                         schedule_id=schedule_id,
@@ -226,23 +226,24 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
                 batch = results[i : i + batch_size]
 
                 for result_obj in batch:
+                    device_id = cast(str, getattr(result_obj, "device_id"))
                     try:
                         # Update result status
-                        result_obj.status = "in_progress"
-                        result_obj.started_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "in_progress")
+                        setattr(result_obj, "started_at", datetime.now(UTC))
                         await session.commit()
 
                         # Trigger firmware download
                         await client.add_task(
-                            device_id=result_obj.device_id,
+                            device_id=device_id,
                             task_name="download",
                             file_name=schedule.firmware_file,
                             file_type=schedule.file_type,
                         )
 
                         # Update result as success
-                        result_obj.status = "success"
-                        result_obj.completed_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "success")
+                        setattr(result_obj, "completed_at", datetime.now(UTC))
                         completed += 1
 
                         # Publish device progress
@@ -251,7 +252,7 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
                             channel,
                             "device_completed",
                             {
-                                "device_id": result_obj.device_id,
+                                "device_id": device_id,
                                 "status": "success",
                                 "completed": completed,
                                 "total": total_devices,
@@ -261,14 +262,14 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
                         logger.info(
                             "firmware_upgrade.device_success",
                             schedule_id=schedule_id,
-                            device_id=result_obj.device_id,
+                            device_id=device_id,
                         )
 
                     except Exception as e:
                         # Update result as failed
-                        result_obj.status = "failed"
-                        result_obj.error_message = str(e)
-                        result_obj.completed_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "failed")
+                        setattr(result_obj, "error_message", str(e))
+                        setattr(result_obj, "completed_at", datetime.now(UTC))
                         failed += 1
 
                         # Publish device failure
@@ -277,7 +278,7 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
                             channel,
                             "device_failed",
                             {
-                                "device_id": result_obj.device_id,
+                                "device_id": device_id,
                                 "status": "failed",
                                 "error": str(e),
                                 "completed": completed,
@@ -289,15 +290,15 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
                         logger.error(
                             "firmware_upgrade.device_failed",
                             schedule_id=schedule_id,
-                            device_id=result_obj.device_id,
+                            device_id=device_id,
                             error=str(e),
                         )
 
                     await session.commit()
 
             # Update schedule as completed
-            schedule.status = "completed"
-            schedule.completed_at = datetime.now(UTC)
+            setattr(schedule, "status", "completed")
+            setattr(schedule, "completed_at", datetime.now(UTC))
             await session.commit()
             set_firmware_upgrade_schedule_status(
                 schedule.tenant_id, schedule.schedule_id, "completed", 1.0
@@ -334,7 +335,7 @@ async def _execute_firmware_upgrade_async(schedule_id: str, task: Task) -> dict[
 
         except Exception as e:
             # Update schedule as failed
-            schedule.status = "failed"
+            setattr(schedule, "status", "failed")
             schedule.completed_at = datetime.now(UTC)
             await session.commit()
             set_firmware_upgrade_schedule_status(
@@ -407,11 +408,11 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
             raise ValueError("Cannot execute dry-run job")
 
         # Update job status
-        job.status = "running"
+        setattr(job, "status", "running")
         job.started_at = datetime.now(UTC)
-        job.completed_devices = 0
-        job.failed_devices = 0
-        job.pending_devices = job.total_devices
+        setattr(job, "completed_devices", 0)
+        setattr(job, "failed_devices", 0)
+        setattr(job, "pending_devices", 0)
         await session.commit()
         set_mass_config_job_status(job.tenant_id, job.job_id, "running", 1.0)
 
@@ -460,11 +461,11 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
 
                 if device_id in result_map:
                     result_obj = result_map[device_id]
-                    result_obj.status = "pending"
-                    result_obj.error_message = None
-                    result_obj.parameters_changed = {}
-                    result_obj.started_at = None
-                    result_obj.completed_at = None
+                    setattr(result_obj, "status", "pending")
+                    setattr(result_obj, "error_message", None)
+                    setattr(result_obj, "parameters_changed", {})
+                    setattr(result_obj, "started_at", None)
+                    setattr(result_obj, "completed_at", None)
                 else:
                     result_obj = MassConfigResult(
                         job_id=job_id,
@@ -476,8 +477,8 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
 
             await session.commit()
             total_devices = len(results)
-            job.total_devices = total_devices
-            job.pending_devices = total_devices
+            setattr(job, "total_devices", total_devices)
+            setattr(job, "pending_devices", total_devices)
             await session.commit()
 
             # Publish start event
@@ -503,10 +504,11 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                 batch = results[i : i + batch_size]
 
                 for result_obj in batch:
+                    device_id = cast(str, getattr(result_obj, "device_id"))
                     try:
                         # Update result status
-                        result_obj.status = "in_progress"
-                        result_obj.started_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "in_progress")
+                        setattr(result_obj, "started_at", datetime.now(UTC))
                         await session.commit()
 
                         # Build TR-069 parameters from config_changes
@@ -547,17 +549,17 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                         # Set parameters
                         if params_to_set:
                             await client.set_parameter_values(
-                                device_id=result_obj.device_id,
+                                device_id=device_id,
                                 parameters=params_to_set,
                             )
 
                         # Update result as success
-                        result_obj.status = "success"
-                        result_obj.parameters_changed = params_to_set
-                        result_obj.completed_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "success")
+                        setattr(result_obj, "parameters_changed", params_to_set)
+                        setattr(result_obj, "completed_at", datetime.now(UTC))
                         completed += 1
-                        job.completed_devices = completed
-                        job.pending_devices = total_devices - completed - failed
+                        setattr(job, "completed_devices", completed)
+                        setattr(job, "pending_devices", total_devices - completed - failed)
 
                         # Publish device progress
                         await publish_progress(
@@ -565,7 +567,7 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                             channel,
                             "device_configured",
                             {
-                                "device_id": result_obj.device_id,
+                                "device_id": device_id,
                                 "status": "success",
                                 "parameters_changed": params_to_set,
                                 "completed": completed,
@@ -576,17 +578,17 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                         logger.info(
                             "mass_config.device_success",
                             job_id=job_id,
-                            device_id=result_obj.device_id,
+                            device_id=device_id,
                         )
 
                     except Exception as e:
                         # Update result as failed
-                        result_obj.status = "failed"
-                        result_obj.error_message = str(e)
-                        result_obj.completed_at = datetime.now(UTC)
+                        setattr(result_obj, "status", "failed")
+                        setattr(result_obj, "error_message", str(e))
+                        setattr(result_obj, "completed_at", datetime.now(UTC))
                         failed += 1
-                        job.failed_devices = failed
-                        job.pending_devices = total_devices - completed - failed
+                        setattr(job, "failed_devices", failed)
+                        setattr(job, "pending_devices", total_devices - completed - failed)
 
                         # Publish device failure
                         await publish_progress(
@@ -594,7 +596,7 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                             channel,
                             "device_config_failed",
                             {
-                                "device_id": result_obj.device_id,
+                                "device_id": device_id,
                                 "status": "failed",
                                 "error": str(e),
                                 "completed": completed,
@@ -606,16 +608,16 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
                         logger.error(
                             "mass_config.device_failed",
                             job_id=job_id,
-                            device_id=result_obj.device_id,
+                            device_id=device_id,
                             error=str(e),
                         )
 
                     await session.commit()
 
             # Update job as completed
-            job.status = "completed"
-            job.pending_devices = max(0, total_devices - completed - failed)
-            job.completed_at = datetime.now(UTC)
+            setattr(job, "status", "completed")
+            setattr(job, "pending_devices", max(0, total_devices - completed - failed))
+            setattr(job, "completed_at", datetime.now(UTC))
             await session.commit()
             set_mass_config_job_status(job.tenant_id, job.job_id, "completed", 1.0)
 
@@ -650,11 +652,13 @@ async def _execute_mass_config_async(job_id: str, task: Task) -> dict[str, Any]:
 
         except Exception as e:
             # Update job as failed
-            job.status = "failed"
-            job.pending_devices = max(
-                0, job.total_devices - job.completed_devices - job.failed_devices
-            )
-            job.completed_at = datetime.now(UTC)
+            setattr(job, "status", "failed")
+            total_devices_value = cast(int, getattr(job, "total_devices", 0))
+            completed_value = cast(int, getattr(job, "completed_devices", 0))
+            failed_value = cast(int, getattr(job, "failed_devices", 0))
+            remaining = max(0, total_devices_value - completed_value - failed_value)
+            setattr(job, "pending_devices", remaining)
+            setattr(job, "completed_at", datetime.now(UTC))
             await session.commit()
             set_mass_config_job_status(job.tenant_id, job.job_id, "failed", 1.0)
 
@@ -718,9 +722,9 @@ async def _check_scheduled_upgrades_async() -> dict[str, Any]:
 
         triggered = 0
         for schedule in schedules:
-            schedule.status = "queued"
-            schedule.started_at = None
-            schedule.completed_at = None
+            setattr(schedule, "status", "queued")
+            setattr(schedule, "started_at", None)
+            setattr(schedule, "completed_at", None)
             set_firmware_upgrade_schedule_status(
                 schedule.tenant_id, schedule.schedule_id, "queued", 1.0
             )
@@ -770,9 +774,9 @@ async def _replay_pending_operations_async() -> dict[str, Any]:
                     schedule_id=schedule.schedule_id,
                     tenant_id=schedule.tenant_id,
                 )
-            schedule.status = "queued"
-            schedule.started_at = None
-            schedule.completed_at = None
+            setattr(schedule, "status", "queued")
+            setattr(schedule, "started_at", None)
+            setattr(schedule, "completed_at", None)
             set_firmware_upgrade_schedule_status(
                 schedule.tenant_id, schedule.schedule_id, "queued", 1.0
             )
@@ -796,12 +800,12 @@ async def _replay_pending_operations_async() -> dict[str, Any]:
                     job_id=job.job_id,
                     tenant_id=job.tenant_id,
                 )
-            job.status = "queued"
-            job.started_at = None
-            job.completed_at = None
-            job.completed_devices = 0
-            job.failed_devices = 0
-            job.pending_devices = job.total_devices
+            setattr(job, "status", "queued")
+            setattr(job, "started_at", None)
+            setattr(job, "completed_at", None)
+            setattr(job, "completed_devices", 0)
+            setattr(job, "failed_devices", 0)
+            setattr(job, "pending_devices", cast(int, getattr(job, "total_devices", 0)))
             set_mass_config_job_status(job.tenant_id, job.job_id, "queued", 1.0)
             execute_mass_config.delay(job.job_id)
             mass_config_requeued += 1

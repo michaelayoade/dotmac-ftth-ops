@@ -64,7 +64,7 @@ export default function WireGuardPeersPage() {
   }, [serverIdFromQuery]);
 
   const handleSearch = () => {
-    // Backend doesn't support search yet, client-side filtering
+    // Backend doesn&apos;t support search yet, client-side filtering
   };
 
   const handleFilterChange = (key: keyof ListPeersParams, value: unknown) => {

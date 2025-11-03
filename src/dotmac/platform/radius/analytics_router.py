@@ -6,7 +6,7 @@ Requires TimescaleDB to be configured and enabled.
 """
 
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Callable
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -27,6 +27,7 @@ from dotmac.platform.radius.analytics_schemas import (
 from dotmac.platform.settings import settings
 from dotmac.platform.timeseries import TimeSeriesSessionLocal
 from dotmac.platform.timeseries.repository import RadiusTimeSeriesRepository
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = structlog.get_logger(__name__)
 
@@ -47,6 +48,14 @@ async def check_timescaledb_available():
             status_code=503,
             detail="TimescaleDB analytics not available. Enable TIMESCALEDB_ENABLED in configuration.",
         )
+
+
+def _get_session_factory() -> async_sessionmaker[AsyncSession]:
+    """Return the TimescaleDB session factory or raise if unavailable."""
+    session_factory = TimeSeriesSessionLocal
+    if session_factory is None:
+        raise HTTPException(status_code=503, detail="TimescaleDB session not initialized")
+    return session_factory
 
 
 @router.get(
@@ -78,8 +87,10 @@ async def get_subscriber_usage(
         end_date=end_date.isoformat(),
     )
 
+    session_factory = _get_session_factory()
+
     try:
-        async with TimeSeriesSessionLocal() as session:
+        async with session_factory() as session:
             repo = RadiusTimeSeriesRepository()
 
             usage = await repo.get_subscriber_usage(
@@ -147,8 +158,10 @@ async def get_tenant_usage(
         end_date=end_date.isoformat(),
     )
 
+    session_factory = _get_session_factory()
+
     try:
-        async with TimeSeriesSessionLocal() as session:
+        async with session_factory() as session:
             repo = RadiusTimeSeriesRepository()
 
             usage = await repo.get_tenant_usage(
@@ -212,8 +225,10 @@ async def get_hourly_bandwidth(
         subscriber_id=subscriber_id,
     )
 
+    session_factory = _get_session_factory()
+
     try:
-        async with TimeSeriesSessionLocal() as session:
+        async with session_factory() as session:
             repo = RadiusTimeSeriesRepository()
 
             hourly_data = await repo.get_hourly_bandwidth(
@@ -283,8 +298,10 @@ async def get_daily_bandwidth(
         subscriber_id=subscriber_id,
     )
 
+    session_factory = _get_session_factory()
+
     try:
-        async with TimeSeriesSessionLocal() as session:
+        async with session_factory() as session:
             repo = RadiusTimeSeriesRepository()
 
             daily_data = await repo.get_daily_bandwidth(
@@ -371,8 +388,12 @@ async def get_top_subscribers(
         metric=metric,
     )
 
+    session_factory = TimeSeriesSessionLocal
+    if session_factory is None:
+        raise HTTPException(status_code=503, detail="TimescaleDB session not initialized")
+
     try:
-        async with TimeSeriesSessionLocal() as session:
+        async with session_factory() as session:
             repo = RadiusTimeSeriesRepository()
 
             top_subs = await repo.get_top_subscribers(

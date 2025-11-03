@@ -657,6 +657,8 @@ __all__ = [
     "restore_database_state",
     "configure_database_for_testing",
     # Database operations
+    "get_database_url",
+    "get_async_database_url",
     "create_all_tables",
     "create_all_tables_async",
     "drop_all_tables",

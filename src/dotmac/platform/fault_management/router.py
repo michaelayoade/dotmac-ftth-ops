@@ -50,6 +50,29 @@ router = APIRouter(prefix="/faults", tags=["Fault Management"])
 # =============================================================================
 
 
+def _to_uuid(value: str | UUID | None) -> UUID | None:
+    """Safely convert incoming identifiers to UUIDs."""
+    if value is None:
+        return None
+    if isinstance(value, UUID):
+        return value
+    try:
+        return UUID(value)
+    except (ValueError, TypeError):
+        return None
+
+
+def _require_uuid(value: str | UUID | None, *, field: str) -> UUID:
+    """Convert to UUID or raise an HTTP 400 error."""
+    parsed = _to_uuid(value)
+    if parsed is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Valid {field} is required",
+        )
+    return parsed
+
+
 def get_alarm_service(
     tenant_access: TenantAdminAccess,
     session: AsyncSession = Depends(get_session_dependency),
@@ -86,7 +109,7 @@ async def create_alarm(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmResponse:
     """Create new alarm"""
-    return await service.create(data, user_id=user.user_id)
+    return await service.create(data, user_id=_to_uuid(user.user_id))
 
 
 @router.get(
@@ -163,7 +186,7 @@ async def update_alarm(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmResponse:
     """Update alarm"""
-    alarm = await service.update(alarm_id, data, user_id=user.user_id)
+    alarm = await service.update(alarm_id, data, user_id=_to_uuid(user.user_id))
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
     return alarm
@@ -182,7 +205,11 @@ async def acknowledge_alarm(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmResponse:
     """Acknowledge alarm"""
-    alarm = await service.acknowledge(alarm_id, data.note, user.user_id)
+    alarm = await service.acknowledge(
+        alarm_id,
+        data.note,
+        _require_uuid(user.user_id, field="user_id"),
+    )
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
     return alarm
@@ -200,7 +227,7 @@ async def clear_alarm(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmResponse:
     """Clear alarm"""
-    alarm = await service.clear(alarm_id, user_id=user.user_id)
+    alarm = await service.clear(alarm_id, user_id=_to_uuid(user.user_id))
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
     return alarm
@@ -219,7 +246,11 @@ async def resolve_alarm(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmResponse:
     """Resolve alarm"""
-    alarm = await service.resolve(alarm_id, resolution_note, user.user_id)
+    alarm = await service.resolve(
+        alarm_id,
+        resolution_note,
+        _require_uuid(user.user_id, field="user_id"),
+    )
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
     return alarm
@@ -238,7 +269,11 @@ async def add_alarm_note(
     service: AlarmService = Depends(get_alarm_service),
 ) -> dict[str, Any]:
     """Add note to alarm"""
-    await service.add_note(alarm_id, data, user.user_id)
+    await service.add_note(
+        alarm_id,
+        data,
+        _require_uuid(user.user_id, field="user_id"),
+    )
     return {"message": "Note added successfully"}
 
 
@@ -267,7 +302,7 @@ async def create_ticket_from_alarm(
             priority=data.priority,
             additional_notes=data.additional_notes,
             assign_to_user_id=data.assign_to_user_id,
-            user_id=user.user_id,
+                user_id=_require_uuid(user.user_id, field="user_id"),
         )
         if not isinstance(result, dict):
             raise TypeError("AlarmService.create_ticket_from_alarm must return a dictionary")
@@ -315,7 +350,7 @@ async def create_alarm_rule(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmRuleResponse:
     """Create alarm rule"""
-    return await service.create_rule(data, user_id=user.user_id)
+    return await service.create_rule(data, user_id=_to_uuid(user.user_id))
 
 
 @router.get(
@@ -346,7 +381,7 @@ async def update_alarm_rule(
     service: AlarmService = Depends(get_alarm_service),
 ) -> AlarmRuleResponse:
     """Update alarm rule"""
-    rule = await service.update_rule(rule_id, data, user_id=user.user_id)
+    rule = await service.update_rule(rule_id, data, user_id=_to_uuid(user.user_id))
     if not rule:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Rule not found")
     return rule
@@ -387,7 +422,7 @@ async def create_sla_definition(
     service: SLAMonitoringService = Depends(get_sla_service),
 ) -> SLADefinitionResponse:
     """Create SLA definition"""
-    return await service.create_definition(data, user_id=user.user_id)
+    return await service.create_definition(data, user_id=_to_uuid(user.user_id))
 
 
 @router.get(
@@ -442,7 +477,7 @@ async def create_sla_instance(
     service: SLAMonitoringService = Depends(get_sla_service),
 ) -> SLAInstanceResponse:
     """Create SLA instance"""
-    return await service.create_instance(data, user_id=user.user_id)
+    return await service.create_instance(data, user_id=_to_uuid(user.user_id))
 
 
 @router.get(
@@ -538,7 +573,7 @@ async def create_maintenance_window(
     alarm_service: AlarmService = Depends(get_alarm_service),
 ) -> MaintenanceWindowResponse:
     """Create maintenance window"""
-    return await alarm_service.create_maintenance_window(data, user_id=user.user_id)
+    return await alarm_service.create_maintenance_window(data, user_id=_to_uuid(user.user_id))
 
 
 @router.patch(

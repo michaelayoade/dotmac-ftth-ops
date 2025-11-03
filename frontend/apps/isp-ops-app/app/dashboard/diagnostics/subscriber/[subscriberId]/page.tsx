@@ -166,7 +166,13 @@ function SubscriberDiagnosticsContent() {
       if (!response.ok) throw new Error("Failed to fetch diagnostic runs");
       return response.json();
     },
-    refetchInterval: 5000,
+    refetchInterval: (query) => {
+      // Auto-refresh every 5 seconds if any diagnostic is running
+      const hasRunning = query?.state?.data?.items?.some(
+        (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
+      );
+      return hasRunning ? 5000 : false;
+    },
   });
 
   // Fetch the latest diagnostic run details
@@ -181,13 +187,18 @@ function SubscriberDiagnosticsContent() {
       return response.json();
     },
     enabled: !!latestRunId,
-    refetchInterval: 5000,
+    refetchInterval: (query) => {
+      // Auto-refresh every 5 seconds if diagnostic is running or pending
+      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
+        ? 5000
+        : false;
+    },
   });
 
   // Update latestRunId when runs data changes
   useEffect(() => {
-    if (runsData?.items && runsData.items.length > 0 && runsData.items[0]) {
-      setLatestRunId(runsData.items[0].id);
+    if (runsData?.items && runsData.items.length > 0) {
+      setLatestRunId(runsData.items[0]?.id ?? null);
     }
   }, [runsData]);
 
@@ -623,7 +634,7 @@ function SubscriberDiagnosticsContent() {
           <DialogHeader>
             <DialogTitle>Restart CPE Device</DialogTitle>
             <DialogDescription>
-              This will restart the customer's CPE device, which may cause a temporary service interruption.
+              This will restart the customer&apos;s CPE device, which may cause a temporary service interruption.
               Are you sure you want to proceed?
             </DialogDescription>
           </DialogHeader>

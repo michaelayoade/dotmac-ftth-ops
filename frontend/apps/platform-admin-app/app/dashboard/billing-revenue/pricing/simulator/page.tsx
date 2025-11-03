@@ -433,7 +433,7 @@ export default function PriceSimulatorPage() {
                 <Calculator className="h-16 w-16 mx-auto mb-4 opacity-20" />
                 <p className="text-lg font-medium">No Calculation Yet</p>
                 <p className="text-sm mt-2">
-                  Fill in the parameters and click "Calculate Price" to see results
+                  Fill in the parameters and click &quot;Calculate Price&quot; to see results
                 </p>
               </div>
             </CardContent>
@@ -577,8 +577,8 @@ export default function PriceSimulatorPage() {
               </p>
               <ul className="text-sm text-muted-foreground mt-4 space-y-1 inline-block text-left">
                 <li>• No active pricing rules match this product</li>
-                <li>• The customer doesn't meet the eligibility criteria</li>
-                <li>• Quantity requirements weren't met</li>
+                <li>• The customer doesn&apos;t meet the eligibility criteria</li>
+                <li>• Quantity requirements weren&apos;t met</li>
                 <li>• Pricing rules have reached their usage limits</li>
               </ul>
             </div>

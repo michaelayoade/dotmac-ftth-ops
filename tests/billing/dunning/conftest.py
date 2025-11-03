@@ -9,6 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
+from dotmac.platform.auth.core import UserInfo
+
 from dotmac.platform.billing.dunning.models import (
     DunningActionType,
 )
@@ -28,7 +30,7 @@ def dunning_test_environment(monkeypatch):
 
 
 @pytest_asyncio.fixture
-async def async_client(test_app, async_session):
+async def async_client(test_app, async_session, test_tenant_id):
     """Async HTTP client for dunning API tests.
 
     Creates an httpx AsyncClient for testing async endpoints.
@@ -63,9 +65,27 @@ async def async_client(test_app, async_session):
         from dotmac.platform.tenant import get_current_tenant_id
 
         def override_get_current_tenant_id() -> str:
-            return "test-tenant-001"
+            return test_tenant_id
 
         overrides[get_current_tenant_id] = override_get_current_tenant_id
+    except ImportError:  # pragma: no cover
+        pass
+
+    try:
+        from dotmac.platform.auth.dependencies import get_current_user
+        from dotmac.platform.auth.core import UserInfo
+
+        def override_get_current_user() -> UserInfo:
+            return UserInfo(
+                user_id=str(uuid4()),
+                tenant_id=test_tenant_id,
+                email="test@example.com",
+                username="test-user",
+                roles=["admin"],
+                permissions=["billing:dunning:write"],
+            )
+
+        overrides[get_current_user] = override_get_current_user
     except ImportError:  # pragma: no cover
         pass
 
@@ -73,7 +93,14 @@ async def async_client(test_app, async_session):
         test_app.dependency_overrides[dependency] = override
 
     transport = ASGITransport(app=test_app)
-    async with AsyncClient(transport=transport, base_url="http://testserver") as client:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={
+            "Authorization": "Bearer test-token",
+            "X-Tenant-ID": test_tenant_id,
+        },
+    ) as client:
         yield client
 
     for dependency in overrides:

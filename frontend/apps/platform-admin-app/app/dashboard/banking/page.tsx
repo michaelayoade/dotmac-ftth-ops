@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Building2,
   Plus,
@@ -135,15 +135,7 @@ export default function BankingPage() {
     mobile_provider: "",
   });
 
-  useEffect(() => {
-    if (activeTab === "accounts") {
-      loadBankAccounts();
-    } else if (activeTab === "payments") {
-      loadManualPayments();
-    }
-  }, [activeTab]);
-
-  const loadBankAccounts = async () => {
+  const loadBankAccounts = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/bank-accounts`, {
@@ -166,7 +158,7 @@ export default function BankingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const loadAccountSummary = async (accountId: number) => {
     try {
@@ -193,7 +185,7 @@ export default function BankingPage() {
     }
   };
 
-  const loadManualPayments = async () => {
+  const loadManualPayments = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/billing/payments/search`, {
@@ -221,7 +213,15 @@ export default function BankingPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (activeTab === "accounts") {
+      loadBankAccounts();
+    } else if (activeTab === "payments") {
+      loadManualPayments();
+    }
+  }, [activeTab, loadBankAccounts, loadManualPayments]);
 
   const handleCreateAccount = async () => {
     try {

@@ -702,7 +702,7 @@ export default function ReconciliationDetailPage() {
                     <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
                     <p>No payments reconciled yet</p>
                     {reconciliation.status === 'in_progress' && (
-                      <p className="text-sm mt-2">Click "Add Payment" to start reconciling</p>
+                      <p className="text-sm mt-2">Click &quot;Add Payment&quot; to start reconciling</p>
                     )}
                   </div>
                 ) : (
