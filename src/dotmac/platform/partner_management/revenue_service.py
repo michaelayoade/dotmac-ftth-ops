@@ -42,7 +42,9 @@ class PartnerRevenueService:
         tenant_id_value = get_current_tenant_id()
         testing_mode = os.getenv("TESTING") == "1"
         if tenant_id_value:
-            tenant_id = tenant_id_value if isinstance(tenant_id_value, str) else str(tenant_id_value)
+            tenant_id = (
+                tenant_id_value if isinstance(tenant_id_value, str) else str(tenant_id_value)
+            )
             if testing_mode and tenant_id in {"default", "default-tenant"}:
                 tenant_id_value = None
             else:

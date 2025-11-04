@@ -351,11 +351,13 @@ useEffect(() => {
 
 ### Token Authentication
 
-Tokens are sent on connection and stored in `localStorage`:
+Tokens are sent on connection and retrieved via the operator auth helper (which keeps them scoped to the current browser session):
 
 ```typescript
 // The provider automatically sends this
-const token = localStorage.getItem("access_token");
+import { getOperatorAccessToken } from "@dotmac/headless/utils";
+
+const token = getOperatorAccessToken();
 ws.send(
   JSON.stringify({
     type: "auth",

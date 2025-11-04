@@ -119,12 +119,12 @@ export function NASDeviceDialog({
     mutationFn: async (data: NASDevice) => {
       if (isEdit && nasDevice?.id) {
         const response = await apiClient.patch(
-          `/api/v1/radius/nas/${nasDevice.id}`,
+          `/radius/nas/${nasDevice.id}`,
           data
         );
         return response.data;
       } else {
-        const response = await apiClient.post("/api/v1/radius/nas", data);
+        const response = await apiClient.post("/radius/nas", data);
         return response.data;
       }
     },

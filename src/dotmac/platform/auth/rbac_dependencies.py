@@ -161,16 +161,12 @@ def _cached_role_checker(
     )
 
 
-def require_permission(
-    permission: str, error_message: str | None = None
-) -> PermissionChecker:
+def require_permission(permission: str, error_message: str | None = None) -> PermissionChecker:
     """Require a single permission"""
     return _cached_permission_checker((permission,), PermissionMode.ALL, error_message)
 
 
-def require_permissions(
-    *permissions: str, error_message: str | None = None
-) -> PermissionChecker:
+def require_permissions(*permissions: str, error_message: str | None = None) -> PermissionChecker:
     """Require all specified permissions"""
     return _cached_permission_checker(tuple(permissions), PermissionMode.ALL, error_message)
 

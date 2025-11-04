@@ -32,6 +32,7 @@ logger = structlog.get_logger(__name__)
 if TYPE_CHECKING:
     from dotmac.platform.analytics.service import AnalyticsService
 
+
 def _ensure_utc(value: Any | None) -> datetime:
     """Normalize incoming datetime-like values to UTC-aware datetimes."""
 

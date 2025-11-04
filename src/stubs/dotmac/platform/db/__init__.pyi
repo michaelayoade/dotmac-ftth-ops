@@ -6,8 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Session
 
 # Base classes
-class Base(DeclarativeBase):
-    ...
+class Base(DeclarativeBase): ...
 
 BaseModel = Base  # Legacy alias
 

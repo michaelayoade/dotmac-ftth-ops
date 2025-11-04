@@ -87,9 +87,9 @@ class GenieACSService:
             client_candidate = client
         else:
             self.session = None
-            client_candidate = client_or_session if isinstance(
-                client_or_session, GenieACSClient
-            ) else client
+            client_candidate = (
+                client_or_session if isinstance(client_or_session, GenieACSClient) else client
+            )
 
         if client_candidate is None:
             client_candidate = GenieACSClient(tenant_id=tenant_id)
@@ -240,7 +240,11 @@ class GenieACSService:
             except Exception as exc:  # pragma: no cover - defensive logging
                 logger.warning("genieacs.list_devices.failed", error=str(exc))
 
-        indexed = {entry.get("device_id") or entry.get("_id"): entry for entry in devices_raw if entry.get("device_id") or entry.get("_id")}
+        indexed = {
+            entry.get("device_id") or entry.get("_id"): entry
+            for entry in devices_raw
+            if entry.get("device_id") or entry.get("_id")
+        }
         for entry in client_devices:
             key = entry.get("device_id") or entry.get("_id")
             if key is None:
@@ -322,10 +326,9 @@ class GenieACSService:
             deleted = bool(result)
 
         # Remove from client cache if present
-        if (
-            hasattr(self.client, "devices")
-            and isinstance(self.client.devices, dict)  # type: ignore[attr-defined]
-        ):
+        if hasattr(self.client, "devices") and isinstance(
+            self.client.devices, dict
+        ):  # type: ignore[attr-defined]
             removed = self.client.devices.pop(device_id, None)  # type: ignore[index]
             deleted = deleted or removed is not None
 
@@ -356,13 +359,19 @@ class GenieACSService:
                 last_inform_dt = None
 
         if last_inform_dt:
-            online = (datetime.utcnow() - last_inform_dt.replace(tzinfo=None)) < timedelta(minutes=5)
+            online = (datetime.utcnow() - last_inform_dt.replace(tzinfo=None)) < timedelta(
+                minutes=5
+            )
         else:
             online = False
 
         # Get uptime if available
         uptime_param = device_data.get("InternetGatewayDevice.DeviceInfo.UpTime", {})
-        uptime = uptime_param.get("_value") if isinstance(uptime_param, dict) else device_data.get("uptime")
+        uptime = (
+            uptime_param.get("_value")
+            if isinstance(uptime_param, dict)
+            else device_data.get("uptime")
+        )
 
         return DeviceStatusResponse(
             device_id=device_id,
@@ -390,7 +399,9 @@ class GenieACSService:
                     online_count += 1
 
             # Count manufacturers
-            mfr = self._get_param_value(device_data, "InternetGatewayDevice.DeviceInfo.Manufacturer")
+            mfr = self._get_param_value(
+                device_data, "InternetGatewayDevice.DeviceInfo.Manufacturer"
+            )
             if mfr:
                 manufacturers[mfr] = manufacturers.get(mfr, 0) + 1
 
@@ -463,7 +474,9 @@ class GenieACSService:
                 task_id = f"task_{uuid4().hex[:8]}"
 
             # Update cached parameters for quick access
-            store = self._device_store.setdefault(request.device_id, {"device_id": request.device_id})
+            store = self._device_store.setdefault(
+                request.device_id, {"device_id": request.device_id}
+            )
             parameters_store = store.setdefault("parameters", {})
             parameters_store.update(request.parameters)
 
@@ -506,10 +519,14 @@ class GenieACSService:
         operation = request.operation.lower()
         if operation in {"factory_reset", "factoryreset"}:
             reset_request = FactoryResetRequest(device_id=request.device_id)
-            return await self.factory_reset(reset_request, return_task_response=return_task_response)
+            return await self.factory_reset(
+                reset_request, return_task_response=return_task_response
+            )
         if operation in {"reboot", "reboot_device"}:
             reboot_request = RebootRequest(device_id=request.device_id)
-            return await self.reboot_device(reboot_request, return_task_response=return_task_response)
+            return await self.reboot_device(
+                reboot_request, return_task_response=return_task_response
+            )
         raise ValueError(f"Unsupported device operation '{request.operation}'")
 
     async def get_parameters(

@@ -55,7 +55,7 @@ export default function RADIUSSessionsPage() {
     queryKey: ["radius-sessions"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/sessions");
+        const response = await apiClient.get("/radius/sessions");
         return response.data;
       } catch (error) {
         logger.error("Failed to fetch RADIUS sessions", { error });
@@ -68,7 +68,7 @@ export default function RADIUSSessionsPage() {
   // Disconnect session mutation
   const disconnectMutation = useMutation({
     mutationFn: async (session: RADIUSSession) => {
-      const response = await apiClient.post("/api/v1/radius/sessions/disconnect", {
+      const response = await apiClient.post("/radius/sessions/disconnect", {
         username: session.username,
         acctsessionid: session.acctsessionid,
         nasipaddress: session.nasipaddress,

@@ -11,6 +11,7 @@ const config = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
+    '^@dotmac/headless/utils$': '<rootDir>/__mocks__/headless-utils.js',
     '^@dotmac/ui$': '<rootDir>/__mocks__/ui.js',
     '^@dotmac/design-system$': '<rootDir>/__mocks__/design-system.js',
     '^@dotmac/providers$': '<rootDir>/__mocks__/providers.js',

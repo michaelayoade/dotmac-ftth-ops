@@ -56,6 +56,7 @@ export function DesignTokenExporter() {
             variant="outline"
             size="sm"
             className="gap-2 shadow-lg border-2 bg-background/95 backdrop-blur"
+            aria-label="Download design tokens"
           >
             <Download className="h-4 w-4" />
             <span className="hidden md:inline">Export Tokens</span>
@@ -104,6 +105,7 @@ export function DesignTokenExporter() {
             variant="outline"
             size="sm"
             className="gap-2 shadow-lg border-2 bg-background/95 backdrop-blur"
+            aria-label={copied ? "Design tokens copied" : "Copy design tokens"}
           >
             {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
             <span className="hidden md:inline">{copied ? "Copied!" : "Copy"}</span>

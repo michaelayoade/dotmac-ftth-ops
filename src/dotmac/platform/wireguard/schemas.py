@@ -187,7 +187,7 @@ class WireGuardPeerCreate(BaseModel):  # BaseModel resolves to Any in isolation
     )
     notes: str | None = Field(None, description="Internal notes")
 
-    @model_validator(mode='after')
+    @model_validator(mode="after")
     def validate_public_key_if_not_generating(self) -> "WireGuardPeerCreate":
         """Validate public key is provided if not generating."""
         if not self.generate_keys and not self.public_key:

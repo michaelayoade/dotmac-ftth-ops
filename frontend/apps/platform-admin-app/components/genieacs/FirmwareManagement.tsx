@@ -76,8 +76,8 @@ export function FirmwareManagement() {
     setLoading(true);
     try {
       const [filesRes, schedulesRes] = await Promise.all([
-        apiClient.get<FileResponse[]>("/api/v1/genieacs/files"),
-        apiClient.get<FirmwareUpgradeScheduleList>("/api/v1/genieacs/firmware-upgrades/schedules"),
+        apiClient.get<FileResponse[]>("/genieacs/files"),
+        apiClient.get<FirmwareUpgradeScheduleList>("/genieacs/firmware-upgrades/schedules"),
       ]);
 
       setFirmwareFiles(filesRes.data);
@@ -103,7 +103,7 @@ export function FirmwareManagement() {
   const loadScheduleDetails = async (scheduleId: string) => {
     try {
       const response = await apiClient.get<FirmwareUpgradeScheduleResponse>(
-        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`,
+        `/genieacs/firmware-upgrades/schedules/${scheduleId}`,
       );
       setScheduleDetails(response.data);
     } catch (err: any) {
@@ -146,7 +146,7 @@ export function FirmwareManagement() {
       };
 
       const response = await apiClient.post<FirmwareUpgradeScheduleResponse>(
-        "/api/v1/genieacs/firmware-upgrades/schedule",
+        "/genieacs/firmware-upgrades/schedule",
         payload,
       );
 
@@ -183,7 +183,7 @@ export function FirmwareManagement() {
   const handleExecuteSchedule = async (scheduleId: string) => {
     try {
       await apiClient.post<FirmwareUpgradeScheduleResponse>(
-        `/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}/execute`,
+        `/genieacs/firmware-upgrades/schedules/${scheduleId}/execute`,
       );
 
       toast({
@@ -206,7 +206,7 @@ export function FirmwareManagement() {
 
   const handleCancelSchedule = async (scheduleId: string) => {
     try {
-      await apiClient.delete(`/api/v1/genieacs/firmware-upgrades/schedules/${scheduleId}`);
+      await apiClient.delete(`/genieacs/firmware-upgrades/schedules/${scheduleId}`);
 
       toast({
         title: "Schedule Cancelled",

@@ -361,9 +361,7 @@ class KubernetesAdapter(DeploymentAdapter):
                 return "No pods found"
 
             pod_name = pods[0]["metadata"]["name"]
-            logs = await self._kubectl(
-                ["logs", pod_name, "-n", namespace, f"--tail={lines}"]
-            )
+            logs = await self._kubectl(["logs", pod_name, "-n", namespace, f"--tail={lines}"])
 
             return logs
 

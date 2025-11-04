@@ -63,7 +63,7 @@ export default function BandwidthProfilesPage() {
     queryFn: async () => {
       try {
         const response = await apiClient.get(
-          "/api/v1/radius/bandwidth-profiles",
+          "/radius/bandwidth-profiles",
           {
             params: { skip: 0, limit: 1000 },
           }
@@ -79,7 +79,7 @@ export default function BandwidthProfilesPage() {
   // Delete profile mutation
   const deleteMutation = useMutation({
     mutationFn: async (profileId: string) => {
-      await apiClient.delete(`/api/v1/radius/bandwidth-profiles/${profileId}`);
+      await apiClient.delete(`/radius/bandwidth-profiles/${profileId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["bandwidth-profiles"] });

@@ -10,13 +10,13 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const { branding } = useBranding();
   const config = useAppConfig();
-  const apiBaseUrl = config.api.baseUrl;
+  const apiBaseUrl = config.api.baseUrl || "/api/v1";
 
   // Check if user is authenticated via API call (HttpOnly cookies can't be read by JS)
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const response = await fetch("/auth/me", {
+        const response = await fetch("/api/v1/auth/me", {
           credentials: "include",
         });
         setIsLoggedIn(response.ok);

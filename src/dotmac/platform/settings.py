@@ -547,7 +547,9 @@ class Settings(BaseSettings):
     )
 
     # Server configuration
-    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
+    host: str = Field(
+        "0.0.0.0", description="Server host"
+    )  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")

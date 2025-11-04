@@ -67,8 +67,8 @@ export default function TenantBillingPage() {
         setInvoiceSummary({ open: 0, overdue: 0, upcoming: 0 });
         setPaymentSummary({ pending: 0, failed: 0 });
         const [invoicesResponse, paymentsResponse] = await Promise.all([
-          apiClient.get<{ invoices?: Invoice[] }>("/api/v1/billing/invoices"),
-          apiClient.get<{ payments?: Payment[] }>("/api/v1/billing/payments?limit=50"),
+          apiClient.get<{ invoices?: Invoice[] }>("/billing/invoices"),
+          apiClient.get<{ payments?: Payment[] }>("/billing/payments?limit=50"),
         ]);
 
         if (invoicesResponse.data?.invoices) {

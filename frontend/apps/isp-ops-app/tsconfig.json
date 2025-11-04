@@ -21,7 +21,6 @@
     "jsx": "preserve",
     "baseUrl": ".",
     "paths": {
-      "@/types": ["./types", "../base-app/types"],
       "@/types/*": ["./types/*", "../base-app/types/*"],
       "@/lib/*": ["./lib/*", "../base-app/lib/*"],
       "@/components/*": ["./components/*", "../base-app/components/*"],

@@ -148,7 +148,9 @@ export default function CustomerBillingPage() {
         description: "Your invoice is being downloaded.",
       });
 
-      const token = localStorage.getItem("customer_access_token");
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token");
+      const token = urlToken || localStorage.getItem("customer_access_token");
       const response = await fetch(`${API_BASE}/api/v1/customer/invoices/${invoiceId}/download`, {
         method: "GET",
         headers: {
@@ -156,6 +158,14 @@ export default function CustomerBillingPage() {
           Authorization: `Bearer ${token}`,
         },
       });
+
+      if (urlToken) {
+        try {
+          localStorage.setItem("customer_access_token", urlToken);
+        } catch {
+          // ignore storage write errors
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to download invoice: ${response.statusText}`);
@@ -560,4 +570,3 @@ export default function CustomerBillingPage() {
     </div>
   );
 }
-

@@ -47,9 +47,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
   const loadAlarms = useCallback(async () => {
     setLoading(true);
     try {
-      const endpoint = deviceId
-        ? `/api/v1/access/devices/${deviceId}/alarms`
-        : "/api/v1/access/alarms";
+      const endpoint = deviceId ? `/access/devices/${deviceId}/alarms` : "/access/alarms";
 
       const response = await apiClient.get<VOLTHAAlarmListResponse>(endpoint);
       setAlarms(response.data.alarms);
@@ -70,7 +68,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
 
   const handleAcknowledgeAlarm = async (alarmId: string) => {
     try {
-      await apiClient.post(`/api/v1/access/alarms/${alarmId}/acknowledge`);
+      await apiClient.post(`/access/alarms/${alarmId}/acknowledge`);
       setAcknowledgedAlarms((prev) => new Set(prev).add(alarmId));
       toast({
         title: "Alarm Acknowledged",
@@ -87,7 +85,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
 
   const handleClearAlarm = async (alarmId: string) => {
     try {
-      await apiClient.post(`/api/v1/access/alarms/${alarmId}/clear`);
+      await apiClient.post(`/access/alarms/${alarmId}/clear`);
       toast({
         title: "Alarm Cleared",
         description: "Alarm has been cleared",

@@ -2,6 +2,7 @@
 
 Database models for workflow orchestration and saga pattern implementation.
 """
+
 # mypy: disable-error-code="misc"
 
 from __future__ import annotations
@@ -155,7 +156,9 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
 
     # Step identification
     step_name: Mapped[str] = mapped_column(String(128), nullable=False)
-    step_type: Mapped[str] = mapped_column(String(64), nullable=False)  # 'database', 'api', 'external'
+    step_type: Mapped[str] = mapped_column(
+        String(64), nullable=False
+    )  # 'database', 'api', 'external'
     target_system: Mapped[str | None] = mapped_column(
         String(64), nullable=True
     )  # 'radius', 'voltha', 'netbox', etc.

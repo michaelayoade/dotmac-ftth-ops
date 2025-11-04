@@ -599,9 +599,7 @@ class SiteSurvey(BaseModel, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditM
     )
 
     def __repr__(self) -> str:
-        return (
-            f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
-        )
+        return f"<SiteSurvey(id={self.id}, number={self.survey_number}, status={self.status})>"
 
 
 def _get_metadata(instance: Any) -> dict[str, Any]:

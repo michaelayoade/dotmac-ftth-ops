@@ -208,10 +208,7 @@ export function CPEConfigTemplates() {
         dry_run: applyForm.dry_run,
       };
 
-      const response = await apiClient.post<MassConfigResponse>(
-        "/api/v1/genieacs/mass-config",
-        request,
-      );
+      const response = await apiClient.post<MassConfigResponse>("/genieacs/mass-config", request);
 
       toast({
         title: applyForm.dry_run ? "Dry Run Complete" : "Configuration Job Created",

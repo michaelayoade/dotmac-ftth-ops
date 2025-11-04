@@ -69,8 +69,8 @@ export function BulkOperationsDashboard() {
     setLoading(true);
     try {
       const [configRes, firmwareRes] = await Promise.all([
-        apiClient.get<MassConfigJobList>("/api/v1/genieacs/mass-config"),
-        apiClient.get<FirmwareUpgradeScheduleList>("/api/v1/genieacs/firmware-schedules"),
+        apiClient.get<MassConfigJobList>("/genieacs/mass-config"),
+        apiClient.get<FirmwareUpgradeScheduleList>("/genieacs/firmware-schedules"),
       ]);
 
       setConfigJobs(configRes.data.jobs);
@@ -141,8 +141,8 @@ export function BulkOperationsDashboard() {
     try {
       const endpoint =
         type === "config"
-          ? `/api/v1/genieacs/mass-config/${jobId}/cancel`
-          : `/api/v1/genieacs/firmware-schedules/${jobId}/cancel`;
+          ? `/genieacs/mass-config/${jobId}/cancel`
+          : `/genieacs/firmware-schedules/${jobId}/cancel`;
 
       await apiClient.post(endpoint);
       toast({

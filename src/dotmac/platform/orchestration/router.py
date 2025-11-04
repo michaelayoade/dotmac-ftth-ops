@@ -3,6 +3,7 @@ Orchestration API Router
 
 REST API endpoints for workflow orchestration.
 """
+
 # mypy: disable-error-code="arg-type,union-attr,assignment"
 
 import csv
@@ -767,9 +768,9 @@ async def export_workflows_json(
                 "workflow_type": workflow.workflow_type.value,
                 "status": workflow.status.value,
                 "started_at": workflow.started_at.isoformat() if workflow.started_at else None,
-                "completed_at": workflow.completed_at.isoformat()
-                if workflow.completed_at
-                else None,
+                "completed_at": (
+                    workflow.completed_at.isoformat() if workflow.completed_at else None
+                ),
                 "failed_at": workflow.failed_at.isoformat() if workflow.failed_at else None,
                 "retry_count": workflow.retry_count,
                 "error_message": workflow.error_message,
@@ -790,9 +791,9 @@ async def export_workflows_json(
                         "target_system": step.target_system,
                         "status": step.status.value,
                         "started_at": step.started_at.isoformat() if step.started_at else None,
-                        "completed_at": step.completed_at.isoformat()
-                        if step.completed_at
-                        else None,
+                        "completed_at": (
+                            step.completed_at.isoformat() if step.completed_at else None
+                        ),
                         "failed_at": step.failed_at.isoformat() if step.failed_at else None,
                         "error_message": step.error_message,
                         "retry_count": step.retry_count,

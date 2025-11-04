@@ -51,7 +51,7 @@ function OLTListPageContent() {
   } = useQuery<LogicalDeviceListResponse>({
     queryKey: ["access-logical-devices"],
     queryFn: async () => {
-      const response = await apiClient.get<LogicalDeviceListResponse>("/api/v1/access/logical-devices");
+      const response = await apiClient.get<LogicalDeviceListResponse>("/access/logical-devices");
       return response.data;
     },
     refetchInterval: 30000,
@@ -63,7 +63,7 @@ function OLTListPageContent() {
   } = useQuery<DeviceListResponse>({
     queryKey: ["access-devices"],
     queryFn: async () => {
-      const response = await apiClient.get<DeviceListResponse>("/api/v1/access/devices");
+      const response = await apiClient.get<DeviceListResponse>("/access/devices");
       return response.data;
     },
     refetchInterval: 30000,
@@ -75,7 +75,7 @@ function OLTListPageContent() {
   } = useQuery<AccessStatistics>({
     queryKey: ["access-statistics"],
     queryFn: async () => {
-      const response = await apiClient.get<AccessStatistics>("/api/v1/access/statistics");
+      const response = await apiClient.get<AccessStatistics>("/access/statistics");
       return response.data;
     },
     refetchInterval: 30000,

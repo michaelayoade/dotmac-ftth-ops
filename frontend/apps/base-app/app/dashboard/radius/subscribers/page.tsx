@@ -64,7 +64,7 @@ export default function RADIUSSubscribersPage() {
     queryKey: ["radius-subscribers"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/subscribers", {
+        const response = await apiClient.get("/radius/subscribers", {
           params: { skip: 0, limit: 1000 },
         });
         return response.data;
@@ -79,7 +79,7 @@ export default function RADIUSSubscribersPage() {
   const enableMutation = useMutation({
     mutationFn: async (username: string) => {
       const response = await apiClient.post(
-        `/api/v1/radius/subscribers/${username}/enable`
+        `/radius/subscribers/${username}/enable`
       );
       return response.data;
     },
@@ -103,7 +103,7 @@ export default function RADIUSSubscribersPage() {
   const disableMutation = useMutation({
     mutationFn: async (username: string) => {
       const response = await apiClient.post(
-        `/api/v1/radius/subscribers/${username}/disable`
+        `/radius/subscribers/${username}/disable`
       );
       return response.data;
     },
@@ -126,7 +126,7 @@ export default function RADIUSSubscribersPage() {
   // Delete subscriber mutation
   const deleteMutation = useMutation({
     mutationFn: async (username: string) => {
-      await apiClient.delete(`/api/v1/radius/subscribers/${username}`);
+      await apiClient.delete(`/radius/subscribers/${username}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["radius-subscribers"] });
@@ -280,7 +280,9 @@ export default function RADIUSSubscribersPage() {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <Link
-                            href={`/dashboard/radius/subscribers/${subscriber.username}`}
+                            href={`/dashboard/radius/subscribers/${encodeURIComponent(
+                              subscriber.username,
+                            )}/edit`}
                           >
                             <DropdownMenuItem>
                               <Edit className="mr-2 h-4 w-4" />

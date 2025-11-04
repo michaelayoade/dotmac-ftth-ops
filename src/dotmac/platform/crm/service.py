@@ -632,9 +632,11 @@ class QuoteService:
             valid_until=valid_until,
             line_items=line_items,
             metadata_=metadata,
-            notes=notes or f"Renewal quote for existing customer - {discount_percentage}% discount"
-            if discount_percentage
-            else "Renewal quote for existing customer",
+            notes=(
+                notes or f"Renewal quote for existing customer - {discount_percentage}% discount"
+                if discount_percentage
+                else "Renewal quote for existing customer"
+            ),
             created_by=str(created_by_id) if created_by_id else None,
         )
 

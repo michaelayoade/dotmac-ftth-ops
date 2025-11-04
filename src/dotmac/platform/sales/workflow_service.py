@@ -3,6 +3,7 @@ Sales Workflow Service
 
 Provides workflow-compatible methods for sales operations.
 """
+
 # mypy: disable-error-code="arg-type,misc,type-arg,valid-type"
 
 import logging
@@ -91,9 +92,9 @@ class SalesService:
                 "customer_email": lead.email,
                 "total_amount": existing_order.total_amount,
                 "status": existing_order.status.value,
-                "created_at": existing_order.created_at.isoformat()
-                if existing_order.created_at
-                else None,
+                "created_at": (
+                    existing_order.created_at.isoformat() if existing_order.created_at else None
+                ),
                 "order_number": existing_order.order_number,
             }
 

@@ -31,6 +31,7 @@ if TYPE_CHECKING:
 else:
     Base = BaseRuntime
 
+
 class OrderStatus(str, enum.Enum):
     """Order processing status"""
 

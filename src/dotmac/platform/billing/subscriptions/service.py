@@ -795,17 +795,17 @@ class SubscriptionService:
         if db_subscription is None:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
-        # Update period dates
+            # Update period dates
             setattr(db_subscription, "current_period_start", new_period_start)
             setattr(db_subscription, "current_period_end", new_period_end)
 
-        # Reset usage counters for new period
+            # Reset usage counters for new period
             setattr(db_subscription, "usage_records", {})
 
         # If subscription was trialing and trial has ended, activate it
         if subscription.status == SubscriptionStatus.TRIALING:
             if subscription.trial_end and datetime.now(UTC) >= subscription.trial_end:
-                    setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
+                setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
 
         await self.db.commit()
         await self.db.refresh(db_subscription)

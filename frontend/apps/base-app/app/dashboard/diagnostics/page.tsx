@@ -358,7 +358,9 @@ function DiagnosticsHistoryPageContent() {
                           <>
                             <span>•</span>
                             <Link
-                              href={`/dashboard/radius/subscribers/${run.subscriber_id}/diagnostics`}
+                              href={`/dashboard/radius/subscribers/${encodeURIComponent(
+                                run.subscriber_id,
+                              )}/diagnostics`}
                               className="text-primary hover:underline"
                             >
                               {run.subscriber_id}

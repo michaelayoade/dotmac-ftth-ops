@@ -302,7 +302,7 @@ async def create_ticket_from_alarm(
             priority=data.priority,
             additional_notes=data.additional_notes,
             assign_to_user_id=data.assign_to_user_id,
-                user_id=_require_uuid(user.user_id, field="user_id"),
+            user_id=_require_uuid(user.user_id, field="user_id"),
         )
         if not isinstance(result, dict):
             raise TypeError("AlarmService.create_ticket_from_alarm must return a dictionary")

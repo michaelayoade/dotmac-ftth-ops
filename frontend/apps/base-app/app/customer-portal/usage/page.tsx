@@ -105,7 +105,12 @@ export default function CustomerUsagePage() {
         time_range: timeRange,
       };
 
-      const token = localStorage.getItem("customer_access_token");
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get("token");
+      const token = urlToken || localStorage.getItem("customer_access_token");
+      if (!token) {
+        throw new Error("Customer session expired");
+      }
       const response = await fetch(`${API_BASE}/api/v1/customer/usage/report`, {
         method: "POST",
         headers: {
@@ -114,6 +119,14 @@ export default function CustomerUsagePage() {
         },
         body: JSON.stringify(reportData),
       });
+
+      if (urlToken) {
+        try {
+          localStorage.setItem("customer_access_token", urlToken);
+        } catch {
+          // ignore storage exceptions
+        }
+      }
 
       if (!response.ok) {
         throw new Error(`Failed to generate report: ${response.statusText}`);

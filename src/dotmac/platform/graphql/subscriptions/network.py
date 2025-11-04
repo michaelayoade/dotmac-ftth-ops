@@ -231,9 +231,11 @@ class NetworkSubscriptions:
                             description=alert_data["description"],
                             device_id=alert_data.get("device_id"),
                             device_name=alert_data.get("device_name"),
-                            device_type=DeviceTypeEnum(alert_data["device_type"])
-                            if alert_data.get("device_type")
-                            else None,
+                            device_type=(
+                                DeviceTypeEnum(alert_data["device_type"])
+                                if alert_data.get("device_type")
+                                else None
+                            ),
                             triggered_at=alert_data["triggered_at"],
                             acknowledged_at=alert_data.get("acknowledged_at"),
                             resolved_at=alert_data.get("resolved_at"),

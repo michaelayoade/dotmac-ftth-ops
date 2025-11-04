@@ -21,6 +21,8 @@ import {
 import { Customer } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 interface CustomersListProps {
   customers: Customer[];
@@ -139,6 +141,16 @@ interface CustomerRowProps {
 function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps) {
   const [showActions, setShowActions] = useState(false);
   const { toast } = useToast();
+  const buildAuthHeaders = () => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    const token = getOperatorAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  };
 
   const customerName =
     customer.display_name ||
@@ -152,30 +164,21 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
     setShowActions(false);
 
     try {
-      const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/impersonate`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
-        },
+      const response = await apiClient.post<{ access_token: string }>(
+        `/customers/${customer.id}/impersonate`,
+        {},
+        { headers: buildAuthHeaders() },
       );
 
-      if (!response.ok) throw new Error("Failed to generate login token");
-
-      const data = await response.json();
-
-      // Store the impersonation token
-      localStorage.setItem("customer_access_token", data.access_token);
-
-      // Open customer portal in new tab
-      window.open("/customer-portal", "_blank");
+      window.open(
+        `/customer-portal?token=${encodeURIComponent(response.data.access_token)}`,
+        "_blank",
+        "noopener",
+      );
 
       toast({
         title: "Logged in as Customer",
-        description: `You are now viewing the portal as ${customerName}`,
+        description: `Opened customer portal for ${customerName}`,
       });
     } catch (error) {
       toast({
@@ -197,10 +200,8 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
         `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/status`,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: buildAuthHeaders(),
           body: JSON.stringify({ status: newStatus }),
         },
       );
@@ -232,10 +233,8 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
         `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/reset-password`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: buildAuthHeaders(),
         },
       );
 

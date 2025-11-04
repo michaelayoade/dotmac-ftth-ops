@@ -6,6 +6,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { platformConfig } from '@/lib/config';
+import { getOperatorAccessToken } from '../../../shared/utils/operatorAuth';
 
 export interface RADIUSSubscriber {
   id: number;
@@ -47,15 +48,19 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
   return useQuery({
     queryKey: ['radius-subscribers', offset, limit],
     queryFn: async () => {
-      const token = localStorage.getItem('access_token');
+      const token = getOperatorAccessToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/radius/subscribers?offset=${offset}&limit=${limit}`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
+          credentials: 'include',
+          headers,
+        },
       );
 
       if (!response.ok) {
@@ -77,12 +82,16 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
   return useQuery({
     queryKey: ['radius-sessions'],
     queryFn: async () => {
-      const token = localStorage.getItem('access_token');
+      const token = getOperatorAccessToken();
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers.Authorization = `Bearer ${token}`;
+      }
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/radius/sessions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        credentials: 'include',
+        headers,
       });
 
       if (!response.ok) {

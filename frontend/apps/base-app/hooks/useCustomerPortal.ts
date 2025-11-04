@@ -1,10 +1,16 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  createPortalAuthFetch,
+  CUSTOMER_PORTAL_TOKEN_KEY,
+  PortalAuthError,
+} from "../../../shared/utils/operatorAuth";
 import { platformConfig } from "@/lib/config";
 import type { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
 
 const API_BASE = platformConfig.api.baseUrl;
+const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
 
 // ============================================================================
 // Types
@@ -101,13 +107,7 @@ export function useCustomerProfile() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch profile");
@@ -116,7 +116,13 @@ export function useCustomerProfile() {
       const data = await response.json();
       setProfile(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer profile:", err);
     } finally {
       setLoading(false);
@@ -128,13 +134,8 @@ export function useCustomerProfile() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`, {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(updates),
       });
 
@@ -146,7 +147,13 @@ export function useCustomerProfile() {
       setProfile(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error updating customer profile:", err);
       throw err;
     } finally {
@@ -181,13 +188,7 @@ export function useCustomerService() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/service`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch service");
@@ -196,7 +197,13 @@ export function useCustomerService() {
       const data = await response.json();
       setService(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer service:", err);
     } finally {
       setLoading(false);
@@ -208,13 +215,8 @@ export function useCustomerService() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ plan_id: planId }),
       });
 
@@ -226,7 +228,13 @@ export function useCustomerService() {
       setService(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error upgrading plan:", err);
       throw err;
     } finally {
@@ -261,13 +269,7 @@ export function useCustomerInvoices() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/invoices`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/invoices`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch invoices");
@@ -276,7 +278,13 @@ export function useCustomerInvoices() {
       const data = await response.json();
       setInvoices(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer invoices:", err);
     } finally {
       setLoading(false);
@@ -309,13 +317,7 @@ export function useCustomerPayments() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/payments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch payments");
@@ -324,7 +326,13 @@ export function useCustomerPayments() {
       const data = await response.json();
       setPayments(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer payments:", err);
     } finally {
       setLoading(false);
@@ -337,13 +345,8 @@ export function useCustomerPayments() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/payments`, {
+        const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify({
             invoice_id: invoiceId,
             amount,
@@ -359,7 +362,13 @@ export function useCustomerPayments() {
         await fetchPayments(); // Refresh payments list
         return data;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error making payment:", err);
         throw err;
       } finally {
@@ -396,13 +405,7 @@ export function useCustomerPaymentMethods() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/payment-methods`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payment-methods`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch payment methods");
@@ -411,7 +414,13 @@ export function useCustomerPaymentMethods() {
       const data = await response.json();
       setPaymentMethods(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer payment methods:", err);
     } finally {
       setLoading(false);
@@ -424,13 +433,8 @@ export function useCustomerPaymentMethods() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/payment-methods`, {
+        const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payment-methods`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify(request),
         });
 
@@ -441,7 +445,13 @@ export function useCustomerPaymentMethods() {
 
         await fetchPaymentMethods();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error adding customer payment method:", err);
         throw err;
       } finally {
@@ -457,15 +467,10 @@ export function useCustomerPaymentMethods() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(
+        const response = await customerPortalFetch(
           `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/default`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
           },
         );
 
@@ -476,7 +481,13 @@ export function useCustomerPaymentMethods() {
 
         await fetchPaymentMethods();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error setting default payment method:", err);
         throw err;
       } finally {
@@ -492,15 +503,10 @@ export function useCustomerPaymentMethods() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(
+        const response = await customerPortalFetch(
           `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}`,
           {
             method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
           },
         );
 
@@ -511,7 +517,13 @@ export function useCustomerPaymentMethods() {
 
         await fetchPaymentMethods();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error removing payment method:", err);
         throw err;
       } finally {
@@ -527,15 +539,10 @@ export function useCustomerPaymentMethods() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(
+        const response = await customerPortalFetch(
           `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/toggle-autopay`,
           {
             method: "POST",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
           },
         );
 
@@ -546,7 +553,13 @@ export function useCustomerPaymentMethods() {
 
         await fetchPaymentMethods();
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error toggling AutoPay:", err);
         throw err;
       } finally {
@@ -598,13 +611,7 @@ export function useCustomerUsage() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/usage`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/usage`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch usage");
@@ -613,7 +620,13 @@ export function useCustomerUsage() {
       const data = await response.json();
       setUsage(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer usage:", err);
     } finally {
       setLoading(false);
@@ -646,13 +659,7 @@ export function useCustomerTickets() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/tickets`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch tickets");
@@ -661,7 +668,13 @@ export function useCustomerTickets() {
       const data = await response.json();
       setTickets(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer tickets:", err);
     } finally {
       setLoading(false);
@@ -679,13 +692,8 @@ export function useCustomerTickets() {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/tickets`, {
+        const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
           body: JSON.stringify(ticketData),
         });
 
@@ -697,7 +705,13 @@ export function useCustomerTickets() {
         await fetchTickets(); // Refresh tickets list
         return data;
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
         console.error("Error creating ticket:", err);
         throw err;
       } finally {
@@ -734,13 +748,7 @@ export function useCustomerSettings() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/settings`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch settings");
@@ -749,7 +757,13 @@ export function useCustomerSettings() {
       const data = await response.json();
       setSettings(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer settings:", err);
     } finally {
       setLoading(false);
@@ -761,13 +775,8 @@ export function useCustomerSettings() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/settings`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`, {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(updates),
       });
 
@@ -779,7 +788,13 @@ export function useCustomerSettings() {
       setSettings(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error updating customer settings:", err);
       throw err;
     } finally {
@@ -792,13 +807,8 @@ export function useCustomerSettings() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/change-password`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/change-password`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({
           current_password: currentPassword,
           new_password: newPassword,
@@ -811,7 +821,13 @@ export function useCustomerSettings() {
 
       return await response.json();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error changing password:", err);
       throw err;
     } finally {

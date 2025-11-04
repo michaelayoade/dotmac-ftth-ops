@@ -115,17 +115,17 @@ export function NetworkMonitoringDashboard() {
       setError(null);
 
       // Fetch overview
-      const overviewResponse = await apiClient.get<NetworkOverview>("/api/v1/network/overview");
+      const overviewResponse = await apiClient.get<NetworkOverview>("/network/overview");
       setOverview(overviewResponse.data);
 
       // Fetch top devices (limited)
-      const devicesResponse = await apiClient.get<DeviceHealth[]>("/api/v1/network/devices", {
+      const devicesResponse = await apiClient.get<DeviceHealth[]>("/network/devices", {
         params: { limit: 10 },
       });
       setDevices(devicesResponse.data);
 
       // Fetch recent alerts
-      const alertsResponse = await apiClient.get<NetworkAlert[]>("/api/v1/network/alerts", {
+      const alertsResponse = await apiClient.get<NetworkAlert[]>("/network/alerts", {
         params: { active_only: true, limit: 5 },
       });
       setAlerts(alertsResponse.data);
@@ -158,7 +158,7 @@ export function NetworkMonitoringDashboard() {
 
   const handleAcknowledgeAlert = async (alertId: string) => {
     try {
-      await apiClient.post(`/api/v1/network/alerts/${alertId}/acknowledge`, {
+      await apiClient.post(`/network/alerts/${alertId}/acknowledge`, {
         note: "Acknowledged from dashboard",
       });
 

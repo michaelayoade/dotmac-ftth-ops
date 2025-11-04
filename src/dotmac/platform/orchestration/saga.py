@@ -10,6 +10,7 @@ The Saga pattern coordinates transactions across multiple services by:
 
 Reference: https://microservices.io/patterns/data/saga.html
 """
+
 # mypy: disable-error-code="type-arg,assignment,no-overload-impl,no-any-return"
 
 import logging

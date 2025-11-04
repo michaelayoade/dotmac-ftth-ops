@@ -565,6 +565,7 @@ class GenieACSServiceDB(GenieACSService):
             MassConfigResponse with initial status
         """
         from dotmac.platform.genieacs.tasks import execute_mass_config
+
         tenant_id = self._require_tenant_id()
 
         # Verify job exists

@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID, uuid4
 
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
 
@@ -1393,8 +1393,8 @@ class LifecycleOrchestrationService:
         health_result = await self.session.execute(
             select(
                 func.count(ServiceInstance.id),
-                func.count(ServiceInstance.id.filter(ServiceInstance.health_status == "healthy")),
-                func.count(ServiceInstance.id.filter(ServiceInstance.health_status == "degraded")),
+                func.sum(case((ServiceInstance.health_status == "healthy", 1), else_=0)),
+                func.sum(case((ServiceInstance.health_status == "degraded", 1), else_=0)),
                 func.avg(ServiceInstance.uptime_percentage),
             ).where(
                 and_(
@@ -1411,9 +1411,10 @@ class LifecycleOrchestrationService:
         workflow_result = await self.session.execute(
             select(
                 func.count(ProvisioningWorkflow.id),
-                func.count(
-                    ProvisioningWorkflow.id.filter(
-                        ProvisioningWorkflow.status == ProvisioningStatus.FAILED
+                func.sum(
+                    case(
+                        (ProvisioningWorkflow.status == ProvisioningStatus.FAILED, 1),
+                        else_=0,
                     )
                 ),
             ).where(

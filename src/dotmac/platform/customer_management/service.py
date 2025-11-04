@@ -478,9 +478,7 @@ class CustomerService:
                 from sqlalchemy.dialects.postgresql import JSONB
 
                 tag_conditions = [
-                    sa.cast(Customer.tags, JSONB).op("@>")(
-                        sa.cast(literal([tag]), JSONB)
-                    )
+                    sa.cast(Customer.tags, JSONB).op("@>")(sa.cast(literal([tag]), JSONB))
                     for tag in params.tags
                 ]
                 filter_conditions.append(or_(*tag_conditions))
@@ -491,9 +489,7 @@ class CustomerService:
                 for tag in params.tags:
                     # Cast column to text and check if tag appears in JSON array
                     # Tags are stored as ["tag1", "tag2"], so we look for "tag"
-                    tag_conditions.append(
-                        sa.cast(Customer.tags, sa.String).like(f'%"{tag}"%')
-                    )
+                    tag_conditions.append(sa.cast(Customer.tags, sa.String).like(f'%"{tag}"%'))
                 filter_conditions.append(or_(*tag_conditions))
 
         # Date range filters
@@ -565,16 +561,12 @@ class CustomerService:
 
                 filter_conditions.append(
                     json_serial_filter
-                    | sa.cast(Customer.assigned_devices, sa.Text).like(
-                        f"%{params.device_serial}%"
-                    )
+                    | sa.cast(Customer.assigned_devices, sa.Text).like(f"%{params.device_serial}%")
                 )
             else:
                 # For SQLite, use LIKE on the JSON text representation
                 filter_conditions.append(
-                    sa.cast(Customer.assigned_devices, sa.String).like(
-                        f"%{params.device_serial}%"
-                    )
+                    sa.cast(Customer.assigned_devices, sa.String).like(f"%{params.device_serial}%")
                 )
 
         # Apply all filters at once

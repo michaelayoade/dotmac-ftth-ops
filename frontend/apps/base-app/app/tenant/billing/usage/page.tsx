@@ -543,19 +543,13 @@ export default function UsageBillingPage() {
         try {
           const usageIds = selected.map((r) => r.id);
 
-          const response = await fetch("/api/billing/usage/export", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ usage_ids: usageIds }),
-          });
+          const response = await apiClient.post(
+            "/billing/usage/export",
+            { usage_ids: usageIds },
+            { responseType: "blob" },
+          );
 
-          if (!response.ok) {
-            throw new Error(`Failed to download CSV: ${response.statusText}`);
-          }
-
-          const blob = await response.blob();
+          const blob = new Blob([response.data], { type: "text/csv" });
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");
           link.href = url;

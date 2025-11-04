@@ -689,7 +689,11 @@ class DiagnosticsService:
                 results["netbox_vrf"] = netbox_vrf
 
                 # Verify consistency
-                if subscriber.static_ipv4 and netbox_address and str(subscriber.static_ipv4) != netbox_address:
+                if (
+                    subscriber.static_ipv4
+                    and netbox_address
+                    and str(subscriber.static_ipv4) != netbox_address
+                ):
                     recommendations.append(
                         {
                             "severity": "error",
@@ -1030,9 +1034,11 @@ class DiagnosticsService:
                 # Convert daily data for output
                 daily_breakdown = [
                     {
-                        "date": day["day"].date().isoformat()
-                        if hasattr(day["day"], "date")
-                        else str(day["day"]),
+                        "date": (
+                            day["day"].date().isoformat()
+                            if hasattr(day["day"], "date")
+                            else str(day["day"])
+                        ),
                         "bandwidth_gb": float(Decimal(day["total_bandwidth"]) / Decimal(1024**3)),
                         "session_count": day["session_count"],
                     }
@@ -1049,11 +1055,11 @@ class DiagnosticsService:
                     "total_sessions": usage_data["session_count"],
                     "total_duration_hours": float(usage_data["total_duration"] / 3600),
                     "trend": trend,
-                    "peak_day": peak_day.date().isoformat()
-                    if peak_day and hasattr(peak_day, "date")
-                    else str(peak_day)
-                    if peak_day
-                    else None,
+                    "peak_day": (
+                        peak_day.date().isoformat()
+                        if peak_day and hasattr(peak_day, "date")
+                        else str(peak_day) if peak_day else None
+                    ),
                     "peak_usage_gb": float(peak_usage_gb),
                     "daily_breakdown": daily_breakdown,
                 }

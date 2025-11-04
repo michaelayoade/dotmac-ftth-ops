@@ -196,9 +196,11 @@ def create_audit_aware_dependency(user_info_dependency: Any) -> Any:
                 email=getattr(user_info, "email", None),
                 tenant_id=getattr(user_info, "tenant_id", None),
                 roles=getattr(user_info, "roles", []) or [],
-                scopes=list(permissions or [])
-                if permissions is not None
-                else getattr(user_info, "roles", []) or [],
+                scopes=(
+                    list(permissions or [])
+                    if permissions is not None
+                    else getattr(user_info, "roles", []) or []
+                ),
             )
 
             # Also set tenant in context var for database operations

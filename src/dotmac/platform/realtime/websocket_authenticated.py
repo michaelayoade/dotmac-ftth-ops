@@ -146,12 +146,16 @@ async def handle_sessions_ws_authenticated(websocket: WebSocket, redis: RedisCli
                                         "session_id": session_id,
                                         "username": session.username,
                                         "status": "active" if session.is_active else "inactive",
-                                        "start_time": session.acctstarttime.isoformat()
-                                        if session.acctstarttime
-                                        else None,
-                                        "stop_time": session.acctstoptime.isoformat()
-                                        if session.acctstoptime
-                                        else None,
+                                        "start_time": (
+                                            session.acctstarttime.isoformat()
+                                            if session.acctstarttime
+                                            else None
+                                        ),
+                                        "stop_time": (
+                                            session.acctstoptime.isoformat()
+                                            if session.acctstoptime
+                                            else None
+                                        ),
                                         "nas_ip": session.nasipaddress,
                                         "input_bytes": session.acctinputoctets,
                                         "output_bytes": session.acctoutputoctets,

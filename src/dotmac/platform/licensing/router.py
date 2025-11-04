@@ -136,9 +136,9 @@ def _serialize_order(order: LicenseOrder) -> LicenseOrderResponse:
         "fulfillment_method": order.fulfillment_method,
         "status": order.status,
         "total_amount": float(order.total_amount or 0),
-        "discount_applied": float(order.discount_applied)
-        if order.discount_applied is not None
-        else None,
+        "discount_applied": (
+            float(order.discount_applied) if order.discount_applied is not None else None
+        ),
         "payment_status": order.payment_status,
         "invoice_id": str(order.invoice_id) if order.invoice_id else None,
         "subscription_id": order.subscription_id,

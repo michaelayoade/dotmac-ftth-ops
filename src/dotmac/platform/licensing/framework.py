@@ -184,6 +184,7 @@ class FeatureModule(Base):
     @config.setter
     def config(self, value: dict[str, Any]) -> None:
         self.extra_metadata = value
+
     custom_config: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
 
     # Timestamps

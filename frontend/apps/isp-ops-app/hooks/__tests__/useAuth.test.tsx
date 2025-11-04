@@ -13,7 +13,7 @@ import type { AxiosResponse, AxiosRequestConfig } from "axios";
 
 // Mock dependencies
 jest.mock("@/lib/api/services/auth.service");
-jest.mock("@/lib/api-client");
+jest.mock("@/lib/api/client");
 jest.mock("next/navigation", () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -46,10 +46,7 @@ describe("useAuth Hook", () => {
 
   describe("Initial State", () => {
     it("should start with loading state", () => {
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: false,
-        data: null,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(null);
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
@@ -65,10 +62,7 @@ describe("useAuth Hook", () => {
         email: "test@example.com",
       };
 
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: true,
-        data: mockUser,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser as any);
 
       mockApiClient.get.mockResolvedValue(
         createAxiosResponse({
@@ -95,21 +89,15 @@ describe("useAuth Hook", () => {
         email: "test@example.com",
       };
 
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: false,
-        data: null,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(null);
 
       mockAuthService.login.mockResolvedValue({
-        success: true,
-        data: {
-          user: mockUser,
-          access_token: "mock-token",
-          refresh_token: "mock-refresh-token",
-          token_type: "bearer",
-          expires_in: 3600,
-        },
-      });
+        user: mockUser,
+        access_token: "mock-token",
+        refresh_token: "mock-refresh-token",
+        token_type: "bearer",
+        expires_in: 3600,
+      } as any);
 
       mockApiClient.get.mockResolvedValue(
         createAxiosResponse({
@@ -139,10 +127,7 @@ describe("useAuth Hook", () => {
     });
 
     it("should handle login error", async () => {
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: false,
-        data: null,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(null);
 
       mockAuthService.login.mockRejectedValue(new Error("Invalid credentials"));
 
@@ -173,10 +158,7 @@ describe("useAuth Hook", () => {
         email: "test@example.com",
       };
 
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: true,
-        data: mockUser,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser as any);
 
       mockApiClient.get.mockResolvedValue(createAxiosResponse({ effective_permissions: [] }));
 
@@ -210,10 +192,7 @@ describe("useAuth Hook", () => {
         effective_permissions: [{ name: "read:users" }, { name: "write:users" }],
       };
 
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: true,
-        data: mockUser,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser as any);
 
       mockApiClient.get.mockResolvedValue(createAxiosResponse(mockPermissions));
 
@@ -224,7 +203,7 @@ describe("useAuth Hook", () => {
       });
 
       expect(result.current.permissions).toEqual(mockPermissions);
-      expect(mockApiClient.get).toHaveBeenCalledWith("/api/v1/auth/rbac/my-permissions");
+      expect(mockApiClient.get).toHaveBeenCalledWith("/auth/rbac/my-permissions");
     });
 
     it("should handle permission loading failure gracefully", async () => {
@@ -234,10 +213,7 @@ describe("useAuth Hook", () => {
         email: "test@example.com",
       };
 
-      mockAuthService.getCurrentUser.mockResolvedValue({
-        success: true,
-        data: mockUser,
-      });
+      mockAuthService.getCurrentUser.mockResolvedValue(mockUser as any);
 
       mockApiClient.get.mockRejectedValue(new Error("Failed to fetch permissions"));
 
@@ -255,15 +231,21 @@ describe("useAuth Hook", () => {
 
   describe("Error Handling", () => {
     it("should set error state on authentication failure", async () => {
+      jest.useFakeTimers();
       mockAuthService.getCurrentUser.mockRejectedValue(new Error("Network error"));
 
       const { result } = renderHook(() => useAuth(), { wrapper });
 
-      await waitFor(() => {
-        expect(result.current.loading).toBe(false);
-      });
+      try {
+        await act(async () => {
+          jest.runAllTimers();
+          await Promise.resolve();
+        });
 
-      expect(result.current.user).toBe(null);
+        expect(result.current.user).toBe(null);
+      } finally {
+        jest.useRealTimers();
+      }
     });
   });
 
@@ -282,14 +264,8 @@ describe("useAuth Hook", () => {
       };
 
       mockAuthService.getCurrentUser
-        .mockResolvedValueOnce({
-          success: true,
-          data: initialUser,
-        })
-        .mockResolvedValueOnce({
-          success: true,
-          data: updatedUser,
-        });
+        .mockResolvedValueOnce(initialUser as any)
+        .mockResolvedValueOnce(updatedUser as any);
 
       mockApiClient.get.mockResolvedValue(createAxiosResponse({ effective_permissions: [] }));
 

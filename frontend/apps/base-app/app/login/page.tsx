@@ -9,6 +9,10 @@ import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
 import { useBranding } from "@/hooks/useBranding";
+import {
+  clearOperatorAuthTokens,
+  setOperatorAccessToken,
+} from "../../../../shared/utils/operatorAuth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -46,10 +50,27 @@ export default function LoginPage() {
         if (response.status === 200) {
           console.log("[LOGIN] Login successful, redirecting to dashboard...");
           logger.info("Login successful, cookies should be set by server");
+          const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
+
+          if (response.data?.access_token) {
+            setOperatorAccessToken(response.data.access_token);
+            if (defaultHeaders) {
+              defaultHeaders.Authorization = `Bearer ${response.data.access_token}`;
+            }
+          } else {
+            clearOperatorAuthTokens();
+            if (defaultHeaders?.Authorization) {
+              delete defaultHeaders.Authorization;
+            }
+          }
 
           // Store tenant ID if provided
           if (response.data?.tenant_id) {
-            localStorage.setItem("tenant_id", response.data.tenant_id);
+            try {
+              localStorage.setItem("tenant_id", response.data.tenant_id);
+            } catch (error) {
+              logger.debug("Unable to persist tenant_id", error);
+            }
           }
 
           // Small delay to ensure cookies are set
@@ -63,6 +84,11 @@ export default function LoginPage() {
           setError(`Login failed with status ${response.status}`);
         }
       } catch (err: any) {
+        clearOperatorAuthTokens();
+        const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
+        if (defaultHeaders?.Authorization) {
+          delete defaultHeaders.Authorization;
+        }
         console.error("[LOGIN] Error caught:", err);
         console.error("[LOGIN] Error response:", err?.response);
 

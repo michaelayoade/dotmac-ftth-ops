@@ -3,6 +3,7 @@ Sales Order Processing Service
 
 Orchestrates the flow from customer order to deployed tenant with activated services.
 """
+
 # mypy: disable-error-code="assignment,arg-type,call-arg,attr-defined,misc,unused-ignore,union-attr,no-overload-impl,await-not-async,index,type-arg,no-untyped-call"
 
 import asyncio
@@ -252,9 +253,9 @@ class OrderProcessingService:
             company_name=request.company_name,
             organization_slug=request.organization_slug,
             organization_name=request.organization_name,
-            billing_address=request.billing_address.model_dump()
-            if request.billing_address
-            else None,
+            billing_address=(
+                request.billing_address.model_dump() if request.billing_address else None
+            ),
             tax_id=request.tax_id,
             deployment_template_id=template.id if template else None,
             deployment_region=request.deployment_region,

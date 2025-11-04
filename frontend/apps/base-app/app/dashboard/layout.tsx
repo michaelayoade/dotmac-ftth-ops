@@ -1094,7 +1094,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </div>
 
       {/* Main content area */}
-      <div className="lg:pl-64 pt-16">
+      <div className="pt-16 w-full lg:ml-[16rem] lg:w-[calc(100%-16rem)]">
         <main
           id="main-content"
           className="min-h-screen p-4 sm:p-6 lg:p-8 bg-background"

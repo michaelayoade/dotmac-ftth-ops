@@ -150,11 +150,15 @@ class WirelessQueries:
             db_status = (
                 DeviceStatus.ONLINE
                 if status == AccessPointStatus.ONLINE
-                else DeviceStatus.OFFLINE
-                if status == AccessPointStatus.OFFLINE
-                else DeviceStatus.DEGRADED
-                if status == AccessPointStatus.DEGRADED
-                else DeviceStatus.MAINTENANCE
+                else (
+                    DeviceStatus.OFFLINE
+                    if status == AccessPointStatus.OFFLINE
+                    else (
+                        DeviceStatus.DEGRADED
+                        if status == AccessPointStatus.DEGRADED
+                        else DeviceStatus.MAINTENANCE
+                    )
+                )
             )
             query = query.where(WirelessDevice.status == db_status)
 
@@ -323,9 +327,11 @@ class WirelessQueries:
             db_freq = (
                 Frequency.FREQ_2_4_GHZ
                 if frequency_band == FrequencyBand.BAND_2_4_GHZ
-                else Frequency.FREQ_5_GHZ
-                if frequency_band == FrequencyBand.BAND_5_GHZ
-                else Frequency.FREQ_6_GHZ
+                else (
+                    Frequency.FREQ_5_GHZ
+                    if frequency_band == FrequencyBand.BAND_5_GHZ
+                    else Frequency.FREQ_6_GHZ
+                )
             )
             query = query.where(WirelessClientModel.frequency == db_freq)
 

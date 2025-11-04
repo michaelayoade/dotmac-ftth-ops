@@ -46,7 +46,7 @@ function ONUListPageContent() {
   const { data: onusData, isLoading, refetch } = useQuery<DeviceListResponse>({
     queryKey: ["access-onus"],
     queryFn: async () => {
-      const response = await apiClient.get<DeviceListResponse>("/api/v1/access/devices");
+      const response = await apiClient.get<DeviceListResponse>("/access/devices");
       return response.data;
     },
     refetchInterval: 30000,
@@ -74,7 +74,7 @@ function ONUListPageContent() {
         device.metadata?.olt_id ||
         device.parent_id ||
         (device.metadata?.root_device_id as string | undefined);
-      const baseUrl = `/api/v1/access/devices/${encodeURIComponent(device.id)}/${operation}`;
+      const baseUrl = `/access/devices/${encodeURIComponent(device.id)}/${operation}`;
       const url = oltId ? `${baseUrl}?olt_id=${encodeURIComponent(oltId)}` : baseUrl;
       const response = await apiClient.post(url);
       return response.data;

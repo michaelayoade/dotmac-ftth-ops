@@ -3,6 +3,7 @@ Sales Order Schemas
 
 Pydantic schemas for order processing API.
 """
+
 # mypy: disable-error-code="attr-defined,call-arg,misc,unused-ignore"
 
 from datetime import datetime

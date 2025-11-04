@@ -86,9 +86,9 @@ class CustomerActivity:
             activity_type=ActivityTypeEnum(activity.activity_type.value),
             title=activity.title,
             description=activity.description,
-            performed_by=strawberry.ID(str(activity.performed_by))
-            if activity.performed_by
-            else None,
+            performed_by=(
+                strawberry.ID(str(activity.performed_by)) if activity.performed_by else None
+            ),
             created_at=activity.created_at,
         )
 

@@ -21,7 +21,7 @@ import type {
   CreateAlertRuleRequest,
 } from "@/types/network-monitoring";
 
-const API_BASE = "/api/v1";
+const API_BASE = "";
 
 // ============================================================================
 // Network Overview

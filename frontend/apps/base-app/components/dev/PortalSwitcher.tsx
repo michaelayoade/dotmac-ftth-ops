@@ -57,6 +57,7 @@ export function PortalSwitcher() {
             variant="outline"
             size="sm"
             className="gap-2 shadow-lg border-2 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+            aria-label="Open portal switcher"
           >
             <Palette className="h-4 w-4" />
             <span className="hidden sm:inline">{currentMetadata.icon}</span>

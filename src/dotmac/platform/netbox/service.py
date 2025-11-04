@@ -104,7 +104,9 @@ class NetBoxService:
             candidate_client: NetBoxClient | None = client
         else:
             self.session = None
-            candidate_client = client_or_session if isinstance(client_or_session, NetBoxClient) else client
+            candidate_client = (
+                client_or_session if isinstance(client_or_session, NetBoxClient) else client
+            )
 
         self.client: NetBoxClient = candidate_client or NetBoxClient(tenant_id=tenant_id)
         self.tenant_id = tenant_id
@@ -183,15 +185,11 @@ class NetBoxService:
             "id": entry.get("id"),
             "vid": entry.get("vid"),
             "name": entry.get("name"),
-            "tenant": {"name": entry.get("tenant")}
-            if entry.get("tenant")
-            else None,
+            "tenant": {"name": entry.get("tenant")} if entry.get("tenant") else None,
             "status": {"value": entry.get("status", "active")},
             "group": None,
             "site": None,
-            "role": {"name": entry.get("role")}
-            if entry.get("role")
-            else None,
+            "role": {"name": entry.get("role")} if entry.get("role") else None,
             "description": entry.get("description", ""),
             "created": None,
             "last_updated": None,
@@ -209,9 +207,7 @@ class NetBoxService:
             "mtu": entry.get("mtu"),
             "mac_address": entry.get("mac_address"),
             "description": entry.get("description", ""),
-            "mode": {"value": entry.get("mode")}
-            if entry.get("mode")
-            else None,
+            "mode": {"value": entry.get("mode")} if entry.get("mode") else None,
             "untagged_vlan": entry.get("untagged_vlan"),
             "tagged_vlans": entry.get("tagged_vlans", []),
             "created": None,
@@ -549,7 +545,9 @@ class NetBoxService:
 
         network = ipaddress.ip_network(entry["prefix"], strict=False)
         total_ips = network.num_addresses
-        allocated = sum(1 for record in self._ip_store.values() if record.get("prefix_id") == prefix_id)
+        allocated = sum(
+            1 for record in self._ip_store.values() if record.get("prefix_id") == prefix_id
+        )
         available = max(total_ips - allocated, 0)
         utilization = (allocated / total_ips * 100) if total_ips else 0.0
 
@@ -706,11 +704,7 @@ class NetBoxService:
         if ip_id not in self._ip_store:
             raise ValueError("IP address not found")
 
-        payload = (
-            data.model_dump(exclude_none=True)
-            if hasattr(data, "model_dump")
-            else dict(data)
-        )
+        payload = data.model_dump(exclude_none=True) if hasattr(data, "model_dump") else dict(data)
 
         entry = self._ip_store[ip_id]
         for key in ("status", "description", "dns_name", "tenant", "tags", "role"):
@@ -900,7 +894,11 @@ class NetBoxService:
             try:
                 await self.client.assign_interface_vlan(interface_id, vlan_id, mode)  # type: ignore[attr-defined]
             except Exception:
-                logger.debug("netbox.assign_interface_vlan.fallback", interface_id=interface_id, vlan_id=vlan_id)
+                logger.debug(
+                    "netbox.assign_interface_vlan.fallback",
+                    interface_id=interface_id,
+                    vlan_id=vlan_id,
+                )
 
         return (
             InterfaceResponse(**self._interface_response_payload(entry))
@@ -943,14 +941,20 @@ class NetBoxService:
 
     async def get_ip_utilization_report(self, tenant_id: str | None = None) -> dict[str, Any]:
         """Aggregate IP utilization metrics across prefixes."""
-        prefixes = [entry for entry in self._prefix_store.values() if (tenant_id is None or entry.get("tenant") == tenant_id)]
+        prefixes = [
+            entry
+            for entry in self._prefix_store.values()
+            if (tenant_id is None or entry.get("tenant") == tenant_id)
+        ]
         total_prefixes = len(prefixes)
         total_allocated = 0
         total_capacity = 0
         for entry in prefixes:
             network = ipaddress.ip_network(entry["prefix"], strict=False)
             capacity = network.num_addresses
-            allocated = sum(1 for record in self._ip_store.values() if record.get("prefix_id") == entry["id"])
+            allocated = sum(
+                1 for record in self._ip_store.values() if record.get("prefix_id") == entry["id"]
+            )
             total_allocated += allocated
             total_capacity += capacity
 
@@ -965,7 +969,11 @@ class NetBoxService:
 
     async def get_vlan_usage_report(self, tenant_id: str | None = None) -> dict[str, Any]:
         """Generate VLAN usage summary."""
-        vlans = [entry for entry in self._vlan_store.values() if (tenant_id is None or entry.get("tenant") == tenant_id)]
+        vlans = [
+            entry
+            for entry in self._vlan_store.values()
+            if (tenant_id is None or entry.get("tenant") == tenant_id)
+        ]
         total = len(vlans)
         active = sum(1 for entry in vlans if entry.get("status", "").lower() == "active")
         return {
@@ -976,7 +984,11 @@ class NetBoxService:
 
     async def get_interface_status_report(self, device_name: str | None = None) -> dict[str, Any]:
         """Generate interface status summary."""
-        interfaces = [entry for entry in self._interface_store.values() if device_name is None or entry.get("device") == device_name]
+        interfaces = [
+            entry
+            for entry in self._interface_store.values()
+            if device_name is None or entry.get("device") == device_name
+        ]
         total = len(interfaces)
         enabled = sum(1 for entry in interfaces if entry.get("enabled", True))
         disabled = total - enabled

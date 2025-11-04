@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,14 @@ interface DiagnosticRun {
 
 function DiagnosticsPageContent() {
   const params = useParams();
-  const subscriberId = params.subscriberId as string;
+  const subscriberKey = useMemo(() => {
+    const value = params?.subscriberId;
+    if (!value) {
+      return "";
+    }
+    return decodeURIComponent(Array.isArray(value) ? value[0] : value);
+  }, [params]);
+  const encodedSubscriberKey = encodeURIComponent(subscriberKey);
   const [activeTab, setActiveTab] = useState<"checks" | "history">("checks");
   const [runningChecks, setRunningChecks] = useState<Set<string>>(new Set());
 
@@ -58,23 +65,24 @@ function DiagnosticsPageContent() {
 
   // Fetch latest diagnostic runs
   const { data: latestRuns = [], refetch: refetchRuns } = useQuery<DiagnosticRun[]>({
-    queryKey: ["diagnostics", subscriberId],
+    queryKey: ["diagnostics", subscriberKey],
     queryFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?subscriber_id=${subscriberId}&limit=10`,
+        `${platformConfig.api.baseUrl}/api/v1/diagnostics/runs?subscriber_id=${encodedSubscriberKey}&limit=10`,
         { credentials: "include" }
       );
       if (!response.ok) return [];
       const data = await response.json();
       return data.items || [];
     },
+    enabled: Boolean(subscriberKey),
   });
 
   // Health check mutation
   const healthCheckMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch(
-        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/health-check`,
+        `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${encodedSubscriberKey}/health-check`,
         {
           method: "GET",
           credentials: "include",
@@ -84,7 +92,7 @@ function DiagnosticsPageContent() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["diagnostics", subscriberId] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics", subscriberKey] });
       toast({ title: "Health check completed" });
     },
     onError: (error: Error) => {
@@ -103,7 +111,7 @@ function DiagnosticsPageContent() {
         setRunningChecks((prev) => new Set([...prev, checkName]));
         const method = endpoint.includes("restart") ? "POST" : "GET";
         const response = await fetch(
-          `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${subscriberId}/${endpoint}`,
+          `${platformConfig.api.baseUrl}/api/v1/diagnostics/subscribers/${encodedSubscriberKey}/${endpoint}`,
           {
             method,
             credentials: "include",
@@ -118,7 +126,7 @@ function DiagnosticsPageContent() {
           next.delete(checkName);
           return next;
         });
-        queryClient.invalidateQueries({ queryKey: ["diagnostics", subscriberId] });
+      queryClient.invalidateQueries({ queryKey: ["diagnostics", subscriberKey] });
         toast({ title: `${checkName} completed` });
         refetchRuns();
       },
@@ -230,14 +238,14 @@ function DiagnosticsPageContent() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" asChild>
-            <Link href={`/dashboard/radius/subscribers/${subscriberId}`}>
+            <Link href="/dashboard/radius/subscribers">
               <ArrowLeft className="h-4 w-4" />
             </Link>
           </Button>
           <div>
             <h1 className="text-3xl font-bold">Subscriber Diagnostics</h1>
             <p className="text-sm text-muted-foreground">
-              Network diagnostics for subscriber {subscriberId}
+              Network diagnostics for subscriber {subscriberKey}
             </p>
           </div>
         </div>

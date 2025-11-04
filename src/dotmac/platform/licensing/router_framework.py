@@ -610,8 +610,12 @@ async def create_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
-                selectinload(TenantSubscription.quota_usage).selectinload(SubscriptionQuotaUsage.quota),
+                selectinload(TenantSubscription.active_modules).selectinload(
+                    SubscriptionModule.module
+                ),
+                selectinload(TenantSubscription.quota_usage).selectinload(
+                    SubscriptionQuotaUsage.quota
+                ),
             )
             .where(TenantSubscription.id == subscription.id)
         )
@@ -714,7 +718,9 @@ async def add_addon_to_current_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.active_modules).selectinload(
+                    SubscriptionModule.module
+                ),
                 selectinload(TenantSubscription.quota_usage),
             )
             .where(TenantSubscription.id == subscription.id)
@@ -777,7 +783,9 @@ async def remove_addon_from_current_subscription(
             select(TenantSubscription)
             .options(
                 selectinload(TenantSubscription.plan),
-                selectinload(TenantSubscription.active_modules).selectinload(SubscriptionModule.module),
+                selectinload(TenantSubscription.active_modules).selectinload(
+                    SubscriptionModule.module
+                ),
                 selectinload(TenantSubscription.quotas),
             )
             .where(TenantSubscription.id == subscription.id)

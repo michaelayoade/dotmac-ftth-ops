@@ -58,7 +58,7 @@ function ONUDiscoverPageContent() {
   } = useQuery<DiscoveredONU[]>({
     queryKey: ["access-discover-onus"],
     queryFn: async () => {
-      const response = await apiClient.get<DiscoveredONU[]>("/api/v1/access/discover-onus");
+      const response = await apiClient.get<DiscoveredONU[]>("/access/discover-onus");
       return (response.data || []).map(normalizeDiscovery);
     },
   });
@@ -76,7 +76,7 @@ function ONUDiscoverPageContent() {
         service_profile_id: form.service_profile_id,
       };
       const response = await apiClient.post(
-        `/api/v1/access/olts/${encodeURIComponent(form.olt_device_id)}/onus`,
+        `/access/olts/${encodeURIComponent(form.olt_device_id)}/onus`,
         payload,
       );
       return response.data;
@@ -408,4 +408,3 @@ export default function ONUDiscoverPage() {
     </RouteGuard>
   );
 }
-

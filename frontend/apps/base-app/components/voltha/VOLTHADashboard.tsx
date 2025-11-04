@@ -58,10 +58,10 @@ export function VOLTHADashboard() {
     setLoading(true);
     try {
       const [healthRes, oltsRes, onusRes, alarmsRes] = await Promise.all([
-        apiClient.get<VOLTHAHealthResponse>("/api/v1/access/health"),
-        apiClient.get<LogicalDeviceListResponse>("/api/v1/access/logical-devices"),
-        apiClient.get<DeviceListResponse>("/api/v1/access/devices"),
-        apiClient.get<{ alarms: VOLTHAAlarm[] }>("/api/v1/access/alarms"),
+        apiClient.get<VOLTHAHealthResponse>("/access/health"),
+        apiClient.get<LogicalDeviceListResponse>("/access/logical-devices"),
+        apiClient.get<DeviceListResponse>("/access/devices"),
+        apiClient.get<{ alarms: VOLTHAAlarm[] }>("/access/alarms"),
       ]);
 
       setHealth(healthRes.data);
@@ -96,7 +96,7 @@ export function VOLTHADashboard() {
 
   const loadOLTOverview = async (oltId: string) => {
     try {
-      const response = await apiClient.get<OLTOverview>(`/api/v1/access/olts/${oltId}/overview`);
+      const response = await apiClient.get<OLTOverview>(`/access/olts/${oltId}/overview`);
       setOLTOverview(response.data);
     } catch (err) {
       console.error("Failed to load OLT overview", err);
@@ -120,8 +120,8 @@ export function VOLTHADashboard() {
     try {
       const query = selectedDevice?.metadata?.olt_id || selectedDevice?.parent_id;
       const url = query
-        ? `/api/v1/access/devices/${deviceId}/${operation}?olt_id=${encodeURIComponent(query)}`
-        : `/api/v1/access/devices/${deviceId}/${operation}`;
+        ? `/access/devices/${deviceId}/${operation}?olt_id=${encodeURIComponent(query)}`
+        : `/access/devices/${deviceId}/${operation}`;
       await apiClient.post(url);
       toast({
         title: "Operation successful",

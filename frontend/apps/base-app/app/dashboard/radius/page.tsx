@@ -71,7 +71,7 @@ export default function RADIUSPage() {
     queryKey: ["radius-health", refreshKey],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/health");
+        const response = await apiClient.get("/radius/health");
         return response.data;
       } catch (error) {
         logger.error("Failed to fetch RADIUS health", { error });
@@ -86,7 +86,7 @@ export default function RADIUSPage() {
     queryKey: ["radius-subscribers", refreshKey],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/subscribers", {
+        const response = await apiClient.get("/radius/subscribers", {
           params: { skip: 0, limit: 1000 },
         });
         return response.data;
@@ -102,7 +102,7 @@ export default function RADIUSPage() {
     queryKey: ["radius-sessions", refreshKey],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/sessions");
+        const response = await apiClient.get("/radius/sessions");
         return response.data;
       } catch (error) {
         logger.error("Failed to fetch RADIUS sessions", { error });

@@ -315,9 +315,7 @@ async def toggle_scheduled_job(
 ) -> ScheduledJobResponse:
     """Toggle scheduled job active status."""
     tenant_id = _require_tenant_id(current_user)
-    scheduled_job = await service.toggle_scheduled_job(
-        scheduled_job_id, tenant_id, is_active
-    )
+    scheduled_job = await service.toggle_scheduled_job(scheduled_job_id, tenant_id, is_active)
 
     if not scheduled_job:
         raise HTTPException(

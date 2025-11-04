@@ -1,9 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import {
+  createPortalAuthFetch,
+  CUSTOMER_PORTAL_TOKEN_KEY,
+  PortalAuthError,
+} from "../../../shared/utils/operatorAuth";
 import { platformConfig } from "@/lib/config";
 
 const API_BASE = platformConfig.api.baseUrl;
+const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
 
 // ============================================================================
 // Types
@@ -100,13 +106,7 @@ export function useCustomerProfile() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch profile");
@@ -115,7 +115,13 @@ export function useCustomerProfile() {
       const data = await response.json();
       setProfile(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer profile:", err);
     } finally {
       setLoading(false);
@@ -127,13 +133,8 @@ export function useCustomerProfile() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/profile`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`, {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify(updates),
       });
 
@@ -145,7 +146,13 @@ export function useCustomerProfile() {
       setProfile(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error updating customer profile:", err);
       throw err;
     } finally {
@@ -180,13 +187,7 @@ export function useCustomerService() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/service`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service`);
 
       if (!response.ok) {
         throw new Error("Failed to fetch service");
@@ -195,7 +196,13 @@ export function useCustomerService() {
       const data = await response.json();
       setService(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error fetching customer service:", err);
     } finally {
       setLoading(false);
@@ -207,13 +214,8 @@ export function useCustomerService() {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ plan_id: planId }),
       });
 
@@ -225,7 +227,13 @@ export function useCustomerService() {
       setService(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
       console.error("Error upgrading plan:", err);
       throw err;
     } finally {

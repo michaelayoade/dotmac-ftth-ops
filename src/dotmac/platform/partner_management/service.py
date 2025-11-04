@@ -60,7 +60,9 @@ class PartnerService:
         tenant_id_value = get_current_tenant_id()
         testing_mode = os.getenv("TESTING") == "1"
         if tenant_id_value:
-            tenant_id = tenant_id_value if isinstance(tenant_id_value, str) else str(tenant_id_value)
+            tenant_id = (
+                tenant_id_value if isinstance(tenant_id_value, str) else str(tenant_id_value)
+            )
             if testing_mode and tenant_id in {"default", "default-tenant"}:
                 tenant_id_value = None  # Treat framework default as missing during tests
             else:
@@ -74,7 +76,9 @@ class PartnerService:
             if not cached_tenant:
                 cached_tenant = f"test-tenant-{id(self.session):x}"
                 self.session.info["_test_tenant_id"] = cached_tenant
-            logger.debug("No tenant context found (testing); using session fallback", tenant_id=cached_tenant)
+            logger.debug(
+                "No tenant context found (testing); using session fallback", tenant_id=cached_tenant
+            )
             return cached_tenant
 
         tenant_id = "default-tenant"

@@ -72,7 +72,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
   const discoverONUs = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await apiClient.get<DiscoveredONU[]>("/api/v1/access/discover-onus");
+      const response = await apiClient.get<DiscoveredONU[]>("/access/discover-onus");
       const discoveries = (response.data || []).map((onu) => ({ ...onu, metadata: onu.metadata ?? {} }));
       setDiscoveredONUs(discoveries);
 
@@ -128,7 +128,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     setProvisioning(true);
     try {
       const response = await apiClient.post(
-        `/api/v1/access/olts/${encodeURIComponent(provisionForm.olt_device_id)}/onus`,
+        `/access/olts/${encodeURIComponent(provisionForm.olt_device_id)}/onus`,
         provisionForm,
       );
 

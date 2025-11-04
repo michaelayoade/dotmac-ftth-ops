@@ -324,21 +324,13 @@ export default function CreditNotesPage() {
           // Prepare credit note IDs for download
           const creditNoteIds = selected.map((cn) => cn.credit_note_id);
 
-          // Call API to generate CSV
-          const response = await fetch("/api/billing/credit-notes/export", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ credit_note_ids: creditNoteIds }),
-          });
+          const response = await apiClient.post(
+            "/billing/credit-notes/export",
+            { credit_note_ids: creditNoteIds },
+            { responseType: "blob" },
+          );
 
-          if (!response.ok) {
-            throw new Error(`Failed to download CSV: ${response.statusText}`);
-          }
-
-          // Get the CSV blob
-          const blob = await response.blob();
+          const blob = new Blob([response.data], { type: "text/csv" });
 
           // Create a download link and trigger download
           const url = window.URL.createObjectURL(blob);

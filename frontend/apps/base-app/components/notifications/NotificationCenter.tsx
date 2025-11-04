@@ -309,11 +309,19 @@ function NotificationItem({
             className="h-6 w-6"
             onClick={onMarkAsRead}
             title="Mark as read"
+            aria-label="Mark notification as read"
           >
             <Check className="h-3 w-3" />
           </Button>
         )}
-        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={onArchive} title="Archive">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-6 w-6"
+          onClick={onArchive}
+          title="Archive"
+          aria-label="Archive notification"
+        >
           <Archive className="h-3 w-3" />
         </Button>
         <Button
@@ -322,6 +330,7 @@ function NotificationItem({
           className="h-6 w-6 text-destructive"
           onClick={onDelete}
           title="Delete"
+          aria-label="Delete notification"
         >
           <Trash2 className="h-3 w-3" />
         </Button>

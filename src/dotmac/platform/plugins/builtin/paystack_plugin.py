@@ -531,9 +531,11 @@ class PaystackPaymentPlugin(PaymentProvider):
             return {
                 "refund_id": f"refund_{refund_id}",
                 "payment_id": payment_id,
-                "status": refund_status
-                if refund_status in ["pending", "completed", "failed"]
-                else "pending",
+                "status": (
+                    refund_status
+                    if refund_status in ["pending", "completed", "failed"]
+                    else "pending"
+                ),
                 "amount": float(refund_amount),
                 "currency": refund_data_response.get("currency", "NGN"),
                 "reason": reason or "Refund requested",
@@ -639,9 +641,11 @@ class PaystackPaymentPlugin(PaymentProvider):
             "amount": amount,
             "currency": data.get("currency", "NGN"),
             "reference": reference,
-            "customer_email": data.get("customer", {}).get("email")
-            if isinstance(data.get("customer"), dict)
-            else None,
+            "customer_email": (
+                data.get("customer", {}).get("email")
+                if isinstance(data.get("customer"), dict)
+                else None
+            ),
             "provider": "paystack",
             "webhook_id": data.get("id"),
             "paid_at": data.get("paid_at") or data.get("paidAt"),

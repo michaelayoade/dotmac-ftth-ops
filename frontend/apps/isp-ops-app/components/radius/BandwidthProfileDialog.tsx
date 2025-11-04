@@ -89,13 +89,13 @@ export function BandwidthProfileDialog({
     mutationFn: async (data: any) => {
       if (isEdit && profile?.id) {
         const response = await apiClient.patch(
-          `/api/v1/radius/bandwidth-profiles/${profile.id}`,
+          `/radius/bandwidth-profiles/${profile.id}`,
           data
         );
         return response.data;
       } else {
         const response = await apiClient.post(
-          "/api/v1/radius/bandwidth-profiles",
+          "/radius/bandwidth-profiles",
           data
         );
         return response.data;

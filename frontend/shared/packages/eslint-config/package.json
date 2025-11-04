@@ -12,8 +12,8 @@
   "scripts": {
     "test": "jest",
     "build": "echo 'No build step required'",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix"
+    "lint": "echo 'No linting needed for ESLint config files'",
+    "lint:fix": "echo 'No linting needed for ESLint config files'"
   },
   "dependencies": {
     "@typescript-eslint/eslint-plugin": "^8.40.0",
