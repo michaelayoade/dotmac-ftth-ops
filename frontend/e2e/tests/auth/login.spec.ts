@@ -1,17 +1,16 @@
 /**
  * E2E tests for authentication flows
- * Note: Most basic auth tests are covered in tests/base-app/auth-flow.spec.ts
- * These tests focus on advanced scenarios not covered there
+ * Focus on advanced scenarios beyond the baseline happy paths
  */
 import { test, expect } from "@playwright/test";
 
 test.describe("Advanced Authentication Scenarios", () => {
-  const BASE_APP_URL = "http://localhost:3000";
+  const ISP_APP_URL = "http://localhost:3001";
   const TEST_USERNAME = "admin";
   const TEST_PASSWORD = "admin123";
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_APP_URL}/login`);
+    await page.goto(`${ISP_APP_URL}/login`);
     await page.waitForLoadState("networkidle");
   });
 
@@ -77,7 +76,7 @@ test.describe("Advanced Authentication Scenarios", () => {
 
   test("should redirect to intended page after login", async ({ page }) => {
     // Try to access protected page
-    await page.goto(`${BASE_APP_URL}/dashboard/settings`);
+    await page.goto(`${ISP_APP_URL}/dashboard/settings`);
     await page.waitForLoadState("networkidle");
 
     // Should redirect to login
@@ -131,7 +130,7 @@ test.describe("Advanced Authentication Scenarios", () => {
     await expect(page).toHaveURL(/\/login/);
 
     // Should clear session - accessing dashboard should redirect back
-    await page.goto(`${BASE_APP_URL}/dashboard`);
+    await page.goto(`${ISP_APP_URL}/dashboard`);
     await expect(page).toHaveURL(/\/login/);
   });
 });

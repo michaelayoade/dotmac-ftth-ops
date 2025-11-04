@@ -5,16 +5,7 @@
     "forceConsistentCasingInFileNames": true,
     "paths": {
       "@dotmac/typescript-config/*": ["./shared/packages/typescript-config/*"],
-      "@dotmac/*": ["./shared/packages/*/src"],
-      "@/types": ["./apps/base-app/types"],
-      "@/types/*": ["./apps/base-app/types/*"],
-      "@/lib/*": ["./apps/base-app/lib/*"],
-      "@/components/*": ["./apps/base-app/components/*"],
-      "@/providers/*": ["./apps/base-app/providers/*"],
-      "@/hooks/*": ["./apps/base-app/hooks/*"],
-      "@/contexts/*": ["./apps/base-app/contexts/*"],
-      "@/stories/*": ["./apps/base-app/stories/*"],
-      "@/*": ["./apps/base-app/*"]
+      "@dotmac/*": ["./shared/packages/*/src"]
     }
   },
   "references": [

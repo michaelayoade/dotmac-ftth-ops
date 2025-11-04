@@ -17,6 +17,7 @@ else:
         class JWTExpiredSignatureError(Exception):
             """Fallback ExpiredSignatureError used when PyJWT is missing."""
 
+
 if TYPE_CHECKING:
 
     class _ExpiredSignatureError(Exception): ...

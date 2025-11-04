@@ -41,6 +41,7 @@ def _session_context() -> AsyncContextManager[AsyncSession]:
     session_factory = async_session_maker
     return cast(AsyncContextManager[AsyncSession], session_factory())
 
+
 logger = structlog.get_logger(__name__)
 
 
@@ -239,9 +240,9 @@ async def check_and_create_alert(
         metadata={
             "plan_id": str(subscription.plan_id),
             "subscription_id": str(subscription.id),
-            "billing_period_start": subscription.last_usage_reset.isoformat()
-            if subscription.last_usage_reset
-            else None,
+            "billing_period_start": (
+                subscription.last_usage_reset.isoformat() if subscription.last_usage_reset else None
+            ),
         },
         recommended_action=recommended_action,
     )

@@ -420,7 +420,9 @@ class BillingSettingsTable(BillingSQLModel):
     tax_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     payment_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     invoice_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
-    notification_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
+    notification_settings: Mapped[dict[str, Any]] = mapped_column(
+        JSON, nullable=False, default=dict
+    )
     features_enabled: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     custom_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)
     api_settings: Mapped[dict[str, Any]] = mapped_column(JSON, nullable=False, default=dict)

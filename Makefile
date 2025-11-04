@@ -1,6 +1,6 @@
 # DotMac Platform Services - Simplified Makefile
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint typecheck typecheck-mypy typecheck-pyright
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint typecheck typecheck-mypy typecheck-pyright restart-platform restart-isp restart-all
 
 # Colors
 CYAN := \033[0;36m
@@ -17,29 +17,30 @@ help:
 	@echo "$(CYAN)╚══════════════════════════════════════════════════════════╝$(NC)"
 	@echo ""
 	@echo "$(GREEN)Infrastructure - Platform (Core):$(NC)"
-	@echo "  make start-platform         Start platform infrastructure (postgres, redis, vault, minio)"
-	@echo "  make start-platform-obs     Start platform + observability (jaeger, prometheus, grafana)"
-	@echo "  make stop-platform          Stop platform infrastructure"
+	@echo "  make start-platform         Start platform backend + admin frontend"
+	@echo "  make stop-platform          Stop platform services"
+	@echo "  make restart-platform       Restart platform services"
 	@echo "  make status-platform        Check platform service status"
 	@echo "  make logs-platform          View platform logs"
 	@echo ""
 	@echo "$(GREEN)Infrastructure - ISP Services:$(NC)"
-	@echo "  make start-isp              Start ISP services (FreeRADIUS, NetBox, GenieACS, AWX, etc.)"
+	@echo "  make start-isp              Start ISP backend + ISP operations frontend"
 	@echo "  make stop-isp               Stop ISP services"
+	@echo "  make restart-isp            Restart ISP services"
 	@echo "  make status-isp             Check ISP service status"
 	@echo "  make logs-isp               View ISP logs"
 	@echo ""
 	@echo "$(GREEN)Infrastructure - Complete Stack:$(NC)"
-	@echo "  make start-all              Start all services (with observability)"
-	@echo "  make start-all-no-obs       Start all services (without observability)"
+	@echo "  make start-all              Start platform and ISP stacks"
 	@echo "  make stop-all               Stop all services"
-	@echo "  make status-all             Check all service status"
 	@echo "  make restart-all            Restart all services"
+	@echo "  make status-all             Check all service status"
+	@echo "  make logs-all               Tail logs from both stacks"
 	@echo ""
 	@echo "$(GREEN)Development:$(NC)"
-	@echo "  make dev                    Start backend server (localhost:8000)"
-	@echo "  make dev-backend            Start backend with auto-reload"
-	@echo "  make dev-frontend           Start frontend (localhost:3000)"
+	@echo "  make dev                    Start backend app service in Docker"
+	@echo "  make dev-host               Run backend directly on host (debug)"
+	@echo "  make dev-frontend           Start ISP frontend (localhost:3001)"
 	@echo "  make install                Install dependencies"
 	@echo ""
 	@echo "$(GREEN)Testing:$(NC)"
@@ -58,14 +59,9 @@ help:
 	@echo "  make clean-all              Remove ALL containers/volumes (DESTRUCTIVE!)"
 	@echo ""
 	@echo "$(YELLOW)Quick Start:$(NC)"
-	@echo "  1. make start-all           # Start all infrastructure (includes observability)"
+	@echo "  1. make start-all           # Start both compose stacks"
 	@echo "  2. make db-migrate          # Run migrations"
 	@echo "  3. make dev                 # Start backend API"
-	@echo ""
-	@echo "$(YELLOW)Observability:$(NC)"
-	@echo "  Jaeger (Tracing):     http://localhost:16686"
-	@echo "  Prometheus (Metrics): http://localhost:9090"
-	@echo "  Grafana (Dashboards): http://localhost:3400 (admin/admin)"
 	@echo ""
 
 # ===================================================================
@@ -74,9 +70,6 @@ help:
 
 start-platform:
 	@./scripts/infra.sh platform start
-
-start-platform-obs:
-	@./scripts/infra.sh platform start --with-obs
 
 stop-platform:
 	@./scripts/infra.sh platform stop
@@ -114,9 +107,6 @@ logs-isp:
 # ===================================================================
 
 start-all:
-	@./scripts/infra.sh all start --with-obs
-
-start-all-no-obs:
 	@./scripts/infra.sh all start
 
 stop-all:
@@ -152,16 +142,18 @@ install:
 	@echo "$(CYAN)Installing dependencies...$(NC)"
 	@poetry install
 
-dev: dev-backend
-
-dev-backend:
-	@echo "$(CYAN)Starting backend on http://localhost:8000$(NC)"
+dev:
+	@echo "$(CYAN)Starting backend app service inside Docker (logs follow)$(NC)"
 	@echo "$(CYAN)API docs: http://localhost:8000/docs$(NC)"
-	@env -u __PYVENV_LAUNCHER__ ENVIRONMENT=development poetry run uvicorn src.dotmac.platform.main:app --reload --host 0.0.0.0 --port 8000
+	@docker compose -f docker-compose.base.yml up platform-backend
+
+dev-host:
+	@echo "$(CYAN)Starting backend directly on the host (debug mode)$(NC)"
+	@./scripts/quick-backend-start.sh
 
 dev-frontend:
-	@echo "$(CYAN)Starting frontend on http://localhost:3000$(NC)"
-	@cd frontend/apps/base-app && pnpm dev
+	@echo "$(CYAN)Starting ISP frontend on http://localhost:3001$(NC)"
+	@cd frontend && pnpm dev:isp
 
 # ===================================================================
 # Database
@@ -251,13 +243,10 @@ build-freeradius:
 # ===================================================================
 
 docker-platform-up:
-	@docker compose -f docker-compose.base.yml up -d postgres redis vault minio
-
-docker-platform-obs-up:
-	@docker compose -f docker-compose.base.yml --profile observability up -d
+	@docker compose -f docker-compose.base.yml up -d platform-backend platform-frontend
 
 docker-isp-up:
-	@docker compose -f docker-compose.isp.yml up -d
+	@docker compose -f docker-compose.isp.yml up -d isp-backend isp-frontend
 
 docker-ps:
 	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"

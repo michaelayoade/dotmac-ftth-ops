@@ -10,7 +10,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.auth.core import get_current_user
+from dotmac.platform.auth.core import UserInfo, ensure_uuid, get_current_user
 from dotmac.platform.core.exceptions import NotFoundError
 from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.notifications.models import NotificationPriority, NotificationType
@@ -25,7 +25,6 @@ from dotmac.platform.notifications.schemas import (
     TeamNotificationResponse,
 )
 from dotmac.platform.notifications.service import NotificationService
-from dotmac.platform.user_management.models import User
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
@@ -39,7 +38,7 @@ async def list_notifications(
     offset: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Get current user's notifications with filters.
@@ -52,9 +51,11 @@ async def list_notifications(
     """
     service = NotificationService(db)
 
+    user_uuid = ensure_uuid(current_user.user_id)
+
     notifications = await service.get_user_notifications(
         tenant_id=current_user.tenant_id,
-        user_id=current_user.id,
+        user_id=user_uuid,
         unread_only=unread_only,
         priority=priority,
         notification_type=notification_type,
@@ -62,9 +63,7 @@ async def list_notifications(
         limit=limit,
     )
 
-    unread_count = await service.get_unread_count(
-        tenant_id=current_user.tenant_id, user_id=current_user.id
-    )
+    unread_count = await service.get_unread_count(tenant_id=current_user.tenant_id, user_id=user_uuid)
 
     return NotificationListResponse(
         notifications=[NotificationResponse.model_validate(n) for n in notifications],
@@ -76,13 +75,13 @@ async def list_notifications(
 @router.get("/unread-count", response_model=dict[str, int])
 async def get_unread_count(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, int]:
     """Get count of unread notifications for current user."""
     service = NotificationService(db)
 
     count = await service.get_unread_count(
-        tenant_id=current_user.tenant_id, user_id=current_user.id
+        tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
     )
 
     return {"unread_count": count}
@@ -92,7 +91,7 @@ async def get_unread_count(
 async def create_notification(
     request: NotificationCreateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Create a notification for a user.
@@ -133,7 +132,7 @@ async def create_notification(
 async def create_notification_from_template(
     request: NotificationFromTemplateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Create a notification from a template.
@@ -166,7 +165,7 @@ async def create_notification_from_template(
 async def mark_notification_as_read(
     notification_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """Mark a specific notification as read."""
     service = NotificationService(db)
@@ -174,7 +173,7 @@ async def mark_notification_as_read(
     try:
         notification = await service.mark_as_read(
             tenant_id=current_user.tenant_id,
-            user_id=current_user.id,
+            user_id=ensure_uuid(current_user.user_id),
             notification_id=notification_id,
         )
         await db.commit()
@@ -188,14 +187,14 @@ async def mark_notification_as_read(
 @router.post("/read-all", response_model=dict[str, int])
 async def mark_all_as_read(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, int]:
     """Mark all notifications as read for current user."""
     service = NotificationService(db)
 
     try:
         count = await service.mark_all_as_read(
-            tenant_id=current_user.tenant_id, user_id=current_user.id
+            tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
         )
         await db.commit()
 
@@ -209,7 +208,7 @@ async def mark_all_as_read(
 async def archive_notification(
     notification_id: UUID,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """Archive a notification (remove from main inbox)."""
     service = NotificationService(db)
@@ -217,7 +216,7 @@ async def archive_notification(
     try:
         notification = await service.archive_notification(
             tenant_id=current_user.tenant_id,
-            user_id=current_user.id,
+            user_id=ensure_uuid(current_user.user_id),
             notification_id=notification_id,
         )
         await db.commit()
@@ -232,13 +231,13 @@ async def archive_notification(
 @router.get("/preferences", response_model=NotificationPreferenceResponse)
 async def get_notification_preferences(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """Get notification preferences for current user."""
     service = NotificationService(db)
 
     preferences = await service.get_user_preferences(
-        tenant_id=current_user.tenant_id, user_id=current_user.id
+        tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
     )
 
     return NotificationPreferenceResponse.model_validate(preferences)
@@ -248,7 +247,7 @@ async def get_notification_preferences(
 async def update_notification_preferences(
     request: NotificationPreferenceUpdateRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Update notification preferences for current user.
@@ -265,7 +264,7 @@ async def update_notification_preferences(
     try:
         preferences = await service.update_user_preferences(
             tenant_id=current_user.tenant_id,
-            user_id=current_user.id,
+            user_id=ensure_uuid(current_user.user_id),
             enabled=request.enabled,
             email_enabled=request.email_enabled,
             sms_enabled=request.sms_enabled,
@@ -288,7 +287,7 @@ async def update_notification_preferences(
 @router.get("/stats", response_model=dict[str, Any])
 async def get_notification_stats(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
     Get notification statistics for current user.
@@ -301,16 +300,18 @@ async def get_notification_stats(
     service = NotificationService(db)
 
     # Get all notifications
+    user_uuid = ensure_uuid(current_user.user_id)
+
     all_notifications = await service.get_user_notifications(
         tenant_id=current_user.tenant_id,
-        user_id=current_user.id,
+        user_id=user_uuid,
         unread_only=False,
         offset=0,
         limit=1000,
     )
 
     unread_count = await service.get_unread_count(
-        tenant_id=current_user.tenant_id, user_id=current_user.id
+        tenant_id=current_user.tenant_id, user_id=user_uuid
     )
 
     # Count by priority
@@ -344,7 +345,7 @@ async def get_notification_stats(
 async def notify_team(
     request: TeamNotificationRequest,
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: UserInfo = Depends(get_current_user),
 ) -> Any:
     """
     Send notifications to a team of users.

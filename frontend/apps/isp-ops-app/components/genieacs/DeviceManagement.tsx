@@ -54,8 +54,8 @@ export function DeviceManagement() {
     setLoading(true);
     try {
       const [devicesRes, statsRes] = await Promise.all([
-        apiClient.get<DeviceListResponse>("/api/v1/genieacs/devices"),
-        apiClient.get<DeviceStatsResponse>("/api/v1/genieacs/devices/stats/summary"),
+        apiClient.get<DeviceListResponse>("/genieacs/devices"),
+        apiClient.get<DeviceStatsResponse>("/genieacs/devices/stats/summary"),
       ]);
 
       setDevices(devicesRes.data.devices);
@@ -80,7 +80,7 @@ export function DeviceManagement() {
 
   const handleViewDetails = async (deviceId: string) => {
     try {
-      const response = await apiClient.get<DeviceResponse>(`/api/v1/genieacs/devices/${deviceId}`);
+      const response = await apiClient.get<DeviceResponse>(`/genieacs/devices/${deviceId}`);
       setSelectedDevice(response.data);
       setShowDetailsModal(true);
     } catch (err: any) {
@@ -94,7 +94,7 @@ export function DeviceManagement() {
 
   const handleRefreshDevice = async (deviceId: string) => {
     try {
-      await apiClient.post<TaskResponse>("/api/v1/genieacs/tasks/refresh", {
+      await apiClient.post<TaskResponse>("/genieacs/tasks/refresh", {
         device_id: deviceId,
       });
 
@@ -113,7 +113,7 @@ export function DeviceManagement() {
 
   const handleRebootDevice = async (deviceId: string) => {
     try {
-      await apiClient.post<TaskResponse>("/api/v1/genieacs/tasks/reboot", {
+      await apiClient.post<TaskResponse>("/genieacs/tasks/reboot", {
         device_id: deviceId,
       });
 
@@ -136,7 +136,7 @@ export function DeviceManagement() {
     }
 
     try {
-      await apiClient.delete(`/api/v1/genieacs/devices/${deviceId}`);
+      await apiClient.delete(`/genieacs/devices/${deviceId}`);
 
       toast({
         title: "Device Deleted",

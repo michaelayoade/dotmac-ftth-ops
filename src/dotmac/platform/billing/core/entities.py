@@ -203,13 +203,17 @@ class PaymentEntity(Base, TenantMixin, TimestampMixin):  # type: ignore[misc]  #
         Enum(PaymentMethodType, values_callable=lambda x: [e.value for e in x]),
         nullable=False,
     )
-    payment_method_details: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    payment_method_details: Mapped[dict[str, Any]] = mapped_column(
+        MutableDict.as_mutable(JSON), default=dict
+    )
 
     # Provider info
     provider: Mapped[str] = mapped_column(String(50), nullable=False)
     provider_payment_id: Mapped[str | None] = mapped_column(String(255), index=True)
     provider_fee: Mapped[int | None] = mapped_column(Integer)
-    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    provider_payment_data: Mapped[dict[str, Any]] = mapped_column(
+        MutableDict.as_mutable(JSON), default=dict
+    )
 
     # Failure handling
     failure_reason: Mapped[str | None] = mapped_column(String(500))
@@ -597,7 +601,9 @@ class ServiceEntity(Base, TenantMixin, TimestampMixin, AuditMixin, SoftDeleteMix
 
     # Service configuration (flexible JSON for service-specific data)
     bandwidth_mbps: Mapped[int | None] = mapped_column(Integer)
-    service_metadata: Mapped[dict[str, Any]] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    service_metadata: Mapped[dict[str, Any]] = mapped_column(
+        MutableDict.as_mutable(JSON), default=dict
+    )
 
     # Pricing
     monthly_price: Mapped[int | None] = mapped_column(Integer, comment="Price in minor units")

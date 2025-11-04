@@ -386,7 +386,7 @@ echo "✅ Frontend environment valid"
 **Solution:**
 1. Check `/api/v1/platform/config` response
 2. Update frontend to use dynamic config instead of env vars
-3. Clear frontend build cache: `pnpm --filter @dotmac/base-app clean`
+3. Clear frontend build cache: `pnpm --filter @dotmac/isp-ops-app clean` (and/or `@dotmac/platform-admin-app`)
 
 ### Issue: Auth not working
 

@@ -62,7 +62,7 @@ export default function EditRADIUSSubscriberPage() {
       queryFn: async () => {
         try {
           const response = await apiClient.get(
-            `/api/v1/radius/subscribers/${subscriberId}`
+            `/radius/subscribers/${subscriberId}`
           );
           return response.data;
         } catch (error) {
@@ -78,7 +78,7 @@ export default function EditRADIUSSubscriberPage() {
     queryKey: ["bandwidth-profiles"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/bandwidth-profiles", {
+        const response = await apiClient.get("/radius/bandwidth-profiles", {
           params: { skip: 0, limit: 100 },
         });
         return response.data;
@@ -112,7 +112,7 @@ export default function EditRADIUSSubscriberPage() {
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiClient.patch(
-        `/api/v1/radius/subscribers/${subscriberId}`,
+        `/radius/subscribers/${subscriberId}`,
         data
       );
       return response.data;

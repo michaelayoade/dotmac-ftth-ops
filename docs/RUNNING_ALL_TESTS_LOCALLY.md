@@ -33,7 +33,7 @@ This script automatically:
 - ✅ Enables subscription load tests
 - ✅ Uses PostgreSQL instead of SQLite
 - ✅ Applies database migrations
-- ✅ Auto-starts services if needed
+- ✅ Checks database connectivity before running
 
 ## Previously Skipped Tests
 
@@ -165,15 +165,6 @@ Load tests are resource-intensive:
 
 ## Troubleshooting
 
-### PostgreSQL Not Running
-```bash
-# Check PostgreSQL status
-docker ps | grep postgres
-
-# Start if not running
-docker compose -f docker-compose.base.yml up -d postgres redis
-```
-
 ### Script Permission Denied
 ```bash
 chmod +x scripts/run_all_tests_local.sh
@@ -181,11 +172,8 @@ chmod +x scripts/run_all_tests_local.sh
 
 ### Database Connection Errors
 ```bash
-# Reset PostgreSQL
-docker compose -f docker-compose.base.yml restart postgres
-
-# Wait a moment for startup
-sleep 5
+# Verify host/port and credentials
+pg_isready -h localhost -p 5432
 
 # Run tests
 ./scripts/run_all_tests_local.sh

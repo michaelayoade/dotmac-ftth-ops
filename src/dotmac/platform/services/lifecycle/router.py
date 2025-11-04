@@ -557,10 +557,7 @@ async def list_services(
         offset=offset,
     )
 
-    return [
-        ServiceInstanceSummary.model_validate(s).model_dump(mode="json")
-        for s in services
-    ]
+    return [ServiceInstanceSummary.model_validate(s).model_dump(mode="json") for s in services]
 
 
 @router.get(
@@ -630,10 +627,7 @@ async def get_service_events(
         limit=limit,
     )
 
-    return [
-        LifecycleEventResponse.model_validate(e).model_dump(mode="json")
-        for e in events
-    ]
+    return [LifecycleEventResponse.model_validate(e).model_dump(mode="json") for e in events]
 
 
 # ==========================================

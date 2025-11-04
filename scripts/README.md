@@ -40,9 +40,9 @@ The `run_all_tests_local.sh` script automatically:
    - Runs `alembic upgrade head` before tests
    - Ensures PostgreSQL schema is up to date
 
-4. **Auto-starts services if needed**
-   - Checks if PostgreSQL is running
-   - Starts docker compose services if needed
+4. **Checks database connectivity**
+   - Verifies PostgreSQL is reachable
+   - Warns if the configured host:port cannot be contacted
 
 ## Previously Skipped Tests Now Running
 
@@ -124,15 +124,6 @@ Verify the previously skipped tests now run:
 
 ## Troubleshooting
 
-### PostgreSQL Not Running
-```bash
-# Start PostgreSQL manually
-docker compose -f docker-compose.base.yml up -d postgres redis
-
-# Or let the script auto-start it
-./scripts/run_all_tests_local.sh
-```
-
 ### Migrations Not Applied
 ```bash
 # Apply manually if needed
@@ -142,8 +133,9 @@ poetry run alembic upgrade head
 
 ### Test Database Conflicts
 ```bash
-# Reset test database if needed
-docker compose -f docker-compose.base.yml restart postgres
+# Reset test database if needed (example)
+psql postgresql://dotmac_user:change-me-in-production@localhost:5432/postgres \
+  -c "DROP DATABASE IF EXISTS dotmac; CREATE DATABASE dotmac;"
 
 # Re-run migrations
 ./scripts/run_all_tests_local.sh

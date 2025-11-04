@@ -59,7 +59,7 @@ export default function RADIUSNASPage() {
     queryKey: ["radius-nas"],
     queryFn: async () => {
       try {
-        const response = await apiClient.get("/api/v1/radius/nas", {
+        const response = await apiClient.get("/radius/nas", {
           params: { skip: 0, limit: 1000 },
         });
         return response.data;
@@ -73,7 +73,7 @@ export default function RADIUSNASPage() {
   // Delete NAS mutation
   const deleteMutation = useMutation({
     mutationFn: async (nasId: number) => {
-      await apiClient.delete(`/api/v1/radius/nas/${nasId}`);
+      await apiClient.delete(`/radius/nas/${nasId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["radius-nas"] });

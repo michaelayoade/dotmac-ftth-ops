@@ -149,9 +149,9 @@ class Payment:
             customer=None,  # Populated by DataLoader
             invoice_id=strawberry.ID(str(payment.invoice_id)) if payment.invoice_id else None,
             invoice=None,  # Populated by DataLoader
-            subscription_id=strawberry.ID(str(payment.subscription_id))
-            if payment.subscription_id
-            else None,
+            subscription_id=(
+                strawberry.ID(str(payment.subscription_id)) if payment.subscription_id else None
+            ),
             created_at=payment.created_at,
             processed_at=payment.processed_at,
             refunded_at=payment.refunded_at,

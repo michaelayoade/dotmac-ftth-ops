@@ -29,11 +29,11 @@ This is a comprehensive configuration template that shows what a **full producti
 ### 2. `/prometheus.yml` (Root Config) - **CURRENT DEFAULT**
 **Status**: ✅ **READY TO USE**
 
-This is a **minimal working configuration** that matches the services actually defined in `docker-compose.base.yml`.
+This is a **minimal working configuration** that can be pointed at the active backend service (`platform-backend`) when you run the simplified Compose stack. If you host Prometheus separately, update the scrape target to match where the backend is exposed.
 
-**Services Monitored**:
-- `app:8000` - FastAPI application
-- `otel-collector:8888` - OpenTelemetry collector (when `observability` profile is active)
+**Services Monitored** (default targets):
+- `platform-backend:8000` - FastAPI application metrics endpoint
+- `otel-collector:8888` - OpenTelemetry collector (if deployed alongside your own observability stack)
 
 **When to Use This**:
 - Development environments

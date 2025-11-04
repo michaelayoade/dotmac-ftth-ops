@@ -857,9 +857,11 @@ class BillingService:
                         .where(BillingSubscriptionTable.id == subscription.id)
                         .values(
                             status=SubscriptionStatus.ACTIVE,
-                            activated_at=datetime.now(UTC)
-                            if not subscription.activated_at
-                            else subscription.activated_at,
+                            activated_at=(
+                                datetime.now(UTC)
+                                if not subscription.activated_at
+                                else subscription.activated_at
+                            ),
                         )
                     )
                     await self.db.execute(sub_update)

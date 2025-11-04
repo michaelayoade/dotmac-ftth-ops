@@ -70,7 +70,7 @@ Examples
 - Full suite with coverage: `make test`
 - Integration (Docker required): `./scripts/run_integration_tests.sh`
 - Customer workflow smoke tests: `./scripts/run_customer_tests.sh`
-- Frontend Playwright E2E: `pnpm --filter @dotmac/base-app test:e2e`
+- Frontend Playwright E2E: `pnpm --filter @dotmac/isp-ops-app test:e2e`
 
 ## Mutation Testing
 

@@ -193,9 +193,7 @@ class AWXAdapter(DeploymentAdapter):
         """Get deployment logs"""
         try:
             # Get most recent job for this instance
-            jobs = await self._api_request(
-                "GET", "/api/v2/jobs/", params={"order_by": "-created"}
-            )
+            jobs = await self._api_request("GET", "/api/v2/jobs/", params={"order_by": "-created"})
             results = jobs.get("results")
             if isinstance(results, list) and results:
                 first_job = cast(dict[str, Any], results[0])

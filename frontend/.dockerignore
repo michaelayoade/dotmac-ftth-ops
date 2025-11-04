@@ -1,0 +1,14 @@
+node_modules
+.next
+apps/*/node_modules
+apps/*/.next
+apps/*/coverage
+coverage
+dist
+storybook-static
+**/*.log
+tmp
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

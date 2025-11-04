@@ -241,9 +241,7 @@ async def handle_ticket_status_changed(event: Event) -> None:
 
         status_key = (new_status or "").lower()
         normalized_status = status_key.replace("_", " ").title() if status_key else "Unknown"
-        notification_subject = (
-            f"Ticket {ticket_number} Status Update: {normalized_status}"
-        )
+        notification_subject = f"Ticket {ticket_number} Status Update: {normalized_status}"
         status_message = status_messages.get(
             status_key,
             f"Ticket status changed to {normalized_status}",

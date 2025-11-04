@@ -56,9 +56,11 @@ class HuaweiCLIDriver(BaseOLTDriver):
 
     def __init__(self, config: DriverConfig, context: DriverContext | None = None) -> None:
         super().__init__(
-            config
-            if isinstance(config, HuaweiDriverConfig)
-            else HuaweiDriverConfig(**config.model_dump()),
+            (
+                config
+                if isinstance(config, HuaweiDriverConfig)
+                else HuaweiDriverConfig(**config.model_dump())
+            ),
             context,
         )
         self._cli_lock = asyncio.Lock()
@@ -132,9 +134,9 @@ class HuaweiCLIDriver(BaseOLTDriver):
                     "model": "Unknown",
                     "serial_number": onu.serial_number,
                     "oper_status": onu.state,
-                    "connect_status": "REACHABLE"
-                    if onu.state.lower() == "online"
-                    else "UNREACHABLE",
+                    "connect_status": (
+                        "REACHABLE" if onu.state.lower() == "online" else "UNREACHABLE"
+                    ),
                     "metadata": onu.metadata,
                 }
             )

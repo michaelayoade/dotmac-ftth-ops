@@ -28,8 +28,7 @@ T = TypeVar("T", bound=DomainEvent)
 class EventHandler(Protocol[EventContra]):
     """Protocol for async domain event handlers."""
 
-    def __call__(self, __event: EventContra) -> Awaitable[None]:
-        ...
+    def __call__(self, __event: EventContra) -> Awaitable[None]: ...
 
 
 DomainEventHandler = EventHandler[DomainEvent]

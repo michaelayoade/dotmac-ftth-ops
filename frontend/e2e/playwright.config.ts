@@ -22,7 +22,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.E2E_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.E2E_BASE_URL || "http://localhost:3001",
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: "on-first-retry",
@@ -110,14 +110,19 @@ export default defineConfig({
             // Disable MinIO for e2e tests - use local storage
             DOTMAC_STORAGE_PROVIDER: "local",
             DOTMAC_STORAGE_LOCAL_PATH: "/tmp/e2e_test_storage",
+            // Disable observability dependencies when running outside Docker
+            OBSERVABILITY__OTEL_ENABLED: "false",
+            OBSERVABILITY__ALERTMANAGER_BASE_URL: "",
+            OBSERVABILITY__PROMETHEUS_BASE_URL: "",
+            OBSERVABILITY__GRAFANA_BASE_URL: "",
           },
           timeout: 120000,
         },
         {
-          command: "npm run dev",
-          port: 3000,
+          command: "pnpm dev",
+          port: 3001,
           reuseExistingServer: true, // Always reuse for local dev
-          cwd: "../apps/base-app",
+          cwd: "../apps/isp-ops-app",
           env: {
             NODE_ENV: "test",
             E2E_TEST: "true",

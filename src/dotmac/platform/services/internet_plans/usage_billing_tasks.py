@@ -38,6 +38,7 @@ def _session_context() -> AsyncContextManager[AsyncSession]:
     """Typed helper for acquiring an async session."""
     return cast(AsyncContextManager[AsyncSession], async_session_maker())
 
+
 logger = structlog.get_logger(__name__)
 
 
@@ -195,9 +196,9 @@ async def create_overage_invoice(
                 "unit_price": to_minor_units(overage_charge),
                 "total_price": to_minor_units(overage_charge),
                 "product_id": str(subscription.plan_id),
-                "subscription_id": str(subscription.subscription_id)
-                if subscription.subscription_id
-                else None,
+                "subscription_id": (
+                    str(subscription.subscription_id) if subscription.subscription_id else None
+                ),
                 "tax_rate": 0.0,
                 "tax_amount": 0,
                 "discount_percentage": 0.0,
@@ -226,9 +227,9 @@ async def create_overage_invoice(
             due_days=30,
             notes=f"Data overage charges for billing period {period_start.date()} to {period_end.date()}",
             internal_notes=f"Auto-generated overage invoice for plan subscription {subscription.id}",
-            subscription_id=str(subscription.subscription_id)
-            if subscription.subscription_id
-            else None,
+            subscription_id=(
+                str(subscription.subscription_id) if subscription.subscription_id else None
+            ),
             created_by="system",
         )
 

@@ -246,9 +246,9 @@ def fiber_cable_to_feature(cable: FiberCable) -> dict[str, Any]:
         "length_km": float(cable.length_km) if cable.length_km else None,
         "manufacturer": cable.manufacturer,
         "model": cable.model,
-        "attenuation_db_per_km": float(cable.attenuation_db_per_km)
-        if cable.attenuation_db_per_km
-        else None,
+        "attenuation_db_per_km": (
+            float(cable.attenuation_db_per_km) if cable.attenuation_db_per_km else None
+        ),
         "max_capacity": cable.max_capacity,
         "start_site_id": cable.start_site_id,
         "end_site_id": cable.end_site_id,
@@ -322,9 +322,9 @@ def splice_point_to_feature(splice: SplicePoint) -> dict[str, Any]:
         "id": str(splice.id),
         "splice_id": splice.splice_id,
         "cable_id": str(splice.cable_id),
-        "distribution_point_id": str(splice.distribution_point_id)
-        if splice.distribution_point_id
-        else None,
+        "distribution_point_id": (
+            str(splice.distribution_point_id) if splice.distribution_point_id else None
+        ),
         "status": splice.status.value,
         "splice_type": splice.splice_type,
         "enclosure_type": splice.enclosure_type,

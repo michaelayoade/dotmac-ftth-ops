@@ -1,0 +1,58 @@
+[Unit]
+Description=DotMac Platform - Tenant {{ tenant_id }} ({{ tenant_name }})
+After=network.target postgresql.service redis.service
+Wants=postgresql.service redis.service
+
+[Service]
+Type=notify
+User={{ app_user }}
+Group={{ app_group }}
+WorkingDirectory={{ install_dir }}
+
+# Environment
+EnvironmentFile={{ install_dir }}/.env
+
+# Execution
+ExecStart={{ venv_dir }}/bin/uvicorn dotmac.platform.main:app \
+    --host 0.0.0.0 \
+    --port {{ app_port }} \
+    --workers {{ resources.max_workers | default('4') }} \
+    --log-level {{ log_level | default('info') }} \
+    --access-log \
+    --use-colors
+
+# Restart policy
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Resource limits
+{% if resources.cpu_limit is defined %}
+CPUQuota={{ resources.cpu_limit }}%
+{% endif %}
+{% if resources.memory_limit is defined %}
+MemoryLimit={{ resources.memory_limit }}
+{% endif %}
+TasksMax={{ resources.max_tasks | default('512') }}
+
+# File descriptors
+LimitNOFILE=65535
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ data_dir }} {{ install_dir }}
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=dotmac-tenant-{{ tenant_id }}
+
+# Watchdog
+WatchdogSec=30s
+
+[Install]
+WantedBy=multi-user.target

@@ -397,9 +397,7 @@ class LicensingFrameworkService:
         # Load plan with modules
         result = await self.db.execute(
             select(ServicePlan)
-            .options(
-                selectinload(ServicePlan.included_modules).selectinload(PlanModule.module)
-            )
+            .options(selectinload(ServicePlan.included_modules).selectinload(PlanModule.module))
             .where(ServicePlan.id == plan_id)
         )
         plan = result.scalar_one_or_none()

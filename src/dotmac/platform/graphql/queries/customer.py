@@ -654,9 +654,9 @@ class CustomerQueries:
                         ),
                         "due_date": invoice.due_date.isoformat() if invoice.due_date else None,
                         "paid_at": invoice.paid_at.isoformat() if invoice.paid_at else None,
-                        "created_at": invoice.created_at.isoformat()
-                        if invoice.created_at
-                        else None,
+                        "created_at": (
+                            invoice.created_at.isoformat() if invoice.created_at else None
+                        ),
                     }
                 )
 

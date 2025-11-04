@@ -204,7 +204,7 @@ class HealthChecker:
                         "Session revocation does NOT work across multiple workers/servers. "
                         "DO NOT use in production."
                     ),
-                    required=False,  # Allows dev startup with warning
+                    required=True,
                 )
 
         # Redis is healthy
@@ -217,14 +217,12 @@ class HealthChecker:
 
     def check_vault(self) -> ServiceHealth:
         """Check Vault/OpenBao connectivity."""
-        is_production = _is_production_environment()
-
         if not settings.vault.enabled:
             return ServiceHealth(
                 name="vault",
                 status=ServiceStatus.HEALTHY,
                 message="Vault disabled, skipping check",
-                required=False,
+                required=True,
             )
 
         try:
@@ -242,14 +240,14 @@ class HealthChecker:
                         name="vault",
                         status=ServiceStatus.HEALTHY,
                         message="Vault connection successful",
-                        required=is_production,
+                        required=True,
                     )
                 else:
                     return ServiceHealth(
                         name="vault",
                         status=ServiceStatus.UNHEALTHY,
                         message="Vault health check failed",
-                        required=is_production,
+                        required=True,
                     )
         except Exception as e:
             logger.error(f"Vault health check failed: {e}")
@@ -257,7 +255,7 @@ class HealthChecker:
                 name="vault",
                 status=ServiceStatus.UNHEALTHY,
                 message=f"Connection failed: {str(e)}",
-                required=is_production,
+                required=True,
             )
 
     def check_celery_broker(self) -> ServiceHealth:
@@ -283,7 +281,7 @@ class HealthChecker:
             name="celery_broker",
             status=status,
             message=message,
-            required=False,  # Celery might not be required for all deployments
+            required=True,  # Treat Celery broker as required infrastructure
         )
 
     def check_storage(self) -> ServiceHealth:
@@ -294,7 +292,7 @@ class HealthChecker:
                 name="storage",
                 status=ServiceStatus.HEALTHY,
                 message="Storage configuration not found, using defaults",
-                required=False,
+                required=True,
             )
 
         # Get provider with fallback
@@ -306,7 +304,7 @@ class HealthChecker:
                 name="storage",
                 status=ServiceStatus.HEALTHY,
                 message="Using local filesystem storage",
-                required=False,
+                required=True,
             )
 
         if provider in {"minio", "s3"}:
@@ -318,7 +316,7 @@ class HealthChecker:
                     name="storage",
                     status=ServiceStatus.DEGRADED,
                     message="MinIO client not installed; cannot verify object storage",
-                    required=False,
+                    required=True,
                 )
 
             endpoint = settings.storage.endpoint
@@ -347,13 +345,13 @@ class HealthChecker:
                         name="storage",
                         status=ServiceStatus.HEALTHY,
                         message=f"Object storage bucket '{bucket_name}' reachable",
-                        required=False,
+                        required=True,
                     )
                 return ServiceHealth(
                     name="storage",
                     status=ServiceStatus.DEGRADED,
                     message=f"Bucket '{bucket_name}' not found",
-                    required=False,
+                    required=True,
                 )
             except S3Error as exc:
                 logger.warning("Storage health check failed: %s", exc)
@@ -361,7 +359,7 @@ class HealthChecker:
                     name="storage",
                     status=ServiceStatus.DEGRADED,
                     message=f"Storage error: {exc.code}",
-                    required=False,
+                    required=True,
                 )
             except Exception as exc:  # pragma: no cover - defensive
                 logger.warning("Storage health check failed: %s", exc)
@@ -369,14 +367,14 @@ class HealthChecker:
                     name="storage",
                     status=ServiceStatus.DEGRADED,
                     message=f"Storage connection failed: {exc}",
-                    required=False,
+                    required=True,
                 )
 
         return ServiceHealth(
             name="storage",
             status=ServiceStatus.DEGRADED,
             message=f"Unsupported storage provider '{provider}'",
-            required=False,
+            required=True,
         )
 
     def check_observability(self) -> ServiceHealth:
@@ -386,7 +384,7 @@ class HealthChecker:
                 name="observability",
                 status=ServiceStatus.HEALTHY,
                 message="Observability disabled, skipping check",
-                required=False,
+                required=True,
             )
 
         if not settings.observability.otel_endpoint:
@@ -394,7 +392,7 @@ class HealthChecker:
                 name="observability",
                 status=ServiceStatus.DEGRADED,
                 message="OTLP endpoint not configured",
-                required=False,
+                required=True,
             )
 
         try:
@@ -435,14 +433,14 @@ class HealthChecker:
                     name="observability",
                     status=ServiceStatus.HEALTHY,
                     message="OTLP endpoint accepted test span",
-                    required=False,
+                    required=True,
                 )
 
             return ServiceHealth(
                 name="observability",
                 status=ServiceStatus.DEGRADED,
                 message=f"OTLP endpoint returned {response.status_code}",
-                required=False,
+                required=True,
             )
         except Exception as e:
             logger.warning(f"Observability health check failed: {e}")
@@ -450,7 +448,155 @@ class HealthChecker:
                 name="observability",
                 status=ServiceStatus.DEGRADED,
                 message=f"Connection failed: {str(e)}",
-                required=False,
+                required=True,
+            )
+
+    def check_alertmanager(self) -> ServiceHealth:
+        """Check Alertmanager readiness."""
+        base_url = getattr(settings.observability, "alertmanager_base_url", None)
+
+        if not base_url:
+            return ServiceHealth(
+                name="alertmanager",
+                status=ServiceStatus.DEGRADED,
+                message="Alertmanager base URL not configured",
+                required=True,
+            )
+
+        health_url = base_url.rstrip("/") + "/-/ready"
+
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(health_url)
+
+            if response.status_code == 200:
+                return ServiceHealth(
+                    name="alertmanager",
+                    status=ServiceStatus.HEALTHY,
+                    message="Alertmanager ready endpoint reachable",
+                    required=True,
+                )
+
+            status = (
+                ServiceStatus.UNHEALTHY if response.status_code >= 500 else ServiceStatus.DEGRADED
+            )
+            return ServiceHealth(
+                name="alertmanager",
+                status=status,
+                message=f"Alertmanager readiness returned {response.status_code}",
+                required=True,
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Alertmanager health check failed: %s", e)
+            return ServiceHealth(
+                name="alertmanager",
+                status=ServiceStatus.DEGRADED,
+                message=f"Alertmanager connection failed: {e}",
+                required=True,
+            )
+
+    def check_prometheus(self) -> ServiceHealth:
+        """Check Prometheus readiness."""
+        base_url = getattr(settings.observability, "prometheus_base_url", None)
+
+        if not base_url:
+            return ServiceHealth(
+                name="prometheus",
+                status=ServiceStatus.DEGRADED,
+                message="Prometheus base URL not configured",
+                required=True,
+            )
+
+        health_url = base_url.rstrip("/") + "/-/ready"
+
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(health_url)
+
+            if response.status_code == 200:
+                return ServiceHealth(
+                    name="prometheus",
+                    status=ServiceStatus.HEALTHY,
+                    message="Prometheus ready endpoint reachable",
+                    required=True,
+                )
+
+            status = (
+                ServiceStatus.UNHEALTHY if response.status_code >= 500 else ServiceStatus.DEGRADED
+            )
+            return ServiceHealth(
+                name="prometheus",
+                status=status,
+                message=f"Prometheus readiness returned {response.status_code}",
+                required=True,
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Prometheus health check failed: %s", e)
+            return ServiceHealth(
+                name="prometheus",
+                status=ServiceStatus.DEGRADED,
+                message=f"Prometheus connection failed: {e}",
+                required=True,
+            )
+
+    def check_grafana(self) -> ServiceHealth:
+        """Check Grafana health endpoint."""
+        base_url = getattr(settings.observability, "grafana_base_url", None)
+
+        if not base_url:
+            return ServiceHealth(
+                name="grafana",
+                status=ServiceStatus.DEGRADED,
+                message="Grafana base URL not configured",
+                required=True,
+            )
+
+        health_url = base_url.rstrip("/") + "/api/health"
+        headers: dict[str, str] = {
+            "user-agent": "dotmac-health-check/1",
+        }
+        token = getattr(settings.observability, "grafana_api_token", None)
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+
+        try:
+            with httpx.Client(timeout=5.0) as client:
+                response = client.get(health_url, headers=headers)
+
+            if response.status_code == 200:
+                try:
+                    payload = response.json()
+                    status_value = payload.get("status", "unknown")
+                except Exception:  # pragma: no cover - defensive JSON parsing
+                    status_value = "unknown"
+
+                if str(status_value).lower() in {"ok", "healthy"}:
+                    message = "Grafana health check passed"
+                else:
+                    message = f"Grafana responded with status '{status_value}'"
+                return ServiceHealth(
+                    name="grafana",
+                    status=ServiceStatus.HEALTHY,
+                    message=message,
+                    required=True,
+                )
+
+            status = (
+                ServiceStatus.UNHEALTHY if response.status_code >= 500 else ServiceStatus.DEGRADED
+            )
+            return ServiceHealth(
+                name="grafana",
+                status=status,
+                message=f"Grafana health endpoint returned {response.status_code}",
+                required=True,
+            )
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Grafana health check failed: %s", e)
+            return ServiceHealth(
+                name="grafana",
+                status=ServiceStatus.DEGRADED,
+                message=f"Grafana connection failed: {e}",
+                required=True,
             )
 
     def check_radius_server(self) -> ServiceHealth:
@@ -495,21 +641,21 @@ class HealthChecker:
                 name="radius_server",
                 status=ServiceStatus.HEALTHY,
                 message=f"RADIUS server healthy at {radius_host}:{radius_port}, {status_message}",
-                required=False,
+                required=True,
             )
         elif auth_reachable:
             return ServiceHealth(
                 name="radius_server",
                 status=ServiceStatus.HEALTHY,
                 message=f"RADIUS auth port reachable at {radius_host}:{radius_port}, {status_message}",
-                required=False,
+                required=True,
             )
         else:
             return ServiceHealth(
                 name="radius_server",
                 status=ServiceStatus.DEGRADED,
                 message=f"RADIUS server unreachable at {radius_host}:{radius_port}",
-                required=False,
+                required=True,
             )
 
     def run_all_checks(self) -> tuple[bool, list[ServiceHealth]]:
@@ -526,6 +672,10 @@ class HealthChecker:
             self.check_storage(),
             self.check_celery_broker(),
             self.check_observability(),
+            self.check_alertmanager(),
+            self.check_prometheus(),
+            self.check_grafana(),
+            self.check_radius_server(),
         ]
 
         # Check if all required services are healthy

@@ -624,7 +624,9 @@ async def create_frontend_logs(
                         except Exception:
                             # If tenant resolution fails, use user's tenant_id
                             resolved_tenant_id = (
-                                current_user.tenant_id if hasattr(current_user, "tenant_id") else None
+                                current_user.tenant_id
+                                if hasattr(current_user, "tenant_id")
+                                else None
                             )
 
                         # For platform admins without tenant context, prefer explicit header,

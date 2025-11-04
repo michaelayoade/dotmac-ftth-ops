@@ -280,7 +280,7 @@ describe("Button Component - Comprehensive Tests", () => {
     });
 
     test("sanitizes className prop", () => {
-      const maliciousClass = "btn onclick=\"alert('xss')\"";
+      const maliciousClass = 'btn onclick="alert(\"xss\")"';
       renderButton({
         className: maliciousClass,
         children: "Test",

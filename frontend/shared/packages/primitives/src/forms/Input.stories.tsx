@@ -238,7 +238,7 @@ export const Required: Story = {
     type: "email",
     placeholder: "user@example.com",
     required: true,
-    helperText: "We'll never share your email with anyone else.",
+    helperText: "We&apos;ll never share your email with anyone else.",
   },
   parameters: {
     docs: {

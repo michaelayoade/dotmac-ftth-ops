@@ -15,19 +15,16 @@ pnpm dev:isp            # http://localhost:3001
 # Platform Admin app
 pnpm dev:admin          # http://localhost:3002
 
-# Legacy base app (optional)
-pnpm dev:base-app       # http://localhost:3000
-
 # Build everything
 pnpm build
 ```
 
 ## Key References
 
-- [MULTI-APP-ARCHITECTURE.md](./MULTI-APP-ARCHITECTURE.md) – app separation and shared packages
-- [QUICK-START-MULTI-APP.md](./QUICK-START-MULTI-APP.md) – developer onboarding workflow
+- [ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md) – current architecture and ownership guide
+- [MULTI_APP_ARCHITECTURE.md](./MULTI_APP_ARCHITECTURE.md) – implementation summary & structure
+- [QUICK_START.md](./QUICK_START.md) – day-to-day developer workflow
 - [DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md) – staging/production hosting patterns
-- [apps/base-app/README.md](./apps/base-app/README.md) – base app specifics and scripts
 - [e2e/README.md](./e2e/README.md) – Playwright end-to-end testing guide
 
 ## Workspace Layout
@@ -36,8 +33,7 @@ pnpm build
 frontend/
 ├── apps/
 │   ├── isp-ops-app/         # tenant-facing Next.js app
-│   ├── platform-admin-app/  # platform administration app
-│   └── base-app/            # legacy/compat app plus docs & examples
+│   └── platform-admin-app/  # platform administration app
 ├── shared/
 │   └── packages/            # reusable UI, headless logic, primitives
 ├── e2e/                     # Playwright tests and reports
@@ -46,7 +42,8 @@ frontend/
 
 ## Development Tips
 
-- Configure `NEXT_PUBLIC_API_BASE_URL` for each app if the backend runs on a non-default host.
+- Start the FastAPI backend via `make dev` (Docker) before launching any frontend `pnpm dev:*` task.
+- Configure `NEXT_PUBLIC_API_BASE_URL` for each app if the backend runs outside Docker (e.g. `make dev-host`).
 - Use the per-app `package.json` scripts (e.g. `pnpm --filter @dotmac/isp-ops-app test`) for targeted testing.
-- Refer to `apps/base-app/DEVELOPMENT_GUIDE.md` for logging/error-handling patterns shared across apps.
+- Shared implementation notes live in `docs/` and `shared/`.
 - Keep `pnpm install` scoped to the workspace root; individual worktrees require their own `node_modules`.

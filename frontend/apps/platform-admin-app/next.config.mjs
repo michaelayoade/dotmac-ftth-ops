@@ -11,6 +11,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['react-window'],
+  output: 'standalone',
   experimental: {
     instrumentationHook: false,
     externalDir: true,

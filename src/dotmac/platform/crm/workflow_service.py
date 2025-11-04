@@ -191,9 +191,7 @@ class CRMService:
             billing_cycle_value = str(plan.billing_cycle.value)
 
             # Build subscription data for quote
-            plan_name = (
-                plan.name or subscription_metadata.get("plan_name") or "Service Plan"
-            )
+            plan_name = plan.name or subscription_metadata.get("plan_name") or "Service Plan"
             bandwidth = subscription_metadata.get(
                 "bandwidth", plan_metadata.get("bandwidth", "N/A")
             )

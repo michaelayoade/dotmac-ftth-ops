@@ -141,9 +141,9 @@ class AddonService:
                     min_quantity=int(row.min_quantity),
                     max_quantity=int(row.max_quantity) if row.max_quantity is not None else None,
                     metered_unit=row.metered_unit,
-                    included_quantity=int(row.included_quantity)
-                    if row.included_quantity is not None
-                    else None,
+                    included_quantity=(
+                        int(row.included_quantity) if row.included_quantity is not None else None
+                    ),
                     is_active=row.is_active,
                     is_featured=row.is_featured,
                     compatible_with_all_plans=row.compatible_with_all_plans,
@@ -179,9 +179,9 @@ class AddonService:
             min_quantity=int(row.min_quantity),
             max_quantity=int(row.max_quantity) if row.max_quantity is not None else None,
             metered_unit=row.metered_unit,
-            included_quantity=int(row.included_quantity)
-            if row.included_quantity is not None
-            else None,
+            included_quantity=(
+                int(row.included_quantity) if row.included_quantity is not None else None
+            ),
             is_active=row.is_active,
             is_featured=row.is_featured,
             compatible_with_all_plans=row.compatible_with_all_plans,
@@ -235,18 +235,20 @@ class AddonService:
                 billing_type=AddonBillingType(addon_row.billing_type),
                 price=Decimal(str(addon_row.price)),
                 currency=addon_row.currency,
-                setup_fee=Decimal(str(addon_row.setup_fee))
-                if addon_row.setup_fee is not None
-                else None,
+                setup_fee=(
+                    Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee is not None else None
+                ),
                 is_quantity_based=addon_row.is_quantity_based,
                 min_quantity=int(addon_row.min_quantity),
-                max_quantity=int(addon_row.max_quantity)
-                if addon_row.max_quantity is not None
-                else None,
+                max_quantity=(
+                    int(addon_row.max_quantity) if addon_row.max_quantity is not None else None
+                ),
                 metered_unit=addon_row.metered_unit,
-                included_quantity=int(addon_row.included_quantity)
-                if addon_row.included_quantity is not None
-                else None,
+                included_quantity=(
+                    int(addon_row.included_quantity)
+                    if addon_row.included_quantity is not None
+                    else None
+                ),
                 is_active=addon_row.is_active,
                 is_featured=addon_row.is_featured,
                 compatible_with_all_plans=addon_row.compatible_with_all_plans,
@@ -310,18 +312,20 @@ class AddonService:
             billing_type=AddonBillingType(addon_row.billing_type),
             price=Decimal(str(addon_row.price)),
             currency=addon_row.currency,
-            setup_fee=Decimal(str(addon_row.setup_fee))
-            if addon_row.setup_fee is not None
-            else None,
+            setup_fee=(
+                Decimal(str(addon_row.setup_fee)) if addon_row.setup_fee is not None else None
+            ),
             is_quantity_based=addon_row.is_quantity_based,
             min_quantity=int(addon_row.min_quantity),
-            max_quantity=int(addon_row.max_quantity)
-            if addon_row.max_quantity is not None
-            else None,
+            max_quantity=(
+                int(addon_row.max_quantity) if addon_row.max_quantity is not None else None
+            ),
             metered_unit=addon_row.metered_unit,
-            included_quantity=int(addon_row.included_quantity)
-            if addon_row.included_quantity is not None
-            else None,
+            included_quantity=(
+                int(addon_row.included_quantity)
+                if addon_row.included_quantity is not None
+                else None
+            ),
             is_active=addon_row.is_active,
             is_featured=addon_row.is_featured,
             compatible_with_all_plans=addon_row.compatible_with_all_plans,
@@ -593,18 +597,22 @@ class AddonService:
             billing_type=AddonBillingType(addon_details.billing_type),
             price=Decimal(str(addon_details.price)),
             currency=addon_details.currency,
-            setup_fee=Decimal(str(addon_details.setup_fee))
-            if addon_details.setup_fee is not None
-            else None,
+            setup_fee=(
+                Decimal(str(addon_details.setup_fee))
+                if addon_details.setup_fee is not None
+                else None
+            ),
             is_quantity_based=addon_details.is_quantity_based,
             min_quantity=int(addon_details.min_quantity),
-            max_quantity=int(addon_details.max_quantity)
-            if addon_details.max_quantity is not None
-            else None,
+            max_quantity=(
+                int(addon_details.max_quantity) if addon_details.max_quantity is not None else None
+            ),
             metered_unit=addon_details.metered_unit,
-            included_quantity=int(addon_details.included_quantity)
-            if addon_details.included_quantity is not None
-            else None,
+            included_quantity=(
+                int(addon_details.included_quantity)
+                if addon_details.included_quantity is not None
+                else None
+            ),
             is_active=addon_details.is_active,
             is_featured=addon_details.is_featured,
             compatible_with_all_plans=addon_details.compatible_with_all_plans,
@@ -1122,9 +1130,11 @@ class AddonService:
             .where(BillingTenantAddonTable.tenant_addon_id == tenant_addon_id)
             .where(BillingTenantAddonTable.tenant_id == tenant_id)
             .values(
-                status=AddonStatus.CANCELED.value
-                if not cancel_immediately
-                else AddonStatus.ENDED.value,
+                status=(
+                    AddonStatus.CANCELED.value
+                    if not cancel_immediately
+                    else AddonStatus.ENDED.value
+                ),
                 canceled_at=now,
                 ended_at=ended_at,
                 updated_at=now,
@@ -1195,9 +1205,9 @@ class AddonService:
             "reactivation": {
                 "reactivated_by": reactivated_by_user_id,
                 "reactivated_at": now.isoformat(),
-                "previous_cancellation_at": tenant_addon.canceled_at.isoformat()
-                if tenant_addon.canceled_at
-                else None,
+                "previous_cancellation_at": (
+                    tenant_addon.canceled_at.isoformat() if tenant_addon.canceled_at else None
+                ),
             },
         }
 

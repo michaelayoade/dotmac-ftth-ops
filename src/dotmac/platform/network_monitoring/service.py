@@ -815,11 +815,13 @@ class NetworkMonitoringService:
                 mac_address=cpe_data.get("_deviceId", {}).get("_SerialNumber", cpe_id),
                 wifi_enabled=wifi_data.get("Radio", {}).get("1", {}).get("Enable", False),
                 connected_clients=connected_clients,
-                last_inform=datetime.fromisoformat(
-                    cpe_data.get("_lastInform", "").replace("Z", "+00:00")
-                ).replace(tzinfo=None)
-                if cpe_data.get("_lastInform")
-                else None,
+                last_inform=(
+                    datetime.fromisoformat(
+                        cpe_data.get("_lastInform", "").replace("Z", "+00:00")
+                    ).replace(tzinfo=None)
+                    if cpe_data.get("_lastInform")
+                    else None
+                ),
             )
         except Exception as e:
             logger.warning("Failed to get CPE metrics", cpe_id=cpe_id, error=str(e))

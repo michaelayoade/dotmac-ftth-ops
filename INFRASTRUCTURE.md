@@ -2,11 +2,13 @@
 
 ## Overview
 
-The DotMac platform supports three deployment modes:
+The DotMac platform exposes two lightweight Compose stacks:
 
-1. **Platform Mode** - Base infrastructure (postgres, redis, vault, minio, observability)
-2. **ISP Mode** - ISP-specific services (FreeRADIUS, NetBox, GenieACS, AWX, LibreNMS, etc.)
-3. **All Mode** - Complete stack (platform + ISP services)
+1. **Platform Mode** - Platform backend API + admin frontend
+2. **ISP Mode** - ISP backend API + ISP operations frontend
+3. **All Mode** - Convenience wrapper for running both stacks together
+
+All other services (databases, caches, observability, network infrastructure) are expected to run externally.
 
 ## Quick Start
 
@@ -17,23 +19,20 @@ The DotMac platform supports three deployment modes:
 - Python 3.12+ (for local development)
 - Poetry (for dependency management)
 
-### Start Platform Infrastructure
+### Start Platform Stack
 
 ```bash
-# Start core infrastructure
+# Start backend + admin UI
 make start-platform
-
-# Or with observability stack (Jaeger, Prometheus, Grafana)
-make start-platform-obs
 
 # Check status
 make status-platform
 ```
 
-### Start ISP Services
+### Start ISP Stack
 
 ```bash
-# Start ISP services (will auto-start platform if needed)
+# Start ISP backend + operations UI
 make start-isp
 
 # Check status
@@ -43,7 +42,7 @@ make status-isp
 ### Start Everything
 
 ```bash
-# Start complete stack
+# Start both stacks
 make start-all
 
 # Check status
@@ -52,38 +51,30 @@ make status-all
 
 ## Infrastructure Components
 
-### Platform Services (docker-compose.base.yml)
-
-| Service | Port | Description | Required |
-|---------|------|-------------|----------|
-| **PostgreSQL** | 5432 | Main database | ✅ Yes |
-| **Redis** | 6379 | Cache & message broker | ✅ Yes |
-| **Vault** | 8200 | Secrets management | ⚪ Optional |
-| **MinIO** | 9000, 9001 | S3-compatible storage | ⚪ Optional |
-
-### Observability Stack (Optional)
+### Platform Stack (docker-compose.base.yml)
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **OTEL Collector** | 4317, 4318 | Telemetry ingestion |
-| **Jaeger** | 16686 | Distributed tracing UI |
-| **Prometheus** | 9090 | Metrics storage |
-| **Grafana** | 3400 | Dashboards |
+| **platform-backend** | 8000 | FastAPI application |
+| **platform-frontend** | 3002 | Admin Next.js UI |
 
-### ISP Services (docker-compose.isp.yml)
+### ISP Stack (docker-compose.isp.yml)
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **FreeRADIUS** | 1812-1813 (UDP) | AAA server for authentication |
-| **NetBox** | 8080 | Network inventory & IPAM |
-| **NetBox Worker** | - | Background task processor |
-| **GenieACS** | 7547, 7557, 7567, 7577 | TR-069 ACS for CPE management |
-| **MongoDB** | 27017 | Database for GenieACS |
-| **AWX Web** | 8052 | Ansible automation web UI |
-| **AWX Task** | - | Ansible automation task runner |
-| **LibreNMS** | 8000 | Network monitoring |
-| **WireGuard** | 51820 (UDP) | VPN gateway |
-| **TimescaleDB** | 5433 | Time-series metrics database |
+| **isp-backend** | 8000 | FastAPI application |
+| **isp-frontend** | 3001 | ISP operations Next.js UI |
+
+### External Dependencies
+
+Provision these services separately and configure them via environment variables:
+
+- PostgreSQL (required)
+- Redis (required)
+- Object storage (MinIO/S3) – optional but recommended
+- Vault/OpenBao – optional secrets management
+- GenieACS, NetBox, FreeRADIUS, WireGuard, LibreNMS, TimescaleDB – required for full ISP feature parity
+- Prometheus, Grafana, Jaeger – optional observability stack
 
 ## Common Commands
 
@@ -91,24 +82,24 @@ make status-all
 
 ```bash
 # Platform
-make start-platform          # Start platform infrastructure
-make stop-platform           # Stop platform infrastructure
-make restart-platform        # Restart platform infrastructure
+make start-platform          # Start platform backend + admin UI
+make stop-platform           # Stop platform services
+make restart-platform        # Restart platform services
 make status-platform         # Check platform status
 make logs-platform           # View platform logs
 
 # ISP Services
-make start-isp               # Start ISP services
+make start-isp               # Start ISP backend + ISP UI
 make stop-isp                # Stop ISP services
 make restart-isp             # Restart ISP services
 make status-isp              # Check ISP status
 make logs-isp                # View ISP logs
 
 # All Services
-make start-all               # Start everything
-make stop-all                # Stop everything
-make restart-all             # Restart everything
-make status-all              # Check all status
+make start-all               # Start both stacks
+make stop-all                # Stop both stacks
+make restart-all             # Restart both stacks
+make status-all              # Check both stacks
 ```
 
 ### Development
@@ -124,7 +115,7 @@ make dev-backend             # http://localhost:8000/docs
 make dev-frontend            # http://localhost:3000
 ```
 
-> **Tip:** ISP and platform admin experiences now live in separate Next.js apps. Use `pnpm dev:isp` or `pnpm dev:admin` from the `frontend` directory (see `frontend/QUICK-START-MULTI-APP.md`).
+> **Tip:** ISP and platform admin experiences now live in separate Next.js apps. Use `pnpm dev:isp` or `pnpm dev:admin` from the `frontend` directory (see `frontend/QUICK_START.md`).
 
 ### Database
 
@@ -177,38 +168,38 @@ make clean-all
 
 ```bash
 # Platform
-./scripts/infra.sh platform start              # Start platform
-./scripts/infra.sh platform start --with-obs   # Start with observability
+./scripts/infra.sh platform start              # Start backend + admin UI
 ./scripts/infra.sh platform status             # Check status
-./scripts/infra.sh platform logs postgres      # View postgres logs
+./scripts/infra.sh platform logs platform-backend
 
 # ISP Services
-./scripts/infra.sh isp start                   # Start ISP services
+./scripts/infra.sh isp start                   # Start backend + ISP UI
 ./scripts/infra.sh isp status                  # Check status
-./scripts/infra.sh isp logs freeradius         # View FreeRADIUS logs
+./scripts/infra.sh isp logs isp-backend
 
 # All Services
-./scripts/infra.sh all start                   # Start everything
-./scripts/infra.sh all start --with-obs        # Start with observability
-./scripts/infra.sh all status                  # Check status
+./scripts/infra.sh all start                   # Start both stacks
+./scripts/infra.sh all status                  # Check both stacks
 ```
 
 ### Docker Compose Direct Access
 
 ```bash
 # Platform
-docker compose -f docker-compose.base.yml up -d postgres redis
-docker compose -f docker-compose.base.yml --profile observability up -d
+docker compose -f docker-compose.base.yml up -d platform-backend platform-frontend
+docker compose -f docker-compose.base.yml logs -f platform-backend
 
 # ISP
-docker compose -f docker-compose.isp.yml up -d
-docker compose -f docker-compose.isp.yml logs -f freeradius
+docker compose -f docker-compose.isp.yml up -d isp-backend isp-frontend
+docker compose -f docker-compose.isp.yml logs -f isp-backend
 
 # View containers
 docker ps
 ```
 
 ## Service Configuration
+
+> Note: the simplified Compose files do not manage the services below. Use this section when operating the supporting infrastructure yourself.
 
 ### Platform Infrastructure
 

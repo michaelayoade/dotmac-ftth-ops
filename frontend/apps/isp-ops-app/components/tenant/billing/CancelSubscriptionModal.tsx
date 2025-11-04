@@ -135,7 +135,7 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
           </DialogTitle>
           <DialogDescription>
             {confirmationStep === "details"
-              ? "We're sorry to see you go. Please help us understand why you're canceling."
+              ? "We&apos;re sorry to see you go. Please help us understand why you&apos;re canceling."
               : "Please review and confirm your cancellation."}
           </DialogDescription>
         </DialogHeader>

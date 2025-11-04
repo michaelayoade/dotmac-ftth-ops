@@ -3,578 +3,403 @@
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { useMemo } from "react";
-import { useRouter } from "next/navigation";
-import { Users, TrendingUp, ClipboardList, Calendar } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
-
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EnhancedDataTable, type ColumnDef, type Row } from "@/components/ui/EnhancedDataTable";
-import { EmptyState } from "@/components/ui/empty-state";
+import { useState, useEffect } from "react";
 import {
-  useLeads,
-  useQuotes,
-  useSiteSurveys,
-  type Lead,
-  type Quote,
-  type SiteSurvey,
-} from "@/hooks/useCRM";
+  Calendar,
+  MapPin,
+  User,
+  RefreshCw,
+  Plus,
+  Play,
+  CheckCircle2,
+  XCircle,
+  Clock,
+  Filter,
+  Search,
+  MoreVertical,
+  Eye,
+  Ban,
+} from "lucide-react";
+import { useSiteSurveys } from "@/hooks/useCRM";
+import type { SiteSurvey, SiteSurveyStatus, Serviceability } from "@/hooks/useCRM";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { ScheduleSurveyModal } from "@/components/crm/ScheduleSurveyModal";
+import { CompleteSurveyModal } from "@/components/crm/CompleteSurveyModal";
 import { useToast } from "@/components/ui/use-toast";
 
-function formatRelativeDate(value?: string | null) {
-  if (!value) return "—";
-  try {
-    return formatDistanceToNow(new Date(value), { addSuffix: true });
-  } catch {
-    return value;
-  }
-}
-
-export default function CRMOverviewPage() {
-  const router = useRouter();
+export default function SiteSurveysPage() {
   const { toast } = useToast();
-  const {
-    leads,
-    isLoading: leadsLoading,
-    error: leadsError,
-    refetch: refetchLeads,
-  } = useLeads({ autoRefresh: true, refreshInterval: 60000 });
-  const {
-    quotes,
-    isLoading: quotesLoading,
-    error: quotesError,
-    refetch: refetchQuotes,
-  } = useQuotes();
-  const {
-    surveys,
-    isLoading: surveysLoading,
-    error: surveysError,
-    refetch: refetchSurveys,
-  } = useSiteSurveys();
+  const [showScheduleModal, setShowScheduleModal] = useState(false);
+  const [showCompleteModal, setShowCompleteModal] = useState(false);
+  const [selectedSurvey, setSelectedSurvey] = useState<SiteSurvey | null>(null);
 
-  const leadStats = useMemo(() => {
-    const total = leads.length;
-    const won = leads.filter((lead) => lead.status === "won").length;
-    const qualified = leads.filter((lead) => lead.status === "qualified").length;
-    const quoteSent = leads.filter((lead) => lead.status === "quote_sent").length;
-    const activePipeline = leads.filter(
-      (lead) => !["won", "lost", "disqualified"].includes(lead.status),
-    ).length;
+  // Filters
+  const [statusFilter, setStatusFilter] = useState<SiteSurveyStatus | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
-    const conversionRate = total > 0 ? Number(((won / total) * 100).toFixed(1)) : 0;
+  // Fetch surveys
+  const { surveys, isLoading, refetch, startSurvey, cancelSurvey } = useSiteSurveys({});
 
-    const highPriority = leads.filter((lead) => lead.priority === 1).length;
+  useEffect(() => {
+    // Auto-refresh every 60 seconds
+    const interval = setInterval(refetch, 60000);
+    return () => clearInterval(interval);
+  }, [refetch]);
 
-    return {
-      total,
-      won,
-      qualified,
-      quoteSent,
-      activePipeline,
-      conversionRate,
-      highPriority,
+  // Calculate statistics
+  const stats = {
+    scheduled: surveys.filter((s) => s.status === "scheduled").length,
+    in_progress: surveys.filter((s) => s.status === "in_progress").length,
+    completed: surveys.filter((s) => s.status === "completed").length,
+    canceled: surveys.filter((s) => s.status === "canceled").length,
+    completion_rate:
+      surveys.length > 0
+        ? ((surveys.filter((s) => s.status === "completed").length / surveys.length) * 100).toFixed(
+            1,
+          )
+        : "0.0",
+  };
+
+  // Filter surveys
+  const filteredSurveys = surveys.filter((survey) => {
+    const matchesStatus = statusFilter === "all" || survey.status === statusFilter;
+    const matchesSearch =
+      !searchQuery ||
+      survey.survey_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      survey.lead_id.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  // Status badge component
+  const getStatusBadge = (status: SiteSurveyStatus) => {
+    const styles: Record<SiteSurveyStatus, { variant: any; icon: any; label: string }> = {
+      scheduled: { variant: "secondary", icon: Calendar, label: "Scheduled" },
+      in_progress: { variant: "default", icon: Play, label: "In Progress" },
+      completed: { variant: "outline", icon: CheckCircle2, label: "Completed" },
+      failed: { variant: "destructive", icon: XCircle, label: "Failed" },
+      canceled: { variant: "outline", icon: Ban, label: "Canceled" },
     };
-  }, [leads]);
 
-  const quoteStats = useMemo(() => {
-    const total = quotes.length;
-    const accepted = quotes.filter((quote) => quote.status === "accepted").length;
-    const sent = quotes.filter((quote) => quote.status === "sent").length;
-    const expiringSoon = quotes.filter((quote) => {
-      if (!quote.valid_until) return false;
-      const expiresIn = new Date(quote.valid_until).getTime() - Date.now();
-      const threeDays = 1000 * 60 * 60 * 24 * 3;
-      return expiresIn > 0 && expiresIn <= threeDays;
-    }).length;
+    const style = styles[status];
+    const Icon = style.icon;
 
-    const totalMRR = quotes
-      .filter((quote) => ["accepted", "sent"].includes(quote.status))
-      .reduce((sum, quote) => sum + quote.monthly_recurring_charge, 0);
+    return (
+      <Badge variant={style.variant}>
+        <Icon className="w-3 h-3 mr-1" />
+        {style.label}
+      </Badge>
+    );
+  };
 
-    return {
-      total,
-      accepted,
-      sent,
-      expiringSoon,
-      totalMRR,
+  // Serviceability badge component
+  const getServiceabilityBadge = (serviceability?: Serviceability) => {
+    if (!serviceability) return <span className="text-muted-foreground text-sm">N/A</span>;
+
+    const styles: Record<Serviceability, { color: string; label: string }> = {
+      serviceable: {
+        color: "bg-green-100 text-green-800",
+        label: "Serviceable",
+      },
+      not_serviceable: {
+        color: "bg-red-100 text-red-800",
+        label: "Not Serviceable",
+      },
+      pending_expansion: {
+        color: "bg-yellow-100 text-yellow-800",
+        label: "Pending Expansion",
+      },
+      requires_construction: {
+        color: "bg-orange-100 text-orange-800",
+        label: "Requires Construction",
+      },
     };
-  }, [quotes]);
 
-  const surveyStats = useMemo(() => {
-    const total = surveys.length;
-    const scheduled = surveys.filter((survey) => survey.status === "scheduled").length;
-    const inProgress = surveys.filter((survey) => survey.status === "in_progress").length;
-    const completed = surveys.filter((survey) => survey.status === "completed").length;
-    const requiresConstruction = surveys.filter(
-      (survey) => survey.serviceability === "requires_construction",
-    ).length;
+    const style = styles[serviceability];
 
-    return {
-      total,
-      scheduled,
-      inProgress,
-      completed,
-      requiresConstruction,
-    };
-  }, [surveys]);
+    return <Badge className={style.color}>{style.label}</Badge>;
+  };
 
-  const recentLeads = useMemo(
-    () =>
-      [...leads]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5),
-    [leads],
-  );
+  const handleStartSurvey = async (survey: SiteSurvey) => {
+    const success = await startSurvey(survey.id);
+    if (success) {
+      toast({
+        title: "Survey Started",
+        description: `Survey ${survey.survey_number} is now in progress`,
+      });
+      refetch();
+    }
+  };
 
-  const recentQuotes = useMemo(
-    () =>
-      [...quotes]
-        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-        .slice(0, 5),
-    [quotes],
-  );
+  const handleCompleteSurvey = (survey: SiteSurvey) => {
+    setSelectedSurvey(survey);
+    setShowCompleteModal(true);
+  };
 
-  const upcomingSurveys = useMemo(
-    () =>
-      surveys
-        .filter((survey) => survey.status === "scheduled")
-        .sort((a, b) => new Date(a.scheduled_date).getTime() - new Date(b.scheduled_date).getTime())
-        .slice(0, 5),
-    [surveys],
-  );
+  const handleCancelSurvey = async (survey: SiteSurvey) => {
+    if (!confirm(`Are you sure you want to cancel survey ${survey.survey_number}?`)) {
+      return;
+    }
 
-  const leadColumns: ColumnDef<Lead>[] = useMemo(
-    () => [
-      {
-        id: "lead",
-        header: "Lead",
-        cell: ({ row }: { row: Row<Lead> }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">
-              {row.original.first_name} {row.original.last_name}
-            </span>
-            <span className="text-xs text-muted-foreground">{row.original.email}</span>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }: { row: Row<Lead> }) => <LeadStatusBadge status={row.original.status} />,
-      },
-      {
-        id: "source",
-        header: "Source",
-        cell: ({ row }: { row: Row<Lead> }) => <LeadSourceBadge source={row.original.source} />,
-      },
-      {
-        id: "priority",
-        header: "Priority",
-        cell: ({ row }: { row: Row<Lead> }) => (
-          <LeadPriorityBadge priority={row.original.priority} />
-        ),
-      },
-      {
-        id: "created",
-        header: "Created",
-        cell: ({ row }: { row: Row<Lead> }) => (
-          <span className="text-sm text-muted-foreground">
-            {formatRelativeDate(row.original.created_at)}
-          </span>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const quoteColumns: ColumnDef<Quote>[] = useMemo(
-    () => [
-      {
-        id: "quote",
-        header: "Quote",
-        cell: ({ row }: { row: Row<Quote> }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.quote_number}</span>
-            <span className="text-xs text-muted-foreground">{row.original.service_plan_name}</span>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => <QuoteStatusBadge status={row.original.status} />,
-      },
-      {
-        id: "mrr",
-        header: "Monthly MRR",
-        cell: ({ row }) => (
-          <span className="text-sm">${row.original.monthly_recurring_charge.toLocaleString()}</span>
-        ),
-      },
-      {
-        id: "valid",
-        header: "Valid Until",
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {row.original.valid_until
-              ? new Date(row.original.valid_until).toLocaleDateString()
-              : "—"}
-          </span>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const surveyColumns: ColumnDef<SiteSurvey>[] = useMemo(
-    () => [
-      {
-        id: "survey",
-        header: "Survey",
-        cell: ({ row }) => (
-          <div className="flex flex-col">
-            <span className="font-medium">{row.original.survey_number}</span>
-            <span className="text-xs text-muted-foreground">
-              Lead #{row.original.lead_id.slice(0, 8)}
-            </span>
-          </div>
-        ),
-      },
-      {
-        id: "status",
-        header: "Status",
-        cell: ({ row }) => <SurveyStatusBadge status={row.original.status} />,
-      },
-      {
-        id: "scheduled",
-        header: "Scheduled Date",
-        cell: ({ row }) => (
-          <span className="text-sm text-muted-foreground">
-            {row.original.scheduled_date
-              ? new Date(row.original.scheduled_date).toLocaleString()
-              : "—"}
-          </span>
-        ),
-      },
-      {
-        id: "technician",
-        header: "Technician",
-        accessorKey: "technician_id",
-        cell: ({ row }) => (
-          <span className="text-sm">{row.original.technician_id ?? "Unassigned"}</span>
-        ),
-      },
-    ],
-    [],
-  );
-
-  const handleRefresh = async () => {
-    await Promise.all([refetchLeads(), refetchQuotes(), refetchSurveys()]);
-    toast({
-      title: "CRM Data Refreshed",
-      description: "Leads, quotes, and site surveys have been updated.",
-    });
+    const success = await cancelSurvey(survey.id, "Canceled by user");
+    if (success) {
+      toast({
+        title: "Survey Canceled",
+        description: `Survey ${survey.survey_number} has been canceled`,
+      });
+      refetch();
+    }
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+    <div className="container mx-auto py-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-foreground">Pipeline Snapshot</h2>
-          <p className="text-sm text-muted-foreground">
-            Real-time overview of customer acquisition funnel performance.
-          </p>
+          <h1 className="text-3xl font-bold">Site Surveys</h1>
+          <p className="text-muted-foreground">Schedule and manage technical site assessments</p>
         </div>
-        <Button variant="outline" onClick={handleRefresh}>
-          Refresh Data
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className={`w-4 h-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
+            Refresh
+          </Button>
+          <Button onClick={() => setShowScheduleModal(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Schedule Survey
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCardEnhanced
-          title="Active Pipeline"
-          value={leadStats.activePipeline}
-          subtitle={`${leadStats.highPriority} high-priority leads`}
-          icon={Users}
-          href="/dashboard/crm/leads"
-          loading={leadsLoading}
-          error={leadsError?.message}
-          emptyStateMessage="No leads captured yet"
-        />
-        <MetricCardEnhanced
-          title="Qualified Leads"
-          value={leadStats.qualified}
-          subtitle={`${leadStats.quoteSent} with quotes sent`}
-          icon={ClipboardList}
-          href="/dashboard/crm/leads"
-          loading={leadsLoading}
-          error={leadsError?.message}
-          emptyStateMessage="No qualified leads yet"
-        />
-        <MetricCardEnhanced
-          title="Quote Pipeline MRR"
-          value={quoteStats.totalMRR}
-          subtitle={`${quoteStats.sent} sent • ${quoteStats.accepted} accepted`}
-          icon={TrendingUp}
-          href="/dashboard/crm/quotes"
-          currency
-          loading={quotesLoading}
-          error={quotesError?.message}
-          emptyStateMessage="No quotes generated"
-        />
-        <MetricCardEnhanced
-          title="Site Surveys"
-          value={surveyStats.scheduled + surveyStats.inProgress}
-          subtitle={`${surveyStats.completed} completed • ${surveyStats.requiresConstruction} requiring build`}
-          icon={Calendar}
-          href="/dashboard/crm/site-surveys"
-          loading={surveysLoading}
-          error={surveysError?.message}
-          emptyStateMessage="No surveys scheduled"
-        />
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-2">
+      {/* Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
-          <CardHeader>
-            <CardTitle>Recently Captured Leads</CardTitle>
-            <CardDescription>Monitor the latest opportunities entering the funnel.</CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
+            <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {recentLeads.length === 0 ? (
-              <EmptyState
-                title="No leads yet"
-                description="Capture a new lead to start building your sales pipeline."
-                action={{
-                  label: "Create Lead",
-                  onClick: () => router.push("/dashboard/crm/leads"),
-                }}
-              />
-            ) : (
-              <EnhancedDataTable
-                data={recentLeads}
-                columns={leadColumns}
-                isLoading={leadsLoading}
-                error={leadsError?.message}
-                pagination={false}
-                hideToolbar
-              />
-            )}
+            <div className="text-2xl font-bold">{stats.scheduled}</div>
+            <p className="text-xs text-muted-foreground">Upcoming surveys</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Latest Quotes</CardTitle>
-            <CardDescription>
-              Track proposals in flight and identify deals that need follow-up.
-            </CardDescription>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+            <Play className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {recentQuotes.length === 0 ? (
-              <EmptyState
-                title="No quotes generated"
-                description="Create pricing proposals to progress qualified leads."
-                action={{
-                  label: "Create Quote",
-                  onClick: () => router.push("/dashboard/crm/quotes"),
-                }}
-              />
-            ) : (
-              <EnhancedDataTable
-                data={recentQuotes}
-                columns={quoteColumns}
-                isLoading={quotesLoading}
-                error={quotesError?.message}
-                pagination={false}
-                hideToolbar
-              />
-            )}
+            <div className="text-2xl font-bold">{stats.in_progress}</div>
+            <p className="text-xs text-muted-foreground">Currently on-site</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.completed}</div>
+            <p className="text-xs text-muted-foreground">Finished surveys</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Canceled</CardTitle>
+            <Ban className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.canceled}</div>
+            <p className="text-xs text-muted-foreground">Canceled surveys</p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Completion Rate</CardTitle>
+            <Clock className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.completion_rate}%</div>
+            <p className="text-xs text-muted-foreground">Success rate</p>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Upcoming Site Surveys</CardTitle>
-          <CardDescription>
-            Coordinate field teams and ensure serviceability checks happen on time.
-          </CardDescription>
+          <CardTitle>All Surveys</CardTitle>
+          <CardDescription>View and manage all scheduled site surveys</CardDescription>
         </CardHeader>
-        <CardContent>
-          {upcomingSurveys.length === 0 ? (
-            <EmptyState
-              title="No site surveys scheduled"
-              description="Plan technical assessments to validate feasibility before installation."
-              action={{
-                label: "Schedule Survey",
-                onClick: () => router.push("/dashboard/crm/site-surveys"),
-              }}
-            />
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by survey number or lead..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Filter by status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Statuses</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="in_progress">In Progress</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="failed">Failed</SelectItem>
+                <SelectItem value="canceled">Canceled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Surveys Table */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : filteredSurveys.length === 0 ? (
+            <div className="text-center py-12">
+              <Calendar className="mx-auto h-12 w-12 text-muted-foreground" />
+              <h3 className="mt-4 text-lg font-semibold">No surveys found</h3>
+              <p className="text-muted-foreground mt-2">
+                {searchQuery || statusFilter !== "all"
+                  ? "Try adjusting your filters"
+                  : "Schedule your first site survey to get started"}
+              </p>
+              {!searchQuery && statusFilter === "all" && (
+                <Button className="mt-4" onClick={() => setShowScheduleModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Schedule Survey
+                </Button>
+              )}
+            </div>
           ) : (
-            <EnhancedDataTable
-              data={upcomingSurveys}
-              columns={surveyColumns}
-              isLoading={surveysLoading}
-              error={surveysError?.message}
-              pagination={false}
-              hideToolbar
-            />
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Survey #</TableHead>
+                  <TableHead>Lead</TableHead>
+                  <TableHead>Scheduled Date</TableHead>
+                  <TableHead>Technician</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Serviceability</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredSurveys.map((survey) => (
+                  <TableRow key={survey.id}>
+                    <TableCell className="font-medium">{survey.survey_number}</TableCell>
+                    <TableCell>{survey.lead_id}</TableCell>
+                    <TableCell>{new Date(survey.scheduled_date).toLocaleString()}</TableCell>
+                    <TableCell>
+                      {survey.technician_id ? (
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          <span>{survey.technician_id}</span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Unassigned</span>
+                      )}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(survey.status)}</TableCell>
+                    <TableCell>{getServiceabilityBadge(survey.serviceability)}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="sm" aria-label="Open actions menu">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => {}}>
+                            <Eye className="h-4 w-4 mr-2" />
+                            View Details
+                          </DropdownMenuItem>
+                          {survey.status === "scheduled" && (
+                            <DropdownMenuItem onClick={() => handleStartSurvey(survey)}>
+                              <Play className="h-4 w-4 mr-2" />
+                              Start Survey
+                            </DropdownMenuItem>
+                          )}
+                          {survey.status === "in_progress" && (
+                            <DropdownMenuItem onClick={() => handleCompleteSurvey(survey)}>
+                              <CheckCircle2 className="h-4 w-4 mr-2" />
+                              Complete Survey
+                            </DropdownMenuItem>
+                          )}
+                          {(survey.status === "scheduled" || survey.status === "in_progress") && (
+                            <DropdownMenuItem
+                              onClick={() => handleCancelSurvey(survey)}
+                              className="text-red-600"
+                            >
+                              <Ban className="h-4 w-4 mr-2" />
+                              Cancel Survey
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <ScheduleSurveyModal
+        open={showScheduleModal}
+        onOpenChange={setShowScheduleModal}
+        onSuccess={() => {
+          refetch();
+          setShowScheduleModal(false);
+        }}
+      />
+
+      <CompleteSurveyModal
+        open={showCompleteModal}
+        onOpenChange={setShowCompleteModal}
+        survey={selectedSurvey}
+        onSuccess={() => {
+          refetch();
+          setShowCompleteModal(false);
+          setSelectedSurvey(null);
+        }}
+      />
     </div>
   );
-}
-
-function LeadStatusBadge({ status }: { status: Lead["status"] }) {
-  const config: Record<Lead["status"], { label: string; className: string }> = {
-    new: {
-      label: "New",
-      className: "bg-sky-500/20 text-sky-400 border-sky-500/30",
-    },
-    contacted: {
-      label: "Contacted",
-      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    qualified: {
-      label: "Qualified",
-      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    },
-    site_survey_scheduled: {
-      label: "Survey Scheduled",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    site_survey_completed: {
-      label: "Survey Completed",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    quote_sent: {
-      label: "Quote Sent",
-      className: "bg-indigo-500/20 text-indigo-300 border-indigo-500/30",
-    },
-    negotiating: {
-      label: "Negotiating",
-      className: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-    },
-    won: {
-      label: "Won",
-      className: "bg-emerald-600/30 text-emerald-200 border-emerald-500/30",
-    },
-    lost: {
-      label: "Lost",
-      className: "bg-red-500/20 text-red-300 border-red-500/30",
-    },
-    disqualified: {
-      label: "Disqualified",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    },
-  };
-
-  const { label, className } = config[status] ?? config.new;
-
-  return <Badge className={className}>{label}</Badge>;
-}
-
-function LeadSourceBadge({ source }: { source: Lead["source"] }) {
-  const label = source.replace(/_/g, " ");
-  return (
-    <Badge variant="outline" className="text-xs uppercase">
-      {label}
-    </Badge>
-  );
-}
-
-function LeadPriorityBadge({ priority }: { priority: Lead["priority"] }) {
-  const config: Record<number, { label: string; className: string }> = {
-    1: {
-      label: "High",
-      className: "bg-red-500/20 text-red-200 border-red-500/30",
-    },
-    2: {
-      label: "Medium",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    3: {
-      label: "Low",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    },
-  };
-
-  const { label, className } = config[priority] ??
-    config[3] ?? {
-      label: "Low",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    };
-
-  return <Badge className={className}>{label}</Badge>;
-}
-
-function QuoteStatusBadge({ status }: { status: Quote["status"] }) {
-  const config: Record<Quote["status"], { label: string; className: string }> = {
-    draft: {
-      label: "Draft",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    },
-    sent: {
-      label: "Sent",
-      className: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-    },
-    viewed: {
-      label: "Viewed",
-      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    accepted: {
-      label: "Accepted",
-      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    },
-    rejected: {
-      label: "Rejected",
-      className: "bg-red-500/20 text-red-300 border-red-500/30",
-    },
-    expired: {
-      label: "Expired",
-      className: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    },
-    revised: {
-      label: "Revised",
-      className: "bg-purple-500/20 text-purple-300 border-purple-500/30",
-    },
-  };
-
-  const { label, className } = config[status] ?? config.draft;
-
-  return <Badge className={className}>{label}</Badge>;
-}
-
-function SurveyStatusBadge({ status }: { status: SiteSurvey["status"] }) {
-  const config: Record<SiteSurvey["status"], { label: string; className: string }> = {
-    scheduled: {
-      label: "Scheduled",
-      className: "bg-sky-500/20 text-sky-300 border-sky-500/30",
-    },
-    in_progress: {
-      label: "In Progress",
-      className: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-    },
-    completed: {
-      label: "Completed",
-      className: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
-    },
-    failed: {
-      label: "Failed",
-      className: "bg-red-500/20 text-red-300 border-red-500/30",
-    },
-    canceled: {
-      label: "Canceled",
-      className: "bg-slate-500/20 text-slate-300 border-slate-500/30",
-    },
-  };
-
-  const { label, className } = config[status] ?? config.scheduled;
-
-  return <Badge className={className}>{label}</Badge>;
 }

@@ -118,7 +118,7 @@ export function WireGuardPeerForm({
               <Label htmlFor="name">
                 Peer Name <span className="text-red-500">*</span>
               </Label>
-              <Input id="name" {...register("name")} placeholder="John's Laptop" />
+              <Input id="name" {...register("name")} placeholder="John&apos;s Laptop" />
               {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
             </div>
 

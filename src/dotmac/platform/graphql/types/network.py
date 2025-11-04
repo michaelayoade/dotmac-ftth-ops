@@ -325,15 +325,21 @@ class DeviceMetrics:
             device_type=DeviceTypeEnum(metrics.device_type.value),
             timestamp=metrics.timestamp,
             health=DeviceHealth.from_model(metrics.health),
-            traffic=TrafficStats.from_model(metrics.traffic)
-            if hasattr(metrics, "traffic") and metrics.traffic
-            else None,
-            onu_metrics=ONUMetrics.from_model(metrics.onu_metrics)
-            if hasattr(metrics, "onu_metrics") and metrics.onu_metrics
-            else None,
-            cpe_metrics=CPEMetrics.from_model(metrics.cpe_metrics)
-            if hasattr(metrics, "cpe_metrics") and metrics.cpe_metrics
-            else None,
+            traffic=(
+                TrafficStats.from_model(metrics.traffic)
+                if hasattr(metrics, "traffic") and metrics.traffic
+                else None
+            ),
+            onu_metrics=(
+                ONUMetrics.from_model(metrics.onu_metrics)
+                if hasattr(metrics, "onu_metrics") and metrics.onu_metrics
+                else None
+            ),
+            cpe_metrics=(
+                CPEMetrics.from_model(metrics.cpe_metrics)
+                if hasattr(metrics, "cpe_metrics") and metrics.cpe_metrics
+                else None
+            ),
         )
 
 

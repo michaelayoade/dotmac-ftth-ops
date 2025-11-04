@@ -8,7 +8,7 @@
  */
 
 import { setupServer } from "msw/node";
-import { handlers, mockHandlers } from "../apps/base-app/mocks/handlers";
+import { handlers, mockHandlers } from "../shared/mocks/handlers";
 
 // Determine mode from environment variable
 const MSW_MODE = process.env.MSW_MODE || "proxy";

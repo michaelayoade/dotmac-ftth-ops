@@ -3,7 +3,11 @@
  * Implements ISP Framework Portal ID authentication system
  */
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
+import {
+  createPortalAuthFetch,
+  DEFAULT_PORTAL_TOKEN_KEY,
+} from "../utils/portalAuth";
 import {
   PortalLoginCredentials,
   PortalAuthResponse,
@@ -42,6 +46,10 @@ interface UsePortalIdAuthActions {
 }
 
 export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions {
+  const portalAuthFetch = useMemo(
+    () => createPortalAuthFetch(DEFAULT_PORTAL_TOKEN_KEY),
+    [],
+  );
   const [state, setState] = useState<UsePortalIdAuthState>({
     isAuthenticated: false,
     isLoading: false,
@@ -275,11 +283,10 @@ export function usePortalIdAuth(): UsePortalIdAuthState & UsePortalIdAuthActions
       const session = localStorage.getItem("portal_session");
       if (session) {
         // Notify backend of logout
-        await fetch("/api/portal/v1/auth/logout", {
+        await portalAuthFetch("/api/portal/v1/auth/logout", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
           },
           body: JSON.stringify({ session_id: JSON.parse(session).session_id }),
         });

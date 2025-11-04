@@ -22,6 +22,7 @@ IPv6 Support:
 - RADIUS integration: Assigns both Framed-IP-Address and Framed-IPv6-Address
 - CPE configuration: Configures dual-stack WAN on customer premises equipment
 """
+
 # mypy: disable-error-code="attr-defined,assignment,arg-type,union-attr,call-arg,misc,no-untyped-call"
 
 import logging

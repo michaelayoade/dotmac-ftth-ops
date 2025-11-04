@@ -1300,9 +1300,11 @@ def map_cable_model_to_graphql(cable_model: FiberCableModel) -> FiberCable:
         used_strands=used_strands,
         manufacturer=cable_model.manufacturer,
         model=cable_model.model,
-        installation_type=_map_db_installation_type_to_graphql(cable_model.installation_type)
-        if cable_model.installation_type is not None
-        else CableInstallationType.AERIAL,
+        installation_type=(
+            _map_db_installation_type_to_graphql(cable_model.installation_type)
+            if cable_model.installation_type is not None
+            else CableInstallationType.AERIAL
+        ),
         route=route,
         length_meters=float(cable_model.length_km or 0.0) * 1000.0,
         strands=[],
@@ -1358,8 +1360,9 @@ def map_splice_point_model_to_graphql(splice_model: SplicePointModel) -> SpliceP
         is_active=is_active,
         location=_geo_or_default(splice_model.location_geojson),
         address=None,
-        distribution_point_id=
-        str(splice_model.distribution_point_id) if splice_model.distribution_point_id else None,
+        distribution_point_id=(
+            str(splice_model.distribution_point_id) if splice_model.distribution_point_id else None
+        ),
         closure_type=splice_model.enclosure_type,
         manufacturer=None,
         model=None,
@@ -1422,9 +1425,11 @@ def map_distribution_point_model_to_graphql(
         port_count=0,
         incoming_cables=[],
         outgoing_cables=[],
-        total_cables_connected=len(dp_model.splice_points)
-        if hasattr(dp_model, "splice_points") and dp_model.splice_points
-        else 0,
+        total_cables_connected=(
+            len(dp_model.splice_points)
+            if hasattr(dp_model, "splice_points") and dp_model.splice_points
+            else 0
+        ),
         splice_points=[str(splice.id) for splice in getattr(dp_model, "splice_points", []) or []],
         splice_point_count=len(getattr(dp_model, "splice_points", []) or []),
         has_power=False,

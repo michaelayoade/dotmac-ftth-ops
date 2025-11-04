@@ -127,9 +127,9 @@ class TicketService:
             ticket_type=data.ticket_type,
             service_address=data.service_address,
             affected_services=list(data.affected_services) if data.affected_services else [],
-            device_serial_numbers=list(data.device_serial_numbers)
-            if data.device_serial_numbers
-            else [],
+            device_serial_numbers=(
+                list(data.device_serial_numbers) if data.device_serial_numbers else []
+            ),
         )
         ticket.created_by = current_user.user_id
         ticket.last_response_at = datetime.now(UTC)

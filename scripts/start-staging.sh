@@ -20,14 +20,14 @@ echo "✅ Loading environment from .env.multi-tenant"
 export $(grep -v '^#' .env.multi-tenant | grep -v '^$' | xargs)
 
 echo "✅ Environment loaded"
-echo "   DEPLOYMENT_MODE: $DEPLOYMENT_MODE"
-echo "   ENVIRONMENT: $ENVIRONMENT"
-echo "   DATABASE: PostgreSQL at localhost:5432"
-echo "   REDIS: localhost:6379"
+echo "   DEPLOYMENT_MODE: ${DEPLOYMENT_MODE:-multi_tenant}"
+echo "   ENVIRONMENT: ${ENVIRONMENT:-staging}"
+echo "   API container: docker-compose.base.yml (platform-backend service)"
 echo ""
 
-# Start server
-echo "🚀 Starting FastAPI server on $HOST:$PORT..."
+# Start server via Docker Compose
+echo "🚀 Starting FastAPI app container..."
+echo "   (Ctrl+C to stop; use 'docker compose -f docker-compose.base.yml down' to tear down)"
 echo ""
 
-poetry run uvicorn dotmac.platform.main:app --host "$HOST" --port "$PORT"
+docker compose -f docker-compose.base.yml up platform-backend

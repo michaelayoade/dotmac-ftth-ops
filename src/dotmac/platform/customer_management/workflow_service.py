@@ -297,21 +297,23 @@ class CustomerService:
                     or service_address.get("address_line1")
                     or service_address.get("street")
                 ),
-                service_address_line2=service_address.get("line2")
-                if isinstance(service_address, dict)
-                else None,
-                service_city=service_address.get("city")
-                if isinstance(service_address, dict)
-                else None,
-                service_state_province=service_address.get("state")
-                if isinstance(service_address, dict)
-                else None,
-                service_postal_code=service_address.get("postal_code")
-                if isinstance(service_address, dict)
-                else None,
-                service_country=service_address.get("country")
-                if isinstance(service_address, dict)
-                else None,
+                service_address_line2=(
+                    service_address.get("line2") if isinstance(service_address, dict) else None
+                ),
+                service_city=(
+                    service_address.get("city") if isinstance(service_address, dict) else None
+                ),
+                service_state_province=(
+                    service_address.get("state") if isinstance(service_address, dict) else None
+                ),
+                service_postal_code=(
+                    service_address.get("postal_code")
+                    if isinstance(service_address, dict)
+                    else None
+                ),
+                service_country=(
+                    service_address.get("country") if isinstance(service_address, dict) else None
+                ),
             )
 
             desired_status = customer_data.get("status", CustomerStatus.ACTIVE.value)

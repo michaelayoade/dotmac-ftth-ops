@@ -1,8 +1,0 @@
-# Playwright screenshot baselines
-# These are committed to track visual changes over time
-
-# Keep all screenshots for visual regression testing
-!*.png
-
-# Keep this .gitignore file
-!.gitignore

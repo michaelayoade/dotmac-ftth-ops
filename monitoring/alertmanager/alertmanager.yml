@@ -1,0 +1,26 @@
+# Alertmanager configuration for local development
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'tenant_id']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'dev-null'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'dev-null'
+      continue: true
+
+receivers:
+  - name: 'dev-null'
+    # No notifications in local dev - just accept alerts
+
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'tenant_id']

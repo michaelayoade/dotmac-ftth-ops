@@ -940,9 +940,9 @@ class FiberService:
                 {
                     "point_id": p.point_id,
                     "point_type": p.point_type.value,
-                    "utilization": round((p.used_ports / p.total_ports * 100), 2)
-                    if p.total_ports
-                    else 0,
+                    "utilization": (
+                        round((p.used_ports / p.total_ports * 100), 2) if p.total_ports else 0
+                    ),
                 }
                 for p in near_capacity
             ],
@@ -966,9 +966,11 @@ class FiberService:
                 "homes_passed": total_homes_passed,
                 "homes_connected": total_homes_connected,
                 "penetration_percentage": round(
-                    (total_homes_connected / total_homes_passed * 100)
-                    if total_homes_passed > 0
-                    else 0,
+                    (
+                        (total_homes_connected / total_homes_passed * 100)
+                        if total_homes_passed > 0
+                        else 0
+                    ),
                     2,
                 ),
             },
@@ -976,9 +978,11 @@ class FiberService:
                 "businesses_passed": total_businesses_passed,
                 "businesses_connected": total_businesses_connected,
                 "penetration_percentage": round(
-                    (total_businesses_connected / total_businesses_passed * 100)
-                    if total_businesses_passed > 0
-                    else 0,
+                    (
+                        (total_businesses_connected / total_businesses_passed * 100)
+                        if total_businesses_passed > 0
+                        else 0
+                    ),
                     2,
                 ),
             },

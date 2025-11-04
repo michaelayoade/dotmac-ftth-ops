@@ -11,7 +11,7 @@
     "test:debug": "playwright test --debug",
     "test:ui": "playwright test --ui",
     "test:report": "playwright show-report",
-    "test:codegen": "playwright codegen localhost:3000",
+    "test:codegen": "playwright codegen localhost:3001",
     "install:browsers": "playwright install",
     "install:deps": "playwright install-deps"
   },

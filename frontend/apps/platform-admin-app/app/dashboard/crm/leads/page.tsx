@@ -277,7 +277,7 @@ export default function LeadsManagementPage() {
         cell: ({ row }: { row: Row<Lead> }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="Open actions menu">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>

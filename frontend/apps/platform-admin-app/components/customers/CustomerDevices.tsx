@@ -151,7 +151,7 @@ export function CustomerDevices({ customerId }: CustomerDevicesProps) {
   };
 
   const handleViewDevice = (deviceId: string) => {
-    window.open(`/tenant/devices/${deviceId}`, "_blank");
+    window.open(`/tenant-portal/devices/${deviceId}`, "_blank");
   };
 
   if (loading) {

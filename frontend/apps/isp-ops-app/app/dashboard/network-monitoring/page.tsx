@@ -218,7 +218,7 @@ export default function NetworkMonitoringPage() {
         }
       `;
 
-      const response = await fetch("/api/graphql", {
+      const response = await fetch("/api/v1/graphql", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

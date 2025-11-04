@@ -8,7 +8,7 @@ Complete instructions for bringing up the DotMac platform across **local develop
 
 | Target | Purpose | Infra Command | Frontend Apps | Data Prep | Notes |
 |--------|---------|---------------|---------------|-----------|-------|
-| Local Development | Feature work, debugging | `make start-platform`, `make start-isp` | `pnpm dev:base-app`, `pnpm dev:isp`, `pnpm dev:admin` | `make db-seed` (optional) | Hot reload enabled, seeded accounts available |
+| Local Development | Feature work, debugging | `make start-platform`, `make start-isp` | `pnpm dev:isp`, `pnpm dev:admin` | `make db-seed` (optional) | Hot reload enabled, seeded accounts available |
 | Staging (Docker host) | Shared validation, QA | `ENVIRONMENT=staging make start-all` | `pnpm --filter <app> build && pnpm --filter <app> start` | `make db-seed` or curated fixtures | Run on a remote host/VM; adjust domains and ports |
 | Production | Customer traffic | Hardened Compose run (`docker compose ... up -d`) | Pre-built Next.js apps served via `next start`/reverse proxy | Live data only | Enable TLS, external secrets, observability, systemd services |
 
@@ -38,27 +38,26 @@ cp .env.example .env.production      # Production (harden secrets, disable dev f
 
 ## Baseline Infrastructure Workflow
 
-All environments ultimately rely on the same Compose definitions:
+All environments ultimately rely on two Compose definitions:
 
-- `docker-compose.base.yml` — platform services (PostgreSQL, Redis, Vault/OpenBao, MinIO, optional observability)
-- `docker-compose.isp.yml` — ISP services (FreeRADIUS, NetBox, GenieACS, AWX, LibreNMS, TimescaleDB, WireGuard, workers)
+- `docker-compose.base.yml` — platform backend API + admin frontend
+- `docker-compose.isp.yml` — ISP backend API + ISP operations frontend
 - `scripts/infra.sh` — wrapper script used by the Makefile targets
 
 Common commands:
 
 ```bash
-make start-platform        # postgres, redis, vault, minio
-make start-platform-obs    # adds otel-collector, Prometheus, Jaeger, Grafana
-make start-isp             # FreeRADIUS, NetBox, GenieACS, AWX, LibreNMS, TimescaleDB, WireGuard
+make start-platform        # platform backend + admin UI
+make start-isp             # ISP backend + operations UI
 make status-all            # health summary
 make logs-isp              # follow ISP service logs
 make clean-all             # teardown (removes volumes!) – use with caution
 ```
 
-You can call the wrapper directly for finer control (e.g., to combine modes or disable observability):
+You can call the wrapper directly for finer control:
 
 ```bash
-./scripts/infra.sh platform start --with-obs
+./scripts/infra.sh platform start
 ./scripts/infra.sh isp status
 ./scripts/infra.sh all restart
 ```
@@ -74,15 +73,18 @@ poetry install --with dev
 poetry run alembic upgrade head
 ```
 
-Start the API:
+Start the API (Docker app service):
 
 ```bash
-ENVIRONMENT=${ENVIRONMENT:-development} \
-poetry run uvicorn src.dotmac.platform.main:app \
-  --reload --host 0.0.0.0 --port 8000
+make dev              # foreground
+# or
+docker compose -f docker-compose.base.yml up platform-backend
 ```
 
-For production/staging, drop `--reload` and set the appropriate host/port via environment variables or a process supervisor (systemd, gunicorn, etc.).
+For production/staging, bake the image and run it via Docker Compose (see `docker-compose.base.yml`) or your orchestrator.
+
+> Need bare-metal debugging? Launch `make dev-host`, but update `OBSERVABILITY__*` URLs to
+> `http://localhost` or set `OBSERVABILITY__OTEL_ENABLED=false` first so required health checks pass.
 
 ---
 
@@ -95,7 +97,6 @@ All Next.js apps live under `frontend/apps/` and share the pnpm workspace.
 ```bash
 cd frontend
 pnpm install
-pnpm dev:base-app            # base customer portal (default port 3000)
 pnpm dev:isp                 # ISP operations portal (port 3001)
 pnpm dev:admin               # platform admin portal (port 3002)
 ```
@@ -107,12 +108,10 @@ Each command runs `next dev` with hot reloading. Ensure `NEXT_PUBLIC_API_BASE_UR
 ```bash
 cd frontend
 pnpm install --frozen-lockfile
-pnpm --filter @dotmac/base-app build
 pnpm --filter @dotmac/isp-ops-app build
 pnpm --filter @dotmac/platform-admin-app build
 
-# Serve with a process manager/reverse proxy
-pnpm --filter @dotmac/base-app start            # defaults to port 3000
+# Serve with a process manager/reverse proxy (after `pnpm install --frozen-lockfile`)
 pnpm --filter @dotmac/isp-ops-app start -- -p 3001
 pnpm --filter @dotmac/platform-admin-app start  # uses port 3002
 ```
@@ -129,14 +128,13 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
 2. **Start infrastructure**:  
    ```bash
    make start-platform
-   make start-platform-obs      # optional
-   make start-isp               # optional, heavy stack
+   make start-isp               # optional
    ```
 3. **Install & migrate**: `poetry install --with dev`, `poetry run alembic upgrade head`.
 4. **Seed data (optional)**: `make db-seed`.
-5. **Run API**: `poetry run uvicorn ... --reload`.
-6. **Run frontends**: `pnpm dev:base-app`, `pnpm dev:isp`, `pnpm dev:admin`.
-7. **Verify**: visit http://localhost:8000/docs, http://localhost:3000, http://localhost:3001, http://localhost:3002.
+5. **Run API**: `make dev` (or `docker compose -f docker-compose.base.yml up -d platform-backend`).
+6. **Run frontends**: `pnpm dev:isp`, `pnpm dev:admin`.
+7. **Verify**: visit http://localhost:8000/docs, http://localhost:8001/docs (if ISP stack running), http://localhost:3001, http://localhost:3002.
 8. **Troubleshoot**: `make status-all`, `docker logs <container> --tail 50`, `make clean-*` if rebuild needed.
 
 ### Staging
@@ -146,9 +144,9 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
 3. **Run infrastructure** (typically on a single host or VM):
    ```bash
    export ENVIRONMENT=staging
-   make start-all              # includes observability
+   make start-all
    ```
-   Alternatively: `./scripts/infra.sh all start --with-obs`.
+   Alternatively: `./scripts/infra.sh all start`.
 4. **Run migrations**:
    ```bash
    poetry install
@@ -156,8 +154,8 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
    ```
 5. **Seed sample data** (optional): `ENVIRONMENT=staging make db-seed`.
 6. **Build frontends**: run the pnpm build commands, then serve with `next start` or containerize them.
-7. **Expose services** via reverse proxy and HTTPS. Map staging domains to the relevant ports (3000/3001/3002, 8000, etc.).
-8. **Monitoring**: ensure Prometheus, Grafana, Jaeger are reachable (or disable observability in staging if not needed with `make start-all-no-obs`).
+7. **Expose services** via reverse proxy and HTTPS. Map staging domains to the relevant ports (3000/3001/3002, 8000, etc.) or publish Docker ingress.
+8. **Monitoring**: point observability targets at your external stack or disable related health checks.
 
 ### Production
 
@@ -177,17 +175,16 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
 3. **Deploy infrastructure**:
    ```bash
    docker compose --env-file .env.production \
-     -f docker-compose.base.yml \
-     --profile observability up -d
+     -f docker-compose.base.yml up -d platform-backend platform-frontend
 
    docker compose --env-file .env.production \
-     -f docker-compose.isp.yml up -d
+     -f docker-compose.isp.yml up -d isp-backend isp-frontend
    ```
    Scale services or split them across nodes as required.
 4. **Run migrations** with the production settings:
    ```bash
    docker compose --env-file .env.production \
-     -f docker-compose.base.yml exec -T app \
+     -f docker-compose.base.yml exec -T platform-backend \
      poetry run alembic upgrade head
    ```
 5. **Frontends**: build once, serve via `next start` behind nginx/Envoy or export static builds if using ISR.
@@ -215,7 +212,8 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
 
 | Service | URL (default) | What to verify |
 |---------|---------------|----------------|
-| API | http://localhost:8000/health | 200 OK health response |
+| Platform API | http://localhost:8000/health | 200 OK health response |
+| ISP API | http://localhost:8001/health | 200 OK health response (ISP stack) |
 | FastAPI docs | http://localhost:8000/docs | OpenAPI renders |
 | ISP Ops App | http://localhost:3001 | Can log in with seeded credentials |
 | Platform Admin App | http://localhost:3002 | Navigation, tenant switcher |
@@ -240,4 +238,3 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
   ```
 
 For advanced debugging, refer to `docs/TROUBLESHOOTING_PLAYBOOKS.md` and `docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md`.
-

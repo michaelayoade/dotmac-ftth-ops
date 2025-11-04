@@ -313,7 +313,7 @@ describe("Input Component", () => {
         <Input
           label="Email Address"
           type="email"
-          helperText="We'll never share your email"
+          helperText="We&apos;ll never share your email"
           required
         />,
       );

@@ -228,7 +228,7 @@ class TestHealthCheckerEdgeCases:
         assert result.name == "storage"
         assert result.status == ServiceStatus.DEGRADED
         assert "unknown-storage-provider" in result.message
-        assert result.required is False
+        assert result.required is True
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     @patch("dotmac.platform.monitoring.health_checks.httpx")
@@ -246,6 +246,7 @@ class TestHealthCheckerEdgeCases:
         assert result.name == "observability"
         assert result.status == ServiceStatus.DEGRADED
         assert "Client creation failed" in result.message
+        assert result.required is True
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     @patch("dotmac.platform.monitoring.health_checks.httpx")
@@ -263,6 +264,7 @@ class TestHealthCheckerEdgeCases:
         assert result.name == "observability"
         assert result.status == ServiceStatus.DEGRADED
         assert "Request timeout" in result.message
+        assert result.required is True
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     @patch("dotmac.platform.monitoring.health_checks.httpx")
@@ -294,6 +296,7 @@ class TestHealthCheckerEdgeCases:
             assert result.name == "observability"
             assert result.status == expected_status
             assert result.message == expected_message_part
+            assert result.required is True
 
     @patch("dotmac.platform.monitoring.health_checks.httpx.Client")
     @patch("dotmac.platform.monitoring.health_checks.socket.socket")
@@ -374,19 +377,33 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_storage") as mock_storage,
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
+            patch.object(health_checker, "check_alertmanager") as mock_am,
+            patch.object(health_checker, "check_prometheus") as mock_prom,
+            patch.object(health_checker, "check_grafana") as mock_graf,
+            patch.object(health_checker, "check_radius_server") as mock_radius,
         ):
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
-            mock_vault.return_value = ServiceHealth("vault", ServiceStatus.HEALTHY, required=False)
+            mock_vault.return_value = ServiceHealth("vault", ServiceStatus.HEALTHY, required=True)
             mock_storage.return_value = ServiceHealth(
-                "storage", ServiceStatus.HEALTHY, required=False
+                "storage", ServiceStatus.HEALTHY, required=True
             )
             mock_celery.return_value = ServiceHealth(
-                "celery_broker", ServiceStatus.HEALTHY, required=False
+                "celery_broker", ServiceStatus.HEALTHY, required=True
             )
             mock_obs.return_value = ServiceHealth(
-                "observability", ServiceStatus.HEALTHY, required=False
+                "observability", ServiceStatus.HEALTHY, required=True
+            )
+            mock_am.return_value = ServiceHealth(
+                "alertmanager", ServiceStatus.HEALTHY, required=True
+            )
+            mock_prom.return_value = ServiceHealth(
+                "prometheus", ServiceStatus.HEALTHY, required=True
+            )
+            mock_graf.return_value = ServiceHealth("grafana", ServiceStatus.HEALTHY, required=True)
+            mock_radius.return_value = ServiceHealth(
+                "radius_server", ServiceStatus.HEALTHY, required=True
             )
 
             all_healthy, checks = health_checker.run_all_checks()
@@ -399,6 +416,10 @@ class TestHealthCheckerEdgeCases:
                 "storage",
                 "celery_broker",
                 "observability",
+                "alertmanager",
+                "prometheus",
+                "grafana",
+                "radius_server",
             ]
             actual_order = [check.name for check in checks]
             assert actual_order == expected_order
@@ -412,19 +433,33 @@ class TestHealthCheckerEdgeCases:
             patch.object(health_checker, "check_storage") as mock_storage,
             patch.object(health_checker, "check_celery_broker") as mock_celery,
             patch.object(health_checker, "check_observability") as mock_obs,
+            patch.object(health_checker, "check_alertmanager") as mock_am,
+            patch.object(health_checker, "check_prometheus") as mock_prom,
+            patch.object(health_checker, "check_grafana") as mock_graf,
+            patch.object(health_checker, "check_radius_server") as mock_radius,
         ):
             # Mock return values
             mock_db.return_value = ServiceHealth("database", ServiceStatus.HEALTHY, required=True)
             mock_redis.return_value = ServiceHealth("redis", ServiceStatus.HEALTHY, required=True)
-            mock_vault.return_value = ServiceHealth("vault", ServiceStatus.HEALTHY, required=False)
+            mock_vault.return_value = ServiceHealth("vault", ServiceStatus.HEALTHY, required=True)
             mock_storage.return_value = ServiceHealth(
-                "storage", ServiceStatus.HEALTHY, required=False
+                "storage", ServiceStatus.HEALTHY, required=True
             )
             mock_celery.return_value = ServiceHealth(
-                "celery_broker", ServiceStatus.HEALTHY, required=False
+                "celery_broker", ServiceStatus.HEALTHY, required=True
             )
             mock_obs.return_value = ServiceHealth(
-                "observability", ServiceStatus.HEALTHY, required=False
+                "observability", ServiceStatus.HEALTHY, required=True
+            )
+            mock_am.return_value = ServiceHealth(
+                "alertmanager", ServiceStatus.HEALTHY, required=True
+            )
+            mock_prom.return_value = ServiceHealth(
+                "prometheus", ServiceStatus.HEALTHY, required=True
+            )
+            mock_graf.return_value = ServiceHealth("grafana", ServiceStatus.HEALTHY, required=True)
+            mock_radius.return_value = ServiceHealth(
+                "radius_server", ServiceStatus.HEALTHY, required=True
             )
 
             all_healthy, checks = health_checker.run_all_checks()
@@ -436,6 +471,10 @@ class TestHealthCheckerEdgeCases:
             mock_storage.assert_called_once_with()
             mock_celery.assert_called_once_with()
             mock_obs.assert_called_once_with()
+            mock_am.assert_called_once_with()
+            mock_prom.assert_called_once_with()
+            mock_graf.assert_called_once_with()
+            mock_radius.assert_called_once_with()
 
 
 @pytest.mark.integration
@@ -451,7 +490,8 @@ class TestStartupDependenciesEdgeCases:
         mock_checks = [
             ServiceHealth("database", ServiceStatus.HEALTHY, "OK", required=True),
             ServiceHealth("redis", ServiceStatus.UNHEALTHY, "Failed", required=True),
-            ServiceHealth("vault", ServiceStatus.DEGRADED, "Slow", required=False),
+            ServiceHealth("vault", ServiceStatus.DEGRADED, "Slow", required=True),
+            ServiceHealth("alertmanager", ServiceStatus.HEALTHY, "OK", required=True),
         ]
 
         with patch("dotmac.platform.monitoring.health_checks.HealthChecker") as mock_checker_class:
@@ -493,18 +533,18 @@ class TestStartupDependenciesEdgeCases:
         mock_checks = [
             ServiceHealth("database", ServiceStatus.HEALTHY, "OK", required=True),
             ServiceHealth("redis", ServiceStatus.HEALTHY, "OK", required=True),
-            ServiceHealth("vault", ServiceStatus.UNHEALTHY, "Failed", required=False),
-            ServiceHealth("observability", ServiceStatus.DEGRADED, "Slow", required=False),
+            ServiceHealth("vault", ServiceStatus.UNHEALTHY, "Failed", required=True),
+            ServiceHealth("observability", ServiceStatus.DEGRADED, "Slow", required=True),
         ]
 
         with patch("dotmac.platform.monitoring.health_checks.HealthChecker") as mock_checker_class:
             mock_checker = MagicMock()
-            mock_checker.run_all_checks.return_value = (True, mock_checks)  # All required healthy
+            mock_checker.run_all_checks.return_value = (False, mock_checks)
             mock_checker_class.return_value = mock_checker
 
             result = check_startup_dependencies()
 
-            assert result is True  # Should succeed despite optional service failures
+            assert result is False
 
     @patch("dotmac.platform.monitoring.health_checks.settings")
     def test_check_startup_dependencies_no_failed_required(self, mock_settings):
@@ -514,7 +554,7 @@ class TestStartupDependenciesEdgeCases:
         mock_checks = [
             ServiceHealth("database", ServiceStatus.HEALTHY, "OK", required=True),
             ServiceHealth("redis", ServiceStatus.HEALTHY, "OK", required=True),
-            ServiceHealth("vault", ServiceStatus.UNHEALTHY, "Failed", required=False),
+            ServiceHealth("vault", ServiceStatus.HEALTHY, "OK", required=True),
         ]
 
         with patch("dotmac.platform.monitoring.health_checks.HealthChecker") as mock_checker_class:

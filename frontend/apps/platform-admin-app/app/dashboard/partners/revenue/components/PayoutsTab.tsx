@@ -223,7 +223,7 @@ export function PayoutsTab() {
             <p className="text-sm text-muted-foreground text-center">
               {statusFilter !== "all"
                 ? "No payouts match your filters. Try adjusting your criteria."
-                : "You don't have any payouts yet."}
+                : "You don&apos;t have any payouts yet."}
             </p>
           </CardContent>
         </Card>

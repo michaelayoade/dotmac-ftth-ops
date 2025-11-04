@@ -17,6 +17,7 @@ from . import NotificationChannelPlugin, register_plugin
 
 class _BasePlugin(NotificationChannelPlugin):
     provider_class: type[NotificationChannelProvider]
+
     def create_provider(self, config: dict[str, Any]) -> NotificationChannelProvider:
         return self.provider_class(config=config)
 

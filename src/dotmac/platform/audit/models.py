@@ -21,6 +21,7 @@ if TYPE_CHECKING:
 else:
     Base = BaseRuntime
 
+
 class ActivityType(str, Enum):
     """Types of activities that can be audited."""
 

@@ -21,6 +21,8 @@ import {
 import { Customer } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
+import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";
 
 interface CustomersListProps {
   customers: Customer[];
@@ -139,6 +141,16 @@ interface CustomerRowProps {
 function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps) {
   const [showActions, setShowActions] = useState(false);
   const { toast } = useToast();
+  const buildAuthHeaders = () => {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    const token = getOperatorAccessToken();
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+    return headers;
+  };
 
   const customerName =
     customer.display_name ||
@@ -156,10 +168,8 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
         `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/impersonate`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: buildAuthHeaders(),
         },
       );
 
@@ -168,7 +178,11 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
       const data = await response.json();
 
       // Store the impersonation token
-      localStorage.setItem("customer_access_token", data.access_token);
+      try {
+        localStorage.setItem("customer_access_token", data.access_token);
+      } catch (error) {
+        logger.debug("Unable to persist customer access token", error);
+      }
 
       // Open customer portal in new tab
       window.open("/customer-portal", "_blank");
@@ -197,10 +211,8 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
         `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/status`,
         {
           method: "PATCH",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: buildAuthHeaders(),
           body: JSON.stringify({ status: newStatus }),
         },
       );
@@ -232,10 +244,8 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
         `${platformConfig.api.baseUrl}/api/v1/customers/${customer.id}/reset-password`,
         {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-            "Content-Type": "application/json",
-          },
+          credentials: "include",
+          headers: buildAuthHeaders(),
         },
       );
 

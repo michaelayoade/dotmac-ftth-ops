@@ -354,13 +354,7 @@ def snapshot_database_state() -> DatabaseState:
 def restore_database_state(state: DatabaseState) -> None:
     """Restore database wiring to a previously captured snapshot."""
 
-    global \
-        _sync_engine, \
-        _async_engine, \
-        SyncSessionLocal, \
-        AsyncSessionLocal, \
-        _async_session_maker, \
-        async_session_maker
+    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
 
     _sync_engine = state.sync_engine
     _async_engine = state.async_engine
@@ -379,13 +373,7 @@ def configure_database_for_testing(
 ) -> None:
     """Override engines or session factories for test scenarios."""
 
-    global \
-        _sync_engine, \
-        _async_engine, \
-        SyncSessionLocal, \
-        AsyncSessionLocal, \
-        _async_session_maker, \
-        async_session_maker
+    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
 
     if sync_engine is not None:
         _sync_engine = sync_engine

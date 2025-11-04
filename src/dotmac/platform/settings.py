@@ -102,6 +102,22 @@ class ObservabilitySettings(BaseModel):  # BaseModel resolves to Any in isolatio
         default="120/minute",
         description="Rate limit applied to the Alertmanager webhook endpoint",
     )
+    alertmanager_base_url: str | None = Field(
+        default="http://localhost:9093",
+        description="Base URL for Alertmanager readiness checks",
+    )
+    prometheus_base_url: str | None = Field(
+        default="http://localhost:9090",
+        description="Base URL for Prometheus readiness checks",
+    )
+    grafana_base_url: str | None = Field(
+        default="http://localhost:3400",
+        description="Base URL for Grafana health checks",
+    )
+    grafana_api_token: str | None = Field(
+        default=None,
+        description="Optional Grafana API token used for health checks",
+    )
 
 
 def _default_observability_settings() -> ObservabilitySettings:
@@ -547,7 +563,9 @@ class Settings(BaseSettings):
     )
 
     # Server configuration
-    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
+    host: str = Field(
+        "0.0.0.0", description="Server host"
+    )  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")

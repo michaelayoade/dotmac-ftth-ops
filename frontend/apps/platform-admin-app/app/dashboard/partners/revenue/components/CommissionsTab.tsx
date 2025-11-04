@@ -209,7 +209,7 @@ export function CommissionsTab() {
             <p className="text-sm text-muted-foreground text-center">
               {statusFilter !== "all"
                 ? "No commissions match your filters. Try adjusting your criteria."
-                : "You don't have any commission events yet."}
+                : "You don&apos;t have any commission events yet."}
             </p>
           </CardContent>
         </Card>

@@ -120,7 +120,7 @@ export function CustomerSubscriptions({ customerId }: CustomerSubscriptionsProps
 
   const handleManageSubscription = (subscriptionId: string) => {
     // Navigate to subscription management page
-    window.open(`/tenant/subscriptions/${subscriptionId}`, "_blank");
+    window.open(`/tenant-portal/subscriptions/${subscriptionId}`, "_blank");
   };
 
   if (loading) {

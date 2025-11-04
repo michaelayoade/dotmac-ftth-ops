@@ -583,9 +583,11 @@ class MetricsService:
             SubscriberByStatus(
                 status=status.value,
                 count=status_counts[status],
-                percentage=round(status_counts[status] / total_subscribers * 100, 1)
-                if total_subscribers
-                else 0.0,
+                percentage=(
+                    round(status_counts[status] / total_subscribers * 100, 1)
+                    if total_subscribers
+                    else 0.0
+                ),
             )
             for status in SubscriberStatus
         ]

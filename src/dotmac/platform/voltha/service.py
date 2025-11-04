@@ -370,7 +370,10 @@ class VOLTHAService:
                 continue
 
             # Get ports for this OLT
-            ports = [self._coerce_mapping(port) for port in await self.client.get_logical_device_ports(olt_id)]
+            ports = [
+                self._coerce_mapping(port)
+                for port in await self.client.get_logical_device_ports(olt_id)
+            ]
             olt_devices = devices_by_parent.get(str(root_device_id), [])
 
             for port in ports:

@@ -107,10 +107,18 @@ export default function ContactsPage() {
     },
   });
 
+  const getContactDisplayName = (contact: Contact) => {
+    if (contact.display_name) {
+      return contact.display_name;
+    }
+    return [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
+  };
+
   const handleDelete = (contact: Contact) => {
+    const displayName = getContactDisplayName(contact);
     if (
       confirm(
-        `Are you sure you want to delete contact "${contact.display_name || contact.first_name + ' ' + contact.last_name}"? This action cannot be undone.`
+        `Are you sure you want to delete contact "${displayName}"? This action cannot be undone.`
       )
     ) {
       deleteMutation.mutate(contact.id);
@@ -278,7 +286,7 @@ export default function ContactsPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" aria-label="Open actions menu">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>

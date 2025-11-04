@@ -4,6 +4,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { getOperatorAccessToken } from "../../../utils/operatorAuth";
 import { useISPTenant } from "./useISPTenant";
 import { usePortalIdAuth } from "./usePortalIdAuth";
 
@@ -66,7 +67,7 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
 
   // Build WebSocket URL with authentication
   const buildWebSocketUrl = useCallback(() => {
-    const accessToken = localStorage.getItem("access_token");
+    const accessToken = getOperatorAccessToken();
     const tenantId = session?.tenant.id;
 
     const wsUrl = new URL(url);

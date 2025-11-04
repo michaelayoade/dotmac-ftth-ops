@@ -6,6 +6,40 @@ import axios from "axios";
 import { authService, User } from "@/lib/api/services/auth.service";
 import { logger } from "@/lib/logger";
 import { apiClient } from "@/lib/api/client";
+import {
+  clearOperatorAuthTokens,
+  getOperatorAccessToken,
+  setOperatorAccessToken,
+} from "../../../shared/utils/operatorAuth";
+
+const setAuthHeader = (token: string | null) => {
+  const headers = apiClient.defaults?.headers as any;
+  if (!headers) {
+    return;
+  }
+
+  const common = headers.common || (headers.common = {});
+
+  if (token) {
+    common.Authorization = `Bearer ${token}`;
+  } else if (common.Authorization) {
+    delete common.Authorization;
+  }
+};
+
+const persistAccessToken = (accessToken: string | null) => {
+  setOperatorAccessToken(accessToken);
+  setAuthHeader(accessToken);
+};
+
+const clearTokens = () => {
+  clearOperatorAuthTokens();
+  setAuthHeader(null);
+};
+
+const hydrateTokensFromStorage = () => {
+  setAuthHeader(getOperatorAccessToken());
+};
 
 interface UserPermissions {
   effective_permissions?: Array<{ name: string }>;
@@ -34,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Check if user is authenticated on mount
   useEffect(() => {
+    hydrateTokensFromStorage();
     checkAuth();
   }, []);
 
@@ -65,7 +100,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Store tenant ID in localStorage for API client interceptor
         if (userData.tenant_id) {
-          localStorage.setItem("tenant_id", userData.tenant_id);
+          try {
+            localStorage.setItem("tenant_id", userData.tenant_id);
+          } catch (error) {
+            logger.debug("Unable to persist tenant_id", error);
+          }
+        }
+
+        if (typeof window !== "undefined") {
+          const existingToken = getOperatorAccessToken();
+          if (!existingToken) {
+            try {
+              const refreshed = await authService.refreshToken();
+              persistAccessToken(refreshed?.access_token ?? null);
+            } catch (tokenErr) {
+              logger.warn(
+                "Failed to refresh auth token during auth check",
+                tokenErr instanceof Error ? tokenErr : new Error(String(tokenErr)),
+              );
+            }
+          } else {
+            setAuthHeader(existingToken);
+          }
         }
 
         // Fetch user permissions from RBAC endpoint
@@ -92,7 +148,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         setUser(null);
         setPermissions(null);
-        localStorage.removeItem("tenant_id");
+        try {
+          localStorage.removeItem("tenant_id");
+        } catch (error) {
+          logger.debug("Unable to clear tenant_id from localStorage", error);
+        }
+        clearTokens();
       }
     } catch (err) {
       console.error("[AuthProvider] Auth check failed:", err);
@@ -111,6 +172,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await new Promise((resolve) => setTimeout(resolve, 3000));
       console.log("[AuthProvider] Clearing user state after error...");
 
+      clearTokens();
       setUser(null);
       setPermissions(null);
     } finally {
@@ -126,11 +188,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const authResponse = await authService.login({ username, password });
 
       if (authResponse && authResponse.user) {
+        persistAccessToken(authResponse.access_token ?? null);
         setUser(authResponse.user);
 
         // Store tenant ID in localStorage for API client interceptor
         if (authResponse.user.tenant_id) {
-          localStorage.setItem("tenant_id", authResponse.user.tenant_id);
+          try {
+            localStorage.setItem("tenant_id", authResponse.user.tenant_id);
+          } catch (error) {
+            logger.debug("Unable to persist tenant_id", error);
+          }
         }
 
         // Fetch permissions after successful login
@@ -163,6 +230,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error("Login failed");
       }
     } catch (err) {
+      clearTokens();
       const errorMessage = err instanceof Error ? err.message : "Login failed";
       setError(errorMessage);
       throw err;
@@ -177,7 +245,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authService.logout();
       setUser(null);
       setPermissions(null);
-      localStorage.removeItem("tenant_id");
+      try {
+        localStorage.removeItem("tenant_id");
+      } catch (error) {
+        logger.debug("Unable to clear tenant_id from localStorage", error);
+      }
+      clearTokens();
       router.push("/login");
     } catch (err) {
       logger.error("Logout failed", err instanceof Error ? err : new Error(String(err)));

@@ -5,7 +5,7 @@
 # NEVER mount this file in production!
 #
 # Usage:
-#   docker-compose.override.yml:
+#   docker-compose.override.yml (create your own override file):
 #     volumes:
 #       - ./config/radius/authorize.test:/etc/raddb/mods-config/files/authorize
 #
