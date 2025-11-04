@@ -169,7 +169,7 @@ describe("AuthProvider", () => {
 
       expect(screen.getByTestId("auth-provider-secure")).toBeInTheDocument();
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Unknown auth variant: unknown. Falling back to 'secure'.",
+        'Unknown auth variant: unknown. Falling back to "secure".',
       );
 
       consoleSpy.mockRestore();

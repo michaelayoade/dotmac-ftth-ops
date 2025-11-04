@@ -419,8 +419,11 @@ export VAULT_TOKEN="<your-token>"
 export VAULT_MOUNT_PATH="secret"
 export VAULT_KV_VERSION="2"
 
-# Start the application
-poetry run uvicorn dotmac.platform.main:app --reload
+# Start the application (Docker)
+make dev
+
+# Or run on host for debugging (ensure observability health checks are disabled)
+# poetry run uvicorn dotmac.platform.main:app --reload
 ```
 
 ### 3. Verify Secrets are Loaded
@@ -463,7 +466,10 @@ unset DATABASE_PASSWORD
 unset RADIUS_SECRET
 
 # Start application - should load all secrets from Vault
-poetry run uvicorn dotmac.platform.main:app
+make dev
+
+# Host-only debugging alternative:
+# poetry run uvicorn dotmac.platform.main:app
 
 # Expected output:
 # [INFO] Environment: production

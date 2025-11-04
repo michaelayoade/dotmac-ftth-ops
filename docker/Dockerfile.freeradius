@@ -1,0 +1,70 @@
+# docker/Dockerfile.freeradius
+# FreeRADIUS with PostgreSQL support
+# Multi-architecture support: linux/amd64, linux/arm64
+
+FROM freeradius/freeradius-server:3.2-alpine
+
+LABEL maintainer="DotMac Platform <ops@dotmac.com>"
+LABEL description="FreeRADIUS server with PostgreSQL support for DotMac Platform"
+LABEL org.opencontainers.image.source="https://github.com/your-org/dotmac-ftth-ops"
+
+# Install PostgreSQL client libraries and dependencies
+RUN apk add --no-cache \
+    postgresql-client \
+    postgresql-dev \
+    gcc \
+    musl-dev \
+    && rm -rf /var/cache/apk/*
+
+# Create directories for configuration
+RUN mkdir -p /etc/freeradius/certs \
+    /etc/freeradius/mods-config/sql/postgresql \
+    /var/log/freeradius
+
+# Copy default configuration files
+# These will be overridden by environment-specific configs at runtime
+COPY config/radius/clients.conf.template /etc/freeradius/clients.conf.template
+COPY config/radius/dictionary /etc/freeradius/dictionary.local
+
+# Copy SQL module configuration
+COPY config/radius/sql.conf /etc/freeradius/mods-available/sql
+
+# Copy PostgreSQL schema
+COPY config/radius/postgresql-schema.sql /etc/freeradius/mods-config/sql/postgresql/schema.sql
+
+# Enable SQL module
+RUN ln -sf /etc/freeradius/mods-available/sql /etc/freeradius/mods-enabled/sql
+
+# Copy entrypoint and config templater
+COPY docker/scripts/freeradius-entrypoint.sh /docker-entrypoint.sh
+COPY docker/scripts/config-templater.sh /usr/local/bin/config-templater.sh
+RUN chmod +x /docker-entrypoint.sh /usr/local/bin/config-templater.sh
+
+# Environment variables for dynamic configuration
+ENV RADIUS_SECRET=changeme \
+    POSTGRES_HOST=postgres \
+    POSTGRES_PORT=5432 \
+    POSTGRES_DB=dotmac \
+    POSTGRES_USER=dotmac_user \
+    POSTGRES_PASSWORD=changeme \
+    RADIUS_LOG_LEVEL=info \
+    RADIUS_DEBUG=no
+
+# Expose RADIUS ports
+# 1812: Authentication
+# 1813: Accounting
+# 18120: Status (internal)
+EXPOSE 1812/udp 1813/udp 18120/tcp
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s --retries=3 \
+    CMD radtest healthcheck healthcheck 127.0.0.1:18120 0 testing123 || exit 1
+
+# Set working directory
+WORKDIR /etc/freeradius
+
+# Use custom entrypoint to process templates
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+# Default command
+CMD ["freeradius", "-f"]

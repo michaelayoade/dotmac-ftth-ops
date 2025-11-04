@@ -160,7 +160,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
 
   const handleCreateCreditNote = useCallback(
     (invoice: Invoice) => {
-      router.push(`/tenant/billing/credit-notes/new?invoice_id=${invoice.invoice_id}`);
+      router.push(`/tenant-portal/billing/credit-notes/new?invoice_id=${invoice.invoice_id}`);
     },
     [router],
   );

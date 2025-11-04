@@ -19,9 +19,15 @@
 
 **For local testing only:**
 
-1. **Copy the override file:**
-   ```bash
-   cp docker-compose.override.yml.example docker-compose.override.yml
+> Note: The legacy `docker-compose.override.yml.example` file has been removed along with the bundled FreeRADIUS service. If you run FreeRADIUS via Docker, create your own override file (or compose stack) that mounts the development-only files described below.
+
+1. **Create a Compose override** that mounts the test artifacts (example snippet):
+   ```yaml
+   services:
+     freeradius:
+       volumes:
+         - ./config/radius/authorize.test:/etc/raddb/mods-config/files/authorize:ro
+         - ./config/radius/clients.test.conf:/etc/raddb/clients.d/localhost.conf:ro
    ```
 
 2. **This enables:**

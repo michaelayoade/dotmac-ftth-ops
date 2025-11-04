@@ -46,7 +46,7 @@ receivers:
   # Routes to our FastAPI endpoint which handles dynamic channel routing
   - name: 'dotmac-webhook'
     webhook_configs:
-      - url: 'http://app:8000/api/v1/monitoring/alerts/webhook'
+      - url: '${ALERTMANAGER_WEBHOOK_URL}'
         send_resolved: true
         http_config:
           headers:

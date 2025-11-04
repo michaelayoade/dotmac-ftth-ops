@@ -165,7 +165,7 @@ export function CustomerBilling({ customerId }: CustomerBillingProps) {
   };
 
   const handleViewInvoice = (invoiceId: string) => {
-    window.open(`/tenant/billing/invoices/${invoiceId}`, "_blank");
+    window.open(`/tenant-portal/billing/invoices/${invoiceId}`, "_blank");
   };
 
   if (loading) {

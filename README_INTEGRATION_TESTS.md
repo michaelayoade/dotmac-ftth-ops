@@ -204,35 +204,24 @@ Out of 9,973 total tests:
 
 ## 🔧 Infrastructure
 
-### Services Started Automatically
+### Required Services
 
-When running `pytest -m integration`:
+Integration tests assume the following dependencies are reachable (either locally or via managed services):
 
-1. **PostgreSQL 15** (`localhost:5432`)
+1. **PostgreSQL 15** (`localhost:5432` by default)
    - Database: `dotmac_test`
    - User: `dotmac_user`
    - Password: `change-me`
 
-2. **Redis 7** (`localhost:6379`)
-   - No persistence (test mode)
+2. **Redis 7** (`localhost:6379` by default)
+   - No persistence required for tests
    - Database: 0
 
-3. **MinIO** (`localhost:9000`)
+3. **MinIO** (`localhost:9000` optional)
    - Console: `localhost:9001`
    - Access: `minioadmin` / `minioadmin123`
 
-### Docker Compose Files
-
-```
-docker-compose.base.yml       # Base service definitions
-docker-compose.test.yml       # Test-specific optimizations
-```
-
-Test optimizations include:
-- tmpfs volumes (faster I/O)
-- Disabled PostgreSQL fsync
-- Redis without persistence
-- Faster health checks
+Provision these services using your preferred tooling (Docker Desktop, Kubernetes, managed cloud instances, etc.) and ensure connection details are reflected in your `.env` file.
 
 ### Environment Variables Set
 

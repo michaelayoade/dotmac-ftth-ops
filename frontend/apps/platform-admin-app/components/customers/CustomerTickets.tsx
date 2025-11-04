@@ -122,11 +122,11 @@ export function CustomerTickets({ customerId }: CustomerTicketsProps) {
   }, [fetchTickets]);
 
   const handleCreateTicket = () => {
-    window.open(`/tenant/tickets/new?customer_id=${customerId}`, "_blank");
+    window.open(`/tenant-portal/tickets/new?customer_id=${customerId}`, "_blank");
   };
 
   const handleViewTicket = (ticketId: string) => {
-    window.open(`/tenant/tickets/${ticketId}`, "_blank");
+    window.open(`/tenant-portal/tickets/${ticketId}`, "_blank");
   };
 
   if (loading) {

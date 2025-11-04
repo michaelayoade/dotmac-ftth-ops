@@ -213,7 +213,7 @@ All functionality implemented by extending existing components.
 ### Build Verification ✅
 
 ```bash
-pnpm --filter @dotmac/base-app build
+pnpm --filter @dotmac/isp-ops-app build
 ```
 
 **Result:** ✅ Build successful

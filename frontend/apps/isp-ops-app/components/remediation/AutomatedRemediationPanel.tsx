@@ -46,7 +46,7 @@ const REMEDIATION_ACTIONS: RemediationAction[] = [
   {
     id: "cpe_restart",
     name: "CPE Auto-Restart",
-    description: "Automatically restart CPE when it's offline for more than 10 minutes",
+    description: "Automatically restart CPE when it&apos;s offline for more than 10 minutes",
     icon: "Zap",
     severity: "medium",
     autoEnabled: false,

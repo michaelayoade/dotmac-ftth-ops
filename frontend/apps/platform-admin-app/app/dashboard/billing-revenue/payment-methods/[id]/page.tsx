@@ -97,6 +97,11 @@ export default function PaymentMethodDetailPage() {
   const [amount1, setAmount1] = useState("");
   const [amount2, setAmount2] = useState("");
 
+  const formatTimestamp = (value: string) => {
+    const date = new Date(value);
+    return `${format(date, "MMM d, yyyy")} at ${format(date, "h:mm a")}`;
+  };
+
   // Find the payment method
   useEffect(() => {
     const method = paymentMethods.find((m) => m.payment_method_id === paymentMethodId);
@@ -522,14 +527,14 @@ export default function PaymentMethodDetailPage() {
             <div className="flex justify-between items-center py-2 border-b">
               <span className="text-sm text-muted-foreground">Created</span>
               <span className="text-sm font-medium">
-                {format(new Date(paymentMethod.created_at), "MMM d, yyyy 'at' h:mm a")}
+                {formatTimestamp(paymentMethod.created_at)}
               </span>
             </div>
             {paymentMethod.verified_at && (
               <div className="flex justify-between items-center py-2 border-b">
                 <span className="text-sm text-muted-foreground">Verified</span>
                 <span className="text-sm font-medium">
-                  {format(new Date(paymentMethod.verified_at), "MMM d, yyyy 'at' h:mm a")}
+                  {formatTimestamp(paymentMethod.verified_at)}
                 </span>
               </div>
             )}

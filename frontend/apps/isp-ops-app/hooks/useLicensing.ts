@@ -26,7 +26,7 @@ import {
   UseLicensingReturn,
 } from "../types/licensing";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8001";
 const LICENSING_API = `${API_BASE_URL}/api/v1/licensing`;
 
 /**

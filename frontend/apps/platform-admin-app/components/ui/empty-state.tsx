@@ -195,9 +195,13 @@ EmptyState.Search = function EmptyStateSearch({
       icon={Icon}
       title="No results found"
       description={
-        searchTerm
-          ? `We couldn't find anything matching "${searchTerm}". Try adjusting your search.`
-          : "Try adjusting your filters or search criteria."
+        searchTerm ? (
+          <>
+            We couldn&apos;t find anything matching &quot;{searchTerm}&quot;. Try adjusting your search.
+          </>
+        ) : (
+          "Try adjusting your filters or search criteria."
+        )
       }
       action={
         onClearSearch

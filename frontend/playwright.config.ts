@@ -5,7 +5,6 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * This config runs E2E tests from multiple locations:
  * - /e2e/tests/*.spec.ts - Shared E2E tests
- * - /apps/base-app/e2e/*.spec.ts - Base app E2E tests
  * - /apps/isp-ops-app/e2e/*.spec.ts - ISP ops E2E tests
  * - /apps/platform-admin-app/e2e/*.spec.ts - Platform admin E2E tests
  *
@@ -38,7 +37,7 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html"]] : "html",
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3001",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -55,8 +54,8 @@ export default defineConfig({
   webServer: process.env.E2E_SKIP_SERVER
     ? undefined
     : {
-        command: "pnpm dev:base-app",
-        url: "http://localhost:3000",
+        command: "pnpm dev:isp",
+        url: "http://localhost:3001",
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
       },

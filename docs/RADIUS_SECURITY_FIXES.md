@@ -48,11 +48,13 @@ test    Cleartext-Password := "test"
 DEFAULT Auth-Type := SQL
 ```
 
-**Usage:**
+**Usage:** Create a custom Compose override (or Helm values) for development that mounts the test-only files:
 ```yaml
-# docker-compose.override.yml (local dev only)
-volumes:
-  - ./config/radius/authorize.test:/etc/raddb/mods-config/files/authorize
+# example override (local dev only)
+services:
+  freeradius:
+    volumes:
+      - ./config/radius/authorize.test:/etc/raddb/mods-config/files/authorize
 ```
 
 ---
@@ -103,13 +105,13 @@ client localhost {
 **Local Dev (`config/radius/clients.test.conf`):**
 ```
 # Contains example NAS devices with weak secrets
-# Only mounted via docker-compose.override.yml
+# Only mounted via a local docker-compose override file (do not commit)
 # NEVER deployed to production
 ```
 
 **Mounting test config (local only):**
 ```yaml
-# docker-compose.override.yml
+# Example docker-compose.override.yml fragment
 volumes:
   - ./config/radius/clients.test.conf:/etc/freeradius/clients.conf
 ```
@@ -129,7 +131,7 @@ volumes:
 
 1. **Copy override file** - Explicitly opt-in to test mode
    ```bash
-   cp docker-compose.override.yml.example docker-compose.override.yml
+   # Create docker-compose.override.yml with the development mounts
    ```
 
 2. **Test user enabled** - Only when override file present
@@ -169,7 +171,7 @@ docker-compose.override.yml    # .gitignore ✅
 - [ ] `RADIUS_LOCALHOST_SECRET` is strong (not `testing123`)
 
 ### ✅ Files
-- [ ] `docker-compose.override.yml` is in `.gitignore`
+- [ ] Local `docker-compose.override.yml` is in `.gitignore`
 - [ ] `authorize.test` is NOT mounted in production
 - [ ] `.env` is in `.gitignore` (if used)
 
@@ -190,7 +192,7 @@ docker-compose.override.yml    # .gitignore ✅
 
 1. **Copy override file:**
    ```bash
-   cp docker-compose.override.yml.example docker-compose.override.yml
+   # Create docker-compose.override.yml with necessary mounts
    ```
 
 2. **Start services:**

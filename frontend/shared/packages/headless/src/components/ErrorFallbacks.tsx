@@ -150,7 +150,7 @@ export function InlineErrorFallback({ error, retry, isRetrying }: ErrorFallbackP
 // Empty state fallback
 export function EmptyStateFallback({
   title = "No data available",
-  description = "There's nothing to show here yet.",
+  description = "There&apos;s nothing to show here yet.",
   action,
   actionLabel = "Try again",
 }: {

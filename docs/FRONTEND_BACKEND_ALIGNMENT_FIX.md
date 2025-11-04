@@ -169,7 +169,7 @@ class RADIUSSessionDisconnect(BaseModel):
 ### Build Verification ✅
 
 ```bash
-pnpm --filter @dotmac/base-app build
+pnpm --filter @dotmac/isp-ops-app build
 ```
 
 **Result:** ✅ Build successful
@@ -178,6 +178,9 @@ pnpm --filter @dotmac/base-app build
 - No build errors
 
 ### Manual Testing Steps
+
+> **Note:** The DotMac backend normally runs inside Docker (`make dev`). Use `make dev-host`
+> and adjust observability settings if you prefer to execute the steps below directly on your host.
 
 1. **Start Backend:**
    ```bash

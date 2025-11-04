@@ -58,7 +58,7 @@ export function useCampaignWebSocket(campaignId: string | null) {
       return;
     }
 
-    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
+    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
     const url = `${base}/api/v1/realtime/ws/campaigns/${campaignId}?token=${token}`;
     const ws = new WebSocket(url);
 

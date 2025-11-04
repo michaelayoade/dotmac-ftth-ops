@@ -434,7 +434,7 @@ export default function PartnerOnboardingWorkflow() {
                     company_name: e.target.value,
                   })
                 }
-                placeholder="Leave empty to use partner's company name"
+                placeholder="Leave empty to use partner&apos;s company name"
                 className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>

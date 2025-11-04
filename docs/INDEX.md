@@ -57,6 +57,7 @@ This repository now ships a lean documentation set. Everything you are likely to
 
 - [PORTAL_ARCHITECTURE.md](architecture/PORTAL_ARCHITECTURE.md) — comprehensive portal architecture with 6 portals, authentication flows, user journeys, and deployment modes.
 - [FRONTEND_SITEMAP.md](architecture/FRONTEND_SITEMAP.md) — complete route hierarchy and navigation structure for all portals.
+- External: `frontend/ARCHITECTURE_OVERVIEW.md` & `frontend/MULTI_APP_ARCHITECTURE.md` — latest multi-app context and ownership.
 
 ---
 

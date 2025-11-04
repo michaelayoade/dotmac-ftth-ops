@@ -172,7 +172,7 @@ function DiagnosticsHistoryPageContent() {
           run.status,
           run.severity || "",
           run.duration_ms || "",
-          `"${run.summary?.replace(/"/g, '""') || ""}"`,
+          `"${run.summary?.replace(/"/g, "\"\"") || ""}"`,
         ].join(",")
       ),
     ].join("\n");

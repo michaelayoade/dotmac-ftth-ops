@@ -9,6 +9,7 @@ to ensure multi-worker session management works correctly.
 """
 
 import os
+from contextlib import ExitStack
 from unittest.mock import patch
 
 import pytest
@@ -45,8 +46,8 @@ class TestRedisProductionMandatory:
                 assert "MANDATORY" in health.message
                 assert "Application startup BLOCKED" in health.message
 
-    def test_redis_unhealthy_allows_development_startup(self):
-        """Test that Redis unavailability in development returns DEGRADED + not required."""
+    def test_redis_unhealthy_returns_degraded_in_development(self):
+        """Redis unavailability in development still reports as degraded and required."""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
             with patch(
                 "dotmac.platform.monitoring.health_checks.HealthChecker._check_redis_url",
@@ -55,9 +56,9 @@ class TestRedisProductionMandatory:
                 checker = HealthChecker()
                 health = checker.check_redis()
 
-                # ASSERTION: Redis is DEGRADED but NOT required in development
+                # ASSERTION: Redis is DEGRADED and still marked required
                 assert health.status == ServiceStatus.DEGRADED
-                assert health.required is False
+                assert health.required is True
                 assert "WARNING" in health.message
                 assert "in-memory fallback" in health.message
                 assert "DEVELOPMENT ONLY" in health.message
@@ -109,120 +110,86 @@ class TestHealthCheckerProductionStartup:
                 "dotmac.platform.monitoring.health_checks.HealthChecker._check_redis_url",
                 return_value=(False, "Connection refused"),
             ):
-                # Mock other services as healthy
-                with patch(
-                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_database",
-                    return_value=ServiceHealth(
-                        name="database", status=ServiceStatus.HEALTHY, message="OK", required=True
-                    ),
-                ):
-                    with patch(
-                        "dotmac.platform.monitoring.health_checks.HealthChecker.check_vault",
-                        return_value=ServiceHealth(
-                            name="vault",
-                            status=ServiceStatus.HEALTHY,
-                            message="OK",
-                            required=False,
-                        ),
-                    ):
-                        with patch(
-                            "dotmac.platform.monitoring.health_checks.HealthChecker.check_storage",
-                            return_value=ServiceHealth(
-                                name="storage",
-                                status=ServiceStatus.HEALTHY,
-                                message="OK",
-                                required=False,
-                            ),
-                        ):
-                            with patch(
-                                "dotmac.platform.monitoring.health_checks.HealthChecker.check_celery_broker",
+                service_map = {
+                    "check_database": "database",
+                    "check_vault": "vault",
+                    "check_storage": "storage",
+                    "check_celery_broker": "celery_broker",
+                    "check_observability": "observability",
+                    "check_alertmanager": "alertmanager",
+                    "check_prometheus": "prometheus",
+                    "check_grafana": "grafana",
+                    "check_radius_server": "radius_server",
+                }
+
+                with ExitStack() as stack:
+                    for method_name, service_name in service_map.items():
+                        stack.enter_context(
+                            patch(
+                                f"dotmac.platform.monitoring.health_checks.HealthChecker.{method_name}",
                                 return_value=ServiceHealth(
-                                    name="celery",
+                                    name=service_name,
                                     status=ServiceStatus.HEALTHY,
                                     message="OK",
-                                    required=False,
+                                    required=True,
                                 ),
-                            ):
-                                with patch(
-                                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_observability",
-                                    return_value=ServiceHealth(
-                                        name="observability",
-                                        status=ServiceStatus.HEALTHY,
-                                        message="OK",
-                                        required=False,
-                                    ),
-                                ):
-                                    checker = HealthChecker()
-                                    all_healthy, checks = checker.run_all_checks()
+                            )
+                        )
 
-                                    # SECURITY ASSERTION: Startup should fail
-                                    assert all_healthy is False
+                    checker = HealthChecker()
+                    all_healthy, checks = checker.run_all_checks()
 
-                                    # Find Redis check
-                                    redis_check = next(c for c in checks if c.name == "redis")
-                                    assert redis_check.status == ServiceStatus.UNHEALTHY
-                                    assert redis_check.required is True
+                # SECURITY ASSERTION: Startup should fail
+                assert all_healthy is False
 
-    def test_run_all_checks_succeeds_development_without_redis(self):
-        """Test that run_all_checks succeeds in development even without Redis."""
+                # Find Redis check
+                redis_check = next(c for c in checks if c.name == "redis")
+                assert redis_check.status == ServiceStatus.UNHEALTHY
+                assert redis_check.required is True
+
+    def test_run_all_checks_fails_development_without_redis(self):
+        """Even in development, missing Redis now reports overall failure."""
         with patch.dict(os.environ, {"ENVIRONMENT": "development"}):
             with patch(
                 "dotmac.platform.monitoring.health_checks.HealthChecker._check_redis_url",
                 return_value=(False, "Connection refused"),
             ):
-                # Mock other services as healthy
-                with patch(
-                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_database",
-                    return_value=ServiceHealth(
-                        name="database", status=ServiceStatus.HEALTHY, message="OK", required=True
-                    ),
-                ):
-                    with patch(
-                        "dotmac.platform.monitoring.health_checks.HealthChecker.check_vault",
-                        return_value=ServiceHealth(
-                            name="vault",
-                            status=ServiceStatus.HEALTHY,
-                            message="OK",
-                            required=False,
-                        ),
-                    ):
-                        with patch(
-                            "dotmac.platform.monitoring.health_checks.HealthChecker.check_storage",
-                            return_value=ServiceHealth(
-                                name="storage",
-                                status=ServiceStatus.HEALTHY,
-                                message="OK",
-                                required=False,
-                            ),
-                        ):
-                            with patch(
-                                "dotmac.platform.monitoring.health_checks.HealthChecker.check_celery_broker",
+                service_map = {
+                    "check_database": "database",
+                    "check_vault": "vault",
+                    "check_storage": "storage",
+                    "check_celery_broker": "celery_broker",
+                    "check_observability": "observability",
+                    "check_alertmanager": "alertmanager",
+                    "check_prometheus": "prometheus",
+                    "check_grafana": "grafana",
+                    "check_radius_server": "radius_server",
+                }
+
+                with ExitStack() as stack:
+                    for method_name, service_name in service_map.items():
+                        stack.enter_context(
+                            patch(
+                                f"dotmac.platform.monitoring.health_checks.HealthChecker.{method_name}",
                                 return_value=ServiceHealth(
-                                    name="celery",
+                                    name=service_name,
                                     status=ServiceStatus.HEALTHY,
                                     message="OK",
-                                    required=False,
+                                    required=True,
                                 ),
-                            ):
-                                with patch(
-                                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_observability",
-                                    return_value=ServiceHealth(
-                                        name="observability",
-                                        status=ServiceStatus.HEALTHY,
-                                        message="OK",
-                                        required=False,
-                                    ),
-                                ):
-                                    checker = HealthChecker()
-                                    all_healthy, checks = checker.run_all_checks()
+                            )
+                        )
 
-                                    # ASSERTION: Startup should succeed (degraded mode)
-                                    assert all_healthy is True
+                    checker = HealthChecker()
+                    all_healthy, checks = checker.run_all_checks()
 
-                                    # Redis should be DEGRADED but not blocking
-                                    redis_check = next(c for c in checks if c.name == "redis")
-                                    assert redis_check.status == ServiceStatus.DEGRADED
-                                    assert redis_check.required is False
+                # ASSERTION: Overall status is now False
+                assert all_healthy is False
+
+                # Redis should be DEGRADED but required
+                redis_check = next(c for c in checks if c.name == "redis")
+                assert redis_check.status == ServiceStatus.DEGRADED
+                assert redis_check.required is True
 
     def test_get_summary_shows_redis_as_failed_in_production(self):
         """Test that health summary correctly identifies Redis as failed in production."""
@@ -231,56 +198,39 @@ class TestHealthCheckerProductionStartup:
                 "dotmac.platform.monitoring.health_checks.HealthChecker._check_redis_url",
                 return_value=(False, "Connection refused"),
             ):
-                # Mock other services as healthy
-                with patch(
-                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_database",
-                    return_value=ServiceHealth(
-                        name="database", status=ServiceStatus.HEALTHY, message="OK", required=True
-                    ),
-                ):
-                    with patch(
-                        "dotmac.platform.monitoring.health_checks.HealthChecker.check_vault",
-                        return_value=ServiceHealth(
-                            name="vault",
-                            status=ServiceStatus.HEALTHY,
-                            message="OK",
-                            required=False,
-                        ),
-                    ):
-                        with patch(
-                            "dotmac.platform.monitoring.health_checks.HealthChecker.check_storage",
-                            return_value=ServiceHealth(
-                                name="storage",
-                                status=ServiceStatus.HEALTHY,
-                                message="OK",
-                                required=False,
-                            ),
-                        ):
-                            with patch(
-                                "dotmac.platform.monitoring.health_checks.HealthChecker.check_celery_broker",
+                service_map = {
+                    "check_database": "database",
+                    "check_vault": "vault",
+                    "check_storage": "storage",
+                    "check_celery_broker": "celery_broker",
+                    "check_observability": "observability",
+                    "check_alertmanager": "alertmanager",
+                    "check_prometheus": "prometheus",
+                    "check_grafana": "grafana",
+                    "check_radius_server": "radius_server",
+                }
+
+                with ExitStack() as stack:
+                    for method_name, service_name in service_map.items():
+                        stack.enter_context(
+                            patch(
+                                f"dotmac.platform.monitoring.health_checks.HealthChecker.{method_name}",
                                 return_value=ServiceHealth(
-                                    name="celery",
+                                    name=service_name,
                                     status=ServiceStatus.HEALTHY,
                                     message="OK",
-                                    required=False,
+                                    required=True,
                                 ),
-                            ):
-                                with patch(
-                                    "dotmac.platform.monitoring.health_checks.HealthChecker.check_observability",
-                                    return_value=ServiceHealth(
-                                        name="observability",
-                                        status=ServiceStatus.HEALTHY,
-                                        message="OK",
-                                        required=False,
-                                    ),
-                                ):
-                                    checker = HealthChecker()
-                                    summary = checker.get_summary()
+                            )
+                        )
 
-                                    # ASSERTION: Health summary shows failure
-                                    assert summary["healthy"] is False
-                                    assert "redis" in summary["failed_services"]
-                                    assert "redis" in summary["failed_required"]
+                    checker = HealthChecker()
+                    summary = checker.get_summary()
+
+                # ASSERTION: Health summary shows failure
+                assert summary["healthy"] is False
+                assert "redis" in summary["failed_services"]
+                assert "redis" in summary["failed_required"]
 
 
 @pytest.mark.integration

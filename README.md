@@ -27,25 +27,24 @@ Built for ISPs, WISPs, and fiber network operators who need:
 
 ### Docker Compose Layout
 
-Infrastructure is split across two Compose files. Use the Makefile wrappers (or call Compose directly) to start what you need:
+Infrastructure now runs through two Compose files only. Each file contains the backend API and its paired frontend. Databases, caches, storage, and observability tooling should be provided externally (for example managed cloud services or self-hosted deployments). Use the Makefile wrappers—or call Compose directly—to launch what you need:
 
 ```bash
-# Core platform: Postgres, Redis, Vault, MinIO
+# Platform API + admin frontend
 make start-platform
 
-# Core platform + observability (OTel collector, Prometheus, Grafana, Jaeger)
-make start-platform-obs
-
-# ISP services (FreeRADIUS, NetBox, GenieACS, WireGuard, LibreNMS, TimescaleDB)
+# ISP API + operations frontend
 make start-isp
+
+# Both stacks at once
+make start-all
 ```
 
-Under the hood these targets call Compose directly:
+Under the hood the targets execute:
 
 ```bash
-docker compose -f docker-compose.base.yml up -d postgres redis vault minio
-docker compose -f docker-compose.base.yml --profile observability up -d
-docker compose -f docker-compose.isp.yml up -d
+docker compose -f docker-compose.base.yml up -d platform-backend platform-frontend
+docker compose -f docker-compose.isp.yml up -d isp-backend isp-frontend
 ```
 
 The helper script `./scripts/infra.sh` powers these targets and supports `start`, `status`, `logs`, `restart`, and `clean` actions for `platform`, `isp`, or `all`.
@@ -109,34 +108,36 @@ The helper script `./scripts/infra.sh` powers these targets and supports `start`
 
 ## 📦 Complete Service Stack
 
+The platform continues to expect the supporting infrastructure listed below, but the simplified Compose files no longer provision them automatically. Run these services via your preferred tooling (managed databases, Kubernetes, separate Compose bundles, etc.) and point the application environment variables at those endpoints.
+
 ### Infrastructure Services
 
-| Service | Purpose | Port | Status |
-|---------|---------|------|--------|
-| **PostgreSQL** | Main database | 5432 | ✅ Running |
-| **Redis** | Cache & sessions | 6379 | ✅ Running |
-| **MinIO** | Object storage | 9000/9001 | ✅ Running |
-| **OpenBao** | Secrets management | 8200 | ✅ Running |
-| **MongoDB** | GenieACS database | 27017 | ✅ Running |
-| **TimescaleDB** | Time-series metrics | 5433 | ✅ Running |
+| Service | Purpose | Port | Provisioning |
+|---------|---------|------|--------------|
+| **PostgreSQL** | Main database | 5432 | External (required) |
+| **Redis** | Cache & sessions | 6379 | External (required) |
+| **MinIO / Object storage** | File & asset storage | 9000/9001 | External (optional) |
+| **OpenBao / Vault** | Secrets management | 8200 | External (optional) |
+| **MongoDB** | GenieACS database | 27017 | External (if GenieACS enabled) |
+| **TimescaleDB** | Time-series metrics | 5433 | External (if metrics required) |
 
 ### ISP-Specific Services
 
-| Service | Purpose | Port | Status |
-|---------|---------|------|--------|
-| **FreeRADIUS** | AAA authentication | 1812/1813 (UDP) | ✅ Running |
-| **NetBox** | Network inventory | 8080 | ✅ Running |
-| **GenieACS** | TR-069 CPE management | 7547, 7557, 7567 | ✅ Running |
-| **WireGuard** | VPN gateway | 51820 (UDP) | ✅ Running |
-| **LibreNMS** | Network monitoring | 8000 | ✅ Running |
+| Service | Purpose | Port | Provisioning |
+|---------|---------|------|--------------|
+| **FreeRADIUS** | AAA authentication | 1812/1813 (UDP) | External (recommended) |
+| **NetBox** | Network inventory | 8080 | External (recommended) |
+| **GenieACS** | TR-069 CPE management | 7547, 7557, 7567 | External (recommended) |
+| **WireGuard** | VPN gateway | 51820 (UDP) | External (optional) |
+| **LibreNMS** | Network monitoring | 8000 | External (optional) |
 
 ### Monitoring Services
 
-| Service | Purpose | Port | Status |
-|---------|---------|------|--------|
-| **Prometheus** | Metrics collection | 9090 | ✅ Running |
-| **Grafana** | Dashboards | 3400 | ✅ Running |
-| **Jaeger** | Distributed tracing | 16686 | ✅ Running |
+| Service | Purpose | Port | Provisioning |
+|---------|---------|------|--------------|
+| **Prometheus** | Metrics collection | 9090 | External (optional) |
+| **Grafana** | Dashboards | 3400 | External (optional) |
+| **Jaeger** | Distributed tracing | 16686 | External (optional) |
 
 ## 🚀 Quick Start
 
@@ -161,39 +162,44 @@ cp .env.example .env
 # Update secrets as needed (development defaults work out of the box)
 ```
 
-### 3. Start Core Infrastructure
+### 3. Configure Core Dependencies
+
+Provision PostgreSQL, Redis, object storage, and Vault (if used) outside of Docker Compose. Update `.env` with the connection strings so the application containers can reach those services.
+
+### 4. Start the Platform Stack
 
 ```bash
-make start-platform          # postgres, redis, vault, minio
-make start-platform-obs      # optional: observability stack (otel, prometheus, grafana, jaeger)
-# or: ./scripts/infra.sh platform start --with-obs
+make start-platform          # platform backend + admin frontend
 make status-platform         # verify health
 ```
 
-### 4. Start ISP Services (Optional)
+### 5. Start the ISP Stack (Optional)
 
 ```bash
-make start-isp
+make start-isp               # ISP backend + operations frontend
 make status-isp
 ```
 
-### 5. Backend Setup
+### 6. Backend API (Docker)
 
 ```bash
-poetry install --with dev
+poetry install --with dev                # only needed for tooling/scripts
+poetry run alembic upgrade head          # apply migrations inside local database
 
-# Use Docker PostgreSQL credentials unless you override them
-export DOTMAC_DATABASE_URL="postgresql://dotmac_user:change-me@localhost:5432/dotmac"
-export DOTMAC_DATABASE_URL_ASYNC="postgresql+asyncpg://dotmac_user:change-me@localhost:5432/dotmac"
+# Start the FastAPI app in Docker (press Ctrl+C to stop)
+make dev
 
-poetry run alembic upgrade head
-poetry run uvicorn src.dotmac.platform.main:app \
-  --reload --host 0.0.0.0 --port 8000
+# or run in detached mode
+docker compose -f docker-compose.base.yml up platform-backend
 ```
 
 FastAPI docs: http://localhost:8000/docs
 
-### 6. Frontend Apps
+> ℹ️ **Need to debug on the host?** Use `make dev-host`, but remember to disable observability or point
+> `OBSERVABILITY__ALERTMANAGER_BASE_URL`/`PROMETHEUS_BASE_URL`/`GRAFANA_BASE_URL` at `http://localhost:…`
+> so the health checks succeed.
+
+### 7. Frontend Apps
 
 ```bash
 cd frontend
@@ -205,21 +211,20 @@ pnpm dev:isp          # http://localhost:3001
 # Platform super-admin console
 pnpm dev:admin        # http://localhost:3002
 
-# (Optional) legacy monolith for comparison
-pnpm dev:base-app     # http://localhost:3000
 ```
 
-Press `Ctrl+C` to stop the dev servers. Use `make stop-platform` / `make stop-isp` when you are done.
+Press `Ctrl+C` in the `make dev` terminal to stop the API container, and use `make stop-platform` /
+`make stop-isp` when you are done.
 
 ## 🌐 Access Services
 
 Once deployed, access these services:
 
 ### ISP Management
-- **Backend API**: http://localhost:8000/docs (FastAPI Swagger)
+- **Platform Backend API**: http://localhost:8000/docs (FastAPI Swagger)
+- **ISP Backend API**: http://localhost:8001/docs (FastAPI Swagger, when ISP stack is running)
 - **ISP Operations App**: http://localhost:3001/dashboard – tenant-facing operations (subscribers, devices, billing, automation)
 - **Platform Admin App**: http://localhost:3002/dashboard/platform-admin – super-admin controls (feature flags, plugins, licensing, jobs)
-- **Legacy Base App**: http://localhost:3000 (optional compatibility build)
 
 ### Network Services
 - **NetBox**: http://localhost:8080 (admin / admin)
@@ -246,7 +251,7 @@ Start with these active resources:
 - **[docs/API_SPECIFICATIONS.md](docs/API_SPECIFICATIONS.md)** – REST and integration surface area
 - **[docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md)** – diagnostics tooling and APIs
 - **[docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md)** – fiber data model and workflows
-- **Frontend architecture**: see [frontend/MULTI-APP-ARCHITECTURE.md](frontend/MULTI-APP-ARCHITECTURE.md) and [frontend/DEPLOYMENT-ARCHITECTURE.md](frontend/DEPLOYMENT-ARCHITECTURE.md)
+- **Frontend architecture**: see [frontend/ARCHITECTURE_OVERVIEW.md](frontend/ARCHITECTURE_OVERVIEW.md), [frontend/MULTI_APP_ARCHITECTURE.md](frontend/MULTI_APP_ARCHITECTURE.md), and [frontend/PRODUCTION_DEPLOYMENT_K8S.md](frontend/PRODUCTION_DEPLOYMENT_K8S.md)
 
 ## 🛠️ Technology Stack
 
@@ -268,8 +273,7 @@ Start with these active resources:
 
 #### Frontend Architecture
 - `@dotmac/isp-ops-app` (port 3001) delivers tenant-facing dashboards for subscribers, network assets, automation, and operations.
-- `@dotmac/platform-admin-app` (port 3002) adds platform-level controls (feature flags, plugins, licensing, jobs) while retaining visibility into ISP views.
-- A legacy `@dotmac/base-app` build remains for compatibility and Storybook workflows.
+- `@dotmac/platform-admin-app` (port 3002) provides platform-level controls (feature flags, plugins, licensing, jobs) while retaining visibility into ISP views.
 
 Each app shares the same domain-focused portals (operations, billing, diagnostics, partners, customer management) via the `frontend/shared` workspace packages. Refer to [docs/architecture/PORTAL_ARCHITECTURE.md](docs/architecture/PORTAL_ARCHITECTURE.md) and the multi-app guides above for navigation details.
 
@@ -425,13 +429,15 @@ If you already have a PostgreSQL instance running with the required schema, skip
 ```bash
 export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
 export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
-SKIP_COMPOSE=1 SKIP_MIGRATIONS=1 ./scripts/run_customer_tests.sh
+SKIP_MIGRATIONS=1 ./scripts/run_customer_tests.sh
 ```
 
-The script exports `DOTMAC_DATABASE_URL` / `DOTMAC_DATABASE_URL_ASYNC`, applies the latest Alembic migration, and runs `poetry run pytest tests/customer_management`. To keep the database service running between test runs, you can start it manually:
+The script exports `DOTMAC_DATABASE_URL` / `DOTMAC_DATABASE_URL_ASYNC`, applies the latest Alembic migration, and runs `poetry run pytest tests/customer_management`. If you want to keep a test database running between invocations, launch PostgreSQL separately (for example with `docker run`):
 
 ```bash
-docker compose -f docker-compose.test-db.yml up -d db-test
+docker run --name dotmac-test-db -e POSTGRES_USER=dotmac_test -e POSTGRES_PASSWORD=dotmac_test \
+  -e POSTGRES_DB=dotmac_test -p 6543:5432 -d postgres:15
+
 export DOTMAC_DATABASE_URL=postgresql://dotmac_test:dotmac_test@localhost:6543/dotmac_test
 export DOTMAC_DATABASE_URL_ASYNC=postgresql+asyncpg://dotmac_test:dotmac_test@localhost:6543/dotmac_test
 poetry run alembic upgrade head

@@ -29,7 +29,7 @@ export function ClientProviders({ children }: { children: ReactNode }) {
 
   const shouldWrapWithRBAC =
     pathname?.startsWith("/dashboard") ||
-    pathname?.startsWith("/tenant") ||
+    pathname?.startsWith("/tenant-portal") ||
     pathname?.startsWith("/partner");
 
   const appProviders = (

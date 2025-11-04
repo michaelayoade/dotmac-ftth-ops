@@ -18,13 +18,17 @@ echo -e "${BLUE}========================================${NC}"
 echo -e "${BLUE}Running all tests locally (no skips)${NC}"
 echo -e "${BLUE}========================================${NC}"
 
-# Check if PostgreSQL is running
-if ! docker ps | grep -q "postgres.*Up"; then
-    echo -e "${YELLOW}Warning: PostgreSQL container doesn't appear to be running${NC}"
-    echo -e "${YELLOW}Starting Docker Compose services...${NC}"
-    docker compose -f docker-compose.base.yml up -d postgres redis
-    echo -e "${GREEN}Waiting for PostgreSQL to be ready...${NC}"
-    sleep 5
+# Ensure a PostgreSQL instance is reachable before running migrations.
+DB_HOST=${DOTMAC_TEST_DB_HOST:-${DATABASE__HOST:-localhost}}
+DB_PORT=${DOTMAC_TEST_DB_PORT:-${DATABASE__PORT:-5432}}
+
+if command -v pg_isready >/dev/null 2>&1; then
+    if ! pg_isready -h "${DB_HOST}" -p "${DB_PORT}" >/dev/null 2>&1; then
+        echo -e "${YELLOW}Warning: Unable to reach PostgreSQL at ${DB_HOST}:${DB_PORT}.${NC}"
+        echo -e "${YELLOW}Ensure your database service is running and connection variables are set.${NC}"
+    fi
+else
+    echo -e "${YELLOW}pg_isready not found; skipping PostgreSQL reachability check.${NC}"
 fi
 
 # Export test configuration

@@ -166,11 +166,8 @@ poetry run pytest tests/billing -m integration --collect-only 2>&1 | grep "Conte
 
 ### Check PostgreSQL
 ```bash
-# Is it running?
-docker ps | grep postgres
-
-# Start if needed
-docker compose -f docker-compose.base.yml up -d postgres
+# Is it reachable?
+pg_isready -h ${DATABASE__HOST:-localhost} -p ${DATABASE__PORT:-5432}
 
 # Check migrations
 poetry run alembic current
@@ -202,7 +199,7 @@ poetry run alembic current
 
 ### If tests are still skipped:
 1. Check `.env` file exists: `ls -la .env`
-2. Check PostgreSQL is running: `docker ps | grep postgres`
+2. Verify database settings: `echo $DOTMAC_DATABASE_URL`
 3. Check environment variables load: See "Verification Commands" above
 4. Try the script: `./scripts/run_all_tests_local.sh`
 
@@ -216,17 +213,15 @@ poetry run alembic upgrade head
 poetry run pytest tests/billing -m integration
 ```
 
-### If PostgreSQL won't start:
+### If PostgreSQL won't respond:
 ```bash
-# Check logs
-docker logs dotmac-ftth-ops-postgres-1
+# Check service status using pg_isready
+pg_isready -h ${DATABASE__HOST:-localhost} -p ${DATABASE__PORT:-5432}
 
-# Restart
-docker compose -f docker-compose.base.yml restart postgres
+# Review server logs (example for systemd-managed service)
+journalctl -u postgresql --since "10 minutes ago"
 
-# Or start fresh
-docker compose -f docker-compose.base.yml down
-docker compose -f docker-compose.base.yml up -d postgres redis
+# Restart using your chosen deployment method (systemd, cloud console, etc.)
 ```
 
 ## Success Criteria

@@ -1,21 +1,20 @@
 # E2E Tests - Quick Start
 
-End-to-end coverage for the tenant billing and operations flows lives in the `@dotmac/base-app` workspace. Follow these steps to run the Playwright suites locally.
+End-to-end coverage for the tenant billing and operations flows lives in the `@dotmac/isp-ops-app` workspace (with shared mocks in `frontend/shared`). Follow these steps to run the Playwright suites locally.
 
 ## Prerequisites
 
 1. **Infrastructure**
    ```bash
-   make start-platform          # postgres, redis, vault, minio
-   make start-platform-obs      # optional: otel collector, prometheus, grafana, jaeger
-   make start-isp               # optional: FreeRADIUS, NetBox, GenieACS, etc.
+   make start-platform          # platform backend + admin UI
+   make start-isp               # ISP backend + operations UI
    ```
 2. **Backend**
-   ```bash
-   poetry install --with dev
-   poetry run alembic upgrade head
-   poetry run uvicorn src.dotmac.platform.main:app --reload --port 8000
-   ```
+ ```bash
+ poetry install --with dev
+ poetry run alembic upgrade head
+  make dev                               # or docker compose -f docker-compose.base.yml up platform-backend
+ ```
 3. **Seed data (optional but recommended)**
    ```bash
    make db-seed
@@ -25,33 +24,33 @@ End-to-end coverage for the tenant billing and operations flows lives in the `@d
 
 ```bash
 cd frontend
-pnpm --filter @dotmac/base-app test:e2e
+pnpm --filter @dotmac/isp-ops-app test:e2e
 ```
 
 ## Targeted Runs
 
 ```bash
 # Specific spec
-pnpm --filter @dotmac/base-app exec \
+pnpm --filter @dotmac/isp-ops-app exec \
   playwright test e2e/tenant-portal.spec.ts
 
 # Focus on a test title
-pnpm --filter @dotmac/base-app exec \
+pnpm --filter @dotmac/isp-ops-app exec \
   playwright test e2e/tenant-portal.spec.ts \
   -g "shows main page structure"
 
 # Interactive UI mode
-pnpm --filter @dotmac/base-app exec playwright test --ui
+pnpm --filter @dotmac/isp-ops-app exec playwright test --ui
 
 # Headed browser
-pnpm --filter @dotmac/base-app exec playwright test --headed
+pnpm --filter @dotmac/isp-ops-app exec playwright test --headed
 ```
 
 ## Manual Setup Workflow
 
 ```bash
 # Backend (from repository root)
-poetry run uvicorn src.dotmac.platform.main:app --reload --port 8000 &
+docker compose -f docker-compose.base.yml up platform-backend
 
 # Frontend base app (separate terminal)
 cd frontend/apps/base-app
@@ -63,6 +62,9 @@ pnpm test:e2e tenant-portal.spec.ts
 ```
 
 Stop background servers with `Ctrl+C` when finished.
+
+> Prefer running the API directly on your machine? Use `make dev-host`, but update the observability
+> URLs (or disable OTEL) so health checks do not fail while Playwright waits.
 
 ## Test Credentials
 
@@ -86,10 +88,10 @@ These are created by the default seed data. If authentication fails, re-run `mak
   ```
 
 - **Need to clean state quickly**  
-  Use `./scripts/infra.sh platform restart --with-obs` and `./scripts/infra.sh isp restart` to bounce containers.
+  Use `./scripts/infra.sh platform restart` and `./scripts/infra.sh isp restart` to bounce containers.
 
 ## Additional Resources
 
-- Frontend multi-app overview: `frontend/MULTI-APP-ARCHITECTURE.md`
+- Frontend multi-app overview: `frontend/MULTI_APP_ARCHITECTURE.md`
 - Infrastructure quick reference: `README-INFRASTRUCTURE.md`
 - Platform documentation index: `docs/INDEX.md`

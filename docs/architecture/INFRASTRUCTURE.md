@@ -52,11 +52,8 @@ graph TD
 ### 1. Local Development
 
 ```bash
-# Start core services (postgres, redis, vault, minio)
+# Start platform stack (backend + admin UI)
 make start-platform
-
-# Optional observability stack
-make start-platform-obs
 
 # Start ISP overlay when needed
 make start-isp
@@ -71,12 +68,9 @@ make dev
 # Start everything (platform + ISP)
 make start-all
 
-# Start all without observability
-make start-all-no-obs
-
 # Using docker compose directly
-docker compose -f docker-compose.base.yml up -d app frontend celery-worker celery-beat
-docker compose -f docker-compose.isp.yml up -d
+docker compose -f docker-compose.base.yml up -d platform-backend platform-frontend
+docker compose -f docker-compose.isp.yml up -d isp-backend isp-frontend
 ```
 
 ### 3. Kubernetes (Production)
@@ -205,13 +199,13 @@ The application **never** manages its own infrastructure - it only connects to w
 make status-platform
 
 # View detailed logs
-docker compose -f docker-compose.base.yml logs postgres
-docker compose -f docker-compose.base.yml logs redis
+docker compose -f docker-compose.base.yml logs platform-backend
+docker compose -f docker-compose.base.yml logs platform-frontend
 
 # Test connectivity
-nc -zv localhost 5432  # PostgreSQL
-nc -zv localhost 6379  # Redis
-nc -zv localhost 8200  # Vault
+nc -zv <postgres-host> 5432  # PostgreSQL
+nc -zv <redis-host> 6379     # Redis
+nc -zv <vault-host> 8200     # Vault
 ```
 
 ### Application Can't Connect

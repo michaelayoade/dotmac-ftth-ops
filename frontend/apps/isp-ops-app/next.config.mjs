@@ -11,6 +11,7 @@ const withBundleAnalyzer = bundleAnalyzer({
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['react-window'],
+  output: 'standalone',
   experimental: {
     instrumentationHook: false,
     externalDir: true,
@@ -32,7 +33,7 @@ const nextConfig = {
   },
   // Proxy API requests to backend for proper cookie handling
   async rewrites() {
-    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8001';
     const baseRewrites = [
       {
         source: '/api/v1/:path*',

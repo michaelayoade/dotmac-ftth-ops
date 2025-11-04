@@ -399,7 +399,7 @@ export default function RolesPage() {
                 id="role-description"
                 value={newRole.description}
                 onChange={(e) => setNewRole({ ...newRole, description: e.target.value })}
-                placeholder="Describe the role's purpose and responsibilities"
+              placeholder="Describe the role&apos;s purpose and responsibilities"
                 rows={3}
               />
             </div>

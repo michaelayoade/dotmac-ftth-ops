@@ -4,12 +4,12 @@
   "private": true,
   "description": "DotMac ISP Operations Platform Frontend Workspace",
   "scripts": {
-    "dev": "pnpm --filter @dotmac/base-app dev",
-    "build": "pnpm -r --filter ./shared/packages/** run build && pnpm --filter @dotmac/base-app build",
+    "dev": "pnpm --filter @dotmac/isp-ops-app dev",
+    "build": "pnpm -r --filter ./shared/packages/** run build && pnpm --filter @dotmac/isp-ops-app build && pnpm --filter @dotmac/platform-admin-app build",
     "test": "pnpm -r run test",
     "test:ci": "pnpm -r run test:ci",
     "lint": "pnpm -r run lint",
-    "type-check": "pnpm --filter @dotmac/base-app run type-check",
+    "type-check": "pnpm --filter @dotmac/isp-ops-app run type-check && pnpm --filter @dotmac/platform-admin-app run type-check",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
     "clean": "pnpm -r run clean"
