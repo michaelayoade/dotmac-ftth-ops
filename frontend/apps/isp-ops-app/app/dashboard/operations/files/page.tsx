@@ -22,6 +22,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import { logger } from "@/lib/logger";
 
 interface FileMetadata {
@@ -49,6 +50,7 @@ export default function FilesPage() {
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch files
   const { data, isLoading, error } = useQuery<FilesResponse>({
@@ -131,9 +133,16 @@ export default function FilesPage() {
   };
 
   const handleDelete = async (fileId: string) => {
-    if (confirm("Are you sure you want to delete this file?")) {
-      await deleteMutation.mutateAsync(fileId);
+    const confirmed = await confirmDialog({
+      title: "Delete file",
+      description: "Are you sure you want to delete this file?",
+      confirmText: "Delete file",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    await deleteMutation.mutateAsync(fileId);
   };
 
   const handleDownload = (fileId: string, fileName: string) => {
@@ -331,7 +340,9 @@ export default function FilesPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDelete(file.file_id)}
+                        onClick={() => {
+                          void handleDelete(file.file_id);
+                        }}
                           aria-label={`Delete ${file.file_name}`}
                         >
                           <Trash2 className="h-4 w-4 text-red-600 dark:text-red-400" />

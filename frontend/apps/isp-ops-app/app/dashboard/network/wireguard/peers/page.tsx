@@ -16,6 +16,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import {
   Users,
   Plus,
@@ -55,6 +56,7 @@ export default function WireGuardPeersPage() {
   const { data: servers = [] } = useWireGuardServers({ limit: 1000 });
   const { mutate: deletePeer } = useDeleteWireGuardPeer();
   const { mutate: downloadConfig } = useDownloadPeerConfig();
+  const confirmDialog = useConfirmDialog();
 
   // Update filters when URL query param changes
   useEffect(() => {
@@ -80,8 +82,14 @@ export default function WireGuardPeersPage() {
     setSearchTerm("");
   };
 
-  const handleDelete = (peerId: string, peerName: string) => {
-    if (!confirm(`Are you sure you want to delete peer "${peerName}"?`)) {
+  const handleDelete = async (peerId: string, peerName: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete peer",
+      description: `Are you sure you want to delete peer "${peerName}"?`,
+      confirmText: "Delete peer",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
     deletePeer(peerId);
@@ -226,7 +234,7 @@ function PeerCard({
   onDownload,
 }: {
   peer: WireGuardPeer;
-  onDelete: (id: string, name: string) => void;
+  onDelete: (id: string, name: string) => void | Promise<void>;
   onDownload: (id: string) => void;
 }) {
   const getStatusColor = (status: WireGuardPeerStatus): string => {
@@ -383,7 +391,7 @@ function PeerCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onDelete(peer.id, peer.name);
+                void onDelete(peer.id, peer.name);
               }}
             >
               <Trash2 className="h-3 w-3" />

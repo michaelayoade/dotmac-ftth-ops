@@ -35,11 +35,13 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
     {
       enabled,
       refetchInterval: 30000, // Refresh every 30 seconds
-      onError: (err) => {
-        logger.error("GraphQL subscriber dashboard query failed", err);
-      },
     },
   );
+
+  // Log errors
+  if (error) {
+    logger.error("GraphQL subscriber dashboard query failed", error);
+  }
 
   // Transform GraphQL data to match existing component expectations
   const subscribers = data?.subscribers ?? [];
@@ -72,7 +74,7 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
 
     // Loading states (TanStack Query uses isLoading, mapping to loading for backward compat)
     loading: isLoading,
-    error: error?.message,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
 
     // Actions
     refetch,

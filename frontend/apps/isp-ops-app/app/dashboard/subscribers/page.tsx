@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { logger } from "@/lib/logger";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 // ============================================================================
 // Main Component
@@ -54,6 +55,7 @@ import { logger } from "@/lib/logger";
 export default function SubscribersPage() {
   const { hasPermission } = useRBAC();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Permissions
   const canView = hasPermission("customers.read");
@@ -186,11 +188,13 @@ export default function SubscribersPage() {
   };
 
   const handleDelete = async (subscriber: Subscriber) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete ${subscriber.first_name} ${subscriber.last_name}? This action cannot be undone.`,
-      )
-    ) {
+    const confirmed = await confirmDialog({
+      title: "Delete subscriber",
+      description: `Are you sure you want to delete ${subscriber.first_name} ${subscriber.last_name}? This action cannot be undone.`,
+      confirmText: "Delete subscriber",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

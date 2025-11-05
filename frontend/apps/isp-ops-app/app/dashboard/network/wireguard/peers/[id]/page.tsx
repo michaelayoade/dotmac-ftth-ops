@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import {
   Users,
   Edit,
@@ -61,12 +62,17 @@ export default function PeerDetailsPage({ params }: PeerDetailsPageProps) {
   const { mutate: deletePeer, isPending: isDeleting } = useDeleteWireGuardPeer();
   const { mutate: downloadConfig } = useDownloadPeerConfig();
   const { mutate: regenerateConfig, isPending: isRegenerating } = useRegeneratePeerConfig();
+  const confirmDialog = useConfirmDialog();
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!peer) return;
-    if (
-      !confirm(`Are you sure you want to delete peer "${peer.name}"? This action cannot be undone.`)
-    ) {
+    const confirmed = await confirmDialog({
+      title: "Delete peer",
+      description: `Are you sure you want to delete peer "${peer.name}"? This action cannot be undone.`,
+      confirmText: "Delete peer",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
     deletePeer(id, {
@@ -80,12 +86,15 @@ export default function PeerDetailsPage({ params }: PeerDetailsPageProps) {
     downloadConfig(id);
   };
 
-  const handleRegenerate = () => {
-    if (
-      !confirm(
+  const handleRegenerate = async () => {
+    const confirmed = await confirmDialog({
+      title: "Regenerate configuration",
+      description:
         "Regenerating the configuration will create new keys. The old configuration will no longer work. Continue?",
-      )
-    ) {
+      confirmText: "Regenerate",
+      variant: "warning",
+    });
+    if (!confirmed) {
       return;
     }
     regenerateConfig(id, {
@@ -157,7 +166,13 @@ export default function PeerDetailsPage({ params }: PeerDetailsPageProps) {
               Edit
             </Button>
           </Link>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              void handleDelete();
+            }}
+            disabled={isDeleting}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -431,7 +446,14 @@ export default function PeerDetailsPage({ params }: PeerDetailsPageProps) {
             <Download className="mr-2 h-5 w-5" />
             Download Configuration File
           </Button>
-          <Button onClick={handleRegenerate} variant="outline" size="lg" disabled={isRegenerating}>
+          <Button
+            onClick={() => {
+              void handleRegenerate();
+            }}
+            variant="outline"
+            size="lg"
+            disabled={isRegenerating}
+          >
             <RefreshCw className={`mr-2 h-5 w-5 ${isRegenerating ? "animate-spin" : ""}`} />
             {isRegenerating ? "Regenerating..." : "Regenerate Keys"}
           </Button>
