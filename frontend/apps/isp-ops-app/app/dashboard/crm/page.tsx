@@ -22,10 +22,10 @@ import {
 } from "lucide-react";
 import { useSiteSurveys } from "@/hooks/useCRM";
 import type { SiteSurvey, SiteSurveyStatus, Serviceability } from "@/hooks/useCRM";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -33,26 +33,28 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import { ScheduleSurveyModal } from "@/components/crm/ScheduleSurveyModal";
 import { CompleteSurveyModal } from "@/components/crm/CompleteSurveyModal";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function SiteSurveysPage() {
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedSurvey, setSelectedSurvey] = useState<SiteSurvey | null>(null);
@@ -160,7 +162,13 @@ export default function SiteSurveysPage() {
   };
 
   const handleCancelSurvey = async (survey: SiteSurvey) => {
-    if (!confirm(`Are you sure you want to cancel survey ${survey.survey_number}?`)) {
+    const confirmed = await confirmDialog({
+      title: "Cancel site survey",
+      description: `Are you sure you want to cancel survey ${survey.survey_number}?`,
+      confirmText: "Cancel survey",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -362,7 +370,9 @@ export default function SiteSurveysPage() {
                           )}
                           {(survey.status === "scheduled" || survey.status === "in_progress") && (
                             <DropdownMenuItem
-                              onClick={() => handleCancelSurvey(survey)}
+                              onClick={() => {
+                                void handleCancelSurvey(survey);
+                              }}
                               className="text-red-600"
                             >
                               <Ban className="h-4 w-4 mr-2" />

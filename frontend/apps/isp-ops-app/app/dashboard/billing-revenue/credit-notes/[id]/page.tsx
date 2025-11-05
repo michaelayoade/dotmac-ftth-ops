@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { CreditNote } from "@/types/billing";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -27,10 +27,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -38,9 +38,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 const statusColors = {
   draft: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
@@ -62,6 +63,7 @@ export default function CreditNoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const creditNoteId = params.id as string;
 
@@ -128,7 +130,13 @@ export default function CreditNoteDetailPage() {
   const handleVoidCreditNote = useCallback(async () => {
     if (!creditNote) return;
 
-    if (!confirm("Are you sure you want to void this credit note? This action cannot be undone.")) {
+    const confirmed = await confirmDialog({
+      title: "Void credit note",
+      description: "Are you sure you want to void this credit note? This action cannot be undone.",
+      confirmText: "Void credit note",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -153,7 +161,7 @@ export default function CreditNoteDetailPage() {
     } finally {
       setActionLoading(false);
     }
-  }, [creditNote, fetchCreditNote, toast]);
+  }, [creditNote, confirmDialog, fetchCreditNote, toast]);
 
   const handleApplyCreditNote = useCallback(async () => {
     if (!creditNote) return;

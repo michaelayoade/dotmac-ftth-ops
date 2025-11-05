@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { DollarSign, TrendingUp, Clock, CheckCircle2, Calendar, RefreshCw } from "lucide-react";
 import { useRevenueMetrics, useRevenueStatistics } from "@/hooks/usePartnerRevenue";
 

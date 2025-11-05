@@ -1,10 +1,10 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { LineChart } from "@/components/charts/LineChart";
 import { useMonitoringMetrics } from "@/lib/graphql/hooks";
 import { Activity, AlertTriangle, Clock, Users } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@dotmac/ui";
 
 export function MonitoringMetricsCard({ period: _period = "24h" }: { period?: string }) {
   const { data, isLoading, error } = useMonitoringMetrics();

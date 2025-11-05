@@ -7,9 +7,9 @@ import { PlanComparison } from "@/components/tenant/billing/PlanComparison";
 import { UpgradeModal } from "@/components/tenant/billing/UpgradeModal";
 import { CancelSubscriptionModal } from "@/components/tenant/billing/CancelSubscriptionModal";
 import { SubscriptionPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import { AlertCircle, Receipt, CreditCard, TrendingUp } from "lucide-react";
 import Link from "next/link";
 

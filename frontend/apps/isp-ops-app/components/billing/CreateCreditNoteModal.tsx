@@ -8,22 +8,23 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import { type Invoice } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
 import { useInvoiceActions } from "@/hooks/useInvoiceActions";
 import { Receipt } from "lucide-react";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface CreateCreditNoteModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export function CreateCreditNoteModal({
   const [reason, setReason] = useState("");
   const [notes, setNotes] = useState("");
   const { createCreditNote, isCreatingCreditNote } = useInvoiceActions();
+  const confirmDialog = useConfirmDialog();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +65,11 @@ export function CreateCreditNoteModal({
     }
 
     if (creditAmount > invoice.amount_due) {
-      const confirmed = confirm(
-        `The credit amount (${formatCurrency(creditAmount)}) is greater than the amount due (${formatCurrency(invoice.amount_due)}). Continue anyway?`,
-      );
+      const confirmed = await confirmDialog({
+        title: "Confirm credit amount",
+        description: `The credit amount (${formatCurrency(creditAmount)}) is greater than the amount due (${formatCurrency(invoice.amount_due)}). Continue anyway?`,
+        confirmText: "Continue",
+      });
       if (!confirmed) return;
     }
 

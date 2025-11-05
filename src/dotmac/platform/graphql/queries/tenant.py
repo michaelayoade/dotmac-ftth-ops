@@ -30,6 +30,8 @@ from dotmac.platform.tenant.models import (
     TenantStatus,
 )
 
+PLATFORM_TENANT_READ_PERMISSION = "platform:tenants:read"
+
 
 @strawberry.type
 class TenantQueries:
@@ -58,10 +60,21 @@ class TenantQueries:
         Returns:
             Tenant with conditionally loaded related data
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        current_user = context.require_authenticated_user()
+        db: AsyncSession = context.db
+
+        tenant_id = str(id)
+        platform_access = current_user.is_platform_admin or (
+            PLATFORM_TENANT_READ_PERMISSION in (current_user.permissions or [])
+        )
+        if not platform_access:
+            active_tenant_id = context.get_active_tenant_id()
+            if active_tenant_id != tenant_id:
+                raise Exception("You do not have access to this tenant.")
 
         # Fetch tenant
-        stmt = select(TenantModel).where(TenantModel.id == str(id))
+        stmt = select(TenantModel).where(TenantModel.id == tenant_id)
         result = await db.execute(stmt)
         tenant_model = result.scalar_one_or_none()
 
@@ -127,7 +140,13 @@ class TenantQueries:
         Returns:
             TenantConnection with paginated tenants and metadata
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        current_user = context.require_authenticated_user()
+        permissions = set(current_user.permissions or [])
+        if not current_user.is_platform_admin and PLATFORM_TENANT_READ_PERMISSION not in permissions:
+            raise Exception("Platform administrator access required to list tenants.")
+
+        db: AsyncSession = context.db
 
         # Limit page_size
         page_size = min(page_size, 100)
@@ -215,7 +234,13 @@ class TenantQueries:
         Returns:
             TenantOverviewMetrics with counts, distribution, and growth metrics
         """
-        db: AsyncSession = info.context.db
+        context = info.context
+        current_user = context.require_authenticated_user()
+        permissions = set(current_user.permissions or [])
+        if not current_user.is_platform_admin and PLATFORM_TENANT_READ_PERMISSION not in permissions:
+            raise Exception("Platform administrator access required to view tenant metrics.")
+
+        db: AsyncSession = context.db
 
         # Get status counts
         status_stmt = select(

@@ -17,18 +17,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+} from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import { DualStackIPInput } from "@/components/forms/DualStackIPInput";
 import { IPAddressInput } from "@/components/forms/IPAddressInput";
 import { Loader2, AlertCircle } from "lucide-react";

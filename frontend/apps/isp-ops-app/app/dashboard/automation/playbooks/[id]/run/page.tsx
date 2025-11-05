@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
 import {

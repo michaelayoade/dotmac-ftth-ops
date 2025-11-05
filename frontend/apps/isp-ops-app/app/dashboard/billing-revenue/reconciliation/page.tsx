@@ -21,12 +21,11 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { toast } from '@/components/ui/toast';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dotmac/ui';
+import { Button } from '@dotmac/ui';
+import { Badge } from '@dotmac/ui';
 import {
   Table,
   TableBody,
@@ -34,7 +33,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@dotmac/ui';
 import {
   Dialog,
   DialogContent,
@@ -43,18 +42,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@dotmac/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from '@dotmac/ui';
+import { Input } from '@dotmac/ui';
+import { Label } from '@dotmac/ui';
+import { Textarea } from '@dotmac/ui';
 import { platformConfig } from '@/lib/config';
+import { useToast } from '@dotmac/ui';
+import { useConfirmDialog } from '@dotmac/ui';
 
 // Types
 interface ReconciliationSession {
@@ -213,6 +214,8 @@ const getDiscrepancyColor = (amount: number): string => {
 export default function ReconciliationPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
@@ -252,12 +255,12 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation session created successfully');
+      toast({ title: 'Reconciliation session created successfully' });
       setIsCreateDialogOpen(false);
       resetCreateForm();
     },
     onError: (error: Error) => {
-      toast.error(`Failed to create reconciliation: ${error.message}`);
+      toast({ title: `Failed to create reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -266,10 +269,10 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation completed successfully');
+      toast({ title: 'Reconciliation completed successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to complete reconciliation: ${error.message}`);
+      toast({ title: `Failed to complete reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -278,10 +281,10 @@ export default function ReconciliationPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reconciliations'] });
       queryClient.invalidateQueries({ queryKey: ['reconciliation-summary'] });
-      toast.success('Reconciliation approved successfully');
+      toast({ title: 'Reconciliation approved successfully' });
     },
     onError: (error: Error) => {
-      toast.error(`Failed to approve reconciliation: ${error.message}`);
+      toast({ title: `Failed to approve reconciliation: ${error.message}`, variant: 'destructive' });
     },
   });
 
@@ -301,20 +304,30 @@ export default function ReconciliationPage() {
     createMutation.mutate(createFormData);
   };
 
-  const handleComplete = (id: number) => {
-    if (confirm('Are you sure you want to complete this reconciliation?')) {
+  const handleComplete = async (id: number) => {
+    const confirmed = await confirmDialog({
+      title: 'Complete reconciliation',
+      description: 'Are you sure you want to complete this reconciliation?',
+      confirmText: 'Complete',
+    });
+    if (confirmed) {
       completeMutation.mutate(id);
     }
   };
 
-  const handleApprove = (id: number) => {
-    if (confirm('Are you sure you want to approve this reconciliation?')) {
+  const handleApprove = async (id: number) => {
+    const confirmed = await confirmDialog({
+      title: 'Approve reconciliation',
+      description: 'Are you sure you want to approve this reconciliation?',
+      confirmText: 'Approve',
+    });
+    if (confirmed) {
       approveMutation.mutate(id);
     }
   };
 
   return (
-    <RouteGuard permission="billing:write">
+    <RouteGuard permission={['billing:write']}>
       <div className="container mx-auto p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

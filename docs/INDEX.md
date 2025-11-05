@@ -15,21 +15,34 @@ This repository now ships a lean documentation set. Everything you are likely to
 - [ENVIRONMENT_VARIABLES.md](ENVIRONMENT_VARIABLES.md) — configuration knobs with defaults.
 - [DEVELOPMENT_DATABASE.md](DEVELOPMENT_DATABASE.md) — local database setup, migrations, and troubleshooting.
 - [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md) — canonical entity model and relationships.
+- [../frontend/QUICK_START.md](../frontend/QUICK_START.md) — frontend workspace layout, dev scripts, and tooling.
 
 ---
 
 ## Feature Guides & Runbooks
 
-- [NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](NETWORK_DIAGNOSTICS_IMPLEMENTATION.md) — RADIUS session control, ping, and traceroute tooling.
 - [DYNAMIC_ALERTING_SETUP.md](DYNAMIC_ALERTING_SETUP.md) — alert routing, Prometheus/Alertmanager configuration, and CLI helpers.
 - [FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md) — data model, migrations, and APIs for fiber plant management.
-- [SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md](SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md) — bulk suspend/activate/delete flows in the subscriber UI.
-- [FRONTEND_BACKEND_ALIGNMENT_FIX.md](FRONTEND_BACKEND_ALIGNMENT_FIX.md) — current API contract for RADIUS disconnect actions.
 - [WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md](WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md) — controlling long-running jobs over WebSockets.
-- [WIREGUARD_FRONTEND_IMPLEMENTATION.md](WIREGUARD_FRONTEND_IMPLEMENTATION.md) & [WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md](WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md) — provisioning and UI notes for WireGuard.
+- [WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md](WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md) — provisioning model and backend workflows for WireGuard.
 - [TENANT_ONBOARDING_IMPLEMENTATION.md](TENANT_ONBOARDING_IMPLEMENTATION.md) — tenant enrollment, RBAC, and setup flows.
 - [VAULT_SECRETS_MIGRATION.md](VAULT_SECRETS_MIGRATION.md) — secret management rollout plan.
 - [ALARM_ARCHIVAL.md](ALARM_ARCHIVAL.md) & [ALARM_NOTIFICATION_TESTS.md](ALARM_NOTIFICATION_TESTS.md) — alarm retention and alert-testing guidance.
+
+---
+
+## Frontend GraphQL & UI Infrastructure
+
+> Start here when migrating pages to the new TanStack Query + mutation helpers stack.
+
+- [GRAPHQL_MIGRATION_HELPERS.md](../frontend/docs/GRAPHQL_MIGRATION_HELPERS.md) — overview of query helpers, when to use each pattern, and end-to-end workflow.
+- [NORMALIZATION_HELPERS_REFERENCE.md](../frontend/docs/NORMALIZATION_HELPERS_REFERENCE.md) — recipes for normalizing custom hooks (dashboard/list/detail) into `QueryBoundary`.
+- [MUTATION_HELPERS_REFERENCE.md](../frontend/docs/MUTATION_HELPERS_REFERENCE.md) — mutation utilities: `useMutationWithToast`, optimistic updates, invalidation helpers, and form integration.
+- [SKELETON_COMPONENTS.md](../frontend/docs/SKELETON_COMPONENTS.md) — reusable loading components (table, card grid, dashboard) used across refactors.
+- Migration examples:
+  - [MIGRATION_EXAMPLE_CUSTOMERS.md](../frontend/docs/MIGRATION_EXAMPLE_CUSTOMERS.md) — customer dashboard refactor (query helpers + normalization).
+- [MIGRATION_EXAMPLE_CUSTOMER_EDIT.md](../frontend/docs/MIGRATION_EXAMPLE_CUSTOMER_EDIT.md) — customer edit modal refactor (mutation helpers + forms).
+- [GRAPHQL_MIGRATION_ROADMAP.md](../frontend/docs/GRAPHQL_MIGRATION_ROADMAP.md) — project-level migration tracker and prioritised backlog.
 
 ---
 

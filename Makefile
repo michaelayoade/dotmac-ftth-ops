@@ -1,5 +1,7 @@
 # DotMac Platform Services - Simplified Makefile
 
+SHELL := /bin/bash
+
 .PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint typecheck typecheck-mypy typecheck-pyright restart-platform restart-isp restart-all
 
 # Colors
@@ -141,6 +143,8 @@ clean-all:
 install:
 	@echo "$(CYAN)Installing dependencies...$(NC)"
 	@poetry install
+	@echo "$(CYAN)Installing frontend workspace dependencies...$(NC)"
+	@cd frontend && pnpm install
 
 dev:
 	@echo "$(CYAN)Starting backend app service inside Docker (logs follow)$(NC)"

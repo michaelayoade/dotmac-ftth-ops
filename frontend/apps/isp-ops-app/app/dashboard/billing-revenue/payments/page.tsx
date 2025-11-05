@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -10,9 +10,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -20,7 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +30,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import {
   CreditCard,
   DollarSign,

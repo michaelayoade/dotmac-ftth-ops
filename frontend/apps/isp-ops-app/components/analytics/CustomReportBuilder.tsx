@@ -1,19 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Checkbox } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { FileText, Download, Save, Eye } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 

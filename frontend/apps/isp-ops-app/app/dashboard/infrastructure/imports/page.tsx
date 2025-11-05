@@ -8,14 +8,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import {
   Upload,
   Download,
@@ -35,7 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import { format } from "date-fns";
 
 interface ImportJob {

@@ -7,9 +7,9 @@
  */
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
 import { Plus, Search, Filter, TrendingUp, Users, DollarSign } from "lucide-react";
 import { useInternetPlans, usePlanStatistics } from "../../../../hooks/useInternetPlans";
 import type {

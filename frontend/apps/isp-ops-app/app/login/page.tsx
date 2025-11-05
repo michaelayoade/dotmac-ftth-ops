@@ -69,7 +69,7 @@ export default function LoginPage() {
             try {
               localStorage.setItem("tenant_id", response.data.tenant_id);
             } catch (error) {
-              logger.debug("Unable to persist tenant_id", error);
+              logger.debug("Unable to persist tenant_id", { error: error instanceof Error ? error.message : String(error) });
             }
           }
 

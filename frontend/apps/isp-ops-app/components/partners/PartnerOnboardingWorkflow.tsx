@@ -8,7 +8,7 @@ import {
   PartnerOnboardingInput,
 } from "@/hooks/usePartners";
 import { CheckCircle, Circle, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@dotmac/ui";
 
 type OnboardingStep = "partner" | "customer" | "license" | "deployment" | "review";
 

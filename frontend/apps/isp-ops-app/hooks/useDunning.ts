@@ -9,7 +9,7 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import {
   dunningService,
   type CampaignListFilters,

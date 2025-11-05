@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
-import { createSortableHeader } from "@/components/ui/data-table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { EnhancedDataTable, BulkAction } from "@dotmac/ui";
+import { createSortableHeader } from "@dotmac/ui";
 import { UniversalChart } from "@dotmac/primitives";
 import {
   Activity,
@@ -19,8 +19,9 @@ import {
 } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRBAC } from "@/contexts/RBACContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
+import { apiClient } from "@/lib/api/client";
 import {
   Dialog,
   DialogContent,
@@ -28,7 +29,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,16 +39,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   useUsageRecords,
   useUsageStatistics,

@@ -23,21 +23,21 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   EnhancedDataTable,
   type ColumnDef,
   type BulkAction,
-} from "@/components/ui/EnhancedDataTable";
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { useQuotes, type Quote, type QuoteStatus } from "@/hooks/useCRM";
 import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
@@ -49,12 +49,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function QuotesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -204,9 +206,12 @@ export default function QuotesPage() {
 
   const handleDeleteQuote = useCallback(
     async (quote: Quote) => {
-      const confirmed = confirm(
-        `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
-      );
+      const confirmed = await confirmDialog({
+        title: "Delete quote",
+        description: `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
+        confirmText: "Delete quote",
+        variant: "destructive",
+      });
       if (!confirmed) return;
 
       try {
@@ -225,7 +230,7 @@ export default function QuotesPage() {
         });
       }
     },
-    [deleteQuote, refetch, toast],
+    [confirmDialog, deleteQuote, refetch, toast],
   );
 
   const columns: ColumnDef<Quote>[] = useMemo(
@@ -398,11 +403,17 @@ export default function QuotesPage() {
     {
       label: "Delete Quotes",
       icon: Trash2,
+      variant: "destructive",
       action: async (selectedQuotes) => {
-        const confirmed = confirm(
-          `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
-        );
-        if (!confirmed) return;
+        const confirmed = await confirmDialog({
+          title: "Delete quotes",
+          description: `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
+          confirmText: "Delete quotes",
+          variant: "destructive",
+        });
+        if (!confirmed) {
+          return;
+        }
 
         for (const quote of selectedQuotes) {
           try {

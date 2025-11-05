@@ -25,6 +25,7 @@ import {
   type Workflow,
 } from "@/hooks/useOrchestration";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmDialog } from "@dotmac/ui";
 
 // ============================================================================
 // Utility Functions
@@ -373,6 +374,7 @@ export default function WorkflowHistoryPage() {
   const [dateTo, setDateTo] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string | null>(null);
+  const confirmDialog = useConfirmDialog();
 
   const { workflows, total, totalPages, loading, refetch } = useWorkflows({
     status: statusFilter !== "all" ? statusFilter : undefined,
@@ -454,11 +456,13 @@ export default function WorkflowHistoryPage() {
     const workflowIds = Array.from(selectedIds);
     if (workflowIds.length === 0) return;
 
-    if (
-      !confirm(
-        `Are you sure you want to delete ${workflowIds.length} workflow(s)? This action cannot be undone.`,
-      )
-    ) {
+    const confirmed = await confirmDialog({
+      title: "Delete workflows",
+      description: `Are you sure you want to delete ${workflowIds.length} workflow(s)? This action cannot be undone?`,
+      confirmText: "Delete workflows",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -498,7 +502,9 @@ export default function WorkflowHistoryPage() {
           {selectedIds.size > 0 && (
             <>
               <button
-                onClick={handleBulkDelete}
+              onClick={() => {
+                void handleBulkDelete();
+              }}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
               >
                 <Trash2 className="h-4 w-4" />

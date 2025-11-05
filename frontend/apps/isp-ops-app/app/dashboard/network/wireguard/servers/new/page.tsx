@@ -12,8 +12,8 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
 import { ArrowLeft, Server, Save, AlertCircle } from "lucide-react";
 import { useCreateWireGuardServer } from "@/hooks/useWireGuard";
 import type { WireGuardServerCreate } from "@/types/wireguard";

@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Checkbox } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -22,17 +22,17 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
 import {
   Shield,
   Users,
@@ -48,7 +48,7 @@ import {
   AlertCircle,
   CheckCircle2,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import {
   useRBAC,
   PermissionCategory,
@@ -56,7 +56,7 @@ import {
   type Role,
   type Permission,
 } from "@/contexts/RBACContext";
-import { LoadingState, LoadingTable, LoadingSpinner } from "@/components/ui/loading-states";
+import { LoadingState, LoadingTable, LoadingSpinner } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { apiClient } from "@/lib/api/client";
 

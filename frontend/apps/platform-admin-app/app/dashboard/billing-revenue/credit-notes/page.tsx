@@ -19,9 +19,9 @@ import {
   type ColumnDef,
   type QuickFilter,
   type Row,
-} from "@/components/ui/EnhancedDataTable";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -29,20 +29,20 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { useTenant } from "@/lib/contexts/tenant-context";
 
 const statusColors = {

@@ -5,8 +5,8 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import { useTenant } from "@/lib/contexts/tenant-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import { FileText, Download, Mail, RefreshCw } from "lucide-react";
 import { Receipt } from "@/types/billing";
 import ReceiptList from "@/components/billing/ReceiptList";

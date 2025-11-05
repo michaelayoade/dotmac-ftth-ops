@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Building2, Check, Loader2 } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@dotmac/ui";
 import { cn } from "@/lib/utils";
 import { useTenant, Tenant } from "@/lib/contexts/tenant-context";
 

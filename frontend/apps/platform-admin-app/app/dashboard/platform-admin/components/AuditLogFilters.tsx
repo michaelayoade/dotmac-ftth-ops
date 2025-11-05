@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { Search, Download, RefreshCw, X, Calendar } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { ActivityType, ActivitySeverity, ACTIVITY_CATEGORIES } from "@/types/audit";
 
 interface AuditLogFiltersProps {

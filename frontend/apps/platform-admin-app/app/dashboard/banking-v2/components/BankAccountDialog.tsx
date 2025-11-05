@@ -8,19 +8,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
+} from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
 import { Loader2 } from "lucide-react";
 import { useCreateBankAccount, useUpdateBankAccount } from "@/hooks/useBankAccounts";
 import type {

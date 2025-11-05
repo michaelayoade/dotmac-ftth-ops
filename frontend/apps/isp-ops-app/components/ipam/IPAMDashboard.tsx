@@ -7,9 +7,9 @@
  */
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { parseCIDR, IPFamily, getIPv4UsableHosts } from "@/lib/utils/ip-address";
 import { Network, Globe, Server, TrendingUp } from "lucide-react";
 

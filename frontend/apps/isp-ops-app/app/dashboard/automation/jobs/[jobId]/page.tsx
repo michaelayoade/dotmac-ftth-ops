@@ -1,13 +1,14 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
+import { useConfirmDialog } from "@dotmac/ui";
 import {
   ArrowLeft,
   RefreshCw,
@@ -45,6 +46,7 @@ function JobDetailsPageContent() {
   const jobId = params?.jobId as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   const { data: job, isLoading } = useQuery<Job>({
     queryKey: ["ansible", "job", jobId],
@@ -148,16 +150,29 @@ function JobDetailsPageContent() {
     });
   };
 
-  const handleCancel = () => {
-    if (confirm(`Are you sure you want to cancel this job?`)) {
-      cancelJobMutation.mutate();
+  const handleCancel = async () => {
+    const confirmed = await confirmDialog({
+      title: "Cancel job",
+      description: "Are you sure you want to cancel this job?",
+      confirmText: "Cancel job",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    cancelJobMutation.mutate();
   };
 
-  const handleRelaunch = () => {
-    if (confirm("Relaunch this job with the same configuration?")) {
-      relaunchJobMutation.mutate();
+  const handleRelaunch = async () => {
+    const confirmed = await confirmDialog({
+      title: "Relaunch job",
+      description: "Relaunch this job with the same configuration?",
+      confirmText: "Relaunch",
+    });
+    if (!confirmed) {
+      return;
     }
+    relaunchJobMutation.mutate();
   };
 
   const getStatusBadge = (status: Job["status"]) => {
@@ -273,7 +288,9 @@ function JobDetailsPageContent() {
           {canCancel && (
             <Button
               variant="destructive"
-              onClick={handleCancel}
+              onClick={() => {
+                void handleCancel();
+              }}
               disabled={cancelJobMutation.isPending}
             >
               <StopCircle className="h-4 w-4 mr-2" />
@@ -282,7 +299,9 @@ function JobDetailsPageContent() {
           )}
           {canRelaunch && (
             <Button
-              onClick={handleRelaunch}
+              onClick={() => {
+                void handleRelaunch();
+              }}
               disabled={relaunchJobMutation.isPending}
             >
               <Play className="h-4 w-4 mr-2" />

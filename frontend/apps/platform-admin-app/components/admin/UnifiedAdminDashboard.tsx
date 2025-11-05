@@ -1,9 +1,9 @@
 "use client";
 
 import { useDashboardData } from "@/lib/graphql/graphql-hooks";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import {
   AlertCircle,
   TrendingUp,

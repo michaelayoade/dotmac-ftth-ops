@@ -7,9 +7,9 @@
  */
 
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   ArrowLeft,
   Edit,
@@ -34,6 +34,7 @@ import {
 } from "../../../../../hooks/useInternetPlans";
 import Link from "next/link";
 import type { InternetServicePlan } from "../../../../../types/internet-plans";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function PlanDetailsPage() {
   const params = useParams();
@@ -43,9 +44,16 @@ export default function PlanDetailsPage() {
   const { data: plan, isLoading } = useInternetPlan(planId);
   const { data: stats } = usePlanStatistics(planId);
   const { mutate: deletePlan, isPending: deleting } = useDeleteInternetPlan();
+  const confirmDialog = useConfirmDialog();
 
-  const handleDelete = () => {
-    if (!confirm("Are you sure you want to archive this plan? This action cannot be undone.")) {
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: "Archive plan",
+      description: "Are you sure you want to archive this plan? This action cannot be undone.",
+      confirmText: "Archive plan",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -102,7 +110,9 @@ export default function PlanDetailsPage() {
           </Link>
           <Button
             variant="destructive"
-            onClick={handleDelete}
+            onClick={() => {
+              void handleDelete();
+            }}
             disabled={deleting || (stats?.active_subscriptions ?? 0) > 0}
           >
             <Trash2 className="mr-2 h-4 w-4" />

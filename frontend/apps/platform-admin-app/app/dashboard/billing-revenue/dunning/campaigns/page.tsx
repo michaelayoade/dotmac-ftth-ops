@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -12,7 +12,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,7 +31,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@dotmac/ui";
 import {
   Form,
   FormControl,
@@ -40,18 +40,18 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@/components/ui/form";
+} from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
 import {

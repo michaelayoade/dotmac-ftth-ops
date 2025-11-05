@@ -35,6 +35,8 @@ export * from "./utils/bundle-optimization";
 export * from "./utils/performance";
 export * from "./utils/ssr";
 export * from "./utils/accessibility";
+// Skeleton loading components
+export * from "./skeletons";
 
 // Performance monitoring
 export * from "./performance";

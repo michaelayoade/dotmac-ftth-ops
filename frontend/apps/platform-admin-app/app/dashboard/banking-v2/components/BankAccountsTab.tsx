@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import {
   Plus,
   Building2,
@@ -20,7 +20,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   useBankAccounts,
   useVerifyBankAccount,
@@ -29,6 +29,7 @@ import {
 import type { CompanyBankAccountResponse } from "@/lib/services/bank-accounts-service";
 import { BankAccountDialog } from "./BankAccountDialog";
 import { BankAccountDetailsDialog } from "./BankAccountDetailsDialog";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export function BankAccountsTab() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -39,6 +40,7 @@ export function BankAccountsTab() {
   const { data: accounts, isLoading } = useBankAccounts(includeInactive);
   const verifyAccount = useVerifyBankAccount();
   const deactivateAccount = useDeactivateBankAccount();
+  const confirmDialog = useConfirmDialog();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -86,9 +88,16 @@ export function BankAccountsTab() {
   };
 
   const handleDeactivate = async (accountId: number) => {
-    if (confirm("Are you sure you want to deactivate this bank account?")) {
-      await deactivateAccount.mutateAsync(accountId);
+    const confirmed = await confirmDialog({
+      title: "Deactivate bank account",
+      description: "Are you sure you want to deactivate this bank account?",
+      confirmText: "Deactivate",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    await deactivateAccount.mutateAsync(accountId);
   };
 
   if (isLoading) {

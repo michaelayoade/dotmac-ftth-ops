@@ -17,10 +17,10 @@ import { metricsService, BillingMetrics } from "@/lib/services/metrics-service";
 import { AlertBanner } from "@/components/alerts/AlertBanner";
 import { apiClient } from "@/lib/api/client";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { SkeletonMetricCard } from "@/components/ui/skeleton";
-import { Breadcrumb } from "@/components/ui/breadcrumb";
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { ErrorState } from "@/components/ui/error-state";
+import { SkeletonMetricCard } from "@dotmac/ui";
+import { Breadcrumb } from "@dotmac/ui";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { ErrorState } from "@dotmac/ui";
 import { LineChart } from "@/components/charts/LineChart";
 import { useDashboardMetrics } from "@/hooks/useRealTimeMetrics";
 

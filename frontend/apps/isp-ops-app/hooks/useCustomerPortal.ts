@@ -641,3 +641,273 @@ export function useCustomerSettings() {
     changePassword,
   };
 }
+
+// ============================================================================
+// useCustomerPaymentMethods Hook
+// ============================================================================
+
+export interface CustomerPaymentMethod {
+  payment_method_id: string;
+  method_type: "card" | "bank_account" | "wallet" | "wire_transfer" | "check";
+  status: "active" | "pending_verification" | "verification_failed" | "expired" | "inactive";
+  is_default: boolean;
+  auto_pay_enabled?: boolean;
+
+  // Card details
+  card_brand?:
+    | "visa"
+    | "mastercard"
+    | "amex"
+    | "discover"
+    | "diners"
+    | "jcb"
+    | "unionpay"
+    | "unknown";
+  card_last4?: string;
+  card_exp_month?: number;
+  card_exp_year?: number;
+
+  // Bank account details
+  bank_name?: string;
+  bank_account_last4?: string;
+  bank_account_type?: string;
+
+  // Wallet details
+  wallet_type?: string;
+
+  // Billing details
+  billing_name?: string;
+  billing_email?: string;
+  billing_phone?: string;
+  billing_address_line1?: string;
+  billing_address_line2?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postal_code?: string;
+  billing_country: string;
+
+  // Verification
+  is_verified: boolean;
+
+  // Timestamps
+  created_at: string;
+  expires_at?: string;
+}
+
+export interface AddPaymentMethodRequest {
+  method_type: "card" | "bank_account" | "wallet";
+  card_token?: string;
+  bank_token?: string;
+  bank_account_token?: string;
+  wallet_token?: string;
+  bank_name?: string;
+  bank_account_type?: string;
+  billing_name?: string;
+  billing_email?: string;
+  billing_phone?: string;
+  billing_address_line1?: string;
+  billing_address_line2?: string;
+  billing_city?: string;
+  billing_state?: string;
+  billing_postal_code?: string;
+  billing_country?: string;
+  set_as_default?: boolean;
+}
+
+export function useCustomerPaymentMethods() {
+  const [paymentMethods, setPaymentMethods] = useState<CustomerPaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchPaymentMethods = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payment-methods`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch payment methods");
+      }
+
+      const data = await response.json();
+      setPaymentMethods(data);
+    } catch (err) {
+      const message =
+        err instanceof PortalAuthError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "An error occurred";
+      setError(message);
+      console.error("Error fetching customer payment methods:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const addPaymentMethod = useCallback(
+    async (request: AddPaymentMethodRequest) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payment-methods`, {
+          method: "POST",
+          body: JSON.stringify(request),
+        });
+
+        if (!response.ok) {
+          throw new Error("Failed to add payment method");
+        }
+
+        const data = await response.json();
+        await fetchPaymentMethods();
+        return data;
+      } catch (err) {
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
+        console.error("Error adding payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const setDefaultPaymentMethod = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerPortalFetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/set-default`,
+          {
+            method: "POST",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to set default payment method");
+        }
+
+        const data = await response.json();
+        await fetchPaymentMethods();
+        return data;
+      } catch (err) {
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
+        console.error("Error setting default payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const removePaymentMethod = useCallback(
+    async (paymentMethodId: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerPortalFetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}`,
+          {
+            method: "DELETE",
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to remove payment method");
+        }
+
+        await fetchPaymentMethods();
+      } catch (err) {
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
+        console.error("Error removing payment method:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  const toggleAutoPay = useCallback(
+    async (paymentMethodId: string, enabled: boolean) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const response = await customerPortalFetch(
+          `${API_BASE}/api/v1/customer/payment-methods/${paymentMethodId}/auto-pay`,
+          {
+            method: "POST",
+            body: JSON.stringify({ enabled }),
+          },
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to toggle auto-pay");
+        }
+
+        const data = await response.json();
+        await fetchPaymentMethods();
+        return data;
+      } catch (err) {
+        const message =
+          err instanceof PortalAuthError
+            ? err.message
+            : err instanceof Error
+              ? err.message
+              : "An error occurred";
+        setError(message);
+        console.error("Error toggling auto-pay:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [fetchPaymentMethods],
+  );
+
+  useEffect(() => {
+    fetchPaymentMethods();
+  }, [fetchPaymentMethods]);
+
+  const defaultPaymentMethod = paymentMethods.find((pm) => pm.is_default);
+  const autoPayPaymentMethod = paymentMethods.find((pm) => pm.auto_pay_enabled);
+
+  return {
+    paymentMethods,
+    defaultPaymentMethod,
+    autoPayPaymentMethod,
+    loading,
+    error,
+    refetch: fetchPaymentMethods,
+    addPaymentMethod,
+    setDefaultPaymentMethod,
+    removePaymentMethod,
+    toggleAutoPay,
+  };
+}

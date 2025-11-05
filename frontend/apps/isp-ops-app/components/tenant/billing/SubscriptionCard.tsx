@@ -8,10 +8,10 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
 import { TenantSubscription } from "@/hooks/useTenantSubscription";
 import { formatCurrency } from "@/lib/utils";
 import { format } from "date-fns";

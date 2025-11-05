@@ -7,8 +7,9 @@ import { RouteGuard } from "@/components/auth/PermissionGuard";
 import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
 import CreateRoleModal from "@/components/admin/CreateRoleModal";
 import AssignRoleModal from "@/components/admin/AssignRoleModal";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Role {
   id: string;
@@ -43,6 +44,7 @@ export default function RolesManagementPage() {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const confirmDialog = useConfirmDialog();
 
   useEffect(() => {
     fetchRoles();
@@ -81,7 +83,13 @@ export default function RolesManagementPage() {
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete the role "${role.display_name}"?`)) {
+    const confirmed = await confirmDialog({
+      title: "Delete role",
+      description: `Are you sure you want to delete the role "${role.display_name}"?`,
+      confirmText: "Delete role",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

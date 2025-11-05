@@ -249,7 +249,6 @@ Start with these active resources:
 - **[docs/ENVIRONMENT_VARIABLES.md](docs/ENVIRONMENT_VARIABLES.md)** – backend/frontend configuration matrix
 - **[docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** – canonical entity model overview
 - **[docs/API_SPECIFICATIONS.md](docs/API_SPECIFICATIONS.md)** – REST and integration surface area
-- **[docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md)** – diagnostics tooling and APIs
 - **[docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md)** – fiber data model and workflows
 - **Frontend architecture**: see [frontend/ARCHITECTURE_OVERVIEW.md](frontend/ARCHITECTURE_OVERVIEW.md), [frontend/MULTI_APP_ARCHITECTURE.md](frontend/MULTI_APP_ARCHITECTURE.md), and [frontend/PRODUCTION_DEPLOYMENT_K8S.md](frontend/PRODUCTION_DEPLOYMENT_K8S.md)
 

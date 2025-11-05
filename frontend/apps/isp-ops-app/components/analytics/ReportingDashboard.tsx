@@ -13,18 +13,18 @@ import {
   Filter,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useToast } from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 
 interface ReportTemplate {
   id: string;

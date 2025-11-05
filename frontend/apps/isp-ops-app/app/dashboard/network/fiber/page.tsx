@@ -3,9 +3,9 @@
 // Force dynamic rendering to avoid SSR issues with React Query hooks
 export const dynamic = "force-dynamic";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useFiberDashboardGraphQL } from "@/hooks/useFiberGraphQL";
 import { platformConfig } from "@/lib/config";

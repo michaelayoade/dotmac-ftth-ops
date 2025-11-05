@@ -24,7 +24,7 @@ import {
   CommandList,
   CommandSeparator,
   CommandShortcut,
-} from "@/components/ui/command";
+} from "@dotmac/ui";
 import {
   Search,
   Home,
@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 import { useDebouncedSearch } from "@/hooks/useSearch";
 import { getEntityRoute, formatEntityType } from "@/types/search";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@dotmac/ui";
 
 interface QuickAction {
   id: string;

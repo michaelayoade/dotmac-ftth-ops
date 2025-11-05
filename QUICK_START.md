@@ -52,8 +52,9 @@ Running backend directly on your host (not in Docker):
 ./scripts/dev-backend.sh
 
 # Or manually
+cp .env.local.example .env.local  # first run only
 source .env.local
-cd frontend && pnpm dev:backend
+cd frontend && pnpm dev:backend   # delegates to scripts/quick-backend-start.sh
 ```
 
 📖 See **LOCAL_DEVELOPMENT.md** for complete guide on:

@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
 import type { Payment, PaymentStatus } from "@/types/billing";
 

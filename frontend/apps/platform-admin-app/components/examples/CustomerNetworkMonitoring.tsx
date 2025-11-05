@@ -17,7 +17,7 @@
 
 import { useEffect, useState } from "react";
 import { useCustomerNetworkStatusUpdatedSubscription } from "@/lib/graphql/generated";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 interface Props {
   customerId: string;

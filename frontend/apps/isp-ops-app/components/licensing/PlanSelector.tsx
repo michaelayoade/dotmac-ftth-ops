@@ -14,11 +14,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import { Check, X, Sparkles, TrendingUp, Building2, Clock, Percent } from "lucide-react";
 import { ServicePlan, BillingCycle, ModuleCategory } from "../../types/licensing";
 import { cn } from "@/lib/utils";

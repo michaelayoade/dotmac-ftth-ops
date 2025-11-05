@@ -7,11 +7,11 @@
 "use client";
 
 import React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
 import {
   Calendar,
   CreditCard,

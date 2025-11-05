@@ -8,9 +8,9 @@
 
 import { useMemo } from "react";
 import type { ColumnDef } from "@tanstack/react-table";
-import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { EnhancedDataTable, BulkAction } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,7 +18,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import { MoreHorizontal, Wifi, WifiOff, Eye, Edit, Trash2, Ban, Play } from "lucide-react";
 import type { Subscriber, SubscriberStatus, ConnectionType } from "@/hooks/useSubscribers";
 import { formatDistanceToNow } from "date-fns";
@@ -30,12 +30,12 @@ import { formatDistanceToNow } from "date-fns";
 interface SubscriberListProps {
   subscribers: Subscriber[];
   isLoading?: boolean;
-  onView?: (subscriber: Subscriber) => void;
-  onEdit?: (subscriber: Subscriber) => void;
-  onDelete?: (subscriber: Subscriber) => void;
-  onSuspend?: (subscriber: Subscriber) => void;
-  onActivate?: (subscriber: Subscriber) => void;
-  onRowClick?: (subscriber: Subscriber) => void;
+  onView?: (subscriber: Subscriber) => void | Promise<void>;
+  onEdit?: (subscriber: Subscriber) => void | Promise<void>;
+  onDelete?: (subscriber: Subscriber) => void | Promise<void>;
+  onSuspend?: (subscriber: Subscriber) => void | Promise<void>;
+  onActivate?: (subscriber: Subscriber) => void | Promise<void>;
+  onRowClick?: (subscriber: Subscriber) => void | Promise<void>;
   bulkActions?: BulkAction<Subscriber>[];
   enableBulkActions?: boolean;
 }

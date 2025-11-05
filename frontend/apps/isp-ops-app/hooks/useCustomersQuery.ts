@@ -9,7 +9,7 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys, optimisticHelpers, invalidateHelpers } from "@/lib/query-client";
 import { logger } from "@/lib/logger";
 import { handleError } from "@/lib/utils/error-handler";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 // Migrated from sonner to useToast hook
 // Note: toast options have changed:

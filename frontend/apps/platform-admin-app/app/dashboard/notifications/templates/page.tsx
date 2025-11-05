@@ -16,22 +16,24 @@ import {
   type ColumnDef,
   type BulkAction,
   type QuickFilter,
-} from "@/components/ui/EnhancedDataTable";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTemplateModal } from "@/components/notifications/CreateTemplateModal";
 import { EditTemplateModal } from "@/components/notifications/EditTemplateModal";
 import { PreviewTemplateModal } from "@/components/notifications/PreviewTemplateModal";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function NotificationTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<CommunicationTemplate | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const confirmDialog = useConfirmDialog();
 
   const { hasPermission } = useRBAC();
   const canWrite = hasPermission("notifications.write") || hasPermission("admin");
@@ -95,9 +97,12 @@ export default function NotificationTemplatesPage() {
 
   const handleDelete = useCallback(
     async (template: CommunicationTemplate) => {
-      const confirmed = confirm(
-        `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
-      );
+      const confirmed = await confirmDialog({
+        title: "Delete template",
+        description: `Are you sure you want to delete "${template.name}"? This action cannot be undone.`,
+        confirmText: "Delete",
+        variant: "destructive",
+      });
 
       if (!confirmed) return;
 
@@ -109,7 +114,7 @@ export default function NotificationTemplatesPage() {
         alert("Failed to delete template. Please try again.");
       }
     },
-    [deleteTemplate, refetch],
+    [deleteTemplate, refetch, confirmDialog],
   );
 
   // Columns definition
@@ -277,21 +282,24 @@ export default function NotificationTemplatesPage() {
         label: "Delete Templates",
         icon: Trash2,
         action: async (selected) => {
-          if (
-            confirm(
-              `Are you sure you want to delete ${selected.length} template(s)? This action cannot be undone.`,
-            )
-          ) {
-            for (const template of selected) {
-              await deleteTemplate(template.id);
-            }
-            refetch();
+          const confirmed = await confirmDialog({
+            title: "Delete templates",
+            description: `Are you sure you want to delete ${selected.length} template(s)? This action cannot be undone.`,
+            confirmText: "Delete templates",
+            variant: "destructive",
+          });
+          if (!confirmed) {
+            return;
           }
+          for (const template of selected) {
+            await deleteTemplate(template.id);
+          }
+          refetch();
         },
         variant: "destructive",
       },
     ],
-    [updateTemplate, deleteTemplate, refetch],
+    [updateTemplate, deleteTemplate, refetch, confirmDialog],
   );
 
   // Quick filters

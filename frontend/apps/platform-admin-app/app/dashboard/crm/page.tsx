@@ -8,12 +8,12 @@ import { useRouter } from "next/navigation";
 import { Users, TrendingUp, ClipboardList, Calendar } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EnhancedDataTable, type ColumnDef, type Row } from "@/components/ui/EnhancedDataTable";
-import { EmptyState } from "@/components/ui/empty-state";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { EnhancedDataTable, type ColumnDef, type Row } from "@dotmac/ui";
+import { EmptyState } from "@dotmac/ui";
 import {
   useLeads,
   useQuotes,
@@ -22,7 +22,7 @@ import {
   type Quote,
   type SiteSurvey,
 } from "@/hooks/useCRM";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 function formatRelativeDate(value?: string | null) {
   if (!value) return "—";

@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -11,9 +11,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -21,7 +21,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,18 +31,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   Plus,
   Search,
@@ -59,7 +59,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { apiClient } from "@/lib/api/client";
-import { useToast as useToastHook } from "@/components/ui/use-toast";
+import { useToast as useToastHook } from "@dotmac/ui";
 import { useRouter } from "next/navigation";
 import platformConfig from "@/lib/config";
 

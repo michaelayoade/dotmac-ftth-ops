@@ -8,9 +8,9 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { AvailablePlan } from "@/hooks/useTenantSubscription";
 import { Check } from "lucide-react";
 

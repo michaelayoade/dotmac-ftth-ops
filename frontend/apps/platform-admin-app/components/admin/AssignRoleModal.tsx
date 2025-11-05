@@ -2,8 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, UserPlus, Search, Users, Calendar, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Role {
   id: string;
@@ -114,9 +115,17 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
     }
   }, [selectedUsers, role.name, expiresAt, onAssign, fetchRoleAssignments]);
 
+  const confirmDialog = useConfirmDialog();
+
   const handleRevokeRole = useCallback(
     async (userId: string) => {
-      if (!confirm("Are you sure you want to revoke this role assignment?")) {
+      const confirmed = await confirmDialog({
+        title: "Revoke role assignment",
+        description: "Are you sure you want to revoke this role assignment?",
+        confirmText: "Revoke",
+        variant: "destructive",
+      });
+      if (!confirmed) {
         return;
       }
 
@@ -138,7 +147,7 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         toast.error("Failed to revoke role");
       }
     },
-    [role.name, onAssign, fetchRoleAssignments],
+    [role.name, onAssign, fetchRoleAssignments, confirmDialog],
   );
 
   const toggleUserSelection = (userId: string) => {

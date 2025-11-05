@@ -7,10 +7,10 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useLicensing } from "../../../hooks/useLicensing";
 import { SubscriptionDashboard } from "../../../components/licensing/SubscriptionDashboard";

@@ -6,10 +6,10 @@ export const dynamicParams = true;
 import { useEffect, useState } from "react";
 import { tenantService, TenantStats } from "@/lib/services/tenant-service";
 import { useTenant } from "@/lib/contexts/tenant-context";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import { AlertTriangle } from "lucide-react";
 
 export default function TenantUsagePage() {

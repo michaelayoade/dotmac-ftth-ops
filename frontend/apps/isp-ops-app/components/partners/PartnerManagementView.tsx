@@ -6,10 +6,10 @@ import { Users, Plus } from "lucide-react";
 import PartnerMetrics from "@/components/partners/PartnerMetrics";
 import PartnersList from "@/components/partners/PartnersList";
 import CreatePartnerModal from "@/components/partners/CreatePartnerModal";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { PageHeader } from "@dotmac/ui";
+import { EmptyState } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { ConfirmDialog } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 export function PartnerManagementView() {

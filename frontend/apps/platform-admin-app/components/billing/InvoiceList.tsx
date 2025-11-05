@@ -19,10 +19,11 @@ import {
   type BulkAction,
   type QuickFilter,
   type Row,
-} from "@/components/ui/EnhancedDataTable";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface InvoiceListProps {
   tenantId: string;
@@ -51,6 +52,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const confirmDialog = useConfirmDialog();
 
   const fetchInvoices = useCallback(async () => {
     try {
@@ -106,11 +108,13 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
 
   const handleBulkVoid = useCallback(
     async (selected: Invoice[]) => {
-      if (
-        !confirm(
-          `Are you sure you want to void ${selected.length} invoice(s)? This cannot be undone.`,
-        )
-      ) {
+      const confirmed = await confirmDialog({
+        title: "Void invoices",
+        description: `Are you sure you want to void ${selected.length} invoice(s)? This cannot be undone.`,
+        confirmText: "Void invoices",
+        variant: "destructive",
+      });
+      if (!confirmed) {
         return;
       }
 
@@ -129,7 +133,7 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         setBulkLoading(false);
       }
     },
-    [fetchInvoices],
+    [fetchInvoices, confirmDialog],
   );
 
   const handleBulkDownload = useCallback(async (selected: Invoice[]) => {

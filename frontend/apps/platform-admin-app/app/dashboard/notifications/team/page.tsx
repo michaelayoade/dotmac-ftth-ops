@@ -14,20 +14,20 @@ import {
   type TeamNotificationRequest,
 } from "@/hooks/useTeamNotifications";
 import type { NotificationPriority, NotificationType } from "@/hooks/useNotifications";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from "@dotmac/ui";
+import { RadioGroup, RadioGroupItem } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 
 type TargetMode = "role" | "users";

@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   ArrowLeft,
   ToggleLeft,
@@ -23,8 +23,9 @@ import {
   Activity,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@dotmac/ui";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -46,6 +47,7 @@ function FeatureFlagDetailsPageContent() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
+  const confirmDialog = useConfirmDialog();
 
   // Fetch flag details
   const { data: flag, isLoading, refetch } = useQuery<FeatureFlag>({
@@ -174,8 +176,14 @@ function FeatureFlagDetailsPageContent() {
     updateDescriptionMutation.mutate(editedDescription);
   };
 
-  const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete the feature flag "${flagName}"?`)) {
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: "Delete feature flag",
+      description: `Are you sure you want to delete the feature flag "${flagName}"?`,
+      confirmText: "Delete flag",
+      variant: "destructive",
+    });
+    if (confirmed) {
       deleteFlagMutation.mutate();
     }
   };

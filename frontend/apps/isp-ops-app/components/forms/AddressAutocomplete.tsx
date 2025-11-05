@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import { MapPin, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

@@ -12,11 +12,11 @@ import {
   Loader2,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
+import { useToast } from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
 import { DiagnosticType } from "@/types/diagnostics";
 
 interface PerformanceTestingPanelProps {

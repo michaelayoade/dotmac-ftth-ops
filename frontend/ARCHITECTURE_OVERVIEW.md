@@ -66,6 +66,13 @@ For deployment, observability, and CI/CD guidance, see:
 
 Both applications now own their own `layout.tsx`, `login/page.tsx`, and route trees; there are no re-exports from a third location. When a concern spans both apps (e.g., toast styling, auth hooks), the implementation lives in shared packages.
 
+### Portal Detection & Guards
+
+- `frontend/apps/isp-ops-app/lib/portal.ts` (and the matching admin file) exposes `getPortalType()` and `portalAllows()` for client-side checks driven by the current pathname.
+- `frontend/apps/isp-ops-app/lib/design-system/tokens/colors.ts` defines the route prefixes used for detection alongside portal-specific theming tokens.
+- Sensitive admin-only routes are excluded from the ISP build via rewrites in `frontend/apps/isp-ops-app/next.config.mjs`; the platform-admin config mirrors the approach for its own protected areas.
+- Navigation layouts in `apps/*/app/dashboard/layout.tsx` filter sections with `portalAllows(...)`, ensuring links stay in scope for the current portal.
+
 ---
 
 ## Shared Packages

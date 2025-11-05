@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import {
   Search,
   Download,
@@ -22,7 +22,7 @@ import {
   Minimize2,
   Loader2,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { useLogs } from "@/hooks/useLogs";
 
 export default function LogsPage() {

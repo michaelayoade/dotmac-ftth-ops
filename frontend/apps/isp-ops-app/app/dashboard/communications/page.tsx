@@ -9,10 +9,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCommunicationsDashboard } from "@/hooks/useCommunications";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import {
   Mail,
   Send,

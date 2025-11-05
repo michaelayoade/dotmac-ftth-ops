@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TenantBadge } from "@/components/tenant-selector";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 
 interface NavItem {

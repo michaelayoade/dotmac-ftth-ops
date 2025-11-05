@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@dotmac/ui";
+import { Avatar, AvatarFallback, AvatarImage } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,7 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   Home,
   CreditCard,
@@ -31,7 +31,7 @@ import {
   useCustomerAuth,
   CustomerProtectedRoute,
 } from "@/lib/auth/CustomerAuthContext";
-import { PortalBadge } from "@/components/ui/portal-badge";
+import { PortalBadge } from "@dotmac/ui";
 
 const navigation = [
   { name: "Dashboard", href: "/customer-portal", icon: Home },

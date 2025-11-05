@@ -22,9 +22,9 @@ import {
 import { useRouter, useParams } from 'next/navigation';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dotmac/ui';
+import { Button } from '@dotmac/ui';
+import { Badge } from '@dotmac/ui';
 import {
   Table,
   TableBody,
@@ -32,7 +32,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@dotmac/ui';
 import {
   Dialog,
   DialogContent,
@@ -41,15 +41,16 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+} from '@dotmac/ui';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@dotmac/ui';
+import { Input } from '@dotmac/ui';
+import { Label } from '@dotmac/ui';
+import { Textarea } from '@dotmac/ui';
+import { Alert, AlertDescription, AlertTitle } from '@dotmac/ui';
+import { Separator } from '@dotmac/ui';
 import { platformConfig } from '@/lib/config';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@dotmac/ui';
+import { useConfirmDialog } from '@dotmac/ui';
 
 // Types
 interface ReconciliationSession {
@@ -188,6 +189,7 @@ export default function ReconciliationDetailPage() {
   const id = params.id as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddPaymentDialogOpen, setIsAddPaymentDialogOpen] = useState(false);
   const [addPaymentForm, setAddPaymentForm] = useState<ReconcilePaymentRequest>({
@@ -250,22 +252,26 @@ export default function ReconciliationDetailPage() {
     },
   });
 
-  const handleComplete = () => {
-    if (
-      confirm(
-        'Are you sure you want to complete this reconciliation? This will lock the reconciled payments.'
-      )
-    ) {
+  const handleComplete = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Complete reconciliation',
+      description:
+        'Are you sure you want to complete this reconciliation? This will lock the reconciled payments.',
+      confirmText: 'Complete',
+    });
+    if (confirmed) {
       completeMutation.mutate();
     }
   };
 
-  const handleApprove = () => {
-    if (
-      confirm(
-        'Are you sure you want to approve this reconciliation? This action requires finance team authority.'
-      )
-    ) {
+  const handleApprove = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Approve reconciliation',
+      description:
+        'Are you sure you want to approve this reconciliation? This action requires finance team authority.',
+      confirmText: 'Approve',
+    });
+    if (confirmed) {
       approveMutation.mutate();
     }
   };

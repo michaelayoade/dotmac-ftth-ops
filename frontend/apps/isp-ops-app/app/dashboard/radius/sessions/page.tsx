@@ -11,9 +11,9 @@ import {
   Upload,
   Clock,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -21,11 +21,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { formatDistanceToNow } from "date-fns";
 
 interface RADIUSSession {
@@ -49,6 +50,7 @@ export default function RADIUSSessionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch active sessions
   const { data: sessions, isLoading, refetch } = useQuery<RADIUSSession[]>({
@@ -99,14 +101,17 @@ export default function RADIUSSessionsPage() {
       (session.framedipaddress ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDisconnect = (session: RADIUSSession) => {
-    if (
-      confirm(
-        `Are you sure you want to disconnect session for "${session.username}"? The user will be forced to re-authenticate.`
-      )
-    ) {
-      disconnectMutation.mutate(session);
+  const handleDisconnect = async (session: RADIUSSession) => {
+    const confirmed = await confirmDialog({
+      title: "Disconnect session",
+      description: `Are you sure you want to disconnect session for "${session.username}"? The user will be forced to re-authenticate.`,
+      confirmText: "Disconnect",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    disconnectMutation.mutate(session);
   };
 
   // Calculate total bandwidth
@@ -281,7 +286,9 @@ export default function RADIUSSessionsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDisconnect(session)}
+                        onClick={() => {
+                          void handleDisconnect(session);
+                        }}
                         disabled={disconnectMutation.isPending}
                       >
                         <XCircle className="mr-2 h-4 w-4" />

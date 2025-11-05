@@ -8,9 +8,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Activity,
   RefreshCw,
@@ -25,6 +25,7 @@ import { useSessionsWebSocket } from "../../hooks/useRealtime";
 import type { RADIUSSessionEvent } from "../../types/realtime";
 import { CompactConnectionStatus } from "./ConnectionStatusIndicator";
 import { useNetworkDiagnostics } from "@/hooks/useNetworkDiagnostics";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Session {
   session_id: string;
@@ -63,6 +64,7 @@ export function LiveRadiusSessions({
     handleSessionEvent(event);
   }, enabled);
   const { disconnectSession, isDisconnecting } = useNetworkDiagnostics();
+  const confirmDialog = useConfirmDialog();
 
   const handleSessionEvent = (event: RADIUSSessionEvent) => {
     const sessionId = event.session_id;
@@ -115,9 +117,12 @@ export function LiveRadiusSessions({
   };
 
   const handleDisconnectSession = async (session: Session) => {
-    const confirmed = confirm(
-      `Are you sure you want to disconnect session for user "${session.username}"?\n\nThis will immediately terminate their connection.`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Disconnect session",
+      description: `Are you sure you want to disconnect session for user "${session.username}"? This will immediately terminate their connection.`,
+      confirmText: "Disconnect",
+      variant: "destructive",
+    });
     if (!confirmed) return;
 
     try {

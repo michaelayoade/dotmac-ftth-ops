@@ -1,5 +1,5 @@
 /**
- * Tests for UI utils (deprecated functionality)
+ * Tests for shared UI utilities
  */
 
 import {
@@ -11,7 +11,7 @@ import {
   type PortalColorType,
 } from "../lib/utils";
 
-describe("UI Utils (Deprecated)", () => {
+describe("UI utilities", () => {
   describe("getPortalConfig", () => {
     it("should return correct config for admin portal", () => {
       const config = getPortalConfig("admin");
@@ -108,6 +108,10 @@ describe("UI Utils (Deprecated)", () => {
     it("should handle mixed truthy and falsy values", () => {
       const condition = false;
       expect(cn("always", condition && "conditional", "also-always")).toBe("always also-always");
+    });
+
+    it("should merge Tailwind conflicting classes", () => {
+      expect(cn("px-2 py-2", "px-4")).toBe("py-2 px-4");
     });
   });
 

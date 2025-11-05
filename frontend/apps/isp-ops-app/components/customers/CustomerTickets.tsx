@@ -9,9 +9,9 @@ import {
   XCircle,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useToast } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -19,7 +19,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 
 interface CustomerTicket {
   id: string;

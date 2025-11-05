@@ -18,9 +18,10 @@ export const dynamicParams = true;
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import {
   Server,
   Edit,
@@ -67,19 +68,22 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
     limit: 10,
   });
   const { mutate: deleteServer, isPending: isDeleting } = useDeleteWireGuardServer();
+  const confirmDialog = useConfirmDialog();
 
   const handleRefresh = () => {
     refetchServer();
     refetchHealth();
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!server) return;
-    if (
-      !confirm(
-        `Are you sure you want to delete server "${server.name}"? This will also remove all associated peers.`,
-      )
-    ) {
+    const confirmed = await confirmDialog({
+      title: "Delete server",
+      description: `Are you sure you want to delete server "${server.name}"? This will also remove all associated peers.`,
+      confirmText: "Delete server",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
     deleteServer(id, {
@@ -154,7 +158,13 @@ export default function ServerDetailsPage({ params }: ServerDetailsPageProps) {
               Edit
             </Button>
           </Link>
-          <Button variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+          <Button
+            variant="destructive"
+            onClick={() => {
+              void handleDelete();
+            }}
+            disabled={isDeleting}
+          >
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>

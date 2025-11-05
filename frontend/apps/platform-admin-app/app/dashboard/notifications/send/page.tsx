@@ -17,24 +17,24 @@ import {
   type CommunicationType,
   type BulkNotificationResponse,
 } from "@/hooks/useNotifications";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
+} from "@dotmac/ui";
+import { Checkbox } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 export default function BulkNotificationSenderPage() {

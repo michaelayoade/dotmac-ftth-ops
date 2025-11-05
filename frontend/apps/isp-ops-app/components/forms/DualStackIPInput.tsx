@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { Label } from "@/components/ui/label";
+import { Label } from "@dotmac/ui";
 import { IPAddressInput } from "./IPAddressInput";
 import { IPCIDRInput } from "./IPCIDRInput";
 import { cn } from "@/lib/utils";

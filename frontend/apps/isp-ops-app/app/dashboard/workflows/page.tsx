@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   GitBranch,
   Search,
@@ -29,8 +29,9 @@ import {
   FileCode,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@dotmac/ui";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -61,6 +62,7 @@ function WorkflowsPageContent() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch workflows
   const { data: workflows = [], isLoading, refetch } = useQuery<Workflow[]>({
@@ -331,8 +333,14 @@ function WorkflowsPageContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (confirm(`Delete workflow "${workflow.name}"?`)) {
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: "Delete workflow",
+                        description: `Delete workflow "${workflow.name}"?`,
+                        confirmText: "Delete",
+                        variant: "destructive",
+                      });
+                      if (confirmed) {
                         deleteMutation.mutate(workflow.id);
                       }
                     }}

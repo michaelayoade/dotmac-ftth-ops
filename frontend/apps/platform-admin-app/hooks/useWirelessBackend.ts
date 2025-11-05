@@ -6,7 +6,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import type {
   WirelessDevice,
   WirelessRadio,

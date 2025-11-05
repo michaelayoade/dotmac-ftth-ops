@@ -69,7 +69,8 @@ export default function LoginPage() {
             try {
               localStorage.setItem("tenant_id", response.data.tenant_id);
             } catch (error) {
-              logger.debug("Unable to persist tenant_id", error);
+              const errorContext = error instanceof Error ? { message: error.message, name: error.name } : { error: String(error) };
+              logger.debug("Unable to persist tenant_id", errorContext);
             }
           }
 

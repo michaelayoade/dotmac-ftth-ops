@@ -1,5 +1,5 @@
 import type { Config } from "tailwindcss";
-import { keyframes } from "./lib/design-system/tokens/animations";
+import { keyframes } from "@dotmac/ui";
 
 const config: Config = {
   darkMode: "class",

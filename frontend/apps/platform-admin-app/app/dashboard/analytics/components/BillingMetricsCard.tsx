@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
 import { useBillingMetrics } from "@/lib/graphql/hooks";
 import { DollarSign, TrendingUp, FileText, AlertCircle } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@dotmac/ui";
 
 export function BillingMetricsCard({ period = "30d" }: { period?: string }) {
   const { data, isLoading, error } = useBillingMetrics(period);

@@ -1,0 +1,146 @@
+================================================================================
+                    DOTMAC PLATFORM TEST COVERAGE SUMMARY
+================================================================================
+
+OVERALL METRICS
+===============
+  Total Test Files:           684
+  Total Test Modules:          74
+  Total Source Files:         633
+  Total Source Modules:        61
+  Modules With Tests:      59/61 (96.7%)
+  Modules Without Tests:     2/61  (3.3%)
+  Average Test-to-Source:   1.08x
+
+CRITICAL MODULES BREAKDOWN
+===========================
+
+  BILLING (Core Business Logic)
+  ├─ Test Files:        146
+  ├─ Source Files:      129
+  ├─ Test Functions:   2110
+  ├─ Test Lines:        58104
+  ├─ Coverage Ratio:    1.13x
+  └─ Status:            HEAVILY TESTED
+
+  AUTH (Security Critical)
+  ├─ Test Files:         41
+  ├─ Source Files:       23
+  ├─ Test Functions:    703
+  ├─ Test Lines:        16543
+  ├─ Coverage Ratio:    1.78x
+  └─ Status:            HEAVILY TESTED
+
+  MONITORING (Observability)
+  ├─ Test Files:         21
+  ├─ Source Files:       18
+  ├─ Test Functions:    300
+  ├─ Coverage Ratio:    1.17x
+  └─ Status:            WELL TESTED
+
+  TENANT (Multi-Tenancy)
+  ├─ Test Files:         22
+  ├─ Source Files:       21
+  ├─ Test Functions:    335
+  ├─ Coverage Ratio:    1.05x
+  └─ Status:            WELL TESTED
+
+  CUSTOMER_MANAGEMENT
+  ├─ Test Files:         16
+  ├─ Source Files:        7
+  ├─ Test Functions:    278
+  ├─ Coverage Ratio:    2.29x
+  └─ Status:            HEAVILY TESTED
+
+TEST INFRASTRUCTURE
+====================
+  Conftest Files:           37
+  Shared Fixtures:          20
+  Dedicated Fixture Mods:   14
+  Helper Modules:           14
+  Mocked Test Files:       386 (56.4%)
+  AsyncMock Usage:         268 (39.2%)
+
+TEST PATTERNS & ORGANIZATION
+=============================
+  Comprehensive Tests:       74 files
+  Service Layer Tests:       97 files
+  Router/API Tests:          92 files
+  Integration Tests:         56 files
+  Unit Tests:                17 files
+  E2E Tests:                 14 files
+
+TEST MATURITY INDICATORS
+=========================
+  Async Tests:              391 files (57.2%)
+  Mocked Tests:             386 files (56.4%)
+  Parametrized:                7 files ( 1.0%)  ← OPPORTUNITY
+  Skipped:                     6 files ( 0.9%)
+  Slow:                        8 files ( 1.2%)
+
+MODULES WITH EXCELLENT COVERAGE (ratio > 1.5x)
+===============================================
+  integrations         3.67x  (11 test files / 3 src)
+  contacts             3.20x  (16 test files / 5 src)
+  customer_management  2.29x  (16 test files / 7 src)
+  webhooks             1.83x  (11 test files / 6 src)
+  auth                 1.78x  (41 test files / 23 src)
+  secrets              1.62x  (13 test files / 8 src)
+  netbox               1.60x  (8 test files / 5 src)
+
+MODULES WITHOUT TESTS (PRIORITY 1)
+===================================
+  db           3 source files
+  timeseries   4 source files
+
+CRITICAL GAPS (PRIORITY 2)
+===========================
+  graphql      0.11x (4 test files / 35 src)
+  licensing    0.17x (2 test files / 12 src)
+  rate_limit   0.17x (1 test file / 6 src)
+  notifications 0.19x (3 test files / 16 src)
+  realtime     0.20x (2 test files / 10 src)
+  ansible      0.22x (2 test files / 9 src)
+  ticketing    0.22x (2 test files / 9 src)
+  deployment   0.23x (3 test files / 13 src)
+
+TESTING BEST PRACTICES FOUND
+==============================
+  ✓ Broad async coverage (5,711 async tests)
+  ✓ Extensive mocking support (56.4% of files)
+  ✓ Layered fixture approach (37 conftest files)
+  ✓ Security and billing flows stress-tested
+
+OPPORTUNITIES FOR IMPROVEMENT
+==============================
+  ✗ Add suites for `db` and `timeseries` modules
+  ✗ Expand GraphQL coverage (0.11x ratio)
+  ✗ Increase parametrised testing usage (7 files)
+  ✗ Boost coverage for deployment and notification services
+
+RECOMMENDED ACTIONS
+====================
+  IMMEDIATE (1-2 weeks):
+  □ Add tests for timeseries module
+  □ Add tests for db module
+  □ Document fixture strategy
+
+  SHORT-TERM (2-4 weeks):
+  □ Expand GraphQL coverage (target: 0.50x ratio)
+  □ Increase parametrisation (target: 50+ files)
+  □ Add realtime module tests
+  □ Create notification service regression tests
+
+  MEDIUM-TERM (1-2 months):
+  □ Strengthen deployment coverage
+  □ Add coverage thresholds to CI
+  □ Refactor low-ratio modules incrementally
+
+  LONG-TERM (Ongoing):
+  □ Monitor trends via `scripts/test_metrics_snapshot.py`
+  □ Maintain async test health
+  □ Review large modules for splitting
+
+CONCLUSION
+===========
+The DotMac platform maintains excellent coverage with 684 test files validating 633 module-scoped source files, 10,027 pytest functions, and strong async/mocking practices. The remaining gaps are limited to two helper modules and a handful of low-ratio domains.

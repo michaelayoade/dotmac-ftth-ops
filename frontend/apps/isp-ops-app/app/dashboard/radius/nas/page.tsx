@@ -10,9 +10,9 @@ import {
   Edit,
   Trash2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -20,18 +20,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { NASDeviceDialog } from "@/components/radius/NASDeviceDialog";
 
 interface NASDevice {
@@ -53,6 +54,7 @@ export default function RADIUSNASPage() {
   const [selectedNAS, setSelectedNAS] = useState<NASDevice | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch NAS devices
   const { data: nasDevices, isLoading } = useQuery<NASDevice[]>({
@@ -100,14 +102,17 @@ export default function RADIUSNASPage() {
       (nas.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleDelete = (nas: NASDevice) => {
-    if (
-      confirm(
-        `Are you sure you want to delete NAS device "${nas.shortname}"? This action cannot be undone.`
-      )
-    ) {
-      deleteMutation.mutate(nas.id);
+  const handleDelete = async (nas: NASDevice) => {
+    const confirmed = await confirmDialog({
+      title: "Delete NAS device",
+      description: `Are you sure you want to delete NAS device "${nas.shortname}"? This action cannot be undone.`,
+      confirmText: "Delete device",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate(nas.id);
   };
 
   const handleCreate = () => {
@@ -253,7 +258,9 @@ export default function RADIUSNASPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => handleDelete(nas)}
+                            onClick={() => {
+                              void handleDelete(nas);
+                            }}
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />

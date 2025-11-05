@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Shield, Check, Save, AlertTriangle } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 
 interface Permission {

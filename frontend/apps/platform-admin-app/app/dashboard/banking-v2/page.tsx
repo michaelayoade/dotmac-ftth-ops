@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Building2, Receipt, CheckSquare } from "lucide-react";
 import { BankAccountsTab } from "./components/BankAccountsTab";
 import { ManualPaymentsTab } from "./components/ManualPaymentsTab";

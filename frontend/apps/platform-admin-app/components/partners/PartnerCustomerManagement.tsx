@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useCreatePartnerCustomer, PartnerCustomerInput } from "@/hooks/usePartners";
 import { UserPlus, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@dotmac/ui";
 
 interface PartnerCustomerManagementProps {
   partnerId: string;

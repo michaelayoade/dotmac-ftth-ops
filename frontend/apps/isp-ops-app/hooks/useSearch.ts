@@ -13,7 +13,7 @@
 
 import React from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { searchService } from "@/lib/services/search-service";
 import type {
   SearchResponse,

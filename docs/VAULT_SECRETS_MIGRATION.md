@@ -108,6 +108,9 @@ export VAULT_MOUNT_PATH="secret"  # Default KV v2 mount
 export VAULT_KV_VERSION="2"  # KV version (1 or 2)
 ```
 
+> **Tip:** When the guide instructs you to run the API locally, use `./scripts/dev-backend.sh` (or `make dev-host`).
+> This script loads `.env.local` and applies the host-friendly observability defaults automatically.
+
 ---
 
 ## Vault Setup
@@ -422,8 +425,8 @@ export VAULT_KV_VERSION="2"
 # Start the application (Docker)
 make dev
 
-# Or run on host for debugging (ensure observability health checks are disabled)
-# poetry run uvicorn dotmac.platform.main:app --reload
+# Or run on host for debugging (loads .env.local defaults automatically)
+# ./scripts/dev-backend.sh
 ```
 
 ### 3. Verify Secrets are Loaded

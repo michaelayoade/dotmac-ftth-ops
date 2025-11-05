@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Server, Settings, Calendar, FileText, Activity, BarChart3 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { BulkOperationsDashboard } from "./BulkOperationsDashboard";
 import { FirmwareManagement } from "./FirmwareManagement";
 import { CPEConfigTemplates } from "./CPEConfigTemplates";

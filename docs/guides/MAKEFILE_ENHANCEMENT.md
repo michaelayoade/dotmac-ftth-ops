@@ -185,9 +185,9 @@ make dev-backend
 
 ### Scenario 4: Frontend Only
 ```bash
-# Just need frontend for UI work (backend mock mode)
-cd frontend/apps/base-app
-pnpm dev:mock
+# Just need a portal for UI work
+cd frontend
+pnpm dev:isp   # or pnpm dev:admin
 ```
 
 ---
@@ -273,10 +273,10 @@ docker-compose --profile celery up -d
 sleep 10  # Hope it's ready?
 
 # Terminal 1
-poetry run uvicorn src.dotmac.platform.main:app --reload --port 8000
+./scripts/quick-backend-start.sh  # or ./scripts/dev-backend.sh
 
 # Terminal 2
-cd frontend/apps/base-app && pnpm dev
+cd frontend && pnpm dev:isp
 ```
 
 ### After
@@ -373,7 +373,7 @@ When `make dev` completes, you'll have:
 
 - **Full Guide**: See `DEV_SETUP_GUIDE.md` for comprehensive setup instructions
 - **Backend Config**: See `.env` for backend configuration
-- **Frontend Config**: See `frontend/apps/base-app/.env.local` for frontend config
+- **Frontend Config**: See `frontend/apps/isp-ops-app/.env.local` and `frontend/apps/platform-admin-app/.env.local`
 - **MinIO Fix**: See `SESSION_SUMMARY.md` for MinIO configuration fixes
 
 ---

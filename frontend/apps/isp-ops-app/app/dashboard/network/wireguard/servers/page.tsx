@@ -12,9 +12,10 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import {
   Server,
   Plus,
@@ -49,6 +50,7 @@ export default function WireGuardServersPage() {
 
   const { data: servers = [], isLoading, error } = useWireGuardServers(filters);
   const { mutate: deleteServer } = useDeleteWireGuardServer();
+  const confirmDialog = useConfirmDialog();
 
   const handleSearch = () => {
     // Note: Backend doesn't support search yet, would need to add to API
@@ -68,8 +70,14 @@ export default function WireGuardServersPage() {
     setSearchTerm("");
   };
 
-  const handleDelete = (serverId: string, serverName: string) => {
-    if (!confirm(`Are you sure you want to delete server "${serverName}"?`)) {
+  const handleDelete = async (serverId: string, serverName: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete server",
+      description: `Are you sure you want to delete server "${serverName}"?`,
+      confirmText: "Delete server",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
     deleteServer(serverId);
@@ -186,7 +194,7 @@ function ServerCard({
   onDelete,
 }: {
   server: WireGuardServer;
-  onDelete: (id: string, name: string) => void;
+  onDelete: (id: string, name: string) => void | Promise<void>;
 }) {
   const { data: health } = useServerHealth(server.id);
 
@@ -328,7 +336,7 @@ function ServerCard({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                onDelete(server.id, server.name);
+                void onDelete(server.id, server.name);
               }}
             >
               <Trash2 className="mr-1 h-3 w-3" />

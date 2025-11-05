@@ -46,6 +46,8 @@ pnpm dev:admin
 pnpm dev:backend
 ```
 
+> **Heads-up:** `pnpm dev:backend` now delegates to `scripts/quick-backend-start.sh`. Create `.env.local` from the project root (`cp .env.local.example .env.local`) so the script can load the host-friendly defaults before starting the API.
+
 To stop the servers, press `Ctrl+C`. If a port is left in use:
 
 ```bash

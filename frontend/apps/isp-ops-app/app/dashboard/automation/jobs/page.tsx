@@ -2,16 +2,16 @@
 
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -19,8 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { platformConfig } from "@/lib/config";
 import {
@@ -50,6 +51,7 @@ interface Job {
 function JobsPageContent() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Check if there are any running jobs for auto-refresh
@@ -109,10 +111,17 @@ function JobsPageContent() {
     });
   };
 
-  const handleCancelJob = (jobId: number, jobName: string) => {
-    if (confirm(`Are you sure you want to cancel job "${jobName}"?`)) {
-      cancelJobMutation.mutate(jobId);
+  const handleCancelJob = async (jobId: number, jobName: string) => {
+    const confirmed = await confirmDialog({
+      title: "Cancel job",
+      description: `Are you sure you want to cancel job "${jobName}"?`,
+      confirmText: "Cancel job",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    cancelJobMutation.mutate(jobId);
   };
 
   // Filter jobs by status
@@ -362,7 +371,9 @@ function JobsPageContent() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => handleCancelJob(job.id, job.name)}
+                            onClick={() => {
+                              void handleCancelJob(job.id, job.name);
+                            }}
                             disabled={cancelJobMutation.isPending}
                           >
                             <StopCircle className="h-3 w-3 mr-1" />

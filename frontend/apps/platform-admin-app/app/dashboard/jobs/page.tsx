@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   Briefcase,
   Search,
@@ -30,11 +30,12 @@ import {
   Settings,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@dotmac/ui";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
-import { Progress } from "@/components/ui/progress";
+import { Progress } from "@dotmac/ui";
 
 type JobStatus = "pending" | "running" | "completed" | "failed" | "cancelled";
 type JobType = "bulk_import" | "bulk_export" | "firmware_upgrade" | "batch_provisioning" | "data_migration" | "report_generation" | "custom";
@@ -76,6 +77,7 @@ function JobsPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch jobs
   const { data, isLoading, refetch } = useQuery({
@@ -440,8 +442,14 @@ function JobsPageContent() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (confirm(`Cancel job ${job.id.substring(0, 8)}...?`)) {
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: "Cancel job",
+                            description: `Cancel job ${job.id.substring(0, 8)}...?`,
+                            confirmText: "Cancel job",
+                            variant: "destructive",
+                          });
+                          if (confirmed) {
                             cancelMutation.mutate(job.id);
                           }
                         }}

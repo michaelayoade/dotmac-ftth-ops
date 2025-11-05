@@ -10,7 +10,7 @@
     "dev:admin": "pnpm --filter @dotmac/platform-admin-app dev",
     "dev:services": "cd .. && docker-compose up -d postgres redis minio",
     "dev:all": "npm run dev:services && sleep 5 && npm run dev",
-    "build": "pnpm -r --filter ./shared/packages/** run build && pnpm build:isp && pnpm build:admin",
+    "build": "pnpm graphql:check-schema && pnpm -r --filter ./shared/packages/** run build && pnpm build:isp && pnpm build:admin",
     "build:isp": "pnpm --filter @dotmac/isp-ops-app build",
     "build:admin": "pnpm --filter @dotmac/platform-admin-app build",
     "lint": "pnpm -r run lint",
@@ -24,6 +24,10 @@
     "e2e:ci": "playwright test --reporter=github",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
+    "graphql:codegen": "graphql-codegen --config codegen.ts",
+    "graphql:codegen:watch": "graphql-codegen --config codegen.ts --watch",
+    "graphql:export-schema": "echo 'Run from project root: poetry run python -m strawberry export-schema dotmac.platform.graphql.schema:schema --output frontend/graphql-schema.graphql'",
+    "graphql:check-schema": "test -f graphql-schema.graphql || (echo 'Error: graphql-schema.graphql not found. Run pnpm graphql:export-schema' && exit 1)",
     "clean": "pnpm -r run clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""
@@ -33,9 +37,17 @@
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^6.0.0",
+    "@graphql-codegen/client-preset": "^5.1.1",
+    "@graphql-codegen/typescript": "^5.0.2",
+    "@graphql-codegen/typescript-operations": "^5.0.2",
+    "@graphql-codegen/typescript-react-query": "^6.1.1",
     "@playwright/test": "^1.55.1",
     "concurrently": "^8.2.0",
     "openapi-typescript": "^7.5.2",
     "prettier": "^3.6.2"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^4.42.0"
   }
 }

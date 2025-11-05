@@ -5,18 +5,18 @@ import { useTenantAddons, Addon, CancelAddonRequest } from "@/hooks/useTenantAdd
 import { AddonCard } from "@/components/tenant/billing/AddonCard";
 import { ActiveAddonCard } from "@/components/tenant/billing/ActiveAddonCard";
 import { AddonsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import { AlertCircle, Search, Package, TrendingUp, Zap } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 
 export default function AddonsPage() {
   const {

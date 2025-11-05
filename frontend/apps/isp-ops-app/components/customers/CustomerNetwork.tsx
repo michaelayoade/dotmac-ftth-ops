@@ -16,10 +16,10 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 
 interface NetworkInfo {
   connection_status: "online" | "offline" | "degraded";

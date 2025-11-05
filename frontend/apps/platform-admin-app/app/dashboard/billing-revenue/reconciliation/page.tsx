@@ -23,9 +23,9 @@ import {
 import { useRouter } from 'next/navigation';
 
 import { RouteGuard } from '@/components/auth/PermissionGuard';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@dotmac/ui';
+import { Button } from '@dotmac/ui';
+import { Badge } from '@dotmac/ui';
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from '@dotmac/ui';
 import {
   Dialog,
   DialogContent,
@@ -42,19 +42,20 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from '@dotmac/ui';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+} from '@dotmac/ui';
+import { Input } from '@dotmac/ui';
+import { Label } from '@dotmac/ui';
+import { Textarea } from '@dotmac/ui';
 import { platformConfig } from '@/lib/config';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@dotmac/ui';
+import { useConfirmDialog } from '@dotmac/ui';
 
 // Types
 interface ReconciliationSession {
@@ -214,6 +215,7 @@ export default function ReconciliationPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
   const [filters, setFilters] = useState({
@@ -302,14 +304,24 @@ export default function ReconciliationPage() {
     createMutation.mutate(createFormData);
   };
 
-  const handleComplete = (id: number) => {
-    if (confirm('Are you sure you want to complete this reconciliation?')) {
+  const handleComplete = async (id: number) => {
+    const confirmed = await confirmDialog({
+      title: 'Complete reconciliation',
+      description: 'Are you sure you want to complete this reconciliation?',
+      confirmText: 'Complete',
+    });
+    if (confirmed) {
       completeMutation.mutate(id);
     }
   };
 
-  const handleApprove = (id: number) => {
-    if (confirm('Are you sure you want to approve this reconciliation?')) {
+  const handleApprove = async (id: number) => {
+    const confirmed = await confirmDialog({
+      title: 'Approve reconciliation',
+      description: 'Are you sure you want to approve this reconciliation?',
+      confirmText: 'Approve',
+    });
+    if (confirmed) {
       approveMutation.mutate(id);
     }
   };

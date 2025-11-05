@@ -1,0 +1,54 @@
+{
+  "name": "@dotmac/graphql",
+  "version": "1.0.0",
+  "description": "Shared GraphQL client, operations, and generated types for TanStack Query",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**",
+    "generated/**",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --clean --external @apollo/client --external react --external graphql",
+    "dev": "tsup src/index.ts --format cjs,esm --watch --external @apollo/client --external react --external graphql",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@apollo/client": "^3.14.0",
+    "@dotmac/auth": "workspace:*",
+    "@dotmac/http-client": "workspace:*",
+    "@graphql-typed-document-node/core": "^3.2.0",
+    "@tanstack/react-query": "^4.42.0",
+    "graphql": "^16.9.0",
+    "react": "^18.3.1"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^3.14.0",
+    "react": "^18.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/react": "^18.3.12",
+    "eslint": "^8.57.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.9.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dotmac-framework/frontend.git",
+    "directory": "shared/packages/graphql"
+  },
+  "keywords": [
+    "graphql",
+    "tanstack-query",
+    "react-query",
+    "codegen",
+    "dotmac"
+  ],
+  "author": "DotMac Framework Team",
+  "license": "MIT"
+}

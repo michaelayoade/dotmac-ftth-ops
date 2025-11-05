@@ -8,7 +8,7 @@
  */
 
 import { useEffect } from "react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { AlertCircle, AlertTriangle, Info, XCircle } from "lucide-react";
 import { useAlertEvents } from "../../hooks/useRealtime";
 import type { AlertEvent } from "../../types/realtime";

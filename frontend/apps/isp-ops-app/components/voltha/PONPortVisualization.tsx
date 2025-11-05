@@ -12,11 +12,11 @@ import {
   Server,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useToast } from "@dotmac/ui";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@dotmac/ui";
 import { PONPortMetrics, PONStatistics } from "@/types/voltha";
 
 interface PONPortVisualizationProps {

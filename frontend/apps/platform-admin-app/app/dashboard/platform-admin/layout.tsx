@@ -15,9 +15,9 @@ import {
 } from "lucide-react";
 
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import { cn } from "@/lib/utils";
 import {
   platformAdminService,

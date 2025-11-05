@@ -8,21 +8,22 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import {
   LeadStatusBadge,
   LeadSourceBadge,
@@ -76,6 +77,7 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [newNote, setNewNote] = useState("");
+  const confirmDialog = useConfirmDialog();
 
   // Editable form state
   const [editData, setEditData] = useState<Partial<LeadUpdateRequest>>({});
@@ -165,9 +167,11 @@ export function LeadDetailModal({ isOpen, onClose, lead, onUpdate }: LeadDetailM
   };
 
   const handleConvert = async () => {
-    const confirmed = confirm(
-      `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Convert lead",
+      description: `Convert ${lead.first_name} ${lead.last_name} to a customer? This action cannot be undone.`,
+      confirmText: "Convert",
+    });
     if (!confirmed) return;
 
     try {

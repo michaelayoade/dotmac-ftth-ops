@@ -8,12 +8,12 @@ import {
   CardDescription,
   CardContent,
   CardFooter,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import { TenantAddon } from "@/hooks/useTenantAddons";
 import { format } from "date-fns";
 

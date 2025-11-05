@@ -14,22 +14,23 @@ import {
   Trash2,
 } from "lucide-react";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { formatDistanceToNow } from "date-fns";
 
@@ -77,6 +78,7 @@ export default function ContactDetailPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const contactId = params.id as string;
+  const confirmDialog = useConfirmDialog();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Contact>>({});
@@ -161,14 +163,17 @@ export default function ContactDetailPage() {
     updateMutation.mutate(formData);
   };
 
-  const handleDelete = () => {
-    if (
-      confirm(
-        `Are you sure you want to delete this contact? This action cannot be undone.`
-      )
-    ) {
-      deleteMutation.mutate();
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: "Delete contact",
+      description: "Are you sure you want to delete this contact? This action cannot be undone.",
+      confirmText: "Delete contact",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate();
   };
 
   if (isLoading) {
@@ -231,7 +236,12 @@ export default function ContactDetailPage() {
               <Button variant="outline" onClick={() => setIsEditing(true)}>
                 Edit
               </Button>
-              <Button variant="destructive" onClick={handleDelete}>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleDelete();
+                }}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>

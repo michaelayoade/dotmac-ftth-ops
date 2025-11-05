@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
 import { Shield, Clock, ChevronLeft, ChevronRight, ExternalLink, AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { Button } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { AuditLogFilters, type AuditFilters } from "./AuditLogFilters";
 import Link from "next/link";
 import { useAuditActivities } from "@/hooks/useAudit";

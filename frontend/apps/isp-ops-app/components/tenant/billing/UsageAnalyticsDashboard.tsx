@@ -1,10 +1,10 @@
 "use client";
 
 import React from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Progress } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import {
   TrendingUp,
   TrendingDown,

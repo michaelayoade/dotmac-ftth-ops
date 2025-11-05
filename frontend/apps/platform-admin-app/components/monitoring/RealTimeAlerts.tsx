@@ -3,10 +3,10 @@
 import { useState, useEffect } from "react";
 import { Bell, BellOff, X, AlertCircle, WifiOff, Wifi } from "lucide-react";
 import { useWebSocket, useNetworkMonitoring } from "@/lib/websocket/hooks";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription, AlertTitle } from "@dotmac/ui";
 
 export function RealTimeAlerts() {
   const { connectionState, isConnected, isReconnecting } = useWebSocket();

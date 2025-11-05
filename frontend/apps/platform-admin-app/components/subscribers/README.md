@@ -88,7 +88,7 @@ import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal'
 ## Dependencies
 
 - `@/hooks/useSubscribers` - Data fetching hooks
-- `@/components/ui/*` - shadcn/ui components
+- `@dotmac/ui/*` - shadcn/ui components
 - `lucide-react` - Icons
 - `date-fns` - Date formatting
 - `@tanstack/react-table` - Data table

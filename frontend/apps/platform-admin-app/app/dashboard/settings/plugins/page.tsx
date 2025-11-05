@@ -35,7 +35,8 @@ import {
   type CreatePluginInstanceRequest,
   type PluginTestResult,
 } from "@/hooks/usePlugins";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 type ViewMode = "grid" | "list" | "health";
 
@@ -75,6 +76,7 @@ export default function PluginsPage() {
   const deleteInstance = useDeletePluginInstance();
   const testConnection = useTestPluginConnection();
   const refreshPlugins = useRefreshPlugins();
+  const confirmDialog = useConfirmDialog();
 
   // Load health checks whenever instances change
   const loadHealthChecks = useCallback(async () => {
@@ -113,7 +115,13 @@ export default function PluginsPage() {
   };
 
   const handleDeleteInstance = async (instanceId: string) => {
-    if (!confirm("Are you sure you want to delete this plugin instance? This cannot be undone.")) {
+    const confirmed = await confirmDialog({
+      title: "Delete plugin instance",
+      description: "Are you sure you want to delete this plugin instance? This cannot be undone.",
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

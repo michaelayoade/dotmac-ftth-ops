@@ -135,7 +135,7 @@
 
 ## Frontend Environment Variables
 
-**Files:** `frontend/apps/isp-ops-app/.env.local`, `frontend/apps/platform-admin-app/.env.local` (legacy: `frontend/apps/base-app/.env.local`)
+**Files:** `frontend/apps/isp-ops-app/.env.local`, `frontend/apps/platform-admin-app/.env.local`
 **Config:** `frontend/apps/isp-ops-app/next.config.mjs`, `frontend/apps/platform-admin-app/next.config.mjs`
 
 ### API Configuration
@@ -297,25 +297,25 @@ NEXT_PUBLIC_ENVIRONMENT=production
 ### Current State (Environment Variables)
 
 ```typescript
-// frontend/apps/base-app/lib/config.ts
+// frontend/apps/isp-ops-app/lib/config.ts (mirrored in platform-admin)
 export const platformConfig = {
   features: {
-    enableGraphQL: process.env.NEXT_PUBLIC_ENABLE_GRAPHQL === 'true',
+    enableGraphQL: process.env.NEXT_PUBLIC_ENABLE_GRAPHQL === "true",
     // ... hardcoded from env vars
-  }
-}
+  },
+};
 ```
 
 ### Recommended State (Dynamic from Backend)
 
 ```typescript
-// frontend/apps/base-app/lib/config.ts
+// frontend/apps/isp-ops-app/lib/config.ts (mirrored in platform-admin)
 let cachedConfig: PlatformConfig | null = null;
 
 export async function getPlatformConfig(): Promise<PlatformConfig> {
   if (cachedConfig) return cachedConfig;
 
-  const response = await fetch('/api/v1/platform/config');
+  const response = await fetch("/api/v1/platform/config");
   cachedConfig = await response.json();
   return cachedConfig;
 }
@@ -411,6 +411,6 @@ echo "✅ Frontend environment valid"
 ## References
 
 - Backend Settings: `src/dotmac/platform/settings.py`
-- Frontend Config: `frontend/apps/base-app/lib/config.ts`
+- Frontend Config: `frontend/apps/isp-ops-app/lib/config.ts` (mirrored in the platform-admin app)
 - Platform Config Endpoint: `src/dotmac/platform/config/router.py`
 - Router Registration: `src/dotmac/platform/routers.py`

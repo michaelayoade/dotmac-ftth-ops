@@ -7,8 +7,8 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { AlarmDetailModal } from "./AlarmDetailModal";
 import type { Alarm } from "@/hooks/useFaults";
 

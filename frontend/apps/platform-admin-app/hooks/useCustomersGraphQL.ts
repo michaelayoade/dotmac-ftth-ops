@@ -12,6 +12,9 @@
  * - Type-safe with auto-generated types
  */
 
+import { useToast } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
+import { handleGraphQLError } from "@dotmac/graphql";
 import {
   useCustomerListQuery,
   useCustomerDetailQuery,
@@ -25,8 +28,9 @@ import {
   useCustomerTicketsQuery,
   useCustomerBillingQuery,
   useCustomer360ViewQuery,
-  CustomerStatusEnum,
-} from "@/lib/graphql/generated";
+} from "@dotmac/graphql/generated/react-query";
+
+import { CustomerStatusEnum } from "@dotmac/graphql/generated";
 
 // ============================================================================
 // Customer List Hook
@@ -44,6 +48,7 @@ export interface UseCustomerListOptions {
 }
 
 export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
+  const { toast } = useToast();
   const {
     limit = 50,
     offset = 0,
@@ -55,8 +60,8 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     pollInterval = 30000, // 30 seconds default
   } = options;
 
-  const { data, loading, error, refetch } = useCustomerListQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerListQuery(
+    {
       limit,
       offset,
       status,
@@ -64,10 +69,26 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
       includeActivities,
       includeNotes,
     },
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerListQuery",
+          context: {
+            hook: "useCustomerListGraphQL",
+            limit,
+            offset,
+            status,
+            includeActivities,
+            includeNotes,
+            hasSearch: Boolean(search),
+          },
+        }),
+    },
+  );
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -79,8 +100,8 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     hasNextPage,
     limit,
     offset,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -95,13 +116,25 @@ export interface UseCustomerDetailOptions {
 }
 
 export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerDetailQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerDetailQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDetailQuery",
+          context: {
+            hook: "useCustomerDetailGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const customer = data?.customer ?? null;
 
@@ -109,8 +142,8 @@ export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
     customer,
     activities: customer?.activities ?? [],
     notes: customer?.notes ?? [],
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -125,13 +158,25 @@ export interface UseCustomerMetricsOptions {
 }
 
 export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {}) {
+  const { toast } = useToast();
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, loading, error, refetch } = useCustomerMetricsQuery({
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerMetricsQuery(
+    undefined,
+    {
+      enabled,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerMetricsQuery",
+          context: {
+            hook: "useCustomerMetricsGraphQL",
+          },
+        }),
+    },
+  );
 
   const metrics = data?.customerMetrics;
 
@@ -144,8 +189,8 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
       totalCustomerValue: metrics?.totalCustomerValue ?? 0,
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -160,13 +205,25 @@ export interface UseCustomerActivitiesOptions {
 }
 
 export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerActivitiesQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerActivitiesQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerActivitiesQuery",
+          context: {
+            hook: "useCustomerActivitiesGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const customer = data?.customer ?? null;
   const activities = customer?.activities ?? [];
@@ -174,8 +231,8 @@ export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptio
   return {
     customerId: customer?.id,
     activities,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -190,13 +247,25 @@ export interface UseCustomerNotesOptions {
 }
 
 export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerNotesQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerNotesQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerNotesQuery",
+          context: {
+            hook: "useCustomerNotesGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const customer = data?.customer ?? null;
   const notes = customer?.notes ?? [];
@@ -204,8 +273,8 @@ export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
   return {
     customerId: customer?.id,
     notes,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -224,19 +293,34 @@ export interface UseCustomerDashboardOptions {
 }
 
 export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions = {}) {
+  const { toast } = useToast();
   const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
-  const { data, loading, error, refetch } = useCustomerDashboardQuery({
-    variables: {
+  const { data, isLoading, isFetching, error, refetch } = useCustomerDashboardQuery(
+    {
       limit,
       offset,
       status,
       search: search || undefined,
     },
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDashboardQuery",
+          context: {
+            hook: "useCustomerDashboardGraphQL",
+            limit,
+            offset,
+            status,
+            hasSearch: Boolean(search),
+          },
+        }),
+    },
+  );
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -255,8 +339,9 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
       totalCustomerValue: metrics?.totalCustomerValue ?? 0,
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    isFetching,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -275,13 +360,25 @@ export interface UseCustomerSubscriptionsOptions {
 }
 
 export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscriptionsOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerSubscriptionsQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerSubscriptionsQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerSubscriptionsQuery",
+          context: {
+            hook: "useCustomerSubscriptionsGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const subscriptions = data?.customerSubscriptions ?? [];
 
@@ -296,8 +393,8 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
     currentSubscription,
     activeCount: activeSubscriptions.length,
     totalCount: subscriptions.length,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -313,21 +410,33 @@ export interface UseCustomerNetworkInfoOptions {
 }
 
 export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 30000 } = options; // 30 seconds default
 
-  const { data, loading, error, refetch } = useCustomerNetworkInfoQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerNetworkInfoQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerNetworkInfoQuery",
+          context: {
+            hook: "useCustomerNetworkInfoGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const networkInfo = data?.customerNetworkInfo ?? null;
 
   return {
     networkInfo,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -343,14 +452,26 @@ export interface UseCustomerDevicesOptions {
 }
 
 export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, loading, error, refetch } = useCustomerDevicesQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerDevicesQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDevicesQuery",
+          context: {
+            hook: "useCustomerDevicesGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const deviceData = data?.customerDevices ?? null;
 
@@ -360,8 +481,8 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
     onlineDevices: deviceData?.onlineDevices ?? 0,
     offlineDevices: deviceData?.offlineDevices ?? 0,
     needingUpdates: deviceData?.needingUpdates ?? 0,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -380,25 +501,40 @@ export interface UseCustomerTicketsOptions {
 }
 
 export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
+  const { toast } = useToast();
   const {
     customerId,
-    limit = 50,
-    offset = 0,
-    status,
-    enabled = true,
-    pollInterval = 60000,
+   limit = 50,
+   offset = 0,
+   status,
+   enabled = true,
+   pollInterval = 60000,
   } = options;
 
-  const { data, loading, error, refetch } = useCustomerTicketsQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerTicketsQuery(
+    {
       customerId,
       limit,
       status,
     },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerTicketsQuery",
+          context: {
+            hook: "useCustomerTicketsGraphQL",
+            customerId,
+            status,
+            limit,
+            offset,
+          },
+        }),
+    },
+  );
 
   // customerTickets returns JSON scalar
   const ticketData = (data?.customerTickets as any) ?? {};
@@ -412,8 +548,8 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     highCount: ticketData?.highCount ?? 0,
     overdueCount: ticketData?.overdueCount ?? 0,
     hasNextPage: ticketData?.hasNextPage ?? false,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -429,17 +565,30 @@ export interface UseCustomerBillingOptions {
 }
 
 export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
+  const { toast } = useToast();
   const { customerId, limit = 50, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerBillingQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerBillingQuery(
+    {
       customerId,
       includeInvoices: true,
       invoiceLimit: limit,
     },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerBillingQuery",
+          context: {
+            hook: "useCustomerBillingGraphQL",
+            customerId,
+            limit,
+          },
+        }),
+    },
+  );
 
   // customerBilling returns JSON scalar
   const billingData = (data?.customerBilling as any) ?? {};
@@ -453,8 +602,8 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
     unpaidInvoices: billingData?.unpaidInvoices ?? 0,
     overdueInvoices: billingData?.overdueInvoices ?? 0,
     totalPayments: billingData?.totalPayments ?? 0,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -469,13 +618,25 @@ export interface UseCustomer360ViewOptions {
 }
 
 export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomer360ViewQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomer360ViewQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "Customer360ViewQuery",
+          context: {
+            hook: "useCustomer360ViewGraphQL",
+            customerId,
+          },
+        }),
+    },
+  );
 
   const subscriptions = data?.customerSubscriptions ?? [];
   const activeSubscriptions = subscriptions.filter(
@@ -511,8 +672,8 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
       totalInvoices: billingInfo?.totalInvoices ?? 0,
       unpaidInvoices: billingInfo?.unpaidInvoices ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }

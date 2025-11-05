@@ -4,9 +4,9 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { Network, Router, Database, Cog, Settings } from "lucide-react";
 import { useAllOSSConfigurations, useOSSConfigStatistics } from "@/hooks/useOSSConfig";
 import { OSSConfigurationCard } from "./components/OSSConfigurationCard";

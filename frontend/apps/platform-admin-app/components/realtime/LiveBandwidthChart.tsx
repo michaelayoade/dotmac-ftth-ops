@@ -11,8 +11,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { Activity, Wifi, WifiOff } from "lucide-react";
 import { useWebSocket, useWebSocketSubscription } from "@/lib/websocket/WebSocketProvider";
 import { format } from "date-fns";

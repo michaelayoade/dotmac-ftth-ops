@@ -4,9 +4,9 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   AlertCircle,
   CheckCircle2,
@@ -24,7 +24,7 @@ import {
   type BulkAction,
   type QuickFilter,
   type Row,
-} from "@/components/ui/EnhancedDataTable";
+} from "@dotmac/ui";
 import { UniversalChart } from "@dotmac/primitives";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRBAC } from "@/contexts/RBACContext";

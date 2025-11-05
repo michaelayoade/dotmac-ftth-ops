@@ -2,17 +2,17 @@
 
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   Wifi,
   Search,
@@ -28,9 +28,10 @@ import {
   Users,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
+import { useConfirmDialog } from "@dotmac/ui";
 
 import { Device, DeviceListResponse } from "@/types/voltha";
 
@@ -41,6 +42,7 @@ function ONUListPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch ONUs
   const { data: onusData, isLoading, refetch } = useQuery<DeviceListResponse>({
@@ -375,10 +377,19 @@ function ONUListPageContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (canPerform("reboot") && confirm(`Reboot ONU ${onu.serial_number || onu.id}?`)) {
-                          triggerOperation(onu, "reboot");
+                      onClick={async () => {
+                        if (!canPerform("reboot")) {
+                          return;
                         }
+                        const confirmed = await confirmDialog({
+                          title: "Reboot ONU",
+                          description: `Reboot ONU ${onu.serial_number || onu.id}?`,
+                          confirmText: "Reboot",
+                        });
+                        if (!confirmed) {
+                          return;
+                        }
+                        triggerOperation(onu, "reboot");
                       }}
                       disabled={!canPerform("reboot") || isOperationPending("reboot")}
                       title={canPerform("reboot") ? undefined : "Reboot operation not supported"}
@@ -388,10 +399,20 @@ function ONUListPageContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (canPerform("delete") && confirm(`Delete ONU ${onu.serial_number || onu.id}? This cannot be undone.`)) {
-                          triggerOperation(onu, "delete");
+                      onClick={async () => {
+                        if (!canPerform("delete")) {
+                          return;
                         }
+                        const confirmed = await confirmDialog({
+                          title: "Delete ONU",
+                          description: `Delete ONU ${onu.serial_number || onu.id}? This cannot be undone.`,
+                          confirmText: "Delete",
+                          variant: "destructive",
+                        });
+                        if (!confirmed) {
+                          return;
+                        }
+                        triggerOperation(onu, "delete");
                       }}
                       disabled={!canPerform("delete") || isOperationPending("delete")}
                       className="text-destructive hover:text-destructive"

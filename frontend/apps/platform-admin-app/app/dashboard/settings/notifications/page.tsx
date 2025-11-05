@@ -1,13 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Mail,
   MessageSquare,
@@ -22,7 +22,7 @@ import {
   Save,
   RotateCcw,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { apiClient } from "@/lib/api/client";
 import { handleApiError } from "@/lib/error-handler";

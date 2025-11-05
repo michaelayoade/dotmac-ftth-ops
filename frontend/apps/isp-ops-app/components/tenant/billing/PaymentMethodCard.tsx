@@ -1,14 +1,15 @@
 "use client";
 
 import React from "react";
-import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardHeader, CardContent, CardFooter } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { PaymentMethod } from "@/hooks/useTenantPaymentMethods";
+import { CustomerPaymentMethod } from "@/hooks/useCustomerPortal";
 import { CreditCard, Building2, Wallet, CheckCircle, AlertCircle, Clock } from "lucide-react";
 
 interface PaymentMethodCardProps {
-  paymentMethod: PaymentMethod;
+  paymentMethod: PaymentMethod | CustomerPaymentMethod;
   onSetDefault?: (paymentMethodId: string) => void;
   onRemove?: (paymentMethodId: string) => void;
   onVerify?: (paymentMethodId: string) => void;

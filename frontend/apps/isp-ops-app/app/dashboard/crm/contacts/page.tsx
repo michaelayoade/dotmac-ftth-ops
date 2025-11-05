@@ -14,9 +14,9 @@ import {
   Phone,
   Building2,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -24,18 +24,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Contact {
   id: string;
@@ -66,6 +67,7 @@ export default function ContactsPage() {
   const [page, setPage] = useState(1);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch contacts
   const { data: response, isLoading } = useQuery<ContactListResponse>({
@@ -114,15 +116,18 @@ export default function ContactsPage() {
     return [contact.first_name, contact.last_name].filter(Boolean).join(" ").trim();
   };
 
-  const handleDelete = (contact: Contact) => {
+  const handleDelete = async (contact: Contact) => {
     const displayName = getContactDisplayName(contact);
-    if (
-      confirm(
-        `Are you sure you want to delete contact "${displayName}"? This action cannot be undone.`
-      )
-    ) {
-      deleteMutation.mutate(contact.id);
+    const confirmed = await confirmDialog({
+      title: "Delete contact",
+      description: `Are you sure you want to delete contact "${displayName}"? This action cannot be undone.`,
+      confirmText: "Delete contact",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate(contact.id);
   };
 
   const getStatusBadge = (status: string) => {
@@ -286,7 +291,7 @@ export default function ContactsPage() {
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" aria-label="Open actions menu">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -299,7 +304,9 @@ export default function ContactsPage() {
                             </Link>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
-                              onClick={() => handleDelete(contact)}
+                              onClick={() => {
+                                void handleDelete(contact);
+                              }}
                               className="text-destructive"
                             >
                               <Trash2 className="mr-2 h-4 w-4" />
