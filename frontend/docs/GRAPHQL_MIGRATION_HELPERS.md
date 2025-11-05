@@ -62,62 +62,75 @@ const isAnyLoading = loadingHelpers.isAnyLoading(queryResult);      // Either st
 
 ### `handleGraphQLError`
 
-Centralized error handling with logging and severity mapping:
+Centralized error handling with logging and toast notifications. Use in query `onError` callbacks:
 
 ```tsx
-import { handleGraphQLError, ErrorSeverity } from '@dotmac/graphql';
-import { toast } from 'react-hot-toast';
+import { handleGraphQLError } from '@dotmac/graphql';
+import { useToast } from '@dotmac/ui/use-toast';
+import { logger } from '@/lib/logger';
 
-const { data, error } = useCustomerListQuery(...);
+function useNetworkOverviewGraphQL() {
+  const { toast } = useToast();
 
-useEffect(() => {
-  if (error) {
-    const result = handleGraphQLError(error, {
-      operation: 'CustomerList',
-      componentName: 'CustomerDashboard',
-    });
-
-    // Auto-logged to console with context
-    // result.severity = 'error' | 'warning' | 'info' | 'critical'
-
-    if (result.shouldToast) {
-      toast[result.severity](result.message);
+  const { data, isLoading, error } = useNetworkOverviewQuery(
+    undefined,
+    {
+      enabled: true,
+      refetchInterval: 30000,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'NetworkOverviewQuery',
+          context: {
+            hook: 'useNetworkOverviewGraphQL',
+          },
+        }),
     }
-  }
-}, [error]);
+  );
+
+  return { data, isLoading, error };
+}
 ```
 
-### Error Severity Mapping
-
-Errors are automatically categorized based on `extensions.code`:
-
-| Code Pattern | Severity | Example Codes |
-|-------------|----------|---------------|
-| `INTERNAL_SERVER_ERROR`, `DATABASE_ERROR` | `critical` | System failures |
-| `VALIDATION_ERROR`, `BAD_USER_INPUT`, `NOT_FOUND` | `warning` | Recoverable client errors |
-| `UNAUTHENTICATED`, `FORBIDDEN`, `UNAUTHORIZED` | `info` | Auth/permission errors |
-| Default | `error` | Generic errors |
-
-### User-Friendly Messages
+### Error Handler Options
 
 ```tsx
-import { handleGraphQLErrorWithFriendlyMessage } from '@dotmac/graphql';
+interface GraphQLErrorHandlerOptions {
+  /** Toast dispatcher (required) */
+  toast: (options: { title: string; description?: string; variant?: ToastVariant }) => void;
 
-const result = handleGraphQLErrorWithFriendlyMessage(error, { operation: 'Login' });
-// result.message = "Please log in to continue" (instead of technical message)
+  /** Optional logger */
+  logger?: {
+    error: (message: string, error?: unknown, context?: Record<string, unknown>) => void;
+  };
+
+  /** GraphQL operation name for logging */
+  operationName?: string;
+
+  /** Additional context merged into log payload */
+  context?: Record<string, unknown>;
+
+  /** Fallback message if error lacks a message */
+  fallbackMessage?: string;
+
+  /** Skip toast while still logging */
+  suppressToast?: boolean;
+}
 ```
 
-### Built-in Messages
+### Error Code Mapping
 
-```tsx
-import { ERROR_MESSAGES } from '@dotmac/graphql';
+The handler automatically maps error codes to user-friendly toast messages:
 
-ERROR_MESSAGES.UNAUTHENTICATED      // "Please log in to continue"
-ERROR_MESSAGES.FORBIDDEN            // "You do not have permission..."
-ERROR_MESSAGES.NOT_FOUND            // "The requested resource was not found"
-ERROR_MESSAGES.VALIDATION_ERROR     // "Please check your input..."
-ERROR_MESSAGES.INTERNAL_SERVER_ERROR // "A server error occurred..."
-```
+| Error Code | Toast Title | Description |
+|-----------|-------------|-------------|
+| `UNAUTHENTICATED` | Authentication required | Session expired message |
+| `FORBIDDEN` | Access denied | Permission denied message |
+| `NOT_FOUND` | Not found | Resource not found |
+| `BAD_USER_INPUT` / `VALIDATION_ERROR` | Validation error | Shows error message |
+| `RATE_LIMITED` | Too many requests | Rate limit message |
+| `INTERNAL_SERVER_ERROR` | Server error | Generic server error |
 
 ---
 
@@ -199,71 +212,81 @@ function CustomerDashboard() {
 }
 ```
 
-### After: TanStack Query with helpers
+### After: TanStack Query with error handler in hook
 
 ```tsx
-function CustomerDashboard() {
-  const queryResult = useCustomerListQuery(
+function useCustomerListGraphQL() {
+  const { toast } = useToast();
+
+  const { data, isLoading, error, refetch } = useCustomerListQuery(
     { limit: 50 },
-    { enabled: true, refetchInterval: 30000 }
-  );
-
-  const { data, loading, error } = mapQueryResultWithTransform(
-    queryResult,
-    (data) => data?.customers?.customers ?? []
-  );
-
-  // Error handling
-  useEffect(() => {
-    if (error) {
-      const result = handleGraphQLError(error, {
-        operation: 'CustomerList',
-        componentName: 'CustomerDashboard',
-      });
-      if (result.shouldToast) toast[result.severity](result.message);
+    {
+      enabled: true,
+      refetchInterval: 30000,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'CustomerListQuery',
+          context: { hook: 'useCustomerListGraphQL' },
+        }),
     }
-  }, [error]);
-
-  return (
-    <QueryBoundary
-      result={{ data, loading, error }}
-      isEmpty={(customers) => customers.length === 0}
-    >
-      {(customers) => <CustomerList customers={customers} />}
-    </QueryBoundary>
   );
+
+  return {
+    customers: data?.customers?.customers ?? [],
+    loading: isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
+    refetch,
+  };
+}
+
+function CustomerDashboard() {
+  const { customers, loading, error } = useCustomerListGraphQL();
+
+  if (loading) return <DashboardSkeleton />;
+  if (error) return <ErrorDisplay message={error} />;
+  if (!customers.length) return <NoCustomersFound />;
+
+  return <CustomerList customers={customers} />;
 }
 ```
 
-### After: Fully optimized
+### After: Fully optimized with QueryBoundary
 
 ```tsx
-function CustomerDashboard() {
+function useCustomerListGraphQL() {
+  const { toast } = useToast();
+
   const queryResult = useCustomerListQuery(
     { limit: 50 },
-    { enabled: true, refetchInterval: 30000 }
+    {
+      enabled: true,
+      refetchInterval: 30000,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'CustomerListQuery',
+          context: { hook: 'useCustomerListGraphQL' },
+        }),
+    }
   );
 
-  const { data, loading, error } = mapQueryResultWithTransform(
+  // Map to Apollo-compatible shape for existing components
+  return mapQueryResultWithTransform(
     queryResult,
     (data) => data?.customers?.customers ?? []
   );
+}
 
-  const errorState = useErrorHandler(error, {
-    operation: 'CustomerList',
-    componentName: 'CustomerDashboard',
-  });
-
-  useEffect(() => {
-    if (errorState?.shouldToast) {
-      toast[errorState.severity](errorState.message);
-    }
-  }, [errorState]);
+function CustomerDashboard() {
+  const result = useCustomerListGraphQL();
 
   return (
     <ListQueryBoundary
-      result={{ data, loading, error }}
-      data={data ?? []}
+      result={result}
+      data={result.data ?? []}
       loadingComponent={<DashboardSkeleton />}
       emptyComponent={<NoCustomersFound />}
     >
@@ -289,87 +312,144 @@ function CustomerDashboard() {
 {loading ? <Spinner /> : error ? <Error /> : !data ? <Empty /> : <Content />}
 ```
 
-### 2. Centralize Skeleton Components
+### 2. Use Shared Skeleton Components
 
-Create shared skeleton components per domain:
-
-```tsx
-// shared/packages/ui/src/skeletons/DashboardSkeleton.tsx
-export function DashboardSkeleton() {
-  return (
-    <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-gray-200 rounded w-1/4" />
-      <div className="grid grid-cols-3 gap-4">
-        <div className="h-32 bg-gray-200 rounded" />
-        <div className="h-32 bg-gray-200 rounded" />
-        <div className="h-32 bg-gray-200 rounded" />
-      </div>
-    </div>
-  );
-}
-```
-
-Then use across pages:
+The platform provides pre-built skeleton components in `@dotmac/primitives`:
 
 ```tsx
+import {
+  DashboardSkeleton,
+  TableSkeleton,
+  CardSkeleton,
+} from '@dotmac/primitives';
+
+// Use with QueryBoundary
 <QueryBoundary
   result={mapQueryResult(result)}
-  loadingComponent={<DashboardSkeleton />}
+  loadingComponent={<DashboardSkeleton variant="network" />}
 >
-  {(data) => <Dashboard data={data} />}
+  {(data) => <NetworkDashboard data={data} />}
+</QueryBoundary>
+
+// Table skeleton
+<QueryBoundary
+  result={mapQueryResult(result)}
+  loadingComponent={<TableSkeleton columns={6} rows={10} showSearch />}
+>
+  {(data) => <CustomerTable customers={data} />}
+</QueryBoundary>
+
+// Card grid skeleton
+<QueryBoundary
+  result={mapQueryResult(result)}
+  loadingComponent={
+    <CardGridSkeleton count={4} columns={4} variant="metric" />
+  }
+>
+  {(data) => <MetricsGrid metrics={data} />}
 </QueryBoundary>
 ```
 
-### 3. Handle Errors Contextually
+**Available Skeletons:**
+- `DashboardSkeleton` - Dashboard pages with metrics and content sections
+- `TableSkeleton` - Data tables with search, filters, and pagination
+- `CardSkeleton` / `CardGridSkeleton` - Card layouts (metric, info, detailed)
+
+**Preset Variants:**
+```tsx
+// Dashboard presets
+<DashboardSkeletons.Network />
+<DashboardSkeletons.Metrics />
+<DashboardSkeletons.Compact />
+
+// Table presets
+<TableSkeletons.CustomerList />
+<TableSkeletons.DeviceList />
+<TableSkeletons.Compact />
+
+// Card presets
+<CardSkeletons.Metric />
+<CardSkeletons.MetricGrid />
+<CardSkeletons.InfoGrid />
+```
+
+### 3. Handle Errors in Hook onError
 
 ```tsx
 // Add context to errors for better debugging
-const errorState = useErrorHandler(error, {
-  operation: 'SubscriberList',
-  componentName: 'SubscriberDashboard',
-  userId: session?.user?.id,
-  tenantId: tenant?.id,
-  additionalData: { filters, searchTerm },
-});
+const { data, isLoading, error } = useSubscriberListQuery(
+  { limit: 50 },
+  {
+    enabled: true,
+    onError: (err) =>
+      handleGraphQLError(err, {
+        toast,
+        logger,
+        operationName: 'SubscriberListQuery',
+        context: {
+          hook: 'useSubscriberListGraphQL',
+          userId: session?.user?.id,
+          tenantId: tenant?.id,
+          filters,
+          searchTerm,
+        },
+      }),
+  }
+);
 ```
 
 ### 4. Skip Toast for Expected Errors
 
 ```tsx
-// Auth errors are handled by auth flow, don't toast
-if (errorState && errorState.code !== 'UNAUTHENTICATED') {
-  toast[errorState.severity](errorState.message);
-}
+// Use suppressToast for errors handled elsewhere (e.g., auth redirects)
+onError: (err) =>
+  handleGraphQLError(err, {
+    toast,
+    logger,
+    operationName: 'LoginMutation',
+    suppressToast: isAuthError(err), // Skip toast if auth handles it
+  })
 ```
 
-### 5. Combine Helpers for Maximum DRY
+### 5. Create Reusable Query Hooks
 
 ```tsx
-// Create a reusable hook
-function useQueryWithErrorHandling<TData>(
-  queryResult: UseQueryResult<TData>,
-  operation: string
-) {
-  const normalized = mapQueryResult(queryResult);
-  const errorState = useErrorHandler(normalized.error, { operation });
+// Encapsulate error handling in custom hooks
+function useSubscriberListGraphQL(options: { limit?: number } = {}) {
+  const { toast } = useToast();
+  const { limit = 50 } = options;
 
-  useEffect(() => {
-    if (errorState?.shouldToast) {
-      toast[errorState.severity](errorState.message);
+  const queryResult = useSubscriberListQuery(
+    { limit },
+    {
+      enabled: true,
+      refetchInterval: 30000,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'SubscriberListQuery',
+          context: { hook: 'useSubscriberListGraphQL', limit },
+        }),
     }
-  }, [errorState]);
-
-  return normalized;
-}
-
-// Use everywhere
-function MyComponent() {
-  const result = useQueryWithErrorHandling(
-    useCustomerListQuery(...),
-    'CustomerList'
   );
 
-  return <QueryBoundary result={result}>...</QueryBoundary>;
+  // Return Apollo-compatible shape
+  return mapQueryResultWithTransform(
+    queryResult,
+    (data) => data?.subscribers ?? []
+  );
+}
+
+// Use in components
+function SubscriberDashboard() {
+  const result = useSubscriberListGraphQL({ limit: 100 });
+
+  return (
+    <ListQueryBoundary result={result} data={result.data ?? []}>
+      {(subscribers) => <SubscriberList subscribers={subscribers} />}
+    </ListQueryBoundary>
+  );
 }
 ```
 
@@ -381,11 +461,12 @@ function MyComponent() {
 - [ ] Replace `skip` with `enabled` in options
 - [ ] Replace `pollInterval` with `refetchInterval`
 - [ ] Replace `fetchPolicy` with TanStack equivalents (`staleTime`, `cacheTime`)
-- [ ] Remove `onError` callbacks, use `useErrorHandler` instead
-- [ ] Wrap result with `mapQueryResult` for Apollo compatibility
-- [ ] Replace manual ternaries with `QueryBoundary`
+- [ ] Add `onError` callback with `handleGraphQLError` in hook
+- [ ] Pass `toast` and `logger` to error handler
+- [ ] Add operation name and context for debugging
+- [ ] Wrap result with `mapQueryResult` for Apollo compatibility (optional)
+- [ ] Replace manual ternaries with `QueryBoundary` (optional)
 - [ ] Use shared skeleton components
-- [ ] Add error context for debugging
 - [ ] Test loading, error, and empty states
 
 ---

@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, UserPlus, Search, Users, Calendar, Trash2 } from "lucide-react";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Role {
   id: string;

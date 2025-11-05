@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   ArrowLeft,
   Wifi,
@@ -19,9 +19,10 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { Device, DeviceDetailResponse, Port } from "@/types/voltha";
+import { useConfirmDialog } from "@dotmac/ui";
 
 type DeviceOperation = "enable" | "disable" | "reboot" | "delete";
 
@@ -47,6 +48,7 @@ function ONUDetailsPageContent() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [pendingOperation, setPendingOperation] = useState<DeviceOperation | null>(null);
+  const confirmDialog = useConfirmDialog();
 
   const {
     data: deviceDetail,
@@ -176,11 +178,21 @@ function ONUDetailsPageContent() {
           </Button>
           <Button
             variant="destructive"
-            onClick={() => {
-              if (canPerform("delete") && confirm("Delete this ONU?")) {
+              onClick={async () => {
+                if (!canPerform("delete")) {
+                  return;
+                }
+                const confirmed = await confirmDialog({
+                  title: "Delete ONU",
+                  description: "Delete this ONU?",
+                  confirmText: "Delete",
+                  variant: "destructive",
+                });
+                if (!confirmed) {
+                  return;
+                }
                 handleOperation("delete");
-              }
-            }}
+              }}
             disabled={!canPerform("delete") || pendingOperation !== null}
             title={
               canPerform("delete")

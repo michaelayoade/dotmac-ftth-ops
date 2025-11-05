@@ -233,7 +233,7 @@ export interface UseCustomerDashboardOptions {
 export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions = {}) {
   const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerDashboardQuery(
+  const { data, isLoading, isFetching, error, refetch } = useCustomerDashboardQuery(
     {
       limit,
       offset,
@@ -264,6 +264,7 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
     isLoading,
+    isFetching,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };

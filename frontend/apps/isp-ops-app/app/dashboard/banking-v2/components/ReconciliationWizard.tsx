@@ -8,18 +8,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { useBankAccounts, useManualPayments } from "@/hooks/useBankAccounts";
 import {
@@ -27,8 +27,8 @@ import {
   useAddReconciledPayment,
   useCompleteReconciliation,
 } from "@/hooks/useReconciliation";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@dotmac/ui";
+import { Checkbox } from "@dotmac/ui";
 import type { ReconciliationStart } from "@/lib/services/reconciliation-service";
 
 interface ReconciliationWizardProps {

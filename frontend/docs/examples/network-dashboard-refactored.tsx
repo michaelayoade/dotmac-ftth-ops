@@ -5,21 +5,23 @@
  * Compare with the current implementation in apps/platform-admin-app/components/
  */
 
-import { useEffect } from 'react';
-import { toast } from 'react-hot-toast';
 import {
   useNetworkOverviewQuery,
   mapQueryResult,
   QueryBoundary,
-  useErrorHandler,
+  handleGraphQLError,
   type NormalizedQueryResult,
 } from '@dotmac/graphql';
+import { DashboardSkeleton } from '@dotmac/primitives';
+import { useToast } from '@dotmac/ui/use-toast';
+import { logger } from '@/lib/logger';
 
 // ============================================================================
 // BEFORE: Manual error handling and ternaries
 // ============================================================================
 
 function NetworkDashboardBefore() {
+  const { toast } = useToast();
   const { data, isLoading, error, refetch } = useNetworkOverviewQuery(
     undefined,
     {
@@ -28,15 +30,13 @@ function NetworkDashboardBefore() {
     }
   );
 
-  // Manual error handling
-  useEffect(() => {
-    if (error) {
-      console.error('[NetworkDashboard] Error:', error);
-      toast.error(error instanceof Error ? error.message : 'An error occurred');
-    }
-  }, [error]);
+  // Manual error handling - logged but not consistently
+  if (error) {
+    console.error('[NetworkDashboard] Error:', error);
+    // Inconsistent toast usage across components
+  }
 
-  // Manual loading/error/empty states
+  // Manual loading/error/empty states - repetitive
   if (isLoading) {
     return (
       <div className="space-y-4 animate-pulse">
@@ -73,35 +73,32 @@ function NetworkDashboardBefore() {
 // ============================================================================
 
 function NetworkDashboardAfter() {
+  const { toast } = useToast();
+
   const queryResult = useNetworkOverviewQuery(
     undefined,
     {
       enabled: true,
       refetchInterval: 30000,
+      // Centralized error handling in hook
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'NetworkOverviewQuery',
+          context: { hook: 'useNetworkOverviewGraphQL' },
+        }),
     }
   );
 
-  // Map to Apollo-compatible shape
+  // Map to Apollo-compatible shape (optional - for backward compatibility)
   const result = mapQueryResult(queryResult);
 
-  // Centralized error handling with severity and logging
-  const errorState = useErrorHandler(result.error, {
-    operation: 'NetworkOverview',
-    componentName: 'NetworkDashboard',
-  });
-
-  useEffect(() => {
-    if (errorState?.shouldToast) {
-      // Severity-aware toasting (error | warning | info | critical)
-      toast[errorState.severity](errorState.message);
-    }
-  }, [errorState]);
-
-  // Declarative loading/error/empty handling
+  // Declarative loading/error/empty handling with shared skeleton
   return (
     <QueryBoundary
       result={result}
-      loadingComponent={<NetworkDashboardSkeleton />}
+      loadingComponent={<DashboardSkeleton variant="network" />}
       isEmpty={(data) => !data?.networkOverview}
     >
       {(data) => <NetworkOverviewContent data={data.networkOverview!} />}
@@ -117,27 +114,26 @@ function NetworkDashboardAfter() {
  * Custom hook that encapsulates the entire pattern
  */
 function useNetworkOverviewWithHelpers() {
+  const { toast } = useToast();
+
   const queryResult = useNetworkOverviewQuery(
     undefined,
     {
       enabled: true,
       refetchInterval: 30000,
+      // Error handling built into the hook
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: 'NetworkOverviewQuery',
+          context: { hook: 'useNetworkOverviewWithHelpers' },
+        }),
     }
   );
 
-  const result = mapQueryResult(queryResult);
-  const errorState = useErrorHandler(result.error, {
-    operation: 'NetworkOverview',
-    componentName: 'NetworkDashboard',
-  });
-
-  useEffect(() => {
-    if (errorState?.shouldToast) {
-      toast[errorState.severity](errorState.message);
-    }
-  }, [errorState]);
-
-  return result;
+  // Map to Apollo-compatible shape
+  return mapQueryResult(queryResult);
 }
 
 function NetworkDashboardBest() {
@@ -146,7 +142,7 @@ function NetworkDashboardBest() {
   return (
     <QueryBoundary
       result={result}
-      loadingComponent={<NetworkDashboardSkeleton />}
+      loadingComponent={<DashboardSkeleton variant="network" />}
       isEmpty={(data) => !data?.networkOverview}
     >
       {(data) => <NetworkOverviewContent data={data.networkOverview!} />}
@@ -157,21 +153,6 @@ function NetworkDashboardBest() {
 // ============================================================================
 // Shared Components
 // ============================================================================
-
-function NetworkDashboardSkeleton() {
-  return (
-    <div className="space-y-4 animate-pulse">
-      <div className="h-8 bg-gray-200 rounded w-1/4" />
-      <div className="grid grid-cols-4 gap-4">
-        <div className="h-24 bg-gray-200 rounded" />
-        <div className="h-24 bg-gray-200 rounded" />
-        <div className="h-24 bg-gray-200 rounded" />
-        <div className="h-24 bg-gray-200 rounded" />
-      </div>
-      <div className="h-64 bg-gray-200 rounded" />
-    </div>
-  );
-}
 
 function NetworkOverviewContent({ data }: { data: any }) {
   return (
@@ -236,7 +217,7 @@ function RecentAlerts({ alerts }: any) {
  * 5. **UX**: Severity-aware toasts (error vs warning vs info)
  * 6. **Maintainability**: Changes to error handling happen in one place
  * 7. **Testability**: QueryBoundary is easier to test than nested ternaries
- * 8. **Skeleton Reuse**: Shared skeleton components across dashboard
+ * 8. **Skeleton Reuse**: Shared skeleton components from @dotmac/primitives
  *
  * Code Reduction:
  * - Before: ~40 lines of boilerplate per component

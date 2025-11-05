@@ -15,7 +15,7 @@ import {
   type PaymentRetryRequest,
   type PaymentRetryResponse,
 } from "@/lib/services/reconciliation-service";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 // ============================================
 // Reconciliation Session Hooks

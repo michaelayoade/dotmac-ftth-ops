@@ -6,19 +6,19 @@ export const dynamicParams = true;
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Send } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import {
   useCreateTicket,
   type TicketPriority,

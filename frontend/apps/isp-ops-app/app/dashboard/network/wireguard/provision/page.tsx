@@ -18,20 +18,20 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useProvisionVPNService } from "@/hooks/useWireGuard";
 import type { VPNProvisionRequest } from "@/types/wireguard";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   ArrowLeft,
   Loader2,
@@ -43,7 +43,7 @@ import {
   Download,
   ExternalLink,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 type ProvisioningStep = "form" | "provisioning" | "success" | "error";
 

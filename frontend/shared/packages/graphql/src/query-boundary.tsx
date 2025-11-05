@@ -7,7 +7,6 @@
 
 import type { ReactNode } from 'react';
 import type { NormalizedQueryResult } from './query-helpers';
-import type { ErrorSeverity } from './error-handler';
 
 export interface QueryBoundaryProps<TData> {
   /** Query result from mapQueryResult */
@@ -20,7 +19,7 @@ export interface QueryBoundaryProps<TData> {
   loadingComponent?: ReactNode;
 
   /** Optional custom error component */
-  errorComponent?: (error: string, severity?: ErrorSeverity) => ReactNode;
+  errorComponent?: (error: string) => ReactNode;
 
   /** Optional custom empty state component */
   emptyComponent?: ReactNode;
@@ -138,7 +137,7 @@ export function QueryBoundary<TData>({
   emptyComponent,
   isEmpty,
   skipEmptyCheck = false,
-}: QueryBoundaryProps<TData>) {
+}: QueryBoundaryProps<TData>): React.ReactElement | null {
   // Loading state
   if (result.loading) {
     return <>{loadingComponent ?? <DefaultLoadingSkeleton />}</>;
@@ -193,7 +192,7 @@ export function ListQueryBoundary<TData, TItem>({
   emptyComponent,
 }: Omit<QueryBoundaryProps<TData>, 'isEmpty' | 'skipEmptyCheck'> & {
   data: TItem[];
-}) {
+}): React.ReactElement | null {
   return (
     <QueryBoundary
       result={result}

@@ -8,9 +8,9 @@
  */
 
 import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
 import { Activity, AlertCircle, CheckCircle, RefreshCw, Wifi, WifiOff, X } from "lucide-react";
 import { useRealtimeHealth } from "../../hooks/useRealtime";
 import type { ConnectionStatus } from "../../types/realtime";

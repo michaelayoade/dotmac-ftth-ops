@@ -14,10 +14,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { Job, useCancelJob } from "@/hooks/useJobs";
 import { AlertCircle, Loader2, PauseCircle, PlayCircle, XCircle } from "lucide-react";
 

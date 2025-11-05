@@ -9,18 +9,18 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useTemplates, useDeleteTemplate } from "@/hooks/useCommunications";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import {
   FileText,
   Plus,
@@ -33,8 +33,8 @@ import {
   Trash2,
   Eye,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { CommunicationChannel, type ListTemplatesParams, getTimeAgo } from "@/types/communications";
 
 export default function TemplatesPage() {

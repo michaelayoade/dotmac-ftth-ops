@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -9,9 +9,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -19,7 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@dotmac/ui";
 import {
   useServiceInstance,
   useServiceInstances,
@@ -30,7 +30,7 @@ import { useScheduledJobs, useJobChains, useExecuteJobChain } from "@/hooks/useS
 import { useCampaigns } from "@/hooks/useCampaigns";
 import type { DunningCampaign } from "@/types";
 import { CampaignControlDialog } from "@/components/CampaignControlDialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 export default function AutomationOverviewPage() {

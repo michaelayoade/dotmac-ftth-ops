@@ -8,9 +8,9 @@
  */
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   Activity,
   RefreshCw,
@@ -25,7 +25,7 @@ import { useSessionsWebSocket } from "../../hooks/useRealtime";
 import type { RADIUSSessionEvent } from "../../types/realtime";
 import { CompactConnectionStatus } from "./ConnectionStatusIndicator";
 import { useNetworkDiagnostics } from "@/hooks/useNetworkDiagnostics";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Session {
   session_id: string;

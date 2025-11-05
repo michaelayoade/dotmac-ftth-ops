@@ -3,13 +3,13 @@
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { Wifi, Zap, CheckCircle, Info, ArrowRight, Loader2 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { useCustomerService } from "@/hooks/useCustomerPortal";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 export default function CustomerServicePage() {
   const { toast } = useToast();

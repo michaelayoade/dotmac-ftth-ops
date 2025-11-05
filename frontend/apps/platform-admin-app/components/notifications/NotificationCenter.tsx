@@ -11,20 +11,20 @@ import { useState } from "react";
 import { Bell, Check, CheckCheck, Archive, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@dotmac/ui";
+import { ScrollArea } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationPriority } from "@/hooks/useNotifications";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface NotificationCenterProps {
   /** Maximum notifications to show in dropdown */

@@ -23,22 +23,22 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   EnhancedDataTable,
   type ColumnDef,
   type BulkAction,
   type Row,
-} from "@/components/ui/EnhancedDataTable";
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { useLeads, type Lead, type LeadStatus, type LeadSource } from "@/hooks/useCRM";
 import { LeadStatusBadge, LeadSourceBadge, LeadPriorityBadge } from "@/components/crm/Badges";
 import { CreateLeadModal } from "@/components/crm/CreateLeadModal";
@@ -49,9 +49,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 
 function formatRelativeDate(value?: string | null) {
   if (!value) return "—";

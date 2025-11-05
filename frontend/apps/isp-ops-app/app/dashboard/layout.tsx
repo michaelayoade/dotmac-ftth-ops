@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { SkipLink } from "@/components/ui/skip-link";
+import { SkipLink } from "@dotmac/ui";
 import {
   Home,
   Settings,
@@ -55,7 +55,7 @@ import {
   GitBranch,
   Puzzle,
 } from "lucide-react";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { Can } from "@/components/auth/PermissionGuard";

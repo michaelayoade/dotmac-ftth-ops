@@ -15,8 +15,10 @@
  * Migration: Migrated from Apollo to TanStack Query via @dotmac/graphql
  */
 
-import { useSubscriberDashboardQuery } from "@dotmac/graphql/generated/react-query";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
+import { handleGraphQLError } from "@dotmac/graphql";
+import { useSubscriberDashboardQuery } from "@dotmac/graphql/generated/react-query";
 
 interface UseSubscriberDashboardOptions {
   limit?: number;
@@ -25,6 +27,7 @@ interface UseSubscriberDashboardOptions {
 }
 
 export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOptions = {}) {
+  const { toast } = useToast();
   const { limit = 50, search, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useSubscriberDashboardQuery(
@@ -35,13 +38,19 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
     {
       enabled,
       refetchInterval: 30000, // Refresh every 30 seconds
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "SubscriberDashboardQuery",
+          context: {
+            hook: "useSubscriberDashboardGraphQL",
+            limit,
+            hasSearch: Boolean(search),
+          },
+        }),
     },
   );
-
-  // Log errors
-  if (error) {
-    logger.error("GraphQL subscriber dashboard query failed", error);
-  }
 
   // Transform GraphQL data to match existing component expectations
   const subscribers = data?.subscribers ?? [];

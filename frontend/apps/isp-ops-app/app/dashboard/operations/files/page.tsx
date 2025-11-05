@@ -18,11 +18,11 @@ import {
   Archive,
   FolderOpen,
 } from "lucide-react";
-import { PageHeader } from "@/components/ui/page-header";
-import { EmptyState } from "@/components/ui/empty-state";
-import { StatusBadge } from "@/components/ui/status-badge";
-import { Button } from "@/components/ui/button";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { PageHeader } from "@dotmac/ui";
+import { EmptyState } from "@dotmac/ui";
+import { StatusBadge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 interface FileMetadata {

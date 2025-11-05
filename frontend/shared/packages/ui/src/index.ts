@@ -1,20 +1,98 @@
-// DEPRECATED: This package is deprecated. Use @dotmac/primitives instead.
-// These re-exports are maintained for backward compatibility only.
+// Components
+export * from "./components/EnhancedDataTable.examples";
+export * from "./components/EnhancedDataTable";
+export * from "./components/alert-dialog";
+export * from "./components/alert";
+export * from "./components/avatar";
+export * from "./components/badge";
+export * from "./components/breadcrumb";
+export * from "./components/button";
+export * from "./components/card";
+export * from "./components/checkbox";
+export * from "./components/command";
+export * from "./components/confirm-dialog-provider";
+export * from "./components/confirm-dialog";
+export * from "./components/data-table";
+export * from "./components/dialog";
+export * from "./components/dropdown-menu";
+export * from "./components/empty-state";
+export * from "./components/error-state";
+export * from "./components/form";
+export * from "./components/form-error";
+export * from "./components/input";
+export * from "./components/label";
+export * from "./components/live-indicator";
+export * from "./components/loading-overlay";
+export {
+  LoadingSpinner,
+  LoadingCard,
+  LoadingTable,
+  LoadingGrid,
+  LoadingState,
+  AsyncState,
+  ButtonLoading,
+  ProgressIndicator,
+} from "./components/loading-states";
+export * from "./components/metric-card-enhanced";
+export * from "./components/page-header";
+export * from "./components/portal-badge";
+export * from "./components/portal-button";
+export * from "./components/portal-card";
+export * from "./components/progress";
+export * from "./components/radio-group";
+export * from "./components/scroll-area";
+export * from "./components/select";
+export * from "./components/separator";
+export * from "./components/skeleton";
+export * from "./components/skip-link";
+export * from "./components/status-badge";
+export * from "./components/switch";
+export * from "./components/table";
+export * from "./components/table-pagination";
+export * from "./components/tabs";
+export * from "./components/textarea";
+export * from "./components/theme-toggle";
+export * from "./components/toast";
+export * from "./components/tooltip";
 
-// Core components - re-exported from @dotmac/primitives
-export { Button, buttonVariants } from "@dotmac/primitives";
-export type { ButtonProps } from "@dotmac/primitives";
+// Hooks
+export * from "./hooks/use-toast";
 
-// Re-export other components from primitives if they exist
-export { Input } from "@dotmac/primitives";
-export { Card } from "@dotmac/primitives";
-export { Modal } from "@dotmac/primitives";
-
-// Portal utilities - maintained for compatibility but consider using UniversalTheme instead
+// Utilities
 export * from "./lib/utils";
 
-// Types for backward compatibility
-export type { PortalType, PortalColorType } from "./lib/utils";
-
-// Export portal variants from primitives UniversalTheme for new code
-export type { UniversalThemeConfig } from "@dotmac/primitives";
+// Portal theming helpers
+export {
+  PortalThemeProvider,
+  usePortalTheme,
+  portalMetadata,
+} from "./lib/design-system/portal-themes";
+export type {
+  PortalTheme,
+  PortalThemeContextValue,
+} from "./lib/design-system/portal-themes";
+export {
+  colorTokens,
+  detectPortalFromRoute,
+  getPortalColors,
+  portalRoutes,
+} from "./lib/design-system/tokens/colors";
+export type {
+  PortalType as PortalDesignType,
+} from "./lib/design-system/tokens/colors";
+export {
+  fontFamily,
+  fontWeight,
+  portalFontSizes,
+} from "./lib/design-system/tokens/typography";
+export {
+  spacing,
+  portalSpacing,
+  touchTargets,
+} from "./lib/design-system/tokens/spacing";
+export {
+  duration,
+  easing,
+  portalAnimations,
+  keyframes,
+} from "./lib/design-system/tokens/animations";

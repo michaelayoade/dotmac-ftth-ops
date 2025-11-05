@@ -5,6 +5,9 @@
  * New code should use @dotmac/primitives UniversalTheme instead.
  */
 
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
+
 // ============================================================================
 // Type Definitions
 // ============================================================================
@@ -94,14 +97,9 @@ export function getPortalThemeClass(portal: PortalType): string {
   return `portal-theme-${portal}`;
 }
 
-// ============================================================================
-// Utility Functions
-// ============================================================================
-
 /**
- * Combine class names, filtering out falsy values
- * Simple implementation for backward compatibility
+ * Combine class names using clsx + tailwind-merge to avoid style conflicts.
  */
-export function cn(...classNames: (string | undefined | null | false)[]): string {
-  return classNames.filter(Boolean).join(" ");
+export function cn(...classNames: ClassValue[]): string {
+  return twMerge(clsx(classNames));
 }

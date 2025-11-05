@@ -22,6 +22,7 @@
     "@apollo/client": "^3.14.0",
     "@dotmac/headless": "workspace:*",
     "@dotmac/primitives": "workspace:*",
+    "@dotmac/ui": "workspace:*",
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-dialog": "^1.1.15",

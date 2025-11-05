@@ -35,8 +35,8 @@ import {
   type CreatePluginInstanceRequest,
   type PluginTestResult,
 } from "@/hooks/usePlugins";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 type ViewMode = "grid" | "list" | "health";
 

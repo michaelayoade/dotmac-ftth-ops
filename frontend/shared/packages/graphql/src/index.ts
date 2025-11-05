@@ -19,6 +19,13 @@ export type {
   GraphQLClientConfig,
 } from './client';
 
+export { handleGraphQLError } from './error-handler';
+export type {
+  GraphQLToastFn,
+  GraphQLToastOptions,
+  GraphQLErrorHandlerOptions,
+} from './error-handler';
+
 // Generated types and hooks (available after codegen runs)
 export * from '../generated';
 export * from '../generated/react-query';
@@ -36,17 +43,27 @@ export {
 } from './query-helpers';
 export type { NormalizedQueryResult } from './query-helpers';
 
-// Error handling utilities
+// Normalization helpers for custom dashboard hooks
+// Note: hasQueryData is re-exported in normalization-helpers but not listed here
+// to avoid duplication - it's already exported from query-helpers above
 export {
-  handleGraphQLError,
-  handleGraphQLErrorWithFriendlyMessage,
-  useErrorHandler,
-  getUserFriendlyMessage,
-  ErrorSeverity,
-  ERROR_MESSAGES,
-} from './error-handler';
-export type { ErrorHandlerContext, ErrorHandlerResult } from './error-handler';
+  normalizeDashboardHook,
+  normalizeListQuery,
+  normalizeDetailQuery,
+  extractDashboardData,
+  combineQueryResults,
+} from './normalization-helpers';
+export type { DashboardHookResult } from './normalization-helpers';
 
 // Query boundary components
 export { QueryBoundary, ListQueryBoundary } from './query-boundary';
 export type { QueryBoundaryProps } from './query-boundary';
+
+// Mutation helpers (for forms, updates, deletes)
+export {
+  useMutationWithToast,
+  createOptimisticUpdate,
+  invalidateQueries,
+  useFormMutation,
+} from './mutation-helpers';
+export type { MutationWithToastOptions } from './mutation-helpers';

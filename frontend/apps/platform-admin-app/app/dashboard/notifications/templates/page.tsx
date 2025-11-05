@@ -16,17 +16,17 @@ import {
   type ColumnDef,
   type BulkAction,
   type QuickFilter,
-} from "@/components/ui/EnhancedDataTable";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import { formatDistanceToNow } from "date-fns";
 import { CreateTemplateModal } from "@/components/notifications/CreateTemplateModal";
 import { EditTemplateModal } from "@/components/notifications/EditTemplateModal";
 import { PreviewTemplateModal } from "@/components/notifications/PreviewTemplateModal";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function NotificationTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<CommunicationTemplate | null>(null);

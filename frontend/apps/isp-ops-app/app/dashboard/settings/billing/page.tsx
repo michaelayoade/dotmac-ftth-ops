@@ -29,7 +29,7 @@ import {
   Palette,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface BillingSettings {
   company_info: {

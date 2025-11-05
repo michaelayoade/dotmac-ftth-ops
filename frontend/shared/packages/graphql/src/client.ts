@@ -182,6 +182,7 @@ export function createGraphQLClient(config?: GraphQLClientConfig): GraphQLClient
 export function graphqlFetcher<TData, TVariables>(
   query: string,
   variables?: TVariables,
+  headers?: RequestInit['headers'],
 ): () => Promise<TData> {
   return () => {
     return graphqlClient.request<TData, TVariables>(query, variables);

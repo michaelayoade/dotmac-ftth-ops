@@ -15,9 +15,9 @@ import {
   Power,
   PowerOff,
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -25,18 +25,19 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import { formatDistanceToNow } from "date-fns";
 
 interface RADIUSSubscriber {
@@ -58,6 +59,7 @@ export default function RADIUSSubscribersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch subscribers
   const { data: subscribers, isLoading } = useQuery<RADIUSSubscriber[]>({
@@ -160,14 +162,17 @@ export default function RADIUSSubscribersPage() {
     }
   };
 
-  const handleDelete = (subscriber: RADIUSSubscriber) => {
-    if (
-      confirm(
-        `Are you sure you want to delete subscriber "${subscriber.username}"? This action cannot be undone.`
-      )
-    ) {
-      deleteMutation.mutate(subscriber.username);
+  const handleDelete = async (subscriber: RADIUSSubscriber) => {
+    const confirmed = await confirmDialog({
+      title: "Delete subscriber",
+      description: `Are you sure you want to delete subscriber "${subscriber.username}"? This action cannot be undone.`,
+      confirmText: "Delete subscriber",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate(subscriber.username);
   };
 
   return (
@@ -306,7 +311,9 @@ export default function RADIUSSubscribersPage() {
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
-                            onClick={() => handleDelete(subscriber)}
+                            onClick={() => {
+                              void handleDelete(subscriber);
+                            }}
                             className="text-destructive"
                           >
                             <Trash2 className="mr-2 h-4 w-4" />

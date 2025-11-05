@@ -1,22 +1,233 @@
+import { GraphQLError } from "./client";
+
+type ToastVariant = "default" | "destructive";
+
+export interface GraphQLToastOptions {
+  title: string;
+  description?: string;
+  variant?: ToastVariant;
+}
+
+export interface GraphQLToastFn {
+  (options: GraphQLToastOptions): void;
+}
+
+export interface GraphQLErrorHandlerOptions {
+  /**
+   * Toast dispatcher. Required to surface the error to users.
+   */
+  toast: GraphQLToastFn;
+
+  /**
+   * Optional logger with an error signature compatible with the app logger.
+   */
+  logger?: {
+    error: (message: string, error?: unknown, context?: Record<string, unknown>) => void;
+  };
+
+  /**
+   * Additional context merged into the log payload.
+   */
+  context?: Record<string, unknown>;
+
+  /**
+   * Friendly fallback description if the error lacks a message.
+   * @default "An unexpected error occurred. Please try again."
+   */
+  fallbackMessage?: string;
+
+  /**
+   * GraphQL operation name for logging.
+   */
+  operationName?: string;
+
+  /**
+   * Skip the toast while still logging.
+   */
+  suppressToast?: boolean;
+
+  /**
+   * Optional custom message to show in the toast instead of the server message.
+   */
+  customMessage?: string;
+}
+
+interface NormalizedGraphQLError {
+  message: string;
+  code?: string;
+  path?: Array<string | number>;
+  isNetworkError?: boolean;
+}
+
+const DEFAULT_FALLBACK_MESSAGE = "An unexpected error occurred. Please try again.";
+
+const ERROR_CODE_TO_TOAST: Record<
+  string,
+  { title: string; variant: ToastVariant; getDescription?: (message: string) => string }
+> = {
+  UNAUTHENTICATED: {
+    title: "Authentication required",
+    variant: "destructive",
+    getDescription: () => "Your session has expired. Please sign in again.",
+  },
+  FORBIDDEN: {
+    title: "Access denied",
+    variant: "destructive",
+    getDescription: () => "You do not have permission to perform this action.",
+  },
+  NOT_FOUND: {
+    title: "Not found",
+    variant: "destructive",
+  },
+  BAD_USER_INPUT: {
+    title: "Validation error",
+    variant: "destructive",
+  },
+  VALIDATION_ERROR: {
+    title: "Validation error",
+    variant: "destructive",
+  },
+  CONFLICT: {
+    title: "Conflict detected",
+    variant: "destructive",
+  },
+  RATE_LIMITED: {
+    title: "Too many requests",
+    variant: "destructive",
+    getDescription: () => "You are sending requests too quickly. Please try again shortly.",
+  },
+  SERVICE_UNAVAILABLE: {
+    title: "Service unavailable",
+    variant: "destructive",
+  },
+  INTERNAL_SERVER_ERROR: {
+    title: "Server error",
+    variant: "destructive",
+    getDescription: () => "The server encountered an unexpected error. Please try again later.",
+  },
+};
+
+function isRecord(value: unknown): value is Record<string, any> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractFirstError(errors: any[] | undefined): NormalizedGraphQLError | undefined {
+  if (!Array.isArray(errors) || errors.length === 0) {
+    return undefined;
+  }
+
+  const first = errors[0] ?? {};
+  const message =
+    typeof first?.message === "string"
+      ? first.message
+      : typeof first === "string"
+        ? first
+        : DEFAULT_FALLBACK_MESSAGE;
+
+  const extensions = isRecord(first?.extensions) ? first.extensions : undefined;
+  const code = typeof extensions?.code === "string" ? extensions.code : undefined;
+  const path = Array.isArray(first?.path) ? first.path : undefined;
+
+  return {
+    message,
+    code,
+    path,
+  };
+}
+
+function normalizeGraphQLError(error: unknown): NormalizedGraphQLError {
+  if (error instanceof GraphQLError) {
+    const el = extractFirstError(error.errors);
+    return {
+      message: el?.message ?? error.message ?? DEFAULT_FALLBACK_MESSAGE,
+      code: el?.code,
+      path: el?.path,
+    };
+  }
+
+  if (isRecord(error)) {
+    // ApolloError & similar shapes
+    if (Array.isArray((error as any).graphQLErrors)) {
+      const el = extractFirstError((error as any).graphQLErrors);
+      return {
+        message: el?.message ?? (typeof error.message === "string" ? error.message : DEFAULT_FALLBACK_MESSAGE),
+        code: el?.code,
+        path: el?.path,
+        isNetworkError: Boolean((error as any).networkError),
+      };
+    }
+
+    if (Array.isArray((error as any).errors)) {
+      const el = extractFirstError((error as any).errors);
+      if (el) {
+        return el;
+      }
+    }
+
+    if (typeof error.message === "string") {
+      return {
+        message: error.message,
+        code: typeof (error as any).code === "string" ? (error as any).code : undefined,
+      };
+    }
+  }
+
+  if (typeof error === "string") {
+    return {
+      message: error,
+    };
+  }
+
+  return {
+    message: DEFAULT_FALLBACK_MESSAGE,
+  };
+}
+
+function buildToastPayload(
+  normalized: NormalizedGraphQLError,
+  fallbackMessage: string,
+): GraphQLToastOptions {
+  const message = normalized.message || fallbackMessage;
+  const code = normalized.code ?? "";
+  const mapping = ERROR_CODE_TO_TOAST[code];
+
+  if (mapping) {
+    return {
+      title: mapping.title,
+      description: mapping.getDescription ? mapping.getDescription(message) : message,
+      variant: mapping.variant,
+    };
+  }
+
+  if (normalized.isNetworkError) {
+    return {
+      title: "Network error",
+      description: "Unable to reach the server. Check your connection and try again.",
+      variant: "destructive",
+    };
+  }
+
+  return {
+    title: "Request failed",
+    description: message,
+    variant: "destructive",
+  };
+}
+
 /**
- * GraphQL Error Handler
+ * Handle GraphQL errors consistently across applications.
+ * Logs the error (with context) and surfaces a toast with an appropriate message.
  *
- * Centralized error handling with logging and toast notifications.
- * Extracts error codes from GraphQLError.extensions and maps to appropriate
- * toast variants.
+ * @param error - The unknown GraphQL error thrown by a query or mutation
+ * @param options - Toast/logger configuration
  */
+const SKIP_TOAST_CODES = new Set<string>(['UNAUTHENTICATED', 'SESSION_EXPIRED']);
 
-import { GraphQLError as GQLError } from './client';
-
-/**
- * Error code to toast variant mapping
- * Based on GraphQL error extensions
- */
 export enum ErrorSeverity {
-  INFO = 'info',
-  WARNING = 'warning',
-  ERROR = 'error',
-  CRITICAL = 'critical',
+  INFO = "info",
+  WARNING = "warning",
+  ERROR = "error",
+  CRITICAL = "critical",
 }
 
 export interface ErrorHandlerContext {
@@ -24,7 +235,7 @@ export interface ErrorHandlerContext {
   componentName?: string;
   userId?: string;
   tenantId?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 export interface ErrorHandlerResult {
@@ -35,167 +246,152 @@ export interface ErrorHandlerResult {
   shouldLog: boolean;
 }
 
-/**
- * Maps GraphQL error extensions code to severity
- */
+export const ERROR_MESSAGES: Record<string, string> = {
+  UNAUTHENTICATED: "Please log in to continue",
+  FORBIDDEN: "You do not have permission to perform this action",
+  NOT_FOUND: "The requested resource was not found",
+  VALIDATION_ERROR: "Please check your input and try again",
+  INTERNAL_SERVER_ERROR: "A server error occurred. Please try again later",
+  DATABASE_ERROR: "Unable to access data. Please try again later",
+  NETWORK_ERROR: "Network error. Please check your connection",
+  TIMEOUT: "Request timed out. Please try again",
+};
+
 function getErrorSeverity(code?: string): ErrorSeverity {
   if (!code) return ErrorSeverity.ERROR;
 
-  // Critical errors - system failures
-  if (code.includes('INTERNAL_SERVER_ERROR') || code.includes('DATABASE_ERROR')) {
+  if (code.includes("INTERNAL_SERVER_ERROR") || code.includes("DATABASE_ERROR")) {
     return ErrorSeverity.CRITICAL;
   }
 
-  // Warnings - client errors that might be recoverable
   if (
-    code.includes('VALIDATION_ERROR') ||
-    code.includes('BAD_USER_INPUT') ||
-    code.includes('NOT_FOUND')
+    code.includes("VALIDATION_ERROR") ||
+    code.includes("BAD_USER_INPUT") ||
+    code.includes("NOT_FOUND")
   ) {
     return ErrorSeverity.WARNING;
   }
 
-  // Info - expected errors (auth, permissions)
   if (
-    code.includes('UNAUTHENTICATED') ||
-    code.includes('FORBIDDEN') ||
-    code.includes('UNAUTHORIZED')
+    code.includes("UNAUTHENTICATED") ||
+    code.includes("FORBIDDEN") ||
+    code.includes("UNAUTHORIZED")
   ) {
     return ErrorSeverity.INFO;
   }
 
-  // Default to error
   return ErrorSeverity.ERROR;
 }
 
-/**
- * Handles GraphQL errors with consistent logging and toast behavior
- *
- * @example
- * ```tsx
- * const { data, error } = useCustomerListQuery(...);
- *
- * useEffect(() => {
- *   if (error) {
- *     const result = handleGraphQLError(error, {
- *       operation: 'CustomerList',
- *       componentName: 'CustomerDashboard',
- *     });
- *
- *     if (result.shouldToast) {
- *       toast[result.severity](result.message);
- *     }
- *   }
- * }, [error]);
- * ```
- */
 export function handleGraphQLError(
   error: unknown,
-  context: ErrorHandlerContext = {},
-): ErrorHandlerResult {
-  // Extract error details
-  let message = 'An unexpected error occurred';
-  let code: string | undefined;
-  let extensions: Record<string, any> | undefined;
+  options: GraphQLErrorHandlerOptions,
+): void;
+export function handleGraphQLError(
+  error: unknown,
+  context?: ErrorHandlerContext,
+): ErrorHandlerResult;
+export function handleGraphQLError(
+  error: unknown,
+  optionsOrContext: GraphQLErrorHandlerOptions | ErrorHandlerContext = {},
+): void | ErrorHandlerResult {
+  if ("toast" in optionsOrContext) {
+    const {
+      toast,
+      logger,
+      context,
+      fallbackMessage = DEFAULT_FALLBACK_MESSAGE,
+      operationName,
+      suppressToast = false,
+      customMessage,
+    } = optionsOrContext;
 
-  if (error instanceof GQLError) {
-    message = error.message;
-    if (error.errors && error.errors.length > 0) {
-      const firstError = error.errors[0];
-      code = firstError.extensions?.code as string | undefined;
-      extensions = firstError.extensions;
+    const normalized = normalizeGraphQLError(error);
+
+    if (logger) {
+      const logContext: Record<string, unknown> = {
+        ...context,
+      };
+
+      if (normalized.code) {
+        logContext.code = normalized.code;
+      }
+
+      if (normalized.path) {
+        logContext.path = normalized.path;
+      }
+
+      if (operationName) {
+        logContext.operationName = operationName;
+      }
+
+      const errorObject = error instanceof Error ? error : new Error(String(error));
+      logger.error(
+        `GraphQL operation failed${operationName ? ` (${operationName})` : ""}`,
+        errorObject,
+        logContext,
+      );
     }
-  } else if (error instanceof Error) {
-    message = error.message;
-  } else if (typeof error === 'string') {
-    message = error;
+
+    if (!suppressToast) {
+      const toastPayload = customMessage
+        ? {
+            title: "Request failed",
+            description: customMessage,
+            variant: "destructive" as const,
+          }
+        : buildToastPayload(normalized, fallbackMessage);
+      toast(toastPayload);
+    }
+
+    return;
   }
 
-  const severity = getErrorSeverity(code);
-
-  // Determine if we should toast (skip for certain error codes)
-  const skipToastCodes = ['UNAUTHENTICATED', 'SESSION_EXPIRED'];
-  const shouldToast = !code || !skipToastCodes.includes(code);
-
-  // Always log errors (can be filtered by severity in logger)
+  const context = optionsOrContext as ErrorHandlerContext;
+  const normalized = normalizeGraphQLError(error);
+  const severity = getErrorSeverity(normalized.code);
+  const message = normalized.message || DEFAULT_FALLBACK_MESSAGE;
+  const shouldToast = !normalized.code || !SKIP_TOAST_CODES.has(normalized.code);
   const shouldLog = true;
 
-  // Log to console (in production, this would go to a logging service)
   if (shouldLog) {
     const logContext = {
       severity,
-      code,
-      extensions,
+      code: normalized.code,
+      path: normalized.path,
       ...context,
     };
-
     console.error(`[GraphQL Error] ${message}`, logContext);
   }
 
   return {
     message,
     severity,
-    code,
+    code: normalized.code,
     shouldToast,
     shouldLog,
   };
 }
 
-/**
- * Hook-friendly error handler that returns toast-ready values
- *
- * @example
- * ```tsx
- * const { data, error } = useCustomerListQuery(...);
- * const errorState = useErrorHandler(error, { operation: 'CustomerList' });
- *
- * useEffect(() => {
- *   if (errorState) {
- *     toast[errorState.severity](errorState.message);
- *   }
- * }, [errorState]);
- * ```
- */
 export function useErrorHandler(
   error: unknown,
   context: ErrorHandlerContext = {},
 ): ErrorHandlerResult | null {
   if (!error) return null;
-  return handleGraphQLError(error, context);
+  return handleGraphQLError(error, context) as ErrorHandlerResult;
 }
 
-/**
- * User-friendly error messages for common codes
- */
-export const ERROR_MESSAGES: Record<string, string> = {
-  UNAUTHENTICATED: 'Please log in to continue',
-  FORBIDDEN: 'You do not have permission to perform this action',
-  NOT_FOUND: 'The requested resource was not found',
-  VALIDATION_ERROR: 'Please check your input and try again',
-  INTERNAL_SERVER_ERROR: 'A server error occurred. Please try again later',
-  DATABASE_ERROR: 'Unable to access data. Please try again later',
-  NETWORK_ERROR: 'Network error. Please check your connection',
-  TIMEOUT: 'Request timed out. Please try again',
-};
-
-/**
- * Gets user-friendly message for error code
- */
 export function getUserFriendlyMessage(code?: string): string {
-  if (!code) return 'An unexpected error occurred';
-  return ERROR_MESSAGES[code] || 'An error occurred. Please try again';
+  if (!code) return "An unexpected error occurred";
+  return ERROR_MESSAGES[code] || "An error occurred. Please try again";
 }
 
-/**
- * Enhanced error handler with user-friendly messages
- */
 export function handleGraphQLErrorWithFriendlyMessage(
   error: unknown,
   context: ErrorHandlerContext = {},
 ): ErrorHandlerResult {
-  const result = handleGraphQLError(error, context);
+  const result = handleGraphQLError(error, context) as ErrorHandlerResult;
 
-  // Replace technical message with user-friendly one
   if (result.code) {
     const friendlyMessage = getUserFriendlyMessage(result.code);
     return {

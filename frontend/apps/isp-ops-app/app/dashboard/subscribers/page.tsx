@@ -7,16 +7,16 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@dotmac/ui";
 import { useRBAC } from "@/contexts/RBACContext";
 import {
   useSubscribers,
@@ -27,7 +27,7 @@ import {
   type ConnectionType,
 } from "@/hooks/useSubscribers";
 import { SubscriberList } from "@/components/subscribers/SubscriberList";
-import type { BulkAction } from "@/components/ui/EnhancedDataTable";
+import type { BulkAction } from "@dotmac/ui";
 import { SubscriberDetailModal } from "@/components/subscribers/SubscriberDetailModal";
 import { AddSubscriberModal } from "@/components/subscribers/AddSubscriberModal";
 import {
@@ -44,9 +44,9 @@ import {
   Ban,
   Trash2,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 // ============================================================================
 // Main Component

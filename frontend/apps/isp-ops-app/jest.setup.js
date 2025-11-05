@@ -61,13 +61,17 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
 }));
 
-jest.mock("@/components/ui/use-toast", () => ({
-  useToast: () => ({
-    toast: jest.fn(),
-    dismiss: jest.fn(),
-    toasts: [],
-  }),
-}));
+jest.mock("@dotmac/ui", () => {
+  const actual = jest.requireActual("@dotmac/ui");
+  return {
+    ...actual,
+    useToast: () => ({
+      toast: jest.fn(),
+      dismiss: jest.fn(),
+      toasts: [],
+    }),
+  };
+});
 
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn((options = {}) => ({

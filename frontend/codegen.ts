@@ -67,7 +67,8 @@ const config: CodegenConfig = {
           isReactHook: false,
         },
 
-        // TanStack Query v4 options
+        // Use object syntax (works with both v4 and v5)
+        legacyMode: false,
         exposeFetcher: true,
         exposeQueryKeys: true,
         addInfiniteQuery: true,

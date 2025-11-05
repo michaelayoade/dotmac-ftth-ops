@@ -5,12 +5,12 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/components/ui/use-toast";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { Wifi, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
 

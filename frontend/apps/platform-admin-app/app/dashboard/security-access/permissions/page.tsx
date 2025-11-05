@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -11,8 +11,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   Shield,
   Key,
@@ -27,14 +27,14 @@ import {
   BarChart3,
   FileText,
 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import {
   useRBAC,
   PermissionCategory,
   PermissionAction,
   type Permission,
 } from "@/contexts/RBACContext";
-import { LoadingState, LoadingTable } from "@/components/ui/loading-states";
+import { LoadingState, LoadingTable } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 // Helper function to get category icon

@@ -27,9 +27,9 @@
  * Future: Replace with graphql-ws client that pushes to React Query cache
  */
 
-import { useSubscription, type DocumentNode } from '@apollo/client';
+import { useSubscription, type DocumentNode, type OperationVariables } from '@apollo/client';
 
-export interface SubscriptionOptions<TData = any, TVariables = any> {
+export interface SubscriptionOptions<TData = any, TVariables extends OperationVariables = OperationVariables> {
   /**
    * GraphQL variables for the subscription
    */
@@ -83,7 +83,7 @@ export interface SubscriptionResult<TData = any> {
  * @param options - Subscription configuration
  * @returns Subscription result with data, loading, and error
  */
-export function useGraphQLSubscription<TData = any, TVariables = any>(
+export function useGraphQLSubscription<TData = any, TVariables extends OperationVariables = OperationVariables>(
   subscription: DocumentNode,
   options: SubscriptionOptions<TData, TVariables> = {},
 ): SubscriptionResult<TData> {

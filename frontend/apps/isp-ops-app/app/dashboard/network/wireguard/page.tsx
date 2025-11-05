@@ -12,8 +12,8 @@ export const dynamicParams = true;
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
 import {
   Server,
   Users,

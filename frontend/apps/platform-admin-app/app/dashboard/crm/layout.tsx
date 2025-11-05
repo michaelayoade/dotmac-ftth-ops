@@ -13,8 +13,8 @@ import {
 } from "lucide-react";
 
 import { RouteGuard } from "@/components/auth/PermissionGuard";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { cn } from "@/lib/utils";
 
 type NavItem = {

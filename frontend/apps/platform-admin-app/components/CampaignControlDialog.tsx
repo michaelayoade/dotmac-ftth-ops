@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import type { DunningCampaign } from "@/types";
 import { useCampaignWebSocket, useUpdateCampaign } from "@/hooks/useCampaigns";
 import { AlertTriangle } from "lucide-react";

@@ -12,6 +12,9 @@
  * - Type-safe with auto-generated types
  */
 
+import { useToast } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
+import { handleGraphQLError } from "@dotmac/graphql";
 import {
   useCustomerListQuery,
   useCustomerDetailQuery,
@@ -45,6 +48,7 @@ export interface UseCustomerListOptions {
 }
 
 export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
+  const { toast } = useToast();
   const {
     limit = 50,
     offset = 0,
@@ -68,6 +72,21 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     {
       enabled,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerListQuery",
+          context: {
+            hook: "useCustomerListGraphQL",
+            limit,
+            offset,
+            status,
+            includeActivities,
+            includeNotes,
+            hasSearch: Boolean(search),
+          },
+        }),
     },
   );
 
@@ -97,12 +116,23 @@ export interface UseCustomerDetailOptions {
 }
 
 export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomerDetailQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDetailQuery",
+          context: {
+            hook: "useCustomerDetailGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -128,6 +158,7 @@ export interface UseCustomerMetricsOptions {
 }
 
 export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {}) {
+  const { toast } = useToast();
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
   const { data, isLoading, error, refetch } = useCustomerMetricsQuery(
@@ -135,6 +166,15 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
     {
       enabled,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerMetricsQuery",
+          context: {
+            hook: "useCustomerMetricsGraphQL",
+          },
+        }),
     },
   );
 
@@ -165,12 +205,23 @@ export interface UseCustomerActivitiesOptions {
 }
 
 export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomerActivitiesQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerActivitiesQuery",
+          context: {
+            hook: "useCustomerActivitiesGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -196,12 +247,23 @@ export interface UseCustomerNotesOptions {
 }
 
 export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomerNotesQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerNotesQuery",
+          context: {
+            hook: "useCustomerNotesGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -231,9 +293,10 @@ export interface UseCustomerDashboardOptions {
 }
 
 export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions = {}) {
+  const { toast } = useToast();
   const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerDashboardQuery(
+  const { data, isLoading, isFetching, error, refetch } = useCustomerDashboardQuery(
     {
       limit,
       offset,
@@ -243,6 +306,19 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
     {
       enabled,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDashboardQuery",
+          context: {
+            hook: "useCustomerDashboardGraphQL",
+            limit,
+            offset,
+            status,
+            hasSearch: Boolean(search),
+          },
+        }),
     },
   );
 
@@ -264,6 +340,7 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
     isLoading,
+    isFetching,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
@@ -283,12 +360,23 @@ export interface UseCustomerSubscriptionsOptions {
 }
 
 export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscriptionsOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomerSubscriptionsQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerSubscriptionsQuery",
+          context: {
+            hook: "useCustomerSubscriptionsGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -322,6 +410,7 @@ export interface UseCustomerNetworkInfoOptions {
 }
 
 export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 30000 } = options; // 30 seconds default
 
   const { data, isLoading, error, refetch } = useCustomerNetworkInfoQuery(
@@ -329,6 +418,16 @@ export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOpt
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerNetworkInfoQuery",
+          context: {
+            hook: "useCustomerNetworkInfoGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -353,6 +452,7 @@ export interface UseCustomerDevicesOptions {
 }
 
 export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
   const { data, isLoading, error, refetch } = useCustomerDevicesQuery(
@@ -360,6 +460,16 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerDevicesQuery",
+          context: {
+            hook: "useCustomerDevicesGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 
@@ -391,13 +501,14 @@ export interface UseCustomerTicketsOptions {
 }
 
 export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
+  const { toast } = useToast();
   const {
     customerId,
-    limit = 50,
-    offset = 0,
-    status,
-    enabled = true,
-    pollInterval = 60000,
+   limit = 50,
+   offset = 0,
+   status,
+   enabled = true,
+   pollInterval = 60000,
   } = options;
 
   const { data, isLoading, error, refetch } = useCustomerTicketsQuery(
@@ -409,6 +520,19 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerTicketsQuery",
+          context: {
+            hook: "useCustomerTicketsGraphQL",
+            customerId,
+            status,
+            limit,
+            offset,
+          },
+        }),
     },
   );
 
@@ -441,6 +565,7 @@ export interface UseCustomerBillingOptions {
 }
 
 export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
+  const { toast } = useToast();
   const { customerId, limit = 50, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomerBillingQuery(
@@ -451,6 +576,17 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
     },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "CustomerBillingQuery",
+          context: {
+            hook: "useCustomerBillingGraphQL",
+            customerId,
+            limit,
+          },
+        }),
     },
   );
 
@@ -482,12 +618,23 @@ export interface UseCustomer360ViewOptions {
 }
 
 export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
+  const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
   const { data, isLoading, error, refetch } = useCustomer360ViewQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
+      onError: (err) =>
+        handleGraphQLError(err, {
+          toast,
+          logger,
+          operationName: "Customer360ViewQuery",
+          context: {
+            hook: "useCustomer360ViewGraphQL",
+            customerId,
+          },
+        }),
     },
   );
 

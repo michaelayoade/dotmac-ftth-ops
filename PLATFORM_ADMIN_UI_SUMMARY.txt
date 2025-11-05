@@ -120,7 +120,7 @@ MOST USED COMPONENTS (Top 15):
 └─────────────────────────┴───────┴─────────────────────────────────┘
 
 COMPONENT LIBRARIES:
-├── @/components/ui/* (Shadcn/ui - PRIMARY)
+├── @dotmac/ui/* (Shadcn/ui - PRIMARY)
 │   └── All primitive UI components
 ├── @/components/auth/*
 │   ├── RouteGuard (33 pages use)

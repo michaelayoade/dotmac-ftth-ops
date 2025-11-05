@@ -7,9 +7,9 @@
  */
 
 import React, { useState, useCallback } from "react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { isValidIPv4, isValidIPv6, detectIPFamily, IPFamily } from "@/lib/utils/ip-address";
 import { cn } from "@/lib/utils";
 

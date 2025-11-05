@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { EnhancedDataTable, BulkAction } from "@/components/ui/EnhancedDataTable";
-import { createSortableHeader } from "@/components/ui/data-table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { EnhancedDataTable, BulkAction } from "@dotmac/ui";
+import { createSortableHeader } from "@dotmac/ui";
 import { FileText, Download, X, CheckCircle, RefreshCw, DollarSign } from "lucide-react";
 import { ColumnDef } from "@tanstack/react-table";
 import { useRBAC } from "@/contexts/RBACContext";

@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,9 +13,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { useDomainStatus, useDomainVerification } from "@/hooks/useDomainVerification";
 import { DomainVerificationWizard } from "./DomainVerificationWizard";
 import { Globe, CheckCircle2, AlertCircle, Trash2, Plus, Shield } from "lucide-react";

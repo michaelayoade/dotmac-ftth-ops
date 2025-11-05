@@ -8,19 +8,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Textarea } from "@dotmac/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { RadioGroup, RadioGroupItem } from "@dotmac/ui";
 import { TenantSubscription, SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
 import { format } from "date-fns";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";

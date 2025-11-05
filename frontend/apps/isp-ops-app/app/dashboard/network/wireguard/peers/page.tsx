@@ -13,10 +13,10 @@ export const dynamicParams = true;
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 import {
   Users,
   Plus,

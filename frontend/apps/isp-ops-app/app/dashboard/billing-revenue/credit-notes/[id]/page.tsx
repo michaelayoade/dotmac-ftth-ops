@@ -17,9 +17,9 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { CreditNote } from "@/types/billing";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -27,10 +27,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -38,10 +38,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
-import { useToast } from "@/components/ui/use-toast";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useToast } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 const statusColors = {
   draft: "bg-gray-500/10 text-gray-600 dark:text-gray-400",

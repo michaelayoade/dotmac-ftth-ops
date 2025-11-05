@@ -10,9 +10,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -20,8 +20,8 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from "@dotmac/ui";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import {
   CreditCard,
   Download,
@@ -40,7 +40,7 @@ import {
   useCustomerPayments,
   useCustomerPaymentMethods,
 } from "@/hooks/useCustomerPortal";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMethodModal";
 import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
 import { platformConfig } from "@/lib/config";

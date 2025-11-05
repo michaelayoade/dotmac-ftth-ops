@@ -6,6 +6,32 @@
 import "@testing-library/jest-dom";
 import "./mocks";
 
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({ children }: any) => children,
+}));
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
+    forward: jest.fn(),
+    refresh: jest.fn(),
+  }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+jest.mock("next-themes", () => ({
+  useTheme: () => ({
+    theme: "light",
+    setTheme: jest.fn(),
+    resolvedTheme: "light",
+  }),
+}));
+
 // Mock ResizeObserver which might be used by components
 global.ResizeObserver = jest.fn().mockImplementation(() => ({
   observe: jest.fn(),
@@ -42,6 +68,9 @@ global.performance.now = global.performance.now || (() => Date.now());
 // Mock requestAnimationFrame for animations
 global.requestAnimationFrame = jest.fn((callback) => setTimeout(callback, 16));
 global.cancelAnimationFrame = jest.fn((id) => clearTimeout(id));
+
+// Mock URL.createObjectURL used by table export utilities
+global.URL.createObjectURL = jest.fn(() => "blob:mock");
 
 // Mock CSS.supports for feature detection
 global.CSS = global.CSS || {};

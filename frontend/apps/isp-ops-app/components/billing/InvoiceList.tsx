@@ -19,11 +19,11 @@ import {
   type BulkAction,
   type QuickFilter,
   type Row,
-} from "@/components/ui/EnhancedDataTable";
-import { Badge } from "@/components/ui/badge";
+} from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface InvoiceListProps {
   tenantId: string;

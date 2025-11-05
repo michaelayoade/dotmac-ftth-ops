@@ -7,9 +7,9 @@ import { RouteGuard } from "@/components/auth/PermissionGuard";
 import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
 import CreateRoleModal from "@/components/admin/CreateRoleModal";
 import AssignRoleModal from "@/components/admin/AssignRoleModal";
-import { toast } from "@/components/ui/toast";
+import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface Role {
   id: string;

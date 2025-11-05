@@ -19,7 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Customer } from "@/types";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { platformConfig } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { getOperatorAccessToken } from "../../../../shared/utils/operatorAuth";

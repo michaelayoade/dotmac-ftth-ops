@@ -7,11 +7,11 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useTenant } from "@/lib/contexts/tenant-context";
 import { tenantService, TenantStats } from "@/lib/services/tenant-service";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { Users, CreditCard, Gauge, Plug, LifeBuoy, TrendingUp, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 
 interface QuickLink {
   title: string;

@@ -10,17 +10,17 @@ import { platformConfig } from "@/lib/config";
 import { TenantProvider } from "@/lib/contexts/tenant-context";
 import { RBACProvider } from "@/contexts/RBACContext";
 import { AuthProvider } from "@/hooks/useAuth";
-import { ToastContainer } from "@/components/ui/toast";
+import { ToastContainer } from "@dotmac/ui";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
-import { PortalThemeProvider } from "@/lib/design-system/portal-themes";
+import { PortalThemeProvider } from "@dotmac/ui";
 import {
   AccessibilityProvider,
   LiveRegionAnnouncer,
   SkipToMainContent,
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
-import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog-provider";
+import { ConfirmDialogProvider } from "@dotmac/ui";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();

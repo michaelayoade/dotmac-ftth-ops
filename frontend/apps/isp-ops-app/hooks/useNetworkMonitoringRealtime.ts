@@ -14,7 +14,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useApolloClient, gql, useSubscription } from "@apollo/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import {
   useNetworkOverviewGraphQL,
   useNetworkDeviceListGraphQL,

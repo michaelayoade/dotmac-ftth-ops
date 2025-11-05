@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { AdvancedRevenueChart } from "@/components/analytics/AdvancedRevenueChart";
 import { ChurnAnalysisChart } from "@/components/analytics/ChurnAnalysisChart";
 import { CustomReportBuilder } from "@/components/analytics/CustomReportBuilder";

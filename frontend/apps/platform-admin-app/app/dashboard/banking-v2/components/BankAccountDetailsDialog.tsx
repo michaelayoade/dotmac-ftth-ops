@@ -6,10 +6,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@dotmac/ui";
+import { Card, CardContent } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { useBankAccountSummary } from "@/hooks/useBankAccounts";
 import { Building2, DollarSign, TrendingUp, Calendar } from "lucide-react";
 

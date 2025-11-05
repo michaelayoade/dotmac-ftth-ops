@@ -5,6 +5,8 @@
 #
 # Usage: make -f Makefile.radius <target>
 
+SHELL := /bin/bash
+
 .PHONY: help status health reload restart validate rotate-secrets rotate-secret-single backup restore logs
 
 # Configuration

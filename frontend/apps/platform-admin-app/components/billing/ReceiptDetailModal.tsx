@@ -3,10 +3,10 @@
 import { X, Download, Mail, Printer, FileText, Calendar, CreditCard, User } from "lucide-react";
 import { Receipt } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils/currency";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
 import {
   Table,
   TableBody,
@@ -14,7 +14,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@dotmac/ui";
 
 interface ReceiptDetailModalProps {
   receipt: Receipt | null;

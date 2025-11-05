@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@dotmac/ui";
 import type { Lead, Quote, SiteSurvey } from "@/hooks/useCRM";
 
 export function LeadStatusBadge({ status }: { status: Lead["status"] }) {

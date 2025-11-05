@@ -17,7 +17,7 @@ import {
   type QueryKey,
 } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
 
 // ============================================

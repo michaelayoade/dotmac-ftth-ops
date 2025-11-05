@@ -23,21 +23,21 @@ import {
 } from "lucide-react";
 import { formatDistanceToNow, differenceInDays } from "date-fns";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@dotmac/ui";
+import { Card, CardContent } from "@dotmac/ui";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@dotmac/ui";
 import {
   EnhancedDataTable,
   type ColumnDef,
   type BulkAction,
-} from "@/components/ui/EnhancedDataTable";
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { useQuotes, type Quote, type QuoteStatus } from "@/hooks/useCRM";
 import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
@@ -49,9 +49,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function QuotesPage() {
   const router = useRouter();

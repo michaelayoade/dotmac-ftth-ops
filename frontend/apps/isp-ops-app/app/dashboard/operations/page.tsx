@@ -19,8 +19,8 @@ import {
 } from "lucide-react";
 import { useCustomerListGraphQL, useCustomerMetricsGraphQL } from "@/hooks/useCustomersGraphQL";
 import { AlertBanner } from "@/components/alerts/AlertBanner";
-import { MetricCardEnhanced } from "@/components/ui/metric-card-enhanced";
-import { Button } from "@/components/ui/button";
+import { MetricCardEnhanced } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
 
 interface MetricCardProps {
   title: string;

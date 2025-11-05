@@ -16,6 +16,10 @@ export interface NormalizedQueryResult<TData = unknown> {
   loading: boolean;
   error: string | undefined;
   refetch: () => void;
+  /**
+   * Indicates a background refetch is in flight while cached data is shown.
+   */
+  isRefetching: boolean;
 }
 
 /**
@@ -31,11 +35,13 @@ export function mapQueryResult<TData = unknown>(
   queryResult: UseQueryResult<TData, unknown>,
 ): NormalizedQueryResult<TData> {
   const { data, isLoading, isFetching, error, refetch } = queryResult;
+  const hasData = data !== undefined && data !== null;
 
   return {
     data,
-    // loading = true during initial fetch OR background refetch
-    loading: isLoading || isFetching,
+    // Only treat as loading while no data is available yet
+    loading: !hasData && (isLoading || isFetching),
+    isRefetching: hasData && isFetching,
     // Normalize error to string (Apollo returned error.message)
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch: () => {
@@ -61,10 +67,12 @@ export function mapQueryResultWithTransform<TData, TTransformed>(
   transform: (data: TData | undefined) => TTransformed,
 ): NormalizedQueryResult<TTransformed> {
   const { data, isLoading, isFetching, error, refetch } = queryResult;
+  const hasData = data !== undefined && data !== null;
 
   return {
     data: transform(data),
-    loading: isLoading || isFetching,
+    loading: !hasData && (isLoading || isFetching),
+    isRefetching: hasData && isFetching,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch: () => {
       refetch();

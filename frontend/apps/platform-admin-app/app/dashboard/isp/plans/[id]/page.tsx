@@ -7,9 +7,9 @@
  */
 
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@dotmac/ui";
+import { Card } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
 import {
   ArrowLeft,
   Edit,
@@ -34,7 +34,7 @@ import {
 } from "../../../../../hooks/useInternetPlans";
 import Link from "next/link";
 import type { InternetServicePlan } from "../../../../../types/internet-plans";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 export default function PlanDetailsPage() {
   const params = useParams();

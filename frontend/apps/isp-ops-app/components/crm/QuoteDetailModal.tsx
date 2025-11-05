@@ -8,10 +8,10 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/components/ui/use-toast";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Badge } from "@dotmac/ui";
+import { useToast } from "@dotmac/ui";
 import { QuoteStatusBadge } from "./Badges";
 import { type Quote, useQuotes } from "@/hooks/useCRM";
 import {
@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { QuotePDFGenerator } from "@/lib/pdf/quote-pdf";
 import { apiClient } from "@/lib/api/client";
-import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import { useConfirmDialog } from "@dotmac/ui";
 
 interface QuoteDetailModalProps {
   isOpen: boolean;

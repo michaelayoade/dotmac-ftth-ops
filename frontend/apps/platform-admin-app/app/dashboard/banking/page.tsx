@@ -24,7 +24,7 @@ import {
   CheckSquare,
 } from "lucide-react";
 import { platformConfig } from "@/lib/config";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 
 // Types

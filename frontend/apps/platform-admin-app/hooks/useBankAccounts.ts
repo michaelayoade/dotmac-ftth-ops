@@ -17,7 +17,7 @@ import {
   type PaymentSearchFilters,
   type ReconcilePaymentRequest,
 } from "@/lib/services/bank-accounts-service";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 
 // ============================================
 // Bank Account Hooks

@@ -1,11 +1,11 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { BarChart } from "@/components/charts/BarChart";
 import { LineChart } from "@/components/charts/LineChart";
 import { useCustomerMetrics } from "@/lib/graphql/hooks";
 import { Users, UserPlus, UserMinus, TrendingUp } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton } from "@dotmac/ui";
 
 export function CustomerMetricsCard({ period = "30d" }: { period?: string }) {
   const { data, isLoading, error } = useCustomerMetrics(period);

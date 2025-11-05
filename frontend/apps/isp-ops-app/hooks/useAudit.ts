@@ -12,7 +12,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@dotmac/ui";
 import { auditService } from "@/lib/services/audit-service";
 import type {
   AuditActivity,

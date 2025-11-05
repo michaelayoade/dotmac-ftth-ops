@@ -8,10 +8,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Separator } from "@/components/ui/separator";
+} from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { Separator } from "@dotmac/ui";
 import { AvailablePlan, ProrationPreview } from "@/hooks/useTenantSubscription";
 import { Loader2, AlertCircle, ArrowRight } from "lucide-react";
 import { format } from "date-fns";

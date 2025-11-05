@@ -8,9 +8,9 @@ import {
 import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
 import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMethodModal";
 import { PaymentMethodsPageSkeleton } from "@/components/tenant/billing/SkeletonLoaders";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent } from "@dotmac/ui";
+import { Button } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
 import {
   Dialog,
   DialogContent,
@@ -18,9 +18,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@dotmac/ui";
+import { Input } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
 import { AlertCircle, CreditCard, Plus, Shield, Lock } from "lucide-react";
 
 export default function PaymentMethodsPage() {
