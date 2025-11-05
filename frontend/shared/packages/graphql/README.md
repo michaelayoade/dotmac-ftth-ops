@@ -43,6 +43,22 @@ const data = await graphqlClient.request(
 );
 ```
 
+**Endpoint Configuration:**
+- Default: `/api/v1/graphql` (matches backend route at `src/dotmac/platform/routers.py:881`)
+- Environment variable: `NEXT_PUBLIC_API_URL` for absolute URLs (cross-domain deployments)
+- Custom endpoint: Pass `endpoint` in config
+
+```tsx
+// Custom endpoint
+const client = createGraphQLClient({
+  endpoint: '/custom/graphql',
+});
+
+// Absolute URL (cross-domain)
+// Set NEXT_PUBLIC_API_URL=https://api.example.com
+// Client will use: https://api.example.com/api/v1/graphql
+```
+
 ### TanStack Query Integration (Post-Codegen)
 
 After running `pnpm graphql:codegen`, generated hooks will be available:

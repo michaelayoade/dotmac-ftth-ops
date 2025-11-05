@@ -29,7 +29,8 @@ export interface GraphQLResponse<T = any> {
 export interface GraphQLClientConfig {
   /**
    * GraphQL endpoint URL
-   * Defaults to /graphql relative to current host
+   * Defaults to /api/v1/graphql (matching backend endpoint)
+   * Supports NEXT_PUBLIC_API_URL env var for absolute URLs
    */
   endpoint?: string;
 
@@ -54,7 +55,9 @@ export class GraphQLClient {
   private httpClient: HttpClient;
 
   constructor(config: GraphQLClientConfig = {}) {
-    this.endpoint = config.endpoint || '/graphql';
+    // Default to /api/v1/graphql (matching backend route)
+    // Support NEXT_PUBLIC_API_URL for absolute URLs (e.g., cross-domain)
+    this.endpoint = config.endpoint || this.getDefaultEndpoint();
     this.headers = config.headers || {};
 
     // Use provided client or create default with auth + tenant resolution
@@ -62,6 +65,23 @@ export class GraphQLClient {
       timeout: 30000,
       retries: 3,
     }).enableAuth();
+  }
+
+  /**
+   * Get default GraphQL endpoint
+   * Matches Apollo client configuration for consistency
+   */
+  private getDefaultEndpoint(): string {
+    // In browser environment, check for NEXT_PUBLIC_API_URL
+    if (typeof window !== 'undefined' && typeof process !== 'undefined') {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (apiUrl) {
+        return `${apiUrl}/api/v1/graphql`;
+      }
+    }
+
+    // Default to relative path (works with Next.js rewrites)
+    return '/api/v1/graphql';
   }
 
   /**

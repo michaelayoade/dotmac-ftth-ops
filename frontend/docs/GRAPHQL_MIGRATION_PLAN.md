@@ -31,8 +31,14 @@ poetry run python -m strawberry export-schema \
 | Shared fetcher | Implement a `graphqlClient.ts` that wraps `fetch` with auth + error handling |
 | Package scripts | `pnpm graphql:codegen` at repo root, invoked in CI before builds |
 | Output location | `frontend/shared/graphql/generated` - shared package imported by both apps |
+| Endpoint | `/api/v1/graphql` (matches `src/dotmac/platform/routers.py:881`) |
 
 Generated files are committed to the repository for deterministic builds.
+
+**Endpoint Configuration:**
+- Default: `/api/v1/graphql` (relative path, works with Next.js rewrites)
+- Environment: `NEXT_PUBLIC_API_URL` for absolute URLs (cross-domain)
+- Matches Apollo client configuration for consistency
 
 ## 3. Incremental Migration
 
