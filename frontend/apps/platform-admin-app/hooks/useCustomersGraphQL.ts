@@ -25,8 +25,9 @@ import {
   useCustomerTicketsQuery,
   useCustomerBillingQuery,
   useCustomer360ViewQuery,
-  CustomerStatusEnum,
-} from "@/lib/graphql/generated";
+} from "@dotmac/graphql/generated/react-query";
+
+import { CustomerStatusEnum } from "@dotmac/graphql/generated";
 
 // ============================================================================
 // Customer List Hook
@@ -55,8 +56,8 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     pollInterval = 30000, // 30 seconds default
   } = options;
 
-  const { data, loading, error, refetch } = useCustomerListQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerListQuery(
+    {
       limit,
       offset,
       status,
@@ -64,10 +65,11 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
       includeActivities,
       includeNotes,
     },
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled,
+      refetchInterval: pollInterval,
+    },
+  );
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -79,8 +81,8 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     hasNextPage,
     limit,
     offset,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -97,11 +99,12 @@ export interface UseCustomerDetailOptions {
 export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerDetailQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerDetailQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   const customer = data?.customer ?? null;
 
@@ -109,8 +112,8 @@ export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
     customer,
     activities: customer?.activities ?? [],
     notes: customer?.notes ?? [],
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -127,11 +130,13 @@ export interface UseCustomerMetricsOptions {
 export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {}) {
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, loading, error, refetch } = useCustomerMetricsQuery({
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerMetricsQuery(
+    undefined,
+    {
+      enabled,
+      refetchInterval: pollInterval,
+    },
+  );
 
   const metrics = data?.customerMetrics;
 
@@ -144,8 +149,8 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
       totalCustomerValue: metrics?.totalCustomerValue ?? 0,
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -162,11 +167,12 @@ export interface UseCustomerActivitiesOptions {
 export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptions) {
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerActivitiesQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerActivitiesQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   const customer = data?.customer ?? null;
   const activities = customer?.activities ?? [];
@@ -174,8 +180,8 @@ export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptio
   return {
     customerId: customer?.id,
     activities,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -192,11 +198,12 @@ export interface UseCustomerNotesOptions {
 export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerNotesQuery({
-    variables: { id: customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerNotesQuery(
+    { id: customerId },
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   const customer = data?.customer ?? null;
   const notes = customer?.notes ?? [];
@@ -204,8 +211,8 @@ export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
   return {
     customerId: customer?.id,
     notes,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -226,17 +233,18 @@ export interface UseCustomerDashboardOptions {
 export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions = {}) {
   const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
-  const { data, loading, error, refetch } = useCustomerDashboardQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerDashboardQuery(
+    {
       limit,
       offset,
       status,
       search: search || undefined,
     },
-    skip: !enabled,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled,
+      refetchInterval: pollInterval,
+    },
+  );
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -255,8 +263,8 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
       totalCustomerValue: metrics?.totalCustomerValue ?? 0,
       averageCustomerValue: metrics?.averageCustomerValue ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -277,11 +285,12 @@ export interface UseCustomerSubscriptionsOptions {
 export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscriptionsOptions) {
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerSubscriptionsQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerSubscriptionsQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   const subscriptions = data?.customerSubscriptions ?? [];
 
@@ -296,8 +305,8 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
     currentSubscription,
     activeCount: activeSubscriptions.length,
     totalCount: subscriptions.length,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -315,19 +324,20 @@ export interface UseCustomerNetworkInfoOptions {
 export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOptions) {
   const { customerId, enabled = true, pollInterval = 30000 } = options; // 30 seconds default
 
-  const { data, loading, error, refetch } = useCustomerNetworkInfoQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerNetworkInfoQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+    },
+  );
 
   const networkInfo = data?.customerNetworkInfo ?? null;
 
   return {
     networkInfo,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -345,12 +355,13 @@ export interface UseCustomerDevicesOptions {
 export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
   const { customerId, enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, loading, error, refetch } = useCustomerDevicesQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomerDevicesQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+    },
+  );
 
   const deviceData = data?.customerDevices ?? null;
 
@@ -360,8 +371,8 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
     onlineDevices: deviceData?.onlineDevices ?? 0,
     offlineDevices: deviceData?.offlineDevices ?? 0,
     needingUpdates: deviceData?.needingUpdates ?? 0,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -389,16 +400,17 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     pollInterval = 60000,
   } = options;
 
-  const { data, loading, error, refetch } = useCustomerTicketsQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerTicketsQuery(
+    {
       customerId,
       limit,
       status,
     },
-    skip: !enabled || !customerId,
-    pollInterval,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled: enabled && !!customerId,
+      refetchInterval: pollInterval,
+    },
+  );
 
   // customerTickets returns JSON scalar
   const ticketData = (data?.customerTickets as any) ?? {};
@@ -412,8 +424,8 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     highCount: ticketData?.highCount ?? 0,
     overdueCount: ticketData?.overdueCount ?? 0,
     hasNextPage: ticketData?.hasNextPage ?? false,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -431,15 +443,16 @@ export interface UseCustomerBillingOptions {
 export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
   const { customerId, limit = 50, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomerBillingQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useCustomerBillingQuery(
+    {
       customerId,
       includeInvoices: true,
       invoiceLimit: limit,
     },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   // customerBilling returns JSON scalar
   const billingData = (data?.customerBilling as any) ?? {};
@@ -453,8 +466,8 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
     unpaidInvoices: billingData?.unpaidInvoices ?? 0,
     overdueInvoices: billingData?.overdueInvoices ?? 0,
     totalPayments: billingData?.totalPayments ?? 0,
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
@@ -471,11 +484,12 @@ export interface UseCustomer360ViewOptions {
 export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
   const { customerId, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useCustomer360ViewQuery({
-    variables: { customerId },
-    skip: !enabled || !customerId,
-    fetchPolicy: "cache-and-network",
-  });
+  const { data, isLoading, error, refetch } = useCustomer360ViewQuery(
+    { customerId },
+    {
+      enabled: enabled && !!customerId,
+    },
+  );
 
   const subscriptions = data?.customerSubscriptions ?? [];
   const activeSubscriptions = subscriptions.filter(
@@ -511,8 +525,8 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
       totalInvoices: billingInfo?.totalInvoices ?? 0,
       unpaidInvoices: billingInfo?.unpaidInvoices ?? 0,
     },
-    isLoading: loading,
-    error: error?.message,
+    isLoading,
+    error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,
   };
 }
