@@ -1,0 +1,2592 @@
+schema {
+  query: Query
+  mutation: Mutation
+  subscription: RealtimeSubscription
+}
+
+type APIKeyMetrics {
+  """Total number of API keys"""
+  totalKeys: Int!
+
+  """Active keys"""
+  activeKeys: Int!
+
+  """Inactive keys"""
+  inactiveKeys: Int!
+
+  """Expired keys"""
+  expiredKeys: Int!
+
+  """Keys created in last 30 days"""
+  keysCreatedLast30d: Int!
+
+  """Keys used in last 7 days"""
+  keysUsedLast7d: Int!
+
+  """Keys expiring within 30 days"""
+  keysExpiringSoon: Int!
+
+  """Total API requests made with keys"""
+  totalApiRequests: Int!
+
+  """Average requests per key"""
+  avgRequestsPerKey: Float!
+
+  """Keys never used"""
+  neverUsedKeys: Int!
+
+  """Keys without expiration date"""
+  keysWithoutExpiry: Int!
+
+  """Top scopes by usage"""
+  topScopes: [APIKeyScopeUsage!]!
+
+  """Metrics period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type APIKeyScopeUsage {
+  """Scope name"""
+  scope: String!
+
+  """Usage count for the scope"""
+  count: Int!
+}
+
+type APPerformanceMetrics {
+  txBytes: Int!
+  rxBytes: Int!
+  txPackets: Int!
+  rxPackets: Int!
+  txRateMbps: Float
+  rxRateMbps: Float
+  txErrors: Int!
+  rxErrors: Int!
+  txDropped: Int!
+  rxDropped: Int!
+  retries: Int!
+  retryRatePercent: Float
+  connectedClients: Int!
+  authenticatedClients: Int!
+  authorizedClients: Int!
+  cpuUsagePercent: Float
+  memoryUsagePercent: Float
+  uptimeSeconds: Int
+}
+
+type AccessPoint {
+  id: ID!
+  name: String!
+  macAddress: String!
+  ipAddress: String
+  serialNumber: String
+  status: AccessPointStatus!
+  isOnline: Boolean!
+  lastSeenAt: DateTime
+  model: String
+  manufacturer: String
+  firmwareVersion: String
+  hardwareRevision: String
+  ssid: String!
+  frequencyBand: FrequencyBand!
+  channel: Int!
+  channelWidth: Int!
+  transmitPower: Int!
+  maxClients: Int
+  securityType: WirelessSecurityType!
+  location: InstallationLocation
+  rfMetrics: RFMetrics
+  performance: APPerformanceMetrics
+  controllerId: String
+  controllerName: String
+  siteId: String
+  siteName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastRebootAt: DateTime
+  isMeshEnabled: Boolean!
+  isBandSteeringEnabled: Boolean!
+  isLoadBalancingEnabled: Boolean!
+}
+
+type AccessPointConnection {
+  accessPoints: [AccessPoint!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+enum AccessPointStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+  MAINTENANCE
+  PROVISIONING
+  REBOOTING
+}
+
+enum ActivityTypeEnum {
+  CREATED
+  UPDATED
+  STATUS_CHANGED
+  NOTE_ADDED
+  TAG_ADDED
+  TAG_REMOVED
+  CONTACT_MADE
+  PURCHASE
+  SUPPORT_TICKET
+  LOGIN
+  EXPORT
+  IMPORT
+}
+
+type Address {
+  streetAddress: String!
+  city: String!
+  stateProvince: String!
+  postalCode: String!
+  country: String!
+}
+
+type AlertConnection {
+  alerts: [NetworkAlert!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+enum AlertSeverityEnum {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+type AnalyticsMetrics {
+  """Total events tracked"""
+  totalEvents: Int!
+
+  """Unique users"""
+  uniqueUsers: Int!
+
+  """Unique sessions"""
+  uniqueSessions: Int!
+
+  """Page view events"""
+  pageViews: Int!
+
+  """User action events"""
+  userActions: Int!
+
+  """System events"""
+  systemEvents: Int!
+
+  """Conversion events"""
+  conversionEvents: Int!
+
+  """Most frequent event names"""
+  topEvents: [String!]!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type AuthMetrics {
+  """Total login attempts"""
+  totalLogins: Int!
+
+  """Successful logins"""
+  successfulLogins: Int!
+
+  """Failed login attempts"""
+  failedLogins: Int!
+
+  """Login success rate (%)"""
+  loginSuccessRate: Float!
+
+  """Active users this period"""
+  activeUsers: Int!
+
+  """New user registrations"""
+  newUsers: Int!
+
+  """Users with MFA enabled"""
+  mfaEnabledUsers: Int!
+
+  """MFA adoption rate (%)"""
+  mfaAdoptionRate: Float!
+
+  """Password reset requests"""
+  passwordResets: Int!
+
+  """Suspicious activity count"""
+  suspiciousActivities: Int!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+enum BillingCycleEnum {
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  ANNUAL
+  CUSTOM
+}
+
+type BillingMetrics {
+  """Monthly Recurring Revenue"""
+  mrr: Float!
+
+  """Annual Recurring Revenue"""
+  arr: Float!
+
+  """Number of active subscriptions"""
+  activeSubscriptions: Int!
+
+  """Total invoices this period"""
+  totalInvoices: Int!
+
+  """Paid invoices this period"""
+  paidInvoices: Int!
+
+  """Overdue invoices"""
+  overdueInvoices: Int!
+
+  """Total payments this period"""
+  totalPayments: Int!
+
+  """Successful payments"""
+  successfulPayments: Int!
+
+  """Failed payments"""
+  failedPayments: Int!
+
+  """Total payment amount in major units"""
+  totalPaymentAmount: Float!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type CPEMetrics {
+  macAddress: String!
+  wifiEnabled: Boolean
+  connectedClients: Int
+  wifi2ghzClients: Int
+  wifi5ghzClients: Int
+  wanIp: String
+  lastInform: DateTime
+}
+
+enum CableInstallationType {
+  AERIAL
+  UNDERGROUND
+  BURIED
+  DUCT
+  BUILDING
+  SUBMARINE
+}
+
+type CableRoute {
+  pathGeojson: String!
+  totalDistanceMeters: Float!
+  startPoint: GeoCoordinate!
+  endPoint: GeoCoordinate!
+  intermediatePoints: [GeoCoordinate!]!
+  elevationChangeMeters: Float
+  undergroundDistanceMeters: Float
+  aerialDistanceMeters: Float
+}
+
+type ChannelUtilization {
+  channel: Int!
+  frequencyMhz: Int!
+  band: FrequencyBand!
+  utilizationPercent: Float!
+  interferenceLevel: Float!
+  accessPointsCount: Int!
+}
+
+enum ClientConnectionType {
+  WIFI_2_4
+  WIFI_5
+  WIFI_6
+  WIFI_6E
+}
+
+type CommunicationsMetrics {
+  """Total messages sent"""
+  totalSent: Int!
+
+  """Successfully delivered"""
+  delivered: Int!
+
+  """Failed deliveries"""
+  failed: Int!
+
+  """Bounced messages"""
+  bounced: Int!
+
+  """Delivery rate (%)"""
+  deliveryRate: Float!
+
+  """Messages opened"""
+  opened: Int!
+
+  """Links clicked"""
+  clicked: Int!
+
+  """Open rate (%)"""
+  openRate: Float!
+
+  """Click rate (%)"""
+  clickRate: Float!
+
+  """Emails sent"""
+  emailSent: Int!
+
+  """SMS sent"""
+  smsSent: Int!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type CoverageZone {
+  id: ID!
+  name: String!
+  description: String
+  siteId: String!
+  siteName: String!
+  floor: String
+  areaType: String!
+  coverageAreaSqm: Float
+  signalStrengthMinDbm: Float
+  signalStrengthMaxDbm: Float
+  signalStrengthAvgDbm: Float
+  accessPointIds: [String!]!
+  accessPointCount: Int!
+  interferenceLevel: Float
+  channelUtilizationAvg: Float
+  noiseFloorAvgDbm: Float
+  connectedClients: Int!
+  maxClientCapacity: Int!
+  clientDensityPerAp: Float
+  coveragePolygon: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  lastSurveyedAt: DateTime
+}
+
+type CoverageZoneConnection {
+  zones: [CoverageZone!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+type Customer {
+  id: ID!
+  customerNumber: String!
+  firstName: String!
+  lastName: String!
+  middleName: String
+  displayName: String
+  companyName: String
+  status: CustomerStatusEnum!
+  customerType: CustomerTypeEnum!
+  tier: CustomerTierEnum!
+  email: String!
+  emailVerified: Boolean!
+  phone: String
+  phoneVerified: Boolean!
+  mobile: String
+  addressLine1: String
+  addressLine2: String
+  city: String
+  stateProvince: String
+  postalCode: String
+  country: String
+  taxId: String
+  industry: String
+  employeeCount: Int
+  lifetimeValue: Decimal!
+  totalPurchases: Int!
+  averageOrderValue: Decimal!
+  lastPurchaseDate: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  acquisitionDate: DateTime!
+  lastContactDate: DateTime
+  activities: [CustomerActivity!]!
+  notes: [CustomerNote!]!
+}
+
+type CustomerActivity {
+  id: ID!
+  customerId: ID!
+  activityType: ActivityTypeEnum!
+  title: String!
+  description: String
+  performedBy: ID
+  createdAt: DateTime!
+}
+
+type CustomerActivityUpdate {
+  id: String!
+  customerId: String!
+  activityType: String!
+  title: String!
+  description: String
+  performedBy: String
+  performedByName: String
+  createdAt: DateTime!
+}
+
+type CustomerConnection {
+  customers: [Customer!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+type CustomerDeviceUpdate {
+  customerId: String!
+  deviceId: String!
+  deviceType: String!
+  deviceName: String!
+  status: String!
+  healthStatus: String!
+  isOnline: Boolean!
+  lastSeenAt: DateTime
+  signalStrength: Int
+  temperature: Int
+  cpuUsage: Int
+  memoryUsage: Int
+  uptimeSeconds: Int
+  firmwareVersion: String
+  needsFirmwareUpdate: Boolean!
+  changeType: String!
+  previousValue: String
+  newValue: String
+  updatedAt: DateTime!
+}
+
+type CustomerMetrics {
+  """Total number of customers"""
+  totalCustomers: Int!
+
+  """Active customers"""
+  activeCustomers: Int!
+
+  """New customers this period"""
+  newCustomers: Int!
+
+  """Churned customers this period"""
+  churnedCustomers: Int!
+
+  """Customer growth rate (%)"""
+  customerGrowthRate: Float!
+
+  """Churn rate (%)"""
+  churnRate: Float!
+
+  """Retention rate (%)"""
+  retentionRate: Float!
+
+  """Average customer LTV"""
+  averageCustomerValue: Float!
+
+  """Total customer value"""
+  totalCustomerValue: Float!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type CustomerNetworkStatusUpdate {
+  customerId: String!
+  connectionStatus: String!
+  lastSeenAt: DateTime!
+  ipv4Address: String
+  ipv6Address: String
+  macAddress: String
+  vlanId: Int
+  signalStrength: Int
+  signalQuality: Int
+  uptimeSeconds: Int
+  uptimePercentage: Decimal
+  bandwidthUsageMbps: Decimal
+  downloadSpeedMbps: Decimal
+  uploadSpeedMbps: Decimal
+  packetLoss: Decimal
+  latencyMs: Int
+  jitter: Decimal
+  ontRxPower: Decimal
+  ontTxPower: Decimal
+  oltRxPower: Decimal
+  serviceStatus: String
+  updatedAt: DateTime!
+}
+
+type CustomerNote {
+  id: ID!
+  customerId: ID!
+  subject: String!
+  content: String!
+  isInternal: Boolean!
+  createdById: ID
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CustomerNoteData {
+  id: String!
+  customerId: String!
+  subject: String!
+  content: String!
+  isInternal: Boolean!
+  createdById: String!
+  createdByName: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type CustomerNoteUpdate {
+  customerId: String!
+  action: String!
+  note: CustomerNoteData
+  changedBy: String!
+  changedByName: String
+  updatedAt: DateTime!
+}
+
+enum CustomerStatusEnum {
+  PROSPECT
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  CHURNED
+  ARCHIVED
+}
+
+type CustomerTicketUpdate {
+  customerId: String!
+  action: String!
+  ticket: CustomerTicketUpdateData!
+  changedBy: String
+  changedByName: String
+  changes: [String!]
+  comment: String
+  updatedAt: DateTime!
+}
+
+type CustomerTicketUpdateData {
+  id: String!
+  ticketNumber: String!
+  title: String!
+  description: String
+  status: String!
+  priority: String!
+  category: String
+  subCategory: String
+  assignedTo: String
+  assignedToName: String
+  assignedTeam: String
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  resolvedAt: DateTime
+  closedAt: DateTime
+  customerId: String!
+  customerName: String
+}
+
+enum CustomerTierEnum {
+  FREE
+  BASIC
+  STANDARD
+  PREMIUM
+  ENTERPRISE
+}
+
+enum CustomerTypeEnum {
+  INDIVIDUAL
+  BUSINESS
+  ENTERPRISE
+  PARTNER
+  VENDOR
+}
+
+type DashboardOverview {
+  """Billing metrics"""
+  billing: BillingMetrics!
+
+  """Customer metrics"""
+  customers: CustomerMetrics!
+
+  """System monitoring metrics"""
+  monitoring: MonitoringMetrics!
+
+  """Analytics metrics"""
+  analytics: AnalyticsMetrics
+
+  """Authentication metrics"""
+  auth: AuthMetrics
+
+  """Communications metrics"""
+  communications: CommunicationsMetrics
+
+  """File storage metrics"""
+  fileStorage: FileStorageMetrics
+}
+
+type DataSourceStatus {
+  name: String!
+  status: String!
+}
+
+"""Date with time (isoformat)"""
+scalar DateTime
+
+"""Decimal (fixed-point)"""
+scalar Decimal
+
+type DeviceConnection {
+  devices: [DeviceHealth!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type DeviceHealth {
+  deviceId: String!
+  deviceName: String!
+  deviceType: DeviceTypeEnum!
+  status: DeviceStatusEnum!
+  ipAddress: String
+  lastSeen: DateTime
+  uptimeSeconds: Int
+  cpuUsagePercent: Float
+  memoryUsagePercent: Float
+  temperatureCelsius: Float
+  powerStatus: String
+  pingLatencyMs: Float
+  packetLossPercent: Float
+  firmwareVersion: String
+  model: String
+  location: String
+  tenantId: String!
+  isHealthy: Boolean!
+  uptimeDays: Int
+}
+
+type DeviceMetrics {
+  deviceId: String!
+  deviceName: String!
+  deviceType: DeviceTypeEnum!
+  timestamp: DateTime!
+  health: DeviceHealth!
+  traffic: TrafficStats
+  onuMetrics: ONUMetrics
+  cpeMetrics: CPEMetrics
+}
+
+enum DeviceStatusEnum {
+  ONLINE
+  OFFLINE
+  DEGRADED
+  UNKNOWN
+}
+
+enum DeviceTypeEnum {
+  OLT
+  ONU
+  CPE
+  ROUTER
+  SWITCH
+  FIREWALL
+  OTHER
+}
+
+type DeviceTypeSummary {
+  deviceType: DeviceTypeEnum!
+  totalCount: Int!
+  onlineCount: Int!
+  offlineCount: Int!
+  degradedCount: Int!
+  avgCpuUsage: Float
+  avgMemoryUsage: Float
+}
+
+type DeviceUpdate {
+  deviceId: String!
+  deviceName: String!
+  deviceType: DeviceTypeEnum!
+  status: DeviceStatusEnum!
+  ipAddress: String
+  firmwareVersion: String
+  model: String
+  location: String
+  tenantId: String!
+  cpuUsagePercent: Float
+  memoryUsagePercent: Float
+  temperatureCelsius: Float
+  powerStatus: String
+  pingLatencyMs: Float
+  packetLossPercent: Float
+  uptimeSeconds: Int
+  uptimeDays: Int
+  lastSeen: DateTime
+  isHealthy: Boolean!
+  changeType: String!
+  previousValue: String
+  newValue: String
+  updatedAt: DateTime!
+}
+
+type DistributionPoint {
+  id: ID!
+  siteId: String!
+  name: String!
+  description: String
+  pointType: DistributionPointType!
+  status: FiberCableStatus!
+  isActive: Boolean!
+  location: GeoCoordinate!
+  address: Address
+  siteName: String
+  manufacturer: String
+  model: String
+  totalCapacity: Int!
+  availableCapacity: Int!
+  usedCapacity: Int!
+  ports: [PortAllocation!]!
+  portCount: Int!
+  incomingCables: [String!]!
+  outgoingCables: [String!]!
+  totalCablesConnected: Int!
+  splicePoints: [String!]!
+  splicePointCount: Int!
+  hasPower: Boolean!
+  batteryBackup: Boolean!
+  environmentalMonitoring: Boolean!
+  temperatureCelsius: Float
+  humidityPercent: Float
+  capacityUtilizationPercent: Float!
+  fiberStrandCount: Int!
+  availableStrandCount: Int!
+  serviceAreaIds: [String!]!
+  servesCustomerCount: Int!
+  accessType: String!
+  requiresKey: Boolean!
+  securityLevel: String
+  accessNotes: String
+  installedAt: DateTime
+  lastInspectedAt: DateTime
+  lastMaintainedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type DistributionPointConnection {
+  distributionPoints: [DistributionPoint!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+enum DistributionPointType {
+  CABINET
+  CLOSURE
+  POLE
+  MANHOLE
+  HANDHOLE
+  BUILDING_ENTRY
+  PEDESTAL
+}
+
+type FiberCable {
+  id: ID!
+  cableId: String!
+  name: String!
+  description: String
+  status: FiberCableStatus!
+  isActive: Boolean!
+  fiberType: FiberType!
+  totalStrands: Int!
+  availableStrands: Int!
+  usedStrands: Int!
+  manufacturer: String
+  model: String
+  installationType: CableInstallationType!
+  route: CableRoute!
+  lengthMeters: Float!
+  strands: [FiberStrand!]!
+  startDistributionPointId: String!
+  endDistributionPointId: String!
+  startPointName: String
+  endPointName: String
+  capacityUtilizationPercent: Float!
+  bandwidthCapacityGbps: Float
+  splicePointIds: [String!]!
+  spliceCount: Int!
+  totalLossDb: Float
+  averageAttenuationDbPerKm: Float
+  maxAttenuationDbPerKm: Float
+  conduitId: String
+  ductNumber: Int
+  armored: Boolean!
+  fireRated: Boolean!
+  ownerId: String
+  ownerName: String
+  isLeased: Boolean!
+  installedAt: DateTime
+  testedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type FiberCableConnection {
+  cables: [FiberCable!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+enum FiberCableStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_CONSTRUCTION
+  MAINTENANCE
+  DAMAGED
+  DECOMMISSIONED
+}
+
+type FiberDashboard {
+  analytics: FiberNetworkAnalytics!
+  topCablesByUtilization: [FiberCable!]!
+  topDistributionPointsByCapacity: [DistributionPoint!]!
+  topServiceAreasByPenetration: [ServiceArea!]!
+  cablesRequiringAttention: [FiberHealthMetrics!]!
+  recentTestResults: [OTDRTestResult!]!
+  distributionPointsNearCapacity: [DistributionPoint!]!
+  serviceAreasExpansionCandidates: [ServiceArea!]!
+  newConnectionsTrend: [Int!]!
+  capacityUtilizationTrend: [Float!]!
+  networkHealthTrend: [Float!]!
+  generatedAt: DateTime!
+}
+
+type FiberHealthMetrics {
+  cableId: String!
+  cableName: String!
+  healthStatus: FiberHealthStatus!
+  healthScore: Float!
+  totalLossDb: Float!
+  averageLossPerKmDb: Float!
+  maxLossPerKmDb: Float!
+  reflectanceDb: Float
+  averageSpliceLossDb: Float
+  maxSpliceLossDb: Float
+  failingSplicesCount: Int!
+  totalStrands: Int!
+  activeStrands: Int!
+  degradedStrands: Int!
+  failedStrands: Int!
+  lastTestedAt: DateTime
+  testPassRatePercent: Float
+  daysSinceLastTest: Int
+  activeAlarms: Int!
+  warningCount: Int!
+  requiresMaintenance: Boolean!
+}
+
+enum FiberHealthStatus {
+  EXCELLENT
+  GOOD
+  FAIR
+  POOR
+  CRITICAL
+}
+
+type FiberNetworkAnalytics {
+  totalFiberKm: Float!
+  totalCables: Int!
+  totalStrands: Int!
+  totalDistributionPoints: Int!
+  totalSplicePoints: Int!
+  totalCapacity: Int!
+  usedCapacity: Int!
+  availableCapacity: Int!
+  capacityUtilizationPercent: Float!
+  healthyCables: Int!
+  degradedCables: Int!
+  failedCables: Int!
+  networkHealthScore: Float!
+  totalServiceAreas: Int!
+  activeServiceAreas: Int!
+  homesPassed: Int!
+  homesConnected: Int!
+  penetrationRatePercent: Float!
+  averageCableLossDbPerKm: Float!
+  averageSpliceLossDb: Float!
+  cablesDueForTesting: Int!
+  cablesActive: Int!
+  cablesInactive: Int!
+  cablesUnderConstruction: Int!
+  cablesMaintenance: Int!
+  cablesWithHighLoss: [String!]!
+  distributionPointsNearCapacity: [String!]!
+  serviceAreasNeedsExpansion: [String!]!
+  generatedAt: DateTime!
+}
+
+type FiberStrand {
+  strandId: Int!
+  colorCode: String
+  isActive: Boolean!
+  isAvailable: Boolean!
+  customerId: String
+  customerName: String
+  serviceId: String
+  attenuationDb: Float
+  lossDb: Float
+  spliceCount: Int!
+}
+
+enum FiberType {
+  SINGLE_MODE
+  MULTI_MODE
+  HYBRID
+}
+
+type FileStorageMetrics {
+  """Total files stored"""
+  totalFiles: Int!
+
+  """Total storage used (bytes)"""
+  totalSizeBytes: Int!
+
+  """Total storage used (MB)"""
+  totalSizeMb: Float!
+
+  """File uploads this period"""
+  uploadsCount: Int!
+
+  """File downloads this period"""
+  downloadsCount: Int!
+
+  """File deletions this period"""
+  deletesCount: Int!
+
+  """Most common file types"""
+  topFileTypes: [String!]!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+enum FrequencyBand {
+  BAND_2_4_GHZ
+  BAND_5_GHZ
+  BAND_6_GHZ
+}
+
+type GeoCoordinate {
+  latitude: Float!
+  longitude: Float!
+  altitude: Float
+}
+
+type GeoLocation {
+  latitude: Float!
+  longitude: Float!
+  altitude: Float
+  accuracy: Float
+}
+
+type HighFrequencyUser {
+  """User identifier"""
+  userId: String!
+
+  """Number of accesses by the user"""
+  accessCount: Int!
+}
+
+type InfrastructureHealth {
+  """Overall health status"""
+  status: String!
+
+  """Overall system uptime percentage"""
+  uptime: Float!
+
+  """Individual service health statuses"""
+  services: [InfrastructureServiceStatus!]!
+}
+
+type InfrastructureMetrics {
+  """Overall health summary"""
+  health: InfrastructureHealth!
+
+  """Resource usage metrics"""
+  resources: ResourceUsageMetrics!
+
+  """Performance statistics"""
+  performance: PerformanceMetricsDetail!
+
+  """Log summary metrics"""
+  logs: LogMetricsSummary!
+
+  """Metrics period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type InfrastructureServiceStatus {
+  """Service name"""
+  name: String!
+
+  """Service status (healthy/degraded/unhealthy)"""
+  status: String!
+
+  """Optional diagnostic message for the service"""
+  message: String
+}
+
+type InstallationLocation {
+  siteName: String!
+  building: String
+  floor: String
+  room: String
+  mountingType: String
+  coordinates: GeoLocation
+}
+
+type InterfaceStats {
+  interfaceName: String!
+  status: String!
+  speedMbps: Int
+  bytesIn: Int!
+  bytesOut: Int!
+  packetsIn: Int!
+  packetsOut: Int!
+  errorsIn: Int!
+  errorsOut: Int!
+  dropsIn: Int!
+  dropsOut: Int!
+  rateInBps: Float
+  rateOutBps: Float
+  utilizationPercent: Float
+}
+
+type InterferenceSource {
+  sourceType: String!
+  frequencyMhz: Int!
+  strengthDbm: Float!
+  affectedChannels: [Int!]!
+}
+
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf).
+"""
+scalar JSON @specifiedBy(url: "https://ecma-international.org/wp-content/uploads/ECMA-404_2nd_edition_december_2017.pdf")
+
+type LogMetricsSummary {
+  """Total logs in period"""
+  totalLogs: Int!
+
+  """Critical severity logs"""
+  criticalLogs: Int!
+
+  """Warning severity logs"""
+  warningLogs: Int!
+
+  """Informational logs"""
+  infoLogs: Int!
+
+  """Error rate based on logs (%)"""
+  errorRate: Float!
+}
+
+type MonitoringMetrics {
+  """Current error rate (%)"""
+  errorRate: Float!
+
+  """Number of critical errors"""
+  criticalErrors: Int!
+
+  """Number of warnings"""
+  warningCount: Int!
+
+  """Average response time (ms)"""
+  avgResponseTimeMs: Float!
+
+  """P95 response time (ms)"""
+  p95ResponseTimeMs: Float!
+
+  """P99 response time (ms)"""
+  p99ResponseTimeMs: Float!
+
+  """Total requests processed"""
+  totalRequests: Int!
+
+  """Successful requests"""
+  successfulRequests: Int!
+
+  """Failed requests"""
+  failedRequests: Int!
+
+  """API request count"""
+  apiRequests: Int!
+
+  """User activity count"""
+  userActivities: Int!
+
+  """System activity count"""
+  systemActivities: Int!
+
+  """Requests with >1s latency"""
+  highLatencyRequests: Int!
+
+  """Request timeouts"""
+  timeoutCount: Int!
+
+  """Metrics calculation period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type Mutation {
+  """Provision new subscriber atomically"""
+  provisionSubscriber(input: ProvisionSubscriberInput!): ProvisionSubscriberResult!
+
+  """Retry a failed workflow"""
+  retryWorkflow(workflowId: String!): Workflow!
+
+  """Cancel a running workflow"""
+  cancelWorkflow(workflowId: String!): Workflow!
+
+  """Health check mutation"""
+  ping: String!
+}
+
+type NetworkAlert {
+  alertId: String!
+  severity: AlertSeverityEnum!
+  title: String!
+  description: String!
+  deviceId: String
+  deviceName: String
+  deviceType: DeviceTypeEnum
+  triggeredAt: DateTime!
+  acknowledgedAt: DateTime
+  resolvedAt: DateTime
+  isActive: Boolean!
+  isAcknowledged: Boolean!
+  metricName: String
+  thresholdValue: Float
+  currentValue: Float
+  alertRuleId: String
+  tenantId: String!
+}
+
+type NetworkAlertUpdate {
+  action: String!
+  alert: NetworkAlert!
+  updatedAt: DateTime!
+}
+
+type NetworkOverview {
+  tenantId: String!
+  timestamp: DateTime!
+  totalDevices: Int!
+  onlineDevices: Int!
+  offlineDevices: Int!
+  degradedDevices: Int!
+  activeAlerts: Int!
+  criticalAlerts: Int!
+  warningAlerts: Int!
+  totalBandwidthInBps: Float!
+  totalBandwidthOutBps: Float!
+  peakBandwidthInBps: Float
+  peakBandwidthOutBps: Float
+  deviceTypeSummary: [DeviceTypeSummary!]!
+  recentOfflineDevices: [String!]!
+  recentAlerts: [NetworkAlert!]!
+  dataSourceStatus: [DataSourceStatus!]!
+  uptimePercentage: Float!
+  totalBandwidthGbps: Float!
+}
+
+type ONUMetrics {
+  serialNumber: String!
+  opticalPowerRxDbm: Float
+  opticalPowerTxDbm: Float
+  oltRxPowerDbm: Float
+  distanceMeters: Int
+  state: String
+}
+
+type OTDRTestResult {
+  testId: String!
+  cableId: String!
+  strandId: Int!
+  testedAt: DateTime!
+  testedBy: String!
+  wavelengthNm: Int!
+  pulseWidthNs: Int!
+  totalLossDb: Float!
+  totalLengthMeters: Float!
+  averageAttenuationDbPerKm: Float!
+  spliceCount: Int!
+  connectorCount: Int!
+  bendCount: Int!
+  breakCount: Int!
+  isPassing: Boolean!
+  passThresholdDb: Float!
+  marginDb: Float
+  traceFileUrl: String
+}
+
+type Payment {
+  id: ID!
+  paymentNumber: String
+  amount: Decimal!
+  currency: String!
+  feeAmount: Decimal
+  netAmount: Decimal
+  refundAmount: Decimal
+  status: PaymentStatusEnum!
+  failureReason: String
+  failureCode: String
+  paymentMethodType: PaymentMethodTypeEnum!
+  provider: String!
+  paymentMethod: PaymentMethod
+  customerId: ID!
+  customer: PaymentCustomer
+  invoiceId: ID
+  invoice: PaymentInvoice
+  subscriptionId: ID
+  createdAt: DateTime!
+  processedAt: DateTime
+  refundedAt: DateTime
+  description: String
+  metadata: JSON
+}
+
+type PaymentConnection {
+  payments: [Payment!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  totalAmount: Decimal!
+  totalSucceeded: Decimal!
+  totalPending: Decimal!
+  totalFailed: Decimal!
+}
+
+type PaymentCustomer {
+  id: ID!
+  name: String!
+  email: String!
+  customerNumber: String
+}
+
+type PaymentInvoice {
+  id: ID!
+  invoiceNumber: String!
+  totalAmount: Decimal!
+  status: String!
+}
+
+type PaymentMethod {
+  type: PaymentMethodTypeEnum!
+  provider: String!
+  last4: String
+  brand: String
+  expiryMonth: Int
+  expiryYear: Int
+}
+
+enum PaymentMethodTypeEnum {
+  CARD
+  BANK_ACCOUNT
+  DIGITAL_WALLET
+  CASH
+  CHECK
+  WIRE_TRANSFER
+  ACH
+  CRYPTO
+  OTHER
+}
+
+type PaymentMetrics {
+  totalPayments: Int!
+  succeededCount: Int!
+  pendingCount: Int!
+  failedCount: Int!
+  refundedCount: Int!
+  totalRevenue: Decimal!
+  pendingAmount: Decimal!
+  failedAmount: Decimal!
+  refundedAmount: Decimal!
+  successRate: Float!
+  averagePaymentSize: Decimal!
+  todayRevenue: Decimal!
+  weekRevenue: Decimal!
+  monthRevenue: Decimal!
+}
+
+enum PaymentStatusEnum {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  CANCELLED
+  REQUIRES_ACTION
+  REQUIRES_CAPTURE
+  REQUIRES_CONFIRMATION
+}
+
+type PerformanceMetricsDetail {
+  """Average response time (ms)"""
+  avgResponseTimeMs: Float!
+
+  """P95 response time (ms)"""
+  p95ResponseTimeMs: Float!
+
+  """P99 response time (ms)"""
+  p99ResponseTimeMs: Float!
+
+  """Total requests processed"""
+  totalRequests: Int!
+
+  """Successful requests"""
+  successfulRequests: Int!
+
+  """Failed requests"""
+  failedRequests: Int!
+
+  """Requests per second"""
+  requestsPerSecond: Float!
+
+  """Error rate (%)"""
+  errorRate: Float!
+
+  """Requests over 1s latency"""
+  highLatencyRequests: Int!
+
+  """Request timeouts"""
+  timeoutCount: Int!
+}
+
+type Permission {
+  id: ID!
+  name: String!
+  displayName: String!
+  description: String
+  category: PermissionCategoryEnum!
+  isActive: Boolean!
+  isSystem: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum PermissionCategoryEnum {
+  USER
+  CUSTOMER
+  TICKET
+  BILLING
+  SECURITY
+  ADMIN
+  ANALYTICS
+  COMMUNICATION
+  WORKFLOW
+  NETWORK
+  IPAM
+  AUTOMATION
+  CPE
+}
+
+type PermissionsByCategory {
+  category: PermissionCategoryEnum!
+  permissions: [Permission!]!
+  count: Int!
+}
+
+type PlanConnection {
+  plans: [SubscriptionPlan!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type PortAllocation {
+  portNumber: Int!
+  isAllocated: Boolean!
+  isActive: Boolean!
+  cableId: String
+  strandId: Int
+  customerId: String
+  customerName: String
+  serviceId: String
+}
+
+type Product {
+  id: ID!
+  productId: String!
+  sku: String!
+  name: String!
+  description: String
+  category: String!
+  productType: ProductTypeEnum!
+  basePrice: Decimal!
+  currency: String!
+  isActive: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ProductConnection {
+  products: [Product!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+enum ProductTypeEnum {
+  ONE_TIME
+  SUBSCRIPTION
+  USAGE_BASED
+  HYBRID
+}
+
+type ProfileChangeRecord {
+  id: ID!
+  fieldName: String!
+  oldValue: String
+  newValue: String
+  changeReason: String
+  changedByUserId: ID!
+  changedByUsername: String
+  createdAt: DateTime!
+  ipAddress: String
+}
+
+"""Subscriber provisioning input"""
+input ProvisionSubscriberInput {
+  customerId: String = null
+  firstName: String!
+  lastName: String!
+  email: String!
+  phone: String!
+  secondaryPhone: String = null
+  serviceAddress: String!
+  serviceCity: String!
+  serviceState: String!
+  servicePostalCode: String!
+  serviceCountry: String! = "USA"
+  servicePlanId: String!
+  bandwidthMbps: Int!
+  connectionType: String!
+  onuSerial: String = null
+  onuMac: String = null
+  cpeMac: String = null
+  vlanId: Int = null
+  ipv4Address: String = null
+  ipv6Prefix: String = null
+  installationDate: DateTime = null
+  installationNotes: String = null
+  autoActivate: Boolean! = true
+  sendWelcomeEmail: Boolean! = true
+  createRadiusAccount: Boolean! = true
+  allocateIpFromNetbox: Boolean! = true
+  configureVoltha: Boolean! = true
+  configureGenieacs: Boolean! = true
+  notes: String = null
+}
+
+"""Subscriber provisioning result"""
+type ProvisionSubscriberResult {
+  workflowId: String!
+  subscriberId: String
+  customerId: String
+  status: WorkflowStatus!
+  radiusUsername: String
+  ipv4Address: String
+  vlanId: Int
+  onuId: String
+  cpeId: String
+  serviceId: String
+  stepsCompleted: Int
+  totalSteps: Int
+  errorMessage: String
+  createdAt: DateTime
+  completedAt: DateTime
+
+  """Is provisioning successful"""
+  isSuccessful: Boolean!
+
+  """Full workflow details"""
+  workflow: Workflow
+}
+
+type Query {
+  """Get billing overview metrics"""
+  billingMetrics(period: String! = "30d"): BillingMetrics!
+
+  """Get customer analytics metrics"""
+  customerMetrics(period: String! = "30d"): CustomerMetrics!
+
+  """Get system monitoring metrics"""
+  monitoringMetrics(period: String! = "1h"): MonitoringMetrics!
+
+  """Get complete dashboard overview in one query"""
+  dashboardOverview(period: String! = "30d"): DashboardOverview!
+
+  """Get security metrics overview"""
+  securityMetrics(period: String! = "30d"): SecurityOverview!
+
+  """Get infrastructure metrics overview"""
+  infrastructureMetrics(period: String! = "1d"): InfrastructureMetrics!
+
+  """Get RADIUS subscribers with optional filtering"""
+  subscribers(limit: Int! = 50, enabled: Boolean = null, search: String = null): [Subscriber!]!
+
+  """Get active RADIUS sessions"""
+  sessions(limit: Int! = 100, username: String = null): [Session!]!
+
+  """Get subscriber metrics summary"""
+  subscriberMetrics: SubscriberMetrics!
+
+  """Get customer by ID with activities and notes"""
+  customer(id: ID!, includeActivities: Boolean! = true, includeNotes: Boolean! = true): Customer
+
+  """Get list of customers with optional filters"""
+  customers(limit: Int! = 50, offset: Int! = 0, status: CustomerStatusEnum = null, search: String = null, includeActivities: Boolean! = false, includeNotes: Boolean! = false): CustomerConnection!
+
+  """Get customer subscriptions"""
+  customerSubscriptions(customerId: ID!, status: String = null, limit: Int! = 50): [Subscription!]!
+
+  """Get customer network information"""
+  customerNetworkInfo(customerId: ID!): JSON!
+
+  """Get customer devices"""
+  customerDevices(customerId: ID!, deviceType: String = null, activeOnly: Boolean! = true): JSON!
+
+  """Get customer tickets"""
+  customerTickets(customerId: ID!, status: String = null, limit: Int! = 50): JSON!
+
+  """Get customer billing information"""
+  customerBilling(customerId: ID!, includeInvoices: Boolean! = true, invoiceLimit: Int! = 10): JSON!
+
+  """Get payment by ID with customer and invoice data"""
+  payment(id: ID!, includeCustomer: Boolean! = true, includeInvoice: Boolean! = true): Payment
+
+  """Get list of payments with optional filters"""
+  payments(limit: Int! = 50, offset: Int! = 0, status: PaymentStatusEnum = null, customerId: ID = null, dateFrom: DateTime = null, dateTo: DateTime = null, includeCustomer: Boolean! = true, includeInvoice: Boolean! = false): PaymentConnection!
+
+  """Get payment metrics and statistics"""
+  paymentMetrics(dateFrom: DateTime = null, dateTo: DateTime = null): PaymentMetrics!
+
+  """Get subscription by ID with conditional loading"""
+  subscription(id: ID!, includeCustomer: Boolean! = false, includePlan: Boolean! = false, includeInvoices: Boolean! = false): Subscription
+
+  """Get list of subscriptions with filters and conditional loading"""
+  subscriptions(page: Int! = 1, pageSize: Int! = 10, status: SubscriptionStatusEnum = null, billingCycle: BillingCycleEnum = null, search: String = null, includeCustomer: Boolean! = false, includePlan: Boolean! = false, includeInvoices: Boolean! = false): SubscriptionConnection!
+
+  """Get subscription metrics and statistics"""
+  subscriptionMetrics: SubscriptionMetrics!
+
+  """Get list of subscription plans"""
+  plans(page: Int! = 1, pageSize: Int! = 20, isActive: Boolean = null, billingCycle: BillingCycleEnum = null): PlanConnection!
+
+  """Get list of products"""
+  products(page: Int! = 1, pageSize: Int! = 20, isActive: Boolean = null, category: String = null): ProductConnection!
+
+  """Get tenant by ID with conditional field loading"""
+  tenant(id: ID!, includeMetadata: Boolean! = false, includeSettings: Boolean! = false, includeUsage: Boolean! = false, includeInvitations: Boolean! = false): Tenant
+
+  """Get list of tenants with optional filters and conditional loading"""
+  tenants(page: Int! = 1, pageSize: Int! = 10, status: TenantStatusEnum = null, plan: String = null, search: String = null, includeMetadata: Boolean! = false, includeSettings: Boolean! = false, includeUsage: Boolean! = false, includeInvitations: Boolean! = false): TenantConnection!
+
+  """Get tenant overview metrics and statistics"""
+  tenantMetrics: TenantOverviewMetrics!
+
+  """Get user by ID with conditional field loading"""
+  user(id: ID!, includeMetadata: Boolean! = false, includeRoles: Boolean! = false, includePermissions: Boolean! = false, includeTeams: Boolean! = false, includeProfileChanges: Boolean! = false): User
+
+  """Get list of users with optional filters and conditional loading"""
+  users(page: Int! = 1, pageSize: Int! = 10, isActive: Boolean = null, isVerified: Boolean = null, isSuperuser: Boolean = null, isPlatformAdmin: Boolean = null, search: String = null, includeMetadata: Boolean! = false, includeRoles: Boolean! = false, includePermissions: Boolean! = false, includeTeams: Boolean! = false): UserConnection!
+
+  """Get user overview metrics and statistics"""
+  userMetrics: UserOverviewMetrics!
+
+  """Get list of roles with optional filters"""
+  roles(page: Int! = 1, pageSize: Int! = 20, isActive: Boolean = null, isSystem: Boolean = null, search: String = null): RoleConnection!
+
+  """Get permissions grouped by category"""
+  permissionsByCategory(category: PermissionCategoryEnum = null): [PermissionsByCategory!]!
+
+  """Get comprehensive network overview dashboard"""
+  networkOverview: NetworkOverview!
+
+  """List network devices with optional filters"""
+  networkDevices(page: Int! = 1, pageSize: Int! = 20, deviceType: DeviceTypeEnum = null, status: DeviceStatusEnum = null, search: String = null, includeTraffic: Boolean! = false, includeAlerts: Boolean! = false): DeviceConnection!
+
+  """Get device health status by ID"""
+  deviceHealth(deviceId: String!, deviceType: DeviceTypeEnum!): DeviceHealth
+
+  """Get device traffic and bandwidth statistics"""
+  deviceTraffic(deviceId: String!, deviceType: DeviceTypeEnum!, includeInterfaces: Boolean! = false): TrafficStats
+
+  """Get comprehensive device metrics (health + traffic + device-specific)"""
+  deviceMetrics(deviceId: String!, deviceType: DeviceTypeEnum!, includeInterfaces: Boolean! = false): DeviceMetrics
+
+  """List network alerts with filtering"""
+  networkAlerts(page: Int! = 1, pageSize: Int! = 50, severity: AlertSeverityEnum = null, activeOnly: Boolean! = true, deviceId: String = null, deviceType: DeviceTypeEnum = null): AlertConnection!
+
+  """Get alert by ID"""
+  networkAlert(alertId: String!): NetworkAlert
+
+  """Get workflow by ID"""
+  workflow(workflowId: String!): Workflow
+
+  """List workflows with filtering"""
+  workflows(filter: WorkflowFilterInput = null): WorkflowConnection!
+
+  """Get workflow statistics"""
+  workflowStatistics: WorkflowStatistics!
+
+  """Get running workflows count"""
+  runningWorkflowsCount: Int!
+
+  """Check if a workflow is running for a specific customer"""
+  hasRunningWorkflowForCustomer(customerId: String!): Boolean!
+  accessPoints(limit: Int! = 50, offset: Int! = 0, siteId: String = null, status: AccessPointStatus = null, frequencyBand: FrequencyBand = null, search: String = null): AccessPointConnection!
+  accessPoint(id: ID!): AccessPoint
+  accessPointsBySite(siteId: String!): [AccessPoint!]!
+  wirelessClients(limit: Int! = 50, offset: Int! = 0, accessPointId: String = null, customerId: String = null, frequencyBand: FrequencyBand = null, search: String = null): WirelessClientConnection!
+  wirelessClient(id: ID!): WirelessClient
+  wirelessClientsByAccessPoint(accessPointId: String!): [WirelessClient!]!
+  wirelessClientsByCustomer(customerId: String!): [WirelessClient!]!
+  coverageZones(limit: Int! = 50, offset: Int! = 0, siteId: String = null, areaType: String = null): CoverageZoneConnection!
+  coverageZone(id: ID!): CoverageZone
+  coverageZonesBySite(siteId: String!): [CoverageZone!]!
+  rfAnalytics(siteId: String!): RFAnalytics!
+  channelUtilization(siteId: String!, frequencyBand: FrequencyBand!): [ChannelUtilization!]!
+  wirelessSiteMetrics(siteId: String!): WirelessSiteMetrics
+  wirelessDashboard: WirelessDashboard!
+  fiberCables(limit: Int! = 50, offset: Int! = 0, status: FiberCableStatus = null, fiberType: FiberType = null, installationType: CableInstallationType = null, siteId: String = null, search: String = null): FiberCableConnection!
+  fiberCable(id: ID!): FiberCable
+  fiberCablesByRoute(startPointId: String!, endPointId: String!): [FiberCable!]!
+  fiberCablesByDistributionPoint(distributionPointId: String!): [FiberCable!]!
+  splicePoints(limit: Int! = 50, offset: Int! = 0, status: SpliceStatus = null, cableId: String = null, distributionPointId: String = null): SplicePointConnection!
+  splicePoint(id: ID!): SplicePoint
+  splicePointsByCable(cableId: String!): [SplicePoint!]!
+  distributionPoints(limit: Int! = 50, offset: Int! = 0, pointType: DistributionPointType = null, status: FiberCableStatus = null, siteId: String = null, nearCapacity: Boolean = null): DistributionPointConnection!
+  distributionPoint(id: ID!): DistributionPoint
+  distributionPointsBySite(siteId: String!): [DistributionPoint!]!
+  serviceAreas(limit: Int! = 50, offset: Int! = 0, areaType: ServiceAreaType = null, isServiceable: Boolean = null, constructionStatus: String = null): ServiceAreaConnection!
+  serviceArea(id: ID!): ServiceArea
+  serviceAreasByPostalCode(postalCode: String!): [ServiceArea!]!
+  fiberHealthMetrics(cableId: String = null, healthStatus: FiberHealthStatus = null): [FiberHealthMetrics!]!
+  otdrTestResults(cableId: String!, strandId: Int = null, limit: Int! = 10): [OTDRTestResult!]!
+  fiberNetworkAnalytics: FiberNetworkAnalytics!
+  fiberDashboard: FiberDashboard!
+
+  """API version and info"""
+  version: String!
+}
+
+type RFAnalytics {
+  siteId: String!
+  siteName: String!
+  analysisTimestamp: DateTime!
+  channelUtilization24ghz: [ChannelUtilization!]!
+  channelUtilization5ghz: [ChannelUtilization!]!
+  channelUtilization6ghz: [ChannelUtilization!]!
+  recommendedChannels24ghz: [Int!]!
+  recommendedChannels5ghz: [Int!]!
+  recommendedChannels6ghz: [Int!]!
+  interferenceSources: [InterferenceSource!]!
+  totalInterferenceScore: Float!
+  averageSignalStrengthDbm: Float!
+  averageSnr: Float!
+  coverageQualityScore: Float!
+  clientsPerBand24ghz: Int!
+  clientsPerBand5ghz: Int!
+  clientsPerBand6ghz: Int!
+  bandUtilizationBalanceScore: Float!
+}
+
+type RFMetrics {
+  signalStrengthDbm: Float
+  noiseFloorDbm: Float
+  signalToNoiseRatio: Float
+  channelUtilizationPercent: Float
+  interferenceLevel: Float
+  txPowerDbm: Float
+  rxPowerDbm: Float
+}
+
+type RealtimeSubscription {
+  """Subscribe to customer network status updates"""
+  customerNetworkStatusUpdated(customerId: ID!): CustomerNetworkStatusUpdate!
+
+  """Subscribe to customer device updates"""
+  customerDevicesUpdated(customerId: ID!): CustomerDeviceUpdate!
+
+  """Subscribe to customer ticket updates"""
+  customerTicketUpdated(customerId: ID!): CustomerTicketUpdate!
+
+  """Subscribe to customer activity updates"""
+  customerActivityAdded(customerId: ID!): CustomerActivityUpdate!
+
+  """Subscribe to customer note updates"""
+  customerNoteUpdated(customerId: ID!): CustomerNoteUpdate!
+
+  """Subscribe to device status and metrics updates"""
+  deviceUpdated(deviceType: DeviceTypeEnum = null, status: DeviceStatusEnum = null): DeviceUpdate!
+
+  """Subscribe to network alert updates"""
+  networkAlertUpdated(severity: AlertSeverityEnum = null, deviceId: String = null): NetworkAlertUpdate!
+}
+
+type ResourceUsageMetrics {
+  """CPU usage percentage"""
+  cpuUsage: Float!
+
+  """Memory usage percentage"""
+  memoryUsage: Float!
+
+  """Disk usage percentage"""
+  diskUsage: Float!
+
+  """Network ingress (MB)"""
+  networkInMb: Float!
+
+  """Network egress (MB)"""
+  networkOutMb: Float!
+}
+
+type Role {
+  id: ID!
+  name: String!
+  displayName: String!
+  description: String
+  priority: Int!
+  isActive: Boolean!
+  isSystem: Boolean!
+  isDefault: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  permissions: [Permission!]!
+}
+
+type RoleConnection {
+  roles: [Role!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type SecretAccessSummary {
+  """Secret path/name"""
+  secretPath: String!
+
+  """Access count for the secret"""
+  accessCount: Int!
+}
+
+type SecretsMetrics {
+  """Secrets accessed count"""
+  totalSecretsAccessed: Int!
+
+  """Secrets created count"""
+  totalSecretsCreated: Int!
+
+  """Secrets updated count"""
+  totalSecretsUpdated: Int!
+
+  """Secrets deleted count"""
+  totalSecretsDeleted: Int!
+
+  """Unique secrets accessed"""
+  uniqueSecretsAccessed: Int!
+
+  """Unique users accessing secrets"""
+  uniqueUsersAccessing: Int!
+
+  """Average accesses per secret"""
+  avgAccessesPerSecret: Float!
+
+  """Failed access attempts"""
+  failedAccessAttempts: Int!
+
+  """After-hours accesses"""
+  afterHoursAccesses: Int!
+
+  """Top users by access count"""
+  highFrequencyUsers: [HighFrequencyUser!]!
+
+  """Top accessed secrets"""
+  mostAccessedSecrets: [SecretAccessSummary!]!
+
+  """Secrets created in last 7 days"""
+  secretsCreatedLast7d: Int!
+
+  """Secrets deleted in last 7 days"""
+  secretsDeletedLast7d: Int!
+
+  """Metrics period"""
+  period: String!
+
+  """Metrics generation timestamp"""
+  timestamp: DateTime!
+}
+
+type SecurityOverview {
+  """Authentication metrics"""
+  auth: AuthMetrics!
+
+  """API key metrics"""
+  apiKeys: APIKeyMetrics!
+
+  """Secrets management metrics"""
+  secrets: SecretsMetrics!
+}
+
+type ServiceArea {
+  id: ID!
+  areaId: String!
+  name: String!
+  description: String
+  areaType: ServiceAreaType!
+  isActive: Boolean!
+  isServiceable: Boolean!
+  boundaryGeojson: String!
+  areaSqkm: Float!
+  city: String!
+  stateProvince: String!
+  postalCodes: [String!]!
+  streetCount: Int!
+  homesPassed: Int!
+  homesConnected: Int!
+  businessesPassed: Int!
+  businessesConnected: Int!
+  penetrationRatePercent: Float
+  distributionPointIds: [String!]!
+  distributionPointCount: Int!
+  totalFiberKm: Float!
+  totalCapacity: Int!
+  usedCapacity: Int!
+  availableCapacity: Int!
+  capacityUtilizationPercent: Float!
+  maxBandwidthGbps: Float!
+  averageDistanceToDistributionMeters: Float
+  estimatedPopulation: Int
+  householdDensityPerSqkm: Float
+  constructionStatus: String!
+  constructionCompletePercent: Float
+  targetCompletionDate: DateTime
+  plannedAt: DateTime
+  constructionStartedAt: DateTime
+  activatedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type ServiceAreaConnection {
+  serviceAreas: [ServiceArea!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+enum ServiceAreaType {
+  RESIDENTIAL
+  COMMERCIAL
+  INDUSTRIAL
+  MIXED
+}
+
+type Session {
+  radacctid: Int!
+  username: String!
+  nasipaddress: String!
+  acctsessionid: String!
+  acctsessiontime: Int
+  acctinputoctets: Int
+  acctoutputoctets: Int
+  acctstarttime: DateTime
+  acctstoptime: DateTime
+}
+
+type SignalQuality {
+  rssiDbm: Float
+  snrDb: Float
+  noiseFloorDbm: Float
+  signalStrengthPercent: Float
+  linkQualityPercent: Float
+}
+
+type SpliceConnection {
+  cableAId: String!
+  cableAStrand: Int!
+  cableBId: String!
+  cableBStrand: Int!
+  spliceType: SpliceType!
+  lossDb: Float
+  reflectanceDb: Float
+  isPassing: Boolean!
+  testResult: String
+  testedAt: DateTime
+  testedBy: String
+}
+
+type SplicePoint {
+  id: ID!
+  spliceId: String!
+  name: String!
+  description: String
+  status: SpliceStatus!
+  isActive: Boolean!
+  location: GeoCoordinate!
+  address: Address
+  distributionPointId: String
+  closureType: String
+  manufacturer: String
+  model: String
+  trayCount: Int!
+  trayCapacity: Int!
+  cablesConnected: [String!]!
+  cableCount: Int!
+  spliceConnections: [SpliceConnection!]!
+  totalSplices: Int!
+  activeSplices: Int!
+  averageSpliceLossDb: Float
+  maxSpliceLossDb: Float
+  passingSplices: Int!
+  failingSplices: Int!
+  accessType: String!
+  requiresSpecialAccess: Boolean!
+  accessNotes: String
+  installedAt: DateTime
+  lastTestedAt: DateTime
+  lastMaintainedAt: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+type SplicePointConnection {
+  splicePoints: [SplicePoint!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+enum SpliceStatus {
+  ACTIVE
+  INACTIVE
+  DEGRADED
+  FAILED
+}
+
+enum SpliceType {
+  FUSION
+  MECHANICAL
+}
+
+type Subscriber {
+  id: Int!
+  subscriberId: String!
+  username: String!
+  enabled: Boolean!
+  framedIpAddress: String
+  bandwidthProfileId: String
+  createdAt: DateTime
+  updatedAt: DateTime
+  sessions: [Session!]!
+}
+
+type SubscriberMetrics {
+  totalCount: Int!
+  enabledCount: Int!
+  disabledCount: Int!
+  activeSessionsCount: Int!
+  totalDataUsageMb: Float!
+}
+
+type Subscription {
+  id: ID!
+  subscriptionId: String!
+  customerId: String!
+  planId: String!
+  tenantId: String!
+  currentPeriodStart: DateTime!
+  currentPeriodEnd: DateTime!
+  status: SubscriptionStatusEnum!
+  trialEnd: DateTime
+  isInTrial: Boolean!
+  cancelAtPeriodEnd: Boolean!
+  canceledAt: DateTime
+  endedAt: DateTime
+  customPrice: Decimal
+  usageRecords: JSON!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  isActive: Boolean!
+  daysUntilRenewal: Int!
+  isPastDue: Boolean!
+  customer: SubscriptionCustomer
+  plan: SubscriptionPlan
+  recentInvoices: [SubscriptionInvoice!]!
+}
+
+type SubscriptionConnection {
+  subscriptions: [Subscription!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type SubscriptionCustomer {
+  id: ID!
+  customerId: String!
+  name: String
+  email: String!
+  phone: String
+  createdAt: DateTime!
+}
+
+type SubscriptionInvoice {
+  id: ID!
+  invoiceId: String!
+  invoiceNumber: String!
+  amount: Decimal!
+  currency: String!
+  status: String!
+  dueDate: DateTime!
+  paidAt: DateTime
+  createdAt: DateTime!
+}
+
+type SubscriptionMetrics {
+  totalSubscriptions: Int!
+  activeSubscriptions: Int!
+  trialingSubscriptions: Int!
+  pastDueSubscriptions: Int!
+  canceledSubscriptions: Int!
+  pausedSubscriptions: Int!
+  monthlyRecurringRevenue: Decimal!
+  annualRecurringRevenue: Decimal!
+  averageRevenuePerUser: Decimal!
+  newSubscriptionsThisMonth: Int!
+  newSubscriptionsLastMonth: Int!
+  churnRate: Decimal!
+  growthRate: Decimal!
+  monthlySubscriptions: Int!
+  quarterlySubscriptions: Int!
+  annualSubscriptions: Int!
+  trialConversionRate: Decimal!
+  activeTrials: Int!
+}
+
+type SubscriptionPlan {
+  id: ID!
+  planId: String!
+  productId: String!
+  name: String!
+  description: String
+  billingCycle: BillingCycleEnum!
+  price: Decimal!
+  currency: String!
+  setupFee: Decimal
+  trialDays: Int
+  isActive: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  hasTrial: Boolean!
+  hasSetupFee: Boolean!
+  includedUsage: JSON!
+  overageRates: JSON!
+}
+
+enum SubscriptionStatusEnum {
+  INCOMPLETE
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  ENDED
+  PAUSED
+}
+
+type TeamMembership {
+  id: ID!
+  teamId: ID!
+  teamName: String!
+  role: String!
+  isActive: Boolean!
+  joinedAt: DateTime
+  leftAt: DateTime
+}
+
+type Tenant {
+  id: ID!
+  name: String!
+  slug: String!
+  domain: String
+  status: TenantStatusEnum!
+  planType: TenantPlanTypeEnum!
+  billingCycle: BillingCycleEnum!
+  email: String
+  phone: String
+  billingEmail: String
+  trialEndsAt: DateTime
+  subscriptionStartsAt: DateTime
+  subscriptionEndsAt: DateTime
+  usageMetrics: TenantUsageMetrics!
+  companySize: String
+  industry: String
+  country: String
+  timezone: String!
+  logoUrl: String
+  primaryColor: String
+  features: JSON
+  settingsJson: JSON
+  customMetadata: JSON
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  deletedAt: DateTime
+  isTrial: Boolean!
+  isActive: Boolean!
+  trialExpired: Boolean!
+  settings: [TenantSetting!]!
+  usageRecords: [TenantUsageRecord!]!
+  invitations: [TenantInvitation!]!
+}
+
+type TenantConnection {
+  tenants: [Tenant!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type TenantInvitation {
+  id: ID!
+  tenantId: ID!
+  email: String!
+  role: String!
+  invitedBy: ID!
+  status: String!
+  expiresAt: DateTime!
+  acceptedAt: DateTime
+  createdAt: DateTime!
+  isExpired: Boolean!
+  isPending: Boolean!
+}
+
+type TenantOverviewMetrics {
+  totalTenants: Int!
+  activeTenants: Int!
+  trialTenants: Int!
+  suspendedTenants: Int!
+  cancelledTenants: Int!
+  freePlanCount: Int!
+  starterPlanCount: Int!
+  professionalPlanCount: Int!
+  enterprisePlanCount: Int!
+  customPlanCount: Int!
+  totalUsers: Int!
+  totalApiCalls: Int!
+  totalStorageGb: Decimal!
+  newTenantsThisMonth: Int!
+  churnedTenantsThisMonth: Int!
+}
+
+enum TenantPlanTypeEnum {
+  FREE
+  STARTER
+  PROFESSIONAL
+  ENTERPRISE
+  CUSTOM
+}
+
+type TenantSetting {
+  id: Int!
+  tenantId: ID!
+  key: String!
+  value: String!
+  valueType: String!
+  description: String
+  isEncrypted: Boolean!
+  createdAt: DateTime!
+  updatedAt: DateTime!
+}
+
+enum TenantStatusEnum {
+  ACTIVE
+  SUSPENDED
+  TRIAL
+  INACTIVE
+  PENDING
+  CANCELLED
+}
+
+type TenantUsageMetrics {
+  maxUsers: Int!
+  maxApiCallsPerMonth: Int!
+  maxStorageGb: Int!
+  currentUsers: Int!
+  currentApiCalls: Int!
+  currentStorageGb: Decimal!
+  hasExceededUserLimit: Boolean!
+  hasExceededApiLimit: Boolean!
+  hasExceededStorageLimit: Boolean!
+}
+
+type TenantUsageRecord {
+  id: Int!
+  tenantId: ID!
+  periodStart: DateTime!
+  periodEnd: DateTime!
+  apiCalls: Int!
+  storageGb: Decimal!
+  activeUsers: Int!
+  bandwidthGb: Decimal!
+  metrics: JSON!
+}
+
+type TrafficStats {
+  deviceId: String!
+  deviceName: String!
+  timestamp: DateTime!
+  totalBytesIn: Int!
+  totalBytesOut: Int!
+  totalPacketsIn: Int!
+  totalPacketsOut: Int!
+  currentRateInBps: Float!
+  currentRateOutBps: Float!
+  peakRateInBps: Float
+  peakRateOutBps: Float
+  peakTimestamp: DateTime
+  interfaces: [InterfaceStats!]!
+  currentRateInMbps: Float!
+  currentRateOutMbps: Float!
+  totalBandwidthGbps: Float!
+}
+
+type User {
+  id: ID!
+  username: String!
+  email: String!
+  tenantId: String
+  fullName: String
+  firstName: String
+  lastName: String
+  phoneNumber: String
+  phone: String
+  phoneVerified: Boolean!
+  bio: String
+  website: String
+  location: String
+  timezone: String
+  language: String
+  avatarUrl: String
+  isActive: Boolean!
+  isVerified: Boolean!
+  isSuperuser: Boolean!
+  isPlatformAdmin: Boolean!
+  mfaEnabled: Boolean!
+  lastLogin: DateTime
+  lastLoginIp: String
+  failedLoginAttempts: Int!
+  lockedUntil: DateTime
+  createdAt: DateTime!
+  updatedAt: DateTime!
+  status: UserStatusEnum!
+  displayName: String!
+  primaryRole: String!
+  metadata: JSON
+  roles: [Role!]!
+  permissions: [Permission!]!
+  teams: [TeamMembership!]!
+  profileChanges: [ProfileChangeRecord!]!
+  rolesLegacy: [String!]!
+  permissionsLegacy: [String!]!
+}
+
+type UserConnection {
+  users: [User!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+  hasPrevPage: Boolean!
+  page: Int!
+  pageSize: Int!
+}
+
+type UserOverviewMetrics {
+  totalUsers: Int!
+  activeUsers: Int!
+  suspendedUsers: Int!
+  invitedUsers: Int!
+  verifiedUsers: Int!
+  mfaEnabledUsers: Int!
+  platformAdmins: Int!
+  superusers: Int!
+  regularUsers: Int!
+  usersLoggedInLast24h: Int!
+  usersLoggedInLast7d: Int!
+  usersLoggedInLast30d: Int!
+  neverLoggedIn: Int!
+  newUsersThisMonth: Int!
+  newUsersLastMonth: Int!
+}
+
+enum UserStatusEnum {
+  ACTIVE
+  SUSPENDED
+  INVITED
+}
+
+type WirelessClient {
+  id: ID!
+  macAddress: String!
+  hostname: String
+  ipAddress: String
+  manufacturer: String
+  accessPointId: String!
+  accessPointName: String!
+  ssid: String!
+  connectionType: ClientConnectionType!
+  frequencyBand: FrequencyBand!
+  channel: Int!
+  isAuthenticated: Boolean!
+  isAuthorized: Boolean!
+  authMethod: String
+  signalStrengthDbm: Float
+  signalQuality: SignalQuality
+  noiseFloorDbm: Float
+  snr: Float
+  txRateMbps: Float
+  rxRateMbps: Float
+  txBytes: Int!
+  rxBytes: Int!
+  txPackets: Int!
+  rxPackets: Int!
+  txRetries: Int!
+  rxRetries: Int!
+  connectedAt: DateTime!
+  lastSeenAt: DateTime!
+  uptimeSeconds: Int!
+  idleTimeSeconds: Int
+  supports80211k: Boolean!
+  supports80211r: Boolean!
+  supports80211v: Boolean!
+  maxPhyRateMbps: Float
+  customerId: String
+  customerName: String
+}
+
+type WirelessClientConnection {
+  clients: [WirelessClient!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+type WirelessDashboard {
+  totalSites: Int!
+  totalAccessPoints: Int!
+  totalClients: Int!
+  totalCoverageZones: Int!
+  onlineAps: Int!
+  offlineAps: Int!
+  degradedAps: Int!
+  clientsByBand24ghz: Int!
+  clientsByBand5ghz: Int!
+  clientsByBand6ghz: Int!
+  topApsByClients: [AccessPoint!]!
+  topApsByThroughput: [AccessPoint!]!
+  sitesWithIssues: [WirelessSiteMetrics!]!
+  totalThroughputMbps: Float!
+  averageSignalStrengthDbm: Float!
+  averageClientExperienceScore: Float!
+  clientCountTrend: [Int!]!
+  throughputTrendMbps: [Float!]!
+  offlineEventsCount: Int!
+  generatedAt: DateTime!
+}
+
+enum WirelessSecurityType {
+  OPEN
+  WEP
+  WPA
+  WPA2
+  WPA3
+  WPA2_WPA3
+}
+
+type WirelessSiteMetrics {
+  siteId: String!
+  siteName: String!
+  totalAps: Int!
+  onlineAps: Int!
+  offlineAps: Int!
+  degradedAps: Int!
+  totalClients: Int!
+  clients24ghz: Int!
+  clients5ghz: Int!
+  clients6ghz: Int!
+  averageSignalStrengthDbm: Float
+  averageSnr: Float
+  totalThroughputMbps: Float
+  totalCapacity: Int!
+  capacityUtilizationPercent: Float
+  overallHealthScore: Float!
+  rfHealthScore: Float!
+  clientExperienceScore: Float!
+}
+
+"""Workflow execution details"""
+type Workflow {
+  workflowId: String!
+  workflowType: WorkflowType!
+  status: WorkflowStatus!
+  startedAt: DateTime
+  completedAt: DateTime
+  failedAt: DateTime
+  errorMessage: String
+  retryCount: Int!
+  steps: [WorkflowStep!]!
+
+  """Workflow duration in seconds"""
+  durationSeconds: Float
+
+  """Is workflow in terminal state"""
+  isTerminal: Boolean!
+
+  """Number of completed steps"""
+  completedStepsCount: Int!
+
+  """Total number of steps"""
+  totalStepsCount: Int!
+}
+
+"""Workflow list with pagination"""
+type WorkflowConnection {
+  workflows: [Workflow!]!
+  totalCount: Int!
+  hasNextPage: Boolean!
+}
+
+"""Workflow filter input"""
+input WorkflowFilterInput {
+  workflowType: WorkflowType = null
+  status: WorkflowStatus = null
+  limit: Int! = 50
+  offset: Int! = 0
+}
+
+"""Workflow statistics"""
+type WorkflowStatistics {
+  totalWorkflows: Int!
+  pendingWorkflows: Int!
+  runningWorkflows: Int!
+  completedWorkflows: Int!
+  failedWorkflows: Int!
+  rolledBackWorkflows: Int!
+  successRate: Float!
+  averageDurationSeconds: Float!
+  totalCompensations: Int!
+
+  """Workflows by type"""
+  byType: String!
+
+  """Workflows by status"""
+  byStatus: String!
+}
+
+"""Workflow execution status"""
+enum WorkflowStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  ROLLING_BACK
+  ROLLED_BACK
+  COMPENSATED
+}
+
+"""Workflow step details"""
+type WorkflowStep {
+  stepId: String!
+  stepName: String!
+  stepOrder: Int!
+  targetSystem: String
+  status: WorkflowStepStatus!
+  startedAt: DateTime
+  completedAt: DateTime
+  failedAt: DateTime
+  errorMessage: String
+  retryCount: Int!
+  outputData: String
+}
+
+"""Workflow step status"""
+enum WorkflowStepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+  COMPENSATING
+  COMPENSATED
+  COMPENSATION_FAILED
+}
+
+"""Workflow type"""
+enum WorkflowType {
+  PROVISION_SUBSCRIBER
+  DEPROVISION_SUBSCRIBER
+  ACTIVATE_SERVICE
+  SUSPEND_SERVICE
+  TERMINATE_SERVICE
+  CHANGE_SERVICE_PLAN
+  UPDATE_NETWORK_CONFIG
+  MIGRATE_SUBSCRIBER
+}
