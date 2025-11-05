@@ -46,6 +46,7 @@ const data = await graphqlClient.request(
 **Endpoint Configuration:**
 - Default: `/api/v1/graphql` (matches backend route at `src/dotmac/platform/routers.py:881`)
 - Environment variable: `NEXT_PUBLIC_API_URL` for absolute URLs (cross-domain deployments)
+- Works in both browser and server (SSR/build) contexts
 - Custom endpoint: Pass `endpoint` in config
 
 ```tsx
@@ -57,7 +58,14 @@ const client = createGraphQLClient({
 // Absolute URL (cross-domain)
 // Set NEXT_PUBLIC_API_URL=https://api.example.com
 // Client will use: https://api.example.com/api/v1/graphql
+// Works during SSR, build-time, and browser runtime
 ```
+
+**Environment Variable Behavior:**
+- `NEXT_PUBLIC_API_URL` is checked in all contexts (browser, SSR, build-time)
+- Next.js inlines `NEXT_PUBLIC_*` vars at build time for browser bundles
+- Server-side code accesses `process.env` directly
+- No special handling needed for cross-domain SSR scenarios
 
 ### TanStack Query Integration (Post-Codegen)
 

@@ -30,7 +30,7 @@ export interface GraphQLClientConfig {
   /**
    * GraphQL endpoint URL
    * Defaults to /api/v1/graphql (matching backend endpoint)
-   * Supports NEXT_PUBLIC_API_URL env var for absolute URLs
+   * Supports NEXT_PUBLIC_API_URL env var for absolute URLs (works in SSR/build/browser)
    */
   endpoint?: string;
 
@@ -70,14 +70,16 @@ export class GraphQLClient {
   /**
    * Get default GraphQL endpoint
    * Matches Apollo client configuration for consistency
+   * Works in both browser and server (SSR/build) contexts
    */
   private getDefaultEndpoint(): string {
-    // In browser environment, check for NEXT_PUBLIC_API_URL
-    if (typeof window !== 'undefined' && typeof process !== 'undefined') {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (apiUrl) {
-        return `${apiUrl}/api/v1/graphql`;
-      }
+    // Check for NEXT_PUBLIC_API_URL in both browser and server contexts
+    // Next.js inlines NEXT_PUBLIC_* vars at build time for browser bundles
+    // Server-side code has direct access to process.env
+    const apiUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined;
+
+    if (apiUrl) {
+      return `${apiUrl}/api/v1/graphql`;
     }
 
     // Default to relative path (works with Next.js rewrites)
