@@ -25,6 +25,7 @@ import { apiClient } from "@/lib/api/client";
 import { DollarSign, CreditCard, Building2, Wallet, Check, Upload, X } from "lucide-react";
 import { type Invoice, PaymentMethods, type PaymentMethod } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface RecordPaymentModalProps {
   isOpen: boolean;
@@ -50,6 +51,7 @@ export function RecordPaymentModal({
   onSuccess,
 }: RecordPaymentModalProps) {
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
 
@@ -152,9 +154,11 @@ export function RecordPaymentModal({
       }
 
       if (paymentAmount > totalAmountDue) {
-        const confirmed = confirm(
-          `Payment amount ($${paymentAmount.toFixed(2)}) exceeds total amount due ($${totalAmountDue.toFixed(2)}). Continue anyway?`,
-        );
+        const confirmed = await confirmDialog({
+          title: "Confirm overpayment",
+          description: `Payment amount (${formatCurrency(paymentAmount)}) exceeds total amount due (${formatCurrency(totalAmountDue)}). Continue anyway?`,
+          confirmText: "Record payment",
+        });
         if (!confirmed) {
           setIsSubmitting(false);
           return;

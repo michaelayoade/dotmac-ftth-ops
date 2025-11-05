@@ -50,6 +50,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Separator } from '@/components/ui/separator';
 import { platformConfig } from '@/lib/config';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirmDialog } from '@/components/ui/confirm-dialog-provider';
 
 // Types
 interface ReconciliationSession {
@@ -188,6 +189,7 @@ export default function ReconciliationDetailPage() {
   const id = params.id as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [activeTab, setActiveTab] = useState('overview');
   const [isAddPaymentDialogOpen, setIsAddPaymentDialogOpen] = useState(false);
   const [addPaymentForm, setAddPaymentForm] = useState<ReconcilePaymentRequest>({
@@ -250,22 +252,26 @@ export default function ReconciliationDetailPage() {
     },
   });
 
-  const handleComplete = () => {
-    if (
-      confirm(
-        'Are you sure you want to complete this reconciliation? This will lock the reconciled payments.'
-      )
-    ) {
+  const handleComplete = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Complete reconciliation',
+      description:
+        'Are you sure you want to complete this reconciliation? This will lock the reconciled payments.',
+      confirmText: 'Complete',
+    });
+    if (confirmed) {
       completeMutation.mutate();
     }
   };
 
-  const handleApprove = () => {
-    if (
-      confirm(
-        'Are you sure you want to approve this reconciliation? This action requires finance team authority.'
-      )
-    ) {
+  const handleApprove = async () => {
+    const confirmed = await confirmDialog({
+      title: 'Approve reconciliation',
+      description:
+        'Are you sure you want to approve this reconciliation? This action requires finance team authority.',
+      confirmText: 'Approve',
+    });
+    if (confirmed) {
       approveMutation.mutate();
     }
   };

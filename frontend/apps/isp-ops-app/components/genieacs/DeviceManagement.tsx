@@ -39,9 +39,11 @@ import {
   DeviceResponse,
   TaskResponse,
 } from "@/types/genieacs";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 export function DeviceManagement() {
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const [devices, setDevices] = useState<DeviceInfo[]>([]);
   const [stats, setStats] = useState<DeviceStatsResponse | null>(null);
@@ -131,7 +133,13 @@ export function DeviceManagement() {
   };
 
   const handleDeleteDevice = async (deviceId: string) => {
-    if (!confirm(`Are you sure you want to delete device ${deviceId}?`)) {
+    const confirmed = await confirmDialog({
+      title: "Delete device",
+      description: `Are you sure you want to delete device ${deviceId}?`,
+      confirmText: "Delete device",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

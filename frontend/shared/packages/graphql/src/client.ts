@@ -178,15 +178,17 @@ export function createGraphQLClient(config?: GraphQLClientConfig): GraphQLClient
 /**
  * Fetcher function for TanStack Query / GraphQL Code Generator
  * This is the signature expected by @graphql-codegen/typescript-react-query
+ * Returns a curried function that can be called with variables and options
  */
 export function graphqlFetcher<TData, TVariables>(
   query: string,
   variables?: TVariables,
-  options?: { headers?: Record<string, string> },
-): Promise<TData> {
-  const client = options?.headers
-    ? new GraphQLClient({ headers: options.headers })
-    : graphqlClient;
+) {
+  return (options?: { headers?: Record<string, string> }): Promise<TData> => {
+    const client = options?.headers
+      ? new GraphQLClient({ headers: options.headers })
+      : graphqlClient;
 
-  return client.request<TData, TVariables>(query, variables);
+    return client.request<TData, TVariables>(query, variables);
+  };
 }

@@ -31,6 +31,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -76,6 +77,7 @@ function SalesOrdersPageContent() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch orders
   const { data: orders = [], isLoading, refetch } = useQuery<Order[]>({
@@ -399,8 +401,13 @@ function SalesOrdersPageContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (confirm(`Process order ${order.order_number}?`)) {
+                      onClick={async () => {
+                        const confirmed = await confirmDialog({
+                          title: "Process order",
+                          description: `Process order ${order.order_number}?`,
+                          confirmText: "Process",
+                        });
+                        if (confirmed) {
                           processMutation.mutate(order.id);
                         }
                       }}
@@ -415,8 +422,14 @@ function SalesOrdersPageContent() {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => {
-                        if (confirm(`Cancel order ${order.order_number}?`)) {
+                      onClick={async () => {
+                        const confirmed = await confirmDialog({
+                          title: "Cancel order",
+                          description: `Cancel order ${order.order_number}?`,
+                          confirmText: "Cancel order",
+                          variant: "destructive",
+                        });
+                        if (confirmed) {
                           cancelMutation.mutate(order.id);
                         }
                       }}

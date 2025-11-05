@@ -25,6 +25,7 @@ import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import Link from "next/link";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface Preset {
   id: string;
@@ -56,6 +57,7 @@ function PresetsPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch presets
   const { data: presets = [], isLoading } = useQuery<Preset[]>({
@@ -260,10 +262,17 @@ function PresetsPageContent() {
     updateMutation.mutate({ id: selectedPreset.id, data: formData });
   };
 
-  const handleDelete = (preset: Preset) => {
-    if (confirm(`Are you sure you want to delete the preset "${preset.name}"?`)) {
-      deleteMutation.mutate(preset.id);
+  const handleDelete = async (preset: Preset) => {
+    const confirmed = await confirmDialog({
+      title: "Delete preset",
+      description: `Are you sure you want to delete the preset "${preset.name}"?`,
+      confirmText: "Delete preset",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate(preset.id);
   };
 
   const filteredPresets = presets.filter(
@@ -402,7 +411,9 @@ function PresetsPageContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleDelete(preset)}
+                    onClick={() => {
+                      void handleDelete(preset);
+                    }}
                     className="text-destructive hover:text-destructive"
                   >
                     <Trash2 className="h-3 w-3" />

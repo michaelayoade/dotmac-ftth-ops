@@ -29,6 +29,7 @@ import {
 import type { CompanyBankAccountResponse } from "@/lib/services/bank-accounts-service";
 import { BankAccountDialog } from "./BankAccountDialog";
 import { BankAccountDetailsDialog } from "./BankAccountDetailsDialog";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 export function BankAccountsTab() {
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -39,6 +40,7 @@ export function BankAccountsTab() {
   const { data: accounts, isLoading } = useBankAccounts(includeInactive);
   const verifyAccount = useVerifyBankAccount();
   const deactivateAccount = useDeactivateBankAccount();
+  const confirmDialog = useConfirmDialog();
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -86,9 +88,16 @@ export function BankAccountsTab() {
   };
 
   const handleDeactivate = async (accountId: number) => {
-    if (confirm("Are you sure you want to deactivate this bank account?")) {
-      await deactivateAccount.mutateAsync(accountId);
+    const confirmed = await confirmDialog({
+      title: "Deactivate bank account",
+      description: "Are you sure you want to deactivate this bank account?",
+      confirmText: "Deactivate",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    await deactivateAccount.mutateAsync(accountId);
   };
 
   if (isLoading) {
@@ -154,7 +163,7 @@ export function BankAccountsTab() {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
+                      <Button variant="ghost" size="icon" aria-label="Open actions menu">
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>

@@ -51,10 +51,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 export default function QuotesPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -134,7 +136,7 @@ export default function QuotesPage() {
       (quote) =>
         quote.quote_number.toLowerCase().includes(query) ||
         quote.service_plan_name.toLowerCase().includes(query) ||
-        (quote.bandwidth ?? "").toLowerCase().includes(query),
+        quote.bandwidth?.toLowerCase().includes(query),
     );
   }, [quotes, searchQuery]);
 
@@ -204,9 +206,12 @@ export default function QuotesPage() {
 
   const handleDeleteQuote = useCallback(
     async (quote: Quote) => {
-      const confirmed = confirm(
-        `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
-      );
+      const confirmed = await confirmDialog({
+        title: "Delete quote",
+        description: `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
+        confirmText: "Delete quote",
+        variant: "destructive",
+      });
       if (!confirmed) return;
 
       try {
@@ -225,7 +230,7 @@ export default function QuotesPage() {
         });
       }
     },
-    [deleteQuote, refetch, toast],
+    [confirmDialog, deleteQuote, refetch, toast],
   );
 
   const columns: ColumnDef<Quote>[] = useMemo(
@@ -328,7 +333,7 @@ export default function QuotesPage() {
         cell: ({ row }) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
+              <Button variant="ghost" size="sm" aria-label="Open actions menu">
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
@@ -398,11 +403,17 @@ export default function QuotesPage() {
     {
       label: "Delete Quotes",
       icon: Trash2,
+      variant: "destructive",
       action: async (selectedQuotes) => {
-        const confirmed = confirm(
-          `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
-        );
-        if (!confirmed) return;
+        const confirmed = await confirmDialog({
+          title: "Delete quotes",
+          description: `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
+          confirmText: "Delete quotes",
+          variant: "destructive",
+        });
+        if (!confirmed) {
+          return;
+        }
 
         for (const quote of selectedQuotes) {
           try {

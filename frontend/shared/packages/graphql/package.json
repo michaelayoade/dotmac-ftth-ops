@@ -11,17 +11,23 @@
     "README.md"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
+    "build": "tsup src/index.ts --format cjs,esm --clean --external @apollo/client --external react --external graphql",
+    "dev": "tsup src/index.ts --format cjs,esm --watch --external @apollo/client --external react --external graphql",
     "lint": "eslint src --ext .ts,.tsx",
     "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@apollo/client": "^3.14.0",
     "@dotmac/auth": "workspace:*",
     "@dotmac/http-client": "workspace:*",
     "@tanstack/react-query": "^5.59.20",
-    "graphql": "^16.9.0"
+    "graphql": "^16.9.0",
+    "react": "^18.3.1"
+  },
+  "peerDependencies": {
+    "@apollo/client": "^3.14.0",
+    "react": "^18.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",

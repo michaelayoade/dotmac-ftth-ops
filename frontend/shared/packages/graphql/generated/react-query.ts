@@ -1,10 +1,10 @@
 import {
   useQuery,
   useInfiniteQuery,
-  type UseQueryOptions,
-  type UseInfiniteQueryOptions,
+  UseQueryOptions,
+  UseInfiniteQueryOptions,
 } from "@tanstack/react-query";
-import type { graphqlFetcher } from "@dotmac/graphql";
+import { graphqlFetcher } from "../src/client";
 export type Maybe<T> = T | null | undefined;
 export type InputMaybe<T> = T | null | undefined;
 export type Exact<T extends { [key: string]: unknown }> = { [K in keyof T]: T[K] };

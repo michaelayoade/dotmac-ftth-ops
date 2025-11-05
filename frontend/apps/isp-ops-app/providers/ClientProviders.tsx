@@ -20,6 +20,7 @@ import {
   SkipToMainContent,
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
+import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog-provider";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -32,13 +33,15 @@ export function ClientProviders({ children }: { children: ReactNode }) {
 
   const appProviders = (
     <AppConfigProvider value={platformConfig}>
-      <BrandingProvider>
-        <SkipToMainContent />
-        {children}
-        <LiveRegionAnnouncer />
-        <KeyboardShortcuts />
-      </BrandingProvider>
-      <ToastContainer />
+      <ConfirmDialogProvider>
+        <BrandingProvider>
+          <SkipToMainContent />
+          {children}
+          <LiveRegionAnnouncer />
+          <KeyboardShortcuts />
+        </BrandingProvider>
+        <ToastContainer />
+      </ConfirmDialogProvider>
     </AppConfigProvider>
   );
 

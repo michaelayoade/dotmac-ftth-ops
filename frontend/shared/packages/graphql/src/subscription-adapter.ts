@@ -134,7 +134,7 @@ export function hasSubscriptionData<TData>(
  * >(DEVICE_UPDATES_SUBSCRIPTION);
  * ```
  */
-export function createSubscriptionHook<TData = any, TVariables = any>(
+export function createSubscriptionHook<TData = any, TVariables extends Record<string, any> = Record<string, any>>(
   subscription: DocumentNode,
 ) {
   return (options?: SubscriptionOptions<TData, TVariables>) => {

@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import { logger } from "@/lib/logger";
 import { formatDistanceToNow } from "date-fns";
 
@@ -77,6 +78,7 @@ export default function ContactDetailPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const contactId = params.id as string;
+  const confirmDialog = useConfirmDialog();
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<Contact>>({});
@@ -161,14 +163,17 @@ export default function ContactDetailPage() {
     updateMutation.mutate(formData);
   };
 
-  const handleDelete = () => {
-    if (
-      confirm(
-        `Are you sure you want to delete this contact? This action cannot be undone.`
-      )
-    ) {
-      deleteMutation.mutate();
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: "Delete contact",
+      description: "Are you sure you want to delete this contact? This action cannot be undone.",
+      confirmText: "Delete contact",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    deleteMutation.mutate();
   };
 
   if (isLoading) {
@@ -231,7 +236,12 @@ export default function ContactDetailPage() {
               <Button variant="outline" onClick={() => setIsEditing(true)}>
                 Edit
               </Button>
-              <Button variant="destructive" onClick={handleDelete}>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  void handleDelete();
+                }}
+              >
                 <Trash2 className="mr-2 h-4 w-4" />
                 Delete
               </Button>

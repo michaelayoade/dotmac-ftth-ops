@@ -32,6 +32,7 @@ import {
 } from "lucide-react";
 import { QuotePDFGenerator } from "@/lib/pdf/quote-pdf";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface QuoteDetailModalProps {
   isOpen: boolean;
@@ -52,6 +53,7 @@ export function QuoteDetailModal({
   const { sendQuote, acceptQuote, rejectQuote, deleteQuote } = useQuotes();
   const [isProcessing, setIsProcessing] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<any>(null);
+  const confirmDialog = useConfirmDialog();
 
   // Fetch company info from settings
   useEffect(() => {
@@ -111,9 +113,11 @@ export function QuoteDetailModal({
   };
 
   const handleAccept = async () => {
-    const confirmed = confirm(
-      `Accept quote ${quote.quote_number}? This will mark it as accepted and ready for conversion.`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Accept quote",
+      description: `Accept quote ${quote.quote_number}? This will mark it as accepted and ready for conversion.`,
+      confirmText: "Accept",
+    });
     if (!confirmed) return;
 
     setIsProcessing(true);
@@ -164,9 +168,12 @@ export function QuoteDetailModal({
   };
 
   const handleDelete = async () => {
-    const confirmed = confirm(
-      `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
-    );
+    const confirmed = await confirmDialog({
+      title: "Delete quote",
+      description: `Are you sure you want to delete quote ${quote.quote_number}? This action cannot be undone.`,
+      confirmText: "Delete",
+      variant: "destructive",
+    });
     if (!confirmed) return;
 
     setIsProcessing(true);

@@ -61,9 +61,9 @@ const config: CodegenConfig = {
       ],
 
       config: {
-        // Use our shared fetcher
+        // Use our shared fetcher (relative path from generated/ to src/)
         fetcher: {
-          func: '@dotmac/graphql#graphqlFetcher',
+          func: '../src/client#graphqlFetcher',
           isReactHook: false,
         },
 
@@ -73,7 +73,8 @@ const config: CodegenConfig = {
         addInfiniteQuery: true,
 
         // Type-safety improvements
-        useTypeImports: true,
+        // Note: useTypeImports disabled to allow fetcher function imports (not type-only)
+        useTypeImports: false,
         strictScalars: true,
 
         scalars: {
