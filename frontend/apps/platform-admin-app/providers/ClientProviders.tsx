@@ -14,14 +14,13 @@ import { ToastContainer } from "@/components/ui/toast";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
 import { PortalThemeProvider } from "@/lib/design-system/portal-themes";
-import { PortalSwitcher, PortalThemeDebug } from "@/components/dev/PortalSwitcher";
-import { DesignTokenExporter } from "@/components/dev/DesignTokenExporter";
 import {
   AccessibilityProvider,
   LiveRegionAnnouncer,
   SkipToMainContent,
   KeyboardShortcuts,
 } from "@/lib/design-system/accessibility";
+import { ConfirmDialogProvider } from "@/components/ui/confirm-dialog-provider";
 
 export function ClientProviders({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -34,17 +33,15 @@ export function ClientProviders({ children }: { children: ReactNode }) {
 
   const appProviders = (
     <AppConfigProvider value={platformConfig}>
-      <BrandingProvider>
-        <SkipToMainContent />
-        {children}
-        <LiveRegionAnnouncer />
-        <KeyboardShortcuts />
-      </BrandingProvider>
-      <ToastContainer />
-      {/* Development-only tools */}
-      <PortalSwitcher />
-      <PortalThemeDebug />
-      <DesignTokenExporter />
+      <ConfirmDialogProvider>
+        <BrandingProvider>
+          <SkipToMainContent />
+          {children}
+          <LiveRegionAnnouncer />
+          <KeyboardShortcuts />
+        </BrandingProvider>
+        <ToastContainer />
+      </ConfirmDialogProvider>
     </AppConfigProvider>
   );
 

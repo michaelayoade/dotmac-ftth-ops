@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 const statusColors = {
   draft: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
@@ -62,6 +63,7 @@ export default function CreditNoteDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const creditNoteId = params.id as string;
 
@@ -128,7 +130,13 @@ export default function CreditNoteDetailPage() {
   const handleVoidCreditNote = useCallback(async () => {
     if (!creditNote) return;
 
-    if (!confirm("Are you sure you want to void this credit note? This action cannot be undone.")) {
+    const confirmed = await confirmDialog({
+      title: "Void credit note",
+      description: "Are you sure you want to void this credit note? This action cannot be undone.",
+      confirmText: "Void credit note",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -153,7 +161,7 @@ export default function CreditNoteDetailPage() {
     } finally {
       setActionLoading(false);
     }
-  }, [creditNote, fetchCreditNote, toast]);
+  }, [creditNote, confirmDialog, fetchCreditNote, toast]);
 
   const handleApplyCreditNote = useCallback(async () => {
     if (!creditNote) return;

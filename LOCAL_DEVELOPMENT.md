@@ -30,7 +30,7 @@ cp .env.local.example .env.local
 # 2. Load environment
 source .env.local
 
-# 3. Start backend
+# 3. Start backend (delegates to scripts/quick-backend-start.sh)
 cd frontend && pnpm dev:backend
 ```
 

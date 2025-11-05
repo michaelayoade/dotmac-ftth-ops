@@ -41,6 +41,23 @@ const hydrateTokensFromStorage = () => {
   setAuthHeader(getOperatorAccessToken());
 };
 
+/**
+ * Convert unknown error to a Record for logging
+ */
+const errorToLogContext = (error: unknown): Record<string, unknown> => {
+  if (error instanceof Error) {
+    return {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+    };
+  }
+  if (typeof error === "object" && error !== null) {
+    return error as Record<string, unknown>;
+  }
+  return { error: String(error) };
+};
+
 interface UserPermissions {
   effective_permissions?: Array<{ name: string }>;
   [key: string]: unknown;
@@ -103,7 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             localStorage.setItem("tenant_id", userData.tenant_id);
           } catch (error) {
-            logger.debug("Unable to persist tenant_id", error);
+            logger.debug("Unable to persist tenant_id", errorToLogContext(error));
           }
         }
 
@@ -116,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             } catch (tokenErr) {
               logger.warn(
                 "Failed to refresh auth token during auth check",
-                tokenErr instanceof Error ? tokenErr : new Error(String(tokenErr)),
+                errorToLogContext(tokenErr),
               );
             }
           } else {
@@ -151,7 +168,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           localStorage.removeItem("tenant_id");
         } catch (error) {
-          logger.debug("Unable to clear tenant_id from localStorage", error);
+          logger.debug("Unable to clear tenant_id from localStorage", errorToLogContext(error));
         }
         clearTokens();
       }
@@ -196,7 +213,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           try {
             localStorage.setItem("tenant_id", authResponse.user.tenant_id);
           } catch (error) {
-            logger.debug("Unable to persist tenant_id", error);
+            logger.debug("Unable to persist tenant_id", errorToLogContext(error));
           }
         }
 
@@ -248,7 +265,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         localStorage.removeItem("tenant_id");
       } catch (error) {
-        logger.debug("Unable to clear tenant_id from localStorage", error);
+        logger.debug("Unable to clear tenant_id from localStorage", errorToLogContext(error));
       }
       clearTokens();
       router.push("/login");

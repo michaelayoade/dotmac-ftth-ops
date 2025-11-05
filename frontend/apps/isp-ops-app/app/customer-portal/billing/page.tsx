@@ -86,7 +86,7 @@ export default function CustomerBillingPage() {
 
   const defaultMethodId =
     defaultPaymentMethod?.payment_method_id ||
-    paymentMethods.find((method) => method.is_default)?.payment_method_id ||
+    paymentMethods.find((method: { is_default: boolean }) => method.is_default)?.payment_method_id ||
     paymentMethods[0]?.payment_method_id ||
     null;
 
@@ -526,7 +526,7 @@ export default function CustomerBillingPage() {
                     variant={autoPayPaymentMethod ? "destructive" : "outline"}
                     onClick={async () => {
                       try {
-                        await toggleAutoPay(defaultPaymentMethod.payment_method_id);
+                        await toggleAutoPay(defaultPaymentMethod.payment_method_id, !autoPayPaymentMethod);
                         toast({
                           title: autoPayPaymentMethod ? "AutoPay Disabled" : "AutoPay Enabled",
                           description: autoPayPaymentMethod

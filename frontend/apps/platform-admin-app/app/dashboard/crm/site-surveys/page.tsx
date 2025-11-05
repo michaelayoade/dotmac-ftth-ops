@@ -50,9 +50,11 @@ import {
 import { ScheduleSurveyModal } from "@/components/crm/ScheduleSurveyModal";
 import { CompleteSurveyModal } from "@/components/crm/CompleteSurveyModal";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 export default function SiteSurveysPage() {
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [selectedSurvey, setSelectedSurvey] = useState<SiteSurvey | null>(null);
@@ -160,7 +162,13 @@ export default function SiteSurveysPage() {
   };
 
   const handleCancelSurvey = async (survey: SiteSurvey) => {
-    if (!confirm(`Are you sure you want to cancel survey ${survey.survey_number}?`)) {
+    const confirmed = await confirmDialog({
+      title: "Cancel site survey",
+      description: `Are you sure you want to cancel survey ${survey.survey_number}?`,
+      confirmText: "Cancel survey",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

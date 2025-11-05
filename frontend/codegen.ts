@@ -13,8 +13,8 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
  * Run: pnpm graphql:codegen
  */
 const config: CodegenConfig = {
-  // Use committed schema snapshot for deterministic builds
-  schema: './graphql-schema.json',
+  // Use committed schema snapshot for deterministic builds (SDL format)
+  schema: './graphql-schema.graphql',
 
   // Search for .graphql files in both apps
   documents: [
@@ -41,6 +41,7 @@ const config: CodegenConfig = {
           Date: 'string',
           JSON: 'Record<string, any>',
           UUID: 'string',
+          Decimal: 'string',
         },
 
         // Don't generate unused types
@@ -80,6 +81,7 @@ const config: CodegenConfig = {
           Date: 'string',
           JSON: 'Record<string, any>',
           UUID: 'string',
+          Decimal: 'string',
         },
 
         // Hook naming

@@ -299,7 +299,7 @@ const allSections: NavSection[] = [
     icon: ArrowLeftRight,
     href: "/dashboard/data-transfer",
     permission: "admin",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "Import/Export",
@@ -315,7 +315,7 @@ const allSections: NavSection[] = [
     icon: Briefcase,
     href: "/dashboard/jobs",
     permission: "jobs:read",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "All Jobs",
@@ -508,7 +508,7 @@ const allSections: NavSection[] = [
     icon: Plug,
     href: "/dashboard/integrations",
     permission: "admin",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "All Integrations",
@@ -524,7 +524,7 @@ const allSections: NavSection[] = [
     icon: Puzzle,
     href: "/dashboard/plugins",
     permission: "admin",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "All Plugins",
@@ -540,7 +540,7 @@ const allSections: NavSection[] = [
     icon: ToggleLeft,
     href: "/dashboard/feature-flags",
     permission: "admin",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "All Flags",
@@ -570,7 +570,7 @@ const allSections: NavSection[] = [
     label: "Security & Access",
     icon: Shield,
     href: "/dashboard/security-access",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       { name: "Overview", href: "/dashboard/security-access", icon: BarChart3 },
       {
@@ -605,7 +605,7 @@ const allSections: NavSection[] = [
     icon: Activity,
     href: "/dashboard/infrastructure",
     permission: "infrastructure.read",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "Overview",
@@ -645,7 +645,7 @@ const allSections: NavSection[] = [
     icon: Shield,
     href: "/dashboard/platform-admin",
     permission: "platform:admin",
-    portals: ["admin"],
+    portals: ["ispAdmin"],
     items: [
       {
         name: "Overview",

@@ -34,11 +34,13 @@ import {
   Eye,
 } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import { CommunicationChannel, type ListTemplatesParams, getTimeAgo } from "@/types/communications";
 
 export default function TemplatesPage() {
   const { toast } = useToast();
   const deleteTemplate = useDeleteTemplate();
+  const confirmDialog = useConfirmDialog();
 
   const [filters, setFilters] = useState<ListTemplatesParams>({
     page: 1,
@@ -51,10 +53,14 @@ export default function TemplatesPage() {
     setFilters((prev) => ({ ...prev, [key]: value, page: 1 }));
   };
 
-  const handleDelete = (id: string, name: string) => {
-    if (
-      !confirm(`Are you sure you want to delete template "${name}"? This action cannot be undone.`)
-    ) {
+  const handleDelete = async (id: string, name: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete template",
+      description: `Are you sure you want to delete template "${name}"? This action cannot be undone.`,
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

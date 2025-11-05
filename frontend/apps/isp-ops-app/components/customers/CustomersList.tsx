@@ -181,7 +181,7 @@ function CustomerRow({ customer, onSelect, onEdit, onDelete }: CustomerRowProps)
       try {
         localStorage.setItem("customer_access_token", data.access_token);
       } catch (error) {
-        logger.debug("Unable to persist customer access token", error);
+        logger.debug("Unable to persist customer access token", { error: error instanceof Error ? error.message : String(error) });
       }
 
       // Open customer portal in new tab

@@ -11,9 +11,11 @@
  * - 78% smaller payload
  * - No N+1 database queries
  * - Type-safe from backend to frontend
+ *
+ * Migration: Migrated from Apollo to TanStack Query via @dotmac/graphql
  */
 
-import { useSubscriberDashboardQuery } from "@/lib/graphql/generated";
+import { useSubscriberDashboardQuery } from "@dotmac/graphql/generated/react-query";
 import { logger } from "@/lib/logger";
 
 interface UseSubscriberDashboardOptions {
@@ -25,17 +27,19 @@ interface UseSubscriberDashboardOptions {
 export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOptions = {}) {
   const { limit = 50, search, enabled = true } = options;
 
-  const { data, loading, error, refetch } = useSubscriberDashboardQuery({
-    variables: {
+  const { data, isLoading, error, refetch } = useSubscriberDashboardQuery(
+    {
       limit,
       search: search || undefined,
     },
-    skip: !enabled,
-    pollInterval: 30000, // Refresh every 30 seconds
-    onError: (err) => {
-      logger.error("GraphQL subscriber dashboard query failed", err);
+    {
+      enabled,
+      refetchInterval: 30000, // Refresh every 30 seconds
+      onError: (err) => {
+        logger.error("GraphQL subscriber dashboard query failed", err);
+      },
     },
-  });
+  );
 
   // Transform GraphQL data to match existing component expectations
   const subscribers = data?.subscribers ?? [];
@@ -66,8 +70,8 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
       totalDataUsageMb: metrics?.totalDataUsageMb ?? 0,
     },
 
-    // Loading states
-    loading,
+    // Loading states (TanStack Query uses isLoading, mapping to loading for backward compat)
+    loading: isLoading,
     error: error?.message,
 
     // Actions

@@ -539,9 +539,9 @@ ENABLE_PLATFORM_ROUTES=true
 
 If you need to add a 7th portal:
 
-1. **Create route structure:**
+1. **Create a dedicated app workspace (copy one of the existing apps as a template) and scaffold the route structure:**
    ```bash
-   mkdir -p frontend/apps/base-app/app/new-portal
+   mkdir -p frontend/apps/new-portal-app/app/new-portal
    ```
 
 2. **Add layout:**

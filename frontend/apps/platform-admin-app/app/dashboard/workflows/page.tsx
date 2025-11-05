@@ -31,6 +31,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -61,6 +62,7 @@ function WorkflowsPageContent() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch workflows
   const { data: workflows = [], isLoading, refetch } = useQuery<Workflow[]>({
@@ -331,8 +333,14 @@ function WorkflowsPageContent() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => {
-                      if (confirm(`Delete workflow "${workflow.name}"?`)) {
+                    onClick={async () => {
+                      const confirmed = await confirmDialog({
+                        title: "Delete workflow",
+                        description: `Delete workflow "${workflow.name}"?`,
+                        confirmText: "Delete",
+                        variant: "destructive",
+                      });
+                      if (confirmed) {
                         deleteMutation.mutate(workflow.id);
                       }
                     }}

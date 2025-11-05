@@ -83,8 +83,9 @@ docker compose -f docker-compose.base.yml up platform-backend
 
 For production/staging, bake the image and run it via Docker Compose (see `docker-compose.base.yml`) or your orchestrator.
 
-> Need bare-metal debugging? Launch `make dev-host`, but update `OBSERVABILITY__*` URLs to
-> `http://localhost` or set `OBSERVABILITY__OTEL_ENABLED=false` first so required health checks pass.
+> Need bare-metal debugging? `make dev-host` now routes through `scripts/quick-backend-start.sh`.
+> Create `.env.local` from `.env.local.example` first so the script can apply the host defaults
+> (`OBSERVABILITY__OTEL_ENDPOINT=http://localhost:4318`, etc.) before starting the API.
 
 ---
 
@@ -237,4 +238,4 @@ Place these behind nginx/traefik and enable TLS for staging/production traffic.
   docker compose -f docker-compose.isp.yml ps
   ```
 
-For advanced debugging, refer to `docs/TROUBLESHOOTING_PLAYBOOKS.md` and `docs/NETWORK_DIAGNOSTICS_IMPLEMENTATION.md`.
+For advanced debugging, refer to `docs/TROUBLESHOOTING_PLAYBOOKS.md`.

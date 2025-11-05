@@ -20,9 +20,9 @@ interface EmptyStateProps {
   title: string;
 
   /**
-   * Description text
+   * Description text or element
    */
-  description?: string;
+  description?: React.ReactNode;
 
   /**
    * Primary action button

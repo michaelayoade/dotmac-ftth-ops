@@ -25,6 +25,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -46,6 +47,7 @@ function FeatureFlagDetailsPageContent() {
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);
   const [editedDescription, setEditedDescription] = useState("");
+  const confirmDialog = useConfirmDialog();
 
   // Fetch flag details
   const { data: flag, isLoading, refetch } = useQuery<FeatureFlag>({
@@ -174,8 +176,14 @@ function FeatureFlagDetailsPageContent() {
     updateDescriptionMutation.mutate(editedDescription);
   };
 
-  const handleDelete = () => {
-    if (confirm(`Are you sure you want to delete the feature flag "${flagName}"?`)) {
+  const handleDelete = async () => {
+    const confirmed = await confirmDialog({
+      title: "Delete feature flag",
+      description: `Are you sure you want to delete the feature flag "${flagName}"?`,
+      confirmText: "Delete flag",
+      variant: "destructive",
+    });
+    if (confirmed) {
       deleteFlagMutation.mutate();
     }
   };

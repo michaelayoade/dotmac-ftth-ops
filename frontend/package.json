@@ -26,8 +26,8 @@
     "e2e:debug": "playwright test --debug",
     "graphql:codegen": "graphql-codegen --config codegen.ts",
     "graphql:codegen:watch": "graphql-codegen --config codegen.ts --watch",
-    "graphql:export-schema": "echo 'Run from project root: poetry run python -m strawberry export-schema dotmac.platform.graphql.schema:schema --output frontend/graphql-schema.json'",
-    "graphql:check-schema": "test -f graphql-schema.json || (echo 'Error: graphql-schema.json not found. Run pnpm graphql:export-schema' && exit 1)",
+    "graphql:export-schema": "echo 'Run from project root: poetry run python -m strawberry export-schema dotmac.platform.graphql.schema:schema --output frontend/graphql-schema.graphql'",
+    "graphql:check-schema": "test -f graphql-schema.graphql || (echo 'Error: graphql-schema.graphql not found. Run pnpm graphql:export-schema' && exit 1)",
     "clean": "pnpm -r run clean",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\""

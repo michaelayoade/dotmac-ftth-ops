@@ -30,6 +30,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 
@@ -60,6 +61,7 @@ function PluginsPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch plugin instances
   const { data, isLoading, refetch } = useQuery({
@@ -119,7 +121,13 @@ function PluginsPageContent() {
   };
 
   const handleDelete = async (pluginId: string) => {
-    if (!confirm("Are you sure you want to delete this plugin instance?")) {
+    const confirmed = await confirmDialog({
+      title: "Delete plugin instance",
+      description: "Are you sure you want to delete this plugin instance?",
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) {
       return;
     }
 

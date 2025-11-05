@@ -20,13 +20,10 @@ This repository now ships a lean documentation set. Everything you are likely to
 
 ## Feature Guides & Runbooks
 
-- [NETWORK_DIAGNOSTICS_IMPLEMENTATION.md](NETWORK_DIAGNOSTICS_IMPLEMENTATION.md) — RADIUS session control, ping, and traceroute tooling.
 - [DYNAMIC_ALERTING_SETUP.md](DYNAMIC_ALERTING_SETUP.md) — alert routing, Prometheus/Alertmanager configuration, and CLI helpers.
 - [FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md) — data model, migrations, and APIs for fiber plant management.
-- [SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md](SUBSCRIBER_BULK_OPERATIONS_IMPLEMENTATION.md) — bulk suspend/activate/delete flows in the subscriber UI.
-- [FRONTEND_BACKEND_ALIGNMENT_FIX.md](FRONTEND_BACKEND_ALIGNMENT_FIX.md) — current API contract for RADIUS disconnect actions.
 - [WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md](WEBSOCKET_JOB_CAMPAIGN_CONTROLS.md) — controlling long-running jobs over WebSockets.
-- [WIREGUARD_FRONTEND_IMPLEMENTATION.md](WIREGUARD_FRONTEND_IMPLEMENTATION.md) & [WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md](WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md) — provisioning and UI notes for WireGuard.
+- [WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md](WIREGUARD_VPN_IMPLEMENTATION_BLUEPRINT.md) — provisioning model and backend workflows for WireGuard.
 - [TENANT_ONBOARDING_IMPLEMENTATION.md](TENANT_ONBOARDING_IMPLEMENTATION.md) — tenant enrollment, RBAC, and setup flows.
 - [VAULT_SECRETS_MIGRATION.md](VAULT_SECRETS_MIGRATION.md) — secret management rollout plan.
 - [ALARM_ARCHIVAL.md](ALARM_ARCHIVAL.md) & [ALARM_NOTIFICATION_TESTS.md](ALARM_NOTIFICATION_TESTS.md) — alarm retention and alert-testing guidance.

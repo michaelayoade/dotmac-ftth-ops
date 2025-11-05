@@ -63,6 +63,8 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
+import type { ConfirmDialogVariant } from "@/components/ui/confirm-dialog";
 
 // ============================================================================
 // Types
@@ -75,6 +77,9 @@ export interface BulkAction<TData> {
   variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   disabled?: (selectedRows: TData[]) => boolean;
   confirmMessage?: string;
+  confirmTitle?: string;
+  confirmConfirmText?: string;
+  confirmVariant?: ConfirmDialogVariant;
 }
 
 export interface QuickFilter<TData> {
@@ -254,6 +259,7 @@ export function EnhancedDataTable<TData, TValue>({
   const [activeQuickFilters, setActiveQuickFilters] = React.useState<string[]>(() =>
     quickFilters.filter((filter) => filter.defaultActive).map((filter) => filter.label),
   );
+  const confirmDialog = useConfirmDialog();
 
   React.useEffect(() => {
     setActiveQuickFilters((previous) => {
@@ -372,13 +378,22 @@ export function EnhancedDataTable<TData, TValue>({
 
   const handleBulkAction = React.useCallback(
     async (action: BulkAction<TData>) => {
-      if (action.confirmMessage && !confirm(action.confirmMessage)) {
-        return;
+      if (action.confirmMessage) {
+        const confirmed = await confirmDialog({
+          title: action.confirmTitle ?? "Confirm action",
+          description: action.confirmMessage,
+          confirmText: action.confirmConfirmText ?? action.label,
+          variant:
+            action.confirmVariant ?? (action.variant === "destructive" ? "destructive" : "default"),
+        });
+        if (!confirmed) {
+          return;
+        }
       }
       await action.action(selectedRows);
       table.resetRowSelection();
     },
-    [selectedRows, table],
+    [confirmDialog, selectedRows, table],
   );
 
   const toggleQuickFilter = React.useCallback(

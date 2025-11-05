@@ -14,8 +14,6 @@ import { ToastContainer } from "@/components/ui/toast";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
 import { PortalThemeProvider } from "@/lib/design-system/portal-themes";
-import { PortalSwitcher, PortalThemeDebug } from "@/components/dev/PortalSwitcher";
-import { DesignTokenExporter } from "@/components/dev/DesignTokenExporter";
 import {
   AccessibilityProvider,
   LiveRegionAnnouncer,
@@ -41,10 +39,6 @@ export function ClientProviders({ children }: { children: ReactNode }) {
         <KeyboardShortcuts />
       </BrandingProvider>
       <ToastContainer />
-      {/* Development-only tools */}
-      <PortalSwitcher />
-      <PortalThemeDebug />
-      <DesignTokenExporter />
     </AppConfigProvider>
   );
 

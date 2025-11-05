@@ -29,6 +29,7 @@ import {
   Palette,
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface BillingSettings {
   company_info: {
@@ -189,6 +190,7 @@ export default function BillingSettingsPage() {
     type: "success" | "error";
     text: string;
   } | null>(null);
+  const confirmDialog = useConfirmDialog();
 
   useEffect(() => {
     loadSettings();
@@ -234,7 +236,13 @@ export default function BillingSettingsPage() {
   };
 
   const resetToDefaults = async () => {
-    if (!confirm("Are you sure you want to reset all settings to defaults?")) return;
+    const confirmed = await confirmDialog({
+      title: "Reset billing settings",
+      description: "Are you sure you want to reset all settings to defaults?",
+      confirmText: "Reset",
+      variant: "destructive",
+    });
+    if (!confirmed) return;
 
     setSaving(true);
     try {

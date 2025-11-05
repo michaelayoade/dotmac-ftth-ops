@@ -46,6 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import { useRBAC } from "@/contexts/RBACContext";
 import { formatDistanceToNow, format } from "date-fns";
 import { CommunicationDetailModal } from "@/components/notifications/CommunicationDetailModal";
@@ -77,6 +78,7 @@ export default function NotificationHistoryPage() {
 
   const [selectedLog, setSelectedLog] = useState<CommunicationLog | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const confirmDialog = useConfirmDialog();
 
   // Statistics
   const stats = useMemo(() => {
@@ -109,7 +111,11 @@ export default function NotificationHistoryPage() {
   const handleRetry = useCallback(
     async (log: CommunicationLog) => {
       if (!log.id) return;
-      const shouldRetry = confirm(`Retry sending to ${log.recipient}?`);
+      const shouldRetry = await confirmDialog({
+        title: "Retry communication",
+        description: `Retry sending to ${log.recipient}?`,
+        confirmText: "Retry",
+      });
       if (!shouldRetry) return;
 
       const success = await retryFailedCommunication(log.id);
@@ -120,7 +126,7 @@ export default function NotificationHistoryPage() {
         alert("Failed to retry communication");
       }
     },
-    [refetch, retryFailedCommunication],
+    [refetch, retryFailedCommunication, confirmDialog],
   );
 
   const columns: ColumnDef<CommunicationLog>[] = useMemo(
@@ -309,12 +315,18 @@ export default function NotificationHistoryPage() {
             return;
           }
 
-          if (confirm(`Retry ${failedLogs.length} failed communication(s)?`)) {
-            for (const log of failedLogs) {
-              await retryFailedCommunication(log.id);
-            }
-            refetch();
+          const confirmed = await confirmDialog({
+            title: "Retry communications",
+            description: `Retry ${failedLogs.length} failed communication(s)?`,
+            confirmText: "Retry",
+          });
+          if (!confirmed) {
+            return;
           }
+          for (const log of failedLogs) {
+            await retryFailedCommunication(log.id);
+          }
+          refetch();
         },
         variant: "default",
       },
@@ -328,7 +340,7 @@ export default function NotificationHistoryPage() {
         variant: "outline",
       },
     ],
-    [retryFailedCommunication, refetch],
+    [retryFailedCommunication, refetch, confirmDialog],
   );
 
   // Quick filters

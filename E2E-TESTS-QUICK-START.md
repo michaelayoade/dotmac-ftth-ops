@@ -1,97 +1,51 @@
-# E2E Tests - Quick Start
+# E2E Tests – Quick Start
 
-End-to-end coverage for the tenant billing and operations flows lives in the `@dotmac/isp-ops-app` workspace (with shared mocks in `frontend/shared`). Follow these steps to run the Playwright suites locally.
+Use this guide to run the Playwright suites that validate the ISP operations portal. Everything lives inside the `frontend` workspace and relies on the same backend services you use for local development.
 
-## Prerequisites
+## 1. Start the stack
 
-1. **Infrastructure**
-   ```bash
-   make start-platform          # platform backend + admin UI
-   make start-isp               # ISP backend + operations UI
-   ```
-2. **Backend**
- ```bash
- poetry install --with dev
- poetry run alembic upgrade head
-  make dev                               # or docker compose -f docker-compose.base.yml up platform-backend
- ```
-3. **Seed data (optional but recommended)**
-   ```bash
-   make db-seed
-   ```
+From the repository root:
 
-## Run All E2E Tests
+```bash
+make dev            # starts infrastructure, backend API, and both portals
+```
+
+If you only need the backend running, use `pnpm dev:backend` from the `frontend` directory.
+
+## 2. Install Playwright dependencies
 
 ```bash
 cd frontend
-pnpm --filter @dotmac/isp-ops-app test:e2e
-```
-
-## Targeted Runs
-
-```bash
-# Specific spec
-pnpm --filter @dotmac/isp-ops-app exec \
-  playwright test e2e/tenant-portal.spec.ts
-
-# Focus on a test title
-pnpm --filter @dotmac/isp-ops-app exec \
-  playwright test e2e/tenant-portal.spec.ts \
-  -g "shows main page structure"
-
-# Interactive UI mode
-pnpm --filter @dotmac/isp-ops-app exec playwright test --ui
-
-# Headed browser
-pnpm --filter @dotmac/isp-ops-app exec playwright test --headed
-```
-
-## Manual Setup Workflow
-
-```bash
-# Backend (from repository root)
-docker compose -f docker-compose.base.yml up platform-backend
-
-# Frontend base app (separate terminal)
-cd frontend/apps/base-app
 pnpm install
-pnpm dev &
-
-# Execute focused tests
-pnpm test:e2e tenant-portal.spec.ts
+npx playwright install --with-deps
 ```
 
-Stop background servers with `Ctrl+C` when finished.
+## 3. Run the suites
 
-> Prefer running the API directly on your machine? Use `make dev-host`, but update the observability
-> URLs (or disable OTEL) so health checks do not fail while Playwright waits.
+```bash
+# Entire ISP portal suite (frontend/playwright.config.ts)
+pnpm playwright test
 
-## Test Credentials
+# Headed / debug helpers
+pnpm playwright test --headed
+pnpm playwright test --ui
 
-- **Username:** `superadmin`
-- **Password:** `admin123`
+# Target a spec or test title
+pnpm playwright test e2e/tenant-portal.spec.ts
+pnpm playwright test e2e/tenant-portal.spec.ts -g "shows main page structure"
+```
 
-These are created by the default seed data. If authentication fails, re-run `make db-seed` or update the user manually via psql.
+## 4. Test data
+
+Default seed credentials:
+
+- Username: `superadmin`
+- Password: `admin123`
+
+If authentication fails, rerun `make db-seed` from the repo root.
 
 ## Troubleshooting
 
-- **Playwright times out**  
-  Increase timeout in `frontend/apps/base-app/playwright.config.ts` or disable mobile browsers before rerunning.
-
-- **No data appears in UI**  
-  Ensure the backend is running on `http://localhost:8000`, `make db-seed` has been executed, and the E2E app is pointing to the correct API via `NEXT_PUBLIC_API_BASE_URL`.
-
-- **Infrastructure not running**  
-  ```bash
-  make status-platform
-  make status-isp
-  ```
-
-- **Need to clean state quickly**  
-  Use `./scripts/infra.sh platform restart` and `./scripts/infra.sh isp restart` to bounce containers.
-
-## Additional Resources
-
-- Frontend multi-app overview: `frontend/MULTI_APP_ARCHITECTURE.md`
-- Infrastructure quick reference: `README-INFRASTRUCTURE.md`
-- Platform documentation index: `docs/INDEX.md`
+- Verify the API is reachable at `http://localhost:8000` before launching Playwright.
+- When health checks hang, confirm the infrastructure containers are up (`make status-all`).
+- To wipe state quickly, use `./scripts/infra.sh platform restart` and `./scripts/infra.sh isp restart`.

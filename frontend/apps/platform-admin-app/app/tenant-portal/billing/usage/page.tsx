@@ -21,6 +21,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useToast } from "@/components/ui/use-toast";
 import { logger } from "@/lib/logger";
+import { apiClient } from "@/lib/api/client";
 import {
   Dialog,
   DialogContent,

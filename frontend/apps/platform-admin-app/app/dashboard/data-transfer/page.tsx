@@ -31,6 +31,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface TransferJob {
   job_id: string;
@@ -75,6 +76,7 @@ function DataTransferPageContent() {
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch supported formats
   const { data: formats } = useQuery<FormatsResponse>({
@@ -569,8 +571,14 @@ function DataTransferPageContent() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (confirm(`Cancel job "${job.name}"?`)) {
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: "Cancel transfer job",
+                            description: `Cancel job "${job.name}"?`,
+                            confirmText: "Cancel job",
+                            variant: "destructive",
+                          });
+                          if (confirmed) {
                             cancelMutation.mutate(job.job_id);
                           }
                         }}

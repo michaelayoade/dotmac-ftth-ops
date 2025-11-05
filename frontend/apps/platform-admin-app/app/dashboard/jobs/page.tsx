@@ -32,6 +32,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Progress } from "@/components/ui/progress";
@@ -76,6 +77,7 @@ function JobsPageContent() {
   const [typeFilter, setTypeFilter] = useState<string>("all");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch jobs
   const { data, isLoading, refetch } = useQuery({
@@ -440,8 +442,14 @@ function JobsPageContent() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          if (confirm(`Cancel job ${job.id.substring(0, 8)}...?`)) {
+                        onClick={async () => {
+                          const confirmed = await confirmDialog({
+                            title: "Cancel job",
+                            description: `Cancel job ${job.id.substring(0, 8)}...?`,
+                            confirmText: "Cancel job",
+                            variant: "destructive",
+                          });
+                          if (confirmed) {
                             cancelMutation.mutate(job.id);
                           }
                         }}

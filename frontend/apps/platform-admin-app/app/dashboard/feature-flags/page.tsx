@@ -40,6 +40,7 @@ import {
 import { platformConfig } from "@/lib/config";
 import { useToast } from "@/components/ui/use-toast";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 import Link from "next/link";
 import { formatDistanceToNow, format } from "date-fns";
 
@@ -67,6 +68,7 @@ function FeatureFlagsPageContent() {
   const [newFlagEnabled, setNewFlagEnabled] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const confirmDialog = useConfirmDialog();
 
   // Fetch feature flags
   const { data: flags = [], isLoading, refetch } = useQuery<FeatureFlag[]>({
@@ -216,8 +218,14 @@ function FeatureFlagsPageContent() {
     });
   };
 
-  const handleDeleteFlag = (flagName: string) => {
-    if (confirm(`Are you sure you want to delete the feature flag "${flagName}"?`)) {
+  const handleDeleteFlag = async (flagName: string) => {
+    const confirmed = await confirmDialog({
+      title: "Delete feature flag",
+      description: `Are you sure you want to delete the feature flag "${flagName}"?`,
+      confirmText: "Delete flag",
+      variant: "destructive",
+    });
+    if (confirmed) {
       deleteFlagMutation.mutate(flagName);
     }
   };

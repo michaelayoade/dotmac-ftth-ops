@@ -314,8 +314,8 @@ const ws = new WebSocket(
 - `src/dotmac/platform/billing/dunning/service.py` - Campaign service
 
 #### Frontend
-- `frontend/apps/base-app/hooks/useWebSocket.ts` - WebSocket hook
-- `frontend/apps/base-app/app/dashboard/automation/page.tsx` - Job monitoring UI
+- `frontend/apps/isp-ops-app/lib/websocket/WebSocketProvider.tsx` - WebSocket provider + hooks (mirrored in platform-admin)
+- `frontend/apps/isp-ops-app/app/dashboard/automation/page.tsx` - Job monitoring UI
 
 ---
 

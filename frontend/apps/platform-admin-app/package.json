@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
+    "@dotmac/graphql": "workspace:*",
     "@dotmac/headless": "workspace:*",
     "@dotmac/primitives": "workspace:*",
     "@hookform/resolvers": "^3.9.1",

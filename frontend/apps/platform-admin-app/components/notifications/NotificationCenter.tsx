@@ -24,6 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationPriority } from "@/hooks/useNotifications";
+import { useConfirmDialog } from "@/components/ui/confirm-dialog-provider";
 
 interface NotificationCenterProps {
   /** Maximum notifications to show in dropdown */
@@ -43,6 +44,7 @@ export function NotificationCenter({
   viewAllUrl = "/dashboard/notifications",
 }: NotificationCenterProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const confirmDialog = useConfirmDialog();
 
   const {
     notifications,
@@ -77,9 +79,16 @@ export function NotificationCenter({
 
   const handleDelete = async (notificationId: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm("Are you sure you want to delete this notification?")) {
-      await deleteNotification(notificationId);
+    const confirmed = await confirmDialog({
+      title: "Delete notification",
+      description: "Are you sure you want to delete this notification?",
+      confirmText: "Delete",
+      variant: "destructive",
+    });
+    if (!confirmed) {
+      return;
     }
+    await deleteNotification(notificationId);
   };
 
   const handleNotificationClick = async (notification: Notification) => {
