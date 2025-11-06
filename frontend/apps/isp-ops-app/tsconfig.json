@@ -20,6 +20,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "baseUrl": ".",
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
       "@/types/*": ["./types/*"],
       "@/lib/*": ["./lib/*"],
@@ -27,13 +32,12 @@
       "@/providers/*": ["./providers/*"],
       "@/hooks/*": ["./hooks/*"],
       "@/contexts/*": ["./contexts/*"],
-      "@/*": ["./*"]
-    },
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ]
+      "@/*": ["./*"],
+      "@dotmac/primitives": ["../../shared/packages/primitives/src/index.ts"],
+      "@dotmac/primitives/*": ["../../shared/packages/primitives/src/*"],
+      "@dotmac/auth": ["../../shared/packages/auth/src/index.ts"],
+      "@dotmac/auth/*": ["../../shared/packages/auth/src/*"]
+    }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [

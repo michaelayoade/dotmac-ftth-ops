@@ -167,18 +167,12 @@ export default function DashboardPage() {
                 Real-time visibility into subscribers, network health, and provisioning pipelines.
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            {user && (
               <div className="text-sm text-muted-foreground hidden sm:block">
-                <div className="font-medium text-foreground">{user?.email}</div>
-                <div>{user?.roles?.join(", ") || "Operator"}</div>
+                <div className="font-medium text-foreground">{user.email}</div>
+                <div>{user.roles?.join(", ") || "Operator"}</div>
               </div>
-              <Link
-                href="/dashboard/settings/profile"
-                className="text-sm font-medium text-sky-400 hover:text-sky-300"
-              >
-                Manage account →
-              </Link>
-            </div>
+            )}
           </div>
 
           <div className="flex flex-wrap gap-2">
