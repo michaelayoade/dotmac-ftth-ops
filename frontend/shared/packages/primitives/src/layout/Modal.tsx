@@ -64,8 +64,8 @@ export const ModalFocusUtils = {
       return;
     }
 
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const firstElement = focusableElements[0]!;
+    const lastElement = focusableElements[focusableElements.length - 1]!;
 
     if (event.shiftKey && document.activeElement === firstElement) {
       event.preventDefault();
@@ -78,11 +78,12 @@ export const ModalFocusUtils = {
 
   setInitialFocus: (container: HTMLElement) => {
     const focusableElements = ModalFocusUtils.getFocusableElements(container);
-    if (focusableElements.length > 0) {
-      focusableElements[0].focus();
-    } else {
-      container.focus();
+    const firstElement = focusableElements[0];
+    if (firstElement) {
+      firstElement.focus();
+      return;
     }
+    container.focus();
   },
 };
 
@@ -224,7 +225,12 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
             type="button"
             className="modal-close"
             onClick={onClose}
-            onKeyDown={(e) => e.key === "Enter" && onClose}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClose?.();
+              }
+            }}
             aria-label="Close modal"
             data-testid={`${id}-modal-close`}
           >
@@ -237,37 +243,40 @@ export const ModalContent = forwardRef<HTMLDivElement, ModalContentProps>(
 );
 
 // Modal header component
-export interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  as?: keyof JSX.IntrinsicElements;
-}
+export interface ModalHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
 
 export const ModalHeader = forwardRef<HTMLDivElement, ModalHeaderProps>(
-  ({ className, as: Component = "div", children, ...props }, ref) => {
+  ({ className, children, ...props }, ref) => {
     return (
-      <Component ref={ref} className={clsx("modal-header", className)} {...props}>
+      <div ref={ref} className={clsx("modal-header", className)} {...props}>
         {children}
-      </Component>
+      </div>
     );
   },
 );
 
 // Modal title component
 export interface ModalTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
+  level?: 1 | 2 | 3 | 4 | 5 | 6;
   as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
 }
 
 export const ModalTitle = forwardRef<HTMLHeadingElement, ModalTitleProps>(
-  ({ className, as: Component = "h2", children, ...props }, ref) => {
+  ({ className, level = 2, as, children, ...props }, ref) => {
     const id = useId();
+    const clampedLevel = Math.min(Math.max(level, 1), 6);
+    type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+    const HeadingTag: HeadingTag = as ?? (`h${clampedLevel}` as HeadingTag);
+
     return (
-      <Component
+      <HeadingTag
         ref={ref}
         className={clsx("modal-title", className)}
         data-testid={`${id}-modal-title`}
         {...props}
       >
         {children}
-      </Component>
+      </HeadingTag>
     );
   },
 );
@@ -335,9 +344,9 @@ export const ModalTrigger = forwardRef<HTMLButtonElement, ModalTriggerProps>(
     if (asChild && React.isValidElement(children)) {
       return React.cloneElement(children, {
         ...children.props,
-        onClick: (e: React.MouseEvent) => {
-          children.props.onClick?.(e);
-          onClick?.(e);
+        onClick: (e: React.MouseEvent<any>) => {
+          (children.props.onClick as React.MouseEventHandler<any> | undefined)?.(e);
+          onClick?.(e as React.MouseEvent<HTMLButtonElement>);
         },
       });
     }
@@ -348,7 +357,6 @@ export const ModalTrigger = forwardRef<HTMLButtonElement, ModalTriggerProps>(
         ref={ref}
         className={clsx("modal-trigger", className)}
         onClick={onClick}
-        onKeyDown={(e) => e.key === "Enter" && onClick}
         data-testid={`${id}-modal-trigger`}
         {...props}
       >

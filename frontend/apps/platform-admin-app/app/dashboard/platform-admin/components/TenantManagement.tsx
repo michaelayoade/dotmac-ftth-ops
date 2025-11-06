@@ -24,9 +24,13 @@ import {
 } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
-import { platformAdminTenantService } from "@/lib/services/platform-admin-tenant-service";
+import {
+  platformAdminTenantService,
+  type TenantDetails,
+  type PlatformTenantListParams,
+} from "@/lib/services/platform-admin-tenant-service";
 import { usePlatformTenants } from "@/hooks/usePlatformTenants";
-import { tenantService, Tenant } from "@/lib/services/tenant-service";
+import { tenantService } from "@/lib/services/tenant-service";
 import { Building2, ChevronLeft, ChevronRight, Eye, Key, Plus, Search, Users } from "lucide-react";
 import { TenantOnboardingWizard } from "@/components/tenant/TenantOnboardingWizard";
 
@@ -72,14 +76,14 @@ export function TenantManagement() {
   const [impersonateTenantId, setImpersonateTenantId] = useState<string | null>(null);
   const [impersonationDuration, setImpersonationDuration] = useState(60);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [detailTenant, setDetailTenant] = useState<Tenant | null>(null);
+  const [detailTenant, setDetailTenant] = useState<TenantDetails | null>(null);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const { toast } = useToast();
-  const queryParams = useMemo(
+  const queryParams = useMemo<PlatformTenantListParams>(
     () => ({
       page: pagination.page,
-      pageSize: pagination.pageSize,
+      limit: pagination.pageSize,
       search: filters.search.trim() || undefined,
       status: filters.status || undefined,
       plan: filters.plan || undefined,
@@ -437,12 +441,14 @@ export function TenantManagement() {
                   <div>
                     <p className="text-sm text-muted-foreground">Plan</p>
                     <Badge variant="secondary" className="mt-1">
-                      {tenantService.getPlanDisplayName(detailTenant.plan ?? "free")}
+                      {tenantService.getPlanDisplayName(detailTenant.subscription?.plan ?? "free")}
                     </Badge>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Billing cycle</p>
-                    <p className="mt-1 capitalize">{detailTenant.billing_cycle ?? "monthly"}</p>
+                    <p className="text-sm text-muted-foreground">Subscription status</p>
+                    <p className="mt-1 capitalize">
+                      {detailTenant.subscription?.status ?? "unknown"}
+                    </p>
                   </div>
                 </div>
 

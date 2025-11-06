@@ -10,10 +10,16 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import structlog
+from fastapi import HTTPException
 from redis.asyncio.client import PubSub
+from redis.exceptions import RedisError, TimeoutError as RedisTimeoutError
 from sse_starlette.sse import EventSourceResponse
 
 from dotmac.platform.redis_client import RedisClientType
+from dotmac.platform.resilience.circuit_breaker import (
+    CircuitBreakerError,
+    get_redis_pubsub_breaker,
+)
 
 logger = structlog.get_logger(__name__)
 
@@ -39,27 +45,103 @@ class SSEStream:
 
         Yields:
             SSE event dictionaries
-        """
-        self.pubsub = self.redis.pubsub()
-        await self.pubsub.subscribe(channel)
 
-        logger.info("sse.subscribed", tenant_id=self.tenant_id, channel=channel)
+        Raises:
+            HTTPException: 503 if Redis is unavailable or circuit breaker is open
+        """
+        circuit_breaker = get_redis_pubsub_breaker()
+
+        # Check circuit breaker state before attempting subscription
+        if circuit_breaker.is_open:
+            logger.error(
+                "sse.circuit_breaker_open",
+                tenant_id=self.tenant_id,
+                channel=channel,
+                circuit_state=circuit_breaker.get_state(),
+            )
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "Redis pub/sub temporarily unavailable",
+                    "message": "Service is experiencing connection issues. Please try again later.",
+                    "circuit_breaker_state": circuit_breaker.get_state(),
+                }
+            )
+
+        async def _subscribe_with_breaker() -> PubSub:
+            """Subscribe to channel with circuit breaker protection."""
+            pubsub = self.redis.pubsub()
+            await pubsub.subscribe(channel)
+            return pubsub
+
+        try:
+            # Use circuit breaker for subscription
+            self.pubsub = await circuit_breaker.call(_subscribe_with_breaker)
+            logger.info("sse.subscribed", tenant_id=self.tenant_id, channel=channel)
+        except CircuitBreakerError as exc:
+            logger.error(
+                "sse.circuit_breaker_open",
+                tenant_id=self.tenant_id,
+                channel=channel,
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "Redis pub/sub temporarily unavailable",
+                    "message": str(exc),
+                }
+            )
+        except RedisError as exc:
+            logger.error(
+                "sse.redis_subscribe_failed",
+                tenant_id=self.tenant_id,
+                channel=channel,
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "Redis connection failed",
+                    "message": "Unable to establish connection to Redis pub/sub. Please check Redis status.",
+                    "detail": str(exc),
+                }
+            )
+        except Exception as exc:  # pragma: no cover - defensive
+            logger.error(
+                "sse.subscribe_failed",
+                tenant_id=self.tenant_id,
+                channel=channel,
+                error=str(exc),
+            )
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "Stream initialization failed",
+                    "message": "Unable to initialize event stream.",
+                    "detail": str(exc),
+                }
+            )
 
         try:
             # Send initial connection event
             yield {"event": "connected", "data": json.dumps({"channel": channel})}
 
-            # Listen for messages
-            async for message in self.pubsub.listen():
+            while True:
+                try:
+                    message = await self.pubsub.get_message(ignore_subscribe_messages=False, timeout=1.0)
+                except RedisTimeoutError:
+                    # Idle timeout - keep connection alive
+                    continue
+
+                if not message:
+                    continue
+
                 if message["type"] == "message":
                     try:
-                        # Parse event data
                         event_data = json.loads(message["data"])
                         event_type = event_data.get("event_type", "unknown")
-
-                        # Yield SSE event
                         yield {"event": event_type, "data": message["data"]}
-
                     except json.JSONDecodeError:
                         logger.warning(
                             "sse.invalid_json",
@@ -67,11 +149,24 @@ class SSEStream:
                             channel=channel,
                         )
                         continue
+                elif message["type"] == "unsubscribe":
+                    break
 
         except asyncio.CancelledError:
             logger.info("sse.cancelled", tenant_id=self.tenant_id, channel=channel)
             raise
-        except Exception as e:
+        except RedisError as exc:
+            logger.error(
+                "sse.redis_error",
+                tenant_id=self.tenant_id,
+                channel=channel,
+                error=str(exc),
+            )
+            yield {
+                "event": "error",
+                "data": json.dumps({"error": "Redis error", "detail": str(exc)}),
+            }
+        except Exception as e:  # pragma: no cover - defensive
             logger.error(
                 "sse.error",
                 tenant_id=self.tenant_id,
@@ -84,8 +179,16 @@ class SSEStream:
             }
         finally:
             if self.pubsub:
-                await self.pubsub.unsubscribe(channel)
-                await self.pubsub.close()
+                try:
+                    await self.pubsub.unsubscribe(channel)
+                    await self.pubsub.close()
+                except RedisError as exc:
+                    logger.warning(
+                        "sse.redis_unsubscribe_failed",
+                        tenant_id=self.tenant_id,
+                        channel=channel,
+                        error=str(exc),
+                    )
             logger.info("sse.unsubscribed", tenant_id=self.tenant_id, channel=channel)
 
 

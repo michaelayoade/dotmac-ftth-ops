@@ -59,7 +59,7 @@ export default function PartnerCustomerManagement({
       });
       setShowForm(false);
     } catch (error: any) {
-      alert(`Failed to create customer: ${error.message}`);
+      alert(`Failed to create customer: ${(error as Error).message}`);
     }
   };
 
@@ -294,7 +294,7 @@ export default function PartnerCustomerManagement({
       {createPartnerCustomer.isError && (
         <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg">
           <p className="font-semibold">Error creating customer</p>
-          <p className="text-sm mt-1">{createPartnerCustomer.error?.message}</p>
+          <p className="text-sm mt-1">{(createPartnerCustomer.error as Error)?.message}</p>
         </div>
       )}
     </div>

@@ -749,7 +749,7 @@ if (await getFeatureFlag('new-dashboard-ui')) {
 
 // Get flag with default value
 const rateLimit = await getFeatureFlag('api-rate-limit', 1000);
-console.log(\`Rate limit: \${rateLimit}\`);`}
+telemetry.track('api_rate_limit', rateLimit);`}
                 </pre>
               </div>
 

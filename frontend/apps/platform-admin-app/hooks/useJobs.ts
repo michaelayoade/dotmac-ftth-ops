@@ -2,6 +2,7 @@
  * React hooks for managing active jobs with WebSocket controls
  */
 
+import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
@@ -82,17 +83,14 @@ export function useCancelJob() {
  * WebSocket hook for real-time job control
  */
 export function useJobWebSocket(jobId: string | null) {
-  const [socket, setSocket] = React.useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = React.useState(false);
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [isConnected, setIsConnected] = useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!jobId) return;
 
     // Get auth token from localStorage or cookies
-    const token = localStorage.getItem("auth_token");
-    if (!token) return;
-
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/api/v1/realtime/ws/jobs/${jobId}?token=${token}`;
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/api/v1/realtime/ws/jobs/${jobId}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -116,19 +114,19 @@ export function useJobWebSocket(jobId: string | null) {
     };
   }, [jobId]);
 
-  const cancelJob = React.useCallback(() => {
+  const cancelJob = useCallback(() => {
     if (socket && isConnected) {
       socket.send(JSON.stringify({ type: "cancel_job" }));
     }
   }, [socket, isConnected]);
 
-  const pauseJob = React.useCallback(() => {
+  const pauseJob = useCallback(() => {
     if (socket && isConnected) {
       socket.send(JSON.stringify({ type: "pause_job" }));
     }
   }, [socket, isConnected]);
 
-  const resumeJob = React.useCallback(() => {
+  const resumeJob = useCallback(() => {
     if (socket && isConnected) {
       socket.send(JSON.stringify({ type: "resume_job" }));
     }
@@ -142,5 +140,3 @@ export function useJobWebSocket(jobId: string | null) {
     resumeJob,
   };
 }
-
-import React from "react";

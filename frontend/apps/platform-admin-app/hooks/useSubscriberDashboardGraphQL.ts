@@ -15,6 +15,7 @@
  * Migration: Migrated from Apollo to TanStack Query via @dotmac/graphql
  */
 
+import { useEffect } from "react";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { handleGraphQLError } from "@dotmac/graphql";
@@ -38,19 +39,24 @@ export function useSubscriberDashboardGraphQL(options: UseSubscriberDashboardOpt
     {
       enabled,
       refetchInterval: 30000, // Refresh every 30 seconds
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "SubscriberDashboardQuery",
-          context: {
-            hook: "useSubscriberDashboardGraphQL",
-            limit,
-            hasSearch: Boolean(search),
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "SubscriberDashboardQuery",
+      context: {
+        hook: "useSubscriberDashboardGraphQL",
+        limit,
+        hasSearch: Boolean(search),
+      },
+    });
+  }, [error, toast, limit, search]);
 
   // Transform GraphQL data to match existing component expectations
   const subscribers = data?.subscribers ?? [];

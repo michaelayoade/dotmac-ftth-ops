@@ -18,7 +18,7 @@ import { ArrowLeft, Server, Save, AlertCircle } from "lucide-react";
 import { useCreateWireGuardServer } from "@/hooks/useWireGuard";
 import type { WireGuardServerCreate } from "@/types/wireguard";
 
-export default function CreateServerPage() {
+export default function CreateServerPage(): JSX.Element {
   const router = useRouter();
   const { mutate: createServer, isPending, error } = useCreateWireGuardServer();
 

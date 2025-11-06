@@ -128,8 +128,14 @@ export function NavigationProvider({
   onNavigate,
   collapsed = false,
 }: NavigationProviderProps) {
+  const contextValue: NavigationContextValue = {
+    ...(activeItem !== undefined ? { activeItem } : {}),
+    ...(onNavigate ? { onNavigate } : {}),
+    collapsed,
+  };
+
   return (
-    <NavigationContext.Provider value={{ activeItem, onNavigate, collapsed }}>
+    <NavigationContext.Provider value={contextValue}>
       {children}
     </NavigationContext.Provider>
   );
@@ -145,7 +151,7 @@ export interface NavbarProps
 }
 
 export const Navbar = forwardRef<HTMLElement, NavbarProps>(
-  ({ className, variant, size, brand, actions, children, asChild = false, ...props }, _ref) => {
+  ({ className, variant, size, brand, actions, children, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "nav";
 
     return (
@@ -173,7 +179,7 @@ export interface NavigationMenuProps extends React.HTMLAttributes<HTMLUListEleme
 }
 
 export const NavigationMenu = forwardRef<HTMLUListElement, NavigationMenuProps>(
-  ({ className, orientation = "horizontal", asChild = false, ...props }, _ref) => {
+  ({ className, orientation = "horizontal", asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "ul";
 
     return (
@@ -214,7 +220,7 @@ export const NavigationItem = forwardRef<HTMLLIElement, NavigationItemProps>(
     },
     ref,
   ) => {
-    const { activeItem, _onNavigate } = useNavigation();
+    const { activeItem, onNavigate } = useNavigation();
     const isActive = active || (itemKey && activeItem === itemKey);
     const Comp = asChild ? Slot : "li";
 
@@ -243,7 +249,11 @@ export const NavigationItem = forwardRef<HTMLLIElement, NavigationItemProps>(
           className,
         )}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === "Enter" && handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleClick(e as unknown as React.MouseEvent<HTMLLIElement>);
+          }
+        }}
         {...props}
       >
         <div className="navigation-item-content">
@@ -282,7 +292,7 @@ export const NavigationLink = forwardRef<HTMLAnchorElement, NavigationLinkProps>
     },
     ref,
   ) => {
-    const { activeItem, _onNavigate } = useNavigation();
+    const { activeItem, onNavigate } = useNavigation();
     const isActive = active || (itemKey && activeItem === itemKey);
     const Comp = asChild ? Slot : "a";
 
@@ -311,7 +321,11 @@ export const NavigationLink = forwardRef<HTMLAnchorElement, NavigationLinkProps>
           className,
         )}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === "Enter" && handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleClick(e as unknown as React.MouseEvent<HTMLAnchorElement>);
+          }
+        }}
         aria-current={isActive ? "page" : undefined}
         aria-disabled={disabled ? "true" : undefined}
         {...props}
@@ -468,7 +482,7 @@ export interface BreadcrumbItemProps extends React.HTMLAttributes<HTMLLIElement>
 }
 
 export const BreadcrumbItem = forwardRef<HTMLLIElement, BreadcrumbItemProps>(
-  ({ className, current = false, asChild = false, ...props }, _ref) => {
+  ({ className, current = false, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "li";
 
     return (
@@ -494,7 +508,7 @@ export interface BreadcrumbLinkProps extends React.AnchorHTMLAttributes<HTMLAnch
 }
 
 export const BreadcrumbLink = forwardRef<HTMLAnchorElement, BreadcrumbLinkProps>(
-  ({ className, asChild = false, ...props }, _ref) => {
+  ({ className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "a";
 
     return <Comp ref={ref} className={clsx("breadcrumb-link", className)} {...props} />;
@@ -507,7 +521,7 @@ export interface BreadcrumbPageProps extends React.HTMLAttributes<HTMLSpanElemen
 }
 
 export const BreadcrumbPage = forwardRef<HTMLSpanElement, BreadcrumbPageProps>(
-  ({ className, asChild = false, ...props }, _ref) => {
+  ({ className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "span";
 
     return (
@@ -529,7 +543,7 @@ export interface BreadcrumbEllipsisProps extends React.HTMLAttributes<HTMLSpanEl
 }
 
 export const BreadcrumbEllipsis = forwardRef<HTMLSpanElement, BreadcrumbEllipsisProps>(
-  ({ className, asChild = false, ...props }, _ref) => {
+  ({ className, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "span";
 
     return (
@@ -574,7 +588,10 @@ export const TabNavigation = forwardRef<HTMLDivElement, TabNavigationProps>(
     const Comp = asChild ? Slot : "div";
 
     return (
-      <NavigationProvider activeItem={value} onNavigate={onValueChange}>
+      <NavigationProvider
+        {...(value !== undefined ? { activeItem: value } : {})}
+        {...(onValueChange ? { onNavigate: onValueChange } : {})}
+      >
         <Comp
           ref={ref}
           className={clsx("tab-navigation", `variant-${variant}`, `size-${size}`, className)}
@@ -596,8 +613,8 @@ export interface TabItemProps extends React.HTMLAttributes<HTMLButtonElement> {
 }
 
 export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
-  ({ className, value, disabled = false, onClick, asChild = false, ...props }, _ref) => {
-    const { activeItem, _onNavigate } = useNavigation();
+  ({ className, value, disabled = false, onClick, asChild = false, ...props }, ref) => {
+    const { activeItem, onNavigate } = useNavigation();
     const isActive = activeItem === value;
     const Comp = asChild ? Slot : "button";
 
@@ -624,7 +641,11 @@ export const TabItem = forwardRef<HTMLButtonElement, TabItemProps>(
         aria-disabled={disabled}
         tabIndex={isActive ? 0 : -1}
         onClick={handleClick}
-        onKeyDown={(e) => e.key === "Enter" && handleClick}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            handleClick(e as unknown as React.MouseEvent<HTMLButtonElement>);
+          }
+        }}
         {...props}
       />
     );

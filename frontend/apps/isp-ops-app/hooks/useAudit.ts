@@ -51,7 +51,7 @@ export const auditKeys = {
  * GET /api/v1/audit/activities
  */
 export function useAuditActivities(filters: AuditFilterParams = {}, enabled = true) {
-  return useQuery<AuditActivityList, Error>({
+  return useQuery<AuditActivityList, Error, AuditActivityList, any>({
     queryKey: auditKeys.activities.list(filters),
     queryFn: () => auditService.listActivities(filters),
     enabled,
@@ -65,7 +65,7 @@ export function useAuditActivities(filters: AuditFilterParams = {}, enabled = tr
  * GET /api/v1/audit/activities/recent
  */
 export function useRecentActivities(limit = 20, days = 7, enabled = true) {
-  return useQuery<AuditActivity[], Error>({
+  return useQuery<AuditActivity[], Error, AuditActivity[], any>({
     queryKey: auditKeys.activities.recent(limit, days),
     queryFn: () => auditService.getRecentActivities(limit, days),
     enabled,
@@ -80,7 +80,7 @@ export function useRecentActivities(limit = 20, days = 7, enabled = true) {
  * GET /api/v1/audit/activities/user/{userId}
  */
 export function useUserActivities(userId: string, limit = 50, days = 30, enabled = true) {
-  return useQuery<AuditActivity[], Error>({
+  return useQuery<AuditActivity[], Error, AuditActivity[], any>({
     queryKey: auditKeys.activities.user(userId, limit, days),
     queryFn: () => auditService.getUserActivities(userId, limit, days),
     enabled: enabled && !!userId,
@@ -94,7 +94,7 @@ export function useUserActivities(userId: string, limit = 50, days = 30, enabled
  * GET /api/v1/audit/activities/{activityId}
  */
 export function useActivityDetails(activityId: string, enabled = true) {
-  return useQuery<AuditActivity, Error>({
+  return useQuery<AuditActivity, Error, AuditActivity, any>({
     queryKey: auditKeys.activities.detail(activityId),
     queryFn: () => auditService.getActivity(activityId),
     enabled: enabled && !!activityId,
@@ -110,7 +110,7 @@ export function useActivityDetails(activityId: string, enabled = true) {
  * GET /api/v1/audit/activities/summary
  */
 export function useActivitySummary(days = 7, enabled = true) {
-  return useQuery<ActivitySummary, Error>({
+  return useQuery<ActivitySummary, Error, ActivitySummary, any>({
     queryKey: auditKeys.summary(days),
     queryFn: () => auditService.getActivitySummary(days),
     enabled,
@@ -124,7 +124,7 @@ export function useActivitySummary(days = 7, enabled = true) {
  * Convenience hook for getting audit logs for a specific resource
  */
 export function useResourceHistory(resourceType: string, resourceId: string, enabled = true) {
-  return useQuery<AuditActivity[], Error>({
+  return useQuery<AuditActivity[], Error, AuditActivity[], any>({
     queryKey: ["audit", "resource", resourceType, resourceId],
     queryFn: () => auditService.getResourceHistory(resourceType, resourceId),
     enabled: enabled && !!resourceType && !!resourceId,
@@ -165,7 +165,7 @@ export function useExportAuditLogs(options?: {
  * GET /api/v1/audit/compliance
  */
 export function useComplianceReport(fromDate: string, toDate: string, enabled = true) {
-  return useQuery<ComplianceReport, Error>({
+  return useQuery<ComplianceReport, Error, ComplianceReport, any>({
     queryKey: auditKeys.compliance(fromDate, toDate),
     queryFn: () => auditService.getComplianceReport(fromDate, toDate),
     enabled: enabled && !!fromDate && !!toDate,

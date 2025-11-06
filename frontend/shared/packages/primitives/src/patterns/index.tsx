@@ -24,7 +24,7 @@ export const CompositionPatterns = {
     label: (text: string) => (
       <label htmlFor={`input-${Math.random().toString(36).substr(2, 9)}`}>{text}</label>
     ),
-    input: (props: unknown) => <input {...props} />,
+    input: (props: React.InputHTMLAttributes<HTMLInputElement>) => <input {...props} />,
     error: (message: string) => <span className="error">{message}</span>,
     help: (text: string) => <span className="help">{text}</span>,
   }),

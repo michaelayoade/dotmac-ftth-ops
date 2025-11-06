@@ -16,6 +16,9 @@ import {
   Info,
 } from "lucide-react";
 import type { PluginInstance, PluginHealthCheck } from "@/hooks/usePlugins";
+import { logger } from "@/lib/logger";
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 interface PluginHealthDashboardProps {
   instances: PluginInstance[];
@@ -80,7 +83,7 @@ export const PluginHealthDashboard = ({
       await onRefresh();
     } catch (error) {
       // Handle refresh errors gracefully
-      console.error("Failed to refresh health checks:", error);
+      logger.error("Failed to refresh plugin health checks", toError(error));
       // Error is logged but doesn&apos;t crash the UI
       // Could add toast notification here in the future
     } finally {

@@ -138,8 +138,8 @@ export function generateThemeFromConfig(config: ThemeConfig): BrandTheme {
     },
     brand: {
       name: brandName,
-      logo: logoUrl ? { light: logoUrl, dark: logoUrl } : undefined,
-      customCss,
+      ...(logoUrl ? { logo: { light: logoUrl, dark: logoUrl } } : {}),
+      ...(customCss ? { customCss } : {}),
     },
   };
 }
@@ -416,11 +416,15 @@ export class ThemeConfigLoader {
   private static loadFromEnvironment(options: any): BrandTheme {
     const config: ThemeConfig = {
       brandColor: process.env.REACT_APP_BRAND_COLOR || "#1e40af",
-      accentColor: process.env.REACT_APP_ACCENT_COLOR,
       brandName: process.env.REACT_APP_BRAND_NAME || "ISP Platform",
-      logoUrl: process.env.REACT_APP_LOGO_URL,
-      fontFamily: process.env.REACT_APP_FONT_FAMILY,
-      customCss: process.env.REACT_APP_CUSTOM_CSS,
+      ...(process.env.REACT_APP_ACCENT_COLOR
+        ? { accentColor: process.env.REACT_APP_ACCENT_COLOR }
+        : {}),
+      ...(process.env.REACT_APP_LOGO_URL ? { logoUrl: process.env.REACT_APP_LOGO_URL } : {}),
+      ...(process.env.REACT_APP_FONT_FAMILY
+        ? { fontFamily: process.env.REACT_APP_FONT_FAMILY }
+        : {}),
+      ...(process.env.REACT_APP_CUSTOM_CSS ? { customCss: process.env.REACT_APP_CUSTOM_CSS } : {}),
     };
 
     return generateThemeFromConfig(config);

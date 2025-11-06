@@ -139,7 +139,13 @@ export function useKeyboardNavigation<T>(
       }
 
       // Then try selection keys
-      NavigationHandlers.handleSelectionKey(key, focusedIndex, items, onSelect, event);
+      NavigationHandlers.handleSelectionKey(
+        key,
+        focusedIndex,
+        items,
+        onSelect ? (item, index) => onSelect(item as T, index) : undefined,
+        event,
+      );
     },
     [
       orientation,
@@ -197,7 +203,7 @@ const FocusTrapHelpers = {
 
   setupFocusTrap: (container: HTMLElement) => {
     const focusableElements = FocusTrapHelpers.getFocusableElements(container);
-    const { first, _last } = FocusTrapHelpers.getFirstAndLastElements(focusableElements);
+    const { first, last } = FocusTrapHelpers.getFirstAndLastElements(focusableElements);
 
     // Focus first element when trap becomes active
     first?.focus();
@@ -209,8 +215,8 @@ const FocusTrapHelpers = {
   },
 };
 
-export function useFocusTrap(isActive: boolean) {
-  const containerRef = React.useRef<HTMLElement>(null);
+export function useFocusTrap<TElement extends HTMLElement = HTMLElement>(isActive: boolean) {
+  const containerRef = React.useRef<TElement>(null);
 
   React.useEffect(() => {
     if (!isActive || !isBrowser || !containerRef.current) {
@@ -302,7 +308,7 @@ export function useAriaSelection<T>(
     items: [],
   },
 ) {
-  const { _items, multiple = false, _onSelectionChange } = options;
+  const { items, multiple = false, onSelectionChange } = options;
   const [selectedItems, setSelectedItems] = React.useState<T[]>([]);
 
   const toggleSelection = React.useCallback(
@@ -321,7 +327,7 @@ export function useAriaSelection<T>(
         return newSelection;
       });
     },
-    [multiple],
+    [multiple, onSelectionChange],
   );
 
   const isSelected = React.useCallback(

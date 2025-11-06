@@ -75,7 +75,7 @@ export function PartnerManagementView() {
       <div className="p-6">
         <EmptyState.Error
           title="Failed to load partners"
-          description={error.message}
+          description={(error as Error).message}
           onRetry={() => window.location.reload()}
         />
       </div>

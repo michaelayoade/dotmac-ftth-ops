@@ -71,7 +71,7 @@ export function ConfirmDialogProvider({ children }: { children: React.ReactNode 
         onConfirm={handleConfirm}
         onCancel={handleCancel}
         variant={options?.variant ?? "default"}
-        isLoading={options?.isLoading}
+        isLoading={options?.isLoading ?? false}
       />
     </ConfirmDialogContext.Provider>
   );
@@ -84,4 +84,3 @@ export function useConfirmDialog() {
   }
   return context.confirm;
 }
-

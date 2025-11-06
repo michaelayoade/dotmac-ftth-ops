@@ -4,6 +4,7 @@ import { useState } from "react";
 import { X, Shield, Plus, Check } from "lucide-react";
 import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 interface Permission {
   id: string;
@@ -126,7 +127,10 @@ export default function CreateRoleModal({
         toast.error("Failed to create role");
       }
     } catch (error) {
-      console.error("Error creating role:", error);
+      logger.error(
+        "Error creating role",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast.error("Failed to create role");
     } finally {
       setCreating(false);

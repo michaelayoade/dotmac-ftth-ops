@@ -238,11 +238,13 @@ export function NetworkDeviceWidget({ device, className, ...props }: NetworkDevi
     return "normal";
   };
 
+  const widgetStatus = device.status === "online" ? "normal" : device.status;
+
   return (
     <BaseRealTimeWidget
       title={device.name}
       subtitle={`${device.type} • ${device.ipAddress}`}
-      status={device.status}
+      status={widgetStatus}
       className={clsx("network-device-widget", className)}
       {...props}
     >
@@ -336,11 +338,11 @@ export interface ServiceHealthWidgetProps extends Omit<BaseRealTimeWidgetProps, 
 }
 
 export function ServiceHealthWidget({ service, className, ...props }: ServiceHealthWidgetProps) {
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): "online" | "offline" | "warning" | "critical" => {
     switch (status) {
       case "healthy":
       case "up":
-        return "normal";
+        return "online";
       case "degraded":
         return "warning";
       case "unhealthy":
@@ -351,11 +353,14 @@ export function ServiceHealthWidget({ service, className, ...props }: ServiceHea
     }
   };
 
+  const serviceStatus = getStatusColor(service.status);
+  const widgetStatus = serviceStatus === "online" ? "normal" : serviceStatus;
+
   return (
     <BaseRealTimeWidget
       title={service.name}
       subtitle={`v${service.version} • ${(service.uptime * 100).toFixed(2)}% uptime`}
-      status={getStatusColor(service.status) as unknown}
+      status={widgetStatus}
       className={clsx("service-health-widget", className)}
       {...props}
     >
@@ -363,7 +368,7 @@ export function ServiceHealthWidget({ service, className, ...props }: ServiceHea
         <div className="overview-item">
           <label htmlFor={`input-${Math.random().toString(36).substr(2, 9)}`}>Status</label>
           <div className="status-badge">
-            <StatusIndicator status={getStatusColor(service.status) as unknown} size="sm" />
+            <StatusIndicator status={serviceStatus} size="sm" />
             <span>{service.status.toUpperCase()}</span>
           </div>
         </div>
@@ -378,7 +383,7 @@ export function ServiceHealthWidget({ service, className, ...props }: ServiceHea
         <h4>Endpoints</h4>
         {service.endpoints.map((endpoint, index) => (
           <div key={`item-${index}`} className="endpoint-item">
-            <StatusIndicator status={getStatusColor(endpoint.status) as unknown} size="sm" />
+            <StatusIndicator status={getStatusColor(endpoint.status)} size="sm" />
             <span className="endpoint-name">{endpoint.name}</span>
             <span className="endpoint-response-time">{endpoint.responseTime}ms</span>
           </div>

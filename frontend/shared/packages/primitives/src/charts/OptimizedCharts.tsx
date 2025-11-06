@@ -127,41 +127,43 @@ const OptimizedTooltip: React.FC<CustomTooltipProps> = memo(
 
     // Memoized formatted entries
     const formattedEntries = useMemo(() => {
-      return payload
-        .map((entry, index) => {
-          if (!entry || typeof entry.value === "undefined") {
-            return null;
-          }
+      if (!payload) {
+        return [];
+      }
 
-          const safeName = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
-          const safeValue = typeof entry.value === "number" ? entry.value : 0;
+      return payload.flatMap((entry, index) => {
+        if (!entry || typeof entry.value === "undefined") {
+          return [];
+        }
 
-          let displayValue: string;
-          let displayName: string;
+        const safeName = entry.name ? sanitizeText(String(entry.name)) : "Unknown";
+        const rawValue =
+          typeof entry.value === "number" ? entry.value : Number(entry.value) || 0;
 
-          if (formatter) {
-            try {
-              const [formattedValue, formattedName] = formatter(safeValue, safeName);
-              displayValue = sanitizeText(String(formattedValue));
-              displayName = sanitizeText(String(formattedName));
-            } catch (error) {
-              console.error("Tooltip formatter error:", error);
-              displayValue = String(safeValue);
-              displayName = safeName;
+        let formattedValue: string | undefined;
+        let formattedName: string | undefined;
+
+        if (formatter) {
+          try {
+            const result = formatter(rawValue, safeName);
+            if (Array.isArray(result) && result.length >= 2) {
+              formattedValue = sanitizeText(String(result[0]));
+              formattedName = sanitizeText(String(result[1]));
             }
-          } else {
-            displayValue = String(safeValue);
-            displayName = safeName;
+          } catch (error) {
+            console.error("Tooltip formatter error:", error);
           }
+        }
 
-          return {
-            displayValue,
-            displayName,
+        return [
+          {
+            displayValue: formattedValue ?? sanitizeText(String(rawValue)),
+            displayName: formattedName ?? safeName,
             color: entry.color || "#666",
             index,
-          };
-        })
-        .filter(Boolean);
+          },
+        ];
+      });
     }, [payload, formatter]);
 
     return (
@@ -249,8 +251,11 @@ export const OptimizedRevenueChart: React.FC<RevenueChartProps> = memo(
 
     // Optimized event handlers
     const handleMouseEnter = useCallback(
-      (_: any, index: number) => {
-        setActiveIndex(index);
+      (...args: unknown[]) => {
+        const index = typeof args[1] === "number" ? args[1] : null;
+        if (index !== null) {
+          setActiveIndex(index);
+        }
       },
       [setActiveIndex],
     );

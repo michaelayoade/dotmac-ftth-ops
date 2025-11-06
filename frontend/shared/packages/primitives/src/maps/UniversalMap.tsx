@@ -183,7 +183,7 @@ const variantStyles = {
 };
 
 // Status colors
-const statusColors = {
+const statusColors: Record<string, string> = {
   active: "#10B981",
   online: "#10B981",
   inactive: "#6B7280",
@@ -196,7 +196,7 @@ const statusColors = {
 };
 
 // Marker icons based on type
-const markerIcons = {
+const markerIcons: Record<MapMarker["type"], typeof MapPin> = {
   customer: Users,
   tower: Wifi,
   fiber: MapPin,
@@ -233,7 +233,7 @@ const MockMapCanvas = ({
       </div>
 
       {/* Service Areas */}
-      {serviceAreas?.map((area, index) => (
+      {serviceAreas?.map((area: ServiceArea, index: number) => (
         <div
           key={area.id}
           className="absolute opacity-30 hover:opacity-50 cursor-pointer transition-opacity"
@@ -251,7 +251,7 @@ const MockMapCanvas = ({
       ))}
 
       {/* Network Nodes */}
-      {networkNodes?.map((node, index) => {
+      {networkNodes?.map((node: NetworkNode, index: number) => {
         const Icon = node.type === "tower" ? Wifi : MapPin;
         return (
           <div
@@ -273,7 +273,7 @@ const MockMapCanvas = ({
       })}
 
       {/* Markers */}
-      {markers?.map((marker, index) => {
+      {markers?.map((marker: MapMarker, index: number) => {
         const Icon = markerIcons[marker.type] || MapPin;
         return (
           <div
@@ -289,7 +289,7 @@ const MockMapCanvas = ({
             <div
               className="p-1 rounded-full shadow-md border-2 border-white"
               style={{
-                backgroundColor: statusColors[marker.status || "active"],
+                backgroundColor: statusColors[marker.status ?? "active"],
               }}
             >
               <Icon className="w-3 h-3 text-white" />
@@ -299,7 +299,7 @@ const MockMapCanvas = ({
       })}
 
       {/* Routes */}
-      {routes?.map((route, index) => (
+      {routes?.map((route: Route, index: number) => (
         <svg
           key={route.id}
           className="absolute inset-0 pointer-events-none"
@@ -307,9 +307,9 @@ const MockMapCanvas = ({
         >
           <path
             d={`M ${20 + index * 30} ${50} L ${80 - index * 20} ${70 + index * 10}`}
-            stroke={statusColors[route.status]}
+            stroke={statusColors[route.status] ?? statusColors.active}
             strokeWidth="3"
-            strokeDashArray={route.type === "planned" ? "5,5" : "none"}
+            strokeDasharray={route.status === "planned" ? "5,5" : undefined}
             fill="none"
           />
         </svg>

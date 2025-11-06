@@ -22,6 +22,7 @@ import {
 } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
+import { logger } from "@/lib/logger";
 
 interface ReceiptListProps {
   tenantId: string;
@@ -76,8 +77,15 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         throw new Error("Failed to fetch receipts");
       }
     } catch (err) {
-      console.error("Failed to fetch receipts:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch receipts";
+      logger.error(
+        "Failed to fetch receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        {
+          tenantId,
+          customerId,
+        },
+      );
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -105,7 +113,11 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Failed to download receipt:", err);
+      logger.error(
+        "Failed to download receipt",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptId: receipt.receipt_id },
+      );
       alert("Failed to download receipt. Please try again.");
     }
   };
@@ -131,7 +143,11 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       await apiClient.post(`/billing/receipts/${receipt.receipt_id}/email`);
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
-      console.error("Failed to email receipt:", err);
+      logger.error(
+        "Failed to email receipt",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptId: receipt.receipt_id },
+      );
       alert("Failed to email receipt. Please try again.");
     }
   };
@@ -157,7 +173,11 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Failed to download receipts:", err);
+      logger.error(
+        "Failed to download receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptCount: selected.length },
+      );
       alert("Failed to download receipts. Please try again.");
     } finally {
       setBulkLoading(false);
@@ -173,7 +193,11 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       });
       alert(`Successfully sent ${receiptIds.length} receipt(s)`);
     } catch (err) {
-      console.error("Failed to email receipts:", err);
+      logger.error(
+        "Failed to email receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptCount: selected.length },
+      );
       alert("Failed to email receipts. Please try again.");
     } finally {
       setBulkLoading(false);

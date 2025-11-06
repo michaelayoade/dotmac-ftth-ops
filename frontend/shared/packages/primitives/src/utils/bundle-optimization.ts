@@ -3,7 +3,8 @@
  * Code splitting, tree shaking, and dynamic loading optimizations
  */
 
-import React, { lazy, ComponentType, LazyExoticComponent } from "react";
+import React, { lazy } from "react";
+import type { ComponentType, LazyExoticComponent } from "react";
 
 // Bundle analysis utilities
 export interface BundleAnalysis {
@@ -42,22 +43,24 @@ export const createDynamicImport = <T extends ComponentType<any>>(
       console.error(`Failed to load component ${componentName}:`, error);
 
       // Return a fallback component
-      return {
-        default: React.forwardRef((props: any, ref: any) =>
+      const Fallback = React.forwardRef<any, any>((props, ref) =>
+        React.createElement(
+          "div",
+          {
+            className: "p-4 bg-red-50 border border-red-200 rounded",
+            ref,
+            ...props,
+          },
           React.createElement(
-            "div",
-            {
-              className: "p-4 bg-red-50 border border-red-200 rounded",
-              ref,
-              ...props,
-            },
-            React.createElement(
-              "p",
-              { className: "text-red-800" },
-              `Failed to load ${componentName}`,
-            ),
+            "p",
+            { className: "text-red-800" },
+            `Failed to load ${componentName}`,
           ),
-        ) as T,
+        ),
+      );
+
+      return {
+        default: Fallback as unknown as T,
       };
     }
   });
@@ -415,8 +418,8 @@ export const PerformanceBudgets = {
   },
 
   // Check if budgets are exceeded
-  checkBudgets: (actualSizes: any, actualMetrics: any) => {
-    const violations = [];
+    checkBudgets: (actualSizes: any, actualMetrics: any) => {
+      const violations: string[] = [];
 
     // Check size budgets
     Object.entries(PerformanceBudgets.sizes).forEach(([key, budget]) => {

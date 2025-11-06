@@ -6,8 +6,8 @@
 
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
-import { ISPBrandTheme, ISPColors } from "./ISPBrandTheme";
+import React, { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 interface WhitelabelConfig {
   brand: {
@@ -243,21 +243,6 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
     document.head.appendChild(style);
   };
 
-  // Generate enhanced theme for ISPBrandTheme
-  const enhancedTheme = config
-    ? {
-        ...ISPColors,
-        primary: generateColorShades(config.colors.primary),
-        secondary: generateColorShades(config.colors.secondary),
-        accent: generateColorShades(config.colors.accent),
-        brand: {
-          name: config.brand.name,
-          logo: config.brand.logo,
-          logoDark: config.brand.logo_dark,
-        },
-      }
-    : ISPColors;
-
   const contextValue: WhitelabelContextType = {
     config,
     isWhitelabel,
@@ -275,7 +260,7 @@ export const WhitelabelThemeProvider: React.FC<WhitelabelThemeProviderProps> = (
 
   return (
     <WhitelabelContext.Provider value={contextValue}>
-      <ISPBrandTheme theme={enhancedTheme}>{children}</ISPBrandTheme>
+      {children}
     </WhitelabelContext.Provider>
   );
 };
@@ -373,42 +358,6 @@ export const WhitelabelContact: React.FC<{
   }
 
   return <span className={className}>{value}</span>;
-};
-
-// Helper function to generate color shades
-const generateColorShades = (baseColor: string) => {
-  // This would use the same color generation logic as the backend
-  // For now, return a simplified version
-  return {
-    50: lighten(baseColor, 0.4),
-    100: lighten(baseColor, 0.3),
-    200: lighten(baseColor, 0.2),
-    300: lighten(baseColor, 0.1),
-    400: lighten(baseColor, 0.05),
-    500: baseColor,
-    600: darken(baseColor, 0.1),
-    700: darken(baseColor, 0.2),
-    800: darken(baseColor, 0.3),
-    900: darken(baseColor, 0.4),
-  };
-};
-
-const lighten = (color: string, amount: number) => {
-  // Simple lightening - in production you'd use a proper color manipulation library
-  const num = parseInt(color.slice(1), 16);
-  const r = Math.min(255, Math.floor((num >> 16) + 255 * amount));
-  const g = Math.min(255, Math.floor(((num >> 8) & 0x00ff) + 255 * amount));
-  const b = Math.min(255, Math.floor((num & 0x0000ff) + 255 * amount));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-};
-
-const darken = (color: string, amount: number) => {
-  // Simple darkening
-  const num = parseInt(color.slice(1), 16);
-  const r = Math.max(0, Math.floor((num >> 16) * (1 - amount)));
-  const g = Math.max(0, Math.floor(((num >> 8) & 0x00ff) * (1 - amount)));
-  const b = Math.max(0, Math.floor((num & 0x0000ff) * (1 - amount)));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
 };
 
 export default WhitelabelThemeProvider;

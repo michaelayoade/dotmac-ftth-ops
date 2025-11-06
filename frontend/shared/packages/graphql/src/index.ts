@@ -26,9 +26,13 @@ export type {
   GraphQLErrorHandlerOptions,
 } from './error-handler';
 
-// Generated types and hooks (available after codegen runs)
-export * from '../generated';
-export * from '../generated/react-query';
+// Generated schema utilities
+export * from '../generated/fragment-masking';
+export * from '../generated/gql';
+export * from '../generated/graphql';
+
+// Generated React Query hooks (exported as namespace to avoid duplicate type conflicts)
+export * as ReactQueryHooks from '../generated/react-query';
 
 // Subscription adapter (temporary Apollo wrapper)
 export { useGraphQLSubscription } from './subscription-adapter';

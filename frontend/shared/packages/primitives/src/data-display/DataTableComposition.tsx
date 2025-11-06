@@ -4,7 +4,7 @@
  * Breaks down the complex AdvancedDataTable into composable parts
  */
 
-import React, { useCallback } from "react";
+import React, { useCallback, useRef } from "react";
 
 // Composition interfaces
 export interface DataTableState {
@@ -30,13 +30,14 @@ export const useDataTableFilters = (
   },
 ) => {
   const [filters, setFilters] = React.useState(initialFilters);
+  const initialRef = useRef(initialFilters);
 
   const handleFilterChange = useCallback((key: string, value: unknown) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(_props);
+    setFilters(initialRef.current);
   }, []);
 
   return { filters, setFilters, handleFilterChange, clearFilters };

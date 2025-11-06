@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { X, UserPlus, Search, Users, Calendar, Trash2 } from "lucide-react";
 import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useConfirmDialog } from "@dotmac/ui";
 
 interface Role {
@@ -53,7 +54,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         setUsers(response.data as User[]);
       }
     } catch (error) {
-      console.error("Error fetching users:", error);
+      logger.error(
+        "Error fetching users",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast.error("Failed to load users");
     }
   }, []);
@@ -66,7 +70,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         setAssignedUsers(response.data as (User & UserRoleAssignment)[]);
       }
     } catch (error) {
-      console.error("Error fetching role assignments:", error);
+      logger.error(
+        "Error fetching role assignments",
+        error instanceof Error ? error : new Error(String(error)),
+      );
     } finally {
       setLoading(false);
     }
@@ -108,7 +115,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
         toast.error(`Failed to assign role to ${failed.length} user(s)`);
       }
     } catch (error) {
-      console.error("Error assigning role:", error);
+      logger.error(
+        "Error assigning role",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast.error("Failed to assign role");
     } finally {
       setAssigning(false);
@@ -143,7 +153,10 @@ export default function AssignRoleModal({ role, onClose, onAssign }: AssignRoleM
           toast.error("Failed to revoke role");
         }
       } catch (error) {
-        console.error("Error revoking role:", error);
+        logger.error(
+          "Error revoking role",
+          error instanceof Error ? error : new Error(String(error)),
+        );
         toast.error("Failed to revoke role");
       }
     },

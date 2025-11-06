@@ -123,11 +123,63 @@ async def platform_health() -> dict[str, str]:
 
 
 @health_router.get("/health")
-async def api_health_check() -> dict[str, str]:
+async def api_health_check() -> dict[str, Any]:
     """
     Health check endpoint at /api/v1/health for frontend compatibility.
 
     Returns:
-        dict with status, version, and environment info
+        dict with status, version, environment info, and service health
     """
-    return _PLATFORM_HEALTH_SUMMARY.copy()
+    from ..monitoring.health_checks import HealthChecker
+
+    checker = HealthChecker()
+    health_summary = checker.get_summary()
+
+    response = _PLATFORM_HEALTH_SUMMARY.copy()
+    response.update({
+        "services": health_summary["services"],
+        "healthy": health_summary["healthy"],
+    })
+
+    return response
+
+
+@health_router.get("/health/redis")
+async def redis_health_check() -> dict[str, Any]:
+    """
+    Dedicated Redis health check endpoint.
+
+    Returns detailed Redis connection status including:
+    - Connection status
+    - Redis version
+    - Connected clients
+    - Memory usage
+    - Uptime
+
+    Returns 503 if Redis is unavailable.
+    """
+    from fastapi import HTTPException
+    from ..redis_client import redis_manager
+
+    try:
+        health_info = await redis_manager.health_check()
+
+        if health_info["status"] != "healthy":
+            raise HTTPException(
+                status_code=503,
+                detail={
+                    "error": "Redis unavailable",
+                    "info": health_info,
+                }
+            )
+
+        return health_info
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=503,
+            detail={
+                "error": "Redis health check failed",
+                "message": str(e),
+            }
+        )

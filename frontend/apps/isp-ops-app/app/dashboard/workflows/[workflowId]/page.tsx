@@ -87,7 +87,7 @@ function WorkflowDetailsPageContent() {
     enabled: !!workflowId,
     refetchInterval: (query) => {
       // Auto-refresh if there are running executions
-      if (query?.state?.data && query.state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
+      if ((query as any)?.state?.data && (query as any).state.data.some((e: WorkflowExecution) => e.status === "RUNNING" || e.status === "PENDING")) {
         return 5000; // Refresh every 5 seconds
       }
       return false;

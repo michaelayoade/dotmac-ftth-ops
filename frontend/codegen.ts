@@ -69,6 +69,7 @@ const config: CodegenConfig = {
 
         // Use object syntax (works with both v4 and v5)
         legacyMode: false,
+        reactQueryVersion: 5,
         exposeFetcher: true,
         exposeQueryKeys: true,
         addInfiniteQuery: true,

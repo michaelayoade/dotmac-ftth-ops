@@ -233,7 +233,7 @@ export function DataTable<T = any>({
     }
 
     if (checked) {
-      const allKeys = data.map((item) => selection.getRowKey?.(item));
+      const allKeys = data.map((item) => selection.getRowKey?.(item)).filter((key): key is string => key !== undefined);
       selection.onChange(allKeys);
     } else {
       selection.onChange([]);
@@ -288,9 +288,9 @@ export function DataTable<T = any>({
               .map((column) => (
                 <TableHead
                   key={column.key}
-                  sortable={column.sortable}
-                  sorted={sorting?.field === column.key ? sorting.order : false}
-                  onSort={() => handleSort(column)}
+                  {...(column.sortable !== undefined ? { sortable: column.sortable } : {})}
+                  {...(sorting?.field === column.key ? { sorted: sorting.order } : {})}
+                  {...(column.sortable ? { onSort: () => handleSort(column) } : {})}
                   style={{ width: column.width }}
                 >
                   {column.title}
@@ -312,7 +312,7 @@ export function DataTable<T = any>({
             </TableRow>
           ) : (
             data.map((record, _index) => {
-              const rowKey = selection?.getRowKey?.(record) || String(index);
+              const rowKey = selection?.getRowKey?.(record) || String(_index);
               const selected = isSelected(record);
 
               return (
@@ -330,8 +330,11 @@ export function DataTable<T = any>({
                     {columns
                       .filter((col) => !col.hidden)
                       .map((column) => (
-                        <TableCell key={column.key} align={column.align}>
-                          {renderCell(column, record, index)}
+                        <TableCell
+                          key={column.key}
+                          {...(column.align ? { align: column.align } : {})}
+                        >
+                          {renderCell(column, record, _index)}
                         </TableCell>
                       ))}
                     {expandable ? (
@@ -386,4 +389,14 @@ TableHead.displayName = "TableHead";
 TableCell.displayName = "TableCell";
 TableCaption.displayName = "TableCaption";
 
-export { Table, TableHeader, TableBody, TableFooter, TableRow, TableHead, TableCell, TableCaption };
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableRow,
+  TableHead,
+  TableCell,
+  TableCaption,
+  DataTable as UniversalTable,
+};

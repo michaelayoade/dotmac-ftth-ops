@@ -167,13 +167,15 @@ export function UniversalActivityFeed({
 
   // Auto-refresh for live feeds
   useEffect(() => {
-    if (isLive && onRefresh && refreshInterval > 0) {
-      const interval = setInterval(() => {
-        onRefresh();
-      }, refreshInterval * 1000);
-
-      return () => clearInterval(interval);
+    if (!isLive || !onRefresh || refreshInterval <= 0) {
+      return;
     }
+
+    const interval = setInterval(() => {
+      onRefresh();
+    }, refreshInterval * 1000);
+
+    return () => clearInterval(interval);
   }, [isLive, onRefresh, refreshInterval]);
 
   // Filter activities

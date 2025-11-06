@@ -16,6 +16,7 @@ import {
 import { useToast } from "@dotmac/ui";
 import { FileText, Download, Save, Eye } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 interface ReportConfig {
   name: string;
@@ -125,7 +126,10 @@ export function CustomReportBuilder() {
         description: `Custom report "${config.name}" has been saved successfully.`,
       });
     } catch (error) {
-      console.error("Failed to save report:", error);
+      logger.error(
+        "Failed to save custom report",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
         title: "Save Failed",
         description:
@@ -158,7 +162,10 @@ export function CustomReportBuilder() {
 
       // Display the generated report
       // Note: In a real implementation, this would open a modal or navigate to a report view
-      console.log("Generated report data:", reportData);
+      logger.debug("Generated report data", {
+        reportName: config.name || undefined,
+        metricCount: config.metrics.length,
+      });
 
       toast({
         title: "Report Generated",
@@ -168,7 +175,10 @@ export function CustomReportBuilder() {
       // Optional: Store report data in state for display
       // setGeneratedReport(reportData);
     } catch (error) {
-      console.error("Failed to generate report:", error);
+      logger.error(
+        "Failed to generate custom report",
+        error instanceof Error ? error : new Error(String(error)),
+      );
       toast({
         title: "Generation Failed",
         description:

@@ -1,5 +1,5 @@
 // Components
-export * from "./components/EnhancedDataTable.examples";
+// export * from "./components/EnhancedDataTable.examples"; // Excluded from build due to type conflicts
 export * from "./components/EnhancedDataTable";
 export * from "./components/alert-dialog";
 export * from "./components/alert";

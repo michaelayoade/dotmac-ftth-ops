@@ -61,7 +61,7 @@ export const dunningKeys = {
  * @returns Campaigns with loading and error states
  */
 export function useDunningCampaigns(filters: CampaignListFilters = {}) {
-  return useQuery<DunningCampaign[], Error>({
+  return useQuery<DunningCampaign[], Error, DunningCampaign[], any>({
     queryKey: dunningKeys.campaign(filters),
     queryFn: () => dunningService.listCampaigns(filters),
     staleTime: 30000, // 30 seconds
@@ -76,7 +76,7 @@ export function useDunningCampaigns(filters: CampaignListFilters = {}) {
  * @returns Campaign details with loading and error states
  */
 export function useDunningCampaign(campaignId: string | null) {
-  return useQuery<DunningCampaign, Error>({
+  return useQuery<DunningCampaign, Error, DunningCampaign, any>({
     queryKey: dunningKeys.campaignDetail(campaignId!),
     queryFn: () => dunningService.getCampaign(campaignId!),
     enabled: !!campaignId,
@@ -271,7 +271,7 @@ export function useResumeDunningCampaign(options?: {
  * @returns Executions with loading and error states
  */
 export function useDunningExecutions(filters: ExecutionListFilters = {}) {
-  return useQuery<DunningExecution[], Error>({
+  return useQuery<DunningExecution[], Error, DunningExecution[], any>({
     queryKey: dunningKeys.execution(filters),
     queryFn: () => dunningService.listExecutions(filters),
     staleTime: 30000, // 30 seconds
@@ -286,7 +286,7 @@ export function useDunningExecutions(filters: ExecutionListFilters = {}) {
  * @returns Execution details with loading and error states
  */
 export function useDunningExecution(executionId: string | null) {
-  return useQuery<DunningExecution, Error>({
+  return useQuery<DunningExecution, Error, DunningExecution, any>({
     queryKey: dunningKeys.executionDetail(executionId!),
     queryFn: () => dunningService.getExecution(executionId!),
     enabled: !!executionId,
@@ -378,7 +378,7 @@ export function useCancelDunningExecution(options?: {
  * @returns Statistics with loading and error states
  */
 export function useDunningStatistics() {
-  return useQuery<DunningStatistics, Error>({
+  return useQuery<DunningStatistics, Error, DunningStatistics, any>({
     queryKey: dunningKeys.statistics(),
     queryFn: () => dunningService.getStatistics(),
     staleTime: 60000, // 1 minute
@@ -393,7 +393,7 @@ export function useDunningStatistics() {
  * @returns Campaign statistics with loading and error states
  */
 export function useDunningCampaignStatistics(campaignId: string | null) {
-  return useQuery<DunningCampaignStats, Error>({
+  return useQuery<DunningCampaignStats, Error, DunningCampaignStats, any>({
     queryKey: dunningKeys.campaignStats(campaignId!),
     queryFn: () => dunningService.getCampaignStatistics(campaignId!),
     enabled: !!campaignId,
@@ -409,7 +409,7 @@ export function useDunningCampaignStatistics(campaignId: string | null) {
  * @returns Chart data with loading and error states
  */
 export function useDunningRecoveryChart(days: number = 30) {
-  return useQuery<DunningRecoveryChartData[], Error>({
+  return useQuery<DunningRecoveryChartData[], Error, DunningRecoveryChartData[], any>({
     queryKey: dunningKeys.recoveryChart(days),
     queryFn: () => dunningService.getRecoveryChartData(days),
     staleTime: 60000, // 1 minute

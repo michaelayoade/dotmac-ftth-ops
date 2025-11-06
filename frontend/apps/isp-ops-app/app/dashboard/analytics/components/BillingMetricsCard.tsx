@@ -35,7 +35,7 @@ export function BillingMetricsCard({ period = "30d" }: { period?: string }) {
         <CardContent className="pt-6">
           <div className="flex items-center gap-2 text-destructive">
             <AlertCircle className="h-5 w-5" />
-            <p>Failed to load billing metrics: {error.message}</p>
+            <p>Failed to load billing metrics: {(error as Error).message}</p>
           </div>
         </CardContent>
       </Card>

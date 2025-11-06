@@ -73,6 +73,7 @@ interface NotificationContextType {
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
   clearAll: () => void;
+  clearNotifications: () => void;
   updateSettings: (settings: Partial<NotificationSettings>) => void;
   connect: () => void;
   disconnect: () => void;
@@ -217,6 +218,8 @@ export interface NotificationProviderProps {
   userId?: string;
   tenantId?: string;
   onError?: (error: Error) => void;
+  maxNotifications?: number;
+  defaultDuration?: number;
 }
 
 export function NotificationProvider({
@@ -226,10 +229,12 @@ export function NotificationProvider({
   userId,
   tenantId,
   onError,
+  maxNotifications,
+  defaultDuration,
 }: NotificationProviderProps) {
   const [state, dispatch] = useReducer(notificationReducer, initialState);
   const websocketRef = useRef<WebSocket | null>(null);
-  const cleanupIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const cleanupIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const soundRef = useRef<HTMLAudioElement | null>(null);
 
   // Generate unique notification ID
@@ -289,7 +294,6 @@ export function NotificationProvider({
             badge: "/icons/badge.png",
             tag: notification.id,
             requireInteraction: notification.priority === "critical",
-            timestamp: notification.timestamp.getTime(),
           });
 
           browserNotification.onclick = () => {
@@ -464,6 +468,18 @@ export function NotificationProvider({
     };
   }, [websocketUrl, state.settings.enableWebSocket, connect, disconnect]);
 
+  useEffect(() => {
+    if (typeof maxNotifications === "number" && maxNotifications > 0) {
+      dispatch({ type: "UPDATE_SETTINGS", payload: { maxNotifications } });
+    }
+  }, [maxNotifications]);
+
+  useEffect(() => {
+    if (typeof defaultDuration === "number" && defaultDuration > 0) {
+      dispatch({ type: "UPDATE_SETTINGS", payload: { autoHideDelay: defaultDuration } });
+    }
+  }, [defaultDuration]);
+
   const contextValue = useMemo<NotificationContextType>(
     () => ({
       state,
@@ -472,21 +488,12 @@ export function NotificationProvider({
       markAsRead,
       markAllAsRead,
       clearAll,
+      clearNotifications: clearAll,
       updateSettings,
       connect,
       disconnect,
     }),
-    [
-      state,
-      addNotification,
-      removeNotification,
-      markAsRead,
-      markAllAsRead,
-      clearAll,
-      updateSettings,
-      connect,
-      disconnect,
-    ],
+    [state, addNotification, removeNotification, markAsRead, markAllAsRead, clearAll, updateSettings, connect, disconnect],
   );
 
   return (
@@ -707,19 +714,21 @@ export function useToast() {
 
   const toast = useCallback(
     (message: string, options?: Partial<Omit<Notification, "id" | "timestamp" | "read">>) => {
-      return addNotification({
+      const notificationPayload: Omit<Notification, "id" | "timestamp" | "read"> = {
         title: options?.title || "Notification",
         message,
         type: options?.type || "info",
         priority: options?.priority || "medium",
         channel: options?.channel || ["browser"],
         persistent: options?.persistent || false,
-        actions: options?.actions,
-        metadata: options?.metadata,
-        expiresAt: options?.expiresAt,
-        userId: options?.userId,
-        tenantId: options?.tenantId,
-      });
+        ...(options?.actions ? { actions: options.actions } : {}),
+        ...(options?.metadata ? { metadata: options.metadata } : {}),
+        ...(options?.expiresAt ? { expiresAt: options.expiresAt } : {}),
+        ...(options?.userId ? { userId: options.userId } : {}),
+        ...(options?.tenantId ? { tenantId: options.tenantId } : {}),
+      };
+
+      return addNotification(notificationPayload);
     },
     [addNotification],
   );

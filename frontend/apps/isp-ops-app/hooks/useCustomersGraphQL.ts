@@ -297,7 +297,7 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
 
   // Find active subscriptions
   const activeSubscriptions = subscriptions.filter(
-    (sub) => sub.status === "ACTIVE" || sub.status === "TRIALING",
+    (sub: any) => sub.status === "ACTIVE" || sub.status === "TRIALING",
   );
   const currentSubscription = activeSubscriptions[0] ?? null;
 
@@ -494,7 +494,7 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
 
   const subscriptions = data?.customerSubscriptions ?? [];
   const activeSubscriptions = subscriptions.filter(
-    (sub) => sub.status === "ACTIVE" || sub.status === "TRIALING",
+    (sub: any) => sub.status === "ACTIVE" || sub.status === "TRIALING",
   );
 
   // Parse JSON scalars

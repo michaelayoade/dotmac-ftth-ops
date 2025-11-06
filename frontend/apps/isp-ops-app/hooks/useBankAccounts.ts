@@ -24,7 +24,7 @@ import { useToast } from "@dotmac/ui";
 // ============================================
 
 export function useBankAccounts(includeInactive: boolean = false) {
-  return useQuery<CompanyBankAccountResponse[], Error>({
+  return useQuery<CompanyBankAccountResponse[], Error, CompanyBankAccountResponse[], any>({
     queryKey: ["bank-accounts", includeInactive],
     queryFn: () => bankAccountsService.listBankAccounts(includeInactive),
     staleTime: 30000, // 30 seconds
@@ -32,7 +32,7 @@ export function useBankAccounts(includeInactive: boolean = false) {
 }
 
 export function useBankAccount(accountId: number | null) {
-  return useQuery<CompanyBankAccountResponse, Error>({
+  return useQuery<CompanyBankAccountResponse, Error, CompanyBankAccountResponse, any>({
     queryKey: ["bank-account", accountId],
     queryFn: () => bankAccountsService.getBankAccount(accountId!),
     enabled: !!accountId,
@@ -40,7 +40,7 @@ export function useBankAccount(accountId: number | null) {
 }
 
 export function useBankAccountSummary(accountId: number | null) {
-  return useQuery<BankAccountSummary, Error>({
+  return useQuery<BankAccountSummary, Error, BankAccountSummary, any>({
     queryKey: ["bank-account-summary", accountId],
     queryFn: () => bankAccountsService.getBankAccountSummary(accountId!),
     enabled: !!accountId,
@@ -158,7 +158,7 @@ export function useDeactivateBankAccount() {
 // ============================================
 
 export function useManualPayments(filters?: PaymentSearchFilters) {
-  return useQuery<ManualPaymentResponse[], Error>({
+  return useQuery<ManualPaymentResponse[], Error, ManualPaymentResponse[], any>({
     queryKey: ["manual-payments", filters],
     queryFn: () => bankAccountsService.searchPayments(filters || {}),
     staleTime: 30000,

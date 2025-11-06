@@ -44,6 +44,7 @@ import { InvoicePDFGenerator } from "@/lib/pdf/invoice-pdf";
 import { useInvoiceActions } from "@/hooks/useInvoiceActions";
 import { CreateCreditNoteModal } from "./CreateCreditNoteModal";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 interface InvoiceDetailModalProps {
   isOpen: boolean;
@@ -85,7 +86,10 @@ export function InvoiceDetailModal({
           setCompanyInfo(response.data);
         }
       } catch (error) {
-        console.error("Failed to fetch company info:", error);
+        logger.error(
+          "Failed to fetch company info for invoice detail",
+          error instanceof Error ? error : new Error(String(error)),
+        );
         // Use fallback data if API fails
         setCompanyInfo({
           name: "Your ISP Company",
@@ -116,7 +120,11 @@ export function InvoiceDetailModal({
           setCustomerInfo(response.data);
         }
       } catch (error) {
-        console.error("Failed to fetch customer info:", error);
+        logger.error(
+          "Failed to fetch customer info for invoice detail",
+          error instanceof Error ? error : new Error(String(error)),
+          { customerId: invoice.customer_id },
+        );
         // Fallback to just customer ID
         setCustomerInfo({ name: `Customer ${invoice.customer_id}` });
       }
@@ -205,7 +213,11 @@ export function InvoiceDetailModal({
         description: `Invoice ${invoice.invoice_number} has been downloaded as PDF.`,
       });
     } catch (error) {
-      console.error("Failed to generate PDF:", error);
+      logger.error(
+        "Failed to generate invoice PDF",
+        error instanceof Error ? error : new Error(String(error)),
+        { invoiceId: invoice.invoice_id },
+      );
       toast({
         title: "Error",
         description: "Failed to generate PDF. Please try again.",

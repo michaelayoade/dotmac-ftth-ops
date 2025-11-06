@@ -39,6 +39,7 @@ import type {
   NetworkPerformanceProps,
   ServiceTierProps,
   AlertSeverityProps,
+  StatusSize,
   UptimeStatus,
   NetworkMetrics,
   ServiceTierConfig,
@@ -107,6 +108,13 @@ const statusDotVariants = cva("rounded-full flex-shrink-0 transition-all duratio
       active: "bg-gradient-to-r from-blue-400 to-indigo-500 shadow-lg shadow-blue-400/50",
       suspended: "bg-gradient-to-r from-gray-400 to-slate-500 shadow-lg shadow-gray-400/50",
       pending: "bg-gradient-to-r from-purple-400 to-indigo-500 shadow-lg shadow-purple-400/50",
+      paid: "bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-400/50",
+      overdue: "bg-gradient-to-r from-red-400 to-rose-500 shadow-lg shadow-red-400/50",
+      processing: "bg-gradient-to-r from-blue-400 to-indigo-500 shadow-lg shadow-blue-400/50",
+      critical: "bg-gradient-to-r from-red-500 to-rose-600 shadow-lg shadow-red-500/40",
+      high: "bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/40",
+      medium: "bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/40",
+      low: "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/40",
     },
     size: {
       sm: "w-2 h-2",
@@ -172,8 +180,13 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
         "high",
         "medium",
         "low",
-      ];
-      const safeVariant = validVariants.includes(variant || "") ? variant : "active";
+      ] as const;
+
+      type ValidVariant = (typeof validVariants)[number];
+      const isValidVariant = (value: string): value is ValidVariant =>
+        validVariants.includes(value as ValidVariant);
+
+      const safeVariant: ValidVariant = variant && isValidVariant(variant) ? variant : "active";
 
       const textIndicator =
         COLOR_CONTRAST.TEXT_INDICATORS[safeVariant as keyof typeof COLOR_CONTRAST.TEXT_INDICATORS];
@@ -190,14 +203,14 @@ export const OptimizedStatusBadge: React.FC<StatusBadgeProps> = memo(
     }, [className, children, variant]);
 
     // Optimized animation behavior
-    const animationConfig = useMemo(
-      () => ({
+    const animationConfig = useMemo(() => {
+      const dotSize: StatusSize = size === "sm" ? "sm" : size === "lg" ? "lg" : "md";
+      return {
         shouldAnimate: animated && !prefersReducedMotion,
         shouldPulse: pulse && !prefersReducedMotion,
-        dotSize: size === "sm" ? "sm" : size === "lg" ? "lg" : ("md" as const),
-      }),
-      [animated, pulse, prefersReducedMotion, size],
-    );
+        dotSize,
+      };
+    }, [animated, pulse, prefersReducedMotion, size]);
 
     // Debounced click handler to prevent rapid firing
     const [, , debouncedClickHandler] = useDebouncedState(null, 150);

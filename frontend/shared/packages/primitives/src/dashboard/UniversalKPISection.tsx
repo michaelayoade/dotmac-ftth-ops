@@ -5,9 +5,9 @@
 
 "use client";
 
-import React from "react";
 import { motion } from "framer-motion";
-import { UniversalMetricCard, UniversalMetricCardProps } from "./UniversalMetricCard";
+import { UniversalMetricCard } from "./UniversalMetricCard";
+import type { UniversalMetricCardProps } from "./UniversalMetricCard";
 import { cn } from "../utils/cn";
 
 export interface KPIItem extends Omit<UniversalMetricCardProps, "size" | "variant"> {

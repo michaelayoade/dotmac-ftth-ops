@@ -7,17 +7,16 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Skeleton } from "@dotmac/ui";
-import { Network, Router, Database, Cog, Settings } from "lucide-react";
+import { Database, Cog, Settings } from "lucide-react";
 import { useAllOSSConfigurations, useOSSConfigStatistics } from "@/hooks/useOSSConfig";
 import { OSSConfigurationCard } from "./components/OSSConfigurationCard";
 import { OSSStatusOverview } from "./components/OSSStatusOverview";
 import type { OSSService } from "@/lib/services/oss-config-service";
 
+// Platform Admin only manages infrastructure-level OSS (NetBox for DCIM/IPAM)
+// Tenant-specific services (GenieACS, VOLTHA) are configured in ISP Ops App
 const OSS_SERVICES: Array<{ service: OSSService; icon: any }> = [
-  { service: "voltha", icon: Network },
-  { service: "genieacs", icon: Router },
   { service: "netbox", icon: Database },
-  { service: "ansible", icon: Cog },
 ];
 
 export default function OSSConfigurationPage() {
@@ -44,10 +43,10 @@ export default function OSSConfigurationPage() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight flex items-center gap-2">
           <Settings className="h-8 w-8" />
-          OSS Integration Configuration
+          Infrastructure Configuration (NetBox)
         </h1>
         <p className="text-muted-foreground mt-2">
-          Configure tenant-specific settings for Operations Support Systems (OSS) integrations
+          Configure NetBox for infrastructure and data center inventory management (DCIM/IPAM)
         </p>
       </div>
 
@@ -56,7 +55,7 @@ export default function OSSConfigurationPage() {
         value={activeTab}
         onValueChange={(value) => setActiveTab(value as OSSService | "overview")}
       >
-        <TabsList className="grid w-full grid-cols-5 lg:w-[800px]">
+        <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="overview" className="gap-2">
             <Settings className="h-4 w-4" />
             Overview

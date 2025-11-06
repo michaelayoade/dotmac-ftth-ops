@@ -22,6 +22,7 @@ import {
 import { useToast } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { DollarSign, CreditCard, Building2, Wallet, Check, Upload, X } from "lucide-react";
 import { type Invoice, PaymentMethods, type PaymentMethod } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
@@ -43,6 +44,15 @@ interface PaymentFormData {
   receipt_file?: File;
   apply_to_invoices: { invoice_id: string; amount: number }[];
 }
+
+type PaymentPayload = {
+  amount: number;
+  method: PaymentMethod;
+  reference: string;
+  description: string;
+  payment_date: string;
+  apply_to_invoices: Array<{ invoice_id: string; amount: number }>;
+};
 
 export function RecordPaymentModal({
   isOpen,
@@ -139,6 +149,8 @@ export function RecordPaymentModal({
     e.preventDefault();
     setIsSubmitting(true);
 
+    let paymentPayload: PaymentPayload | null = null;
+
     try {
       const paymentAmount = parseFloat(formData.amount);
 
@@ -166,7 +178,7 @@ export function RecordPaymentModal({
       }
 
       // Build payment data
-      const paymentData = {
+      const payload: PaymentPayload = {
         amount: paymentAmount,
         method: formData.method,
         reference: formData.reference,
@@ -177,6 +189,7 @@ export function RecordPaymentModal({
           amount: dist.amount,
         })),
       };
+      paymentPayload = payload;
 
       // Record payment via API
       try {
@@ -195,16 +208,20 @@ export function RecordPaymentModal({
 
         // Record payment with receipt URL
         await apiClient.post("/billing/payments", {
-          ...paymentData,
+          ...payload,
           receipt_url: receiptUrl,
         });
 
         toast({
           title: "Payment Recorded",
-          description: `Payment of ${formatCurrency(paymentAmount)} has been successfully recorded.`,
+          description: `Payment of ${formatCurrency(payload.amount)} has been successfully recorded.`,
         });
       } catch (error) {
-        console.error("Failed to record payment:", error);
+        logger.error(
+          "Failed to record payment (submission)",
+          error instanceof Error ? error : new Error(String(error)),
+          { invoiceIds: payload.apply_to_invoices, amount: payload.amount },
+        );
         toast({
           title: "Payment Failed",
           description:
@@ -229,7 +246,11 @@ export function RecordPaymentModal({
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to record payment:", error);
+      logger.error(
+        "Failed to record payment (outer)",
+        error instanceof Error ? error : new Error(String(error)),
+        { amount: paymentPayload?.amount ?? Number(formData.amount || 0) },
+      );
       toast({
         title: "Error",
         description: "Failed to record payment. Please try again.",

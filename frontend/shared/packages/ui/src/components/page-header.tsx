@@ -4,8 +4,9 @@
  * Supports dark mode and flexible action buttons
  */
 
+import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 interface PageHeaderProps {
   /**
@@ -26,12 +27,12 @@ interface PageHeaderProps {
   /**
    * Action buttons or elements to display on the right
    */
-  actions?: React.ReactNode;
+  actions?: ReactNode;
 
   /**
    * Additional content below title/description
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
 
   /**
    * Custom className for the container

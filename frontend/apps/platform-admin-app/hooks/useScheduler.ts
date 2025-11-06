@@ -101,7 +101,7 @@ export function useExecuteJobChain(): UseMutationResult<JobChain, Error, Execute
  * Get a single scheduled job by ID
  */
 export function useScheduledJob(jobId: string | null): UseQueryResult<ScheduledJobResponse, Error> {
-  return useQuery<ScheduledJobResponse, Error>({
+  return useQuery<ScheduledJobResponse, Error, ScheduledJobResponse, any>({
     queryKey: ["scheduler", "scheduled-job", jobId],
     queryFn: async () => {
       if (!jobId) throw new Error("Job ID is required");
@@ -219,7 +219,7 @@ export function useDeleteScheduledJob(): UseMutationResult<void, Error, string> 
  * Get a single job chain by ID
  */
 export function useJobChain(chainId: string | null): UseQueryResult<JobChainResponse, Error> {
-  return useQuery<JobChainResponse, Error>({
+  return useQuery<JobChainResponse, Error, JobChainResponse, any>({
     queryKey: ["scheduler", "job-chain", chainId],
     queryFn: async () => {
       if (!chainId) throw new Error("Chain ID is required");

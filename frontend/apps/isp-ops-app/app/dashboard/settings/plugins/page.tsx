@@ -37,6 +37,9 @@ import {
 } from "@/hooks/usePlugins";
 import { Alert, AlertDescription } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 type ViewMode = "grid" | "list" | "health";
 
@@ -84,7 +87,7 @@ export default function PluginsPage() {
       const result = await bulkHealthCheck.mutateAsync(undefined);
       setHealthChecks(result);
     } catch (error) {
-      console.error("Failed to load health checks:", error);
+      logger.error("Failed to load plugin health checks", toError(error));
     }
   }, [bulkHealthCheck]);
 

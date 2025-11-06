@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { CreditCard, FileDown } from "lucide-react";
 import InvoiceList from "@/components/billing/InvoiceList";
+import { logger } from "@/lib/logger";
 import { useTenant } from "@/lib/contexts/tenant-context";
 import { Invoice } from "@/types/billing";
 
@@ -29,7 +30,11 @@ export default function BillingPage() {
           </div>
           <button
             type="button"
-            onClick={() => console.log("Export invoices clicked")}
+            onClick={() =>
+              logger.info("Export invoices requested", {
+                tenantId: tenantId || "unknown",
+              })
+            }
             className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-muted-foreground hover:bg-accent transition-colors"
           >
             <FileDown className="h-4 w-4" />

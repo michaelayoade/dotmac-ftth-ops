@@ -68,12 +68,12 @@ export type {
   VStackProps,
 } from "./layout/Layout";
 export type {
-  BottomSheetProps,
-  ConfirmationModalProps,
-  DrawerProps,
-  FormModalProps,
-  // Modal types
+  ModalBackdropProps,
   ModalContentProps,
+  ModalHeaderProps,
+  ModalTitleProps,
+  ModalTriggerProps,
+  ModalProps,
 } from "./layout/Modal";
 export type {
   BreadcrumbEllipsisProps,

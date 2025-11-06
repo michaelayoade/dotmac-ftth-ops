@@ -2,17 +2,16 @@
 
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight, Menu, X } from "lucide-react";
-import type React from "react";
-import { useEffect, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { LayoutComposers, when } from "../patterns/composition";
 import { useFocusTrap } from "../utils/accessibility";
 
 interface SidebarItem {
   id: string;
   label: string;
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   badge?: string;
   children?: SidebarItem[];
 }
@@ -23,215 +22,105 @@ interface ResponsiveSidebarProps {
   onNavigate?: (href: string) => void;
   className?: string;
   title?: string;
-  footer?: React.ReactNode;
+  footer?: ReactNode;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
 }
 
-interface SidebarItemProps {
-  item: SidebarItem;
+interface RenderOptions {
+  items: SidebarItem[];
   depth: number;
-  isMobile: boolean;
-  hasChildren: boolean;
-  isActive: boolean;
-  isExpanded: boolean;
-  isDesktopExpanded: boolean;
-  onItemClick: (item: SidebarItem) => void;
-  renderSidebarItem: (item: SidebarItem, depth: number, isMobile: boolean) => React.ReactElement;
+  currentPath: string;
+  expandedItems: Set<string>;
+  showContent: boolean;
+  onToggle: (item: SidebarItem) => void;
+  onNavigate?: (href: string) => void;
 }
 
-// Composition-based sidebar item renderers
-const SidebarItemComposers = {
-  button: (item: SidebarItem, props: SidebarItemProps) => (
-    <button
-      type="button"
-      onClick={() => props.onItemClick(item)}
-      className={clsx(
-        "group flex w-full items-center rounded-md px-3 py-2 font-medium text-sm transition-colors",
-        "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-        {
-          "bg-blue-50 text-blue-700": props.isActive && !props.isMobile,
-          "bg-blue-600 text-white": props.isActive && props.isMobile,
-          "text-gray-700 hover:bg-gray-100 hover:text-gray-900": !props.isActive,
-          "pl-6": props.depth > 0 && (props.isMobile || props.isDesktopExpanded),
-          "justify-center": !props.isMobile && !props.isDesktopExpanded,
-        },
-      )}
-      aria-current={props.isActive ? "page" : undefined}
-      aria-expanded={props.hasChildren ? props.isExpanded : undefined}
-    />
-  ),
-
-  icon: (item: SidebarItem, props: SidebarItemProps) => (
-    <item.icon
-      className={clsx("h-5 w-5 flex-shrink-0", {
-        "text-blue-500": props.isActive && !props.isMobile,
-        "text-white": props.isActive && props.isMobile,
-        "text-gray-400 group-hover:text-gray-500": !props.isActive,
-        "mr-3": props.isMobile || props.isDesktopExpanded,
-      })}
-    />
-  ),
-
-  label: (item: SidebarItem) => <span className="flex-1 text-left">{item.label}</span>,
-
-  badge: (item: SidebarItem, props: SidebarItemProps) =>
-    item.badge ? (
-      <span
-        className={clsx(
-          "ml-2 inline-flex items-center justify-center rounded-full px-2 py-1 font-bold text-xs",
-          {
-            "bg-blue-100 text-blue-600": props.isActive && !props.isMobile,
-            "bg-white bg-opacity-20 text-white": props.isActive && props.isMobile,
-            "bg-red-100 text-red-600": !props.isActive,
-          },
-        )}
-      >
-        {item.badge}
-      </span>
-    ) : null,
-
-  chevron: (_item: SidebarItem, props: SidebarItemProps) =>
-    props.hasChildren ? (
-      <ChevronRight
-        className={clsx("ml-2 h-4 w-4 transition-transform", props.isExpanded && "rotate-90")}
-      />
-    ) : null,
-
-  children: (item: SidebarItem, props: SidebarItemProps) =>
-    props.hasChildren && props.isExpanded && (props.isMobile || props.isDesktopExpanded) ? (
-      <ul className="mt-1 space-y-1">
-        {item.children?.map((child) =>
-          props.renderSidebarItem(child, props.depth + 1, props.isMobile),
-        )}
-      </ul>
-    ) : null,
-};
-
-function SidebarItem(props: SidebarItemProps) {
-  const { item } = props;
-  const showContent = props.isMobile || props.isDesktopExpanded;
-
-  // Use composition to orchestrate the button content
-  const buttonContent = LayoutComposers.inline("2")(
-    () => SidebarItemComposers.icon(item, props),
-    when(
-      showContent,
-      LayoutComposers.inline("2")(
-        () => SidebarItemComposers.label(item),
-        () => SidebarItemComposers.badge(item, props),
-        () => SidebarItemComposers.chevron(item, props),
-      ),
-    ),
-  );
+function renderSidebarItems(options: RenderOptions): ReactNode {
+  const { items, depth, currentPath, expandedItems, showContent, onToggle, onNavigate } = options;
 
   return (
-    <li>
-      <button
-        type="button"
-        onClick={() => props.onItemClick(item)}
-        className={clsx(
-          "group flex w-full items-center rounded-md px-3 py-2 font-medium text-sm transition-colors",
-          "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
-          {
-            "bg-blue-50 text-blue-700": props.isActive && !props.isMobile,
-            "bg-blue-600 text-white": props.isActive && props.isMobile,
-            "text-gray-700 hover:bg-gray-100 hover:text-gray-900": !props.isActive,
-            "pl-6": props.depth > 0 && (props.isMobile || props.isDesktopExpanded),
-            "justify-center": !props.isMobile && !props.isDesktopExpanded,
-          },
-        )}
-        aria-current={props.isActive ? "page" : undefined}
-        aria-expanded={props.hasChildren ? props.isExpanded : undefined}
-      >
-        {buttonContent(_props)}
-      </button>
-
-      {SidebarItemComposers.children(item, props)}
-    </li>
-  );
-}
-
-// Sidebar composition helpers
-const SidebarHelpers = {
-  setupKeyboardHandlers: (isMobileOpen: boolean, setIsMobileOpen: (open: boolean) => void) => {
-    useEffect(() => {
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === "Escape" && isMobileOpen) {
-          setIsMobileOpen(false);
-        }
-      };
-      document.addEventListener("keydown", handleEscape);
-      return () => document.removeEventListener("keydown", handleEscape);
-    }, [isMobileOpen, setIsMobileOpen]);
-  },
-
-  setupScrollPrevention: (isMobileOpen: boolean) => {
-    useEffect(() => {
-      if (isMobileOpen) {
-        document.body.style.overflow = "hidden";
-        return () => {
-          document.body.style.overflow = "";
-        };
-      }
-    }, [isMobileOpen]);
-  },
-
-  createItemClickHandler:
-    (
-      setExpandedItems: React.Dispatch<React.SetStateAction<Set<string>>>,
-      onNavigate?: (href: string) => void,
-      setIsMobileOpen?: (open: boolean) => void,
-    ) =>
-    (item: SidebarItem) => {
-      if (item.children?.length) {
-        setExpandedItems((prev) => {
-          const newSet = new Set(prev);
-          if (newSet.has(item.id)) {
-            newSet.delete(item.id);
-          } else {
-            newSet.add(item.id);
-          }
-          return newSet;
-        });
-      } else {
-        onNavigate?.(item.href);
-        setIsMobileOpen?.(false);
-      }
-    },
-
-  createItemRenderer: (
-    isItemActive: (href: string) => boolean,
-    isItemExpanded: (id: string) => boolean,
-    isDesktopExpanded: boolean,
-    handleItemClick: (item: SidebarItem) => void,
-  ) => {
-    const renderSidebarItem = useCallback(
-      (item: SidebarItem, depth = 0, isMobile = false) => {
-        const hasChildren = item.children && item.children.length > 0;
-        const isActive = isItemActive(item.href);
-        const isExpanded = isItemExpanded(item.id);
+    <ul className={clsx("space-y-1", depth > 0 && "ml-2")} role={depth === 0 ? "tree" : "group"}>
+      {items.map((item) => {
+        const isActive = currentPath === item.href;
+        const hasChildren = (item.children?.length ?? 0) > 0;
+        const isExpanded = hasChildren && expandedItems.has(item.id);
+        const Icon = item.icon;
 
         return (
-          <SidebarItem
-            key={item.id}
-            item={item}
-            depth={depth}
-            isMobile={isMobile}
-            hasChildren={hasChildren}
-            isActive={isActive}
-            isExpanded={isExpanded}
-            isDesktopExpanded={isDesktopExpanded}
-            onItemClick={handleItemClick}
-            renderSidebarItem={renderSidebarItem}
-          />
+          <li key={item.id}>
+            <button
+              type="button"
+              onClick={() => {
+                if (hasChildren) {
+                  onToggle(item);
+                } else {
+                  onNavigate?.(item.href);
+                }
+              }}
+              className={clsx(
+                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-left text-sm font-medium transition-colors",
+                "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                isActive
+                  ? "bg-blue-50 text-blue-700"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900",
+                depth > 0 && "pl-5",
+                !showContent && "justify-center",
+              )}
+              aria-current={isActive ? "page" : undefined}
+              aria-expanded={hasChildren ? isExpanded : undefined}
+            >
+              <Icon
+                className={clsx(
+                  "h-5 w-5 flex-shrink-0",
+                  isActive ? "text-blue-600" : "text-gray-400",
+                )}
+                aria-hidden="true"
+              />
+              {showContent ? (
+                <>
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge ? (
+                    <span
+                      className={clsx(
+                        "rounded-full px-2 py-0.5 text-xs font-semibold",
+                        isActive ? "bg-blue-100 text-blue-700" : "bg-red-100 text-red-600",
+                      )}
+                    >
+                      {item.badge}
+                    </span>
+                  ) : null}
+                  {hasChildren ? (
+                    <ChevronRight
+                      className={clsx(
+                        "h-4 w-4 text-gray-400 transition-transform",
+                        isExpanded && "rotate-90",
+                      )}
+                      aria-hidden="true"
+                    />
+                  ) : null}
+                </>
+              ) : null}
+            </button>
+
+            {hasChildren && isExpanded
+              ? renderSidebarItems({
+                  items: item.children!,
+                  depth: depth + 1,
+                  currentPath,
+                  expandedItems,
+                  showContent,
+                  onToggle,
+                  ...(onNavigate ? { onNavigate } : {}),
+                })
+              : null}
+          </li>
         );
-      },
-      [isItemActive, isItemExpanded, isDesktopExpanded, handleItemClick],
-    );
-    return renderSidebarItem;
-  },
-};
+      })}
+    </ul>
+  );
+}
 
 export function ResponsiveSidebar({
   items,
@@ -245,177 +134,175 @@ export function ResponsiveSidebar({
 }: ResponsiveSidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [isHovered, setIsHovered] = useState(false);
+  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  // Focus trap for mobile drawer
-  const focusTrapRef = useFocusTrap(isMobileOpen);
+  const focusTrapRef = useFocusTrap<HTMLDivElement>(isMobileOpen);
 
-  // Setup handlers using composition
-  SidebarHelpers.setupKeyboardHandlers(isMobileOpen, setIsMobileOpen);
-  SidebarHelpers.setupScrollPrevention(isMobileOpen);
+  const toggleItem = useCallback((item: SidebarItem) => {
+    setExpandedItems((prev) => {
+      const next = new Set(prev);
+      if (next.has(item.id)) {
+        next.delete(item.id);
+      } else {
+        next.add(item.id);
+      }
+      return next;
+    });
+  }, []);
 
-  const isDesktopExpanded = !isCollapsed || isHovered;
-  const isItemActive = (href: string) => currentPath === href;
-  const isItemExpanded = (id: string) => expandedItems.has(id);
-
-  const handleItemClick = SidebarHelpers.createItemClickHandler(
-    setExpandedItems,
-    onNavigate,
-    setIsMobileOpen,
+  const handleNavigate = useCallback(
+    (href: string) => {
+      onNavigate?.(href);
+      setIsMobileOpen(false);
+    },
+    [onNavigate],
   );
 
-  const renderSidebarItem = SidebarHelpers.createItemRenderer(
-    isItemActive,
-    isItemExpanded,
-    isDesktopExpanded,
-    handleItemClick,
+  useEffect(() => {
+    if (!isMobileOpen) {
+      return;
+    }
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMobileOpen(false);
+      }
+    };
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, [isMobileOpen]);
+
+  useEffect(() => {
+    if (!isMobileOpen) {
+      return undefined;
+    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [isMobileOpen]);
+
+  const showContent = collapsible ? (!isCollapsed || isHovered) : true;
+
+  const navigationTree = useMemo(
+    () =>
+      renderSidebarItems({
+        items,
+        depth: 0,
+        currentPath,
+        expandedItems,
+        showContent,
+        onToggle: toggleItem,
+        onNavigate: handleNavigate,
+      }),
+    [items, currentPath, expandedItems, showContent, toggleItem, handleNavigate],
   );
 
-  // Compose sidebar components using composition patterns
-  const _SidebarComponents = {
-    mobileButton: () => (
+  return (
+    <>
+      {/* Mobile trigger */}
       <button
         type="button"
         onClick={() => setIsMobileOpen(true)}
-        className="rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 md:hidden"
-        aria-label="Open sidebar"
-        aria-expanded={isMobileOpen}
+        className="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 md:hidden"
       >
-        <Menu className="h-6 w-6" />
+        <Menu className="h-5 w-5" aria-hidden="true" />
+        <span>Menu</span>
       </button>
-    ),
 
-    overlay: () =>
-      when(
-        () => isMobileOpen,
-        () => (
-          <div
-            className="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
-            onClick={() => setIsMobileOpen(false)}
-            role="button"
-            aria-hidden="true"
-          />
-        ),
-      )(_props),
-
-    mobileDrawer: () => {
-      const mobileLayout = LayoutComposers.stack("0")(
-        () => (
-          <div className="flex items-center justify-between border-gray-200 border-b p-4">
-            <h2 className="font-semibold text-gray-900 text-lg">{title}</h2>
-            <button
-              type="button"
-              onClick={() => setIsMobileOpen(false)}
-              className="rounded-md p-2 text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Close sidebar"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-        ),
-        () => (
-          <nav className="flex-1 overflow-y-auto p-4">
-            <ul className="space-y-1">{items.map((item) => renderSidebarItem(item, 0, true))}</ul>
-          </nav>
-        ),
-        when(
-          () => !!footer,
-          () => <div className="border-gray-200 border-t p-4">{footer}</div>,
-        ),
-      );
-
-      return (
+      {/* Mobile overlay */}
+      {isMobileOpen ? (
         <div
-          ref={focusTrapRef}
-          className={clsx(
-            "fixed inset-y-0 left-0 z-50 w-80 max-w-full transform bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden",
-            isMobileOpen ? "translate-x-0" : "-translate-x-full",
-          )}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation sidebar"
-        >
-          {mobileLayout(_props)}
-        </div>
-      );
-    },
+          className="fixed inset-0 z-40 bg-black/50 md:hidden"
+          role="presentation"
+          onClick={() => setIsMobileOpen(false)}
+        />
+      ) : null}
 
-    desktopSidebar: () => {
-      const desktopLayout = LayoutComposers.stack("0")(
-        () => (
-          <div
-            className={clsx(
-              "flex items-center border-gray-200 border-b p-4",
-              !isDesktopExpanded && "justify-center",
-            )}
+      {/* Mobile drawer */}
+      <div
+        ref={focusTrapRef}
+        className={clsx(
+          "fixed inset-y-0 left-0 z-50 w-80 max-w-full transform bg-white shadow-xl transition-transform duration-300 ease-in-out md:hidden",
+          isMobileOpen ? "translate-x-0" : "-translate-x-full",
+        )}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation sidebar"
+      >
+        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
+          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
+          <button
+            type="button"
+            onClick={() => setIsMobileOpen(false)}
+            className="rounded-md p-2 text-gray-400 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
           >
-            {isDesktopExpanded ? (
-              <h2 className="font-semibold text-gray-400 text-sm uppercase tracking-wider">
+            <X className="h-5 w-5" aria-hidden="true" />
+            <span className="sr-only">Close navigation</span>
+          </button>
+        </div>
+
+        <nav className="flex h-full flex-col overflow-y-auto p-4" aria-label="Mobile navigation">
+          {navigationTree}
+          {footer ? <div className="border-t border-gray-200 pt-4">{footer}</div> : null}
+        </nav>
+      </div>
+
+      {/* Desktop sidebar */}
+      <aside
+        className={clsx(
+          "hidden h-full flex-col border-r border-gray-200 bg-white transition-all duration-200 md:flex",
+          showContent ? "w-64" : "w-16",
+          className,
+        )}
+        onMouseEnter={() => collapsible && setIsHovered(true)}
+        onMouseLeave={() => collapsible && setIsHovered(false)}
+      >
+        <div
+          className={clsx(
+            "flex items-center border-b border-gray-200 px-4 py-3",
+            !showContent && "justify-center",
+          )}
+        >
+          {showContent ? (
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500">
                 {title}
               </h2>
-            ) : null}
-            {collapsible && isDesktopExpanded ? (
-              <button
-                type="button"
-                onClick={() => setIsCollapsed(!isCollapsed)}
-                className="ml-auto rounded p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            ) : null}
-          </div>
-        ),
-        () => (
-          <nav className="flex-1 overflow-y-auto p-4">
-            <ul className={clsx("space-y-1", !isDesktopExpanded && "space-y-2")}>
-              {items.map((item) => renderSidebarItem(item, 0, false))}
-            </ul>
-          </nav>
-        ),
-        when(
-          () => !!footer,
-          () => (
-            <div className={clsx("border-gray-200 border-t p-4", !isDesktopExpanded && "px-2")}>
-              {footer}
             </div>
-          ),
-        ),
-      );
-
-      return (
-        <aside
-          className={clsx(
-            "hidden border-gray-200 border-r bg-white shadow-sm transition-all duration-200 md:flex md:flex-col",
-            isDesktopExpanded ? "w-64" : "w-16",
-            className,
-          )}
-          onMouseEnter={() => collapsible && setIsHovered(true)}
-          onMouseLeave={() => collapsible && setIsHovered(false)}
-        >
-          {desktopLayout(_props)}
-          {collapsible && isCollapsed && !isHovered ? (
+          ) : null}
+          {collapsible && (
             <button
               type="button"
-              onClick={() => setIsCollapsed(false)}
-              className="-right-3 absolute top-20 rounded-full border border-gray-200 bg-white p-1.5 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              aria-label="Expand sidebar"
+              onClick={() => setIsCollapsed((prev) => !prev)}
+              className={clsx(
+                "ml-auto rounded-md p-1 text-gray-400 transition-colors hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2",
+                !showContent && "mx-auto",
+              )}
+              aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
-              <ChevronRight className="h-3 w-3 text-gray-600" />
+              {showContent ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </button>
-          ) : null}
-        </aside>
-      );
-    },
-  };
+          )}
+        </div>
 
-  const _mainLayout = LayoutComposers.stack("0")(
-    SidebarComponents.mobileButton,
-    SidebarComponents.overlay,
-    SidebarComponents.mobileDrawer,
-    SidebarComponents.desktopSidebar,
+        <nav
+          className={clsx(
+            "flex-1 overflow-y-auto p-4",
+            !showContent && "px-2",
+          )}
+          aria-label="Desktop navigation"
+        >
+          {navigationTree}
+        </nav>
+
+        {footer ? (
+          <div className={clsx("border-t border-gray-200 p-4", !showContent && "px-2")}>
+            {footer}
+          </div>
+        ) : null}
+      </aside>
+    </>
   );
-
-  return mainLayout(props);
 }

@@ -39,7 +39,7 @@ export const searchKeys = {
  * GET /api/v1/search
  */
 export function useSearch(params: SearchParams, enabled = true) {
-  return useQuery<SearchResponse, Error>({
+  return useQuery<SearchResponse, Error, SearchResponse, any>({
     queryKey: searchKeys.searches(params),
     queryFn: () => searchService.search(params),
     enabled: enabled && !!params.q && params.q.trim().length > 0,
@@ -52,7 +52,7 @@ export function useSearch(params: SearchParams, enabled = true) {
  * Quick search with simpler interface
  */
 export function useQuickSearch(query: string, type?: string, limit: number = 10, enabled = true) {
-  return useQuery<SearchResponse, Error>({
+  return useQuery<SearchResponse, Error, SearchResponse, any>({
     queryKey: searchKeys.searches({ q: query, type, limit, page: 1 }),
     queryFn: () => searchService.quickSearch(query, type, limit),
     enabled: enabled && !!query && query.trim().length > 0,
@@ -70,7 +70,7 @@ export function useSearchByType(
   limit: number = 20,
   enabled = true,
 ) {
-  return useQuery<SearchResponse, Error>({
+  return useQuery<SearchResponse, Error, SearchResponse, any>({
     queryKey: searchKeys.searches({
       q: query,
       type: entityType,
@@ -198,7 +198,7 @@ export function useReindex(options?: { onSuccess?: () => void; onError?: (error:
  * GET /api/v1/search/stats
  */
 export function useSearchStatistics(enabled = true) {
-  return useQuery<SearchStatistics, Error>({
+  return useQuery<SearchStatistics, Error, SearchStatistics, any>({
     queryKey: searchKeys.statistics(),
     queryFn: () => searchService.getStatistics(),
     enabled,

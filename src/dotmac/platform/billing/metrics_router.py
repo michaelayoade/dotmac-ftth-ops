@@ -645,7 +645,11 @@ class ExpiringSubscriptionsResponse(BaseModel):
     timestamp: datetime = Field(description="Response generation timestamp")
 
 
-@router.get("/subscriptions/expiring", response_model=ExpiringSubscriptionsResponse)
+@router.get(
+    "/subscriptions/expiring",
+    response_model=ExpiringSubscriptionsResponse,
+    operation_id="list_expiring_subscriptions",
+)
 async def get_expiring_subscriptions(
     days: int = Query(
         default=30,

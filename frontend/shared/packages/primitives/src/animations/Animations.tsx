@@ -6,6 +6,7 @@
 "use client";
 
 import { motion, AnimatePresence, useInView, useAnimation } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { useEffect, useRef } from "react";
 import { cn } from "../utils/cn";
 
@@ -227,6 +228,14 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
   onClick,
   disabled = false,
 }) => {
+  const interactiveMotionProps: Partial<HTMLMotionProps<"div">> = !disabled
+    ? {
+        whileHover: "hover",
+        whileTap: "tap",
+        ...(onClick ? { onClick } : {}),
+      }
+    : {};
+
   return (
     <motion.div
       className={cn(
@@ -235,10 +244,8 @@ export const AnimatedCard: React.FC<AnimatedCardProps> = ({
         className,
       )}
       variants={scaleOnHover}
-      whileHover={!disabled ? "hover" : undefined}
-      whileTap={!disabled ? "tap" : undefined}
-      onClick={!disabled ? onClick : undefined}
       layout
+      {...interactiveMotionProps}
     >
       {children}
     </motion.div>
@@ -375,15 +382,19 @@ export const PulseIndicator: React.FC<PulseIndicatorProps> = ({
   active = true,
   className,
 }) => {
+  const animationProps: Partial<HTMLMotionProps<"div">> = active
+    ? { animate: { scale: [1, 1.05, 1] } }
+    : {};
+
   return (
     <motion.div
       className={className}
-      animate={active ? { scale: [1, 1.05, 1] } : undefined}
       transition={{
         duration: 2,
         repeat: Infinity,
         ease: "easeInOut",
       }}
+      {...animationProps}
     >
       {children}
     </motion.div>

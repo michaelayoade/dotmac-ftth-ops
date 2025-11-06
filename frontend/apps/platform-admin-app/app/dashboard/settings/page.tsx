@@ -26,6 +26,9 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
+import { logger } from "@/lib/logger";
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 interface SettingCard {
   id: string;
@@ -54,12 +57,27 @@ const settingCards: SettingCard[] = [
     href: "/dashboard/settings/organization",
   },
   {
+    id: "security",
+    title: "Security",
+    description: "Password, two-factor authentication, and security settings",
+    icon: Shield,
+    href: "/dashboard/settings/security",
+  },
+  {
+    id: "oss",
+    title: "Infrastructure (OSS)",
+    description: "Configure NetBox for infrastructure and data center management",
+    icon: Database,
+    href: "/dashboard/settings/oss",
+    status: "info",
+    badge: "NetBox",
+  },
+  {
     id: "billing",
     title: "Billing Preferences",
     description: "Payment methods, billing address, and invoice settings",
     icon: CreditCard,
     href: "/dashboard/settings/billing",
-    badge: "Payment due",
   },
   {
     id: "notifications",
@@ -69,15 +87,6 @@ const settingCards: SettingCard[] = [
     href: "/dashboard/settings/notifications",
   },
   {
-    id: "security",
-    title: "Security",
-    description: "Password, two-factor authentication, and security settings",
-    icon: Shield,
-    href: "/dashboard/settings/security",
-    status: "warning",
-    badge: "MFA disabled",
-  },
-  {
     id: "integrations",
     title: "Integrations",
     description: "Connect with third-party services and APIs",
@@ -85,32 +94,11 @@ const settingCards: SettingCard[] = [
     href: "/dashboard/settings/integrations",
   },
   {
-    id: "api-tokens",
-    title: "API Tokens",
-    description: "Manage personal API access tokens and OAuth apps",
-    icon: Key,
-    href: "/dashboard/settings/tokens",
-  },
-  {
-    id: "appearance",
-    title: "Appearance",
-    description: "Theme preferences, display settings, and UI customization",
-    icon: Palette,
-    href: "/dashboard/settings/appearance",
-  },
-  {
-    id: "data-privacy",
-    title: "Data & Privacy",
-    description: "Data export, deletion requests, and privacy controls",
-    icon: Database,
-    href: "/dashboard/settings/privacy",
-  },
-  {
-    id: "advanced",
-    title: "Advanced",
-    description: "Developer settings, experimental features, and system config",
-    icon: Sliders,
-    href: "/dashboard/settings/advanced",
+    id: "plugins",
+    title: "Plugins",
+    description: "Manage platform plugins and extensions",
+    icon: Package,
+    href: "/dashboard/settings/plugins",
   },
 ];
 
@@ -215,7 +203,7 @@ function SettingsHubPageContent() {
         setOrganization((orgResponse.data || {}) as Record<string, unknown>);
       }
     } catch (err) {
-      console.error("Failed to fetch settings data:", err);
+      logger.error("Failed to fetch settings data", toError(err));
     } finally {
       setLoading(false);
     }
@@ -302,25 +290,25 @@ function SettingsHubPageContent() {
           <h3 className="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link
-              href="/dashboard/settings/security#change-password"
+              href="/dashboard/settings/security"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-sky-400 transition-colors"
             >
               <Lock className="h-4 w-4" />
               Change Password
             </Link>
             <Link
-              href="/dashboard/settings/security#2fa"
+              href="/dashboard/settings/security"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-sky-400 transition-colors"
             >
               <Shield className="h-4 w-4" />
               Enable 2FA
             </Link>
             <Link
-              href="/dashboard/settings/privacy#export"
+              href="/dashboard/settings/oss"
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-sky-400 transition-colors"
             >
               <Database className="h-4 w-4" />
-              Export Data
+              Configure NetBox
             </Link>
             <Link
               href="/dashboard/settings/billing"

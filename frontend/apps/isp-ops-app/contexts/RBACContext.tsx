@@ -453,7 +453,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const contextValue: RBACContextValue = {
     permissions: permissions || null,
     loading,
-    error,
+    error: error as Error | null,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,

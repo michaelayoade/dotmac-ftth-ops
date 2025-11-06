@@ -22,6 +22,7 @@ import {
 import { useToast } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { DollarSign, CreditCard, Building2, Wallet, Check, Upload, X } from "lucide-react";
 import { type Invoice, PaymentMethods, type PaymentMethod } from "@/types/billing";
 import { formatCurrency } from "@/lib/utils";
@@ -139,8 +140,9 @@ export function RecordPaymentModal({
     e.preventDefault();
     setIsSubmitting(true);
 
+    const paymentAmount = parseFloat(formData.amount);
+
     try {
-      const paymentAmount = parseFloat(formData.amount);
 
       // Validation
       if (paymentAmount <= 0) {
@@ -204,7 +206,11 @@ export function RecordPaymentModal({
           description: `Payment of ${formatCurrency(paymentAmount)} has been successfully recorded.`,
         });
       } catch (error) {
-        console.error("Failed to record payment:", error);
+        logger.error(
+          "Failed to record payment (submission)",
+          error instanceof Error ? error : new Error(String(error)),
+          { invoiceIds: paymentData.apply_to_invoices, amount: paymentAmount },
+        );
         toast({
           title: "Payment Failed",
           description:
@@ -229,7 +235,11 @@ export function RecordPaymentModal({
       if (onSuccess) onSuccess();
       onClose();
     } catch (error) {
-      console.error("Failed to record payment:", error);
+      logger.error(
+        "Failed to record payment (outer)",
+        error instanceof Error ? error : new Error(String(error)),
+        { amount: paymentAmount },
+      );
       toast({
         title: "Error",
         description: "Failed to record payment. Please try again.",

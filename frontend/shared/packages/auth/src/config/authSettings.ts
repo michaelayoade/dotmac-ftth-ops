@@ -2,22 +2,70 @@
  * Authentication Settings Configuration
  * Centralizes all auth-related configuration with environment variable support
  */
+import type { SignOptions, Secret } from "jsonwebtoken";
+
+type SameSite = "strict" | "lax" | "none";
+type ExpiresInString = Extract<SignOptions["expiresIn"], string>;
+
+const DEFAULT_ACCESS_TOKEN_EXPIRY: ExpiresInString = "15m";
+const DEFAULT_REFRESH_TOKEN_EXPIRY: ExpiresInString = "7d";
+
+const EXPIRES_IN_PATTERN =
+  /^(\d+)(?:\s*(years?|year|yrs?|yr|y|weeks?|week|w|days?|day|d|hours?|hour|hrs?|hr|h|minutes?|minute|mins?|min|m|seconds?|second|secs?|sec|s|milliseconds?|millisecond|msecs?|msec|ms))?$/i;
+
+const isExpiresInString = (value: string): value is ExpiresInString =>
+  EXPIRES_IN_PATTERN.test(value.trim());
+
+const parseExpiresIn = (
+  value: string | undefined,
+  fallback: SignOptions["expiresIn"],
+): SignOptions["expiresIn"] => {
+  if (!value) {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return fallback;
+  }
+
+  if (isExpiresInString(trimmed)) {
+    return trimmed;
+  }
+
+  const numericValue = Number(trimmed);
+  if (!Number.isNaN(numericValue)) {
+    return numericValue;
+  }
+
+  return fallback;
+};
+
+const parseSameSite = (value: string | undefined): SameSite => {
+  if (value === "lax" || value === "none" || value === "strict") {
+    return value;
+  }
+  return "strict";
+};
+
+const normalizeSecret = (secret: Secret): string | undefined =>
+  typeof secret === "string" ? secret : undefined;
 
 export interface AuthSecurityConfig {
   // JWT Configuration
-  jwtSecret: string;
-  jwtRefreshSecret: string;
+  jwtSecret: Secret;
+  jwtRefreshSecret: Secret;
   jwtIssuer: string;
   jwtAudience: string;
-  accessTokenExpiry: string;
-  refreshTokenExpiry: string;
+  accessTokenExpiry: SignOptions["expiresIn"];
+  refreshTokenExpiry: SignOptions["expiresIn"];
 
   // Cookie Configuration
   cookieName: string;
   refreshCookieName: string;
   cookieSecure: boolean;
   cookieHttpOnly: boolean;
-  cookieSameSite: "strict" | "lax" | "none";
+  cookieSameSite: SameSite;
   cookieDomain?: string;
   cookieMaxAge: number;
 
@@ -132,15 +180,18 @@ export class AuthSettings {
         (isProduction ? this.throwMissingSecret("JWT_REFRESH_SECRET") : "dev-refresh-secret"),
       jwtIssuer: process.env.JWT_ISSUER || "dotmac-isp-framework",
       jwtAudience: process.env.JWT_AUDIENCE || "dotmac-portals",
-      accessTokenExpiry: process.env.ACCESS_TOKEN_EXPIRY || "15m",
-      refreshTokenExpiry: process.env.REFRESH_TOKEN_EXPIRY || "7d",
+      accessTokenExpiry: parseExpiresIn(process.env.ACCESS_TOKEN_EXPIRY, DEFAULT_ACCESS_TOKEN_EXPIRY),
+      refreshTokenExpiry: parseExpiresIn(
+        process.env.REFRESH_TOKEN_EXPIRY,
+        DEFAULT_REFRESH_TOKEN_EXPIRY,
+      ),
 
       // Cookie Configuration
       cookieName: process.env.AUTH_COOKIE_NAME || "secure-auth-token",
       refreshCookieName: process.env.REFRESH_COOKIE_NAME || "secure-refresh-token",
       cookieSecure: isHTTPS, // Only secure in HTTPS environments
       cookieHttpOnly: true,
-      cookieSameSite: (process.env.COOKIE_SAME_SITE as any) || "strict",
+      cookieSameSite: parseSameSite(process.env.COOKIE_SAME_SITE),
       cookieDomain: process.env.COOKIE_DOMAIN,
       cookieMaxAge: parseInt(process.env.COOKIE_MAX_AGE || "3600000"), // 1 hour
 
@@ -316,14 +367,14 @@ export class AuthSettings {
     const errors: string[] = [];
 
     // Check critical security settings
-    if (
-      this.settings.security.jwtSecret.includes("dev-") &&
-      process.env.NODE_ENV === "production"
-    ) {
+    const jwtSecretValue = normalizeSecret(this.settings.security.jwtSecret);
+    const refreshSecretValue = normalizeSecret(this.settings.security.jwtRefreshSecret);
+
+    if (jwtSecretValue?.includes("dev-") && process.env.NODE_ENV === "production") {
       errors.push("JWT_SECRET must be set in production");
     }
 
-    if (this.settings.security.jwtSecret === this.settings.security.jwtRefreshSecret) {
+    if (jwtSecretValue && refreshSecretValue && jwtSecretValue === refreshSecretValue) {
       errors.push("JWT_SECRET and JWT_REFRESH_SECRET must be different");
     }
 

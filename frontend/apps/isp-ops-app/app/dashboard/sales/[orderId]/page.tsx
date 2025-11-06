@@ -123,7 +123,7 @@ function OrderDetailsPageContent() {
     enabled: !!orderId,
     refetchInterval: (query) => {
       // Auto-refresh while in progress
-      if (query?.state?.data && (query.state.data.in_progress > 0 || query.state.data.pending > 0)) {
+      if ((query as any)?.state?.data && ((query as any).state.data.in_progress > 0 || (query as any).state.data.pending > 0)) {
         return 5000; // Refresh every 5 seconds
       }
       return false;

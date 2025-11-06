@@ -22,6 +22,7 @@ import {
 } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
+import { logger } from "@/lib/logger";
 
 interface ReceiptListProps {
   tenantId: string;
@@ -76,8 +77,12 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         throw new Error("Failed to fetch receipts");
       }
     } catch (err) {
-      console.error("Failed to fetch receipts:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch receipts";
+      logger.error(
+        "Failed to fetch receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        { tenantId, customerId },
+      );
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -89,7 +94,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
   }, [fetchReceipts]);
 
   // Download single receipt PDF
-  const handleDownloadPDF = async (receipt: Receipt) => {
+  const handleDownloadPDF = useCallback(async (receipt: Receipt) => {
     try {
       const response = await apiClient.get(`/billing/receipts/${receipt.receipt_id}/pdf`, {
         responseType: "blob",
@@ -105,39 +110,47 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Failed to download receipt:", err);
+      logger.error(
+        "Failed to download receipt",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptId: receipt.receipt_id },
+      );
       alert("Failed to download receipt. Please try again.");
     }
-  };
+  }, []);
 
   // View receipt HTML
-  const handleViewReceipt = (receipt: Receipt) => {
+  const handleViewReceipt = useCallback((receipt: Receipt) => {
     window.open(`/billing/receipts/${receipt.receipt_id}/html`, "_blank");
-  };
+  }, []);
 
   // Print receipt
-  const handlePrintReceipt = (receipt: Receipt) => {
+  const handlePrintReceipt = useCallback((receipt: Receipt) => {
     const printWindow = window.open(`/billing/receipts/${receipt.receipt_id}/html`, "_blank");
     if (printWindow) {
       printWindow.onload = () => {
         printWindow.print();
       };
     }
-  };
+  }, []);
 
   // Email receipt
-  const handleEmailReceipt = async (receipt: Receipt) => {
+  const handleEmailReceipt = useCallback(async (receipt: Receipt) => {
     try {
       await apiClient.post(`/billing/receipts/${receipt.receipt_id}/email`);
       alert(`Receipt ${receipt.receipt_number} sent to ${receipt.customer_email}`);
     } catch (err) {
-      console.error("Failed to email receipt:", err);
+      logger.error(
+        "Failed to email receipt",
+        err instanceof Error ? err : new Error(String(err)),
+        { receiptId: receipt.receipt_id },
+      );
       alert("Failed to email receipt. Please try again.");
     }
-  };
+  }, []);
 
   // Bulk operations
-  const handleBulkDownload = async (selected: Receipt[]) => {
+  const handleBulkDownload = useCallback(async (selected: Receipt[]) => {
     setBulkLoading(true);
     try {
       const receiptIds = selected.map((r) => r.receipt_id);
@@ -157,14 +170,18 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       link.remove();
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Failed to download receipts:", err);
+      logger.error(
+        "Failed to download receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        { tenantId, receiptCount: selected.length },
+      );
       alert("Failed to download receipts. Please try again.");
     } finally {
       setBulkLoading(false);
     }
-  };
+  }, [tenantId]);
 
-  const handleBulkEmail = async (selected: Receipt[]) => {
+  const handleBulkEmail = useCallback(async (selected: Receipt[]) => {
     setBulkLoading(true);
     try {
       const receiptIds = selected.map((r) => r.receipt_id);
@@ -173,12 +190,16 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
       });
       alert(`Successfully sent ${receiptIds.length} receipt(s)`);
     } catch (err) {
-      console.error("Failed to email receipts:", err);
+      logger.error(
+        "Failed to email receipts",
+        err instanceof Error ? err : new Error(String(err)),
+        { tenantId, receiptCount: selected.length },
+      );
       alert("Failed to email receipts. Please try again.");
     } finally {
       setBulkLoading(false);
     }
-  };
+  }, [tenantId]);
 
   // Column definitions
   const columns: ColumnDef<Receipt>[] = useMemo(
@@ -319,7 +340,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         ),
       },
     ],
-    [],
+    [handleDownloadPDF, handleEmailReceipt, handlePrintReceipt, handleViewReceipt],
   );
 
   // Bulk actions
@@ -336,7 +357,7 @@ export default function ReceiptList({ tenantId, customerId, onReceiptSelect }: R
         action: handleBulkEmail,
       },
     ],
-    [],
+    [handleBulkDownload, handleBulkEmail],
   );
 
   // Quick filters

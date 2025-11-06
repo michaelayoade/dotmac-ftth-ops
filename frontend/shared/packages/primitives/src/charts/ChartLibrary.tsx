@@ -6,7 +6,8 @@
 "use client";
 
 import React from "react";
-import { UniversalChart, UniversalChartProps, ChartDataPoint } from "./UniversalChart";
+import { UniversalChart } from "./UniversalChart";
+import type { UniversalChartProps, ChartDataPoint } from "./UniversalChart";
 
 // Revenue Chart
 export interface RevenueChartData extends ChartDataPoint {
@@ -38,7 +39,7 @@ export function RevenueChart({
             key: "target",
             name: "Target",
             type: "line" as const,
-            strokeDashArray: "5 5",
+            strokeDasharray: "5 5",
           },
         ]
       : []),
@@ -266,21 +267,21 @@ export interface BandwidthChartProps extends Omit<UniversalChartProps, "data" | 
 }
 
 export function BandwidthChart({ data, showStacked = true, ...props }: BandwidthChartProps) {
-  const series = [
+  const series: UniversalChartProps["series"] = [
     {
       key: "residential",
       name: "Residential",
-      stackId: showStacked ? "bandwidth" : undefined,
+      ...(showStacked ? { stackId: "bandwidth" } : {}),
     },
     {
       key: "business",
       name: "Business",
-      stackId: showStacked ? "bandwidth" : undefined,
+      ...(showStacked ? { stackId: "bandwidth" } : {}),
     },
     {
       key: "enterprise",
       name: "Enterprise",
-      stackId: showStacked ? "bandwidth" : undefined,
+      ...(showStacked ? { stackId: "bandwidth" } : {}),
     },
   ];
 

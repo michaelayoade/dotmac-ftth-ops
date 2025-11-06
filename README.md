@@ -141,6 +141,8 @@ The platform continues to expect the supporting infrastructure listed below, but
 
 ## 🚀 Quick Start
 
+> Need to provision a production host? Follow the [Remote Server Deployment Guide](REMOTE_SERVER_DEPLOYMENT_GUIDE.md) for an end-to-end walkthrough covering prerequisites, Docker deployment, Nginx, backups, and hardening.
+
 ### Prerequisites
 
 - **Docker Desktop** 20.10+ with Compose v2

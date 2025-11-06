@@ -24,7 +24,7 @@ interface EditServerPageProps {
   };
 }
 
-export default function EditServerPage({ params }: EditServerPageProps) {
+export default function EditServerPage({ params }: EditServerPageProps): JSX.Element {
   const { id } = params;
   const router = useRouter();
 

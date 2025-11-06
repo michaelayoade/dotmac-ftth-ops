@@ -36,6 +36,9 @@ import type {
   NetworkMetrics,
   ServiceTierConfig,
   AlertSeverityConfig,
+  ServiceTier,
+  AlertSeverity,
+  StatusVariant,
 } from "../types/status";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 import { cn } from "../utils/cn";
@@ -108,6 +111,13 @@ const statusDotVariants = cva("rounded-full flex-shrink-0 transition-all duratio
       active: "bg-gradient-to-r from-blue-400 to-indigo-500 shadow-lg shadow-blue-400/50",
       suspended: "bg-gradient-to-r from-gray-400 to-slate-500 shadow-lg shadow-gray-400/50",
       pending: "bg-gradient-to-r from-purple-400 to-indigo-500 shadow-lg shadow-purple-400/50",
+      paid: "bg-gradient-to-r from-green-400 to-emerald-500 shadow-lg shadow-green-400/40",
+      overdue: "bg-gradient-to-r from-red-400 to-rose-500 shadow-lg shadow-red-400/40",
+      processing: "bg-gradient-to-r from-blue-400 to-indigo-500 shadow-lg shadow-blue-400/40",
+      critical: "bg-gradient-to-r from-red-500 to-rose-600 shadow-lg shadow-red-500/40",
+      high: "bg-gradient-to-r from-orange-500 to-red-500 shadow-lg shadow-orange-500/40",
+      medium: "bg-gradient-to-r from-yellow-500 to-orange-500 shadow-lg shadow-yellow-500/40",
+      low: "bg-gradient-to-r from-blue-500 to-indigo-500 shadow-lg shadow-blue-500/40",
     },
     size: {
       sm: "w-2 h-2",
@@ -172,8 +182,13 @@ export const StatusBadge: React.FC<StatusBadgeProps> = ({
       "high",
       "medium",
       "low",
-    ];
-    return validVariants.includes(variant || "") ? variant : "active";
+    ] as const;
+
+    type ValidVariant = (typeof validVariants)[number];
+    const isValidVariant = (value: string): value is ValidVariant =>
+      validVariants.includes(value as ValidVariant);
+
+    return variant && isValidVariant(variant) ? variant : "active";
   }, [variant]);
 
   // Generate accessible status text with text indicators
@@ -544,7 +559,7 @@ export const NetworkPerformanceIndicator: React.FC<NetworkPerformanceProps> = ({
               size="sm"
               showDot={true}
               pulse={networkStatus.latency.value > 100}
-              onClick={onMetricClick ? handleLatencyClick : undefined}
+              {...(onMetricClick ? { onClick: handleLatencyClick } : {})}
               aria-label={`Latency: ${networkStatus.latency.value}ms - ${networkStatus.latency.status}`}
             >
               {networkStatus.latency.value}ms
@@ -561,7 +576,7 @@ export const NetworkPerformanceIndicator: React.FC<NetworkPerformanceProps> = ({
               size="sm"
               showDot={true}
               pulse={networkStatus.packetLoss.value > 1}
-              onClick={onMetricClick ? handlePacketLossClick : undefined}
+              {...(onMetricClick ? { onClick: handlePacketLossClick } : {})}
               aria-label={`Packet Loss: ${networkStatus.packetLoss.value}% - ${networkStatus.packetLoss.status}`}
             >
               {networkStatus.packetLoss.value}%
@@ -577,7 +592,7 @@ export const NetworkPerformanceIndicator: React.FC<NetworkPerformanceProps> = ({
               variant={networkStatus.bandwidth.variant}
               size="sm"
               showDot={true}
-              onClick={onMetricClick ? handleBandwidthClick : undefined}
+              {...(onMetricClick ? { onClick: handleBandwidthClick } : {})}
               aria-label={`Bandwidth: ${networkStatus.bandwidth.value}% - ${networkStatus.bandwidth.status}`}
             >
               {networkStatus.bandwidth.value}%
@@ -598,9 +613,9 @@ export const ServiceTierIndicator: React.FC<ServiceTierProps> = ({
   "aria-label": ariaLabel,
 }) => {
   // Validate service tier
-  const validatedTier = useMemo(() => {
+  const validatedTier = useMemo<ServiceTier>(() => {
     try {
-      return validateData(serviceTierSchema, tier);
+      return validateData(serviceTierSchema, tier) as ServiceTier;
     } catch (error) {
       console.error("Invalid service tier:", error);
       return "basic";
@@ -614,7 +629,7 @@ export const ServiceTierIndicator: React.FC<ServiceTierProps> = ({
 
   // Centralized tier configuration
   const tierConfig = useMemo(
-    (): Record<string, ServiceTierConfig> => ({
+    (): Record<ServiceTier, ServiceTierConfig> => ({
       basic: {
         label: "Basic",
         variant: "low",
@@ -643,7 +658,7 @@ export const ServiceTierIndicator: React.FC<ServiceTierProps> = ({
     [],
   );
 
-  const config = tierConfig[validatedTier];
+  const config = tierConfig[validatedTier] ?? tierConfig.basic;
 
   // Handle click events safely
   const handleClick = useCallback(() => {
@@ -702,9 +717,9 @@ export const AlertSeverityIndicator: React.FC<AlertSeverityProps> = ({
   "aria-label": ariaLabel,
 }) => {
   // Validate severity level
-  const validatedSeverity = useMemo(() => {
+  const validatedSeverity = useMemo<AlertSeverity>(() => {
     try {
-      return validateData(alertSeveritySchema, severity);
+      return validateData(alertSeveritySchema, severity) as AlertSeverity;
     } catch (error) {
       console.error("Invalid alert severity:", error);
       return "info";
@@ -722,7 +737,7 @@ export const AlertSeverityIndicator: React.FC<AlertSeverityProps> = ({
 
   // Centralized severity configuration
   const severityConfig = useMemo(
-    (): Record<string, AlertSeverityConfig> => ({
+    (): Record<AlertSeverity, AlertSeverityConfig> => ({
       info: {
         variant: "active",
         icon: "ℹ️",
@@ -759,7 +774,7 @@ export const AlertSeverityIndicator: React.FC<AlertSeverityProps> = ({
     [],
   );
 
-  const config = severityConfig[validatedSeverity];
+  const config = severityConfig[validatedSeverity] ?? severityConfig.info;
 
   // Handle dismiss action safely
   const handleDismiss = useCallback(() => {
@@ -845,5 +860,42 @@ export const AlertSeverityIndicator: React.FC<AlertSeverityProps> = ({
 };
 
 // Components are already exported individually above
+
+export interface StatusIndicatorsProps
+  extends Omit<StatusBadgeProps, "variant" | "children"> {
+  status: StatusVariant;
+  showLabel?: boolean;
+  label?: string;
+  children?: React.ReactNode;
+}
+
+export const StatusIndicators: React.FC<StatusIndicatorsProps> = ({
+  showLabel = true,
+  label,
+  children,
+  status,
+  size,
+  animated,
+  className,
+  showDot,
+  pulse,
+  onClick,
+  "aria-label": ariaLabel,
+}) => (
+  <StatusBadge
+    variant={status}
+    {...(size ? { size } : {})}
+    {...(animated !== undefined ? { animated } : {})}
+    {...(className ? { className } : {})}
+    {...(showDot !== undefined ? { showDot } : {})}
+    {...(pulse !== undefined ? { pulse } : {})}
+    {...(onClick ? { onClick } : {})}
+    {...(ariaLabel ? { "aria-label": ariaLabel } : {})}
+  >
+    {showLabel ? (label ?? status.replace(/_/g, " ").toUpperCase()) : null}
+    {children}
+  </StatusBadge>
+);
+
 // Export variants for external use
 export { statusBadgeVariants, statusDotVariants };

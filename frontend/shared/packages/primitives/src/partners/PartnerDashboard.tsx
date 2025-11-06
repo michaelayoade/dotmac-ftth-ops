@@ -112,35 +112,35 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
   // Calculate KPIs
   const kpis = [
     {
+      id: "total-partners",
       title: "Total Partners",
       value: partners.length,
-      trend: "+12%",
-      trendDirection: "up" as const,
-      icon: <Users className="h-4 w-4" />,
+      trend: { direction: "up" as const, percentage: 12, label: "+12%" },
+      icon: (props: { className?: string }) => <Users {...props} />,
     },
     {
+      id: "active-partners",
       title: "Active Partners",
       value: partners.filter((p) => p.status === "active").length,
-      trend: "+8%",
-      trendDirection: "up" as const,
-      icon: <TrendingUp className="h-4 w-4" />,
+      trend: { direction: "up" as const, percentage: 8, label: "+8%" },
+      icon: (props: { className?: string }) => <TrendingUp {...props} />,
     },
     {
+      id: "total-revenue",
       title: "Total Revenue",
       value: `$${partners.reduce((sum, p) => sum + p.total_revenue, 0).toLocaleString()}`,
-      trend: "+15%",
-      trendDirection: "up" as const,
-      icon: <DollarSign className="h-4 w-4" />,
+      trend: { direction: "up" as const, percentage: 15, label: "+15%" },
+      icon: (props: { className?: string }) => <DollarSign {...props} />,
     },
     {
+      id: "avg-revenue",
       title: "Avg Revenue per Partner",
       value:
         partners.length > 0
           ? `$${Math.round(partners.reduce((sum, p) => sum + p.total_revenue, 0) / partners.length).toLocaleString()}`
           : "$0",
-      trend: "+5%",
-      trendDirection: "up" as const,
-      icon: <TrendingUp className="h-4 w-4" />,
+      trend: { direction: "up" as const, percentage: 5, label: "+5%" },
+      icon: (props: { className?: string }) => <TrendingUp {...props} />,
     },
   ];
 
@@ -148,7 +148,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     {
       key: "company_name",
       title: "Company",
-      render: (partner: Partner) => (
+      render: (_value: unknown, partner: Partner) => (
         <div>
           <div className="font-medium">{partner.company_name}</div>
           <div className="text-sm text-gray-500">{partner.partner_code}</div>
@@ -158,7 +158,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     {
       key: "contact_name",
       title: "Contact",
-      render: (partner: Partner) => (
+      render: (_value: unknown, partner: Partner) => (
         <div>
           <div className="font-medium">{partner.contact_name}</div>
           <div className="text-sm text-gray-500">{partner.contact_email}</div>
@@ -172,7 +172,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     {
       key: "tier",
       title: "Tier",
-      render: (partner: Partner) => (
+      render: (_value: unknown, partner: Partner) => (
         <span
           className={`px-2 py-1 rounded-full text-xs font-medium ${getTierColor(partner.tier)}`}
         >
@@ -183,14 +183,20 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     {
       key: "status",
       title: "Status",
-      render: (partner: Partner) => (
-        <StatusIndicators status={partner.status} size="sm" showLabel={true} />
-      ),
+      render: (_value: unknown, partner: Partner) => {
+        const variant =
+          partner.status === "inactive"
+            ? "suspended"
+            : partner.status === "pending"
+              ? "pending"
+              : "active";
+        return <StatusIndicators status={variant} size="sm" showLabel />;
+      },
     },
     {
       key: "total_revenue",
       title: "Revenue",
-      render: (partner: Partner) => `$${partner.total_revenue.toLocaleString()}`,
+      render: (_value: unknown, partner: Partner) => `$${partner.total_revenue.toLocaleString()}`,
     },
     {
       key: "customers_count",
@@ -199,7 +205,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
     {
       key: "actions",
       title: "",
-      render: (partner: Partner) => (
+      render: (_value: unknown, partner: Partner) => (
         <Button variant="ghost" size="sm" onClick={() => onPartnerSelect?.(partner)}>
           <MoreVertical className="h-4 w-4" />
         </Button>
@@ -237,7 +243,7 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
                   </Button>
                 )}
                 <Button
-                  variant="primary"
+                  variant="default"
                   size="sm"
                   onClick={() => {
                     /* Handle create partner */
@@ -286,12 +292,12 @@ export const PartnerDashboard: React.FC<PartnerDashboardProps> = ({
               </select>
             </div>
 
-            <UniversalTable
-              columns={tableColumns}
-              data={filteredPartners}
-              loading={loading}
-              emptyMessage="No partners found"
-            />
+        <UniversalTable
+          columns={tableColumns}
+          data={filteredPartners}
+          loading={loading}
+          emptyText="No partners found"
+        />
           </Card>
         </div>
 

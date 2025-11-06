@@ -65,6 +65,8 @@ export function getCLS(onReport: ReportCallback, reportAllChanges = false): void
         // include the entry in the current session. Otherwise, start a new session.
         if (
           sessionValue &&
+          firstSessionEntry &&
+          lastSessionEntry &&
           entry.startTime - lastSessionEntry.startTime < 1000 &&
           entry.startTime - firstSessionEntry.startTime < 5000
         ) {

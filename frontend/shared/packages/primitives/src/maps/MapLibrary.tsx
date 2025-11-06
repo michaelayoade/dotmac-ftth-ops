@@ -5,15 +5,8 @@
 
 "use client";
 
-import React from "react";
-import {
-  UniversalMap,
-  UniversalMapProps,
-  MapMarker,
-  ServiceArea,
-  NetworkNode,
-  Route,
-} from "./UniversalMap";
+import { UniversalMap } from "./UniversalMap";
+import type { UniversalMapProps, MapMarker, ServiceArea, NetworkNode, Route } from "./UniversalMap";
 
 // Service Coverage Map
 export interface ServiceCoverageMapProps extends Omit<UniversalMapProps, "type" | "serviceAreas"> {
@@ -36,7 +29,7 @@ export function ServiceCoverageMap({
       type="service_coverage"
       serviceAreas={serviceAreas}
       showHeatmap={showCoverageHeatmap}
-      onAreaClick={onServiceAreaSelect}
+      {...(onServiceAreaSelect ? { onAreaClick: onServiceAreaSelect } : {})}
       title={props.title || "Service Coverage Areas"}
     />
   );
@@ -62,7 +55,7 @@ export function NetworkTopologyMap({
       {...props}
       type="network_topology"
       networkNodes={networkNodes}
-      onNodeClick={onNodeSelect}
+      {...(onNodeSelect ? { onNodeClick: onNodeSelect } : {})}
       title={props.title || "Network Infrastructure"}
     />
   );

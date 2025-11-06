@@ -14,7 +14,11 @@ export function calculateBounds(points: LatLng[]): { minLat: number; maxLat: num
   if (points.length === 0) {
     return { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 };
   }
-  return points.reduce(
+  const [firstPoint, ...restPoints] = points;
+  if (!firstPoint) {
+    return { minLat: -90, maxLat: 90, minLng: -180, maxLng: 180 };
+  }
+  return restPoints.reduce(
     (acc, point) => ({
       minLat: Math.min(acc.minLat, point.lat),
       maxLat: Math.max(acc.maxLat, point.lat),
@@ -22,10 +26,10 @@ export function calculateBounds(points: LatLng[]): { minLat: number; maxLat: num
       maxLng: Math.max(acc.maxLng, point.lng),
     }),
     {
-      minLat: points[0].lat,
-      maxLat: points[0].lat,
-      minLng: points[0].lng,
-      maxLng: points[0].lng,
+      minLat: firstPoint.lat,
+      maxLat: firstPoint.lat,
+      minLng: firstPoint.lng,
+      maxLng: firstPoint.lng,
     },
   );
 }

@@ -7,6 +7,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
 import { cn } from "../utils/cn";
 
@@ -212,6 +213,10 @@ export function UniversalMetricCard({
     }
   };
 
+  const hoverMotionProps: Partial<HTMLMotionProps<"div">> = onClick
+    ? { whileHover: { y: -1 } }
+    : {};
+
   const cardContent = (
     <motion.div
       className={cn(
@@ -222,10 +227,10 @@ export function UniversalMetricCard({
         sizes.card,
         className,
       )}
-      whileHover={onClick ? { y: -1 } : undefined}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
+      {...hoverMotionProps}
     >
       <div className={cn("space-y-3", contentClassName)}>
         {/* Header */}

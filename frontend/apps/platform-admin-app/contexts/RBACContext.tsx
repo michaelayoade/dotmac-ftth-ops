@@ -260,6 +260,39 @@ interface RBACContextValue {
 const RBACContext = createContext<RBACContextValue | undefined>(undefined);
 
 /**
+ * Determines whether a permission string is satisfied by the user's effective permissions.
+ * Exported to allow unit tests to guard against regressions in wildcard handling.
+ */
+export function permissionMatches(
+  permission: string,
+  effectivePermissions: Permission[],
+  isSuperuser: boolean,
+): boolean {
+  if (isSuperuser) return true;
+
+  return effectivePermissions.some((perm) => {
+    if (!perm?.name) {
+      return false;
+    }
+
+    if (perm.name === "*" || perm.name === permission) {
+      return true;
+    }
+
+    if (perm.name.endsWith(".*")) {
+      const prefix = perm.name.slice(0, -2);
+      if (!prefix) {
+        return false;
+      }
+
+      return permission === prefix || permission.startsWith(`${prefix}.`);
+    }
+
+    return false;
+  });
+}
+
+/**
  * RBAC Provider Component
  */
 export function RBACProvider({ children }: { children: React.ReactNode }) {
@@ -306,11 +339,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   const hasPermission = useCallback(
     (permission: string): boolean => {
       if (!permissions) return false;
-      if (isSuperuser) return true;
-
-      return effectivePermissions.some(
-        (p) => p.name === permission || p.name === "*" || p.name.endsWith(".*"),
-      );
+      return permissionMatches(permission, effectivePermissions, isSuperuser);
     },
     [permissions, effectivePermissions, isSuperuser],
   );

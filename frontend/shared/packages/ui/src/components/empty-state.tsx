@@ -4,8 +4,9 @@
  * Supports dark mode and various use cases
  */
 
+import type { ReactNode } from "react";
 import { cn } from "../lib/utils";
-import { LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { Button } from "./button";
 
 interface EmptyStateProps {
@@ -22,7 +23,7 @@ interface EmptyStateProps {
   /**
    * Description text or element
    */
-  description?: React.ReactNode;
+  description?: ReactNode;
 
   /**
    * Primary action button
@@ -45,7 +46,7 @@ interface EmptyStateProps {
   /**
    * Custom content to render below description
    */
-  children?: React.ReactNode;
+  children?: ReactNode;
 
   /**
    * Custom className
@@ -158,19 +159,22 @@ EmptyState.List = function EmptyStateList({
   icon?: LucideIcon;
   className?: string;
 }) {
+  const iconProps = Icon ? { icon: Icon } : {};
+  const actionProps = onCreateClick
+    ? {
+        action: {
+          label: createLabel || `Create ${entityName}`,
+          onClick: onCreateClick,
+        },
+      }
+    : {};
+
   return (
     <EmptyState
-      icon={Icon}
+      {...iconProps}
+      {...actionProps}
       title={`No ${entityName} found`}
       description={`Get started by creating your first ${entityName.toLowerCase()}.`}
-      action={
-        onCreateClick
-          ? {
-              label: createLabel || `Create ${entityName}`,
-              onClick: onCreateClick,
-            }
-          : undefined
-      }
       className={className}
     />
   );
@@ -190,9 +194,20 @@ EmptyState.Search = function EmptyStateSearch({
   icon?: LucideIcon;
   className?: string;
 }) {
+  const iconProps = Icon ? { icon: Icon } : {};
+  const actionProps = onClearSearch
+    ? {
+        action: {
+          label: "Clear search",
+          onClick: onClearSearch,
+        },
+      }
+    : {};
+
   return (
     <EmptyState
-      icon={Icon}
+      {...iconProps}
+      {...actionProps}
       title="No results found"
       description={
         searchTerm ? (
@@ -202,14 +217,6 @@ EmptyState.Search = function EmptyStateSearch({
         ) : (
           "Try adjusting your filters or search criteria."
         )
-      }
-      action={
-        onClearSearch
-          ? {
-              label: "Clear search",
-              onClick: onClearSearch,
-            }
-          : undefined
       }
       size="sm"
       className={className}
@@ -235,19 +242,22 @@ EmptyState.Error = function EmptyStateError({
   icon?: LucideIcon;
   className?: string;
 }) {
+  const iconProps = Icon ? { icon: Icon } : {};
+  const actionProps = onRetry
+    ? {
+        action: {
+          label: retryLabel,
+          onClick: onRetry,
+        },
+      }
+    : {};
+
   return (
     <EmptyState
-      icon={Icon}
+      {...iconProps}
+      {...actionProps}
       title={title}
       description={description}
-      action={
-        onRetry
-          ? {
-              label: retryLabel,
-              onClick: onRetry,
-            }
-          : undefined
-      }
       className={className}
     />
   );

@@ -5,8 +5,9 @@
  * across different features in the application.
  */
 
-import { ColumnDef } from "@tanstack/react-table";
-import { EnhancedDataTable, BulkAction } from "./EnhancedDataTable";
+import type { ColumnDef } from "@tanstack/react-table";
+import { EnhancedDataTable } from "./EnhancedDataTable";
+import type { BulkAction } from "./EnhancedDataTable";
 import { createSortableHeader } from "./data-table";
 import { Badge } from "./badge";
 import { Button } from "./button";

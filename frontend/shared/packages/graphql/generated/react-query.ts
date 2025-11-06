@@ -3,6 +3,7 @@ import {
   useInfiniteQuery,
   UseQueryOptions,
   UseInfiniteQueryOptions,
+  InfiniteData,
 } from "@tanstack/react-query";
 import { graphqlFetcher } from "../src/client";
 export type Maybe<T> = T | null | undefined;
@@ -6284,33 +6285,48 @@ export const CustomerListDocument = `
 
 export const useCustomerListQuery = <TData = CustomerListQueryResult, TError = unknown>(
   variables?: CustomerListQueryVariables,
-  options?: UseQueryOptions<CustomerListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerListQueryResult, TError, TData>(
-    variables === undefined ? ["CustomerList"] : ["CustomerList", variables],
-    graphqlFetcher<CustomerListQueryResult, CustomerListQueryVariables>(
+  return useQuery<CustomerListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["CustomerList"] : ["CustomerList", variables],
+    queryFn: graphqlFetcher<CustomerListQueryResult, CustomerListQueryVariables>(
       CustomerListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerListQuery.getKey = (variables?: CustomerListQueryVariables) =>
   variables === undefined ? ["CustomerList"] : ["CustomerList", variables];
 
-export const useInfiniteCustomerListQuery = <TData = CustomerListQueryResult, TError = unknown>(
-  variables?: CustomerListQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerListQueryResult, TError, TData>,
+export const useInfiniteCustomerListQuery = <
+  TData = InfiniteData<CustomerListQueryResult>,
+  TError = unknown,
+>(
+  variables: CustomerListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<CustomerListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerListQueryResult, TError, TData>(
-    variables === undefined ? ["CustomerList.infinite"] : ["CustomerList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerListQueryResult, CustomerListQueryVariables>(CustomerListDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["CustomerList.infinite"]
+            : ["CustomerList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerListQueryResult, CustomerListQueryVariables>(
+            CustomerListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6387,16 +6403,18 @@ export const CustomerDetailDocument = `
 
 export const useCustomerDetailQuery = <TData = CustomerDetailQueryResult, TError = unknown>(
   variables: CustomerDetailQueryVariables,
-  options?: UseQueryOptions<CustomerDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerDetailQueryResult, TError, TData>(
-    ["CustomerDetail", variables],
-    graphqlFetcher<CustomerDetailQueryResult, CustomerDetailQueryVariables>(
+  return useQuery<CustomerDetailQueryResult, TError, TData>({
+    queryKey: ["CustomerDetail", variables],
+    queryFn: graphqlFetcher<CustomerDetailQueryResult, CustomerDetailQueryVariables>(
       CustomerDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerDetailQuery.getKey = (variables: CustomerDetailQueryVariables) => [
@@ -6404,18 +6422,28 @@ useCustomerDetailQuery.getKey = (variables: CustomerDetailQueryVariables) => [
   variables,
 ];
 
-export const useInfiniteCustomerDetailQuery = <TData = CustomerDetailQueryResult, TError = unknown>(
+export const useInfiniteCustomerDetailQuery = <
+  TData = InfiniteData<CustomerDetailQueryResult>,
+  TError = unknown,
+>(
   variables: CustomerDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerDetailQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<CustomerDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerDetailQueryResult, TError, TData>(
-    ["CustomerDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerDetailQueryResult, CustomerDetailQueryVariables>(
-        CustomerDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerDetailQueryResult, CustomerDetailQueryVariables>(
+            CustomerDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6449,38 +6477,48 @@ export const CustomerMetricsDocument = `
 
 export const useCustomerMetricsQuery = <TData = CustomerMetricsQueryResult, TError = unknown>(
   variables?: CustomerMetricsQueryVariables,
-  options?: UseQueryOptions<CustomerMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["CustomerMetrics"] : ["CustomerMetrics", variables],
-    graphqlFetcher<CustomerMetricsQueryResult, CustomerMetricsQueryVariables>(
+  return useQuery<CustomerMetricsQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["CustomerMetrics"] : ["CustomerMetrics", variables],
+    queryFn: graphqlFetcher<CustomerMetricsQueryResult, CustomerMetricsQueryVariables>(
       CustomerMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerMetricsQuery.getKey = (variables?: CustomerMetricsQueryVariables) =>
   variables === undefined ? ["CustomerMetrics"] : ["CustomerMetrics", variables];
 
 export const useInfiniteCustomerMetricsQuery = <
-  TData = CustomerMetricsQueryResult,
+  TData = InfiniteData<CustomerMetricsQueryResult>,
   TError = unknown,
 >(
-  variables?: CustomerMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerMetricsQueryResult, TError, TData>,
+  variables: CustomerMetricsQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<CustomerMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerMetricsQueryResult, TError, TData>(
-    variables === undefined
-      ? ["CustomerMetrics.infinite"]
-      : ["CustomerMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerMetricsQueryResult, CustomerMetricsQueryVariables>(
-        CustomerMetricsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["CustomerMetrics.infinite"]
+            : ["CustomerMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerMetricsQueryResult, CustomerMetricsQueryVariables>(
+            CustomerMetricsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6516,16 +6554,18 @@ export const CustomerActivitiesDocument = `
 
 export const useCustomerActivitiesQuery = <TData = CustomerActivitiesQueryResult, TError = unknown>(
   variables: CustomerActivitiesQueryVariables,
-  options?: UseQueryOptions<CustomerActivitiesQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerActivitiesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerActivitiesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerActivitiesQueryResult, TError, TData>(
-    ["CustomerActivities", variables],
-    graphqlFetcher<CustomerActivitiesQueryResult, CustomerActivitiesQueryVariables>(
+  return useQuery<CustomerActivitiesQueryResult, TError, TData>({
+    queryKey: ["CustomerActivities", variables],
+    queryFn: graphqlFetcher<CustomerActivitiesQueryResult, CustomerActivitiesQueryVariables>(
       CustomerActivitiesDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerActivitiesQuery.getKey = (variables: CustomerActivitiesQueryVariables) => [
@@ -6534,20 +6574,30 @@ useCustomerActivitiesQuery.getKey = (variables: CustomerActivitiesQueryVariables
 ];
 
 export const useInfiniteCustomerActivitiesQuery = <
-  TData = CustomerActivitiesQueryResult,
+  TData = InfiniteData<CustomerActivitiesQueryResult>,
   TError = unknown,
 >(
   variables: CustomerActivitiesQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerActivitiesQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<CustomerActivitiesQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CustomerActivitiesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerActivitiesQueryResult, TError, TData>(
-    ["CustomerActivities.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerActivitiesQueryResult, CustomerActivitiesQueryVariables>(
-        CustomerActivitiesDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerActivities.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerActivitiesQueryResult, CustomerActivitiesQueryVariables>(
+            CustomerActivitiesDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6586,16 +6636,18 @@ export const CustomerNotesDocument = `
 
 export const useCustomerNotesQuery = <TData = CustomerNotesQueryResult, TError = unknown>(
   variables: CustomerNotesQueryVariables,
-  options?: UseQueryOptions<CustomerNotesQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerNotesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerNotesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerNotesQueryResult, TError, TData>(
-    ["CustomerNotes", variables],
-    graphqlFetcher<CustomerNotesQueryResult, CustomerNotesQueryVariables>(
+  return useQuery<CustomerNotesQueryResult, TError, TData>({
+    queryKey: ["CustomerNotes", variables],
+    queryFn: graphqlFetcher<CustomerNotesQueryResult, CustomerNotesQueryVariables>(
       CustomerNotesDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerNotesQuery.getKey = (variables: CustomerNotesQueryVariables) => [
@@ -6603,18 +6655,28 @@ useCustomerNotesQuery.getKey = (variables: CustomerNotesQueryVariables) => [
   variables,
 ];
 
-export const useInfiniteCustomerNotesQuery = <TData = CustomerNotesQueryResult, TError = unknown>(
+export const useInfiniteCustomerNotesQuery = <
+  TData = InfiniteData<CustomerNotesQueryResult>,
+  TError = unknown,
+>(
   variables: CustomerNotesQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerNotesQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<CustomerNotesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerNotesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerNotesQueryResult, TError, TData>(
-    ["CustomerNotes.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerNotesQueryResult, CustomerNotesQueryVariables>(CustomerNotesDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerNotes.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerNotesQueryResult, CustomerNotesQueryVariables>(
+            CustomerNotesDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6675,38 +6737,51 @@ export const CustomerDashboardDocument = `
 
 export const useCustomerDashboardQuery = <TData = CustomerDashboardQueryResult, TError = unknown>(
   variables?: CustomerDashboardQueryVariables,
-  options?: UseQueryOptions<CustomerDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["CustomerDashboard"] : ["CustomerDashboard", variables],
-    graphqlFetcher<CustomerDashboardQueryResult, CustomerDashboardQueryVariables>(
+  return useQuery<CustomerDashboardQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["CustomerDashboard"] : ["CustomerDashboard", variables],
+    queryFn: graphqlFetcher<CustomerDashboardQueryResult, CustomerDashboardQueryVariables>(
       CustomerDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerDashboardQuery.getKey = (variables?: CustomerDashboardQueryVariables) =>
   variables === undefined ? ["CustomerDashboard"] : ["CustomerDashboard", variables];
 
 export const useInfiniteCustomerDashboardQuery = <
-  TData = CustomerDashboardQueryResult,
+  TData = InfiniteData<CustomerDashboardQueryResult>,
   TError = unknown,
 >(
-  variables?: CustomerDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerDashboardQueryResult, TError, TData>,
+  variables: CustomerDashboardQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<CustomerDashboardQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CustomerDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerDashboardQueryResult, TError, TData>(
-    variables === undefined
-      ? ["CustomerDashboard.infinite"]
-      : ["CustomerDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerDashboardQueryResult, CustomerDashboardQueryVariables>(
-        CustomerDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["CustomerDashboard.infinite"]
+            : ["CustomerDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerDashboardQueryResult, CustomerDashboardQueryVariables>(
+            CustomerDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6752,16 +6827,18 @@ export const useCustomerSubscriptionsQuery = <
   TError = unknown,
 >(
   variables: CustomerSubscriptionsQueryVariables,
-  options?: UseQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerSubscriptionsQueryResult, TError, TData>(
-    ["CustomerSubscriptions", variables],
-    graphqlFetcher<CustomerSubscriptionsQueryResult, CustomerSubscriptionsQueryVariables>(
+  return useQuery<CustomerSubscriptionsQueryResult, TError, TData>({
+    queryKey: ["CustomerSubscriptions", variables],
+    queryFn: graphqlFetcher<CustomerSubscriptionsQueryResult, CustomerSubscriptionsQueryVariables>(
       CustomerSubscriptionsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerSubscriptionsQuery.getKey = (variables: CustomerSubscriptionsQueryVariables) => [
@@ -6770,20 +6847,30 @@ useCustomerSubscriptionsQuery.getKey = (variables: CustomerSubscriptionsQueryVar
 ];
 
 export const useInfiniteCustomerSubscriptionsQuery = <
-  TData = CustomerSubscriptionsQueryResult,
+  TData = InfiniteData<CustomerSubscriptionsQueryResult>,
   TError = unknown,
 >(
   variables: CustomerSubscriptionsQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CustomerSubscriptionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerSubscriptionsQueryResult, TError, TData>(
-    ["CustomerSubscriptions.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerSubscriptionsQueryResult, CustomerSubscriptionsQueryVariables>(
-        CustomerSubscriptionsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerSubscriptions.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerSubscriptionsQueryResult, CustomerSubscriptionsQueryVariables>(
+            CustomerSubscriptionsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6813,16 +6900,18 @@ export const useCustomerNetworkInfoQuery = <
   TError = unknown,
 >(
   variables: CustomerNetworkInfoQueryVariables,
-  options?: UseQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerNetworkInfoQueryResult, TError, TData>(
-    ["CustomerNetworkInfo", variables],
-    graphqlFetcher<CustomerNetworkInfoQueryResult, CustomerNetworkInfoQueryVariables>(
+  return useQuery<CustomerNetworkInfoQueryResult, TError, TData>({
+    queryKey: ["CustomerNetworkInfo", variables],
+    queryFn: graphqlFetcher<CustomerNetworkInfoQueryResult, CustomerNetworkInfoQueryVariables>(
       CustomerNetworkInfoDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerNetworkInfoQuery.getKey = (variables: CustomerNetworkInfoQueryVariables) => [
@@ -6831,20 +6920,30 @@ useCustomerNetworkInfoQuery.getKey = (variables: CustomerNetworkInfoQueryVariabl
 ];
 
 export const useInfiniteCustomerNetworkInfoQuery = <
-  TData = CustomerNetworkInfoQueryResult,
+  TData = InfiniteData<CustomerNetworkInfoQueryResult>,
   TError = unknown,
 >(
   variables: CustomerNetworkInfoQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CustomerNetworkInfoQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerNetworkInfoQueryResult, TError, TData>(
-    ["CustomerNetworkInfo.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerNetworkInfoQueryResult, CustomerNetworkInfoQueryVariables>(
-        CustomerNetworkInfoDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerNetworkInfo.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerNetworkInfoQueryResult, CustomerNetworkInfoQueryVariables>(
+            CustomerNetworkInfoDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6875,16 +6974,18 @@ export const CustomerDevicesDocument = `
 
 export const useCustomerDevicesQuery = <TData = CustomerDevicesQueryResult, TError = unknown>(
   variables: CustomerDevicesQueryVariables,
-  options?: UseQueryOptions<CustomerDevicesQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerDevicesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerDevicesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerDevicesQueryResult, TError, TData>(
-    ["CustomerDevices", variables],
-    graphqlFetcher<CustomerDevicesQueryResult, CustomerDevicesQueryVariables>(
+  return useQuery<CustomerDevicesQueryResult, TError, TData>({
+    queryKey: ["CustomerDevices", variables],
+    queryFn: graphqlFetcher<CustomerDevicesQueryResult, CustomerDevicesQueryVariables>(
       CustomerDevicesDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerDevicesQuery.getKey = (variables: CustomerDevicesQueryVariables) => [
@@ -6893,20 +6994,27 @@ useCustomerDevicesQuery.getKey = (variables: CustomerDevicesQueryVariables) => [
 ];
 
 export const useInfiniteCustomerDevicesQuery = <
-  TData = CustomerDevicesQueryResult,
+  TData = InfiniteData<CustomerDevicesQueryResult>,
   TError = unknown,
 >(
   variables: CustomerDevicesQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerDevicesQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<CustomerDevicesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerDevicesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerDevicesQueryResult, TError, TData>(
-    ["CustomerDevices.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerDevicesQueryResult, CustomerDevicesQueryVariables>(
-        CustomerDevicesDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerDevices.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerDevicesQueryResult, CustomerDevicesQueryVariables>(
+            CustomerDevicesDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6933,16 +7041,18 @@ export const CustomerTicketsDocument = `
 
 export const useCustomerTicketsQuery = <TData = CustomerTicketsQueryResult, TError = unknown>(
   variables: CustomerTicketsQueryVariables,
-  options?: UseQueryOptions<CustomerTicketsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerTicketsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerTicketsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerTicketsQueryResult, TError, TData>(
-    ["CustomerTickets", variables],
-    graphqlFetcher<CustomerTicketsQueryResult, CustomerTicketsQueryVariables>(
+  return useQuery<CustomerTicketsQueryResult, TError, TData>({
+    queryKey: ["CustomerTickets", variables],
+    queryFn: graphqlFetcher<CustomerTicketsQueryResult, CustomerTicketsQueryVariables>(
       CustomerTicketsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerTicketsQuery.getKey = (variables: CustomerTicketsQueryVariables) => [
@@ -6951,20 +7061,27 @@ useCustomerTicketsQuery.getKey = (variables: CustomerTicketsQueryVariables) => [
 ];
 
 export const useInfiniteCustomerTicketsQuery = <
-  TData = CustomerTicketsQueryResult,
+  TData = InfiniteData<CustomerTicketsQueryResult>,
   TError = unknown,
 >(
   variables: CustomerTicketsQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerTicketsQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<CustomerTicketsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerTicketsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerTicketsQueryResult, TError, TData>(
-    ["CustomerTickets.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerTicketsQueryResult, CustomerTicketsQueryVariables>(
-        CustomerTicketsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerTickets.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerTicketsQueryResult, CustomerTicketsQueryVariables>(
+            CustomerTicketsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -6995,16 +7112,18 @@ export const CustomerBillingDocument = `
 
 export const useCustomerBillingQuery = <TData = CustomerBillingQueryResult, TError = unknown>(
   variables: CustomerBillingQueryVariables,
-  options?: UseQueryOptions<CustomerBillingQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CustomerBillingQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CustomerBillingQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CustomerBillingQueryResult, TError, TData>(
-    ["CustomerBilling", variables],
-    graphqlFetcher<CustomerBillingQueryResult, CustomerBillingQueryVariables>(
+  return useQuery<CustomerBillingQueryResult, TError, TData>({
+    queryKey: ["CustomerBilling", variables],
+    queryFn: graphqlFetcher<CustomerBillingQueryResult, CustomerBillingQueryVariables>(
       CustomerBillingDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomerBillingQuery.getKey = (variables: CustomerBillingQueryVariables) => [
@@ -7013,20 +7132,27 @@ useCustomerBillingQuery.getKey = (variables: CustomerBillingQueryVariables) => [
 ];
 
 export const useInfiniteCustomerBillingQuery = <
-  TData = CustomerBillingQueryResult,
+  TData = InfiniteData<CustomerBillingQueryResult>,
   TError = unknown,
 >(
   variables: CustomerBillingQueryVariables,
-  options?: UseInfiniteQueryOptions<CustomerBillingQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<CustomerBillingQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CustomerBillingQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CustomerBillingQueryResult, TError, TData>(
-    ["CustomerBilling.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CustomerBillingQueryResult, CustomerBillingQueryVariables>(
-        CustomerBillingDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CustomerBilling.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CustomerBillingQueryResult, CustomerBillingQueryVariables>(
+            CustomerBillingDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7125,16 +7251,18 @@ export const Customer360ViewDocument = `
 
 export const useCustomer360ViewQuery = <TData = Customer360ViewQueryResult, TError = unknown>(
   variables: Customer360ViewQueryVariables,
-  options?: UseQueryOptions<Customer360ViewQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<Customer360ViewQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<Customer360ViewQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<Customer360ViewQueryResult, TError, TData>(
-    ["Customer360View", variables],
-    graphqlFetcher<Customer360ViewQueryResult, Customer360ViewQueryVariables>(
+  return useQuery<Customer360ViewQueryResult, TError, TData>({
+    queryKey: ["Customer360View", variables],
+    queryFn: graphqlFetcher<Customer360ViewQueryResult, Customer360ViewQueryVariables>(
       Customer360ViewDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCustomer360ViewQuery.getKey = (variables: Customer360ViewQueryVariables) => [
@@ -7143,20 +7271,27 @@ useCustomer360ViewQuery.getKey = (variables: Customer360ViewQueryVariables) => [
 ];
 
 export const useInfiniteCustomer360ViewQuery = <
-  TData = Customer360ViewQueryResult,
+  TData = InfiniteData<Customer360ViewQueryResult>,
   TError = unknown,
 >(
   variables: Customer360ViewQueryVariables,
-  options?: UseInfiniteQueryOptions<Customer360ViewQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<Customer360ViewQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<Customer360ViewQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<Customer360ViewQueryResult, TError, TData>(
-    ["Customer360View.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<Customer360ViewQueryResult, Customer360ViewQueryVariables>(
-        Customer360ViewDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["Customer360View.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<Customer360ViewQueryResult, Customer360ViewQueryVariables>(
+            Customer360ViewDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7358,33 +7493,48 @@ export const FiberCableListDocument = `
 
 export const useFiberCableListQuery = <TData = FiberCableListQueryResult, TError = unknown>(
   variables?: FiberCableListQueryVariables,
-  options?: UseQueryOptions<FiberCableListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberCableListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberCableListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberCableListQueryResult, TError, TData>(
-    variables === undefined ? ["FiberCableList"] : ["FiberCableList", variables],
-    graphqlFetcher<FiberCableListQueryResult, FiberCableListQueryVariables>(
+  return useQuery<FiberCableListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["FiberCableList"] : ["FiberCableList", variables],
+    queryFn: graphqlFetcher<FiberCableListQueryResult, FiberCableListQueryVariables>(
       FiberCableListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberCableListQuery.getKey = (variables?: FiberCableListQueryVariables) =>
   variables === undefined ? ["FiberCableList"] : ["FiberCableList", variables];
 
-export const useInfiniteFiberCableListQuery = <TData = FiberCableListQueryResult, TError = unknown>(
-  variables?: FiberCableListQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberCableListQueryResult, TError, TData>,
+export const useInfiniteFiberCableListQuery = <
+  TData = InfiniteData<FiberCableListQueryResult>,
+  TError = unknown,
+>(
+  variables: FiberCableListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<FiberCableListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<FiberCableListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberCableListQueryResult, TError, TData>(
-    variables === undefined ? ["FiberCableList.infinite"] : ["FiberCableList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberCableListQueryResult, FiberCableListQueryVariables>(
-        FiberCableListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["FiberCableList.infinite"]
+            : ["FiberCableList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberCableListQueryResult, FiberCableListQueryVariables>(
+            FiberCableListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7480,16 +7630,18 @@ export const FiberCableDetailDocument = `
 
 export const useFiberCableDetailQuery = <TData = FiberCableDetailQueryResult, TError = unknown>(
   variables: FiberCableDetailQueryVariables,
-  options?: UseQueryOptions<FiberCableDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberCableDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberCableDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberCableDetailQueryResult, TError, TData>(
-    ["FiberCableDetail", variables],
-    graphqlFetcher<FiberCableDetailQueryResult, FiberCableDetailQueryVariables>(
+  return useQuery<FiberCableDetailQueryResult, TError, TData>({
+    queryKey: ["FiberCableDetail", variables],
+    queryFn: graphqlFetcher<FiberCableDetailQueryResult, FiberCableDetailQueryVariables>(
       FiberCableDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberCableDetailQuery.getKey = (variables: FiberCableDetailQueryVariables) => [
@@ -7498,20 +7650,27 @@ useFiberCableDetailQuery.getKey = (variables: FiberCableDetailQueryVariables) =>
 ];
 
 export const useInfiniteFiberCableDetailQuery = <
-  TData = FiberCableDetailQueryResult,
+  TData = InfiniteData<FiberCableDetailQueryResult>,
   TError = unknown,
 >(
   variables: FiberCableDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberCableDetailQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<FiberCableDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<FiberCableDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberCableDetailQueryResult, TError, TData>(
-    ["FiberCableDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberCableDetailQueryResult, FiberCableDetailQueryVariables>(
-        FiberCableDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["FiberCableDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberCableDetailQueryResult, FiberCableDetailQueryVariables>(
+            FiberCableDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7547,16 +7706,18 @@ export const FiberCablesByRouteDocument = `
 
 export const useFiberCablesByRouteQuery = <TData = FiberCablesByRouteQueryResult, TError = unknown>(
   variables: FiberCablesByRouteQueryVariables,
-  options?: UseQueryOptions<FiberCablesByRouteQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberCablesByRouteQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberCablesByRouteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberCablesByRouteQueryResult, TError, TData>(
-    ["FiberCablesByRoute", variables],
-    graphqlFetcher<FiberCablesByRouteQueryResult, FiberCablesByRouteQueryVariables>(
+  return useQuery<FiberCablesByRouteQueryResult, TError, TData>({
+    queryKey: ["FiberCablesByRoute", variables],
+    queryFn: graphqlFetcher<FiberCablesByRouteQueryResult, FiberCablesByRouteQueryVariables>(
       FiberCablesByRouteDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberCablesByRouteQuery.getKey = (variables: FiberCablesByRouteQueryVariables) => [
@@ -7565,20 +7726,30 @@ useFiberCablesByRouteQuery.getKey = (variables: FiberCablesByRouteQueryVariables
 ];
 
 export const useInfiniteFiberCablesByRouteQuery = <
-  TData = FiberCablesByRouteQueryResult,
+  TData = InfiniteData<FiberCablesByRouteQueryResult>,
   TError = unknown,
 >(
   variables: FiberCablesByRouteQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberCablesByRouteQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<FiberCablesByRouteQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<FiberCablesByRouteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberCablesByRouteQueryResult, TError, TData>(
-    ["FiberCablesByRoute.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberCablesByRouteQueryResult, FiberCablesByRouteQueryVariables>(
-        FiberCablesByRouteDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["FiberCablesByRoute.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberCablesByRouteQueryResult, FiberCablesByRouteQueryVariables>(
+            FiberCablesByRouteDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7616,16 +7787,25 @@ export const useFiberCablesByDistributionPointQuery = <
   TError = unknown,
 >(
   variables: FiberCablesByDistributionPointQueryVariables,
-  options?: UseQueryOptions<FiberCablesByDistributionPointQueryResult, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<FiberCablesByDistributionPointQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseQueryOptions<
+      FiberCablesByDistributionPointQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
-  return useQuery<FiberCablesByDistributionPointQueryResult, TError, TData>(
-    ["FiberCablesByDistributionPoint", variables],
-    graphqlFetcher<
+  return useQuery<FiberCablesByDistributionPointQueryResult, TError, TData>({
+    queryKey: ["FiberCablesByDistributionPoint", variables],
+    queryFn: graphqlFetcher<
       FiberCablesByDistributionPointQueryResult,
       FiberCablesByDistributionPointQueryVariables
     >(FiberCablesByDistributionPointDocument, variables),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberCablesByDistributionPointQuery.getKey = (
@@ -7633,20 +7813,37 @@ useFiberCablesByDistributionPointQuery.getKey = (
 ) => ["FiberCablesByDistributionPoint", variables];
 
 export const useInfiniteFiberCablesByDistributionPointQuery = <
-  TData = FiberCablesByDistributionPointQueryResult,
+  TData = InfiniteData<FiberCablesByDistributionPointQueryResult>,
   TError = unknown,
 >(
   variables: FiberCablesByDistributionPointQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberCablesByDistributionPointQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<FiberCablesByDistributionPointQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      FiberCablesByDistributionPointQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberCablesByDistributionPointQueryResult, TError, TData>(
-    ["FiberCablesByDistributionPoint.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<
-        FiberCablesByDistributionPointQueryResult,
-        FiberCablesByDistributionPointQueryVariables
-      >(FiberCablesByDistributionPointDocument, { ...variables, ...(metaData.pageParam ?? {}) })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["FiberCablesByDistributionPoint.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<
+            FiberCablesByDistributionPointQueryResult,
+            FiberCablesByDistributionPointQueryVariables
+          >(FiberCablesByDistributionPointDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7713,38 +7910,48 @@ export const SplicePointListDocument = `
 
 export const useSplicePointListQuery = <TData = SplicePointListQueryResult, TError = unknown>(
   variables?: SplicePointListQueryVariables,
-  options?: UseQueryOptions<SplicePointListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SplicePointListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SplicePointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SplicePointListQueryResult, TError, TData>(
-    variables === undefined ? ["SplicePointList"] : ["SplicePointList", variables],
-    graphqlFetcher<SplicePointListQueryResult, SplicePointListQueryVariables>(
+  return useQuery<SplicePointListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["SplicePointList"] : ["SplicePointList", variables],
+    queryFn: graphqlFetcher<SplicePointListQueryResult, SplicePointListQueryVariables>(
       SplicePointListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSplicePointListQuery.getKey = (variables?: SplicePointListQueryVariables) =>
   variables === undefined ? ["SplicePointList"] : ["SplicePointList", variables];
 
 export const useInfiniteSplicePointListQuery = <
-  TData = SplicePointListQueryResult,
+  TData = InfiniteData<SplicePointListQueryResult>,
   TError = unknown,
 >(
-  variables?: SplicePointListQueryVariables,
-  options?: UseInfiniteQueryOptions<SplicePointListQueryResult, TError, TData>,
+  variables: SplicePointListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<SplicePointListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<SplicePointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SplicePointListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SplicePointList.infinite"]
-      : ["SplicePointList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SplicePointListQueryResult, SplicePointListQueryVariables>(
-        SplicePointListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SplicePointList.infinite"]
+            : ["SplicePointList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SplicePointListQueryResult, SplicePointListQueryVariables>(
+            SplicePointListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7823,16 +8030,18 @@ export const SplicePointDetailDocument = `
 
 export const useSplicePointDetailQuery = <TData = SplicePointDetailQueryResult, TError = unknown>(
   variables: SplicePointDetailQueryVariables,
-  options?: UseQueryOptions<SplicePointDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SplicePointDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SplicePointDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SplicePointDetailQueryResult, TError, TData>(
-    ["SplicePointDetail", variables],
-    graphqlFetcher<SplicePointDetailQueryResult, SplicePointDetailQueryVariables>(
+  return useQuery<SplicePointDetailQueryResult, TError, TData>({
+    queryKey: ["SplicePointDetail", variables],
+    queryFn: graphqlFetcher<SplicePointDetailQueryResult, SplicePointDetailQueryVariables>(
       SplicePointDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSplicePointDetailQuery.getKey = (variables: SplicePointDetailQueryVariables) => [
@@ -7841,20 +8050,30 @@ useSplicePointDetailQuery.getKey = (variables: SplicePointDetailQueryVariables) 
 ];
 
 export const useInfiniteSplicePointDetailQuery = <
-  TData = SplicePointDetailQueryResult,
+  TData = InfiniteData<SplicePointDetailQueryResult>,
   TError = unknown,
 >(
   variables: SplicePointDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<SplicePointDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<SplicePointDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SplicePointDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SplicePointDetailQueryResult, TError, TData>(
-    ["SplicePointDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SplicePointDetailQueryResult, SplicePointDetailQueryVariables>(
-        SplicePointDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["SplicePointDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SplicePointDetailQueryResult, SplicePointDetailQueryVariables>(
+            SplicePointDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -7893,16 +8112,18 @@ export const useSplicePointsByCableQuery = <
   TError = unknown,
 >(
   variables: SplicePointsByCableQueryVariables,
-  options?: UseQueryOptions<SplicePointsByCableQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SplicePointsByCableQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SplicePointsByCableQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SplicePointsByCableQueryResult, TError, TData>(
-    ["SplicePointsByCable", variables],
-    graphqlFetcher<SplicePointsByCableQueryResult, SplicePointsByCableQueryVariables>(
+  return useQuery<SplicePointsByCableQueryResult, TError, TData>({
+    queryKey: ["SplicePointsByCable", variables],
+    queryFn: graphqlFetcher<SplicePointsByCableQueryResult, SplicePointsByCableQueryVariables>(
       SplicePointsByCableDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSplicePointsByCableQuery.getKey = (variables: SplicePointsByCableQueryVariables) => [
@@ -7911,20 +8132,30 @@ useSplicePointsByCableQuery.getKey = (variables: SplicePointsByCableQueryVariabl
 ];
 
 export const useInfiniteSplicePointsByCableQuery = <
-  TData = SplicePointsByCableQueryResult,
+  TData = InfiniteData<SplicePointsByCableQueryResult>,
   TError = unknown,
 >(
   variables: SplicePointsByCableQueryVariables,
-  options?: UseInfiniteQueryOptions<SplicePointsByCableQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<SplicePointsByCableQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SplicePointsByCableQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SplicePointsByCableQueryResult, TError, TData>(
-    ["SplicePointsByCable.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SplicePointsByCableQueryResult, SplicePointsByCableQueryVariables>(
-        SplicePointsByCableDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["SplicePointsByCable.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SplicePointsByCableQueryResult, SplicePointsByCableQueryVariables>(
+            SplicePointsByCableDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8004,38 +8235,52 @@ export const useDistributionPointListQuery = <
   TError = unknown,
 >(
   variables?: DistributionPointListQueryVariables,
-  options?: UseQueryOptions<DistributionPointListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<DistributionPointListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<DistributionPointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<DistributionPointListQueryResult, TError, TData>(
-    variables === undefined ? ["DistributionPointList"] : ["DistributionPointList", variables],
-    graphqlFetcher<DistributionPointListQueryResult, DistributionPointListQueryVariables>(
+  return useQuery<DistributionPointListQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["DistributionPointList"] : ["DistributionPointList", variables],
+    queryFn: graphqlFetcher<DistributionPointListQueryResult, DistributionPointListQueryVariables>(
       DistributionPointListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useDistributionPointListQuery.getKey = (variables?: DistributionPointListQueryVariables) =>
   variables === undefined ? ["DistributionPointList"] : ["DistributionPointList", variables];
 
 export const useInfiniteDistributionPointListQuery = <
-  TData = DistributionPointListQueryResult,
+  TData = InfiniteData<DistributionPointListQueryResult>,
   TError = unknown,
 >(
-  variables?: DistributionPointListQueryVariables,
-  options?: UseInfiniteQueryOptions<DistributionPointListQueryResult, TError, TData>,
+  variables: DistributionPointListQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<DistributionPointListQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<DistributionPointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<DistributionPointListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["DistributionPointList.infinite"]
-      : ["DistributionPointList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<DistributionPointListQueryResult, DistributionPointListQueryVariables>(
-        DistributionPointListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["DistributionPointList.infinite"]
+            : ["DistributionPointList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<DistributionPointListQueryResult, DistributionPointListQueryVariables>(
+            DistributionPointListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8126,16 +8371,18 @@ export const useDistributionPointDetailQuery = <
   TError = unknown,
 >(
   variables: DistributionPointDetailQueryVariables,
-  options?: UseQueryOptions<DistributionPointDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<DistributionPointDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<DistributionPointDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<DistributionPointDetailQueryResult, TError, TData>(
-    ["DistributionPointDetail", variables],
-    graphqlFetcher<DistributionPointDetailQueryResult, DistributionPointDetailQueryVariables>(
-      DistributionPointDetailDocument,
-      variables,
-    ),
-    options,
-  );
+  return useQuery<DistributionPointDetailQueryResult, TError, TData>({
+    queryKey: ["DistributionPointDetail", variables],
+    queryFn: graphqlFetcher<
+      DistributionPointDetailQueryResult,
+      DistributionPointDetailQueryVariables
+    >(DistributionPointDetailDocument, variables),
+    ...options,
+  });
 };
 
 useDistributionPointDetailQuery.getKey = (variables: DistributionPointDetailQueryVariables) => [
@@ -8144,20 +8391,34 @@ useDistributionPointDetailQuery.getKey = (variables: DistributionPointDetailQuer
 ];
 
 export const useInfiniteDistributionPointDetailQuery = <
-  TData = DistributionPointDetailQueryResult,
+  TData = InfiniteData<DistributionPointDetailQueryResult>,
   TError = unknown,
 >(
   variables: DistributionPointDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<DistributionPointDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<DistributionPointDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      DistributionPointDetailQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<DistributionPointDetailQueryResult, TError, TData>(
-    ["DistributionPointDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<DistributionPointDetailQueryResult, DistributionPointDetailQueryVariables>(
-        DistributionPointDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["DistributionPointDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<DistributionPointDetailQueryResult, DistributionPointDetailQueryVariables>(
+            DistributionPointDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8196,16 +8457,21 @@ export const useDistributionPointsBySiteQuery = <
   TError = unknown,
 >(
   variables: DistributionPointsBySiteQueryVariables,
-  options?: UseQueryOptions<DistributionPointsBySiteQueryResult, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<DistributionPointsBySiteQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseQueryOptions<DistributionPointsBySiteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<DistributionPointsBySiteQueryResult, TError, TData>(
-    ["DistributionPointsBySite", variables],
-    graphqlFetcher<DistributionPointsBySiteQueryResult, DistributionPointsBySiteQueryVariables>(
-      DistributionPointsBySiteDocument,
-      variables,
-    ),
-    options,
-  );
+  return useQuery<DistributionPointsBySiteQueryResult, TError, TData>({
+    queryKey: ["DistributionPointsBySite", variables],
+    queryFn: graphqlFetcher<
+      DistributionPointsBySiteQueryResult,
+      DistributionPointsBySiteQueryVariables
+    >(DistributionPointsBySiteDocument, variables),
+    ...options,
+  });
 };
 
 useDistributionPointsBySiteQuery.getKey = (variables: DistributionPointsBySiteQueryVariables) => [
@@ -8214,20 +8480,34 @@ useDistributionPointsBySiteQuery.getKey = (variables: DistributionPointsBySiteQu
 ];
 
 export const useInfiniteDistributionPointsBySiteQuery = <
-  TData = DistributionPointsBySiteQueryResult,
+  TData = InfiniteData<DistributionPointsBySiteQueryResult>,
   TError = unknown,
 >(
   variables: DistributionPointsBySiteQueryVariables,
-  options?: UseInfiniteQueryOptions<DistributionPointsBySiteQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<DistributionPointsBySiteQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      DistributionPointsBySiteQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<DistributionPointsBySiteQueryResult, TError, TData>(
-    ["DistributionPointsBySite.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<DistributionPointsBySiteQueryResult, DistributionPointsBySiteQueryVariables>(
-        DistributionPointsBySiteDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["DistributionPointsBySite.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<
+            DistributionPointsBySiteQueryResult,
+            DistributionPointsBySiteQueryVariables
+          >(DistributionPointsBySiteDocument, { ...variables, ...(metaData.pageParam ?? {}) })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8299,38 +8579,48 @@ export const ServiceAreaListDocument = `
 
 export const useServiceAreaListQuery = <TData = ServiceAreaListQueryResult, TError = unknown>(
   variables?: ServiceAreaListQueryVariables,
-  options?: UseQueryOptions<ServiceAreaListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<ServiceAreaListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<ServiceAreaListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ServiceAreaListQueryResult, TError, TData>(
-    variables === undefined ? ["ServiceAreaList"] : ["ServiceAreaList", variables],
-    graphqlFetcher<ServiceAreaListQueryResult, ServiceAreaListQueryVariables>(
+  return useQuery<ServiceAreaListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["ServiceAreaList"] : ["ServiceAreaList", variables],
+    queryFn: graphqlFetcher<ServiceAreaListQueryResult, ServiceAreaListQueryVariables>(
       ServiceAreaListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useServiceAreaListQuery.getKey = (variables?: ServiceAreaListQueryVariables) =>
   variables === undefined ? ["ServiceAreaList"] : ["ServiceAreaList", variables];
 
 export const useInfiniteServiceAreaListQuery = <
-  TData = ServiceAreaListQueryResult,
+  TData = InfiniteData<ServiceAreaListQueryResult>,
   TError = unknown,
 >(
-  variables?: ServiceAreaListQueryVariables,
-  options?: UseInfiniteQueryOptions<ServiceAreaListQueryResult, TError, TData>,
+  variables: ServiceAreaListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<ServiceAreaListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<ServiceAreaListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ServiceAreaListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["ServiceAreaList.infinite"]
-      : ["ServiceAreaList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ServiceAreaListQueryResult, ServiceAreaListQueryVariables>(
-        ServiceAreaListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["ServiceAreaList.infinite"]
+            : ["ServiceAreaList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<ServiceAreaListQueryResult, ServiceAreaListQueryVariables>(
+            ServiceAreaListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8393,16 +8683,18 @@ export const ServiceAreaDetailDocument = `
 
 export const useServiceAreaDetailQuery = <TData = ServiceAreaDetailQueryResult, TError = unknown>(
   variables: ServiceAreaDetailQueryVariables,
-  options?: UseQueryOptions<ServiceAreaDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<ServiceAreaDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<ServiceAreaDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ServiceAreaDetailQueryResult, TError, TData>(
-    ["ServiceAreaDetail", variables],
-    graphqlFetcher<ServiceAreaDetailQueryResult, ServiceAreaDetailQueryVariables>(
+  return useQuery<ServiceAreaDetailQueryResult, TError, TData>({
+    queryKey: ["ServiceAreaDetail", variables],
+    queryFn: graphqlFetcher<ServiceAreaDetailQueryResult, ServiceAreaDetailQueryVariables>(
       ServiceAreaDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useServiceAreaDetailQuery.getKey = (variables: ServiceAreaDetailQueryVariables) => [
@@ -8411,20 +8703,30 @@ useServiceAreaDetailQuery.getKey = (variables: ServiceAreaDetailQueryVariables) 
 ];
 
 export const useInfiniteServiceAreaDetailQuery = <
-  TData = ServiceAreaDetailQueryResult,
+  TData = InfiniteData<ServiceAreaDetailQueryResult>,
   TError = unknown,
 >(
   variables: ServiceAreaDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<ServiceAreaDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<ServiceAreaDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<ServiceAreaDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ServiceAreaDetailQueryResult, TError, TData>(
-    ["ServiceAreaDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ServiceAreaDetailQueryResult, ServiceAreaDetailQueryVariables>(
-        ServiceAreaDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["ServiceAreaDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<ServiceAreaDetailQueryResult, ServiceAreaDetailQueryVariables>(
+            ServiceAreaDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8465,16 +8767,21 @@ export const useServiceAreasByPostalCodeQuery = <
   TError = unknown,
 >(
   variables: ServiceAreasByPostalCodeQueryVariables,
-  options?: UseQueryOptions<ServiceAreasByPostalCodeQueryResult, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<ServiceAreasByPostalCodeQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseQueryOptions<ServiceAreasByPostalCodeQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ServiceAreasByPostalCodeQueryResult, TError, TData>(
-    ["ServiceAreasByPostalCode", variables],
-    graphqlFetcher<ServiceAreasByPostalCodeQueryResult, ServiceAreasByPostalCodeQueryVariables>(
-      ServiceAreasByPostalCodeDocument,
-      variables,
-    ),
-    options,
-  );
+  return useQuery<ServiceAreasByPostalCodeQueryResult, TError, TData>({
+    queryKey: ["ServiceAreasByPostalCode", variables],
+    queryFn: graphqlFetcher<
+      ServiceAreasByPostalCodeQueryResult,
+      ServiceAreasByPostalCodeQueryVariables
+    >(ServiceAreasByPostalCodeDocument, variables),
+    ...options,
+  });
 };
 
 useServiceAreasByPostalCodeQuery.getKey = (variables: ServiceAreasByPostalCodeQueryVariables) => [
@@ -8483,20 +8790,34 @@ useServiceAreasByPostalCodeQuery.getKey = (variables: ServiceAreasByPostalCodeQu
 ];
 
 export const useInfiniteServiceAreasByPostalCodeQuery = <
-  TData = ServiceAreasByPostalCodeQueryResult,
+  TData = InfiniteData<ServiceAreasByPostalCodeQueryResult>,
   TError = unknown,
 >(
   variables: ServiceAreasByPostalCodeQueryVariables,
-  options?: UseInfiniteQueryOptions<ServiceAreasByPostalCodeQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<ServiceAreasByPostalCodeQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      ServiceAreasByPostalCodeQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ServiceAreasByPostalCodeQueryResult, TError, TData>(
-    ["ServiceAreasByPostalCode.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ServiceAreasByPostalCodeQueryResult, ServiceAreasByPostalCodeQueryVariables>(
-        ServiceAreasByPostalCodeDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["ServiceAreasByPostalCode.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<
+            ServiceAreasByPostalCodeQueryResult,
+            ServiceAreasByPostalCodeQueryVariables
+          >(ServiceAreasByPostalCodeDocument, { ...variables, ...(metaData.pageParam ?? {}) })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8544,38 +8865,51 @@ export const FiberHealthMetricsDocument = `
 
 export const useFiberHealthMetricsQuery = <TData = FiberHealthMetricsQueryResult, TError = unknown>(
   variables?: FiberHealthMetricsQueryVariables,
-  options?: UseQueryOptions<FiberHealthMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberHealthMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberHealthMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberHealthMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["FiberHealthMetrics"] : ["FiberHealthMetrics", variables],
-    graphqlFetcher<FiberHealthMetricsQueryResult, FiberHealthMetricsQueryVariables>(
+  return useQuery<FiberHealthMetricsQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["FiberHealthMetrics"] : ["FiberHealthMetrics", variables],
+    queryFn: graphqlFetcher<FiberHealthMetricsQueryResult, FiberHealthMetricsQueryVariables>(
       FiberHealthMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberHealthMetricsQuery.getKey = (variables?: FiberHealthMetricsQueryVariables) =>
   variables === undefined ? ["FiberHealthMetrics"] : ["FiberHealthMetrics", variables];
 
 export const useInfiniteFiberHealthMetricsQuery = <
-  TData = FiberHealthMetricsQueryResult,
+  TData = InfiniteData<FiberHealthMetricsQueryResult>,
   TError = unknown,
 >(
-  variables?: FiberHealthMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberHealthMetricsQueryResult, TError, TData>,
+  variables: FiberHealthMetricsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<FiberHealthMetricsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<FiberHealthMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberHealthMetricsQueryResult, TError, TData>(
-    variables === undefined
-      ? ["FiberHealthMetrics.infinite"]
-      : ["FiberHealthMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberHealthMetricsQueryResult, FiberHealthMetricsQueryVariables>(
-        FiberHealthMetricsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["FiberHealthMetrics.infinite"]
+            : ["FiberHealthMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberHealthMetricsQueryResult, FiberHealthMetricsQueryVariables>(
+            FiberHealthMetricsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8621,16 +8955,18 @@ export const OtdrTestResultsDocument = `
 
 export const useOtdrTestResultsQuery = <TData = OtdrTestResultsQueryResult, TError = unknown>(
   variables: OtdrTestResultsQueryVariables,
-  options?: UseQueryOptions<OtdrTestResultsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<OtdrTestResultsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<OtdrTestResultsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<OtdrTestResultsQueryResult, TError, TData>(
-    ["OTDRTestResults", variables],
-    graphqlFetcher<OtdrTestResultsQueryResult, OtdrTestResultsQueryVariables>(
+  return useQuery<OtdrTestResultsQueryResult, TError, TData>({
+    queryKey: ["OTDRTestResults", variables],
+    queryFn: graphqlFetcher<OtdrTestResultsQueryResult, OtdrTestResultsQueryVariables>(
       OtdrTestResultsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useOtdrTestResultsQuery.getKey = (variables: OtdrTestResultsQueryVariables) => [
@@ -8639,20 +8975,27 @@ useOtdrTestResultsQuery.getKey = (variables: OtdrTestResultsQueryVariables) => [
 ];
 
 export const useInfiniteOtdrTestResultsQuery = <
-  TData = OtdrTestResultsQueryResult,
+  TData = InfiniteData<OtdrTestResultsQueryResult>,
   TError = unknown,
 >(
   variables: OtdrTestResultsQueryVariables,
-  options?: UseInfiniteQueryOptions<OtdrTestResultsQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<OtdrTestResultsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<OtdrTestResultsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<OtdrTestResultsQueryResult, TError, TData>(
-    ["OTDRTestResults.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<OtdrTestResultsQueryResult, OtdrTestResultsQueryVariables>(
-        OtdrTestResultsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["OTDRTestResults.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<OtdrTestResultsQueryResult, OtdrTestResultsQueryVariables>(
+            OtdrTestResultsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8712,38 +9055,52 @@ export const useFiberNetworkAnalyticsQuery = <
   TError = unknown,
 >(
   variables?: FiberNetworkAnalyticsQueryVariables,
-  options?: UseQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberNetworkAnalyticsQueryResult, TError, TData>(
-    variables === undefined ? ["FiberNetworkAnalytics"] : ["FiberNetworkAnalytics", variables],
-    graphqlFetcher<FiberNetworkAnalyticsQueryResult, FiberNetworkAnalyticsQueryVariables>(
+  return useQuery<FiberNetworkAnalyticsQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["FiberNetworkAnalytics"] : ["FiberNetworkAnalytics", variables],
+    queryFn: graphqlFetcher<FiberNetworkAnalyticsQueryResult, FiberNetworkAnalyticsQueryVariables>(
       FiberNetworkAnalyticsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberNetworkAnalyticsQuery.getKey = (variables?: FiberNetworkAnalyticsQueryVariables) =>
   variables === undefined ? ["FiberNetworkAnalytics"] : ["FiberNetworkAnalytics", variables];
 
 export const useInfiniteFiberNetworkAnalyticsQuery = <
-  TData = FiberNetworkAnalyticsQueryResult,
+  TData = InfiniteData<FiberNetworkAnalyticsQueryResult>,
   TError = unknown,
 >(
-  variables?: FiberNetworkAnalyticsQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>,
+  variables: FiberNetworkAnalyticsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<FiberNetworkAnalyticsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberNetworkAnalyticsQueryResult, TError, TData>(
-    variables === undefined
-      ? ["FiberNetworkAnalytics.infinite"]
-      : ["FiberNetworkAnalytics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberNetworkAnalyticsQueryResult, FiberNetworkAnalyticsQueryVariables>(
-        FiberNetworkAnalyticsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["FiberNetworkAnalytics.infinite"]
+            : ["FiberNetworkAnalytics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberNetworkAnalyticsQueryResult, FiberNetworkAnalyticsQueryVariables>(
+            FiberNetworkAnalyticsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8836,33 +9193,48 @@ export const FiberDashboardDocument = `
 
 export const useFiberDashboardQuery = <TData = FiberDashboardQueryResult, TError = unknown>(
   variables?: FiberDashboardQueryVariables,
-  options?: UseQueryOptions<FiberDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<FiberDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<FiberDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<FiberDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["FiberDashboard"] : ["FiberDashboard", variables],
-    graphqlFetcher<FiberDashboardQueryResult, FiberDashboardQueryVariables>(
+  return useQuery<FiberDashboardQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["FiberDashboard"] : ["FiberDashboard", variables],
+    queryFn: graphqlFetcher<FiberDashboardQueryResult, FiberDashboardQueryVariables>(
       FiberDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useFiberDashboardQuery.getKey = (variables?: FiberDashboardQueryVariables) =>
   variables === undefined ? ["FiberDashboard"] : ["FiberDashboard", variables];
 
-export const useInfiniteFiberDashboardQuery = <TData = FiberDashboardQueryResult, TError = unknown>(
-  variables?: FiberDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<FiberDashboardQueryResult, TError, TData>,
+export const useInfiniteFiberDashboardQuery = <
+  TData = InfiniteData<FiberDashboardQueryResult>,
+  TError = unknown,
+>(
+  variables: FiberDashboardQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<FiberDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<FiberDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<FiberDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["FiberDashboard.infinite"] : ["FiberDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<FiberDashboardQueryResult, FiberDashboardQueryVariables>(
-        FiberDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["FiberDashboard.infinite"]
+            : ["FiberDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<FiberDashboardQueryResult, FiberDashboardQueryVariables>(
+            FiberDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -8920,38 +9292,48 @@ export const NetworkOverviewDocument = `
 
 export const useNetworkOverviewQuery = <TData = NetworkOverviewQueryResult, TError = unknown>(
   variables?: NetworkOverviewQueryVariables,
-  options?: UseQueryOptions<NetworkOverviewQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<NetworkOverviewQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<NetworkOverviewQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<NetworkOverviewQueryResult, TError, TData>(
-    variables === undefined ? ["NetworkOverview"] : ["NetworkOverview", variables],
-    graphqlFetcher<NetworkOverviewQueryResult, NetworkOverviewQueryVariables>(
+  return useQuery<NetworkOverviewQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["NetworkOverview"] : ["NetworkOverview", variables],
+    queryFn: graphqlFetcher<NetworkOverviewQueryResult, NetworkOverviewQueryVariables>(
       NetworkOverviewDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useNetworkOverviewQuery.getKey = (variables?: NetworkOverviewQueryVariables) =>
   variables === undefined ? ["NetworkOverview"] : ["NetworkOverview", variables];
 
 export const useInfiniteNetworkOverviewQuery = <
-  TData = NetworkOverviewQueryResult,
+  TData = InfiniteData<NetworkOverviewQueryResult>,
   TError = unknown,
 >(
-  variables?: NetworkOverviewQueryVariables,
-  options?: UseInfiniteQueryOptions<NetworkOverviewQueryResult, TError, TData>,
+  variables: NetworkOverviewQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<NetworkOverviewQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<NetworkOverviewQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<NetworkOverviewQueryResult, TError, TData>(
-    variables === undefined
-      ? ["NetworkOverview.infinite"]
-      : ["NetworkOverview.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<NetworkOverviewQueryResult, NetworkOverviewQueryVariables>(
-        NetworkOverviewDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["NetworkOverview.infinite"]
+            : ["NetworkOverview.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<NetworkOverviewQueryResult, NetworkOverviewQueryVariables>(
+            NetworkOverviewDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9009,38 +9391,51 @@ export const NetworkDeviceListDocument = `
 
 export const useNetworkDeviceListQuery = <TData = NetworkDeviceListQueryResult, TError = unknown>(
   variables?: NetworkDeviceListQueryVariables,
-  options?: UseQueryOptions<NetworkDeviceListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<NetworkDeviceListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<NetworkDeviceListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<NetworkDeviceListQueryResult, TError, TData>(
-    variables === undefined ? ["NetworkDeviceList"] : ["NetworkDeviceList", variables],
-    graphqlFetcher<NetworkDeviceListQueryResult, NetworkDeviceListQueryVariables>(
+  return useQuery<NetworkDeviceListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["NetworkDeviceList"] : ["NetworkDeviceList", variables],
+    queryFn: graphqlFetcher<NetworkDeviceListQueryResult, NetworkDeviceListQueryVariables>(
       NetworkDeviceListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useNetworkDeviceListQuery.getKey = (variables?: NetworkDeviceListQueryVariables) =>
   variables === undefined ? ["NetworkDeviceList"] : ["NetworkDeviceList", variables];
 
 export const useInfiniteNetworkDeviceListQuery = <
-  TData = NetworkDeviceListQueryResult,
+  TData = InfiniteData<NetworkDeviceListQueryResult>,
   TError = unknown,
 >(
-  variables?: NetworkDeviceListQueryVariables,
-  options?: UseInfiniteQueryOptions<NetworkDeviceListQueryResult, TError, TData>,
+  variables: NetworkDeviceListQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<NetworkDeviceListQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<NetworkDeviceListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<NetworkDeviceListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["NetworkDeviceList.infinite"]
-      : ["NetworkDeviceList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<NetworkDeviceListQueryResult, NetworkDeviceListQueryVariables>(
-        NetworkDeviceListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["NetworkDeviceList.infinite"]
+            : ["NetworkDeviceList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<NetworkDeviceListQueryResult, NetworkDeviceListQueryVariables>(
+            NetworkDeviceListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9102,16 +9497,18 @@ export const DeviceDetailDocument = `
 
 export const useDeviceDetailQuery = <TData = DeviceDetailQueryResult, TError = unknown>(
   variables: DeviceDetailQueryVariables,
-  options?: UseQueryOptions<DeviceDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<DeviceDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<DeviceDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<DeviceDetailQueryResult, TError, TData>(
-    ["DeviceDetail", variables],
-    graphqlFetcher<DeviceDetailQueryResult, DeviceDetailQueryVariables>(
+  return useQuery<DeviceDetailQueryResult, TError, TData>({
+    queryKey: ["DeviceDetail", variables],
+    queryFn: graphqlFetcher<DeviceDetailQueryResult, DeviceDetailQueryVariables>(
       DeviceDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useDeviceDetailQuery.getKey = (variables: DeviceDetailQueryVariables) => [
@@ -9119,18 +9516,28 @@ useDeviceDetailQuery.getKey = (variables: DeviceDetailQueryVariables) => [
   variables,
 ];
 
-export const useInfiniteDeviceDetailQuery = <TData = DeviceDetailQueryResult, TError = unknown>(
+export const useInfiniteDeviceDetailQuery = <
+  TData = InfiniteData<DeviceDetailQueryResult>,
+  TError = unknown,
+>(
   variables: DeviceDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<DeviceDetailQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<DeviceDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<DeviceDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<DeviceDetailQueryResult, TError, TData>(
-    ["DeviceDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<DeviceDetailQueryResult, DeviceDetailQueryVariables>(DeviceDetailDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["DeviceDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<DeviceDetailQueryResult, DeviceDetailQueryVariables>(
+            DeviceDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9187,16 +9594,18 @@ export const DeviceTrafficDocument = `
 
 export const useDeviceTrafficQuery = <TData = DeviceTrafficQueryResult, TError = unknown>(
   variables: DeviceTrafficQueryVariables,
-  options?: UseQueryOptions<DeviceTrafficQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<DeviceTrafficQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<DeviceTrafficQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<DeviceTrafficQueryResult, TError, TData>(
-    ["DeviceTraffic", variables],
-    graphqlFetcher<DeviceTrafficQueryResult, DeviceTrafficQueryVariables>(
+  return useQuery<DeviceTrafficQueryResult, TError, TData>({
+    queryKey: ["DeviceTraffic", variables],
+    queryFn: graphqlFetcher<DeviceTrafficQueryResult, DeviceTrafficQueryVariables>(
       DeviceTrafficDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useDeviceTrafficQuery.getKey = (variables: DeviceTrafficQueryVariables) => [
@@ -9204,18 +9613,28 @@ useDeviceTrafficQuery.getKey = (variables: DeviceTrafficQueryVariables) => [
   variables,
 ];
 
-export const useInfiniteDeviceTrafficQuery = <TData = DeviceTrafficQueryResult, TError = unknown>(
+export const useInfiniteDeviceTrafficQuery = <
+  TData = InfiniteData<DeviceTrafficQueryResult>,
+  TError = unknown,
+>(
   variables: DeviceTrafficQueryVariables,
-  options?: UseInfiniteQueryOptions<DeviceTrafficQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<DeviceTrafficQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<DeviceTrafficQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<DeviceTrafficQueryResult, TError, TData>(
-    ["DeviceTraffic.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<DeviceTrafficQueryResult, DeviceTrafficQueryVariables>(DeviceTrafficDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["DeviceTraffic.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<DeviceTrafficQueryResult, DeviceTrafficQueryVariables>(
+            DeviceTrafficDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9274,38 +9693,48 @@ export const NetworkAlertListDocument = `
 
 export const useNetworkAlertListQuery = <TData = NetworkAlertListQueryResult, TError = unknown>(
   variables?: NetworkAlertListQueryVariables,
-  options?: UseQueryOptions<NetworkAlertListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<NetworkAlertListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<NetworkAlertListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<NetworkAlertListQueryResult, TError, TData>(
-    variables === undefined ? ["NetworkAlertList"] : ["NetworkAlertList", variables],
-    graphqlFetcher<NetworkAlertListQueryResult, NetworkAlertListQueryVariables>(
+  return useQuery<NetworkAlertListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["NetworkAlertList"] : ["NetworkAlertList", variables],
+    queryFn: graphqlFetcher<NetworkAlertListQueryResult, NetworkAlertListQueryVariables>(
       NetworkAlertListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useNetworkAlertListQuery.getKey = (variables?: NetworkAlertListQueryVariables) =>
   variables === undefined ? ["NetworkAlertList"] : ["NetworkAlertList", variables];
 
 export const useInfiniteNetworkAlertListQuery = <
-  TData = NetworkAlertListQueryResult,
+  TData = InfiniteData<NetworkAlertListQueryResult>,
   TError = unknown,
 >(
-  variables?: NetworkAlertListQueryVariables,
-  options?: UseInfiniteQueryOptions<NetworkAlertListQueryResult, TError, TData>,
+  variables: NetworkAlertListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<NetworkAlertListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<NetworkAlertListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<NetworkAlertListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["NetworkAlertList.infinite"]
-      : ["NetworkAlertList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<NetworkAlertListQueryResult, NetworkAlertListQueryVariables>(
-        NetworkAlertListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["NetworkAlertList.infinite"]
+            : ["NetworkAlertList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<NetworkAlertListQueryResult, NetworkAlertListQueryVariables>(
+            NetworkAlertListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9350,16 +9779,18 @@ export const NetworkAlertDetailDocument = `
 
 export const useNetworkAlertDetailQuery = <TData = NetworkAlertDetailQueryResult, TError = unknown>(
   variables: NetworkAlertDetailQueryVariables,
-  options?: UseQueryOptions<NetworkAlertDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<NetworkAlertDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<NetworkAlertDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<NetworkAlertDetailQueryResult, TError, TData>(
-    ["NetworkAlertDetail", variables],
-    graphqlFetcher<NetworkAlertDetailQueryResult, NetworkAlertDetailQueryVariables>(
+  return useQuery<NetworkAlertDetailQueryResult, TError, TData>({
+    queryKey: ["NetworkAlertDetail", variables],
+    queryFn: graphqlFetcher<NetworkAlertDetailQueryResult, NetworkAlertDetailQueryVariables>(
       NetworkAlertDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useNetworkAlertDetailQuery.getKey = (variables: NetworkAlertDetailQueryVariables) => [
@@ -9368,20 +9799,30 @@ useNetworkAlertDetailQuery.getKey = (variables: NetworkAlertDetailQueryVariables
 ];
 
 export const useInfiniteNetworkAlertDetailQuery = <
-  TData = NetworkAlertDetailQueryResult,
+  TData = InfiniteData<NetworkAlertDetailQueryResult>,
   TError = unknown,
 >(
   variables: NetworkAlertDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<NetworkAlertDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<NetworkAlertDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<NetworkAlertDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<NetworkAlertDetailQueryResult, TError, TData>(
-    ["NetworkAlertDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<NetworkAlertDetailQueryResult, NetworkAlertDetailQueryVariables>(
-        NetworkAlertDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["NetworkAlertDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<NetworkAlertDetailQueryResult, NetworkAlertDetailQueryVariables>(
+            NetworkAlertDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9476,38 +9917,48 @@ export const NetworkDashboardDocument = `
 
 export const useNetworkDashboardQuery = <TData = NetworkDashboardQueryResult, TError = unknown>(
   variables?: NetworkDashboardQueryVariables,
-  options?: UseQueryOptions<NetworkDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<NetworkDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<NetworkDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<NetworkDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["NetworkDashboard"] : ["NetworkDashboard", variables],
-    graphqlFetcher<NetworkDashboardQueryResult, NetworkDashboardQueryVariables>(
+  return useQuery<NetworkDashboardQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["NetworkDashboard"] : ["NetworkDashboard", variables],
+    queryFn: graphqlFetcher<NetworkDashboardQueryResult, NetworkDashboardQueryVariables>(
       NetworkDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useNetworkDashboardQuery.getKey = (variables?: NetworkDashboardQueryVariables) =>
   variables === undefined ? ["NetworkDashboard"] : ["NetworkDashboard", variables];
 
 export const useInfiniteNetworkDashboardQuery = <
-  TData = NetworkDashboardQueryResult,
+  TData = InfiniteData<NetworkDashboardQueryResult>,
   TError = unknown,
 >(
-  variables?: NetworkDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<NetworkDashboardQueryResult, TError, TData>,
+  variables: NetworkDashboardQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<NetworkDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<NetworkDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<NetworkDashboardQueryResult, TError, TData>(
-    variables === undefined
-      ? ["NetworkDashboard.infinite"]
-      : ["NetworkDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<NetworkDashboardQueryResult, NetworkDashboardQueryVariables>(
-        NetworkDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["NetworkDashboard.infinite"]
+            : ["NetworkDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<NetworkDashboardQueryResult, NetworkDashboardQueryVariables>(
+            NetworkDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9619,38 +10070,52 @@ export const useSubscriberDashboardQuery = <
   TError = unknown,
 >(
   variables?: SubscriberDashboardQueryVariables,
-  options?: UseQueryOptions<SubscriberDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriberDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriberDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriberDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["SubscriberDashboard"] : ["SubscriberDashboard", variables],
-    graphqlFetcher<SubscriberDashboardQueryResult, SubscriberDashboardQueryVariables>(
+  return useQuery<SubscriberDashboardQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["SubscriberDashboard"] : ["SubscriberDashboard", variables],
+    queryFn: graphqlFetcher<SubscriberDashboardQueryResult, SubscriberDashboardQueryVariables>(
       SubscriberDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriberDashboardQuery.getKey = (variables?: SubscriberDashboardQueryVariables) =>
   variables === undefined ? ["SubscriberDashboard"] : ["SubscriberDashboard", variables];
 
 export const useInfiniteSubscriberDashboardQuery = <
-  TData = SubscriberDashboardQueryResult,
+  TData = InfiniteData<SubscriberDashboardQueryResult>,
   TError = unknown,
 >(
-  variables?: SubscriberDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriberDashboardQueryResult, TError, TData>,
+  variables: SubscriberDashboardQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<SubscriberDashboardQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SubscriberDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriberDashboardQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SubscriberDashboard.infinite"]
-      : ["SubscriberDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriberDashboardQueryResult, SubscriberDashboardQueryVariables>(
-        SubscriberDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SubscriberDashboard.infinite"]
+            : ["SubscriberDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriberDashboardQueryResult, SubscriberDashboardQueryVariables>(
+            SubscriberDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9697,29 +10162,44 @@ export const SubscriberDocument = `
 
 export const useSubscriberQuery = <TData = SubscriberQueryResult, TError = unknown>(
   variables: SubscriberQueryVariables,
-  options?: UseQueryOptions<SubscriberQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriberQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriberQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriberQueryResult, TError, TData>(
-    ["Subscriber", variables],
-    graphqlFetcher<SubscriberQueryResult, SubscriberQueryVariables>(SubscriberDocument, variables),
-    options,
-  );
+  return useQuery<SubscriberQueryResult, TError, TData>({
+    queryKey: ["Subscriber", variables],
+    queryFn: graphqlFetcher<SubscriberQueryResult, SubscriberQueryVariables>(
+      SubscriberDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useSubscriberQuery.getKey = (variables: SubscriberQueryVariables) => ["Subscriber", variables];
 
-export const useInfiniteSubscriberQuery = <TData = SubscriberQueryResult, TError = unknown>(
+export const useInfiniteSubscriberQuery = <
+  TData = InfiniteData<SubscriberQueryResult>,
+  TError = unknown,
+>(
   variables: SubscriberQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriberQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<SubscriberQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<SubscriberQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriberQueryResult, TError, TData>(
-    ["Subscriber.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriberQueryResult, SubscriberQueryVariables>(SubscriberDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["Subscriber.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriberQueryResult, SubscriberQueryVariables>(SubscriberDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9755,33 +10235,48 @@ export const ActiveSessionsDocument = `
 
 export const useActiveSessionsQuery = <TData = ActiveSessionsQueryResult, TError = unknown>(
   variables?: ActiveSessionsQueryVariables,
-  options?: UseQueryOptions<ActiveSessionsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<ActiveSessionsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<ActiveSessionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ActiveSessionsQueryResult, TError, TData>(
-    variables === undefined ? ["ActiveSessions"] : ["ActiveSessions", variables],
-    graphqlFetcher<ActiveSessionsQueryResult, ActiveSessionsQueryVariables>(
+  return useQuery<ActiveSessionsQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["ActiveSessions"] : ["ActiveSessions", variables],
+    queryFn: graphqlFetcher<ActiveSessionsQueryResult, ActiveSessionsQueryVariables>(
       ActiveSessionsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useActiveSessionsQuery.getKey = (variables?: ActiveSessionsQueryVariables) =>
   variables === undefined ? ["ActiveSessions"] : ["ActiveSessions", variables];
 
-export const useInfiniteActiveSessionsQuery = <TData = ActiveSessionsQueryResult, TError = unknown>(
-  variables?: ActiveSessionsQueryVariables,
-  options?: UseInfiniteQueryOptions<ActiveSessionsQueryResult, TError, TData>,
+export const useInfiniteActiveSessionsQuery = <
+  TData = InfiniteData<ActiveSessionsQueryResult>,
+  TError = unknown,
+>(
+  variables: ActiveSessionsQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<ActiveSessionsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<ActiveSessionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ActiveSessionsQueryResult, TError, TData>(
-    variables === undefined ? ["ActiveSessions.infinite"] : ["ActiveSessions.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ActiveSessionsQueryResult, ActiveSessionsQueryVariables>(
-        ActiveSessionsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["ActiveSessions.infinite"]
+            : ["ActiveSessions.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<ActiveSessionsQueryResult, ActiveSessionsQueryVariables>(
+            ActiveSessionsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9812,38 +10307,51 @@ export const SubscriberMetricsDocument = `
 
 export const useSubscriberMetricsQuery = <TData = SubscriberMetricsQueryResult, TError = unknown>(
   variables?: SubscriberMetricsQueryVariables,
-  options?: UseQueryOptions<SubscriberMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriberMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriberMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriberMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["SubscriberMetrics"] : ["SubscriberMetrics", variables],
-    graphqlFetcher<SubscriberMetricsQueryResult, SubscriberMetricsQueryVariables>(
+  return useQuery<SubscriberMetricsQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["SubscriberMetrics"] : ["SubscriberMetrics", variables],
+    queryFn: graphqlFetcher<SubscriberMetricsQueryResult, SubscriberMetricsQueryVariables>(
       SubscriberMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriberMetricsQuery.getKey = (variables?: SubscriberMetricsQueryVariables) =>
   variables === undefined ? ["SubscriberMetrics"] : ["SubscriberMetrics", variables];
 
 export const useInfiniteSubscriberMetricsQuery = <
-  TData = SubscriberMetricsQueryResult,
+  TData = InfiniteData<SubscriberMetricsQueryResult>,
   TError = unknown,
 >(
-  variables?: SubscriberMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriberMetricsQueryResult, TError, TData>,
+  variables: SubscriberMetricsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<SubscriberMetricsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SubscriberMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriberMetricsQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SubscriberMetrics.infinite"]
-      : ["SubscriberMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriberMetricsQueryResult, SubscriberMetricsQueryVariables>(
-        SubscriberMetricsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SubscriberMetrics.infinite"]
+            : ["SubscriberMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriberMetricsQueryResult, SubscriberMetricsQueryVariables>(
+            SubscriberMetricsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -9945,38 +10453,48 @@ export const SubscriptionListDocument = `
 
 export const useSubscriptionListQuery = <TData = SubscriptionListQueryResult, TError = unknown>(
   variables?: SubscriptionListQueryVariables,
-  options?: UseQueryOptions<SubscriptionListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriptionListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriptionListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriptionListQueryResult, TError, TData>(
-    variables === undefined ? ["SubscriptionList"] : ["SubscriptionList", variables],
-    graphqlFetcher<SubscriptionListQueryResult, SubscriptionListQueryVariables>(
+  return useQuery<SubscriptionListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["SubscriptionList"] : ["SubscriptionList", variables],
+    queryFn: graphqlFetcher<SubscriptionListQueryResult, SubscriptionListQueryVariables>(
       SubscriptionListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriptionListQuery.getKey = (variables?: SubscriptionListQueryVariables) =>
   variables === undefined ? ["SubscriptionList"] : ["SubscriptionList", variables];
 
 export const useInfiniteSubscriptionListQuery = <
-  TData = SubscriptionListQueryResult,
+  TData = InfiniteData<SubscriptionListQueryResult>,
   TError = unknown,
 >(
-  variables?: SubscriptionListQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriptionListQueryResult, TError, TData>,
+  variables: SubscriptionListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<SubscriptionListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<SubscriptionListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriptionListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SubscriptionList.infinite"]
-      : ["SubscriptionList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriptionListQueryResult, SubscriptionListQueryVariables>(
-        SubscriptionListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SubscriptionList.infinite"]
+            : ["SubscriptionList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriptionListQueryResult, SubscriptionListQueryVariables>(
+            SubscriptionListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10067,16 +10585,18 @@ export const SubscriptionDetailDocument = `
 
 export const useSubscriptionDetailQuery = <TData = SubscriptionDetailQueryResult, TError = unknown>(
   variables: SubscriptionDetailQueryVariables,
-  options?: UseQueryOptions<SubscriptionDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriptionDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriptionDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriptionDetailQueryResult, TError, TData>(
-    ["SubscriptionDetail", variables],
-    graphqlFetcher<SubscriptionDetailQueryResult, SubscriptionDetailQueryVariables>(
+  return useQuery<SubscriptionDetailQueryResult, TError, TData>({
+    queryKey: ["SubscriptionDetail", variables],
+    queryFn: graphqlFetcher<SubscriptionDetailQueryResult, SubscriptionDetailQueryVariables>(
       SubscriptionDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriptionDetailQuery.getKey = (variables: SubscriptionDetailQueryVariables) => [
@@ -10085,20 +10605,30 @@ useSubscriptionDetailQuery.getKey = (variables: SubscriptionDetailQueryVariables
 ];
 
 export const useInfiniteSubscriptionDetailQuery = <
-  TData = SubscriptionDetailQueryResult,
+  TData = InfiniteData<SubscriptionDetailQueryResult>,
   TError = unknown,
 >(
   variables: SubscriptionDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriptionDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<SubscriptionDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SubscriptionDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriptionDetailQueryResult, TError, TData>(
-    ["SubscriptionDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriptionDetailQueryResult, SubscriptionDetailQueryVariables>(
-        SubscriptionDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["SubscriptionDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriptionDetailQueryResult, SubscriptionDetailQueryVariables>(
+            SubscriptionDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10147,38 +10677,52 @@ export const useSubscriptionMetricsQuery = <
   TError = unknown,
 >(
   variables?: SubscriptionMetricsQueryVariables,
-  options?: UseQueryOptions<SubscriptionMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriptionMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriptionMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriptionMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["SubscriptionMetrics"] : ["SubscriptionMetrics", variables],
-    graphqlFetcher<SubscriptionMetricsQueryResult, SubscriptionMetricsQueryVariables>(
+  return useQuery<SubscriptionMetricsQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["SubscriptionMetrics"] : ["SubscriptionMetrics", variables],
+    queryFn: graphqlFetcher<SubscriptionMetricsQueryResult, SubscriptionMetricsQueryVariables>(
       SubscriptionMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriptionMetricsQuery.getKey = (variables?: SubscriptionMetricsQueryVariables) =>
   variables === undefined ? ["SubscriptionMetrics"] : ["SubscriptionMetrics", variables];
 
 export const useInfiniteSubscriptionMetricsQuery = <
-  TData = SubscriptionMetricsQueryResult,
+  TData = InfiniteData<SubscriptionMetricsQueryResult>,
   TError = unknown,
 >(
-  variables?: SubscriptionMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriptionMetricsQueryResult, TError, TData>,
+  variables: SubscriptionMetricsQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<SubscriptionMetricsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SubscriptionMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriptionMetricsQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SubscriptionMetrics.infinite"]
-      : ["SubscriptionMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriptionMetricsQueryResult, SubscriptionMetricsQueryVariables>(
-        SubscriptionMetricsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SubscriptionMetrics.infinite"]
+            : ["SubscriptionMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriptionMetricsQueryResult, SubscriptionMetricsQueryVariables>(
+            SubscriptionMetricsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10235,30 +10779,48 @@ export const PlanListDocument = `
 
 export const usePlanListQuery = <TData = PlanListQueryResult, TError = unknown>(
   variables?: PlanListQueryVariables,
-  options?: UseQueryOptions<PlanListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<PlanListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<PlanListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<PlanListQueryResult, TError, TData>(
-    variables === undefined ? ["PlanList"] : ["PlanList", variables],
-    graphqlFetcher<PlanListQueryResult, PlanListQueryVariables>(PlanListDocument, variables),
-    options,
-  );
+  return useQuery<PlanListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["PlanList"] : ["PlanList", variables],
+    queryFn: graphqlFetcher<PlanListQueryResult, PlanListQueryVariables>(
+      PlanListDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 usePlanListQuery.getKey = (variables?: PlanListQueryVariables) =>
   variables === undefined ? ["PlanList"] : ["PlanList", variables];
 
-export const useInfinitePlanListQuery = <TData = PlanListQueryResult, TError = unknown>(
-  variables?: PlanListQueryVariables,
-  options?: UseInfiniteQueryOptions<PlanListQueryResult, TError, TData>,
+export const useInfinitePlanListQuery = <
+  TData = InfiniteData<PlanListQueryResult>,
+  TError = unknown,
+>(
+  variables: PlanListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<PlanListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<PlanListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<PlanListQueryResult, TError, TData>(
-    variables === undefined ? ["PlanList.infinite"] : ["PlanList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<PlanListQueryResult, PlanListQueryVariables>(PlanListDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["PlanList.infinite"]
+            : ["PlanList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<PlanListQueryResult, PlanListQueryVariables>(PlanListDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10301,33 +10863,48 @@ export const ProductListDocument = `
 
 export const useProductListQuery = <TData = ProductListQueryResult, TError = unknown>(
   variables?: ProductListQueryVariables,
-  options?: UseQueryOptions<ProductListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<ProductListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<ProductListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ProductListQueryResult, TError, TData>(
-    variables === undefined ? ["ProductList"] : ["ProductList", variables],
-    graphqlFetcher<ProductListQueryResult, ProductListQueryVariables>(
+  return useQuery<ProductListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["ProductList"] : ["ProductList", variables],
+    queryFn: graphqlFetcher<ProductListQueryResult, ProductListQueryVariables>(
       ProductListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useProductListQuery.getKey = (variables?: ProductListQueryVariables) =>
   variables === undefined ? ["ProductList"] : ["ProductList", variables];
 
-export const useInfiniteProductListQuery = <TData = ProductListQueryResult, TError = unknown>(
-  variables?: ProductListQueryVariables,
-  options?: UseInfiniteQueryOptions<ProductListQueryResult, TError, TData>,
+export const useInfiniteProductListQuery = <
+  TData = InfiniteData<ProductListQueryResult>,
+  TError = unknown,
+>(
+  variables: ProductListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<ProductListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<ProductListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ProductListQueryResult, TError, TData>(
-    variables === undefined ? ["ProductList.infinite"] : ["ProductList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ProductListQueryResult, ProductListQueryVariables>(ProductListDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["ProductList.infinite"]
+            : ["ProductList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<ProductListQueryResult, ProductListQueryVariables>(ProductListDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10401,38 +10978,52 @@ export const useSubscriptionDashboardQuery = <
   TError = unknown,
 >(
   variables?: SubscriptionDashboardQueryVariables,
-  options?: UseQueryOptions<SubscriptionDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<SubscriptionDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<SubscriptionDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<SubscriptionDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["SubscriptionDashboard"] : ["SubscriptionDashboard", variables],
-    graphqlFetcher<SubscriptionDashboardQueryResult, SubscriptionDashboardQueryVariables>(
+  return useQuery<SubscriptionDashboardQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["SubscriptionDashboard"] : ["SubscriptionDashboard", variables],
+    queryFn: graphqlFetcher<SubscriptionDashboardQueryResult, SubscriptionDashboardQueryVariables>(
       SubscriptionDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useSubscriptionDashboardQuery.getKey = (variables?: SubscriptionDashboardQueryVariables) =>
   variables === undefined ? ["SubscriptionDashboard"] : ["SubscriptionDashboard", variables];
 
 export const useInfiniteSubscriptionDashboardQuery = <
-  TData = SubscriptionDashboardQueryResult,
+  TData = InfiniteData<SubscriptionDashboardQueryResult>,
   TError = unknown,
 >(
-  variables?: SubscriptionDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<SubscriptionDashboardQueryResult, TError, TData>,
+  variables: SubscriptionDashboardQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<SubscriptionDashboardQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<SubscriptionDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<SubscriptionDashboardQueryResult, TError, TData>(
-    variables === undefined
-      ? ["SubscriptionDashboard.infinite"]
-      : ["SubscriptionDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<SubscriptionDashboardQueryResult, SubscriptionDashboardQueryVariables>(
-        SubscriptionDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["SubscriptionDashboard.infinite"]
+            : ["SubscriptionDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<SubscriptionDashboardQueryResult, SubscriptionDashboardQueryVariables>(
+            SubscriptionDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10539,30 +11130,48 @@ export const UserListDocument = `
 
 export const useUserListQuery = <TData = UserListQueryResult, TError = unknown>(
   variables?: UserListQueryVariables,
-  options?: UseQueryOptions<UserListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserListQueryResult, TError, TData>(
-    variables === undefined ? ["UserList"] : ["UserList", variables],
-    graphqlFetcher<UserListQueryResult, UserListQueryVariables>(UserListDocument, variables),
-    options,
-  );
+  return useQuery<UserListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["UserList"] : ["UserList", variables],
+    queryFn: graphqlFetcher<UserListQueryResult, UserListQueryVariables>(
+      UserListDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useUserListQuery.getKey = (variables?: UserListQueryVariables) =>
   variables === undefined ? ["UserList"] : ["UserList", variables];
 
-export const useInfiniteUserListQuery = <TData = UserListQueryResult, TError = unknown>(
-  variables?: UserListQueryVariables,
-  options?: UseInfiniteQueryOptions<UserListQueryResult, TError, TData>,
+export const useInfiniteUserListQuery = <
+  TData = InfiniteData<UserListQueryResult>,
+  TError = unknown,
+>(
+  variables: UserListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<UserListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserListQueryResult, TError, TData>(
-    variables === undefined ? ["UserList.infinite"] : ["UserList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserListQueryResult, UserListQueryVariables>(UserListDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["UserList.infinite"]
+            : ["UserList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserListQueryResult, UserListQueryVariables>(UserListDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10656,29 +11265,44 @@ export const UserDetailDocument = `
 
 export const useUserDetailQuery = <TData = UserDetailQueryResult, TError = unknown>(
   variables: UserDetailQueryVariables,
-  options?: UseQueryOptions<UserDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserDetailQueryResult, TError, TData>(
-    ["UserDetail", variables],
-    graphqlFetcher<UserDetailQueryResult, UserDetailQueryVariables>(UserDetailDocument, variables),
-    options,
-  );
+  return useQuery<UserDetailQueryResult, TError, TData>({
+    queryKey: ["UserDetail", variables],
+    queryFn: graphqlFetcher<UserDetailQueryResult, UserDetailQueryVariables>(
+      UserDetailDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useUserDetailQuery.getKey = (variables: UserDetailQueryVariables) => ["UserDetail", variables];
 
-export const useInfiniteUserDetailQuery = <TData = UserDetailQueryResult, TError = unknown>(
+export const useInfiniteUserDetailQuery = <
+  TData = InfiniteData<UserDetailQueryResult>,
+  TError = unknown,
+>(
   variables: UserDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<UserDetailQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<UserDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserDetailQueryResult, TError, TData>(
-    ["UserDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserDetailQueryResult, UserDetailQueryVariables>(UserDetailDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["UserDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserDetailQueryResult, UserDetailQueryVariables>(UserDetailDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10721,33 +11345,48 @@ export const UserMetricsDocument = `
 
 export const useUserMetricsQuery = <TData = UserMetricsQueryResult, TError = unknown>(
   variables?: UserMetricsQueryVariables,
-  options?: UseQueryOptions<UserMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["UserMetrics"] : ["UserMetrics", variables],
-    graphqlFetcher<UserMetricsQueryResult, UserMetricsQueryVariables>(
+  return useQuery<UserMetricsQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["UserMetrics"] : ["UserMetrics", variables],
+    queryFn: graphqlFetcher<UserMetricsQueryResult, UserMetricsQueryVariables>(
       UserMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useUserMetricsQuery.getKey = (variables?: UserMetricsQueryVariables) =>
   variables === undefined ? ["UserMetrics"] : ["UserMetrics", variables];
 
-export const useInfiniteUserMetricsQuery = <TData = UserMetricsQueryResult, TError = unknown>(
-  variables?: UserMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<UserMetricsQueryResult, TError, TData>,
+export const useInfiniteUserMetricsQuery = <
+  TData = InfiniteData<UserMetricsQueryResult>,
+  TError = unknown,
+>(
+  variables: UserMetricsQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<UserMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserMetricsQueryResult, TError, TData>(
-    variables === undefined ? ["UserMetrics.infinite"] : ["UserMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserMetricsQueryResult, UserMetricsQueryVariables>(UserMetricsDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["UserMetrics.infinite"]
+            : ["UserMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserMetricsQueryResult, UserMetricsQueryVariables>(UserMetricsDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10796,30 +11435,48 @@ export const RoleListDocument = `
 
 export const useRoleListQuery = <TData = RoleListQueryResult, TError = unknown>(
   variables?: RoleListQueryVariables,
-  options?: UseQueryOptions<RoleListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<RoleListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<RoleListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<RoleListQueryResult, TError, TData>(
-    variables === undefined ? ["RoleList"] : ["RoleList", variables],
-    graphqlFetcher<RoleListQueryResult, RoleListQueryVariables>(RoleListDocument, variables),
-    options,
-  );
+  return useQuery<RoleListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["RoleList"] : ["RoleList", variables],
+    queryFn: graphqlFetcher<RoleListQueryResult, RoleListQueryVariables>(
+      RoleListDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useRoleListQuery.getKey = (variables?: RoleListQueryVariables) =>
   variables === undefined ? ["RoleList"] : ["RoleList", variables];
 
-export const useInfiniteRoleListQuery = <TData = RoleListQueryResult, TError = unknown>(
-  variables?: RoleListQueryVariables,
-  options?: UseInfiniteQueryOptions<RoleListQueryResult, TError, TData>,
+export const useInfiniteRoleListQuery = <
+  TData = InfiniteData<RoleListQueryResult>,
+  TError = unknown,
+>(
+  variables: RoleListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<RoleListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<RoleListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<RoleListQueryResult, TError, TData>(
-    variables === undefined ? ["RoleList.infinite"] : ["RoleList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<RoleListQueryResult, RoleListQueryVariables>(RoleListDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["RoleList.infinite"]
+            : ["RoleList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<RoleListQueryResult, RoleListQueryVariables>(RoleListDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10854,38 +11511,52 @@ export const usePermissionsByCategoryQuery = <
   TError = unknown,
 >(
   variables?: PermissionsByCategoryQueryVariables,
-  options?: UseQueryOptions<PermissionsByCategoryQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<PermissionsByCategoryQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<PermissionsByCategoryQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<PermissionsByCategoryQueryResult, TError, TData>(
-    variables === undefined ? ["PermissionsByCategory"] : ["PermissionsByCategory", variables],
-    graphqlFetcher<PermissionsByCategoryQueryResult, PermissionsByCategoryQueryVariables>(
+  return useQuery<PermissionsByCategoryQueryResult, TError, TData>({
+    queryKey:
+      variables === undefined ? ["PermissionsByCategory"] : ["PermissionsByCategory", variables],
+    queryFn: graphqlFetcher<PermissionsByCategoryQueryResult, PermissionsByCategoryQueryVariables>(
       PermissionsByCategoryDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 usePermissionsByCategoryQuery.getKey = (variables?: PermissionsByCategoryQueryVariables) =>
   variables === undefined ? ["PermissionsByCategory"] : ["PermissionsByCategory", variables];
 
 export const useInfinitePermissionsByCategoryQuery = <
-  TData = PermissionsByCategoryQueryResult,
+  TData = InfiniteData<PermissionsByCategoryQueryResult>,
   TError = unknown,
 >(
-  variables?: PermissionsByCategoryQueryVariables,
-  options?: UseInfiniteQueryOptions<PermissionsByCategoryQueryResult, TError, TData>,
+  variables: PermissionsByCategoryQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<PermissionsByCategoryQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<PermissionsByCategoryQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<PermissionsByCategoryQueryResult, TError, TData>(
-    variables === undefined
-      ? ["PermissionsByCategory.infinite"]
-      : ["PermissionsByCategory.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<PermissionsByCategoryQueryResult, PermissionsByCategoryQueryVariables>(
-        PermissionsByCategoryDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["PermissionsByCategory.infinite"]
+            : ["PermissionsByCategory.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<PermissionsByCategoryQueryResult, PermissionsByCategoryQueryVariables>(
+            PermissionsByCategoryDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -10953,33 +11624,48 @@ export const UserDashboardDocument = `
 
 export const useUserDashboardQuery = <TData = UserDashboardQueryResult, TError = unknown>(
   variables?: UserDashboardQueryVariables,
-  options?: UseQueryOptions<UserDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["UserDashboard"] : ["UserDashboard", variables],
-    graphqlFetcher<UserDashboardQueryResult, UserDashboardQueryVariables>(
+  return useQuery<UserDashboardQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["UserDashboard"] : ["UserDashboard", variables],
+    queryFn: graphqlFetcher<UserDashboardQueryResult, UserDashboardQueryVariables>(
       UserDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useUserDashboardQuery.getKey = (variables?: UserDashboardQueryVariables) =>
   variables === undefined ? ["UserDashboard"] : ["UserDashboard", variables];
 
-export const useInfiniteUserDashboardQuery = <TData = UserDashboardQueryResult, TError = unknown>(
-  variables?: UserDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<UserDashboardQueryResult, TError, TData>,
+export const useInfiniteUserDashboardQuery = <
+  TData = InfiniteData<UserDashboardQueryResult>,
+  TError = unknown,
+>(
+  variables: UserDashboardQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<UserDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["UserDashboard.infinite"] : ["UserDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserDashboardQueryResult, UserDashboardQueryVariables>(UserDashboardDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["UserDashboard.infinite"]
+            : ["UserDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserDashboardQueryResult, UserDashboardQueryVariables>(
+            UserDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11017,29 +11703,44 @@ export const UserRolesDocument = `
 
 export const useUserRolesQuery = <TData = UserRolesQueryResult, TError = unknown>(
   variables: UserRolesQueryVariables,
-  options?: UseQueryOptions<UserRolesQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserRolesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserRolesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserRolesQueryResult, TError, TData>(
-    ["UserRoles", variables],
-    graphqlFetcher<UserRolesQueryResult, UserRolesQueryVariables>(UserRolesDocument, variables),
-    options,
-  );
+  return useQuery<UserRolesQueryResult, TError, TData>({
+    queryKey: ["UserRoles", variables],
+    queryFn: graphqlFetcher<UserRolesQueryResult, UserRolesQueryVariables>(
+      UserRolesDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useUserRolesQuery.getKey = (variables: UserRolesQueryVariables) => ["UserRoles", variables];
 
-export const useInfiniteUserRolesQuery = <TData = UserRolesQueryResult, TError = unknown>(
+export const useInfiniteUserRolesQuery = <
+  TData = InfiniteData<UserRolesQueryResult>,
+  TError = unknown,
+>(
   variables: UserRolesQueryVariables,
-  options?: UseInfiniteQueryOptions<UserRolesQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<UserRolesQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserRolesQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserRolesQueryResult, TError, TData>(
-    ["UserRoles.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserRolesQueryResult, UserRolesQueryVariables>(UserRolesDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["UserRoles.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserRolesQueryResult, UserRolesQueryVariables>(UserRolesDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11077,16 +11778,18 @@ export const UserPermissionsDocument = `
 
 export const useUserPermissionsQuery = <TData = UserPermissionsQueryResult, TError = unknown>(
   variables: UserPermissionsQueryVariables,
-  options?: UseQueryOptions<UserPermissionsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserPermissionsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserPermissionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserPermissionsQueryResult, TError, TData>(
-    ["UserPermissions", variables],
-    graphqlFetcher<UserPermissionsQueryResult, UserPermissionsQueryVariables>(
+  return useQuery<UserPermissionsQueryResult, TError, TData>({
+    queryKey: ["UserPermissions", variables],
+    queryFn: graphqlFetcher<UserPermissionsQueryResult, UserPermissionsQueryVariables>(
       UserPermissionsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useUserPermissionsQuery.getKey = (variables: UserPermissionsQueryVariables) => [
@@ -11095,20 +11798,27 @@ useUserPermissionsQuery.getKey = (variables: UserPermissionsQueryVariables) => [
 ];
 
 export const useInfiniteUserPermissionsQuery = <
-  TData = UserPermissionsQueryResult,
+  TData = InfiniteData<UserPermissionsQueryResult>,
   TError = unknown,
 >(
   variables: UserPermissionsQueryVariables,
-  options?: UseInfiniteQueryOptions<UserPermissionsQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<UserPermissionsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserPermissionsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserPermissionsQueryResult, TError, TData>(
-    ["UserPermissions.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserPermissionsQueryResult, UserPermissionsQueryVariables>(
-        UserPermissionsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["UserPermissions.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserPermissionsQueryResult, UserPermissionsQueryVariables>(
+            UserPermissionsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11144,29 +11854,44 @@ export const UserTeamsDocument = `
 
 export const useUserTeamsQuery = <TData = UserTeamsQueryResult, TError = unknown>(
   variables: UserTeamsQueryVariables,
-  options?: UseQueryOptions<UserTeamsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<UserTeamsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<UserTeamsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<UserTeamsQueryResult, TError, TData>(
-    ["UserTeams", variables],
-    graphqlFetcher<UserTeamsQueryResult, UserTeamsQueryVariables>(UserTeamsDocument, variables),
-    options,
-  );
+  return useQuery<UserTeamsQueryResult, TError, TData>({
+    queryKey: ["UserTeams", variables],
+    queryFn: graphqlFetcher<UserTeamsQueryResult, UserTeamsQueryVariables>(
+      UserTeamsDocument,
+      variables,
+    ),
+    ...options,
+  });
 };
 
 useUserTeamsQuery.getKey = (variables: UserTeamsQueryVariables) => ["UserTeams", variables];
 
-export const useInfiniteUserTeamsQuery = <TData = UserTeamsQueryResult, TError = unknown>(
+export const useInfiniteUserTeamsQuery = <
+  TData = InfiniteData<UserTeamsQueryResult>,
+  TError = unknown,
+>(
   variables: UserTeamsQueryVariables,
-  options?: UseInfiniteQueryOptions<UserTeamsQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<UserTeamsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<UserTeamsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<UserTeamsQueryResult, TError, TData>(
-    ["UserTeams.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<UserTeamsQueryResult, UserTeamsQueryVariables>(UserTeamsDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["UserTeams.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<UserTeamsQueryResult, UserTeamsQueryVariables>(UserTeamsDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11263,38 +11988,48 @@ export const AccessPointListDocument = `
 
 export const useAccessPointListQuery = <TData = AccessPointListQueryResult, TError = unknown>(
   variables?: AccessPointListQueryVariables,
-  options?: UseQueryOptions<AccessPointListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<AccessPointListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<AccessPointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<AccessPointListQueryResult, TError, TData>(
-    variables === undefined ? ["AccessPointList"] : ["AccessPointList", variables],
-    graphqlFetcher<AccessPointListQueryResult, AccessPointListQueryVariables>(
+  return useQuery<AccessPointListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["AccessPointList"] : ["AccessPointList", variables],
+    queryFn: graphqlFetcher<AccessPointListQueryResult, AccessPointListQueryVariables>(
       AccessPointListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useAccessPointListQuery.getKey = (variables?: AccessPointListQueryVariables) =>
   variables === undefined ? ["AccessPointList"] : ["AccessPointList", variables];
 
 export const useInfiniteAccessPointListQuery = <
-  TData = AccessPointListQueryResult,
+  TData = InfiniteData<AccessPointListQueryResult>,
   TError = unknown,
 >(
-  variables?: AccessPointListQueryVariables,
-  options?: UseInfiniteQueryOptions<AccessPointListQueryResult, TError, TData>,
+  variables: AccessPointListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<AccessPointListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<AccessPointListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<AccessPointListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["AccessPointList.infinite"]
-      : ["AccessPointList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<AccessPointListQueryResult, AccessPointListQueryVariables>(
-        AccessPointListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["AccessPointList.infinite"]
+            : ["AccessPointList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<AccessPointListQueryResult, AccessPointListQueryVariables>(
+            AccessPointListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11391,16 +12126,18 @@ export const AccessPointDetailDocument = `
 
 export const useAccessPointDetailQuery = <TData = AccessPointDetailQueryResult, TError = unknown>(
   variables: AccessPointDetailQueryVariables,
-  options?: UseQueryOptions<AccessPointDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<AccessPointDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<AccessPointDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<AccessPointDetailQueryResult, TError, TData>(
-    ["AccessPointDetail", variables],
-    graphqlFetcher<AccessPointDetailQueryResult, AccessPointDetailQueryVariables>(
+  return useQuery<AccessPointDetailQueryResult, TError, TData>({
+    queryKey: ["AccessPointDetail", variables],
+    queryFn: graphqlFetcher<AccessPointDetailQueryResult, AccessPointDetailQueryVariables>(
       AccessPointDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useAccessPointDetailQuery.getKey = (variables: AccessPointDetailQueryVariables) => [
@@ -11409,20 +12146,30 @@ useAccessPointDetailQuery.getKey = (variables: AccessPointDetailQueryVariables) 
 ];
 
 export const useInfiniteAccessPointDetailQuery = <
-  TData = AccessPointDetailQueryResult,
+  TData = InfiniteData<AccessPointDetailQueryResult>,
   TError = unknown,
 >(
   variables: AccessPointDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<AccessPointDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<AccessPointDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<AccessPointDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<AccessPointDetailQueryResult, TError, TData>(
-    ["AccessPointDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<AccessPointDetailQueryResult, AccessPointDetailQueryVariables>(
-        AccessPointDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["AccessPointDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<AccessPointDetailQueryResult, AccessPointDetailQueryVariables>(
+            AccessPointDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11468,16 +12215,18 @@ export const AccessPointsBySiteDocument = `
 
 export const useAccessPointsBySiteQuery = <TData = AccessPointsBySiteQueryResult, TError = unknown>(
   variables: AccessPointsBySiteQueryVariables,
-  options?: UseQueryOptions<AccessPointsBySiteQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<AccessPointsBySiteQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<AccessPointsBySiteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<AccessPointsBySiteQueryResult, TError, TData>(
-    ["AccessPointsBySite", variables],
-    graphqlFetcher<AccessPointsBySiteQueryResult, AccessPointsBySiteQueryVariables>(
+  return useQuery<AccessPointsBySiteQueryResult, TError, TData>({
+    queryKey: ["AccessPointsBySite", variables],
+    queryFn: graphqlFetcher<AccessPointsBySiteQueryResult, AccessPointsBySiteQueryVariables>(
       AccessPointsBySiteDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useAccessPointsBySiteQuery.getKey = (variables: AccessPointsBySiteQueryVariables) => [
@@ -11486,20 +12235,30 @@ useAccessPointsBySiteQuery.getKey = (variables: AccessPointsBySiteQueryVariables
 ];
 
 export const useInfiniteAccessPointsBySiteQuery = <
-  TData = AccessPointsBySiteQueryResult,
+  TData = InfiniteData<AccessPointsBySiteQueryResult>,
   TError = unknown,
 >(
   variables: AccessPointsBySiteQueryVariables,
-  options?: UseInfiniteQueryOptions<AccessPointsBySiteQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<AccessPointsBySiteQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<AccessPointsBySiteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<AccessPointsBySiteQueryResult, TError, TData>(
-    ["AccessPointsBySite.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<AccessPointsBySiteQueryResult, AccessPointsBySiteQueryVariables>(
-        AccessPointsBySiteDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["AccessPointsBySite.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<AccessPointsBySiteQueryResult, AccessPointsBySiteQueryVariables>(
+            AccessPointsBySiteDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11570,38 +12329,51 @@ export const WirelessClientListDocument = `
 
 export const useWirelessClientListQuery = <TData = WirelessClientListQueryResult, TError = unknown>(
   variables?: WirelessClientListQueryVariables,
-  options?: UseQueryOptions<WirelessClientListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<WirelessClientListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<WirelessClientListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessClientListQueryResult, TError, TData>(
-    variables === undefined ? ["WirelessClientList"] : ["WirelessClientList", variables],
-    graphqlFetcher<WirelessClientListQueryResult, WirelessClientListQueryVariables>(
+  return useQuery<WirelessClientListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["WirelessClientList"] : ["WirelessClientList", variables],
+    queryFn: graphqlFetcher<WirelessClientListQueryResult, WirelessClientListQueryVariables>(
       WirelessClientListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useWirelessClientListQuery.getKey = (variables?: WirelessClientListQueryVariables) =>
   variables === undefined ? ["WirelessClientList"] : ["WirelessClientList", variables];
 
 export const useInfiniteWirelessClientListQuery = <
-  TData = WirelessClientListQueryResult,
+  TData = InfiniteData<WirelessClientListQueryResult>,
   TError = unknown,
 >(
-  variables?: WirelessClientListQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessClientListQueryResult, TError, TData>,
+  variables: WirelessClientListQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessClientListQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<WirelessClientListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessClientListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["WirelessClientList.infinite"]
-      : ["WirelessClientList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<WirelessClientListQueryResult, WirelessClientListQueryVariables>(
-        WirelessClientListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["WirelessClientList.infinite"]
+            : ["WirelessClientList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<WirelessClientListQueryResult, WirelessClientListQueryVariables>(
+            WirelessClientListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11674,16 +12446,18 @@ export const useWirelessClientDetailQuery = <
   TError = unknown,
 >(
   variables: WirelessClientDetailQueryVariables,
-  options?: UseQueryOptions<WirelessClientDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<WirelessClientDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<WirelessClientDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessClientDetailQueryResult, TError, TData>(
-    ["WirelessClientDetail", variables],
-    graphqlFetcher<WirelessClientDetailQueryResult, WirelessClientDetailQueryVariables>(
+  return useQuery<WirelessClientDetailQueryResult, TError, TData>({
+    queryKey: ["WirelessClientDetail", variables],
+    queryFn: graphqlFetcher<WirelessClientDetailQueryResult, WirelessClientDetailQueryVariables>(
       WirelessClientDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useWirelessClientDetailQuery.getKey = (variables: WirelessClientDetailQueryVariables) => [
@@ -11692,20 +12466,30 @@ useWirelessClientDetailQuery.getKey = (variables: WirelessClientDetailQueryVaria
 ];
 
 export const useInfiniteWirelessClientDetailQuery = <
-  TData = WirelessClientDetailQueryResult,
+  TData = InfiniteData<WirelessClientDetailQueryResult>,
   TError = unknown,
 >(
   variables: WirelessClientDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessClientDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessClientDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<WirelessClientDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessClientDetailQueryResult, TError, TData>(
-    ["WirelessClientDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<WirelessClientDetailQueryResult, WirelessClientDetailQueryVariables>(
-        WirelessClientDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["WirelessClientDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<WirelessClientDetailQueryResult, WirelessClientDetailQueryVariables>(
+            WirelessClientDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11754,16 +12538,21 @@ export const useWirelessClientsByAccessPointQuery = <
   TError = unknown,
 >(
   variables: WirelessClientsByAccessPointQueryVariables,
-  options?: UseQueryOptions<WirelessClientsByAccessPointQueryResult, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<WirelessClientsByAccessPointQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseQueryOptions<WirelessClientsByAccessPointQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessClientsByAccessPointQueryResult, TError, TData>(
-    ["WirelessClientsByAccessPoint", variables],
-    graphqlFetcher<
+  return useQuery<WirelessClientsByAccessPointQueryResult, TError, TData>({
+    queryKey: ["WirelessClientsByAccessPoint", variables],
+    queryFn: graphqlFetcher<
       WirelessClientsByAccessPointQueryResult,
       WirelessClientsByAccessPointQueryVariables
     >(WirelessClientsByAccessPointDocument, variables),
-    options,
-  );
+    ...options,
+  });
 };
 
 useWirelessClientsByAccessPointQuery.getKey = (
@@ -11771,20 +12560,37 @@ useWirelessClientsByAccessPointQuery.getKey = (
 ) => ["WirelessClientsByAccessPoint", variables];
 
 export const useInfiniteWirelessClientsByAccessPointQuery = <
-  TData = WirelessClientsByAccessPointQueryResult,
+  TData = InfiniteData<WirelessClientsByAccessPointQueryResult>,
   TError = unknown,
 >(
   variables: WirelessClientsByAccessPointQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessClientsByAccessPointQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessClientsByAccessPointQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      WirelessClientsByAccessPointQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessClientsByAccessPointQueryResult, TError, TData>(
-    ["WirelessClientsByAccessPoint.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<
-        WirelessClientsByAccessPointQueryResult,
-        WirelessClientsByAccessPointQueryVariables
-      >(WirelessClientsByAccessPointDocument, { ...variables, ...(metaData.pageParam ?? {}) })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["WirelessClientsByAccessPoint.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<
+            WirelessClientsByAccessPointQueryResult,
+            WirelessClientsByAccessPointQueryVariables
+          >(WirelessClientsByAccessPointDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11831,16 +12637,21 @@ export const useWirelessClientsByCustomerQuery = <
   TError = unknown,
 >(
   variables: WirelessClientsByCustomerQueryVariables,
-  options?: UseQueryOptions<WirelessClientsByCustomerQueryResult, TError, TData>,
+  options?: Omit<
+    UseQueryOptions<WirelessClientsByCustomerQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseQueryOptions<WirelessClientsByCustomerQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessClientsByCustomerQueryResult, TError, TData>(
-    ["WirelessClientsByCustomer", variables],
-    graphqlFetcher<WirelessClientsByCustomerQueryResult, WirelessClientsByCustomerQueryVariables>(
-      WirelessClientsByCustomerDocument,
-      variables,
-    ),
-    options,
-  );
+  return useQuery<WirelessClientsByCustomerQueryResult, TError, TData>({
+    queryKey: ["WirelessClientsByCustomer", variables],
+    queryFn: graphqlFetcher<
+      WirelessClientsByCustomerQueryResult,
+      WirelessClientsByCustomerQueryVariables
+    >(WirelessClientsByCustomerDocument, variables),
+    ...options,
+  });
 };
 
 useWirelessClientsByCustomerQuery.getKey = (variables: WirelessClientsByCustomerQueryVariables) => [
@@ -11849,20 +12660,34 @@ useWirelessClientsByCustomerQuery.getKey = (variables: WirelessClientsByCustomer
 ];
 
 export const useInfiniteWirelessClientsByCustomerQuery = <
-  TData = WirelessClientsByCustomerQueryResult,
+  TData = InfiniteData<WirelessClientsByCustomerQueryResult>,
   TError = unknown,
 >(
   variables: WirelessClientsByCustomerQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessClientsByCustomerQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessClientsByCustomerQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<
+      WirelessClientsByCustomerQueryResult,
+      TError,
+      TData
+    >["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessClientsByCustomerQueryResult, TError, TData>(
-    ["WirelessClientsByCustomer.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<WirelessClientsByCustomerQueryResult, WirelessClientsByCustomerQueryVariables>(
-        WirelessClientsByCustomerDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["WirelessClientsByCustomer.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<
+            WirelessClientsByCustomerQueryResult,
+            WirelessClientsByCustomerQueryVariables
+          >(WirelessClientsByCustomerDocument, { ...variables, ...(metaData.pageParam ?? {}) })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -11921,38 +12746,48 @@ export const CoverageZoneListDocument = `
 
 export const useCoverageZoneListQuery = <TData = CoverageZoneListQueryResult, TError = unknown>(
   variables?: CoverageZoneListQueryVariables,
-  options?: UseQueryOptions<CoverageZoneListQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CoverageZoneListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CoverageZoneListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CoverageZoneListQueryResult, TError, TData>(
-    variables === undefined ? ["CoverageZoneList"] : ["CoverageZoneList", variables],
-    graphqlFetcher<CoverageZoneListQueryResult, CoverageZoneListQueryVariables>(
+  return useQuery<CoverageZoneListQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["CoverageZoneList"] : ["CoverageZoneList", variables],
+    queryFn: graphqlFetcher<CoverageZoneListQueryResult, CoverageZoneListQueryVariables>(
       CoverageZoneListDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCoverageZoneListQuery.getKey = (variables?: CoverageZoneListQueryVariables) =>
   variables === undefined ? ["CoverageZoneList"] : ["CoverageZoneList", variables];
 
 export const useInfiniteCoverageZoneListQuery = <
-  TData = CoverageZoneListQueryResult,
+  TData = InfiniteData<CoverageZoneListQueryResult>,
   TError = unknown,
 >(
-  variables?: CoverageZoneListQueryVariables,
-  options?: UseInfiniteQueryOptions<CoverageZoneListQueryResult, TError, TData>,
+  variables: CoverageZoneListQueryVariables,
+  options: Omit<UseInfiniteQueryOptions<CoverageZoneListQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<CoverageZoneListQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CoverageZoneListQueryResult, TError, TData>(
-    variables === undefined
-      ? ["CoverageZoneList.infinite"]
-      : ["CoverageZoneList.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CoverageZoneListQueryResult, CoverageZoneListQueryVariables>(
-        CoverageZoneListDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["CoverageZoneList.infinite"]
+            : ["CoverageZoneList.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CoverageZoneListQueryResult, CoverageZoneListQueryVariables>(
+            CoverageZoneListDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12003,16 +12838,18 @@ export const CoverageZoneDetailDocument = `
 
 export const useCoverageZoneDetailQuery = <TData = CoverageZoneDetailQueryResult, TError = unknown>(
   variables: CoverageZoneDetailQueryVariables,
-  options?: UseQueryOptions<CoverageZoneDetailQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CoverageZoneDetailQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CoverageZoneDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CoverageZoneDetailQueryResult, TError, TData>(
-    ["CoverageZoneDetail", variables],
-    graphqlFetcher<CoverageZoneDetailQueryResult, CoverageZoneDetailQueryVariables>(
+  return useQuery<CoverageZoneDetailQueryResult, TError, TData>({
+    queryKey: ["CoverageZoneDetail", variables],
+    queryFn: graphqlFetcher<CoverageZoneDetailQueryResult, CoverageZoneDetailQueryVariables>(
       CoverageZoneDetailDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCoverageZoneDetailQuery.getKey = (variables: CoverageZoneDetailQueryVariables) => [
@@ -12021,20 +12858,30 @@ useCoverageZoneDetailQuery.getKey = (variables: CoverageZoneDetailQueryVariables
 ];
 
 export const useInfiniteCoverageZoneDetailQuery = <
-  TData = CoverageZoneDetailQueryResult,
+  TData = InfiniteData<CoverageZoneDetailQueryResult>,
   TError = unknown,
 >(
   variables: CoverageZoneDetailQueryVariables,
-  options?: UseInfiniteQueryOptions<CoverageZoneDetailQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<CoverageZoneDetailQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CoverageZoneDetailQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CoverageZoneDetailQueryResult, TError, TData>(
-    ["CoverageZoneDetail.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CoverageZoneDetailQueryResult, CoverageZoneDetailQueryVariables>(
-        CoverageZoneDetailDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CoverageZoneDetail.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CoverageZoneDetailQueryResult, CoverageZoneDetailQueryVariables>(
+            CoverageZoneDetailDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12074,16 +12921,18 @@ export const useCoverageZonesBySiteQuery = <
   TError = unknown,
 >(
   variables: CoverageZonesBySiteQueryVariables,
-  options?: UseQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<CoverageZonesBySiteQueryResult, TError, TData>(
-    ["CoverageZonesBySite", variables],
-    graphqlFetcher<CoverageZonesBySiteQueryResult, CoverageZonesBySiteQueryVariables>(
+  return useQuery<CoverageZonesBySiteQueryResult, TError, TData>({
+    queryKey: ["CoverageZonesBySite", variables],
+    queryFn: graphqlFetcher<CoverageZonesBySiteQueryResult, CoverageZonesBySiteQueryVariables>(
       CoverageZonesBySiteDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useCoverageZonesBySiteQuery.getKey = (variables: CoverageZonesBySiteQueryVariables) => [
@@ -12092,20 +12941,30 @@ useCoverageZonesBySiteQuery.getKey = (variables: CoverageZonesBySiteQueryVariabl
 ];
 
 export const useInfiniteCoverageZonesBySiteQuery = <
-  TData = CoverageZonesBySiteQueryResult,
+  TData = InfiniteData<CoverageZonesBySiteQueryResult>,
   TError = unknown,
 >(
   variables: CoverageZonesBySiteQueryVariables,
-  options?: UseInfiniteQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<CoverageZonesBySiteQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<CoverageZonesBySiteQueryResult, TError, TData>(
-    ["CoverageZonesBySite.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<CoverageZonesBySiteQueryResult, CoverageZonesBySiteQueryVariables>(
-        CoverageZonesBySiteDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["CoverageZonesBySite.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<CoverageZonesBySiteQueryResult, CoverageZonesBySiteQueryVariables>(
+            CoverageZonesBySiteDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12177,32 +13036,44 @@ export const RfAnalyticsDocument = `
 
 export const useRfAnalyticsQuery = <TData = RfAnalyticsQueryResult, TError = unknown>(
   variables: RfAnalyticsQueryVariables,
-  options?: UseQueryOptions<RfAnalyticsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<RfAnalyticsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<RfAnalyticsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<RfAnalyticsQueryResult, TError, TData>(
-    ["RFAnalytics", variables],
-    graphqlFetcher<RfAnalyticsQueryResult, RfAnalyticsQueryVariables>(
+  return useQuery<RfAnalyticsQueryResult, TError, TData>({
+    queryKey: ["RFAnalytics", variables],
+    queryFn: graphqlFetcher<RfAnalyticsQueryResult, RfAnalyticsQueryVariables>(
       RfAnalyticsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useRfAnalyticsQuery.getKey = (variables: RfAnalyticsQueryVariables) => ["RFAnalytics", variables];
 
-export const useInfiniteRfAnalyticsQuery = <TData = RfAnalyticsQueryResult, TError = unknown>(
+export const useInfiniteRfAnalyticsQuery = <
+  TData = InfiniteData<RfAnalyticsQueryResult>,
+  TError = unknown,
+>(
   variables: RfAnalyticsQueryVariables,
-  options?: UseInfiniteQueryOptions<RfAnalyticsQueryResult, TError, TData>,
+  options: Omit<UseInfiniteQueryOptions<RfAnalyticsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseInfiniteQueryOptions<RfAnalyticsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<RfAnalyticsQueryResult, TError, TData>(
-    ["RFAnalytics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<RfAnalyticsQueryResult, RfAnalyticsQueryVariables>(RfAnalyticsDocument, {
-        ...variables,
-        ...(metaData.pageParam ?? {}),
-      })(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["RFAnalytics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<RfAnalyticsQueryResult, RfAnalyticsQueryVariables>(RfAnalyticsDocument, {
+            ...variables,
+            ...(metaData.pageParam ?? {}),
+          })(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12236,16 +13107,18 @@ export const ChannelUtilizationDocument = `
 
 export const useChannelUtilizationQuery = <TData = ChannelUtilizationQueryResult, TError = unknown>(
   variables: ChannelUtilizationQueryVariables,
-  options?: UseQueryOptions<ChannelUtilizationQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<ChannelUtilizationQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<ChannelUtilizationQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<ChannelUtilizationQueryResult, TError, TData>(
-    ["ChannelUtilization", variables],
-    graphqlFetcher<ChannelUtilizationQueryResult, ChannelUtilizationQueryVariables>(
+  return useQuery<ChannelUtilizationQueryResult, TError, TData>({
+    queryKey: ["ChannelUtilization", variables],
+    queryFn: graphqlFetcher<ChannelUtilizationQueryResult, ChannelUtilizationQueryVariables>(
       ChannelUtilizationDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useChannelUtilizationQuery.getKey = (variables: ChannelUtilizationQueryVariables) => [
@@ -12254,20 +13127,30 @@ useChannelUtilizationQuery.getKey = (variables: ChannelUtilizationQueryVariables
 ];
 
 export const useInfiniteChannelUtilizationQuery = <
-  TData = ChannelUtilizationQueryResult,
+  TData = InfiniteData<ChannelUtilizationQueryResult>,
   TError = unknown,
 >(
   variables: ChannelUtilizationQueryVariables,
-  options?: UseInfiniteQueryOptions<ChannelUtilizationQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<ChannelUtilizationQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<ChannelUtilizationQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<ChannelUtilizationQueryResult, TError, TData>(
-    ["ChannelUtilization.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<ChannelUtilizationQueryResult, ChannelUtilizationQueryVariables>(
-        ChannelUtilizationDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["ChannelUtilization.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<ChannelUtilizationQueryResult, ChannelUtilizationQueryVariables>(
+            ChannelUtilizationDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12316,16 +13199,18 @@ export const useWirelessSiteMetricsQuery = <
   TError = unknown,
 >(
   variables: WirelessSiteMetricsQueryVariables,
-  options?: UseQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessSiteMetricsQueryResult, TError, TData>(
-    ["WirelessSiteMetrics", variables],
-    graphqlFetcher<WirelessSiteMetricsQueryResult, WirelessSiteMetricsQueryVariables>(
+  return useQuery<WirelessSiteMetricsQueryResult, TError, TData>({
+    queryKey: ["WirelessSiteMetrics", variables],
+    queryFn: graphqlFetcher<WirelessSiteMetricsQueryResult, WirelessSiteMetricsQueryVariables>(
       WirelessSiteMetricsDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useWirelessSiteMetricsQuery.getKey = (variables: WirelessSiteMetricsQueryVariables) => [
@@ -12334,20 +13219,30 @@ useWirelessSiteMetricsQuery.getKey = (variables: WirelessSiteMetricsQueryVariabl
 ];
 
 export const useInfiniteWirelessSiteMetricsQuery = <
-  TData = WirelessSiteMetricsQueryResult,
+  TData = InfiniteData<WirelessSiteMetricsQueryResult>,
   TError = unknown,
 >(
   variables: WirelessSiteMetricsQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<WirelessSiteMetricsQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessSiteMetricsQueryResult, TError, TData>(
-    ["WirelessSiteMetrics.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<WirelessSiteMetricsQueryResult, WirelessSiteMetricsQueryVariables>(
-        WirelessSiteMetricsDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey: optionsQueryKey ?? ["WirelessSiteMetrics.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<WirelessSiteMetricsQueryResult, WirelessSiteMetricsQueryVariables>(
+            WirelessSiteMetricsDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 
@@ -12416,38 +13311,51 @@ export const WirelessDashboardDocument = `
 
 export const useWirelessDashboardQuery = <TData = WirelessDashboardQueryResult, TError = unknown>(
   variables?: WirelessDashboardQueryVariables,
-  options?: UseQueryOptions<WirelessDashboardQueryResult, TError, TData>,
+  options?: Omit<UseQueryOptions<WirelessDashboardQueryResult, TError, TData>, "queryKey"> & {
+    queryKey?: UseQueryOptions<WirelessDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
-  return useQuery<WirelessDashboardQueryResult, TError, TData>(
-    variables === undefined ? ["WirelessDashboard"] : ["WirelessDashboard", variables],
-    graphqlFetcher<WirelessDashboardQueryResult, WirelessDashboardQueryVariables>(
+  return useQuery<WirelessDashboardQueryResult, TError, TData>({
+    queryKey: variables === undefined ? ["WirelessDashboard"] : ["WirelessDashboard", variables],
+    queryFn: graphqlFetcher<WirelessDashboardQueryResult, WirelessDashboardQueryVariables>(
       WirelessDashboardDocument,
       variables,
     ),
-    options,
-  );
+    ...options,
+  });
 };
 
 useWirelessDashboardQuery.getKey = (variables?: WirelessDashboardQueryVariables) =>
   variables === undefined ? ["WirelessDashboard"] : ["WirelessDashboard", variables];
 
 export const useInfiniteWirelessDashboardQuery = <
-  TData = WirelessDashboardQueryResult,
+  TData = InfiniteData<WirelessDashboardQueryResult>,
   TError = unknown,
 >(
-  variables?: WirelessDashboardQueryVariables,
-  options?: UseInfiniteQueryOptions<WirelessDashboardQueryResult, TError, TData>,
+  variables: WirelessDashboardQueryVariables,
+  options: Omit<
+    UseInfiniteQueryOptions<WirelessDashboardQueryResult, TError, TData>,
+    "queryKey"
+  > & {
+    queryKey?: UseInfiniteQueryOptions<WirelessDashboardQueryResult, TError, TData>["queryKey"];
+  },
 ) => {
   return useInfiniteQuery<WirelessDashboardQueryResult, TError, TData>(
-    variables === undefined
-      ? ["WirelessDashboard.infinite"]
-      : ["WirelessDashboard.infinite", variables],
-    (metaData) =>
-      graphqlFetcher<WirelessDashboardQueryResult, WirelessDashboardQueryVariables>(
-        WirelessDashboardDocument,
-        { ...variables, ...(metaData.pageParam ?? {}) },
-      )(),
-    options,
+    (() => {
+      const { queryKey: optionsQueryKey, ...restOptions } = options;
+      return {
+        queryKey:
+          (optionsQueryKey ?? variables === undefined)
+            ? ["WirelessDashboard.infinite"]
+            : ["WirelessDashboard.infinite", variables],
+        queryFn: (metaData) =>
+          graphqlFetcher<WirelessDashboardQueryResult, WirelessDashboardQueryVariables>(
+            WirelessDashboardDocument,
+            { ...variables, ...(metaData.pageParam ?? {}) },
+          )(),
+        ...restOptions,
+      };
+    })(),
   );
 };
 

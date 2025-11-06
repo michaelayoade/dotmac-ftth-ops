@@ -207,7 +207,7 @@ export default function ReconciliationDetailPage() {
     queryFn: () => fetchReconciliation(id),
     refetchInterval: (query) => {
       // Refetch every 15 seconds if in_progress
-      return query?.state?.data?.status === 'in_progress' ? 15000 : false;
+      return (query as any)?.state?.data?.status === 'in_progress' ? 15000 : false;
     },
   });
 

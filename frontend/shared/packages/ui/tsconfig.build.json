@@ -13,6 +13,8 @@
     "strict": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "jsxImportSource": "react",
+    "types": ["react", "react-dom"],
     "outDir": "dist",
     "baseUrl": ".",
     "paths": {

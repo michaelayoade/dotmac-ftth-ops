@@ -12,7 +12,13 @@ export function useToast() {
 
   const toast = useCallback(({ title, description, variant = "default" }: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substr(2, 9);
-    const newToast = { id, title, description, variant };
+    const newToast: Toast = { id, variant };
+    if (title !== undefined) {
+      newToast.title = title;
+    }
+    if (description !== undefined) {
+      newToast.description = description;
+    }
     setToasts((prev) => [...prev, newToast]);
 
     // Auto dismiss after 5 seconds

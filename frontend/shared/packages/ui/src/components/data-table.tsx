@@ -7,18 +7,21 @@
 "use client";
 
 import * as React from "react";
-import {
+import type {
   ColumnDef,
   ColumnFiltersState,
+  Column,
   SortingState,
+  TableOptions,
   VisibilityState,
+} from "@tanstack/react-table";
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-  Column,
 } from "@tanstack/react-table";
 import { ArrowUpDown, ChevronDown } from "lucide-react";
 import { Button } from "./button";
@@ -126,11 +129,10 @@ export function DataTable<TData, TValue>({
   const [columnVisibilityState, setColumnVisibilityState] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
 
-  const table = useReactTable({
+  const tableOptions: TableOptions<TData> = {
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: paginated ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -143,12 +145,19 @@ export function DataTable<TData, TValue>({
       columnVisibility: columnVisibilityState,
       rowSelection,
     },
-    initialState: {
+  };
+
+  if (paginated) {
+    tableOptions.getPaginationRowModel = getPaginationRowModel();
+    tableOptions.initialState = {
+      ...(tableOptions.initialState ?? {}),
       pagination: {
         pageSize: defaultPageSize,
       },
-    },
-  });
+    };
+  }
+
+  const table = useReactTable(tableOptions);
 
   return (
     <div className={cn("space-y-4", className)}>
@@ -183,7 +192,7 @@ export function DataTable<TData, TValue>({
                         key={column.id}
                         className="capitalize"
                         checked={column.getIsVisible()}
-                        onCheckedChange={(value: boolean) => column.toggleVisibility(!!value)}
+                        onCheckedChange={(value) => column.toggleVisibility(value === true)}
                       >
                         {column.id}
                       </DropdownMenuCheckboxItem>

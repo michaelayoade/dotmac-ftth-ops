@@ -59,10 +59,12 @@ This repository now ships a lean documentation set. Everything you are likely to
 
 - [EXCEPTION_HANDLING_GUIDE.md](EXCEPTION_HANDLING_GUIDE.md) — structured logging patterns and FastAPI error handling.
 - [TROUBLESHOOTING_PLAYBOOKS.md](TROUBLESHOOTING_PLAYBOOKS.md) — production incident runbooks.
+- [REALTIME_STREAMS.md](REALTIME_STREAMS.md) — SSE endpoints, curl examples, and troubleshooting tips.
 - SQL migration files:  
   - [DEPLOYMENT_MIGRATION.sql](DEPLOYMENT_MIGRATION.sql)  
   - [SALES_MIGRATION.sql](SALES_MIGRATION.sql)
 - [../E2E-TESTS-QUICK-START.md](../E2E-TESTS-QUICK-START.md) — Playwright end-to-end testing workflow.
+- [REMOTE_SERVER_DEPLOYMENT_GUIDE.md](../REMOTE_SERVER_DEPLOYMENT_GUIDE.md) — complete server provisioning and Docker deployment checklist for production hosts.
 
 ---
 

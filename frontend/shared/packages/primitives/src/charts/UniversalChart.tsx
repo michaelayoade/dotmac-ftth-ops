@@ -33,7 +33,7 @@ import { cn } from "../utils/cn";
 export type ChartType = "line" | "area" | "bar" | "pie" | "donut" | "combo";
 
 export interface ChartDataPoint {
-  [key: string]: string | number | Date;
+  [key: string]: string | number | Date | null | undefined;
 }
 
 export interface ChartSeries {
@@ -41,9 +41,9 @@ export interface ChartSeries {
   name: string;
   color?: string;
   type?: "line" | "area" | "bar";
-  yAxisId?: "left" | "right";
+  yAxisId?: "left" | "right" | string;
   strokeWidth?: number;
-  strokeDashArray?: string;
+  strokeDasharray?: string;
   fill?: string;
   stackId?: string;
 }
@@ -152,7 +152,7 @@ export interface UniversalChartProps {
     x?: number | string;
     label?: string;
     color?: string;
-    strokeDashArray?: string;
+    strokeDasharray?: string;
   }>;
 
   // Customization
@@ -329,7 +329,7 @@ export function UniversalChart({
   );
 
   // Render different chart types
-  const renderChart = () => {
+  const renderChart = (): React.ReactElement | null => {
     const commonProps = {
       data,
       margin: { top: 20, right: 30, left: 20, bottom: 20 },
@@ -337,31 +337,36 @@ export function UniversalChart({
 
     switch (type) {
       case "line":
-        return (
-          <LineChart {...commonProps}>
-            <defs>
-              {seriesWithColors.map((s, index) => (
-                <linearGradient key={s.key} id={`gradient-${s.key}`} x1="0" y1="0" x2="0" y2="1">
+        {
+          const hasXAxisAngle = typeof xAxis?.angle === "number";
+          const leftDomain = yAxis?.left?.domain;
+          const rightDomain = yAxis?.right?.domain;
+
+          return (
+            <LineChart {...commonProps}>
+              <defs>
+                {seriesWithColors.map((s, index) => (
+                  <linearGradient key={s.key} id={`gradient-${s.key}`} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={s.color} stopOpacity={0.3} />
                   <stop offset="95%" stopColor={s.color} stopOpacity={0.1} />
                 </linearGradient>
               ))}
             </defs>
-            {showGrid && <CartesianGrid strokeDashArray="3 3" stroke="#f0f0f0" />}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />}
             {!xAxis?.hide && (
               <XAxis
                 dataKey={xAxis?.dataKey || "x"}
                 tickFormatter={formatXAxis}
-                angle={xAxis?.angle}
-                textAnchor={xAxis?.angle ? "end" : "middle"}
-                height={xAxis?.angle ? 60 : 30}
+                textAnchor={hasXAxisAngle ? "end" : "middle"}
+                height={hasXAxisAngle ? 60 : 30}
+                {...(hasXAxisAngle ? { angle: xAxis?.angle as number } : {})}
               />
             )}
             {!yAxis?.left?.hide && (
               <YAxis
                 yAxisId="left"
                 tickFormatter={(value) => formatYAxis(value, "left")}
-                domain={yAxis?.left?.domain}
+                {...(leftDomain ? { domain: leftDomain } : {})}
               />
             )}
             {yAxis?.right && !yAxis.right.hide && (
@@ -369,7 +374,7 @@ export function UniversalChart({
                 yAxisId="right"
                 orientation="right"
                 tickFormatter={(value) => formatYAxis(value, "right")}
-                domain={yAxis.right.domain}
+                {...(rightDomain ? { domain: rightDomain } : {})}
               />
             )}
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
@@ -381,7 +386,7 @@ export function UniversalChart({
                 dataKey={s.key}
                 stroke={s.color}
                 strokeWidth={s.strokeWidth || 2}
-                strokeDashArray={s.strokeDashArray}
+                strokeDasharray={s.strokeDasharray}
                 yAxisId={s.yAxisId || "left"}
                 dot={{ fill: s.color, r: 4 }}
                 activeDot={{
@@ -397,16 +402,17 @@ export function UniversalChart({
             {referenceLines.map((line, index) => (
               <ReferenceLine
                 key={index}
-                y={line.y}
-                x={line.x}
+                {...(line.y !== undefined ? { y: line.y } : {})}
+                {...(line.x !== undefined ? { x: line.x } : {})}
                 stroke={line.color || colors.accent}
-                strokeDashArray={line.strokeDashArray || "5 5"}
-                label={line.label}
+                strokeDasharray={line.strokeDasharray || "5 5"}
+                {...(line.label ? { label: line.label } : {})}
               />
             ))}
             {showBrush && <Brush dataKey={xAxis?.dataKey || "x"} height={30} />}
           </LineChart>
         );
+        }
 
       case "area":
         return (
@@ -419,7 +425,7 @@ export function UniversalChart({
                 </linearGradient>
               ))}
             </defs>
-            {showGrid && <CartesianGrid strokeDashArray="3 3" stroke="#f0f0f0" />}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />}
             {!xAxis?.hide && <XAxis dataKey={xAxis?.dataKey || "x"} tickFormatter={formatXAxis} />}
             {!yAxis?.left?.hide && <YAxis tickFormatter={(value) => formatYAxis(value, "left")} />}
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
@@ -429,11 +435,11 @@ export function UniversalChart({
                 key={s.key}
                 type={smooth ? "monotone" : "linear"}
                 dataKey={s.key}
-                stackId={stacked ? s.stackId || "default" : undefined}
                 stroke={s.color}
                 fill={s.fill || `url(#gradient-${s.key})`}
                 strokeWidth={s.strokeWidth || 2}
                 animationDuration={animationDuration}
+                {...(stacked ? { stackId: s.stackId ?? "default" } : {})}
               />
             ))}
           </AreaChart>
@@ -442,7 +448,7 @@ export function UniversalChart({
       case "bar":
         return (
           <BarChart {...commonProps}>
-            {showGrid && <CartesianGrid strokeDashArray="3 3" stroke="#f0f0f0" />}
+            {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />}
             {!xAxis?.hide && <XAxis dataKey={xAxis?.dataKey || "x"} tickFormatter={formatXAxis} />}
             {!yAxis?.left?.hide && <YAxis tickFormatter={(value) => formatYAxis(value, "left")} />}
             {showTooltip && <Tooltip content={<CustomTooltip />} />}
@@ -452,9 +458,9 @@ export function UniversalChart({
                 key={s.key}
                 dataKey={s.key}
                 fill={s.color}
-                stackId={stacked ? s.stackId || "default" : undefined}
                 animationDuration={animationDuration}
                 onClick={(data) => onDataPointClick?.(data, s.key)}
+                {...(stacked ? { stackId: s.stackId ?? "default" } : {})}
               />
             ))}
           </BarChart>
@@ -521,14 +527,25 @@ export function UniversalChart({
     );
   }
 
+  const chartElement = renderChart();
+  if (!chartElement) {
+    return null;
+  }
+
+  const responsiveContainerProps: {
+    width: string | number;
+    height?: string | number;
+    aspect?: number;
+  } = { width };
+
+  if (aspectRatio !== undefined) {
+    responsiveContainerProps.aspect = aspectRatio;
+  } else {
+    responsiveContainerProps.height = height;
+  }
+
   const chartContent = (
-    <ResponsiveContainer
-      width={width}
-      height={aspectRatio ? undefined : height}
-      aspect={aspectRatio}
-    >
-      {renderChart()}
-    </ResponsiveContainer>
+    <ResponsiveContainer {...responsiveContainerProps}>{chartElement}</ResponsiveContainer>
   );
 
   if (!cardWrapper) {

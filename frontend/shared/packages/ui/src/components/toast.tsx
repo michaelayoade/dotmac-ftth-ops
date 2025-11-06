@@ -15,9 +15,14 @@ interface Toast {
 let toastQueue: Toast[] = [];
 let setToasts: ((toasts: Toast[]) => void) | null = null;
 
-const addToast = (toast: Omit<Toast, "id">) => {
+const addToast = ({ type, message, duration }: Omit<Toast, "id">) => {
   const id = Math.random().toString(36).substr(2, 9);
-  const newToast = { ...toast, id };
+  const newToast: Toast = {
+    id,
+    type,
+    message,
+    ...(duration !== undefined ? { duration } : {}),
+  };
 
   toastQueue = [...toastQueue, newToast];
   if (setToasts) {
@@ -27,7 +32,7 @@ const addToast = (toast: Omit<Toast, "id">) => {
   // Auto remove after duration
   setTimeout(() => {
     removeToast(id);
-  }, toast.duration || 5000);
+  }, duration ?? 5000);
 };
 
 const removeToast = (id: string) => {
@@ -37,11 +42,18 @@ const removeToast = (id: string) => {
   }
 };
 
+const withOptionalDuration = (type: ToastType, message: string, duration?: number) =>
+  addToast({
+    type,
+    message,
+    ...(duration !== undefined ? { duration } : {}),
+  });
+
 export const toast = {
-  success: (message: string, duration?: number) => addToast({ type: "success", message, duration }),
-  error: (message: string, duration?: number) => addToast({ type: "error", message, duration }),
-  info: (message: string, duration?: number) => addToast({ type: "info", message, duration }),
-  warning: (message: string, duration?: number) => addToast({ type: "warning", message, duration }),
+  success: (message: string, duration?: number) => withOptionalDuration("success", message, duration),
+  error: (message: string, duration?: number) => withOptionalDuration("error", message, duration),
+  info: (message: string, duration?: number) => withOptionalDuration("info", message, duration),
+  warning: (message: string, duration?: number) => withOptionalDuration("warning", message, duration),
 };
 
 const getToastIcon = (type: ToastType) => {

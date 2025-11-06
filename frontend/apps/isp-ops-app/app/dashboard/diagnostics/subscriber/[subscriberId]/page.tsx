@@ -168,8 +168,8 @@ function SubscriberDiagnosticsContent() {
     },
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if any diagnostic is running
-      const hasRunning = query?.state?.data?.items?.some(
-        (run) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
+      const hasRunning = (query as any)?.state?.data?.items?.some(
+        (run: any) => run.status === DiagnosticStatus.RUNNING || run.status === DiagnosticStatus.PENDING
       );
       return hasRunning ? 5000 : false;
     },
@@ -189,7 +189,7 @@ function SubscriberDiagnosticsContent() {
     enabled: !!latestRunId,
     refetchInterval: (query) => {
       // Auto-refresh every 5 seconds if diagnostic is running or pending
-      return query?.state?.data && (query.state.data.status === DiagnosticStatus.RUNNING || query.state.data.status === DiagnosticStatus.PENDING)
+      return (query as any)?.state?.data && ((query as any).state.data.status === DiagnosticStatus.RUNNING || (query as any).state.data.status === DiagnosticStatus.PENDING)
         ? 5000
         : false;
     },
@@ -595,7 +595,7 @@ function SubscriberDiagnosticsContent() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {runs.map((run) => (
+                {runs.map((run: any) => (
                   <TableRow key={run.id}>
                     <TableCell className="font-medium">
                       {formatDiagnosticType(run.diagnostic_type)}

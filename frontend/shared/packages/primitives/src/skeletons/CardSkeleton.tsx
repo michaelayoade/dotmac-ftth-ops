@@ -314,7 +314,10 @@ export function CardSkeleton({
       {variant === 'detailed' && <DetailedCardSkeleton {...commonProps} />}
       {variant === 'compact' && <CompactCardSkeleton showIcon={showIcon} />}
       {variant === 'default' && (
-        <DefaultCardSkeleton {...commonProps} height={height} />
+        <DefaultCardSkeleton
+          {...commonProps}
+          {...(height !== undefined ? { height } : {})}
+        />
       )}
     </div>
   );

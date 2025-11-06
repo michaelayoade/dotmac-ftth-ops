@@ -267,7 +267,7 @@ This document describes the WebSocket-based real-time control system for jobs an
 **Connection**:
 ```javascript
 const ws = new WebSocket(
-  'ws://localhost:8000/api/v1/realtime/ws/jobs/550e8400?token=<jwt_token>'
+  'ws://localhost:8000/api/v1/realtime/ws/jobs/550e8400'
 );
 ```
 
@@ -289,7 +289,7 @@ const ws = new WebSocket(
 **Connection**:
 ```javascript
 const ws = new WebSocket(
-  'ws://localhost:8000/api/v1/realtime/ws/campaigns/campaign-789?token=<jwt_token>'
+  'ws://localhost:8000/api/v1/realtime/ws/campaigns/campaign-789'
 );
 ```
 
@@ -456,7 +456,7 @@ for message in pubsub.listen():
 npm install -g wscat
 
 # Connect to job WebSocket
-wscat -c "ws://localhost:8000/api/v1/realtime/ws/jobs/550e8400?token=<jwt_token>"
+wscat -H "Authorization: Bearer $TOKEN" -c "ws://localhost:8000/api/v1/realtime/ws/jobs/550e8400"
 
 # Send cancel command
 > {"type": "cancel_job"}
@@ -469,7 +469,7 @@ wscat -c "ws://localhost:8000/api/v1/realtime/ws/jobs/550e8400?token=<jwt_token>
 
 ```bash
 # Connect to campaign WebSocket
-wscat -c "ws://localhost:8000/api/v1/realtime/ws/campaigns/campaign-789?token=<jwt_token>"
+wscat -H "Authorization: Bearer $TOKEN" -c "ws://localhost:8000/api/v1/realtime/ws/campaigns/campaign-789"
 
 # Send pause command
 > {"type": "pause_campaign"}
