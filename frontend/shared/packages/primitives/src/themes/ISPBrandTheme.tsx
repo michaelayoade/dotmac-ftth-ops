@@ -5,7 +5,8 @@
 
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext } from "react";
+import type { ReactNode } from "react";
 import { cn } from "../utils/cn";
 
 // Brand Colors - ISP specific color palette

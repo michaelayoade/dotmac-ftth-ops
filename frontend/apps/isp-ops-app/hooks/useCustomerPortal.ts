@@ -7,9 +7,13 @@ import {
   PortalAuthError,
 } from "../../../shared/utils/operatorAuth";
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 const API_BASE = platformConfig.api.baseUrl;
 const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 // ============================================================================
 // Types
@@ -122,7 +126,7 @@ export function useCustomerProfile() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer profile:", err);
+      logger.error("Error fetching customer profile", toError(err));
     } finally {
       setLoading(false);
     }
@@ -153,7 +157,7 @@ export function useCustomerProfile() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error updating customer profile:", err);
+      logger.error("Error updating customer profile", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -203,7 +207,7 @@ export function useCustomerService() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer service:", err);
+      logger.error("Error fetching customer service", toError(err));
     } finally {
       setLoading(false);
     }
@@ -234,7 +238,7 @@ export function useCustomerService() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error upgrading plan:", err);
+      logger.error("Error upgrading plan", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -284,7 +288,7 @@ export function useCustomerInvoices() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer invoices:", err);
+      logger.error("Error fetching customer invoices", toError(err));
     } finally {
       setLoading(false);
     }
@@ -332,7 +336,7 @@ export function useCustomerPayments() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer payments:", err);
+      logger.error("Error fetching customer payments", toError(err));
     } finally {
       setLoading(false);
     }
@@ -368,7 +372,7 @@ export function useCustomerPayments() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error making payment:", err);
+        logger.error("Error making payment", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -420,7 +424,7 @@ export function useCustomerUsage() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer usage:", err);
+      logger.error("Error fetching customer usage", toError(err));
     } finally {
       setLoading(false);
     }
@@ -468,7 +472,7 @@ export function useCustomerTickets() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer tickets:", err);
+      logger.error("Error fetching customer tickets", toError(err));
     } finally {
       setLoading(false);
     }
@@ -505,7 +509,7 @@ export function useCustomerTickets() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error creating ticket:", err);
+        logger.error("Error creating ticket", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -557,7 +561,7 @@ export function useCustomerSettings() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer settings:", err);
+      logger.error("Error fetching customer settings", toError(err));
     } finally {
       setLoading(false);
     }
@@ -588,7 +592,7 @@ export function useCustomerSettings() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error updating customer settings:", err);
+      logger.error("Error updating customer settings", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -621,7 +625,7 @@ export function useCustomerSettings() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error changing password:", err);
+      logger.error("Error changing password", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -740,7 +744,7 @@ export function useCustomerPaymentMethods() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer payment methods:", err);
+      logger.error("Error fetching customer payment methods", toError(err));
     } finally {
       setLoading(false);
     }
@@ -772,7 +776,7 @@ export function useCustomerPaymentMethods() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error adding payment method:", err);
+        logger.error("Error adding payment method", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -809,7 +813,7 @@ export function useCustomerPaymentMethods() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error setting default payment method:", err);
+        logger.error("Error setting default payment method", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -844,7 +848,7 @@ export function useCustomerPaymentMethods() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error removing payment method:", err);
+        logger.error("Error removing payment method", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -882,7 +886,7 @@ export function useCustomerPaymentMethods() {
               ? err.message
               : "An error occurred";
         setError(message);
-        console.error("Error toggling auto-pay:", err);
+        logger.error("Error toggling auto-pay", toError(err));
         throw err;
       } finally {
         setLoading(false);

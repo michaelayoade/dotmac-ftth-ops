@@ -62,7 +62,7 @@ export interface UniversalDataTableProps<T = any> {
   columns: TableColumn<T>[];
 
   // Actions
-  actions?: TableAction<T>[];
+  actions?: TableAction<T[]>[];
   rowActions?: TableAction<T>[];
   bulkActions?: TableAction<T[]>[];
 
@@ -444,7 +444,7 @@ export function UniversalDataTable<T extends Record<string, any>>({
                   return (
                     <button
                       key={action.id}
-                      onClick={() => action.onClick(selectedRows)}
+                      onClick={() => action.onClick(selectedRows, selectedRows.length)}
                       className={cn(
                         "px-3 py-2 rounded-lg text-sm font-medium",
                         action.variant === "danger" && "bg-red-600 text-white hover:bg-red-700",

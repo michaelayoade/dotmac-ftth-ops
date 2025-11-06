@@ -80,18 +80,18 @@ const defaultActions: Record<string, HeaderAction[]> = {
     {
       id: "notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: (props) => <Bell {...props} />,
       onClick: () => {},
       badge: 3,
     },
-    { id: "settings", label: "Settings", icon: Settings, onClick: () => {} },
+    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
   ],
   customer: [
-    { id: "help", label: "Help", icon: HelpCircle, onClick: () => {} },
+    { id: "help", label: "Help", icon: (props) => <HelpCircle {...props} />, onClick: () => {} },
     {
       id: "notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: (props) => <Bell {...props} />,
       onClick: () => {},
       badge: 2,
     },
@@ -100,18 +100,18 @@ const defaultActions: Record<string, HeaderAction[]> = {
     {
       id: "notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: (props) => <Bell {...props} />,
       onClick: () => {},
       badge: 5,
     },
-    { id: "settings", label: "Settings", icon: Settings, onClick: () => {} },
+    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
   ],
   technician: [
-    { id: "help", label: "Help", icon: HelpCircle, onClick: () => {} },
+    { id: "help", label: "Help", icon: (props) => <HelpCircle {...props} />, onClick: () => {} },
     {
       id: "notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: (props) => <Bell {...props} />,
       onClick: () => {},
       badge: 1,
     },
@@ -120,11 +120,11 @@ const defaultActions: Record<string, HeaderAction[]> = {
     {
       id: "notifications",
       label: "Notifications",
-      icon: Bell,
+      icon: (props) => <Bell {...props} />,
       onClick: () => {},
       badge: 7,
     },
-    { id: "settings", label: "Settings", icon: Settings, onClick: () => {} },
+    { id: "settings", label: "Settings", icon: (props) => <Settings {...props} />, onClick: () => {} },
   ],
 };
 
@@ -149,7 +149,7 @@ export default function UniversalHeader({
 }: UniversalHeaderProps) {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const styles = variantStyles[variant];
-  const headerActions = actions || defaultActions[variant];
+  const headerActions = actions ?? defaultActions[variant] ?? [];
 
   const toggleUserMenu = () => setShowUserMenu(!showUserMenu);
 

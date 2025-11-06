@@ -60,7 +60,7 @@ export default function TenantCustomersView() {
 
   // Transform GraphQL customers to match expected Customer type
   const customers: Customer[] = graphqlCustomers.map(
-    (c) =>
+    (c: any) =>
       ({
         id: c.id,
         name: c.displayName || `${c.firstName} ${c.lastName}`,

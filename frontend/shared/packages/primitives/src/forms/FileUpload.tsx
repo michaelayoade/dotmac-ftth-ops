@@ -59,7 +59,7 @@ export interface SimpleFile {
 
 // Base FileUpload props (simplified)
 export interface BaseFileUploadProps
-  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange">,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onChange" | "onError">,
     VariantProps<typeof uploadVariants> {
   multiple?: boolean;
   disabled?: boolean;
@@ -254,16 +254,29 @@ export const useFileInput = (
 };
 
 // Upload area component (composable)
-export interface UploadAreaProps {
+export interface UploadAreaProps
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, "onClick" | "onKeyDown"> {
   isDragOver?: boolean;
   disabled?: boolean;
   children?: React.ReactNode;
   onClick?: () => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
   className?: string;
 }
 
 export const UploadArea = forwardRef<HTMLDivElement, UploadAreaProps>(
-  ({ isDragOver, disabled, children, onClick, className, ...props }, ref) => {
+  ({ isDragOver, disabled, children, onClick, onKeyDown, className, ...props }, ref) => {
+    const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (disabled) {
+        return;
+      }
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        onClick?.();
+      }
+      onKeyDown?.(event);
+    };
+
     return (
       <div
         ref={ref}
@@ -276,7 +289,7 @@ export const UploadArea = forwardRef<HTMLDivElement, UploadAreaProps>(
           className,
         )}
         onClick={disabled ? undefined : onClick}
-        onKeyDown={(e) => (e.key === "Enter" && disabled ? undefined : onClick)}
+        onKeyDown={handleKeyDown}
         role="button"
         tabIndex={disabled ? -1 : 0}
         aria-label="File upload area"
@@ -324,11 +337,15 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove, classN
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    if (FileValidationUtils.isImageFile(file)) {
-      const url = URL.createObjectURL(file);
-      setPreviewUrl(url);
-      return () => URL.revokeObjectURL(url);
+    if (!FileValidationUtils.isImageFile(file)) {
+      setPreviewUrl(null);
+      return;
     }
+
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+
+    return () => URL.revokeObjectURL(url);
   }, [file]);
 
   return (
@@ -348,7 +365,12 @@ export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove, classN
           type="button"
           className="remove-file"
           onClick={onRemove}
-          onKeyDown={(e) => e.key === "Enter" && onRemove}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              onRemove();
+            }
+          }}
           aria-label={`Remove ${file.name}`}
         >
           ×
@@ -427,16 +449,19 @@ export const FileUpload = forwardRef<HTMLDivElement, BaseFileUploadProps>(
           isDragOver={isDragOver}
           disabled={disabled}
           onClick={openFileDialog}
-          onKeyDown={(e) => e.key === "Enter" && openFileDialog}
+          onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openFileDialog();
+            }
+          }}
         >
           {children || (
             <UploadContent
               primaryText="Drop files here or click to upload"
-              secondaryText={
-                validation?.acceptedTypes
-                  ? `Accepted types: ${validation.acceptedTypes.join(", ")}`
-                  : undefined
-              }
+              {...(validation?.acceptedTypes
+                ? { secondaryText: `Accepted types: ${validation.acceptedTypes.join(", ")}` }
+                : {})}
             />
           )}
         </UploadArea>

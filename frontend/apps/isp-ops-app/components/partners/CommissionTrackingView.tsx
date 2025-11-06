@@ -79,7 +79,7 @@ export default function CommissionTrackingView({ partnerId }: CommissionTracking
     return (
       <div className="text-center py-8">
         <div className="text-red-400">Failed to load commissions</div>
-        <div className="text-sm text-slate-500 mt-2">{error.message}</div>
+        <div className="text-sm text-slate-500 mt-2">{(error as Error).message}</div>
       </div>
     );
   }

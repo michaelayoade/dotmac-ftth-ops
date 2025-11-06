@@ -98,6 +98,7 @@ interface ToastData {
   action?: {
     label: string;
     onClick: () => void;
+    altText?: string;
   };
   onClose?: () => void;
 }
@@ -156,36 +157,48 @@ export function ToastProvider({
       <ToastPrimitive.Provider swipeDirection={swipeDirection} swipeThreshold={swipeThreshold}>
         {children}
 
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            open={true}
-            onOpenChange={(open) => {
-              if (!open) {
-                removeToast(toast.id);
-                toast.onClose?.();
-              }
-            }}
-            duration={toast.duration}
-            variant={toast.variant}
-          >
-            <ToastContent>
-              {toast.title ? <ToastTitle>{toast.title}</ToastTitle> : null}
-              {toast.description ? <ToastDescription>{toast.description}</ToastDescription> : null}
-            </ToastContent>
+        {toasts.map((toast) => {
+          const action = toast.action;
 
-            {toast.action ? (
-              <ToastAction
-                onClick={toast.action.onClick}
-                onKeyDown={(e) => e.key === "Enter" && toast.action.onClick}
-              >
-                {toast.action.label}
-              </ToastAction>
-            ) : null}
+          return (
+            <Toast
+              key={toast.id}
+              open={true}
+              onOpenChange={(open) => {
+                if (!open) {
+                  removeToast(toast.id);
+                  toast.onClose?.();
+                }
+              }}
+              {...(toast.duration !== undefined ? { duration: toast.duration } : {})}
+              {...(toast.variant ? { variant: toast.variant } : {})}
+            >
+              <ToastContent>
+                {toast.title ? <ToastTitle>{toast.title}</ToastTitle> : null}
+                {toast.description ? (
+                  <ToastDescription>{toast.description}</ToastDescription>
+                ) : null}
+              </ToastContent>
 
-            <ToastClose />
-          </Toast>
-        ))}
+              {action ? (
+                <ToastAction
+                  altText={action.altText ?? action.label}
+                  onClick={action.onClick}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      action.onClick();
+                    }
+                  }}
+                >
+                  {action.label}
+                </ToastAction>
+              ) : null}
+
+              <ToastClose />
+            </Toast>
+          );
+        })}
 
         <ToastViewport />
       </ToastPrimitive.Provider>
@@ -336,7 +349,7 @@ export const AlertTitle = forwardRef<HTMLHeadingElement, AlertTitleProps>(
   ({ className, asChild = false, ...props }, _ref) => {
     const Comp = asChild ? Slot : "h5";
 
-    return <Comp ref={ref} className={clsx("alert-title", className)} {...props} />;
+    return <Comp ref={_ref} className={clsx("alert-title", className)} {...props} />;
   },
 );
 
@@ -349,7 +362,7 @@ export const AlertDescription = forwardRef<HTMLDivElement, AlertDescriptionProps
   ({ className, asChild = false, ...props }, _ref) => {
     const Comp = asChild ? Slot : "div";
 
-    return <Comp ref={ref} className={clsx("alert-description", className)} {...props} />;
+    return <Comp ref={_ref} className={clsx("alert-description", className)} {...props} />;
   },
 );
 
@@ -403,7 +416,7 @@ export const Loading = forwardRef<HTMLDivElement, LoadingProps>(
 
     const content = (
       <Comp
-        ref={ref}
+        ref={_ref}
         className={clsx(
           loadingVariants({ variant, size }),
           "loading",
@@ -443,7 +456,7 @@ export const LoadingSkeleton = forwardRef<HTMLDivElement, LoadingSkeletonProps>(
     const Comp = asChild ? Slot : "div";
 
     return (
-      <Comp ref={ref} className={clsx("loading-skeleton-container", className)} {...props}>
+      <Comp ref={_ref} className={clsx("loading-skeleton-container", className)} {...props}>
         {avatar ? <div className="skeleton-avatar" /> : null}
 
         <div className="skeleton-content">
@@ -544,7 +557,7 @@ export const PresenceIndicator = forwardRef<HTMLDivElement, PresenceIndicatorPro
   ({ className, status, size = "md", withPulse = false, label, ...props }, _ref) => {
     return (
       <div
-        ref={ref}
+        ref={_ref}
         className={clsx(
           "status-indicator",
           `status-${status}`,

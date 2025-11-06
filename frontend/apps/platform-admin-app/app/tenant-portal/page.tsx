@@ -12,6 +12,7 @@ import { Skeleton } from "@dotmac/ui";
 import { Users, CreditCard, Gauge, Plug, LifeBuoy, TrendingUp, AlertTriangle } from "lucide-react";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
 
 interface QuickLink {
   title: string;
@@ -62,7 +63,10 @@ export default function TenantOverviewPage() {
       .getStats(currentTenant.id)
       .then(setStats)
       .catch((err) => {
-        console.error("Failed to load tenant stats", err);
+        logger.error(
+          "Failed to load tenant stats",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         setError(err instanceof Error ? err.message : "Unable to load metrics");
       })
       .finally(() => setStatsLoading(false));

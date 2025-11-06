@@ -132,7 +132,7 @@ export function useQueueEmail(options?: {
  * GET /api/v1/communications/templates
  */
 export function useTemplates(params: ListTemplatesParams = {}) {
-  return useQuery<TemplateListResponse, Error>({
+  return useQuery<TemplateListResponse, Error, TemplateListResponse, any>({
     queryKey: communicationsKeys.templates.list(params),
     queryFn: () => communicationsService.listTemplates(params),
     staleTime: 30000, // 30 seconds
@@ -145,7 +145,7 @@ export function useTemplates(params: ListTemplatesParams = {}) {
  * GET /api/v1/communications/templates/{id}
  */
 export function useTemplate(id: string | null) {
-  return useQuery<CommunicationTemplate, Error>({
+  return useQuery<CommunicationTemplate, Error, CommunicationTemplate, any>({
     queryKey: communicationsKeys.templates.detail(id || ""),
     queryFn: () => communicationsService.getTemplate(id!),
     enabled: !!id,
@@ -293,7 +293,7 @@ export function useQuickRender(options?: {
  * GET /api/v1/communications/logs
  */
 export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
-  return useQuery<{ logs: CommunicationLog[]; total: number }, Error>({
+  return useQuery<{ logs: CommunicationLog[]; total: number }, Error, { logs: CommunicationLog[]; total: number }, any>({
     queryKey: communicationsKeys.logs.list(params),
     queryFn: () => communicationsService.listLogs(params),
     staleTime: 10000, // 10 seconds
@@ -306,7 +306,7 @@ export function useCommunicationLogs(params: ListCommunicationsParams = {}) {
  * GET /api/v1/communications/logs/{id}
  */
 export function useCommunicationLog(id: string | null) {
-  return useQuery<CommunicationLog, Error>({
+  return useQuery<CommunicationLog, Error, CommunicationLog, any>({
     queryKey: communicationsKeys.logs.detail(id || ""),
     queryFn: () => communicationsService.getLog(id!),
     enabled: !!id,
@@ -349,7 +349,7 @@ export function useQueueBulk(options?: {
  * GET /api/v1/communications/bulk/{id}/status
  */
 export function useBulkOperationStatus(id: string | null, options?: { refetchInterval?: number }) {
-  return useQuery<BulkOperationStatusResponse, Error>({
+  return useQuery<BulkOperationStatusResponse, Error, BulkOperationStatusResponse, any>({
     queryKey: communicationsKeys.bulk.detail(id || ""),
     queryFn: () => communicationsService.getBulkEmailStatus(id!),
     enabled: !!id,
@@ -393,7 +393,7 @@ export function useCancelBulk(options?: {
  * GET /api/v1/communications/tasks/{task_id}
  */
 export function useTaskStatus(taskId: string | null, options?: { refetchInterval?: number }) {
-  return useQuery<TaskStatusResponse, Error>({
+  return useQuery<TaskStatusResponse, Error, TaskStatusResponse, any>({
     queryKey: communicationsKeys.tasks.detail(taskId || ""),
     queryFn: () => communicationsService.getTaskStatus(taskId!),
     enabled: !!taskId,
@@ -410,7 +410,7 @@ export function useTaskStatus(taskId: string | null, options?: { refetchInterval
  * GET /api/v1/communications/stats
  */
 export function useCommunicationStats(params: StatsParams = {}) {
-  return useQuery<CommunicationStats, Error>({
+  return useQuery<CommunicationStats, Error, CommunicationStats, any>({
     queryKey: communicationsKeys.stats.overview(params),
     queryFn: () => communicationsService.getStatistics(params),
     staleTime: 30000, // 30 seconds
@@ -423,7 +423,7 @@ export function useCommunicationStats(params: StatsParams = {}) {
  * GET /api/v1/communications/activity
  */
 export function useCommunicationActivity(params: ActivityParams = {}) {
-  return useQuery<ActivityResponse, Error>({
+  return useQuery<ActivityResponse, Error, ActivityResponse, any>({
     queryKey: communicationsKeys.stats.activity(params),
     queryFn: () => communicationsService.getRecentActivity(params),
     staleTime: 60000, // 1 minute
@@ -436,7 +436,7 @@ export function useCommunicationActivity(params: ActivityParams = {}) {
  * GET /api/v1/communications/health
  */
 export function useCommunicationHealth() {
-  return useQuery<HealthResponse, Error>({
+  return useQuery<HealthResponse, Error, HealthResponse, any>({
     queryKey: communicationsKeys.stats.health(),
     queryFn: () => communicationsService.healthCheck(),
     refetchInterval: 30000, // Refresh every 30 seconds
@@ -450,7 +450,7 @@ export function useCommunicationHealth() {
  * GET /api/v1/communications/metrics
  */
 export function useCommunicationMetrics() {
-  return useQuery<MetricsResponse, Error>({
+  return useQuery<MetricsResponse, Error, MetricsResponse, any>({
     queryKey: communicationsKeys.stats.metrics(),
     queryFn: () => communicationsService.getMetrics(),
     staleTime: 300000, // 5 minutes (matches Redis cache TTL)

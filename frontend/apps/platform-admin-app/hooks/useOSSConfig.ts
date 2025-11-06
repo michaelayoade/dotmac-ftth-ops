@@ -48,7 +48,7 @@ export const ossConfigKeys = {
  * ```
  */
 export function useOSSConfiguration(service: OSSService | null, enabled = true) {
-  return useQuery<OSSServiceConfigResponse, Error>({
+  return useQuery<OSSServiceConfigResponse, Error, OSSServiceConfigResponse, any>({
     queryKey: ossConfigKeys.detail(service!),
     queryFn: () => ossConfigService.getConfiguration(service!),
     enabled: enabled && !!service,
@@ -68,7 +68,7 @@ export function useOSSConfiguration(service: OSSService | null, enabled = true) 
  * ```
  */
 export function useAllOSSConfigurations() {
-  return useQuery<OSSServiceConfigResponse[], Error>({
+  return useQuery<OSSServiceConfigResponse[], Error, OSSServiceConfigResponse[], any>({
     queryKey: ossConfigKeys.allConfigurations(),
     queryFn: () => ossConfigService.getAllConfigurations(),
     staleTime: 5 * 60 * 1000, // 5 minutes

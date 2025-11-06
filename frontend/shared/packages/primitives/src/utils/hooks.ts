@@ -186,6 +186,10 @@ export function useKeyboardNavigation(items: string[], onSelect: (item: string) 
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      if (items.length === 0) {
+        return;
+      }
+
       switch (e.key) {
         case "ArrowDown":
           e.preventDefault();
@@ -198,7 +202,12 @@ export function useKeyboardNavigation(items: string[], onSelect: (item: string) 
         case "Enter":
         case " ":
           e.preventDefault();
-          onSelect(items[activeIndex]);
+          {
+            const item = items[activeIndex];
+            if (item !== undefined) {
+              onSelect(item);
+            }
+          }
           break;
         case "Escape":
           e.preventDefault();

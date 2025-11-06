@@ -29,9 +29,9 @@ async def extract_token_from_websocket(websocket: WebSocket) -> str | None:
     Extract authentication token from WebSocket connection.
 
     Tries multiple sources in order:
-    1. Query parameter: ?token=<jwt_token>
-    2. Authorization header: Authorization: Bearer <jwt_token>
-    3. Cookie: access_token=<jwt_token>
+    1. Authorization header: Authorization: Bearer <jwt_token>
+    2. Cookie: access_token=<jwt_token>
+    3. Query parameter (legacy fallback): ?token=<jwt_token>
 
     Args:
         websocket: FastAPI WebSocket connection
@@ -39,24 +39,24 @@ async def extract_token_from_websocket(websocket: WebSocket) -> str | None:
     Returns:
         Token string if found, None otherwise
     """
-    # 1. Try query parameter
-    query_params = parse_qs(websocket.url.query) if websocket.url.query else {}
-    if "token" in query_params:
-        token = query_params["token"][0]
-        if token:
-            return token
-
-    # 2. Try Authorization header
+    # 1. Try Authorization header
     auth_header = websocket.headers.get("authorization") or websocket.headers.get("Authorization")
     if auth_header:
         parts = auth_header.split()
         if len(parts) == 2 and parts[0].lower() == "bearer":
             return parts[1]
 
-    # 3. Try cookie
+    # 2. Try cookie
     cookies = websocket.cookies
     if "access_token" in cookies:
         return cookies["access_token"]
+
+    # 3. Legacy query parameter fallback
+    query_params = parse_qs(websocket.url.query) if websocket.url.query else {}
+    if "token" in query_params:
+        token = query_params["token"][0]
+        if token:
+            return token
 
     return None
 

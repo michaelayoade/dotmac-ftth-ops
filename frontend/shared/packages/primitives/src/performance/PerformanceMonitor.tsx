@@ -150,10 +150,14 @@ export function PerformanceMonitor({
     const newMetrics: PerformanceMetrics = {};
 
     if (navigation) {
+      const rawStart =
+        "navigationStart" in navigation
+          ? (navigation as PerformanceNavigationTiming & { navigationStart: number }).navigationStart
+          : navigation.startTime;
+      const navStart = typeof rawStart === "number" ? rawStart : 0;
       newMetrics.ttfb = navigation.responseStart - navigation.requestStart;
-      newMetrics.domContentLoaded =
-        navigation.domContentLoadedEventEnd - navigation.navigationStart;
-      newMetrics.loadComplete = navigation.loadEventEnd - navigation.navigationStart;
+      newMetrics.domContentLoaded = navigation.domContentLoadedEventEnd - navStart;
+      newMetrics.loadComplete = navigation.loadEventEnd - navStart;
     }
 
     if (memory) {
@@ -251,27 +255,27 @@ export function PerformanceMonitor({
           <MetricCard
             title="LCP"
             description="Largest Contentful Paint"
-            value={metrics.lcp}
             unit="ms"
             threshold={mergedThresholds.lcp}
             icon={<Clock className="h-5 w-5" />}
+            {...(metrics.lcp !== undefined ? { value: metrics.lcp } : {})}
           />
           <MetricCard
             title="FID"
             description="First Input Delay"
-            value={metrics.fid}
             unit="ms"
             threshold={mergedThresholds.fid}
             icon={<Zap className="h-5 w-5" />}
+            {...(metrics.fid !== undefined ? { value: metrics.fid } : {})}
           />
           <MetricCard
             title="CLS"
             description="Cumulative Layout Shift"
-            value={metrics.cls}
             unit=""
             threshold={mergedThresholds.cls}
             icon={<Activity className="h-5 w-5" />}
             precision={3}
+            {...(metrics.cls !== undefined ? { value: metrics.cls } : {})}
           />
         </div>
       </div>
@@ -280,44 +284,66 @@ export function PerformanceMonitor({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
           <h4 className="text-md font-semibold text-gray-900 mb-3">Loading Performance</h4>
-          <div className="space-y-3">
-            <MetricRow
-              label="First Contentful Paint"
-              value={metrics.fcp}
-              unit="ms"
-              threshold={mergedThresholds.fcp}
-            />
-            <MetricRow
-              label="Time to First Byte"
-              value={metrics.ttfb}
-              unit="ms"
-              threshold={mergedThresholds.ttfb}
-            />
-            <MetricRow label="DOM Content Loaded" value={metrics.domContentLoaded} unit="ms" />
-            <MetricRow label="Load Complete" value={metrics.loadComplete} unit="ms" />
+            <div className="space-y-3">
+              <MetricRow
+                label="First Contentful Paint"
+                unit="ms"
+                threshold={mergedThresholds.fcp}
+                {...(metrics.fcp !== undefined ? { value: metrics.fcp } : {})}
+              />
+              <MetricRow
+                label="Time to First Byte"
+                unit="ms"
+                threshold={mergedThresholds.ttfb}
+                {...(metrics.ttfb !== undefined ? { value: metrics.ttfb } : {})}
+              />
+              <MetricRow
+                label="DOM Content Loaded"
+                unit="ms"
+                {...(metrics.domContentLoaded !== undefined
+                  ? { value: metrics.domContentLoaded }
+                  : {})}
+              />
+              <MetricRow
+                label="Load Complete"
+                unit="ms"
+                {...(metrics.loadComplete !== undefined ? { value: metrics.loadComplete } : {})}
+              />
+            </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
-          <h4 className="text-md font-semibold text-gray-900 mb-3">React Performance</h4>
-          <div className="space-y-3">
-            <MetricRow label="Render Time" value={metrics.renderTime} unit="ms" />
-            <MetricRow label="Commit Time" value={metrics.commitTime} unit="ms" />
-            <MetricRow
-              label="Memory Usage"
-              value={metrics.usedJSHeapSize ? metrics.usedJSHeapSize / 1024 / 1024 : undefined}
-              unit="MB"
-              precision={1}
-            />
-            <MetricRow
-              label="Total Memory"
-              value={metrics.totalJSHeapSize ? metrics.totalJSHeapSize / 1024 / 1024 : undefined}
-              unit="MB"
-              precision={1}
-            />
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h4 className="text-md font-semibold text-gray-900 mb-3">React Performance</h4>
+            <div className="space-y-3">
+              <MetricRow
+                label="Render Time"
+                unit="ms"
+                {...(metrics.renderTime !== undefined ? { value: metrics.renderTime } : {})}
+              />
+              <MetricRow
+                label="Commit Time"
+                unit="ms"
+                {...(metrics.commitTime !== undefined ? { value: metrics.commitTime } : {})}
+              />
+              <MetricRow
+                label="Memory Usage"
+                unit="MB"
+                precision={1}
+                {...(metrics.usedJSHeapSize !== undefined
+                  ? { value: metrics.usedJSHeapSize / 1024 / 1024 }
+                  : {})}
+              />
+              <MetricRow
+                label="Total Memory"
+                unit="MB"
+                precision={1}
+                {...(metrics.totalJSHeapSize !== undefined
+                  ? { value: metrics.totalJSHeapSize / 1024 / 1024 }
+                  : {})}
+              />
+            </div>
           </div>
         </div>
-      </div>
 
       {/* Performance Trends */}
       {showDetails && history.length > 5 && (

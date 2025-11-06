@@ -29,12 +29,17 @@ export interface AccessibilityTestResult {
 export const calculateContrastRatio = (foreground: string, background: string): number => {
   const getLuminance = (hex: string): number => {
     const rgb = hex.replace("#", "").match(/.{2}/g);
-    if (!rgb) return 0;
+    if (!rgb || rgb.length < 3) return 0;
+    const [rHex, gHex, bHex] = rgb as [string, string, string];
 
-    const [r, g, b] = rgb.map((component) => {
+    const normalizeComponent = (component: string): number => {
       const value = parseInt(component, 16) / 255;
       return value <= 0.03928 ? value / 12.92 : Math.pow((value + 0.055) / 1.055, 2.4);
-    });
+    };
+
+    const r = normalizeComponent(rHex);
+    const g = normalizeComponent(gHex);
+    const b = normalizeComponent(bHex);
 
     return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };

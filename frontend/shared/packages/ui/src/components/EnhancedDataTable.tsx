@@ -28,12 +28,15 @@
 "use client";
 
 import * as React from "react";
-import {
+import type {
   ColumnDef,
   ColumnFiltersState,
   Row,
   SortingState,
   VisibilityState,
+  TableOptions,
+} from "@tanstack/react-table";
+import {
   flexRender,
   getCoreRowModel,
   getFilteredRowModel,
@@ -139,7 +142,7 @@ export interface EnhancedDataTableProps<TData, TValue> {
   className?: string;
   isLoading?: boolean;
   onRowClick?: (row: TData) => void;
-  getRowId?: (row: TData, index: number) => string | number;
+  getRowId?: (row: TData, index: number, parent?: Row<TData>) => string | number;
 
   // Toolbar actions
   toolbarActions?: React.ReactNode;
@@ -331,11 +334,10 @@ export function EnhancedDataTable<TData, TValue>({
     [searchFields],
   );
 
-  const table = useReactTable({
+  const tableOptions: TableOptions<TData> = {
     data: filteredData,
     columns: tableColumns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: isPaginated ? getPaginationRowModel() : undefined,
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onSortingChange: setSorting,
@@ -343,8 +345,6 @@ export function EnhancedDataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibilityState,
     onRowSelectionChange: setRowSelection,
     onGlobalFilterChange: setGlobalFilter,
-    globalFilterFn: enableSearch ? globalFilterFn : undefined,
-    getRowId: getRowId ? (originalRow, index) => String(getRowId(originalRow, index)) : undefined,
     state: {
       sorting,
       columnFilters,
@@ -352,12 +352,28 @@ export function EnhancedDataTable<TData, TValue>({
       rowSelection,
       globalFilter,
     },
-    initialState: {
+  };
+
+  if (enableSearch) {
+    tableOptions.globalFilterFn = globalFilterFn;
+  }
+
+  if (getRowId) {
+    tableOptions.getRowId = (originalRow, index, parent) =>
+      String(getRowId(originalRow, index, parent));
+  }
+
+  if (isPaginated) {
+    tableOptions.getPaginationRowModel = getPaginationRowModel();
+    tableOptions.initialState = {
+      ...(tableOptions.initialState ?? {}),
       pagination: {
         pageSize: defaultPageSize,
       },
-    },
-  });
+    };
+  }
+
+  const table = useReactTable(tableOptions);
 
   React.useEffect(() => {
     if (isPaginated) {

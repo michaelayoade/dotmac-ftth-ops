@@ -53,13 +53,8 @@ export function useCampaignWebSocket(campaignId: string | null) {
       return;
     }
 
-    const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-    if (!token) {
-      return;
-    }
-
     const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000";
-    const url = `${base}/api/v1/realtime/ws/campaigns/${campaignId}?token=${token}`;
+    const url = `${base}/api/v1/realtime/ws/campaigns/${campaignId}`;
     const ws = new WebSocket(url);
 
     ws.onopen = () => {

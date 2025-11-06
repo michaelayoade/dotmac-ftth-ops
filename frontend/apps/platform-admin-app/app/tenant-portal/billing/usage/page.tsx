@@ -811,7 +811,7 @@ export default function UsageBillingPage() {
           <DialogHeader>
             <DialogTitle>Record Usage</DialogTitle>
             <DialogDescription>
-              Manually record usage for a customer's subscription
+              Manually record usage for a customer&apos;s subscription
             </DialogDescription>
           </DialogHeader>
 

@@ -75,7 +75,7 @@ export const versioningKeys = {
  * @returns API versions with loading and error states
  */
 export function useVersions(filters: VersionListFilters = {}) {
-  return useQuery<APIVersionInfo[], Error>({
+  return useQuery<APIVersionInfo[], Error, APIVersionInfo[], any>({
     queryKey: versioningKeys.version(filters),
     queryFn: () => versioningService.listVersions(filters),
     staleTime: 60000, // 1 minute
@@ -90,7 +90,7 @@ export function useVersions(filters: VersionListFilters = {}) {
  * @returns Version details with loading and error states
  */
 export function useVersion(version: string | null) {
-  return useQuery<APIVersionInfo, Error>({
+  return useQuery<APIVersionInfo, Error, APIVersionInfo, any>({
     queryKey: versioningKeys.versionDetail(version!),
     queryFn: () => versioningService.getVersion(version!),
     enabled: !!version,
@@ -107,7 +107,7 @@ export function useVersion(version: string | null) {
  * @returns Usage statistics with loading and error states
  */
 export function useVersionUsageStats(version: string | null, days: number = 30) {
-  return useQuery<VersionUsageStats, Error>({
+  return useQuery<VersionUsageStats, Error, VersionUsageStats, any>({
     queryKey: versioningKeys.versionUsage(version!, days),
     queryFn: () => versioningService.getVersionUsageStats(version!, days),
     enabled: !!version,
@@ -123,7 +123,7 @@ export function useVersionUsageStats(version: string | null, days: number = 30) 
  * @returns Health check results with loading and error states
  */
 export function useVersionHealth(version: string | null) {
-  return useQuery<VersionHealthCheck, Error>({
+  return useQuery<VersionHealthCheck, Error, VersionHealthCheck, any>({
     queryKey: versioningKeys.versionHealth(version!),
     queryFn: () => versioningService.getVersionHealth(version!),
     enabled: !!version,
@@ -347,7 +347,7 @@ export function useRemoveVersion(options?: {
  * @returns Breaking changes with loading and error states
  */
 export function useBreakingChanges(filters: BreakingChangeFilters = {}) {
-  return useQuery<BreakingChange[], Error>({
+  return useQuery<BreakingChange[], Error, BreakingChange[], any>({
     queryKey: versioningKeys.breakingChange(filters),
     queryFn: () => versioningService.listBreakingChanges(filters),
     staleTime: 60000,
@@ -362,7 +362,7 @@ export function useBreakingChanges(filters: BreakingChangeFilters = {}) {
  * @returns Breaking change details with loading and error states
  */
 export function useBreakingChange(changeId: string | null) {
-  return useQuery<BreakingChange, Error>({
+  return useQuery<BreakingChange, Error, BreakingChange, any>({
     queryKey: versioningKeys.breakingChangeDetail(changeId!),
     queryFn: () => versioningService.getBreakingChange(changeId!),
     enabled: !!changeId,
@@ -488,7 +488,7 @@ export function useDeleteBreakingChange(options?: {
  * @returns Adoption metrics with loading and error states
  */
 export function useVersionAdoption(days: number = 30) {
-  return useQuery<VersionAdoptionMetrics, Error>({
+  return useQuery<VersionAdoptionMetrics, Error, VersionAdoptionMetrics, any>({
     queryKey: versioningKeys.adoption(days),
     queryFn: () => versioningService.getAdoptionMetrics(days),
     staleTime: 60000,
@@ -502,7 +502,7 @@ export function useVersionAdoption(days: number = 30) {
  * @returns Configuration with loading and error states
  */
 export function useVersioningConfiguration() {
-  return useQuery<VersionConfiguration, Error>({
+  return useQuery<VersionConfiguration, Error, VersionConfiguration, any>({
     queryKey: versioningKeys.config(),
     queryFn: () => versioningService.getConfiguration(),
     staleTime: 60000,

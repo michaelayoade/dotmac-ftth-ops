@@ -23,7 +23,7 @@
     "js-cookie": "^3.0.5",
     "uuid": "^9.0.1",
     "@dotmac/auth": "workspace:*",
-    "@tanstack/react-query": "^4.42.0"
+    "@tanstack/react-query": "^5.90.5"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",

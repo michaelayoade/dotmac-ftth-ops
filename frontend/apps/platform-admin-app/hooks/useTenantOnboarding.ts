@@ -33,7 +33,7 @@ export function useTenantOnboarding() {
 }
 
 export function useOnboardingStatus(tenantId?: string) {
-  return useQuery<OnboardingStatusResponse, Error>({
+  return useQuery<OnboardingStatusResponse, Error, OnboardingStatusResponse, any>({
     queryKey: ["tenant-onboarding-status", tenantId],
     queryFn: () => tenantOnboardingService.getOnboardingStatus(tenantId!),
     enabled: !!tenantId,

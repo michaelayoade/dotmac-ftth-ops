@@ -72,7 +72,7 @@ export function useDomainVerification(tenantId: string) {
 }
 
 export function useDomainStatus(tenantId?: string) {
-  return useQuery<DomainVerificationStatusResponse, Error>({
+  return useQuery<DomainVerificationStatusResponse, Error, DomainVerificationStatusResponse, any>({
     queryKey: ["domain-status", tenantId],
     queryFn: () => domainVerificationService.getStatus(tenantId!),
     enabled: !!tenantId,

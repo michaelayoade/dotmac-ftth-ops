@@ -5,12 +5,12 @@ import React, { Component, type ErrorInfo, type ReactNode } from "react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
-  errorId?: string;
+  error: Error | null;
+  errorInfo: ErrorInfo | null;
+  errorId: string | null;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: (error: Error, errorInfo: ErrorInfo, retry: () => void) => ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo, errorId: string) => void;
@@ -20,11 +20,11 @@ interface ErrorBoundaryProps {
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: number | null = null;
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: null, errorInfo: null, errorId: null };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
@@ -32,11 +32,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return {
       hasError: true,
       error,
+      errorInfo: null,
       errorId,
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
     const { errorId } = this.state;
 
@@ -48,8 +49,8 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     // Report to error tracking service (e.g., Sentry)
-    if (typeof window !== "undefined" && (window as unknown).Sentry) {
-      (window as unknown).Sentry.captureException(error, {
+    if (typeof window !== "undefined" && (window as any).Sentry) {
+      (window as any).Sentry.captureException(error, {
         contexts: {
           react: {
             componentStack: errorInfo.componentStack,
@@ -68,26 +69,26 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       window.clearTimeout(this.retryTimeoutId);
     }
 
-    this.setState({ hasError: false, error: undefined, errorInfo: undefined });
+    this.setState({ hasError: false, error: null, errorInfo: null, errorId: null });
   };
 
   handleReload = () => {
     window.location.reload();
   };
 
-  render() {
+  override render() {
     const { hasError, error, errorInfo, errorId } = this.state;
     const {
       children,
       fallback,
       level = "component",
       enableRetry = true,
-      showErrorDetails = process.env.NODE_ENV === "development",
+      showErrorDetails = typeof process !== 'undefined' && process.env?.NODE_ENV === "development",
     } = this.props;
 
     if (hasError && error) {
       // Custom fallback
-      if (fallback) {
+      if (fallback && errorInfo) {
         return fallback(error, errorInfo, this.handleRetry);
       }
 
@@ -95,13 +96,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       return (
         <ErrorFallback
           error={error}
-          errorInfo={errorInfo}
-          errorId={errorId}
           level={level}
           enableRetry={enableRetry}
           showErrorDetails={showErrorDetails}
           onRetry={this.handleRetry}
           onReload={this.handleReload}
+          {...(errorInfo ? { errorInfo } : {})}
+          {...(errorId ? { errorId } : {})}
         />
       );
     }
@@ -269,8 +270,8 @@ export function useErrorHandler() {
     const errorId = `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
     // Report to error tracking service
-    if (typeof window !== "undefined" && (window as unknown).Sentry) {
-      (window as unknown).Sentry.captureException(error, {
+    if (typeof window !== "undefined" && (window as any).Sentry) {
+      (window as any).Sentry.captureException(error, {
         tags: {
           context: context || "manual",
           errorId,

@@ -7,9 +7,13 @@ import {
   PortalAuthError,
 } from "../../../shared/utils/operatorAuth";
 import { platformConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
 
 const API_BASE = platformConfig.api.baseUrl;
 const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 // ============================================================================
 // Types
@@ -122,7 +126,7 @@ export function useCustomerProfile() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer profile:", err);
+      logger.error("Error fetching customer profile", toError(err));
     } finally {
       setLoading(false);
     }
@@ -153,7 +157,7 @@ export function useCustomerProfile() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error updating customer profile:", err);
+      logger.error("Error updating customer profile", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -203,7 +207,7 @@ export function useCustomerService() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error fetching customer service:", err);
+      logger.error("Error fetching customer service", toError(err));
     } finally {
       setLoading(false);
     }
@@ -234,7 +238,7 @@ export function useCustomerService() {
             ? err.message
             : "An error occurred";
       setError(message);
-      console.error("Error upgrading plan:", err);
+      logger.error("Error upgrading plan", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -283,8 +287,9 @@ export function useCustomerInvoices() {
       const data = await response.json();
       setInvoices(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching customer invoices:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error fetching customer invoices", toError(err));
     } finally {
       setLoading(false);
     }
@@ -331,8 +336,9 @@ export function useCustomerPayments() {
       const data = await response.json();
       setPayments(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching customer payments:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error fetching customer payments", toError(err));
     } finally {
       setLoading(false);
     }
@@ -367,7 +373,7 @@ export function useCustomerPayments() {
         return data;
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
-        console.error("Error making payment:", err);
+        logger.error("Error making payment", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -418,8 +424,9 @@ export function useCustomerUsage() {
       const data = await response.json();
       setUsage(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching customer usage:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error fetching customer usage", toError(err));
     } finally {
       setLoading(false);
     }
@@ -466,8 +473,9 @@ export function useCustomerTickets() {
       const data = await response.json();
       setTickets(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching customer tickets:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error fetching customer tickets", toError(err));
     } finally {
       setLoading(false);
     }
@@ -503,7 +511,7 @@ export function useCustomerTickets() {
         return data;
       } catch (err) {
         setError(err instanceof Error ? err.message : "An error occurred");
-        console.error("Error creating ticket:", err);
+        logger.error("Error creating ticket", toError(err));
         throw err;
       } finally {
         setLoading(false);
@@ -554,8 +562,9 @@ export function useCustomerSettings() {
       const data = await response.json();
       setSettings(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error fetching customer settings:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error fetching customer settings", toError(err));
     } finally {
       setLoading(false);
     }
@@ -584,8 +593,9 @@ export function useCustomerSettings() {
       setSettings(data);
       return data;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error updating customer settings:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error updating customer settings", toError(err));
       throw err;
     } finally {
       setLoading(false);
@@ -616,8 +626,9 @@ export function useCustomerSettings() {
 
       return await response.json();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("Error changing password:", err);
+      const message = err instanceof Error ? err.message : "An error occurred";
+      setError(message);
+      logger.error("Error changing password", toError(err));
       throw err;
     } finally {
       setLoading(false);

@@ -4,11 +4,15 @@ Real-Time API Router
 FastAPI endpoints for SSE streams and WebSocket connections.
 """
 
-from fastapi import APIRouter, Depends, WebSocket
+from fastapi import APIRouter, Depends, Request, WebSocket
 from sse_starlette.sse import EventSourceResponse
 
-from dotmac.platform.auth.core import UserInfo
-from dotmac.platform.auth.dependencies import get_current_user
+from dotmac.platform.auth.core import (
+    TokenType,
+    UserInfo,
+    _claims_to_user_info,
+    _verify_token_with_fallback,
+)
 from dotmac.platform.realtime.sse import (
     create_alert_stream,
     create_onu_status_stream,
@@ -22,6 +26,7 @@ from dotmac.platform.realtime.websocket_authenticated import (
     handle_sessions_ws_authenticated,
 )
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
+from dotmac.platform.auth.dependencies import get_current_user_optional
 
 router = APIRouter(prefix="/realtime", tags=["Real-Time"])
 
@@ -43,7 +48,7 @@ router = APIRouter(prefix="/realtime", tags=["Real-Time"])
 )
 async def stream_onu_status(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> EventSourceResponse:
     """
     Stream ONU status events via SSE.
@@ -55,7 +60,8 @@ async def stream_onu_status(
 
     The connection stays open and pushes events as they occur.
     """
-    response: EventSourceResponse = await create_onu_status_stream(redis, current_user.tenant_id)
+    tenant_id = current_user.tenant_id if current_user else None
+    response: EventSourceResponse = await create_onu_status_stream(redis, tenant_id)
     return response
 
 
@@ -66,7 +72,7 @@ async def stream_onu_status(
 )
 async def stream_alerts(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> EventSourceResponse:
     """
     Stream alert events via SSE.
@@ -78,7 +84,8 @@ async def stream_alerts(
 
     The connection stays open and pushes events as they occur.
     """
-    response: EventSourceResponse = await create_alert_stream(redis, current_user.tenant_id)
+    tenant_id = current_user.tenant_id if current_user else None
+    response: EventSourceResponse = await create_alert_stream(redis, tenant_id)
     return response
 
 
@@ -89,7 +96,7 @@ async def stream_alerts(
 )
 async def stream_tickets(
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> EventSourceResponse:
     """
     Stream ticket events via SSE.
@@ -102,7 +109,8 @@ async def stream_tickets(
 
     The connection stays open and pushes events as they occur.
     """
-    response: EventSourceResponse = await create_ticket_stream(redis, current_user.tenant_id)
+    tenant_id = current_user.tenant_id if current_user else None
+    response: EventSourceResponse = await create_ticket_stream(redis, tenant_id)
     return response
 
 
@@ -112,8 +120,9 @@ async def stream_tickets(
     description="Server-Sent Events stream for subscriber lifecycle events",
 )
 async def stream_subscribers(
+    request: Request,
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> EventSourceResponse:
     """
     Stream subscriber lifecycle events via SSE.
@@ -126,7 +135,18 @@ async def stream_subscribers(
 
     The connection stays open and pushes events as they occur.
     """
-    response: EventSourceResponse = await create_subscriber_stream(redis, current_user.tenant_id)
+    if current_user is None:
+        auth_header = request.headers.get("Authorization", "")
+        token = None
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header.split(None, 1)[1]
+        if token:
+            claims = await _verify_token_with_fallback(token, TokenType.ACCESS)
+            current_user = _claims_to_user_info(claims)
+
+    response: EventSourceResponse = await create_subscriber_stream(
+        redis, current_user.tenant_id if current_user else None
+    )
     return response
 
 
@@ -136,8 +156,9 @@ async def stream_subscribers(
     description="Server-Sent Events stream for real-time RADIUS session tracking",
 )
 async def stream_radius_sessions(
+    request: Request,
     redis: RedisClientType = Depends(get_redis_client),
-    current_user: UserInfo = Depends(get_current_user),
+    current_user: UserInfo | None = Depends(get_current_user_optional),
 ) -> EventSourceResponse:
     """
     Stream RADIUS session events via SSE.
@@ -163,8 +184,17 @@ async def stream_radius_sessions(
         "timestamp": "2025-01-15T10:30:00Z"
     }
     """
+    if current_user is None:
+        auth_header = request.headers.get("Authorization", "")
+        token = None
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header.split(None, 1)[1]
+        if token:
+            claims = await _verify_token_with_fallback(token, TokenType.ACCESS)
+            current_user = _claims_to_user_info(claims)
+
     response: EventSourceResponse = await create_radius_session_stream(
-        redis, current_user.tenant_id
+        redis, current_user.tenant_id if current_user else None
     )
     return response
 
@@ -188,9 +218,8 @@ async def websocket_sessions(
     - Session stopped (user logout)
 
     Authentication:
-    - JWT token via query parameter: ?token=<jwt_token>
     - JWT token via Authorization header: Authorization: Bearer <jwt_token>
-    - JWT token via cookie: access_token=<jwt_token>
+    - JWT token via HttpOnly cookie: access_token=<jwt_token>
 
     Required Permissions:
     - sessions.read OR radius.sessions.read
@@ -200,7 +229,8 @@ async def websocket_sessions(
     - Users can only receive events for their own tenant
 
     Example:
-        ws://localhost:8000/api/v1/realtime/ws/sessions?token=<jwt_token>
+        wscat -H "Authorization: Bearer <jwt_token>" \\
+          -c ws://localhost:8000/api/v1/realtime/ws/sessions
     """
     await handle_sessions_ws_authenticated(websocket, redis)
 
@@ -222,9 +252,8 @@ async def websocket_job_progress(
     Supports bidirectional communication for job control (pause, cancel).
 
     Authentication:
-    - JWT token via query parameter: ?token=<jwt_token>
     - JWT token via Authorization header: Authorization: Bearer <jwt_token>
-    - JWT token via cookie: access_token=<jwt_token>
+    - JWT token via HttpOnly cookie: access_token=<jwt_token>
 
     Required Permissions:
     - jobs.read (required for monitoring)
@@ -241,7 +270,8 @@ async def websocket_job_progress(
     - {"type": "cancel_job"} - Cancel job execution
 
     Example:
-        ws://localhost:8000/api/v1/realtime/ws/jobs/123?token=<jwt_token>
+        wscat -H "Authorization: Bearer <jwt_token>" \\
+          -c ws://localhost:8000/api/v1/realtime/ws/jobs/123
     """
     await handle_job_ws_authenticated(websocket, job_id, redis)
 
@@ -263,9 +293,8 @@ async def websocket_campaign_progress(
     Supports bidirectional communication for campaign control (pause, resume, cancel).
 
     Authentication:
-    - JWT token via query parameter: ?token=<jwt_token>
     - JWT token via Authorization header: Authorization: Bearer <jwt_token>
-    - JWT token via cookie: access_token=<jwt_token>
+    - JWT token via HttpOnly cookie: access_token=<jwt_token>
 
     Required Permissions:
     - campaigns.read OR firmware.campaigns.read (required for monitoring)
@@ -284,6 +313,7 @@ async def websocket_campaign_progress(
     - {"type": "cancel_campaign"} - Cancel campaign execution
 
     Example:
-        ws://localhost:8000/api/v1/realtime/ws/campaigns/456?token=<jwt_token>
+        wscat -H "Authorization: Bearer <jwt_token>" \\
+          -c ws://localhost:8000/api/v1/realtime/ws/campaigns/456
     """
     await handle_campaign_ws_authenticated(websocket, campaign_id, redis)

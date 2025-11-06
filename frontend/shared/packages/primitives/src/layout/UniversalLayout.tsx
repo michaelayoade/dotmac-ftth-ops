@@ -1,11 +1,12 @@
-import React, { useState, useEffect, ReactNode } from "react";
+import React, { useState, useEffect } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { motion } from "framer-motion";
 import UniversalHeader from "./UniversalHeader";
 
 interface NavigationItem {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   href: string;
   badge?: number;
   children?: NavigationItem[];
@@ -209,6 +210,7 @@ export function UniversalLayout({
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }
+    return undefined;
   }, [isMobile, sidebarOpen]);
 
   // Prevent scroll on body when mobile sidebar is open
@@ -410,12 +412,12 @@ export function UniversalLayout({
         {showHeader && (
           <UniversalHeader
             variant={variant}
-            user={user}
-            branding={branding}
-            tenant={tenant}
-            actions={headerActions}
+            {...(user ? { user } : {})}
+            {...(branding ? { branding } : {})}
+            {...(tenant ? { tenant } : {})}
+            {...(headerActions ? { actions: headerActions } : {})}
             onLogout={onLogout}
-            onMenuToggle={showSidebar ? toggleSidebar : undefined}
+            {...(showSidebar ? { onMenuToggle: toggleSidebar } : {})}
             showMobileMenu={sidebarOpen}
           />
         )}
@@ -433,12 +435,12 @@ export function UniversalLayout({
         {showHeader && (
           <UniversalHeader
             variant={variant}
-            user={user}
-            branding={branding}
-            tenant={tenant}
-            actions={headerActions}
+            {...(user ? { user } : {})}
+            {...(branding ? { branding } : {})}
+            {...(tenant ? { tenant } : {})}
+            {...(headerActions ? { actions: headerActions } : {})}
             onLogout={onLogout}
-            onMenuToggle={showSidebar ? toggleSidebar : undefined}
+            {...(showSidebar ? { onMenuToggle: toggleSidebar } : {})}
             showMobileMenu={sidebarOpen}
           />
         )}
@@ -464,12 +466,12 @@ export function UniversalLayout({
         {showHeader && (
           <UniversalHeader
             variant={variant}
-            user={user}
-            branding={branding}
-            tenant={tenant}
-            actions={headerActions}
+            {...(user ? { user } : {})}
+            {...(branding ? { branding } : {})}
+            {...(tenant ? { tenant } : {})}
+            {...(headerActions ? { actions: headerActions } : {})}
             onLogout={onLogout}
-            onMenuToggle={showSidebar ? toggleSidebar : undefined}
+            {...(showSidebar ? { onMenuToggle: toggleSidebar } : {})}
             showMobileMenu={sidebarOpen}
           />
         )}

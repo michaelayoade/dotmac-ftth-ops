@@ -5,7 +5,8 @@
 
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 
 interface CSRFContextValue {
   token: string | null;
@@ -84,7 +85,10 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
   const validateToken = (tokenToValidate: string): boolean => {
     // Check against both client and server tokens
     const storedToken = sessionStorage.getItem("csrf-token");
-    return tokenToValidate === storedToken || (serverToken && tokenToValidate === serverToken);
+    return (
+      tokenToValidate === storedToken ||
+      (serverToken !== null && tokenToValidate === serverToken)
+    );
   };
 
   const refreshToken = () => {
@@ -92,7 +96,7 @@ export function CSRFProvider({ children, endpoint }: CSRFProviderProps) {
   };
 
   const contextValue: CSRFContextValue = {
-    token: serverToken || token,
+    token: serverToken ?? token,
     generateToken,
     validateToken,
     refreshToken,

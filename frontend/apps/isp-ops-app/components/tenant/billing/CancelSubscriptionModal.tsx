@@ -24,6 +24,7 @@ import { RadioGroup, RadioGroupItem } from "@dotmac/ui";
 import { TenantSubscription, SubscriptionCancelRequest } from "@/hooks/useTenantSubscription";
 import { format } from "date-fns";
 import { AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface CancelSubscriptionModalProps {
   open: boolean;
@@ -93,7 +94,11 @@ export const CancelSubscriptionModal: React.FC<CancelSubscriptionModalProps> = (
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      console.error("Failed to cancel subscription:", err);
+      logger.error(
+        "Failed to cancel subscription",
+        err instanceof Error ? err : new Error(String(err)),
+        { subscriptionId: (subscription as any).id },
+      );
     }
   };
 

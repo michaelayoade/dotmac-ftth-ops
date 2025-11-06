@@ -31,6 +31,10 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
   showProgress = true,
   className = "",
 }) => {
+  if (steps.length === 0) {
+    return null;
+  }
+
   const [currentStep, setCurrentStep] = useState(0);
   const [stepData, setStepData] = useState<Record<string, any>>({});
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
@@ -41,6 +45,9 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
 
   const canProceed = useCallback(async () => {
     const step = steps[currentStep];
+    if (!step) {
+      return false;
+    }
     if (step.validation) {
       return await step.validation();
     }
@@ -75,6 +82,9 @@ export const WorkflowTemplate: React.FC<WorkflowTemplateProps> = ({
   );
 
   const currentStepData = steps[currentStep];
+  if (!currentStepData) {
+    return null;
+  }
   const StepComponent = currentStepData.component;
   const isLastStep = currentStep === steps.length - 1;
 

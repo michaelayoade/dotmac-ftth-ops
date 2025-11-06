@@ -171,7 +171,7 @@ export default function OperationsPage() {
   }
 
   // Add recent customer activity
-  recentCustomers.forEach((customer, idx) => {
+  recentCustomers.forEach((customer: any, idx: number) => {
     if (idx < 3) {
       recentActivity.push({
         id: `cust-${customer.id}`,

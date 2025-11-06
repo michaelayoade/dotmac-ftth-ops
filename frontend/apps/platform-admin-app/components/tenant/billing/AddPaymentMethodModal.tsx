@@ -17,6 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@dotmac/ui";
 import { Checkbox } from "@dotmac/ui";
 import { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
 import { CreditCard, Building2, Wallet, AlertCircle } from "lucide-react";
+import { logger } from "@/lib/logger";
 
 interface AddPaymentMethodModalProps {
   open: boolean;
@@ -121,7 +122,11 @@ export const AddPaymentMethodModal: React.FC<AddPaymentMethodModalProps> = ({
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      console.error("Failed to add payment method:", err);
+      logger.error(
+        "Failed to add payment method",
+        err instanceof Error ? err : new Error(String(err)),
+        { methodType },
+      );
     }
   };
 

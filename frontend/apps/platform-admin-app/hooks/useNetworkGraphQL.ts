@@ -14,6 +14,7 @@
  * Migration: Migrated from Apollo to TanStack Query via @dotmac/graphql
  */
 
+import { useEffect } from "react";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { handleGraphQLError } from "@dotmac/graphql";
@@ -46,22 +47,22 @@ export function useNetworkOverviewGraphQL(options: UseNetworkOverviewOptions = {
   const { toast } = useToast();
   const { enabled = true, pollInterval = 30000 } = options; // 30 seconds default
 
-  const { data, isLoading, error, refetch } = useNetworkOverviewQuery(
-    undefined, // no variables
-    {
-      enabled,
-      refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "NetworkOverviewQuery",
-          context: {
-            hook: "useNetworkOverviewGraphQL",
-          },
-        }),
-    },
-  );
+  const { data, isLoading, error, refetch } = useNetworkOverviewQuery(undefined, {
+    enabled,
+    refetchInterval: pollInterval,
+  });
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "NetworkOverviewQuery",
+      context: { hook: "useNetworkOverviewGraphQL" },
+    });
+  }, [error, toast]);
 
   const overview = data?.networkOverview;
 
@@ -120,22 +121,27 @@ export function useNetworkDeviceListGraphQL(options: UseNetworkDeviceListOptions
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "NetworkDeviceListQuery",
-          context: {
-            hook: "useNetworkDeviceListGraphQL",
-            page,
-            pageSize,
-            deviceType,
-            status,
-            hasSearch: Boolean(search),
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "NetworkDeviceListQuery",
+      context: {
+        hook: "useNetworkDeviceListGraphQL",
+        page,
+        pageSize,
+        deviceType,
+        status,
+        hasSearch: Boolean(search),
+      },
+    });
+  }, [deviceType, error, page, pageSize, search, status, toast]);
 
   const devices = data?.networkDevices?.devices ?? [];
   const totalCount = data?.networkDevices?.totalCount ?? 0;
@@ -178,19 +184,24 @@ export function useDeviceDetailGraphQL(options: UseDeviceDetailOptions) {
     {
       enabled: enabled && !!deviceId,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "DeviceDetailQuery",
-          context: {
-            hook: "useDeviceDetailGraphQL",
-            deviceId,
-            deviceType,
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "DeviceDetailQuery",
+      context: {
+        hook: "useDeviceDetailGraphQL",
+        deviceId,
+        deviceType,
+      },
+    });
+  }, [deviceId, deviceType, error, toast]);
 
   const deviceHealth = data?.deviceHealth ?? null;
   const deviceTraffic = data?.deviceTraffic ?? null;
@@ -236,20 +247,25 @@ export function useDeviceTrafficGraphQL(options: UseDeviceTrafficOptions) {
       enabled: enabled && !!deviceId,
       refetchInterval: pollInterval,
       staleTime: 0, // Always fetch fresh traffic data (equivalent to network-only)
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "DeviceTrafficQuery",
-          context: {
-            hook: "useDeviceTrafficGraphQL",
-            deviceId,
-            deviceType,
-            includeInterfaces,
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "DeviceTrafficQuery",
+      context: {
+        hook: "useDeviceTrafficGraphQL",
+        deviceId,
+        deviceType,
+        includeInterfaces,
+      },
+    });
+  }, [deviceId, deviceType, error, includeInterfaces, toast]);
 
   const traffic = data?.deviceTraffic ?? null;
 
@@ -302,23 +318,28 @@ export function useNetworkAlertListGraphQL(options: UseNetworkAlertListOptions =
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "NetworkAlertListQuery",
-          context: {
-            hook: "useNetworkAlertListGraphQL",
-            page,
-            pageSize,
-            severity,
-            activeOnly,
-            deviceId,
-            deviceType,
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "NetworkAlertListQuery",
+      context: {
+        hook: "useNetworkAlertListGraphQL",
+        page,
+        pageSize,
+        severity,
+        activeOnly,
+        deviceId,
+        deviceType,
+      },
+    });
+  }, [activeOnly, deviceId, deviceType, error, page, pageSize, severity, toast]);
 
   const alerts = data?.networkAlerts?.alerts ?? [];
   const totalCount = data?.networkAlerts?.totalCount ?? 0;
@@ -355,18 +376,23 @@ export function useNetworkAlertDetailGraphQL(options: UseNetworkAlertDetailOptio
     { alertId },
     {
       enabled: enabled && !!alertId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "NetworkAlertDetailQuery",
-          context: {
-            hook: "useNetworkAlertDetailGraphQL",
-            alertId,
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "NetworkAlertDetailQuery",
+      context: {
+        hook: "useNetworkAlertDetailGraphQL",
+        alertId,
+      },
+    });
+  }, [alertId, error, toast]);
 
   const alert = data?.networkAlert ?? null;
 
@@ -421,24 +447,39 @@ export function useNetworkDashboardGraphQL(options: UseNetworkDashboardOptions =
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "NetworkDashboardQuery",
-          context: {
-            hook: "useNetworkDashboardGraphQL",
-            devicePage,
-            devicePageSize,
-            deviceType,
-            deviceStatus,
-            alertPage,
-            alertPageSize,
-            alertSeverity,
-          },
-        }),
     },
   );
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "NetworkDashboardQuery",
+      context: {
+        hook: "useNetworkDashboardGraphQL",
+        devicePage,
+        devicePageSize,
+        deviceType,
+        deviceStatus,
+        alertPage,
+        alertPageSize,
+        alertSeverity,
+      },
+    });
+  }, [
+    alertPage,
+    alertPageSize,
+    alertSeverity,
+    devicePage,
+    devicePageSize,
+    deviceStatus,
+    deviceType,
+    error,
+    toast,
+  ]);
 
   const overview = data?.networkOverview;
   const devices = data?.networkDevices?.devices ?? [];

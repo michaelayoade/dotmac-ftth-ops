@@ -2,6 +2,7 @@
  * React hooks for managing active jobs with WebSocket controls
  */
 
+import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
@@ -88,11 +89,7 @@ export function useJobWebSocket(jobId: string | null) {
   React.useEffect(() => {
     if (!jobId) return;
 
-    // Get auth token from localStorage or cookies
-    const token = localStorage.getItem("auth_token");
-    if (!token) return;
-
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001"}/api/v1/realtime/ws/jobs/${jobId}?token=${token}`;
+    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001"}/api/v1/realtime/ws/jobs/${jobId}`;
     const ws = new WebSocket(wsUrl);
 
     ws.onopen = () => {
@@ -142,5 +139,3 @@ export function useJobWebSocket(jobId: string | null) {
     resumeJob,
   };
 }
-
-import React from "react";

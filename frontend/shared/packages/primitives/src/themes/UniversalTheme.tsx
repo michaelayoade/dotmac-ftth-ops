@@ -5,7 +5,8 @@
 
 "use client";
 
-import React, { createContext, useContext, ReactNode, useEffect } from "react";
+import React, { createContext, useContext, useEffect } from "react";
+import type { ReactNode } from "react";
 import { ISPColors, ISPGradients, ISPThemeUtils } from "./ISPBrandTheme";
 import { cn } from "../utils/cn";
 
@@ -88,7 +89,7 @@ const defaultThemeConfig: UniversalThemeConfig = {
 
 const UniversalThemeContext = createContext<{
   config: UniversalThemeConfig;
-  portalTheme: typeof portalThemes.admin;
+  portalTheme: (typeof portalThemes)[keyof typeof portalThemes];
   updateConfig: (updates: Partial<UniversalThemeConfig>) => void;
   getThemeClasses: () => string;
   getCSSVariables: () => Record<string, string>;
@@ -116,15 +117,17 @@ export function UniversalThemeProvider({ children, config = {} }: UniversalTheme
 
   // Detect system preferences
   useEffect(() => {
-    if (themeConfig.colorScheme === "system") {
-      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-      const handleChange = () => {
-        // Would set dark mode here
-      };
-
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
+    if (themeConfig.colorScheme !== "system") {
+      return;
     }
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = () => {
+      // Would set dark mode here
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [themeConfig.colorScheme]);
 
   // Detect reduced motion preference

@@ -362,17 +362,17 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
                 <div className="analysis-stats">
                   <div className="stat">
                     <label>Total Revenue</label>
-                    <value>{formatCurrency(revenueAnalysis.total)}</value>
+                    <span className="value">{formatCurrency(revenueAnalysis.total)}</span>
                   </div>
                   <div className="stat">
                     <label>Average</label>
-                    <value>{formatCurrency(revenueAnalysis.average)}</value>
+                    <span className="value">{formatCurrency(revenueAnalysis.average)}</span>
                   </div>
                   <div className="stat">
                     <label>Growth</label>
-                    <value className={revenueAnalysis.growth > 0 ? "positive" : "negative"}>
+                    <span className={`value ${revenueAnalysis.growth > 0 ? "positive" : "negative"}`}>
                       {revenueAnalysis.growth.toFixed(1)}%
-                    </value>
+                    </span>
                   </div>
                 </div>
               )}
@@ -437,19 +437,23 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
                 <div className="metrics-grid">
                   <div className="metric-item">
                     <label>Total Customers</label>
-                    <value>{formatNumber(customerAnalysis.total)}</value>
+                    <span className="value">{formatNumber(customerAnalysis.total)}</span>
                   </div>
                   <div className="metric-item">
                     <label>Churn Rate</label>
-                    <value className="warning">{formatPercent(customerAnalysis.churnRate)}</value>
+                    <span className="value warning">
+                      {formatPercent(customerAnalysis.churnRate)}
+                    </span>
                   </div>
                   <div className="metric-item">
                     <label>ARPU</label>
-                    <value>{formatCurrency(customerAnalysis.arpu)}</value>
+                    <span className="value">{formatCurrency(customerAnalysis.arpu)}</span>
                   </div>
                   <div className="metric-item">
                     <label>Retention</label>
-                    <value className="success">{formatPercent(customerAnalysis.retention)}</value>
+                    <span className="value success">
+                      {formatPercent(customerAnalysis.retention)}
+                    </span>
                   </div>
                 </div>
               )}
@@ -515,20 +519,25 @@ export const AdvancedAnalyticsCharts: React.FC<AdvancedAnalyticsChartsProps> = (
                     ]}
                     labelFormatter={() => ""}
                     content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        const data = payload[0].payload;
-                        return (
-                          <div className="geo-tooltip">
-                            <p>
-                              <strong>{data.region}</strong>
-                            </p>
-                            <p>Customers: {formatNumber(data.customers)}</p>
-                            <p>Revenue: {formatCurrency(data.revenue)}</p>
-                            <p>Growth: {data.growth.toFixed(1)}%</p>
-                          </div>
-                        );
+                      if (!active || !payload?.length) {
+                        return null;
                       }
-                      return null;
+
+                      const dataPoint = payload[0]?.payload as GeographicData | undefined;
+                      if (!dataPoint) {
+                        return null;
+                      }
+
+                      return (
+                        <div className="geo-tooltip">
+                          <p>
+                            <strong>{dataPoint.region}</strong>
+                          </p>
+                          <p>Customers: {formatNumber(dataPoint.customers)}</p>
+                          <p>Revenue: {formatCurrency(dataPoint.revenue)}</p>
+                          <p>Growth: {dataPoint.growth.toFixed(1)}%</p>
+                        </div>
+                      );
                     }}
                   />
                   <Scatter dataKey="customers" fill={CHART_COLORS.primary} name="Customers" />

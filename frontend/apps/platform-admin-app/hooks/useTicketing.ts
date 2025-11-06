@@ -6,6 +6,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 // ============================================================================
 // Types
@@ -140,7 +144,7 @@ export function useTickets(options: UseTicketsOptions = {}) {
       setTickets(response.data);
       setError(null);
     } catch (err: any) {
-      console.error("Failed to fetch tickets:", err);
+      logger.error("Failed to fetch tickets", toError(err), { status });
       setError(err.response?.data?.detail || "Failed to fetch tickets");
     } finally {
       setLoading(false);
@@ -191,7 +195,7 @@ export function useTicket(ticketId: string | null, autoRefresh = false) {
       setTicket(response.data);
       setError(null);
     } catch (err: any) {
-      console.error("Failed to fetch ticket:", err);
+      logger.error("Failed to fetch ticket", toError(err), { ticketId });
       setError(err.response?.data?.detail || "Failed to fetch ticket");
     } finally {
       setLoading(false);
@@ -237,7 +241,7 @@ export function useCreateTicket() {
       const response = await apiClient.post<TicketDetail>("/tickets", data);
       return response.data;
     } catch (err: any) {
-      console.error("Failed to create ticket:", err);
+      logger.error("Failed to create ticket", toError(err), { targetType: data.target_type });
       setError(err.response?.data?.detail || "Failed to create ticket");
       return null;
     } finally {
@@ -267,7 +271,7 @@ export function useUpdateTicket() {
       const response = await apiClient.patch<TicketDetail>(`/tickets/${ticketId}`, data);
       return response.data;
     } catch (err: any) {
-      console.error("Failed to update ticket:", err);
+      logger.error("Failed to update ticket", toError(err), { ticketId });
       setError(err.response?.data?.detail || "Failed to update ticket");
       return null;
     } finally {
@@ -297,7 +301,7 @@ export function useAddMessage() {
       const response = await apiClient.post<TicketDetail>(`/tickets/${ticketId}/messages`, data);
       return response.data;
     } catch (err: any) {
-      console.error("Failed to add message:", err);
+      logger.error("Failed to add ticket message", toError(err), { ticketId });
       setError(err.response?.data?.detail || "Failed to add message");
       return null;
     } finally {
@@ -369,7 +373,7 @@ export function useTicketStats() {
       setStats(stats);
       setError(null);
     } catch (err: any) {
-      console.error("Failed to fetch ticket stats:", err);
+      logger.error("Failed to fetch ticket stats", toError(err));
       setError(err.response?.data?.detail || "Failed to fetch statistics");
     } finally {
       setLoading(false);

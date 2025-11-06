@@ -107,9 +107,9 @@ export interface CardHeaderProps
 export interface CardTitleProps
   extends React.HTMLAttributes<HTMLHeadingElement>,
     VariantProps<typeof cardTitleVariants> {
-  asChild?: boolean;
   /** Heading level for accessibility */
   level?: 1 | 2 | 3 | 4 | 5 | 6;
+  asChild?: boolean;
 }
 
 export interface CardDescriptionProps
@@ -215,12 +215,23 @@ CardHeader.displayName = "CardHeader";
 
 // Card Title Component
 export const CardTitle = forwardRef<HTMLHeadingElement, CardTitleProps>(
-  ({ className, asChild = false, level = 3, children, ...props }, ref) => {
-    const Comp = asChild ? Slot : (`h${level}` as keyof JSX.IntrinsicElements);
+  ({ className, level = 3, children, asChild = false, ...props }, ref) => {
+    const headingLevel = Math.min(Math.max(level, 1), 6);
+    type HeadingTag = "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+    const Tag = (`h${headingLevel}` as HeadingTag);
+
+    if (asChild) {
+      return (
+        <Slot className={clsx(cardTitleVariants(), className)} {...props}>
+          {children}
+        </Slot>
+      );
+    }
+
     return (
-      <Comp ref={ref} className={clsx(cardTitleVariants({ className }))} {...props}>
+      <Tag ref={ref} className={clsx(cardTitleVariants(), className)} {...props}>
         {children}
-      </Comp>
+      </Tag>
     );
   },
 );
@@ -228,9 +239,20 @@ CardTitle.displayName = "CardTitle";
 
 // Card Description Component
 export const CardDescription = forwardRef<HTMLParagraphElement, CardDescriptionProps>(
-  ({ className, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "p";
-    return <Comp ref={ref} className={clsx(cardDescriptionVariants({ className }))} {...props} />;
+  ({ className, asChild = false, children, ...props }, ref) => {
+    if (asChild) {
+      return (
+        <Slot className={clsx(cardDescriptionVariants(), className)} {...props}>
+          {children}
+        </Slot>
+      );
+    }
+
+    return (
+      <p ref={ref} className={clsx(cardDescriptionVariants(), className)} {...props}>
+        {children}
+      </p>
+    );
   },
 );
 CardDescription.displayName = "CardDescription";

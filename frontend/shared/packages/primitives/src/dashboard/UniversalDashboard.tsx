@@ -5,7 +5,8 @@
 
 "use client";
 
-import React, { ReactNode, useState, useEffect } from "react";
+import { useEffect, useState } from "react";
+import type { ComponentType, ReactNode } from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "../utils/cn";
@@ -63,7 +64,7 @@ export interface DashboardTenant {
 export interface DashboardHeaderAction {
   id: string;
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon?: ComponentType<{ className?: string }>;
   onClick: () => void;
   variant?: "primary" | "secondary" | "outline" | "ghost";
 }

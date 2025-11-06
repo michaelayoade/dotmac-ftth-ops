@@ -39,6 +39,12 @@ import {
 import { Button } from "@dotmac/ui";
 import { toast } from "@dotmac/ui";
 
+type CustomerDashboardQueryResult = ReturnType<typeof useCustomerDashboardGraphQL>;
+type CustomerDashboardData = {
+  customers: CustomerDashboardQueryResult["customers"];
+  metrics: CustomerDashboardQueryResult["metrics"];
+};
+
 export default function TenantCustomersView() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -61,10 +67,13 @@ export default function TenantCustomersView() {
   });
 
   // Normalize dashboard hook result for QueryBoundary
-  const result = normalizeDashboardHook(dashboardQuery, (query) => ({
-    customers: query.customers,
-    metrics: query.metrics,
-  }));
+  const result = normalizeDashboardHook(
+    dashboardQuery,
+    (query: CustomerDashboardQueryResult): CustomerDashboardData => ({
+      customers: query.customers,
+      metrics: query.metrics,
+    }),
+  );
 
   const handleCreateCustomer = () => {
     setShowCreateModal(true);
@@ -83,6 +92,24 @@ export default function TenantCustomersView() {
     setSelectedCustomer(customer);
     setShowEditModal(true);
   };
+
+  const renderMetricsError = (message: string) => (
+    <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+      {message}
+    </div>
+  );
+
+  const metricsEmptyState = (
+    <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+      No customer metrics available yet. New activity will populate this summary automatically.
+    </div>
+  );
+
+  const renderCustomerError = (message: string) => (
+    <div className="rounded-md border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+      {message}
+    </div>
+  );
 
   const handleViewCustomer = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -163,9 +190,11 @@ export default function TenantCustomersView() {
       <QueryBoundary
         result={result}
         loadingComponent={<CardGridSkeleton count={4} columns={4} variant="metric" />}
-        isEmpty={(data) => !data.metrics}
+        errorComponent={renderMetricsError}
+        emptyComponent={metricsEmptyState}
+        isEmpty={(data: CustomerDashboardData) => !data.metrics}
       >
-        {(data) => (
+        {(data: CustomerDashboardData) => (
           <CustomersMetrics
             metrics={{
               total_customers: data.metrics.totalCustomers,
@@ -235,7 +264,8 @@ export default function TenantCustomersView() {
             showCheckbox
           />
         }
-        isEmpty={(data) => data.customers.length === 0}
+        errorComponent={renderCustomerError}
+        isEmpty={(data: CustomerDashboardData) => data.customers.length === 0}
         emptyComponent={
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg shadow">
             <svg
@@ -270,7 +300,7 @@ export default function TenantCustomersView() {
           </div>
         }
       >
-        {(data) => (
+        {(data: CustomerDashboardData) => (
           <CustomersList
             customers={data.customers.map(
               (c: any) =>

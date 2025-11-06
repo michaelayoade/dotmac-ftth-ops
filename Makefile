@@ -2,7 +2,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-backend dev-frontend install test lint typecheck typecheck-mypy typecheck-pyright restart-platform restart-isp restart-all
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
 
 # Colors
 CYAN := \033[0;36m
@@ -40,20 +40,51 @@ help:
 	@echo "  make logs-all               Tail logs from both stacks"
 	@echo ""
 	@echo "$(GREEN)Development:$(NC)"
-	@echo "  make dev                    Start backend app service in Docker"
-	@echo "  make dev-host               Run backend directly on host (debug)"
+	@echo "  make dev                    Start platform backend in Docker (port 8001)"
+	@echo "  make dev-host               Run backend directly on host (port 8000)"
 	@echo "  make dev-frontend           Start ISP frontend (localhost:3001)"
-	@echo "  make install                Install dependencies"
+	@echo "  make dev-frontend-admin     Start platform admin frontend (localhost:3002)"
+	@echo "  make install                Install all dependencies (Python + Node)"
+	@echo "  make check-deps             Verify required tools are installed"
 	@echo ""
 	@echo "$(GREEN)Testing:$(NC)"
-	@echo "  make test                   Run all tests"
-	@echo "  make test-fast              Run fast tests (no coverage)"
-	@echo "  make lint                   Run linting"
-	@echo "  make typecheck              Run mypy and pyright"
+	@echo "  make test                   Run all tests with coverage"
+	@echo "  make test-fast              Run tests without coverage"
+	@echo "  make test-unit              Run unit tests only"
+	@echo "  make test-integration       Run integration tests"
+	@echo "  make test-e2e               Run end-to-end tests"
+	@echo "  make lint                   Run Python linting (ruff + mypy)"
+	@echo "  make lint-frontend          Run frontend linting"
+	@echo "  make typecheck              Run Python type checking"
+	@echo "  make typecheck-frontend     Run frontend type checking"
+	@echo "  make format                 Format Python code"
+	@echo "  make format-frontend        Format frontend code"
 	@echo ""
 	@echo "$(GREEN)Database:$(NC)"
 	@echo "  make db-migrate             Run database migrations"
+	@echo "  make db-migrate-create      Create new migration"
 	@echo "  make db-seed                Seed database with test data"
+	@echo "  make db-reset               Reset database (destructive)"
+	@echo ""
+	@echo "$(GREEN)Build:$(NC)"
+	@echo "  make build-platform         Build platform Docker images"
+	@echo "  make build-isp              Build ISP Docker images"
+	@echo "  make build-all              Build all Docker images"
+	@echo "  make build-freeradius       Build FreeRADIUS image"
+	@echo ""
+	@echo "$(GREEN)Environment:$(NC)"
+	@echo "  make env-validate           Validate current environment"
+	@echo "  make env-check              Check external services"
+	@echo "  make env-local              Switch to local development environment"
+	@echo "  make env-test               Switch to test environment"
+	@echo "  make env-staging            Switch to staging environment"
+	@echo "  make env-show               Show current environment variables"
+	@echo "  make setup                  Run initial platform setup"
+	@echo ""
+	@echo "$(GREEN)Utilities:$(NC)"
+	@echo "  make shell                  Open Poetry shell"
+	@echo "  make clean-py               Remove Python cache files"
+	@echo "  make docker-ps              Show running Docker containers"
 	@echo ""
 	@echo "$(GREEN)Cleanup:$(NC)"
 	@echo "  make clean-platform         Remove platform containers/volumes (DESTRUCTIVE!)"
@@ -61,9 +92,11 @@ help:
 	@echo "  make clean-all              Remove ALL containers/volumes (DESTRUCTIVE!)"
 	@echo ""
 	@echo "$(YELLOW)Quick Start:$(NC)"
-	@echo "  1. make start-all           # Start both compose stacks"
-	@echo "  2. make db-migrate          # Run migrations"
-	@echo "  3. make dev                 # Start backend API"
+	@echo "  1. make check-deps          # Verify tools are installed"
+	@echo "  2. make install             # Install dependencies"
+	@echo "  3. make start-all           # Start infrastructure"
+	@echo "  4. make db-migrate          # Run migrations"
+	@echo "  5. make dev-host            # Start backend on host"
 	@echo ""
 
 # ===================================================================
@@ -109,6 +142,8 @@ logs-isp:
 # ===================================================================
 
 start-all:
+	@echo "$(CYAN)Running pre-flight checks...$(NC)"
+	@./scripts/docker-compose-pre-flight.sh || { echo "$(YELLOW)⚠ Pre-flight checks failed, but continuing...$(NC)"; }
 	@./scripts/infra.sh all start
 
 stop-all:
@@ -140,15 +175,17 @@ clean-all:
 # Development
 # ===================================================================
 
-install:
-	@echo "$(CYAN)Installing dependencies...$(NC)"
+install: check-deps
+	@echo "$(CYAN)Installing Python dependencies...$(NC)"
 	@poetry install
 	@echo "$(CYAN)Installing frontend workspace dependencies...$(NC)"
 	@cd frontend && pnpm install
+	@echo ""
+	@echo "$(GREEN)✓ All dependencies installed successfully!$(NC)"
 
 dev:
-	@echo "$(CYAN)Starting backend app service inside Docker (logs follow)$(NC)"
-	@echo "$(CYAN)API docs: http://localhost:8000/docs$(NC)"
+	@echo "$(CYAN)Starting platform backend service inside Docker (logs follow)$(NC)"
+	@echo "$(CYAN)Platform API docs: http://localhost:8001/docs$(NC)"
 	@docker compose -f docker-compose.base.yml up platform-backend
 
 dev-host:
@@ -158,6 +195,23 @@ dev-host:
 dev-frontend:
 	@echo "$(CYAN)Starting ISP frontend on http://localhost:3001$(NC)"
 	@cd frontend && pnpm dev:isp
+
+dev-frontend-admin:
+	@echo "$(CYAN)Starting Platform Admin frontend on http://localhost:3002$(NC)"
+	@cd frontend && pnpm dev:admin
+
+check-deps:
+	@echo "$(CYAN)Checking required dependencies...$(NC)"
+	@command -v poetry >/dev/null 2>&1 || { echo "$(YELLOW)✗ Poetry not installed. Install from: https://python-poetry.org/$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Poetry installed$(NC)"
+	@command -v pnpm >/dev/null 2>&1 || { echo "$(YELLOW)✗ pnpm not installed. Run: npm install -g pnpm$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ pnpm installed$(NC)"
+	@command -v docker >/dev/null 2>&1 || { echo "$(YELLOW)✗ Docker not installed$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Docker installed$(NC)"
+	@docker info >/dev/null 2>&1 || { echo "$(YELLOW)✗ Docker daemon not running$(NC)"; exit 1; }
+	@echo "$(GREEN)✓ Docker daemon running$(NC)"
+	@echo ""
+	@echo "$(GREEN)All required dependencies are installed!$(NC)"
 
 # ===================================================================
 # Database
@@ -190,33 +244,60 @@ db-reset:
 # ===================================================================
 
 test:
+	@echo "$(CYAN)Running all tests with coverage...$(NC)"
 	@poetry run pytest --cov=src/dotmac --cov-report=term-missing --cov-report=xml
 
 test-fast:
+	@echo "$(CYAN)Running tests without coverage...$(NC)"
 	@poetry run pytest -v --tb=short
+
+test-unit:
+	@echo "$(CYAN)Running unit tests...$(NC)"
+	@poetry run pytest -m unit -v
+
+test-integration:
+	@echo "$(CYAN)Running integration tests...$(NC)"
+	@./scripts/run-integration-tests.sh
+
+test-e2e:
+	@echo "$(CYAN)Running end-to-end tests...$(NC)"
+	@cd frontend && pnpm playwright test
 
 typecheck: typecheck-mypy typecheck-pyright
 
 typecheck-mypy:
+	@echo "$(CYAN)Running mypy type checking...$(NC)"
 	@poetry run mypy --strict src/dotmac/platform/db.py src/dotmac/platform/db/testing.py
 
 typecheck-pyright:
+	@echo "$(CYAN)Running pyright type checking...$(NC)"
 	@poetry run pyright
 
-test-integration:
-	@./scripts/run_integration_tests.sh
+typecheck-frontend:
+	@echo "$(CYAN)Running frontend type checking...$(NC)"
+	@cd frontend && pnpm type-check
 
 # ===================================================================
 # Linting & Formatting
 # ===================================================================
 
 lint:
+	@echo "$(CYAN)Running Python linting...$(NC)"
 	@poetry run ruff check src/ tests/
 	@poetry run mypy src/
 
+lint-frontend:
+	@echo "$(CYAN)Running frontend linting...$(NC)"
+	@cd frontend && pnpm lint
+
 format:
+	@echo "$(CYAN)Formatting Python code...$(NC)"
 	@poetry run ruff check --fix src/ tests/
 	@poetry run ruff format src/ tests/
+
+format-frontend:
+	@echo "$(CYAN)Formatting frontend code...$(NC)"
+	@cd frontend && pnpm format
 
 # ===================================================================
 # Utilities
@@ -235,8 +316,75 @@ clean-py:
 	@find . -type d -name ".ruff_cache" -exec rm -rf {} + 2>/dev/null || true
 
 # ===================================================================
+# Environment & Setup
+# ===================================================================
+
+env-validate:
+	@echo "$(CYAN)Validating environment configuration...$(NC)"
+	@./scripts/validate-docker-compose-env.sh
+
+env-check:
+	@echo "$(CYAN)Checking external services...$(NC)"
+	@./scripts/check-external-services.sh
+
+env-local:
+	@echo "$(CYAN)Switching to local development environment...$(NC)"
+	@if [ -f .env.local ]; then \
+		cp .env.local .env; \
+		echo "$(GREEN)✓ Switched to .env.local$(NC)"; \
+	else \
+		echo "$(YELLOW)✗ .env.local not found. Copy from .env.local.example$(NC)"; \
+		exit 1; \
+	fi
+
+env-test:
+	@echo "$(CYAN)Switching to test environment...$(NC)"
+	@if [ -f .env.test ]; then \
+		cp .env.test .env; \
+		echo "$(GREEN)✓ Switched to .env.test$(NC)"; \
+	else \
+		echo "$(YELLOW)✗ .env.test not found$(NC)"; \
+		exit 1; \
+	fi
+
+env-staging:
+	@echo "$(CYAN)Switching to staging environment...$(NC)"
+	@if [ -f .env.staging ]; then \
+		cp .env.staging .env; \
+		echo "$(GREEN)✓ Switched to .env.staging$(NC)"; \
+	else \
+		echo "$(YELLOW)✗ .env.staging not found$(NC)"; \
+		exit 1; \
+	fi
+
+env-show:
+	@echo "$(CYAN)Current environment variables:$(NC)"
+	@if [ -f .env ]; then \
+		cat .env | grep -v '^#' | grep -v '^$$'; \
+	else \
+		echo "$(YELLOW)No .env file found$(NC)"; \
+	fi
+
+setup:
+	@echo "$(CYAN)Running initial platform setup...$(NC)"
+	@./scripts/setup-platform-and-tenant.sh
+
+# ===================================================================
 # Build
 # ===================================================================
+
+build-platform:
+	@echo "$(CYAN)Building platform Docker images...$(NC)"
+	@docker compose -f docker-compose.base.yml build
+
+build-isp:
+	@echo "$(CYAN)Building ISP Docker images...$(NC)"
+	@docker compose -f docker-compose.isp.yml build
+
+build-all:
+	@echo "$(CYAN)Building all Docker images...$(NC)"
+	@docker compose -f docker-compose.base.yml build
+	@docker compose -f docker-compose.isp.yml build
 
 build-freeradius:
 	@echo "$(CYAN)Building FreeRADIUS image for Apple Silicon...$(NC)"

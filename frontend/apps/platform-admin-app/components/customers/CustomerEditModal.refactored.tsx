@@ -20,11 +20,7 @@ import { apiClient } from "@/lib/api/client";
 import { queryKeys } from "@/lib/query-client";
 import { logger } from "@/lib/logger";
 import { useQueryClient, type QueryKey } from "@tanstack/react-query";
-import {
-  useFormMutation,
-  invalidateQueries,
-} from "@dotmac/graphql";
-import type { MutationWithToastOptions } from "@dotmac/graphql/src/mutation-helpers";
+import { useFormMutation, invalidateQueries } from "@dotmac/graphql";
 
 interface CustomerEditModalProps {
   customer: Customer;

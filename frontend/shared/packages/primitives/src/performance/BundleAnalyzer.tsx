@@ -192,6 +192,8 @@ export function BundleAnalyzer({
       const interval = setInterval(collectMetrics, 30000); // Update every 30s
       return () => clearInterval(interval);
     }
+
+    return undefined;
   }, [realTimeMonitoring]);
 
   if (isLoading) {

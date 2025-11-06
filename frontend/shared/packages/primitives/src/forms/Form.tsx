@@ -28,7 +28,7 @@
  */
 
 import * as React from "react";
-const { createContext, useContext, forwardRef, useId } = React;
+const { createContext, useContext, forwardRef } = React;
 
 import * as LabelPrimitive from "@radix-ui/react-label";
 import { Slot } from "@radix-ui/react-slot";
@@ -90,7 +90,7 @@ const inputVariants = cva("", {
 
 // Form Context
 interface FormContextValue {
-  form: UseFormReturn<unknown>;
+  form: UseFormReturn<FieldValues>;
 }
 
 const FormContext = createContext<FormContextValue | null>(null);
@@ -158,7 +158,7 @@ export function Form<TFieldValues extends FieldValues = FieldValues>({
   const Comp = asChild ? Slot : "form";
 
   return (
-    <FormContext.Provider value={{ form }}>
+    <FormContext.Provider value={{ form: form as UseFormReturn<FieldValues> }}>
       <Comp
         className={clsx(formVariants({ layout, size }), className)}
         onSubmit={form.handleSubmit(onSubmit)}
@@ -317,7 +317,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     ref,
   ) => {
     const Comp = asChild ? Slot : "input";
-    const inputId = useId("input");
+    const inputId = useUniqueId("input");
 
     // Automatically set aria-invalid based on state
     const invalid = ariaInvalid ?? state === "error";
@@ -440,7 +440,7 @@ export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputE
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ className, label, description, indeterminate, id, ...props }, ref) => {
-    const generatedId = useId();
+    const generatedId = useUniqueId();
     const checkboxId = id || `checkbox-${generatedId}`;
 
     return (
@@ -470,7 +470,7 @@ export interface RadioProps extends Omit<React.InputHTMLAttributes<HTMLInputElem
 
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(
   ({ className, label, description, id, ...props }, ref) => {
-    const generatedId = useId();
+    const generatedId = useUniqueId();
     const radioId = id || `radio-${generatedId}`;
 
     return (
@@ -589,6 +589,11 @@ export const validationPatterns = {
     message: "Please enter a valid IP address",
   },
 };
+
+function useUniqueId(prefix = "id"): string {
+  const [generatedId] = React.useState(() => `${prefix}-${Math.random().toString(36).slice(2, 11)}`);
+  return generatedId;
+}
 
 // Export all components
 FormItem.displayName = "FormItem";

@@ -4,7 +4,8 @@
 
 "use client";
 
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component } from "react";
+import type { ErrorInfo, ReactNode } from "react";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -13,7 +14,7 @@ interface ErrorBoundaryState {
   errorId: string;
 }
 
-interface ErrorBoundaryProps {
+export interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo, errorId: string) => void;
@@ -74,7 +75,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
 );
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  private retryTimeoutId: NodeJS.Timeout | null = null;
+  private retryTimeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(props: ErrorBoundaryProps) {
     super(props);
@@ -98,12 +99,12 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const { onError } = this.props;
     const { errorId } = this.state;
 
     // Log error to console in development
-    if (process.env.NODE_ENV === "development") {
+    if (typeof process !== "undefined" && process.env?.NODE_ENV === "development") {
       console.group(`🚨 Component Error (${errorId})`);
       console.error("Error:", error);
       console.error("Error Info:", errorInfo);
@@ -123,7 +124,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }
 
     // Report to error tracking service in production
-    if (process.env.NODE_ENV === "production") {
+    if (typeof process !== "undefined" && process.env?.NODE_ENV === "production") {
       this.reportError(error, errorInfo, errorId);
     }
   }
@@ -170,13 +171,13 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     }, 100);
   };
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     if (this.retryTimeoutId) {
       clearTimeout(this.retryTimeoutId);
     }
   }
 
-  render() {
+  override render() {
     const { children, fallback, isolate } = this.props;
     const { hasError, error, errorId } = this.state;
 
@@ -205,8 +206,9 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     const { error } = this.state;
     if (error?.stack) {
       const match = error.stack.match(/at\s+([A-Z][A-Za-z0-9]*)/);
-      if (match) {
-        return match[1];
+      const matchedName = match?.[1];
+      if (matchedName) {
+        return matchedName;
       }
     }
     return "Component";
@@ -237,7 +239,7 @@ export function useErrorHandler() {
     console.error(`Manual error report (${errorId}):`, error);
 
     // Report to error service in production
-    if (process.env.NODE_ENV === "production") {
+    if (typeof process !== 'undefined' && process.env?.NODE_ENV === "production") {
       fetch("/api/errors", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

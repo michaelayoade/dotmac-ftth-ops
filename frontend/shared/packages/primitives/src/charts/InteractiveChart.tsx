@@ -214,8 +214,11 @@ export const RevenueChart: React.FC<RevenueChartProps> = memo(
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
     // Memoized event handlers for performance
-    const handleMouseEnter = useCallback((_, index: number) => {
-      setActiveIndex(index);
+    const handleMouseEnter = useCallback((...args: unknown[]) => {
+      const index = typeof args[1] === "number" ? args[1] : null;
+      if (index !== null) {
+        setActiveIndex(index);
+      }
     }, []);
 
     const handleMouseLeave = useCallback(() => {
@@ -515,8 +518,11 @@ export const ServiceStatusChart: React.FC<ServiceStatusChartProps> = ({
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
   // Memoized event handlers
-  const handleMouseEnter = useCallback((_, index: number) => {
-    setActiveIndex(index);
+  const handleMouseEnter = useCallback((...args: unknown[]) => {
+    const index = typeof args[1] === "number" ? args[1] : null;
+    if (index !== null) {
+      setActiveIndex(index);
+    }
   }, []);
 
   const handleMouseLeave = useCallback(() => {

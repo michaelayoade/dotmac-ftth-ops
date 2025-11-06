@@ -239,7 +239,7 @@ export function AsyncState<T>({
   return (
     <LoadingState
       loading={loading}
-      error={error}
+      error={error ?? null}
       empty={isEmptyData}
       loadingComponent={loadingComponent}
       errorComponent={errorComponent}

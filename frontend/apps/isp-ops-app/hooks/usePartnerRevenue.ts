@@ -24,7 +24,7 @@ import {
  * @returns Revenue metrics with loading and error states
  */
 export function useRevenueMetrics(filters: RevenueMetricsFilters = {}) {
-  return useQuery<PartnerRevenueMetrics, Error>({
+  return useQuery<PartnerRevenueMetrics, Error, PartnerRevenueMetrics, any>({
     queryKey: ["partner-revenue-metrics", filters],
     queryFn: () => partnerRevenueService.getRevenueMetrics(filters),
     staleTime: 60000, // 1 minute
@@ -43,7 +43,7 @@ export function useRevenueMetrics(filters: RevenueMetricsFilters = {}) {
  * @returns Commission events list with loading and error states
  */
 export function useCommissionEvents(filters: CommissionFilters = {}) {
-  return useQuery<PartnerCommissionEvent[], Error>({
+  return useQuery<PartnerCommissionEvent[], Error, PartnerCommissionEvent[], any>({
     queryKey: ["partner-commissions", filters],
     queryFn: () => partnerRevenueService.listCommissionEvents(filters),
     staleTime: 30000, // 30 seconds
@@ -58,7 +58,7 @@ export function useCommissionEvents(filters: CommissionFilters = {}) {
  * @returns Commission event details with loading and error states
  */
 export function useCommissionEvent(commissionId: string | null) {
-  return useQuery<PartnerCommissionEvent, Error>({
+  return useQuery<PartnerCommissionEvent, Error, PartnerCommissionEvent, any>({
     queryKey: ["partner-commission", commissionId],
     queryFn: () => partnerRevenueService.getCommissionEvent(commissionId!),
     enabled: !!commissionId,
@@ -78,7 +78,7 @@ export function useCommissionEvent(commissionId: string | null) {
  * @returns Payouts list with loading and error states
  */
 export function usePayouts(filters: PayoutFilters = {}) {
-  return useQuery<PartnerPayout[], Error>({
+  return useQuery<PartnerPayout[], Error, PartnerPayout[], any>({
     queryKey: ["partner-payouts", filters],
     queryFn: () => partnerRevenueService.listPayouts(filters),
     staleTime: 30000, // 30 seconds
@@ -93,7 +93,7 @@ export function usePayouts(filters: PayoutFilters = {}) {
  * @returns Payout details with loading and error states
  */
 export function usePayout(payoutId: string | null) {
-  return useQuery<PartnerPayout, Error>({
+  return useQuery<PartnerPayout, Error, PartnerPayout, any>({
     queryKey: ["partner-payout", payoutId],
     queryFn: () => partnerRevenueService.getPayout(payoutId!),
     enabled: !!payoutId,

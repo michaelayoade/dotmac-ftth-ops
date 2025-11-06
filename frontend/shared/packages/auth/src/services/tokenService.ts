@@ -5,6 +5,7 @@
  */
 
 import jwt from "jsonwebtoken";
+import type { SignOptions } from "jsonwebtoken";
 import type { User, AuthTokens, PortalType } from "../types";
 import { getAuthSecurity } from "../config/authSettings";
 
@@ -53,6 +54,13 @@ export class TokenService {
       permissions: user.permissions,
     };
 
+    const accessTokenOptions: SignOptions = {
+      expiresIn: config.accessTokenExpiry,
+      issuer: config.jwtIssuer,
+      audience: config.jwtAudience,
+      subject: user.id,
+    };
+
     const accessToken = jwt.sign(
       {
         ...payload,
@@ -60,13 +68,15 @@ export class TokenService {
         ctx: securityContext,
       },
       config.jwtSecret,
-      {
-        expiresIn: config.accessTokenExpiry,
-        issuer: config.jwtIssuer,
-        audience: config.jwtAudience,
-        subject: user.id,
-      },
+      accessTokenOptions,
     );
+
+    const refreshTokenOptions: SignOptions = {
+      expiresIn: config.refreshTokenExpiry,
+      issuer: config.jwtIssuer,
+      audience: config.jwtAudience,
+      subject: user.id,
+    };
 
     const refreshToken = jwt.sign(
       {
@@ -76,17 +86,15 @@ export class TokenService {
         type: "refresh",
       },
       config.jwtRefreshSecret,
-      {
-        expiresIn: config.refreshTokenExpiry,
-        issuer: config.jwtIssuer,
-        audience: config.jwtAudience,
-        subject: user.id,
-      },
+      refreshTokenOptions,
     );
 
     // Calculate expiration timestamp
-    const decoded = jwt.decode(accessToken) as jwt.JwtPayload;
-    const expiresAt = (decoded.exp || 0) * 1000;
+    const decodedPayload = jwt.decode(accessToken);
+    const expiresAt =
+      decodedPayload && typeof decodedPayload !== "string" && decodedPayload.exp
+        ? decodedPayload.exp * 1000
+        : 0;
 
     return {
       accessToken,

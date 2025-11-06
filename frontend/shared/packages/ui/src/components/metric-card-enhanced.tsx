@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { LucideIcon, ArrowUpRight, AlertCircle, TrendingUp } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { ArrowUpRight, AlertCircle, TrendingUp } from "lucide-react";
 import { cn } from "../lib/utils";
 
 interface MetricCardEnhancedProps {

@@ -42,10 +42,6 @@ export * from "./skeletons";
 export * from "./performance";
 // Note: createValidationRules and validationPatterns exported from forms
 
-// Enhanced ISP-specific components (security-hardened & WCAG 2.1 AA compliant)
-export * from "./charts/InteractiveChart";
-export * from "./indicators/StatusIndicators";
-
 // Export ErrorBoundary explicitly to avoid conflicts with error/ErrorBoundary
 export { ErrorBoundary as ComponentErrorBoundary } from "./components/ErrorBoundary";
 export * from "./utils/security";

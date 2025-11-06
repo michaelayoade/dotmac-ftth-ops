@@ -36,7 +36,7 @@ from dotmac.platform.monitoring.error_middleware import (
 )
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
 from dotmac.platform.platform_app import platform_app
-from dotmac.platform.redis_client import init_redis, shutdown_redis
+from dotmac.platform.redis_client import init_redis, shutdown_redis, redis_manager
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
@@ -425,6 +425,19 @@ def create_application() -> FastAPI:
     async def ready_check() -> dict[str, Any]:
         """Readiness check endpoint (deprecated, use /health/ready)."""
         return await readiness_check()
+
+    @app.get("/health/redis")
+    async def redis_health() -> dict[str, Any]:
+        """Report Redis connection status."""
+        try:
+            status = await redis_manager.health_check()
+        except RuntimeError as exc:
+            status = {
+                "status": "unhealthy",
+                "message": str(exc),
+            }
+        status["timestamp"] = datetime.now(UTC).isoformat()
+        return status
 
     # API info endpoint (public - shows available endpoints)
     @app.get("/api")

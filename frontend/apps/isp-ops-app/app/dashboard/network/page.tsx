@@ -14,16 +14,8 @@ import { useRBAC } from "@/contexts/RBACContext";
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
 import { platformConfig } from "@/lib/config";
 import { NetworkTopologyMap } from "@dotmac/primitives";
-
-// Type definition (matches @dotmac/primitives NetworkNode)
-interface NetworkNode {
-  id: string;
-  type: "router" | "switch" | "server" | "tower" | "fiber_node";
-  name: string;
-  coordinates: { lat: number; lng: number };
-  status: "online" | "offline" | "degraded" | "maintenance";
-  metadata?: Record<string, any>;
-}
+import type { NetworkTopologyNode as NetworkNode } from "@dotmac/primitives";
+import { logger } from "@/lib/logger";
 
 export default function NetworkOverviewPage() {
   const { hasPermission } = useRBAC();
@@ -179,7 +171,12 @@ export default function NetworkOverviewPage() {
               height={360}
               variant="admin"
               showLegend
-              onNodeSelect={(node: any) => console.log("Selected node:", node)}
+              onNodeSelect={(node: any) =>
+                logger.info("network-topology.node-selected", {
+                  nodeId: node.id,
+                  nodeType: node.type,
+                })
+              }
             />
           ) : (
             <p className="text-sm text-muted-foreground">

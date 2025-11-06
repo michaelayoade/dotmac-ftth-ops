@@ -116,7 +116,7 @@ export default function PartnerOnboardingWorkflow() {
           `Workflow ID: ${result.workflow_id}`,
       );
     } catch (error: any) {
-      alert(`Failed to complete onboarding: ${error.message}`);
+      alert(`Failed to complete onboarding: ${(error as Error).message}`);
     }
   };
 
@@ -536,7 +536,7 @@ export default function PartnerOnboardingWorkflow() {
       {completeOnboarding.isError && (
         <div className="bg-destructive/10 border border-destructive text-destructive p-4 rounded-lg">
           <p className="font-semibold">Error completing onboarding</p>
-          <p className="text-sm mt-1">{completeOnboarding.error?.message}</p>
+          <p className="text-sm mt-1">{(completeOnboarding.error as Error)?.message}</p>
         </div>
       )}
     </div>

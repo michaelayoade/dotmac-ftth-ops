@@ -30,6 +30,10 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/lib/api/client";
 import { useConfirmDialog } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 interface BillingSettings {
   company_info: {
@@ -204,7 +208,7 @@ export default function BillingSettingsPage() {
         setSettings(response.data as BillingSettings);
       }
     } catch (error) {
-      console.error("Failed to load billing settings:", error);
+      logger.error("Failed to load billing settings", toError(error));
       setMessage({ type: "error", text: "Failed to load settings" });
     } finally {
       setLoading(false);
@@ -228,7 +232,7 @@ export default function BillingSettingsPage() {
       setMessage({ type: "success", text: "Settings saved successfully!" });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error("Error saving settings:", error);
+      logger.error("Error saving billing settings", toError(error));
       setMessage({ type: "error", text: "Failed to save settings" });
     } finally {
       setSaving(false);
@@ -253,7 +257,7 @@ export default function BillingSettingsPage() {
       setMessage({ type: "success", text: "Settings reset to defaults!" });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
-      console.error("Error resetting settings:", error);
+      logger.error("Error resetting billing settings", toError(error));
       setMessage({ type: "error", text: "Failed to reset settings" });
     } finally {
       setSaving(false);

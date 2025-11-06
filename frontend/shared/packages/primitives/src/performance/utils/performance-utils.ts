@@ -28,7 +28,7 @@ export function measurePerformance<T>(
     duration: endTime - startTime,
     startTime,
     endTime,
-    metadata,
+    ...(metadata !== undefined ? { metadata } : {}),
   };
 
   // Log to console in development
@@ -56,7 +56,7 @@ export async function measureAsyncPerformance<T>(
     duration: endTime - startTime,
     startTime,
     endTime,
-    metadata,
+    ...(metadata !== undefined ? { metadata } : {}),
   };
 
   if (process.env.NODE_ENV === "development") {
@@ -322,13 +322,14 @@ export const networkUtils = {
     // Use performance observer to get detailed timing
     const observer = new PerformanceObserver((list) => {
       const entry = list.getEntries().find((e) => e.name === url);
-      if (entry) {
+      if (entry && "domainLookupEnd" in entry && "connectEnd" in entry) {
+        const resource = entry as PerformanceResourceTiming;
         console.log("[Network] Request timing:", {
-          dns: entry.domainLookupEnd - entry.domainLookupStart,
-          connect: entry.connectEnd - entry.connectStart,
-          request: entry.requestStart - entry.connectEnd,
-          response: entry.responseEnd - entry.requestStart,
-          total: entry.responseEnd - entry.startTime,
+          dns: resource.domainLookupEnd - resource.domainLookupStart,
+          connect: resource.connectEnd - resource.connectStart,
+          request: resource.requestStart - resource.connectEnd,
+          response: resource.responseEnd - resource.requestStart,
+          total: resource.responseEnd - resource.startTime,
         });
       }
     });

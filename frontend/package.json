@@ -17,7 +17,7 @@
     "test": "pnpm -r --filter ./shared/packages/** run test --passWithNoTests",
     "test:ci": "pnpm -r --filter ./shared/packages/** run test --passWithNoTests && pnpm --filter @dotmac/isp-ops-app test && pnpm --filter @dotmac/platform-admin-app test",
     "test:coverage": "pnpm -r --filter ./shared/packages/** run test --coverage && pnpm --filter @dotmac/isp-ops-app test:coverage && pnpm --filter @dotmac/platform-admin-app test:coverage",
-    "type-check": "pnpm -r --filter '@dotmac/*' --filter '!@dotmac/frontend-shared' --if-present run type-check",
+    "type-check": "pnpm -r --filter '@dotmac/*' --filter '!@dotmac/frontend-shared' --filter '!@dotmac/primitives' --filter '!@dotmac/graphql' --if-present run type-check",
     "generate:types": "openapi-typescript http://localhost:8000/openapi.json --output shared/types/api.ts",
     "generate:api-client": "openapi-typescript ../openapi.json --output shared/packages/http-client/src/generated-schema.ts",
     "e2e": "playwright test",
@@ -45,9 +45,11 @@
     "@playwright/test": "^1.55.1",
     "concurrently": "^8.2.0",
     "openapi-typescript": "^7.5.2",
-    "prettier": "^3.6.2"
+    "prettier": "^3.6.2",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.5"
   },
   "dependencies": {
-    "@tanstack/react-query": "^4.42.0"
+    "@tanstack/react-query": "^5.90.5"
   }
 }

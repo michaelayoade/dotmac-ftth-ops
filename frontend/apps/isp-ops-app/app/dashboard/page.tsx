@@ -18,7 +18,7 @@ import { useSystemHealth } from "@/hooks/useOperations";
 import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
-import { getCurrentUser, logout as logoutUser } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import { platformConfig } from "@/lib/config";
 import { logger } from "@/lib/logger";
 import { useFeatureFlag } from "@/lib/feature-flags";
@@ -148,14 +148,6 @@ export default function DashboardPage() {
     },
   ];
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-    } finally {
-      router.push("/login");
-    }
-  };
-
   if (initializing) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -180,12 +172,12 @@ export default function DashboardPage() {
                 <div className="font-medium text-foreground">{user?.email}</div>
                 <div>{user?.roles?.join(", ") || "Operator"}</div>
               </div>
-              <button
-                onClick={handleLogout}
-                className="px-4 py-2 text-sm bg-accent hover:bg-muted rounded-lg transition-colors"
+              <Link
+                href="/dashboard/settings/profile"
+                className="text-sm font-medium text-sky-400 hover:text-sky-300"
               >
-                Sign out
-              </button>
+                Manage account →
+              </Link>
             </div>
           </div>
 

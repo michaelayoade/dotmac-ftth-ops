@@ -8,9 +8,9 @@
 import type { ReactNode } from "react";
 
 // Core composition types
-export type ComponentRenderer<T = any> = (props: T) => ReactNode;
-export type ConditionalRenderer<T = any> = (props: T) => boolean;
-export type ComposableProps<T = any> = T & {
+export type ComponentRenderer<T = unknown> = (props: T) => ReactNode;
+export type ConditionalRenderer<T = unknown> = (props: T) => boolean;
+export type ComposableProps<T = unknown> = T & {
   children?: ReactNode;
   className?: string;
 };
@@ -50,12 +50,16 @@ export function createSlotRenderer<T extends Record<string, unknown>>(
   return (props: T) => (
     <>
       {Object.entries(slots).map(([key, renderer]) => {
-        const slotProps = props[key];
-        return slotProps && renderer ? (
+        const slotProps = props[key as keyof T];
+        if (slotProps === undefined || !renderer) {
+          return null;
+        }
+        const renderFn = renderer as ComponentRenderer<any>;
+        return (
           <div key={key} data-slot={key}>
-            {renderer(slotProps)}
+            {renderFn(slotProps)}
           </div>
-        ) : null;
+        );
       })}
     </>
   );
@@ -72,11 +76,14 @@ export interface StateCompositionConfig<T, S> {
 
 export function createStateComposer<T, S>(config: StateCompositionConfig<T, S>) {
   return (props: T) => {
-    const activeState = Object.entries(config.states).find(([_, condition]) => condition(props));
+    const stateKeys = Object.keys(config.states) as Array<keyof S>;
+    const activeKey = stateKeys.find((key) => {
+      const condition = config.states[key];
+      return condition ? condition(props) : false;
+    });
 
-    if (activeState) {
-      const [stateName] = activeState;
-      const renderer = config.renderers[stateName as keyof S];
+    if (activeKey) {
+      const renderer = config.renderers[activeKey];
       return renderer ? renderer(props) : null;
     }
 
@@ -99,9 +106,9 @@ export function withComposition<T>(
  */
 export const LayoutComposers = {
   stack:
-    <T,>(gap?: string) =>
-    (...renderers: ComponentRenderer<T>[]) =>
-    (props: T) => (
+    (gap?: string) =>
+    (...renderers: ComponentRenderer<any>[]) =>
+    (props: unknown) => (
       <div className={`flex flex-col ${gap ? `gap-${gap}` : "gap-4"}`}>
         {renderers.map((render, index) => (
           <div key={`item-${index}`}>{render(props)}</div>
@@ -110,9 +117,9 @@ export const LayoutComposers = {
     ),
 
   inline:
-    <T,>(gap?: string) =>
-    (...renderers: ComponentRenderer<T>[]) =>
-    (props: T) => (
+    (gap?: string) =>
+    (...renderers: ComponentRenderer<any>[]) =>
+    (props: unknown) => (
       <div className={`flex flex-row items-center ${gap ? `gap-${gap}` : "gap-2"}`}>
         {renderers.map((render, index) => (
           <div key={`item-${index}`}>{render(props)}</div>
@@ -121,9 +128,9 @@ export const LayoutComposers = {
     ),
 
   grid:
-    <T,>(cols: number = 2) =>
-    (...renderers: ComponentRenderer<T>[]) =>
-    (props: T) => (
+    (cols: number = 2) =>
+    (...renderers: ComponentRenderer<any>[]) =>
+    (props: unknown) => (
       <div className={`grid grid-cols-${cols} gap-4`}>
         {renderers.map((render, index) => (
           <div key={`item-${index}`}>{render(props)}</div>

@@ -22,6 +22,10 @@ import {
   type UsageRecordUpdate,
   type UsageStatistics,
 } from "@/lib/services/usage-billing-service";
+import { logger } from "@/lib/logger";
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
 // Re-export types for convenience
 export type {
@@ -62,7 +66,7 @@ export const usageKeys = {
  * @returns Usage records with loading and error states
  */
 export function useUsageRecords(filters: UsageRecordFilters = {}) {
-  return useQuery<UsageRecord[], Error>({
+  return useQuery<UsageRecord[], Error, UsageRecord[], any>({
     queryKey: usageKeys.record(filters),
     queryFn: () => usageBillingService.listUsageRecords(filters),
     staleTime: 30000, // 30 seconds
@@ -77,7 +81,7 @@ export function useUsageRecords(filters: UsageRecordFilters = {}) {
  * @returns Usage record details with loading and error states
  */
 export function useUsageRecord(recordId: string | null) {
-  return useQuery<UsageRecord, Error>({
+  return useQuery<UsageRecord, Error, UsageRecord, any>({
     queryKey: usageKeys.recordDetail(recordId!),
     queryFn: () => usageBillingService.getUsageRecord(recordId!),
     enabled: !!recordId,
@@ -300,7 +304,7 @@ export function useExcludeUsageRecordsFromBilling(options?: {
  * @returns Usage aggregates with loading and error states
  */
 export function useUsageAggregates(filters: UsageAggregateFilters = {}) {
-  return useQuery<UsageAggregate[], Error>({
+  return useQuery<UsageAggregate[], Error, UsageAggregate[], any>({
     queryKey: usageKeys.aggregate(filters),
     queryFn: () => usageBillingService.listUsageAggregates(filters),
     staleTime: 60000, // 1 minute
@@ -320,7 +324,7 @@ export function useUsageAggregates(filters: UsageAggregateFilters = {}) {
  * @returns Usage statistics with loading and error states
  */
 export function useUsageStatistics(periodStart?: string, periodEnd?: string) {
-  return useQuery<UsageStatistics, Error>({
+  return useQuery<UsageStatistics, Error, UsageStatistics, any>({
     queryKey: usageKeys.statistics(periodStart, periodEnd),
     queryFn: () => usageBillingService.getUsageStatistics(periodStart, periodEnd),
     staleTime: 60000, // 1 minute
@@ -335,7 +339,7 @@ export function useUsageStatistics(periodStart?: string, periodEnd?: string) {
  * @returns Chart data with loading and error states
  */
 export function useUsageChartData(filters: UsageChartFilters) {
-  return useQuery<UsageChartData[], Error>({
+  return useQuery<UsageChartData[], Error, UsageChartData[], any>({
     queryKey: usageKeys.chartData(filters),
     queryFn: () => usageBillingService.getUsageChartData(filters),
     staleTime: 60000, // 1 minute
@@ -362,7 +366,11 @@ export function useUsageOperations() {
         await markAsBilled.mutateAsync({ recordIds, invoiceId });
         return true;
       } catch (error) {
-        console.error("Failed to mark usage records as billed:", error);
+        logger.error(
+          "Failed to mark usage records as billed",
+          toError(error),
+          { invoiceId, recordCount: recordIds.length },
+        );
         return false;
       }
     },
@@ -371,7 +379,11 @@ export function useUsageOperations() {
         await excludeFromBilling.mutateAsync(recordIds);
         return true;
       } catch (error) {
-        console.error("Failed to exclude usage records from billing:", error);
+        logger.error(
+          "Failed to exclude usage records from billing",
+          toError(error),
+          { recordCount: recordIds.length },
+        );
         return false;
       }
     },

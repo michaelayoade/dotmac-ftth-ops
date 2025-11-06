@@ -10,11 +10,14 @@
     "skipLibCheck": true,
     "allowSyntheticDefaultImports": true,
     // Temporarily disable strict checking for experimental package
-    "strict": false,
-    "exactOptionalPropertyTypes": false,
-    "noUncheckedIndexedAccess": false,
-    "noImplicitAny": false
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@dotmac/primitives": ["src/index.ts"],
+      "@dotmac/primitives/*": ["src/*"]
+    },
+    "types": ["react", "react-dom", "node"]
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*"]
+  "exclude": ["node_modules", "dist", "**/*.test.*", "**/*.spec.*", "**/*.stories.*"]
 }

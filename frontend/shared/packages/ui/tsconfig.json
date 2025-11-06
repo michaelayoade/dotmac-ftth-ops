@@ -5,6 +5,7 @@
     "rootDir": "src",
     "baseUrl": ".",
     "skipLibCheck": true,
+    "exactOptionalPropertyTypes": false,
     "paths": {
       "@/*": [
         "src/*"

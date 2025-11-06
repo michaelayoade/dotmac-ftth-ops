@@ -24,6 +24,7 @@ import { Badge } from "@dotmac/ui";
 import { formatCurrency } from "@/lib/utils/currency";
 import { useRouter } from "next/navigation";
 import { useConfirmDialog } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
 
 interface InvoiceListProps {
   tenantId: string;
@@ -73,8 +74,8 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         throw new Error("Failed to fetch invoices");
       }
     } catch (err) {
-      console.error("Failed to fetch invoices:", err);
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch invoices";
+      logger.error("Failed to fetch invoices", err instanceof Error ? err : new Error(String(err)));
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -97,7 +98,10 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         alert(`Successfully sent ${invoiceIds.length} invoice(s)`);
         await fetchInvoices();
       } catch (err) {
-        console.error("Failed to send invoices:", err);
+        logger.error(
+          "Failed to send invoices",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         alert("Failed to send invoices. Please try again.");
       } finally {
         setBulkLoading(false);
@@ -127,7 +131,10 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
         alert(`Successfully voided ${invoiceIds.length} invoice(s)`);
         await fetchInvoices();
       } catch (err) {
-        console.error("Failed to void invoices:", err);
+        logger.error(
+          "Failed to void invoices",
+          err instanceof Error ? err : new Error(String(err)),
+        );
         alert("Failed to void invoices. Please try again.");
       } finally {
         setBulkLoading(false);
@@ -155,7 +162,10 @@ export default function InvoiceList({ tenantId, onInvoiceSelect }: InvoiceListPr
       link.click();
       link.remove();
     } catch (err) {
-      console.error("Failed to download invoices:", err);
+      logger.error(
+        "Failed to download invoices",
+        err instanceof Error ? err : new Error(String(err)),
+      );
       alert("Failed to download invoices. Please try again.");
     } finally {
       setBulkLoading(false);

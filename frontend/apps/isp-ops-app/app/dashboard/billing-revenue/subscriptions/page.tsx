@@ -649,7 +649,7 @@ export default function SubscriptionsPage() {
                 className="flex h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
               >
                 <option value="">Select customer</option>
-                {customerList.map((customer) => (
+                {customerList.map((customer: any) => (
                   <option key={customer.id} value={customer.id}>
                     {customer.displayName || `${customer.firstName} ${customer.lastName}`} (
                     {customer.email})

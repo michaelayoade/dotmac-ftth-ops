@@ -29,7 +29,7 @@ export function useReconciliations(params?: {
   page?: number;
   page_size?: number;
 }) {
-  return useQuery<ReconciliationListResponse, Error>({
+  return useQuery<ReconciliationListResponse, Error, ReconciliationListResponse, any>({
     queryKey: ["reconciliations", params],
     queryFn: () => reconciliationService.listReconciliations(params),
     staleTime: 30000, // 30 seconds
@@ -37,7 +37,7 @@ export function useReconciliations(params?: {
 }
 
 export function useReconciliation(reconciliationId: number | null) {
-  return useQuery<ReconciliationResponse, Error>({
+  return useQuery<ReconciliationResponse, Error, ReconciliationResponse, any>({
     queryKey: ["reconciliation", reconciliationId],
     queryFn: () => reconciliationService.getReconciliation(reconciliationId!),
     enabled: !!reconciliationId,
@@ -45,7 +45,7 @@ export function useReconciliation(reconciliationId: number | null) {
 }
 
 export function useReconciliationSummary(params?: { bank_account_id?: number; days?: number }) {
-  return useQuery<ReconciliationSummary, Error>({
+  return useQuery<ReconciliationSummary, Error, ReconciliationSummary, any>({
     queryKey: ["reconciliation-summary", params],
     queryFn: () => reconciliationService.getReconciliationSummary(params),
     staleTime: 60000, // 1 minute

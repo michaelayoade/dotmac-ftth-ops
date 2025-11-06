@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,7 +14,6 @@ import {
 } from "../../../../shared/utils/operatorAuth";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const { branding } = useBranding();
@@ -41,14 +39,11 @@ export default function LoginPage() {
           username: data.email, // Backend expects username field
           password: data.password,
         });
-        console.log("[LOGIN] Response received:", {
+        logger.debug("Login response received", {
           status: response.status,
-          data: response.data,
         });
-        logger.debug("Login response received", { status: response.status });
 
         if (response.status === 200) {
-          console.log("[LOGIN] Login successful, redirecting to dashboard...");
           logger.info("Login successful, cookies should be set by server");
           const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
 
@@ -81,7 +76,7 @@ export default function LoginPage() {
           // Use window.location for hard redirect to ensure cookies are picked up
           window.location.href = "/dashboard";
         } else {
-          console.log("[LOGIN] Unexpected status:", response.status);
+          logger.warn("Login returned unexpected status", { status: response.status });
           setError(`Login failed with status ${response.status}`);
         }
       } catch (err: any) {
@@ -90,8 +85,7 @@ export default function LoginPage() {
         if (defaultHeaders?.Authorization) {
           delete defaultHeaders.Authorization;
         }
-        console.error("[LOGIN] Error caught:", err);
-        console.error("[LOGIN] Error response:", err?.response);
+        logger.error("Login request threw an error", err instanceof Error ? err : new Error(String(err)));
 
         // Extract error message from various possible locations
         let errorMessage = "Login failed";
@@ -105,27 +99,29 @@ export default function LoginPage() {
           errorMessage = err.message;
         }
 
-        console.error("[LOGIN] Error message:", errorMessage);
-        logger.error("Login error", err instanceof Error ? err : new Error(String(err)));
+        logger.error("Login failed", {
+          message: errorMessage,
+          status: err?.response?.status,
+        });
         setError(errorMessage);
       } finally {
         setLoading(false);
       }
     },
-    [router],
-  ); // Only depends on router which is stable
+    [],
+  ); // No external dependencies
 
   // Expose login function for E2E tests
   React.useEffect(() => {
     if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
       (window as any).__e2e_login = async (username: string, password: string) => {
-        console.log("[E2E] __e2e_login called with username:", username);
+        logger.debug("__e2e_login invoked", { username });
         setValue("email", username, { shouldValidate: true });
         setValue("password", password, { shouldValidate: true });
         // Call handleSubmit and pass onSubmit directly each time
         await handleSubmit(onSubmit)();
       };
-      console.log("[E2E] __e2e_login function registered on window");
+      logger.debug("__e2e_login function registered on window");
     }
   }, [setValue, handleSubmit, onSubmit]); // Added onSubmit to dependencies
 
@@ -250,21 +246,21 @@ export default function LoginPage() {
               data-testid="test-login-admin"
               style={{ position: "absolute", left: "-9999px", opacity: 0 }}
               onClick={async () => {
-                console.log("[E2E] Test login button clicked");
+                logger.debug("[E2E] Test login button clicked");
                 setValue("email", "admin", { shouldValidate: true });
                 setValue("password", "admin123", { shouldValidate: true });
-                console.log("[E2E] Form values set, submitting...");
-                console.log("[E2E] Form errors:", errors);
+                logger.debug("[E2E] Form values set, submitting...");
+                logger.debug("[E2E] Form errors", { errors });
                 const result = await handleSubmit(
                   (data) => {
-                    console.log("[E2E] Form submitted with data:", data);
+                    logger.debug("[E2E] Form submitted with data", { data });
                     return onSubmit(data);
                   },
                   (validationErrors) => {
-                    console.error("[E2E] Form validation failed:", validationErrors);
+                    logger.warn("[E2E] Form validation failed", { validationErrors });
                   },
                 )();
-                console.log("[E2E] Submit result:", result);
+                logger.debug("[E2E] Submit result", { result });
               }}
             >
               Test Login Admin

@@ -12,6 +12,7 @@
  * - Type-safe with auto-generated types
  */
 
+import { useEffect } from "react";
 import { useToast } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
 import { handleGraphQLError } from "@dotmac/graphql";
@@ -60,7 +61,7 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     pollInterval = 30000, // 30 seconds default
   } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerListQuery(
+  const queryResult = useCustomerListQuery(
     {
       limit,
       offset,
@@ -72,23 +73,29 @@ export function useCustomerListGraphQL(options: UseCustomerListOptions = {}) {
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerListQuery",
-          context: {
-            hook: "useCustomerListGraphQL",
-            limit,
-            offset,
-            status,
-            includeActivities,
-            includeNotes,
-            hasSearch: Boolean(search),
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = queryResult;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerListQuery",
+      context: {
+        hook: "useCustomerListGraphQL",
+        limit,
+        offset,
+        status,
+        includeActivities,
+        includeNotes,
+        hasSearch: Boolean(search),
+      },
+    });
+  }, [error, toast, limit, offset, status, includeActivities, includeNotes, search]);
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -119,22 +126,28 @@ export function useCustomerDetailGraphQL(options: UseCustomerDetailOptions) {
   const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerDetailQuery(
+  const detailQuery = useCustomerDetailQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerDetailQuery",
-          context: {
-            hook: "useCustomerDetailGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = detailQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerDetailQuery",
+      context: {
+        hook: "useCustomerDetailGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const customer = data?.customer ?? null;
 
@@ -161,22 +174,28 @@ export function useCustomerMetricsGraphQL(options: UseCustomerMetricsOptions = {
   const { toast } = useToast();
   const { enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, isLoading, error, refetch } = useCustomerMetricsQuery(
+  const metricsQuery = useCustomerMetricsQuery(
     undefined,
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerMetricsQuery",
-          context: {
-            hook: "useCustomerMetricsGraphQL",
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = metricsQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerMetricsQuery",
+      context: {
+        hook: "useCustomerMetricsGraphQL",
+      },
+    });
+  }, [error, toast]);
 
   const metrics = data?.customerMetrics;
 
@@ -208,22 +227,28 @@ export function useCustomerActivitiesGraphQL(options: UseCustomerActivitiesOptio
   const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerActivitiesQuery(
+  const activitiesQuery = useCustomerActivitiesQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerActivitiesQuery",
-          context: {
-            hook: "useCustomerActivitiesGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = activitiesQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerActivitiesQuery",
+      context: {
+        hook: "useCustomerActivitiesGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const customer = data?.customer ?? null;
   const activities = customer?.activities ?? [];
@@ -250,22 +275,28 @@ export function useCustomerNotesGraphQL(options: UseCustomerNotesOptions) {
   const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerNotesQuery(
+  const notesQuery = useCustomerNotesQuery(
     { id: customerId },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerNotesQuery",
-          context: {
-            hook: "useCustomerNotesGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = notesQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerNotesQuery",
+      context: {
+        hook: "useCustomerNotesGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const customer = data?.customer ?? null;
   const notes = customer?.notes ?? [];
@@ -296,7 +327,7 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
   const { toast } = useToast();
   const { limit = 20, offset = 0, status, search, enabled = true, pollInterval = 30000 } = options;
 
-  const { data, isLoading, isFetching, error, refetch } = useCustomerDashboardQuery(
+  const dashboardQuery = useCustomerDashboardQuery(
     {
       limit,
       offset,
@@ -306,21 +337,27 @@ export function useCustomerDashboardGraphQL(options: UseCustomerDashboardOptions
     {
       enabled,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerDashboardQuery",
-          context: {
-            hook: "useCustomerDashboardGraphQL",
-            limit,
-            offset,
-            status,
-            hasSearch: Boolean(search),
-          },
-        }),
     },
   );
+  const { data, isLoading, isFetching, error, refetch } = dashboardQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerDashboardQuery",
+      context: {
+        hook: "useCustomerDashboardGraphQL",
+        limit,
+        offset,
+        status,
+        hasSearch: Boolean(search),
+      },
+    });
+  }, [error, toast, limit, offset, status, search]);
 
   const customers = data?.customers?.customers ?? [];
   const totalCount = data?.customers?.totalCount ?? 0;
@@ -363,22 +400,28 @@ export function useCustomerSubscriptionsGraphQL(options: UseCustomerSubscription
   const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerSubscriptionsQuery(
+  const subscriptionsQuery = useCustomerSubscriptionsQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerSubscriptionsQuery",
-          context: {
-            hook: "useCustomerSubscriptionsGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = subscriptionsQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerSubscriptionsQuery",
+      context: {
+        hook: "useCustomerSubscriptionsGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const subscriptions = data?.customerSubscriptions ?? [];
 
@@ -413,23 +456,29 @@ export function useCustomerNetworkInfoGraphQL(options: UseCustomerNetworkInfoOpt
   const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 30000 } = options; // 30 seconds default
 
-  const { data, isLoading, error, refetch } = useCustomerNetworkInfoQuery(
+  const networkInfoQuery = useCustomerNetworkInfoQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerNetworkInfoQuery",
-          context: {
-            hook: "useCustomerNetworkInfoGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = networkInfoQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerNetworkInfoQuery",
+      context: {
+        hook: "useCustomerNetworkInfoGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const networkInfo = data?.customerNetworkInfo ?? null;
 
@@ -455,23 +504,29 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
   const { toast } = useToast();
   const { customerId, enabled = true, pollInterval = 60000 } = options; // 60 seconds default
 
-  const { data, isLoading, error, refetch } = useCustomerDevicesQuery(
+  const devicesQuery = useCustomerDevicesQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerDevicesQuery",
-          context: {
-            hook: "useCustomerDevicesGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = devicesQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerDevicesQuery",
+      context: {
+        hook: "useCustomerDevicesGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const deviceData = data?.customerDevices ?? null;
 
@@ -504,14 +559,14 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
   const { toast } = useToast();
   const {
     customerId,
-   limit = 50,
-   offset = 0,
-   status,
-   enabled = true,
-   pollInterval = 60000,
+    limit = 50,
+    offset = 0,
+    status,
+    enabled = true,
+    pollInterval = 60000,
   } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerTicketsQuery(
+  const ticketsQuery = useCustomerTicketsQuery(
     {
       customerId,
       limit,
@@ -520,21 +575,27 @@ export function useCustomerTicketsGraphQL(options: UseCustomerTicketsOptions) {
     {
       enabled: enabled && !!customerId,
       refetchInterval: pollInterval,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerTicketsQuery",
-          context: {
-            hook: "useCustomerTicketsGraphQL",
-            customerId,
-            status,
-            limit,
-            offset,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = ticketsQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerTicketsQuery",
+      context: {
+        hook: "useCustomerTicketsGraphQL",
+        customerId,
+        status,
+        limit,
+        offset,
+      },
+    });
+  }, [error, toast, customerId, status, limit, offset]);
 
   // customerTickets returns JSON scalar
   const ticketData = (data?.customerTickets as any) ?? {};
@@ -568,7 +629,7 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
   const { toast } = useToast();
   const { customerId, limit = 50, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomerBillingQuery(
+  const billingQuery = useCustomerBillingQuery(
     {
       customerId,
       includeInvoices: true,
@@ -576,19 +637,25 @@ export function useCustomerBillingGraphQL(options: UseCustomerBillingOptions) {
     },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "CustomerBillingQuery",
-          context: {
-            hook: "useCustomerBillingGraphQL",
-            customerId,
-            limit,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = billingQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "CustomerBillingQuery",
+      context: {
+        hook: "useCustomerBillingGraphQL",
+        customerId,
+        limit,
+      },
+    });
+  }, [error, toast, customerId, limit]);
 
   // customerBilling returns JSON scalar
   const billingData = (data?.customerBilling as any) ?? {};
@@ -621,22 +688,28 @@ export function useCustomer360ViewGraphQL(options: UseCustomer360ViewOptions) {
   const { toast } = useToast();
   const { customerId, enabled = true } = options;
 
-  const { data, isLoading, error, refetch } = useCustomer360ViewQuery(
+  const viewQuery = useCustomer360ViewQuery(
     { customerId },
     {
       enabled: enabled && !!customerId,
-      onError: (err) =>
-        handleGraphQLError(err, {
-          toast,
-          logger,
-          operationName: "Customer360ViewQuery",
-          context: {
-            hook: "useCustomer360ViewGraphQL",
-            customerId,
-          },
-        }),
     },
   );
+  const { data, isLoading, error, refetch } = viewQuery;
+
+  useEffect(() => {
+    if (!error) {
+      return;
+    }
+    handleGraphQLError(error, {
+      toast,
+      logger,
+      operationName: "Customer360ViewQuery",
+      context: {
+        hook: "useCustomer360ViewGraphQL",
+        customerId,
+      },
+    });
+  }, [error, toast, customerId]);
 
   const subscriptions = data?.customerSubscriptions ?? [];
   const activeSubscriptions = subscriptions.filter(

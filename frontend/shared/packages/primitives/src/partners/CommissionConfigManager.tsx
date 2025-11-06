@@ -20,7 +20,15 @@ import {
 import { Card } from "../layout/Card";
 import { Button } from "../forms/Button";
 import { Input } from "../forms/Input";
-import { Modal } from "../layout/Modal";
+import {
+  Modal,
+  ModalBackdrop,
+  ModalContent,
+  ModalHeader,
+  ModalTitle,
+  ModalBody,
+  ModalFooter,
+} from "../layout/Modal";
 import { UniversalTable } from "../data-display/Table";
 import { StatusIndicators } from "../indicators/StatusIndicators";
 
@@ -49,6 +57,11 @@ interface CommissionConfigManagerProps {
   apiEndpoint?: string;
   onConfigChange?: (config: CommissionConfig) => void;
 }
+
+const extractDatePart = (isoString: string): string => {
+  const [datePart] = isoString.split("T");
+  return datePart ?? isoString;
+};
 
 export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = ({
   apiEndpoint = "/api/v1/commission-config",
@@ -79,29 +92,31 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
 
   const handleCreate = () => {
     setEditingConfig(null);
-    setFormData({
+    const initialData: Partial<CommissionConfig> = {
       name: "",
       description: "",
       is_active: true,
       is_default: false,
       commission_structure: "percentage",
       rate_config: { percentage: "10.0" },
-      effective_from: new Date().toISOString().split("T")[0],
+      effective_from: extractDatePart(new Date().toISOString()),
       calculate_on: "revenue",
       payment_frequency: "monthly",
       minimum_payout: 50.0,
       settings: {},
-    });
+    };
+    setFormData(initialData);
     setShowModal(true);
   };
 
   const handleEdit = (config: CommissionConfig) => {
     setEditingConfig(config);
-    setFormData({
+    const editableData: Partial<CommissionConfig> = {
       ...config,
-      effective_from: config.effective_from.split("T")[0],
-      effective_until: config.effective_until?.split("T")[0] || "",
-    });
+      effective_from: extractDatePart(config.effective_from),
+      effective_until: config.effective_until ? extractDatePart(config.effective_until) : "",
+    };
+    setFormData(editableData);
     setShowModal(true);
   };
 
@@ -190,7 +205,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     {
       key: "name",
       title: "Configuration",
-      render: (config: CommissionConfig) => (
+      render: (_value: unknown, config: CommissionConfig) => (
         <div className="flex items-center space-x-2">
           {config.is_default && <Star className="h-4 w-4 text-yellow-500 fill-current" />}
           <div>
@@ -205,7 +220,7 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     {
       key: "commission_structure",
       title: "Structure",
-      render: (config: CommissionConfig) => (
+      render: (_value: unknown, config: CommissionConfig) => (
         <div className="flex items-center space-x-2">
           {renderStructureIcon(config.commission_structure)}
           <span className="capitalize">{config.commission_structure.replace("_", " ")}</span>
@@ -215,13 +230,13 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     {
       key: "rate_config",
       title: "Rate",
-      render: (config: CommissionConfig) =>
+      render: (_value: unknown, config: CommissionConfig) =>
         renderRateConfig(config.commission_structure, config.rate_config),
     },
     {
       key: "filters",
       title: "Applies To",
-      render: (config: CommissionConfig) => (
+      render: (_value: unknown, config: CommissionConfig) => (
         <div className="text-sm">
           {config.reseller_type && <div>Type: {config.reseller_type.replace("_", " ")}</div>}
           {config.reseller_tier && <div>Tier: {config.reseller_tier}</div>}
@@ -235,25 +250,22 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
     {
       key: "payment_frequency",
       title: "Frequency",
-      render: (config: CommissionConfig) => (
+      render: (_value: unknown, config: CommissionConfig) => (
         <span className="capitalize">{config.payment_frequency}</span>
       ),
     },
     {
       key: "is_active",
       title: "Status",
-      render: (config: CommissionConfig) => (
-        <StatusIndicators
-          status={config.is_active ? "active" : "inactive"}
-          size="sm"
-          showLabel={true}
-        />
-      ),
+      render: (_value: unknown, config: CommissionConfig) => {
+        const variant = config.is_active ? "active" : "suspended";
+        return <StatusIndicators status={variant} size="sm" showLabel />;
+      },
     },
     {
       key: "actions",
       title: "Actions",
-      render: (config: CommissionConfig) => (
+      render: (_value: unknown, config: CommissionConfig) => (
         <div className="flex items-center space-x-1">
           <Button variant="ghost" size="sm" onClick={() => handleEdit(config)}>
             <Edit className="h-4 w-4" />
@@ -299,18 +311,21 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
           columns={tableColumns}
           data={configs}
           loading={loading}
-          emptyMessage="No commission configurations found"
+          emptyText="No commission configurations found"
         />
       </Card>
 
       {/* Configuration Modal */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title={editingConfig ? "Edit Commission Configuration" : "New Commission Configuration"}
-        size="lg"
-      >
-        <div className="space-y-6">
+      <Modal open={showModal} onOpenChange={setShowModal}>
+        <ModalBackdrop />
+        <ModalContent size="lg" aria-label="Commission configuration modal">
+          <ModalHeader>
+            <ModalTitle>
+              {editingConfig ? "Edit Commission Configuration" : "New Commission Configuration"}
+            </ModalTitle>
+          </ModalHeader>
+          <ModalBody>
+            <div className="space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
@@ -432,12 +447,16 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Type</label>
               <select
                 value={formData.reseller_type || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    reseller_type: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData((prev) => {
+                    if (!value) {
+                      const { reseller_type: _omit, ...rest } = prev;
+                      return rest;
+                    }
+                    return { ...prev, reseller_type: value };
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Types</option>
@@ -452,12 +471,16 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               <label className="block text-sm font-medium text-gray-700 mb-1">Reseller Tier</label>
               <select
                 value={formData.reseller_tier || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    reseller_tier: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData((prev) => {
+                    if (!value) {
+                      const { reseller_tier: _omit, ...rest } = prev;
+                      return rest;
+                    }
+                    return { ...prev, reseller_tier: value };
+                  });
+                }}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
                 <option value="">All Tiers</option>
@@ -471,12 +494,16 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               <label className="block text-sm font-medium text-gray-700 mb-1">Territory</label>
               <Input
                 value={formData.territory || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    territory: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData((prev) => {
+                    if (!value) {
+                      const { territory: _omit, ...rest } = prev;
+                      return rest;
+                    }
+                    return { ...prev, territory: value };
+                  });
+                }}
                 placeholder="e.g., North America"
               />
             </div>
@@ -559,16 +586,20 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Effective Until
               </label>
-              <Input
-                type="date"
-                value={formData.effective_until || ""}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    effective_until: e.target.value || undefined,
-                  })
-                }
-              />
+                <Input
+                  type="date"
+                  value={formData.effective_until || ""}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData((prev) => {
+                      if (!value) {
+                        const { effective_until: _omit, ...rest } = prev;
+                        return rest;
+                      }
+                      return { ...prev, effective_until: value };
+                    });
+                  }}
+                />
             </div>
           </div>
 
@@ -593,14 +624,19 @@ export const CommissionConfigManager: React.FC<CommissionConfigManagerProps> = (
               <span className="ml-2 text-sm">Set as Default</span>
             </label>
           </div>
-        </div>
-
-        <div className="flex justify-end space-x-2 pt-6">
-          <Button variant="outline" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave}>{editingConfig ? "Update" : "Create"} Configuration</Button>
-        </div>
+            </div>
+          </ModalBody>
+          <ModalFooter>
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={() => setShowModal(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>
+                {editingConfig ? "Update" : "Create"} Configuration
+              </Button>
+            </div>
+          </ModalFooter>
+        </ModalContent>
       </Modal>
     </>
   );

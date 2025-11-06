@@ -151,9 +151,17 @@ const ChartContainer = forwardRef<HTMLDivElement, ChartContainerProps>(
   ) => {
     return (
       <div ref={ref} className={clsx("chart-container", className)} {...props}>
-        <ChartHeader title={title} description={description} actions={actions} />
+        <ChartHeader
+          {...(title !== undefined ? { title } : {})}
+          {...(description !== undefined ? { description } : {})}
+          {...(actions !== undefined ? { actions } : {})}
+        />
         <div className="chart-content">
-          <ChartContent loading={loading} error={error} emptyText={emptyText}>
+          <ChartContent
+            {...(loading !== undefined ? { loading } : {})}
+            {...(error !== undefined ? { error } : {})}
+            emptyText={emptyText}
+          >
             {children}
           </ChartContent>
         </div>
@@ -198,15 +206,19 @@ export function LineChart({
   title,
   description,
 }: LineChartProps) {
+  const containerMetaProps: Partial<ChartContainerProps> = {
+    ...(loading !== undefined ? { loading } : {}),
+    ...(error !== undefined ? { error } : {}),
+    ...(emptyText !== undefined ? { emptyText } : {}),
+    ...(title !== undefined ? { title } : {}),
+    ...(description !== undefined ? { description } : {}),
+  };
+
   if (loading || error || data.length === 0) {
     return (
       <ChartContainer
         className={clsx(chartVariants({ size, variant }), className)}
-        loading={loading}
-        error={error}
-        emptyText={emptyText}
-        title={title}
-        description={description}
+        {...containerMetaProps}
       />
     );
   }
@@ -214,14 +226,13 @@ export function LineChart({
   return (
     <ChartContainer
       className={clsx(chartVariants({ size, variant }), className)}
-      title={title}
-      description={description}
+      {...containerMetaProps}
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsLineChart data={data}>
           {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
-          <YAxis domain={yAxisDomain} />
+          <YAxis {...(yAxisDomain ? { domain: yAxisDomain } : {})} />
           {showTooltip ? <Tooltip /> : null}
           {showLegend ? <Legend /> : null}
 
@@ -280,15 +291,19 @@ export function BarChart({
   title,
   description,
 }: BarChartProps) {
+  const containerMetaProps: Partial<ChartContainerProps> = {
+    ...(loading !== undefined ? { loading } : {}),
+    ...(error !== undefined ? { error } : {}),
+    ...(emptyText !== undefined ? { emptyText } : {}),
+    ...(title !== undefined ? { title } : {}),
+    ...(description !== undefined ? { description } : {}),
+  };
+
   if (loading || error || data.length === 0) {
     return (
       <ChartContainer
         className={clsx(chartVariants({ size, variant }), className)}
-        loading={loading}
-        error={error}
-        emptyText={emptyText}
-        title={title}
-        description={description}
+        {...containerMetaProps}
       />
     );
   }
@@ -296,19 +311,23 @@ export function BarChart({
   return (
     <ChartContainer
       className={clsx(chartVariants({ size, variant }), className)}
-      title={title}
-      description={description}
+      {...containerMetaProps}
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsBarChart data={data} layout={layout}>
           {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
-          <YAxis domain={yAxisDomain} />
+          <YAxis {...(yAxisDomain ? { domain: yAxisDomain } : {})} />
           {showTooltip ? <Tooltip /> : null}
           {showLegend ? <Legend /> : null}
 
           {bars.map(({ key, fill, stackId }) => (
-            <Bar key={key} dataKey={key} fill={fill} stackId={stackId} />
+            <Bar
+              key={key}
+              dataKey={key}
+              fill={fill}
+              {...(stackId ? { stackId } : {})}
+            />
           ))}
         </RechartsBarChart>
       </ResponsiveContainer>
@@ -350,15 +369,19 @@ export function AreaChart({
   title,
   description,
 }: AreaChartProps) {
+  const containerMetaProps: Partial<ChartContainerProps> = {
+    ...(loading !== undefined ? { loading } : {}),
+    ...(error !== undefined ? { error } : {}),
+    ...(emptyText !== undefined ? { emptyText } : {}),
+    ...(title !== undefined ? { title } : {}),
+    ...(description !== undefined ? { description } : {}),
+  };
+
   if (loading || error || data.length === 0) {
     return (
       <ChartContainer
         className={clsx(chartVariants({ size, variant }), className)}
-        loading={loading}
-        error={error}
-        emptyText={emptyText}
-        title={title}
-        description={description}
+        {...containerMetaProps}
       />
     );
   }
@@ -366,14 +389,13 @@ export function AreaChart({
   return (
     <ChartContainer
       className={clsx(chartVariants({ size, variant }), className)}
-      title={title}
-      description={description}
+      {...containerMetaProps}
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsAreaChart data={data}>
           {showGrid ? <CartesianGrid strokeDasharray="3 3" /> : null}
           <XAxis dataKey={xAxisKey} />
-          <YAxis domain={yAxisDomain} />
+          <YAxis {...(yAxisDomain ? { domain: yAxisDomain } : {})} />
           {showTooltip ? <Tooltip /> : null}
           {showLegend ? <Legend /> : null}
 
@@ -384,7 +406,7 @@ export function AreaChart({
               dataKey={key}
               stroke={stroke}
               fill={fill}
-              stackId={stackId}
+              {...(stackId ? { stackId } : {})}
             />
           ))}
         </RechartsAreaChart>
@@ -426,15 +448,19 @@ export function PieChart({
   title,
   description,
 }: PieChartProps) {
+  const containerMetaProps: Partial<ChartContainerProps> = {
+    ...(loading !== undefined ? { loading } : {}),
+    ...(error !== undefined ? { error } : {}),
+    ...(emptyText !== undefined ? { emptyText } : {}),
+    ...(title !== undefined ? { title } : {}),
+    ...(description !== undefined ? { description } : {}),
+  };
+
   if (loading || error || data.length === 0) {
     return (
       <ChartContainer
         className={clsx(chartVariants({ size, variant }), className)}
-        loading={loading}
-        error={error}
-        emptyText={emptyText}
-        title={title}
-        description={description}
+        {...containerMetaProps}
       />
     );
   }
@@ -457,8 +483,7 @@ export function PieChart({
   return (
     <ChartContainer
       className={clsx(chartVariants({ size, variant }), className)}
-      title={title}
-      description={description}
+      {...containerMetaProps}
     >
       <ResponsiveContainer width={width} height={height}>
         <RechartsPieChart>
@@ -567,8 +592,8 @@ export const chartUtils = {
   },
 
   generateColors: (count: number, hue = 220, saturation = 70) => {
-    return Array.from({ length: count }, (_, _i) => {
-      const lightness = 40 + ((i * 20) % 40);
+    return Array.from({ length: count }, (_, index) => {
+      const lightness = 40 + ((index * 20) % 40);
       return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
     });
   },

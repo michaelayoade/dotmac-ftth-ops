@@ -30,7 +30,7 @@ export default function PartnerDetailPage() {
       });
       setQuotaInfo(result);
     } catch (error: any) {
-      alert(`Failed to check quota: ${error.message}`);
+      alert(`Failed to check quota: ${(error as Error).message}`);
     }
   };
 
@@ -50,7 +50,7 @@ export default function PartnerDetailPage() {
         <div className="text-center py-12">
           <div className="text-red-400">Failed to load partner details</div>
           <div className="text-sm text-foreground0 mt-2">
-            {error?.message || "Partner not found"}
+            {(error as Error)?.message || "Partner not found"}
           </div>
           <Link
             href="/dashboard/partners"

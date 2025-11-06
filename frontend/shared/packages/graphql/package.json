@@ -5,6 +5,15 @@
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./generated": "./generated/index.ts",
+    "./generated/*": "./generated/*.ts"
+  },
   "files": [
     "dist/**",
     "generated/**",
@@ -22,7 +31,7 @@
     "@dotmac/auth": "workspace:*",
     "@dotmac/http-client": "workspace:*",
     "@graphql-typed-document-node/core": "^3.2.0",
-    "@tanstack/react-query": "^4.42.0",
+    "@tanstack/react-query": "^5.90.5",
     "graphql": "^16.9.0",
     "react": "^18.3.1"
   },
