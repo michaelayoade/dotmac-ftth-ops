@@ -8,9 +8,30 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 /** @type {import('next').NextConfig} */
+const sharedPackageAliases = {
+  '@dotmac/ui': '../../shared/packages/ui/src',
+  '@dotmac/primitives': '../../shared/packages/primitives/src',
+  '@dotmac/headless': '../../shared/packages/headless/src',
+  '@dotmac/features': '../../shared/packages/features/src',
+  '@dotmac/graphql': '../../shared/packages/graphql/src',
+  '@dotmac/http-client': '../../shared/packages/http-client/src',
+  '@dotmac/design-system': '../../shared/packages/design-system/src',
+  '@dotmac/providers': '../../shared/packages/providers/src',
+};
+
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['react-window'],
+  transpilePackages: [
+    'react-window',
+    '@dotmac/ui',
+    '@dotmac/primitives',
+    '@dotmac/headless',
+    '@dotmac/features',
+    '@dotmac/graphql',
+    '@dotmac/http-client',
+    '@dotmac/design-system',
+    '@dotmac/providers',
+  ],
   output: 'standalone',
   experimental: {
     instrumentationHook: false,
@@ -56,20 +77,8 @@ const nextConfig = {
     const path = require('path');
     config.resolve.alias['@dotmac/better-auth'] = path.resolve(dir, '../../shared/lib/better-auth/index.ts');
 
-    try {
-      const sharedPackages = [
-        '@dotmac/ui',
-        '@dotmac/design-system',
-        '@dotmac/providers',
-        '@dotmac/http-client',
-        '@dotmac/headless',
-        '@dotmac/primitives',
-      ];
-      for (const pkg of sharedPackages) {
-        config.resolve.alias[pkg] = require.resolve(pkg);
-      }
-    } catch (error) {
-      // ignore alias errors in environments where packages are not yet installed
+    for (const [pkg, relativePath] of Object.entries(sharedPackageAliases)) {
+      config.resolve.alias[pkg] = path.resolve(dir, relativePath);
     }
 
     config.resolve.alias['react-window'] = require.resolve('react-window');

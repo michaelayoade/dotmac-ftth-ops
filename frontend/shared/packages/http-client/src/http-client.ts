@@ -1,4 +1,9 @@
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import type { HttpClientConfig, RequestConfig, ApiResponse, HttpMethod } from "./types";
 import { TenantResolver } from "./tenant-resolver";
 import { ErrorNormalizer } from "./error-normalizer";
@@ -42,7 +47,7 @@ export class HttpClient {
   private setupInterceptors(): void {
     // Request interceptor for tenant ID and auth
     this.axiosInstance.interceptors.request.use(
-      (config) => {
+      (config: InternalAxiosRequestConfig & { skipTenantId?: boolean }) => {
         // Add tenant ID if not skipped
         if (!this.isSkipTenantId(config)) {
           const tenantId = this.tenantResolver?.getTenantId();
@@ -172,8 +177,11 @@ export class HttpClient {
     };
   }
 
-  private isSkipTenantId(config: any): boolean {
-    return config?.skipTenantId === true;
+  private isSkipTenantId(config: RequestConfig | InternalAxiosRequestConfig | undefined): boolean {
+    if (!config) {
+      return false;
+    }
+    return (config as RequestConfig).skipTenantId === true;
   }
 
   // Utility methods
