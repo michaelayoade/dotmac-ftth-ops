@@ -2,7 +2,7 @@
 
 SHELL := /bin/bash
 
-.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
+.PHONY: help start-platform start-isp start-all stop-platform stop-isp stop-all status-platform status-isp status-all logs-platform logs-isp logs-all clean-platform clean-isp clean-all dev dev-host dev-frontend dev-frontend-admin install check-prereqs check-docker check-deps test test-fast test-unit test-integration test-e2e lint lint-frontend typecheck typecheck-frontend typecheck-mypy typecheck-pyright format format-frontend db-migrate db-migrate-create db-seed db-reset build-platform build-isp build-all build-freeradius env-validate env-check env-local env-test env-staging env-show setup shell clean-py docker-ps docker-platform-up docker-isp-up restart-platform restart-isp restart-all
 
 # Colors
 CYAN := \033[0;36m
@@ -143,7 +143,14 @@ logs-isp:
 
 start-all:
 	@echo "$(CYAN)Running pre-flight checks...$(NC)"
-	@./scripts/docker-compose-pre-flight.sh || { echo "$(YELLOW)⚠ Pre-flight checks failed, but continuing...$(NC)"; }
+	@if ./scripts/docker-compose-pre-flight.sh; then \
+		true; \
+	elif [ "$(ALLOW_PRE_FLIGHT_SKIP)" = "1" ]; then \
+		echo "$(YELLOW)⚠ Pre-flight checks failed, but ALLOW_PRE_FLIGHT_SKIP=1 so continuing...$(NC)"; \
+	else \
+		echo "$(YELLOW)✗ Pre-flight checks failed. Set ALLOW_PRE_FLIGHT_SKIP=1 to override.$(NC)"; \
+		exit 1; \
+	fi
 	@./scripts/infra.sh all start
 
 stop-all:
@@ -175,7 +182,7 @@ clean-all:
 # Development
 # ===================================================================
 
-install: check-deps
+install: check-prereqs
 	@echo "$(CYAN)Installing Python dependencies...$(NC)"
 	@poetry install
 	@echo "$(CYAN)Installing frontend workspace dependencies...$(NC)"
@@ -200,17 +207,24 @@ dev-frontend-admin:
 	@echo "$(CYAN)Starting Platform Admin frontend on http://localhost:3002$(NC)"
 	@cd frontend && pnpm dev:admin
 
-check-deps:
-	@echo "$(CYAN)Checking required dependencies...$(NC)"
+check-prereqs:
+	@echo "$(CYAN)Checking core development dependencies...$(NC)"
 	@command -v poetry >/dev/null 2>&1 || { echo "$(YELLOW)✗ Poetry not installed. Install from: https://python-poetry.org/$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ Poetry installed$(NC)"
 	@command -v pnpm >/dev/null 2>&1 || { echo "$(YELLOW)✗ pnpm not installed. Run: npm install -g pnpm$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ pnpm installed$(NC)"
+	@echo ""
+	@echo "$(GREEN)Core development dependencies look good!$(NC)"
+
+check-docker:
+	@echo "$(CYAN)Checking Docker availability...$(NC)"
 	@command -v docker >/dev/null 2>&1 || { echo "$(YELLOW)✗ Docker not installed$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ Docker installed$(NC)"
 	@docker info >/dev/null 2>&1 || { echo "$(YELLOW)✗ Docker daemon not running$(NC)"; exit 1; }
 	@echo "$(GREEN)✓ Docker daemon running$(NC)"
 	@echo ""
+
+check-deps: check-prereqs check-docker
 	@echo "$(GREEN)All required dependencies are installed!$(NC)"
 
 # ===================================================================

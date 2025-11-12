@@ -209,6 +209,10 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 except Exception:
                     pass
 
+        # Attempt to derive tenant from authenticated context when header/query missing
+        if not resolved_id:
+            resolved_id = await self._resolve_authenticated_tenant(request)
+
         # Get final tenant ID based on configuration
         tenant_id = self.config.get_tenant_id_for_request(resolved_id)
 
@@ -358,3 +362,114 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 status_code=401,
                 detail="Invalid authentication for tenant impersonation.",
             ) from exc
+
+    async def _resolve_authenticated_tenant(self, request: Request) -> str | None:
+        """Resolve tenant from authenticated context (JWT, cookies, API keys).
+
+        This enables browser and API clients that rely on Authorization headers
+        or secure cookies to establish tenant context without duplicating headers.
+        """
+        # Try JWT tokens (Authorization header or HttpOnly cookie)
+        jwt_token = self._extract_jwt_token(request)
+        if jwt_token:
+            claims = self._verify_jwt_claims(jwt_token)
+            if claims:
+                tenant_from_claims = self._tenant_from_claims(request, claims)
+                if tenant_from_claims:
+                    # Cache claims for downstream middleware if needed
+                    try:
+                        setattr(request.state, "jwt_claims", claims)
+                    except Exception:
+                        pass
+                    return tenant_from_claims
+
+        # Try API keys (used by service automation)
+        api_key = request.headers.get("X-API-Key")
+        if isinstance(api_key, str) and api_key.strip():
+            tenant_from_key = await self._tenant_from_api_key(api_key.strip())
+            if tenant_from_key:
+                return tenant_from_key
+
+        return None
+
+    def _extract_jwt_token(self, request: Request) -> str | None:
+        """Extract JWT token from Authorization header or secure cookie."""
+        auth_header = request.headers.get("Authorization")
+        if isinstance(auth_header, str) and auth_header.lower().startswith("bearer "):
+            token = auth_header.split(" ", 1)[1].strip()
+            if token:
+                return token
+
+        cookies = getattr(request, "cookies", None)
+        if cookies:
+            try:
+                cookie_token = cookies.get("access_token")
+            except Exception:
+                cookie_token = None
+            if isinstance(cookie_token, str) and cookie_token:
+                return cookie_token.strip() or None
+
+        return None
+
+    def _verify_jwt_claims(self, token: str) -> dict[str, Any] | None:
+        """Verify JWT token and return claims without raising upstream errors."""
+        try:
+            from dotmac.platform.auth.core import jwt_service
+
+            return jwt_service.verify_token(token)
+        except Exception as exc:
+            logger.debug("tenant_jwt_verification_failed", error=str(exc))
+            return None
+
+    def _tenant_from_claims(self, request: Request, claims: dict[str, Any]) -> str | None:
+        """Determine effective tenant from JWT claims and partner headers."""
+        managed_tenants = claims.get("managed_tenant_ids") or []
+        if not isinstance(managed_tenants, list):
+            managed_tenants = []
+
+        active_header = request.headers.get("X-Active-Tenant-Id")
+        if isinstance(active_header, str):
+            candidate = active_header.strip()
+            if candidate:
+                if managed_tenants and candidate in managed_tenants:
+                    return candidate
+                if not managed_tenants:
+                    # No managed tenants associated; treat as unauthorized header
+                    logger.warning(
+                        "active_tenant_header_ignored_no_managed_tenants",
+                        requested_tenant=candidate,
+                    )
+                else:
+                    logger.warning(
+                        "active_tenant_header_unauthorized",
+                        requested_tenant=candidate,
+                        managed_tenants=managed_tenants,
+                    )
+
+        active_claim = claims.get("active_managed_tenant_id")
+        if isinstance(active_claim, str) and active_claim:
+            if not managed_tenants or active_claim in managed_tenants:
+                return active_claim
+
+        tenant_claim = claims.get("tenant_id")
+        if isinstance(tenant_claim, str) and tenant_claim:
+            return tenant_claim
+
+        return None
+
+    async def _tenant_from_api_key(self, api_key: str) -> str | None:
+        """Resolve tenant from API key verification."""
+        try:
+            from dotmac.platform.auth.core import api_key_service
+
+            key_data = await api_key_service.verify_api_key(api_key)
+        except Exception as exc:
+            logger.debug("tenant_api_key_verification_failed", error=str(exc))
+            return None
+
+        if isinstance(key_data, dict):
+            tenant_id = key_data.get("tenant_id")
+            if isinstance(tenant_id, str) and tenant_id:
+                return tenant_id
+
+        return None

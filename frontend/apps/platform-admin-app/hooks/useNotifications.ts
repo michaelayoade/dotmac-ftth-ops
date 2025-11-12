@@ -374,7 +374,12 @@ export function useNotifications(options?: {
           {
             ...previousData,
             notifications: previousData.notifications.map((n) =>
-              n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n
+              n.id === notificationId
+                ? (({ read_at: _ignored, ...rest }) => ({
+                    ...rest,
+                    is_read: false,
+                  }))(n)
+                : n
             ),
             unread_count: previousData.unread_count + 1,
           }

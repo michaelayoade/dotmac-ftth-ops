@@ -7,12 +7,19 @@
 
 SHELL := /bin/bash
 
-.PHONY: help status health reload restart validate rotate-secrets rotate-secret-single backup restore logs
+.PHONY: help status health validate reload restart rotate-secrets rotate-secret-single dry-run-rotate backup restore logs logs-debug test-auth test-auth-custom show-sessions show-auth-failures check-certificates enable-debug gitops-status gitops-diff gitops-sync watch-status metrics clean-old-sessions
 
 # Configuration
 RADIUS_CONTAINER := isp-freeradius
 RADIUS_CONFIG_DIR := $(CURDIR)/config/radius
 RADIUS_BACKUP_DIR := $(CURDIR)/backups/radius
+
+# Provide a TTY to docker exec only when make is attached to one
+DOCKER_TTY :=
+ifneq (,$(shell test -t 1 && echo yes))
+	DOCKER_TTY := -t
+endif
+DOCKER_EXEC = docker exec -i $(DOCKER_TTY) $(RADIUS_CONTAINER)
 
 help: ## Show this help message
 	@echo 'RADIUS Server Operations'
@@ -28,28 +35,28 @@ status: ## Show RADIUS server status
 	@docker ps --filter "name=$(RADIUS_CONTAINER)" --format "table {{.Names}}\t{{.Status}}\t{{.Health}}"
 	@echo ""
 	@echo "=== Health Check ==="
-	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123 || echo "Health check failed"
+	@$(DOCKER_EXEC) radtest test test localhost 0 testing123 || echo "Health check failed"
 
 health: ## Run comprehensive health check
 	@echo "=== FreeRADIUS Health Check ==="
 	@echo "1. Container running:"
 	@docker ps --filter "name=$(RADIUS_CONTAINER)" --format "  ✓ {{.Names}} is {{.Status}}" || echo "  ✗ Container not running"
 	@echo "2. Config validation:"
-	@docker exec $(RADIUS_CONTAINER) radiusd -XC 2>&1 | tail -5
+	@$(DOCKER_EXEC) radiusd -XC 2>&1 | tail -5
 	@echo "3. Test authentication:"
-	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123 | grep -q "Access-Accept" && echo "  ✓ Auth test passed" || echo "  ✗ Auth test failed"
+	@$(DOCKER_EXEC) radtest test test localhost 0 testing123 | grep -q "Access-Accept" && echo "  ✓ Auth test passed" || echo "  ✗ Auth test failed"
 	@echo "4. Port status:"
-	@docker exec $(RADIUS_CONTAINER) netstat -uln | grep -E "(1812|1813|3799)" || echo "  Installing netstat..."
+	@$(DOCKER_EXEC) netstat -uln | grep -E "(1812|1813|3799)" || echo "  Installing netstat..."
 
 validate: ## Validate FreeRADIUS configuration (does not apply)
 	@echo "=== Validating FreeRADIUS Configuration ==="
-	@docker exec $(RADIUS_CONTAINER) radiusd -XC
+	@$(DOCKER_EXEC) radiusd -XC
 	@echo ""
 	@echo "✓ Configuration is valid"
 
 reload: ## Reload FreeRADIUS gracefully (SIGHUP)
 	@echo "=== Reloading FreeRADIUS (graceful) ==="
-	@docker exec $(RADIUS_CONTAINER) kill -HUP 1
+	@$(DOCKER_EXEC) kill -HUP 1
 	@echo "Waiting for reload..."
 	@sleep 3
 	@docker ps --filter "name=$(RADIUS_CONTAINER)" --filter "health=healthy" | grep -q "$(RADIUS_CONTAINER)" && echo "✓ Reload successful" || echo "✗ Reload failed - check logs"
@@ -126,37 +133,37 @@ logs: ## Tail FreeRADIUS logs
 	@docker logs -f --tail=100 $(RADIUS_CONTAINER)
 
 logs-debug: ## Tail FreeRADIUS logs with debug level
-	@docker exec -it $(RADIUS_CONTAINER) tail -f /var/log/freeradius/radius.log
+	@$(DOCKER_EXEC) tail -f /var/log/freeradius/radius.log
 
 test-auth: ## Test RADIUS authentication with test user
 	@echo "=== Testing RADIUS Authentication ==="
-	@docker exec $(RADIUS_CONTAINER) radtest test test localhost 0 testing123
+	@$(DOCKER_EXEC) radtest test test localhost 0 testing123
 
 test-auth-custom: ## Test custom user (Usage: make test-auth-custom USER=john PASS=secret)
 	@if [ -z "$(USER)" ] || [ -z "$(PASS)" ]; then \
 		echo "Usage: make -f Makefile.radius test-auth-custom USER=john PASS=secret"; \
 		exit 1; \
 	fi
-	@docker exec $(RADIUS_CONTAINER) radtest $(USER) $(PASS) localhost 0 testing123
+	@$(DOCKER_EXEC) radtest $(USER) $(PASS) localhost 0 testing123
 
 show-sessions: ## Show active RADIUS sessions
 	@echo "=== Active RADIUS Sessions ==="
-	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+	@$(DOCKER_EXEC) psql -U dotmac_user -d dotmac -c \
 		"SELECT username, nasipaddress, acctstarttime, acctsessiontime FROM radacct WHERE acctstoptime IS NULL LIMIT 20;"
 
 show-auth-failures: ## Show recent authentication failures
 	@echo "=== Recent Authentication Failures ==="
-	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+	@$(DOCKER_EXEC) psql -U dotmac_user -d dotmac -c \
 		"SELECT authdate, username, reply FROM radpostauth WHERE reply != 'Access-Accept' ORDER BY authdate DESC LIMIT 20;"
 
 check-certificates: ## Check TLS certificate expiry
 	@echo "=== TLS Certificate Status ==="
-	@docker exec $(RADIUS_CONTAINER) openssl x509 -in /etc/freeradius/certs/server.pem -noout -dates 2>/dev/null || echo "No TLS certificate found"
+	@$(DOCKER_EXEC) openssl x509 -in /etc/freeradius/certs/server.pem -noout -dates 2>/dev/null || echo "No TLS certificate found"
 
 enable-debug: ## Enable debug logging (temporarily)
 	@echo "=== Enabling Debug Logging ==="
 	@echo "This will restart radiusd in debug mode"
-	@docker exec -it $(RADIUS_CONTAINER) sh -c "kill -TERM 1 && radiusd -X"
+	@$(DOCKER_EXEC) sh -c "kill -TERM 1 && radiusd -X"
 
 # GitOps helpers
 
@@ -188,16 +195,16 @@ watch-status: ## Watch server status (refreshes every 5s)
 metrics: ## Show RADIUS performance metrics
 	@echo "=== RADIUS Performance Metrics ==="
 	@echo "Total sessions (last 24h):"
-	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+	@$(DOCKER_EXEC) psql -U dotmac_user -d dotmac -c \
 		"SELECT COUNT(*) FROM radacct WHERE acctstarttime > NOW() - INTERVAL '24 hours';"
 	@echo ""
 	@echo "Auth success rate (last 24h):"
-	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+	@$(DOCKER_EXEC) psql -U dotmac_user -d dotmac -c \
 		"SELECT \
 			COUNT(CASE WHEN reply = 'Access-Accept' THEN 1 END) * 100.0 / COUNT(*) AS success_rate \
 		FROM radpostauth WHERE authdate > NOW() - INTERVAL '24 hours';"
 
 clean-old-sessions: ## Clean up old session records (> 90 days)
 	@echo "=== Cleaning Up Old Sessions ==="
-	@docker exec -it $(RADIUS_CONTAINER) psql -U dotmac_user -d dotmac -c \
+	@$(DOCKER_EXEC) psql -U dotmac_user -d dotmac -c \
 		"DELETE FROM radacct WHERE acctstoptime < NOW() - INTERVAL '90 days';"
