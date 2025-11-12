@@ -1,5 +1,5 @@
 import Cookies from "js-cookie";
-import type { AxiosRequestConfig, AxiosResponse } from "axios";
+import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 export interface AuthConfig {
   tokenSource: "cookie" | "localStorage" | "sessionStorage";
@@ -25,7 +25,9 @@ export class AuthInterceptor {
     };
   }
 
-  requestInterceptor = (config: AxiosRequestConfig): AxiosRequestConfig => {
+  requestInterceptor = (
+    config: InternalAxiosRequestConfig & { skipAuth?: boolean },
+  ): InternalAxiosRequestConfig => {
     const token = this.getToken();
 
     if (token && !this.isSkipAuth(config)) {
@@ -225,7 +227,7 @@ export class AuthInterceptor {
     }
   }
 
-  private async retryRequest(config: AxiosRequestConfig): Promise<any> {
+  private async retryRequest(config: InternalAxiosRequestConfig): Promise<any> {
     // This would need to be handled by the main HttpClient instance
     throw new Error("Retry request needs to be handled by HttpClient");
   }
@@ -241,7 +243,7 @@ export class AuthInterceptor {
     }
   }
 
-  private isSkipAuth(config: any): boolean {
+  private isSkipAuth(config: { skipAuth?: boolean } | undefined): boolean {
     return config?.skipAuth === true;
   }
 }
