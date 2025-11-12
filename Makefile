@@ -184,6 +184,7 @@ clean-all:
 
 install: check-prereqs
 	@echo "$(CYAN)Installing Python dependencies...$(NC)"
+	@poetry lock --no-update 1>/dev/null && echo "$(GREEN)✓ poetry.lock synced$(NC)" || { echo "$(YELLOW)✗ Failed to sync poetry.lock$(NC)"; exit 1; }
 	@poetry install
 	@echo "$(CYAN)Installing frontend workspace dependencies...$(NC)"
 	@cd frontend && pnpm install

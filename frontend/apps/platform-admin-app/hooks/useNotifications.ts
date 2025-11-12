@@ -529,13 +529,18 @@ export function useNotificationTemplates(options?: {
   activeOnly?: boolean;
 }) {
   const queryClient = useQueryClient();
+  const templateFilters: { type?: CommunicationType; activeOnly?: boolean } = {};
+
+  if (options?.type) {
+    templateFilters.type = options.type;
+  }
+  if (typeof options?.activeOnly !== "undefined") {
+    templateFilters.activeOnly = options.activeOnly;
+  }
 
   // Query for templates list
   const templatesQuery = useQuery({
-    queryKey: notificationsKeys.templateList({
-      type: options?.type,
-      activeOnly: options?.activeOnly,
-    }),
+    queryKey: notificationsKeys.templateList(templateFilters),
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
@@ -669,18 +674,27 @@ export function useCommunicationLogs(options?: {
   pageSize?: number;
 }) {
   const queryClient = useQueryClient();
+  const logFilters: {
+    type?: CommunicationType;
+    status?: CommunicationStatus;
+    recipient?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    pageSize?: number;
+  } = {};
+
+  if (options?.type) logFilters.type = options.type;
+  if (options?.status) logFilters.status = options.status;
+  if (options?.recipient) logFilters.recipient = options.recipient;
+  if (options?.startDate) logFilters.startDate = options.startDate;
+  if (options?.endDate) logFilters.endDate = options.endDate;
+  if (typeof options?.page !== "undefined") logFilters.page = options.page;
+  if (typeof options?.pageSize !== "undefined") logFilters.pageSize = options.pageSize;
 
   // Query for communication logs
   const logsQuery = useQuery({
-    queryKey: notificationsKeys.logList({
-      type: options?.type,
-      status: options?.status,
-      recipient: options?.recipient,
-      startDate: options?.startDate,
-      endDate: options?.endDate,
-      page: options?.page,
-      pageSize: options?.pageSize,
-    }),
+    queryKey: notificationsKeys.logList(logFilters),
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
