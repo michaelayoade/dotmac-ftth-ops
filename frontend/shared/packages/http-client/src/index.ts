@@ -1,5 +1,7 @@
+import { HttpClient } from "./http-client";
+
 // Main exports
-export { HttpClient } from "./http-client";
+export { HttpClient };
 export { TenantResolver } from "./tenant-resolver";
 export { ErrorNormalizer } from "./error-normalizer";
 export { RetryHandler } from "./retry-handler";
