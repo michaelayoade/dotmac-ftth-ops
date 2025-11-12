@@ -160,6 +160,7 @@ def pytest_sessionfinish(session, exitstatus):
             print(f"{i:2d}. {test_name:50s} {avg_ms:8.2f}ms")
         print("=" * 60)
 
+
 # pytest plugin registration
 def pytest_configure(config):
     """Register pytest plugin."""

@@ -51,7 +51,12 @@ import {
   FileText,
 } from "lucide-react";
 import { format } from "date-fns";
-import { usePayments, usePaymentMetrics, type PaymentStatus } from "@/hooks/usePaymentsGraphQL";
+import {
+  usePayments,
+  usePaymentMetrics,
+  type PaymentStatus,
+  type PaymentFilters,
+} from "@/hooks/usePaymentsGraphQL";
 import { apiClient } from "@/lib/api/client";
 import { handleApiError } from "@/lib/error-handler";
 import { logger } from "@/lib/logger";
@@ -93,7 +98,7 @@ export default function PaymentsPage() {
   const [refundReason, setRefundReason] = useState("");
 
   // Calculate date filters
-  const getDateFilters = () => {
+  const getDateFilters = (): { dateFrom?: string } => {
     const now = new Date();
     if (dateRange === "last_7_days") {
       return {
@@ -114,22 +119,21 @@ export default function PaymentsPage() {
   const dateFilters = getDateFilters();
 
   // Fetch payments using GraphQL
+  const paymentFilters: PaymentFilters = {
+    limit: 100,
+    offset: 0,
+    includeCustomer: true,
+    includeInvoice: false,
+    ...dateFilters,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  };
+
   const {
     data: paymentsData,
     isLoading: paymentsLoading,
     error: paymentsError,
     refetch: refetchPayments,
-  } = usePayments(
-    {
-      limit: 100,
-      offset: 0,
-      status: statusFilter,
-      includeCustomer: true,
-      includeInvoice: false,
-      ...dateFilters,
-    },
-    true,
-  );
+  } = usePayments(paymentFilters, true);
 
   // Fetch payment metrics
   const { data: metricsData } = usePaymentMetrics({
@@ -148,7 +152,7 @@ export default function PaymentsPage() {
           customerName.toLowerCase().includes(searchLower) ||
           payment.customer?.email.toLowerCase().includes(searchLower) ||
           payment.id.toLowerCase().includes(searchLower) ||
-          payment.description?.toLowerCase().includes(searchLower);
+          payment['description']?.toLowerCase().includes(searchLower);
         if (!matchesSearch) return false;
       }
 
@@ -169,15 +173,15 @@ export default function PaymentsPage() {
       payment_method: p.provider,
       payment_method_type: p.paymentMethodType as Payment["payment_method_type"],
       description: p.description || `Payment via ${p.provider}`,
-      invoice_id: p.invoiceId || undefined,
-      subscription_id: p.subscriptionId || undefined,
+      invoice_id: p.invoiceId || null,
+      subscription_id: p.subscriptionId || null,
       created_at: p.createdAt,
-      processed_at: p.processedAt || undefined,
-      failure_reason: p.failureReason || undefined,
-      refund_amount: p.refundAmount || undefined,
-      fee_amount: p.feeAmount || undefined,
-      net_amount: p.netAmount || undefined,
-      metadata: p.metadata || undefined,
+      processed_at: p.processedAt || null,
+      failure_reason: p.failureReason || null,
+      refund_amount: p.refundAmount || null,
+      fee_amount: p.feeAmount || null,
+      net_amount: p.netAmount || null,
+      metadata: p.metadata || null,
     }));
 
   // Metrics from GraphQL
@@ -619,7 +623,7 @@ export default function PaymentsPage() {
                       <div className="font-medium">
                         {formatCurrency(payment.amount, payment.currency)}
                       </div>
-                      {payment.net_amount !== undefined && (
+                      {payment.net_amount !== undefined && payment.net_amount !== null && (
                         <div className="text-xs text-muted-foreground">
                           Net: {formatCurrency(payment.net_amount, payment.currency)}
                         </div>
@@ -651,7 +655,7 @@ export default function PaymentsPage() {
                           size="sm"
                           variant="outline"
                           onClick={() => {
-                            setSelectedPayment(payment);
+                            setSelectedPayment(payment as any);
                             setShowDetailDialog(true);
                           }}
                         >
@@ -662,7 +666,7 @@ export default function PaymentsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedPayment(payment);
+                              setSelectedPayment(payment as any);
                               setShowRefundDialog(true);
                             }}
                           >
@@ -674,7 +678,7 @@ export default function PaymentsPage() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              setSelectedPayment(payment);
+                              setSelectedPayment(payment as any);
                               setShowRetryDialog(true);
                             }}
                           >

@@ -40,10 +40,10 @@ export function EditTemplateModal({
 }: EditTemplateModalProps) {
   const [formData, setFormData] = useState<TemplateUpdateRequest>({
     name: template.name,
-    description: template.description,
-    subject_template: template.subject_template,
-    text_template: template.text_template,
-    html_template: template.html_template,
+    ...(template.description && { description: template.description }),
+    ...(template.subject_template && { subject_template: template.subject_template }),
+    ...(template.text_template && { text_template: template.text_template }),
+    ...(template.html_template && { html_template: template.html_template }),
     required_variables: template.required_variables,
     is_active: template.is_active,
   });
@@ -54,10 +54,10 @@ export function EditTemplateModal({
   useEffect(() => {
     setFormData({
       name: template.name,
-      description: template.description,
-      subject_template: template.subject_template,
-      text_template: template.text_template,
-      html_template: template.html_template,
+      ...(template.description && { description: template.description }),
+      ...(template.subject_template && { subject_template: template.subject_template }),
+      ...(template.text_template && { text_template: template.text_template }),
+      ...(template.html_template && { html_template: template.html_template }),
       required_variables: template.required_variables,
       is_active: template.is_active,
     });
@@ -235,7 +235,7 @@ export function EditTemplateModal({
             </div>
             <Switch
               id="is_active"
-              checked={formData.is_active}
+              checked={formData.is_active ?? false}
               onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
             />
           </div>

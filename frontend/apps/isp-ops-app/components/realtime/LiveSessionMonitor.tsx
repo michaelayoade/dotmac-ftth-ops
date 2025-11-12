@@ -60,74 +60,6 @@ export function LiveSessionMonitor() {
     }
   }, [sessionUpdate]);
 
-  // Simulate session updates if WebSocket not connected
-  useEffect(() => {
-    if (!isConnected) {
-      // Initialize with some mock sessions
-      const mockSessions: ActiveSession[] = [
-        {
-          session_id: "sess_1",
-          username: "john.doe@example.com",
-          ip_address: "10.0.0.101",
-          nas_ip_address: "10.1.1.1",
-          upload_bytes: 1024 * 1024 * 50,
-          download_bytes: 1024 * 1024 * 200,
-          session_time_seconds: 3600,
-          last_update: new Date().toISOString(),
-        },
-        {
-          session_id: "sess_2",
-          username: "jane.smith@example.com",
-          ip_address: "10.0.0.102",
-          nas_ip_address: "10.1.1.2",
-          upload_bytes: 1024 * 1024 * 30,
-          download_bytes: 1024 * 1024 * 150,
-          session_time_seconds: 1800,
-          last_update: new Date().toISOString(),
-        },
-        {
-          session_id: "sess_3",
-          username: "bob.johnson@example.com",
-          ip_address: "10.0.0.103",
-          nas_ip_address: "10.1.1.1",
-          upload_bytes: 1024 * 1024 * 100,
-          download_bytes: 1024 * 1024 * 500,
-          session_time_seconds: 7200,
-          last_update: new Date().toISOString(),
-        },
-      ];
-
-      const initialSessions = new Map(mockSessions.map((s) => [s.session_id, s]));
-      setActiveSessions(initialSessions);
-
-      // Simulate random updates
-      const interval = setInterval(() => {
-        setActiveSessions((prev) => {
-          const newSessions = new Map(prev);
-          const sessions = Array.from(newSessions.values());
-
-          if (sessions.length > 0) {
-            const randomIndex = Math.floor(Math.random() * sessions.length);
-            const randomSession = sessions[randomIndex];
-            if (!randomSession) {
-              return newSessions;
-            }
-            randomSession.upload_bytes += Math.random() * 1024 * 1024 * 5;
-            randomSession.download_bytes += Math.random() * 1024 * 1024 * 10;
-            randomSession.session_time_seconds += 5;
-            randomSession.last_update = new Date().toISOString();
-            newSessions.set(randomSession.session_id, randomSession);
-          }
-
-          return newSessions;
-        });
-      }, 5000);
-
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [isConnected]);
-
   const sessionsArray = Array.from(activeSessions.values()).sort(
     (a, b) => b.session_time_seconds - a.session_time_seconds,
   );
@@ -158,6 +90,25 @@ export function LiveSessionMonitor() {
     }
     return `${secs}s`;
   };
+
+  if (!isConnected && sessionsArray.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Live Session Monitor
+          </CardTitle>
+          <CardDescription>Waiting for a live session stream…</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground">
+            WebSocket connection is offline. Once telemetry resumes, active sessions will appear here.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

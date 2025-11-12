@@ -11,7 +11,6 @@ This module contains tests for specific bug fixes:
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -92,7 +91,9 @@ class TestActivityMetadataFix:
             "follow_up_required": False,
         }
 
-    async def test_add_activity_with_empty_metadata(self, async_session, sample_customer, test_tenant):
+    async def test_add_activity_with_empty_metadata(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test that adding activity with empty metadata works."""
         # Setup
         async_session.add(sample_customer)
@@ -121,7 +122,9 @@ class TestActivityMetadataFix:
         # Assert
         assert activity.metadata_ == {}
 
-    async def test_activity_metadata_persisted_correctly(self, async_session, sample_customer, test_tenant):
+    async def test_activity_metadata_persisted_correctly(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test that metadata is persisted and retrieved correctly."""
         # Setup
         async_session.add(sample_customer)
@@ -173,7 +176,9 @@ class TestActivityMetadataFix:
 class TestEagerLoadingFix:
     """Test fix for eager loading InvalidRequestError (Bug #2)."""
 
-    async def test_get_customer_with_include_activities_param(self, async_session, sample_customer, test_tenant):
+    async def test_get_customer_with_include_activities_param(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test that get_customer doesn't raise InvalidRequestError with include_activities=True."""
         # Setup
         async_session.add(sample_customer)
@@ -194,7 +199,9 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_with_include_notes_param(self, async_session, sample_customer, test_tenant):
+    async def test_get_customer_with_include_notes_param(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test that get_customer doesn't raise InvalidRequestError with include_notes=True."""
         # Setup
         async_session.add(sample_customer)
@@ -215,7 +222,9 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_with_both_includes(self, async_session, sample_customer, test_tenant):
+    async def test_get_customer_with_both_includes(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test that get_customer works with both include flags."""
         # Setup
         async_session.add(sample_customer)
@@ -237,7 +246,9 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.id == sample_customer.id
 
-    async def test_get_customer_by_number_with_activities(self, async_session, sample_customer, test_tenant):
+    async def test_get_customer_by_number_with_activities(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test get_customer_by_number doesn't raise with include_activities."""
         # Setup
         async_session.add(sample_customer)
@@ -258,7 +269,9 @@ class TestEagerLoadingFix:
         assert customer is not None
         assert customer.customer_number == sample_customer.customer_number
 
-    async def test_get_customer_by_email_with_activities(self, async_session, sample_customer, test_tenant):
+    async def test_get_customer_by_email_with_activities(
+        self, async_session, sample_customer, test_tenant
+    ):
         """Test get_customer_by_email doesn't raise with include_activities."""
         # Setup
         async_session.add(sample_customer)

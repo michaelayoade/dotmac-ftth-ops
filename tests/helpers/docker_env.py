@@ -31,7 +31,7 @@ def is_running_in_docker() -> bool:
 
     # Check cgroup (works on Linux)
     try:
-        with open("/proc/1/cgroup", "r") as f:
+        with open("/proc/1/cgroup") as f:
             content = f.read()
             if "docker" in content or "containerd" in content:
                 return True
@@ -67,10 +67,7 @@ def get_service_host(service_name: str, default_host: str = "localhost") -> str:
 
 
 def get_docker_network_url(
-    service_name: str,
-    port: int,
-    default_host: str = "localhost",
-    scheme: str = "http"
+    service_name: str, port: int, default_host: str = "localhost", scheme: str = "http"
 ) -> str:
     """
     Build a URL for a Docker service that works both inside and outside Docker.

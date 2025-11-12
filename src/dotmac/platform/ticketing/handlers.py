@@ -14,12 +14,27 @@ from dotmac.platform.audit.service import AuditService
 from dotmac.platform.communications.email_service import EmailMessage, EmailService
 from dotmac.platform.events.decorators import subscribe
 from dotmac.platform.events.models import Event
+from dotmac.platform.settings import settings
 
 logger = structlog.get_logger(__name__)
 
 # Initialize services
 audit_service = AuditService()
 email_service = EmailService()
+
+external_services = getattr(settings, "external_services", None)
+brand_config = getattr(external_services, "brand", None) if external_services else None
+
+
+def _brand_email(attr: str, default: str | None) -> str | None:
+    return getattr(brand_config, attr, None) or default
+
+
+SUPPORT_EMAIL = _brand_email("support_email", getattr(settings.email, "from_address", None))
+if SUPPORT_EMAIL is None:
+    SUPPORT_EMAIL = "support@dotmac.platform"
+OPERATIONS_EMAIL = _brand_email("operations_email", SUPPORT_EMAIL)
+PARTNER_CONTACT_EMAIL = _brand_email("partner_support_email", SUPPORT_EMAIL)
 
 RESOURCE_CREATED: Final[ActivityType] = ActivityType("resource.created")
 RESOURCE_UPDATED: Final[ActivityType] = ActivityType("resource.updated")
@@ -62,7 +77,7 @@ async def handle_ticket_created(event: Event) -> None:
     # Send email notification to target party
     try:
         notification_message = EmailMessage(
-            to=["support@example.com"],  # Configure based on target_type
+            to=[SUPPORT_EMAIL],  # Configure based on target_type
             subject=f"New Support Ticket: {ticket_number}",
             text_body=f"""
 A new support ticket has been created:
@@ -151,7 +166,7 @@ async def handle_ticket_message_added(event: Event) -> None:
 
     # Send notification to relevant parties
     try:
-        recipient_email = "support@example.com"  # Configure based on sender/recipient
+        recipient_email = SUPPORT_EMAIL  # Configure based on sender/recipient
         notification_message = EmailMessage(
             to=[recipient_email],
             subject=f"New Message on Ticket {ticket_number}",
@@ -248,7 +263,7 @@ async def handle_ticket_status_changed(event: Event) -> None:
         )
 
         notification_message = EmailMessage(
-            to=["support@example.com"],
+            to=[SUPPORT_EMAIL],
             subject=notification_subject,
             text_body=f"""
 Ticket {ticket_number} status has been updated.
@@ -337,7 +352,7 @@ async def handle_ticket_assigned(event: Event) -> None:
     # Send assignment notification
     try:
         notification_message = EmailMessage(
-            to=["assignee@example.com"],  # Lookup assignee email from user_id
+            to=[OPERATIONS_EMAIL],  # Lookup assignee email from user_id
             subject=f"Ticket {ticket_number} Assigned to You",
             text_body=f"""
 You have been assigned to ticket {ticket_number}.
@@ -408,7 +423,7 @@ async def handle_ticket_escalated_to_partner(event: Event) -> None:
     # Send escalation notification to partner
     try:
         notification_message = EmailMessage(
-            to=["partner@example.com"],  # Lookup partner email from partner_id
+            to=[PARTNER_CONTACT_EMAIL],  # Lookup partner email from partner_id
             subject=f"ESCALATION: Ticket {ticket_number} Requires Partner Support",
             text_body=f"""
 Ticket {ticket_number} has been escalated to your team for expert support.
@@ -569,6 +584,143 @@ async def track_ticket_resolution_analytics(event: Event) -> None:
             )
 
 
+@subscribe("order.completed")  # type: ignore[misc]  # Custom decorator is untyped
+async def handle_order_completed_create_installation_ticket(event: Event) -> None:
+    """
+    Handle order completion event and create installation ticket.
+
+    When an order is marked as completed, automatically create an INSTALLATION_REQUEST
+    ticket to initiate field operations workflow.
+
+    Actions:
+    - Create INSTALLATION_REQUEST ticket
+    - Capture order details (customer, service address, equipment)
+    - Set appropriate SLA based on service type
+    - Notify technician queue
+    """
+    from sqlalchemy import select
+
+    from dotmac.platform.auth.core import UserInfo
+    from dotmac.platform.db import AsyncSessionLocal
+    from dotmac.platform.ticketing.models import TicketActorType, TicketPriority, TicketType
+    from dotmac.platform.ticketing.schemas import TicketCreate
+    from dotmac.platform.ticketing.service import TicketService
+
+    order_id = event.payload.get("order_id")
+    tenant_id = event.payload.get("tenant_id") or event.metadata.tenant_id
+    deployment_instance_id = event.payload.get("deployment_instance_id")
+
+    logger.info(
+        "Handling order.completed event for installation ticket creation",
+        order_id=order_id,
+        tenant_id=tenant_id,
+        deployment_instance_id=deployment_instance_id,
+    )
+
+    # Fetch order details from database
+    if tenant_id is None:
+        logger.error("Missing tenant_id on order.completed event", order_id=order_id)
+        return
+
+    try:
+        from dotmac.platform.sales.models import Order
+
+        async with AsyncSessionLocal() as session:
+            order_result = await session.execute(select(Order).where(Order.id == order_id))
+            order = order_result.scalar_one_or_none()
+
+            if not order:
+                logger.error("Order not found", order_id=order_id)
+                return
+
+            # Determine priority based on order details
+            priority = TicketPriority.NORMAL
+            if hasattr(order, "priority") and order.priority == "urgent":
+                priority = TicketPriority.URGENT
+            elif hasattr(order, "priority") and order.priority == "high":
+                priority = TicketPriority.HIGH
+
+            # Prepare ticket data
+            ticket_data = TicketCreate(
+                subject=f"Installation Request - Order {order.order_number}",
+                message=f"""
+New installation request from completed order.
+
+Order Number: {order.order_number}
+Customer: {order.customer_email or "N/A"}
+Company: {order.company_name or "N/A"}
+
+Please schedule and assign technician for field installation.
+            """.strip(),
+                target_type=TicketActorType.TENANT,
+                priority=priority,
+                tenant_id=tenant_id,
+                ticket_type=TicketType.INSTALLATION_REQUEST,
+                service_address=order.customer_email or None,  # TODO: actual address
+                metadata={
+                    "order_id": str(order_id),
+                    "order_number": order.order_number,
+                    "deployment_instance_id": str(deployment_instance_id)
+                    if deployment_instance_id
+                    else None,
+                    "total_amount": float(order.total_amount) if order.total_amount else 0.0,
+                    "auto_created": True,
+                    "source": "order_completion_workflow",
+                },
+            )
+
+            # Create ticket using the service
+            system_user = UserInfo(
+                user_id=0,
+                username="system",
+                email="system@dotmac.platform",
+                tenant_id=tenant_id,
+                is_platform_admin=False,
+            )
+
+        ticket_service = TicketService(session)
+        ticket = await ticket_service.create_ticket(
+            data=ticket_data,
+            current_user=system_user,
+            tenant_id=tenant_id,
+        )
+
+        logger.info(
+            "Installation ticket created from order",
+            ticket_id=ticket.id,
+            ticket_number=ticket.ticket_number,
+            order_id=order_id,
+            order_number=order.order_number,
+        )
+
+        # Create audit log
+        await audit_service.log_activity(
+            activity_type=RESOURCE_CREATED,
+            action="installation_ticket.auto_created",
+            description=f"Installation ticket {ticket.ticket_number} auto-created from order {order.order_number}",
+            tenant_id=tenant_id,
+            user_id=None,  # System-generated
+            resource_type="ticket",
+            resource_id=str(ticket.id),
+            severity=ActivitySeverity.MEDIUM,
+            details={
+                "ticket_number": ticket.ticket_number,
+                "order_id": str(order_id),
+                "order_number": order.order_number,
+                "ticket_type": "installation_request",
+                "auto_created": True,
+            },
+        )
+
+    except Exception as e:
+        logger.error(
+            "Failed to create installation ticket from order",
+            order_id=order_id,
+            error=str(e),
+            exc_info=True,
+        )
+
+
 __all__ = [
     "handle_ticket_created",
     "handle_ticket_message_added",
@@ -577,4 +729,5 @@ __all__ = [
     "handle_ticket_escalated_to_partner",
     "track_ticket_creation_analytics",
     "track_ticket_resolution_analytics",
+    "handle_order_completed_create_installation_ticket",
 ]

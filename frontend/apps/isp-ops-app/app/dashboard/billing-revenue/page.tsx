@@ -202,16 +202,15 @@ function BillingRevenuePageContent() {
         if (transactionsResponse.data?.payments) {
           const transactions: PaymentActivityItem[] = transactionsResponse.data.payments.map(
             (t, index: number) => ({
-              id: (t.id as string) || `trans-${index}`,
-              type: (t.type as "payment" | "invoice" | "subscription" | "refund") || "payment",
+              id: (t['id'] as string) || `trans-${index}`,
+              type: (t['type'] as "payment" | "invoice" | "subscription" | "refund") || "payment",
               description:
-                (t.description as string) ||
-                `Payment from ${(t.customer_name as string) || "Customer"}`,
-              amount: (t.amount as number) || 0,
-              timestamp: t.created_at
-                ? new Date(t.created_at as string).toLocaleString()
+                (t['description'] as string) ||
+                `Payment from ${(t['customer_name'] as string) || "Customer"}`,
+              amount: (t['amount'] as number) || 0,
+              timestamp: t['created_at']? new Date(t['created_at'] as string).toLocaleString()
                 : "Recently",
-              status: (t.status as "success" | "pending" | "failed") || "pending",
+              status: (t['status'] as "success" | "pending" | "failed") || "pending",
             }),
           );
           setRecentTransactions(transactions);

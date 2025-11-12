@@ -235,7 +235,7 @@ function CampaignDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const campaignId = params.id as string;
+  const campaignId = params['id'] as string;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -296,17 +296,17 @@ function CampaignDetailsContent() {
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignFormSchema),
-    values: campaign
-      ? {
-          name: campaign.name,
-          description: campaign.description || "",
-          trigger_after_days: campaign.trigger_after_days,
-          max_retries: campaign.max_retries,
-          retry_interval_days: campaign.retry_interval_days,
-          priority: campaign.priority,
-          is_active: campaign.is_active,
-        }
-      : undefined,
+    ...(campaign && {
+      values: {
+        name: campaign.name,
+        description: campaign.description || "",
+        trigger_after_days: campaign.trigger_after_days,
+        max_retries: campaign.max_retries,
+        retry_interval_days: campaign.retry_interval_days,
+        priority: campaign.priority,
+        is_active: campaign.is_active,
+      },
+    }),
   });
 
   // Update campaign mutation
@@ -420,8 +420,11 @@ function CampaignDetailsContent() {
     });
   };
 
-  const onSubmit = (data: CampaignFormValues) => {
-    updateCampaignMutation.mutate(data);
+  const onSubmit: React.FormEventHandler<HTMLFormElement> = (e) => {
+    e.preventDefault();
+    form.handleSubmit((data: CampaignFormValues) => {
+      updateCampaignMutation.mutate(data);
+    })(e);
   };
 
   const handleDeleteConfirm = () => {
@@ -953,7 +956,7 @@ function CampaignDetailsContent() {
             <DialogDescription>Update campaign settings</DialogDescription>
           </DialogHeader>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={onSubmit} className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"

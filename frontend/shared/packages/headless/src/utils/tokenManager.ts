@@ -153,7 +153,7 @@ class SecureTokenManager {
     },
 
     validateIssuer: (issuer: string): boolean => {
-      const expectedIssuer = process.env.NEXT_PUBLIC_JWT_ISSUER || "dotmac-platform";
+      const expectedIssuer = process.env["NEXT_PUBLIC_JWT_ISSUER"] || "dotmac-platform";
       if (issuer !== expectedIssuer) {
         return false;
       }
@@ -161,7 +161,7 @@ class SecureTokenManager {
     },
 
     validateAudience: (audience: string): boolean => {
-      const expectedAudience = process.env.NEXT_PUBLIC_JWT_AUDIENCE || "dotmac-frontend";
+      const expectedAudience = process.env["NEXT_PUBLIC_JWT_AUDIENCE"] || "dotmac-frontend";
       if (audience !== expectedAudience) {
         return false;
       }

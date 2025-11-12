@@ -42,7 +42,7 @@ import {
 export default function TicketDetailPage() {
   const params = useParams();
   const router = useRouter();
-  const ticketId = params.id as string;
+  const ticketId = params['id'] as string;
 
   const { ticket, loading, refetch } = useTicket(ticketId, true);
   const { addMessage, loading: sendingMessage } = useAddMessage();

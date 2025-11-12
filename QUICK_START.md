@@ -73,7 +73,7 @@ cd frontend && pnpm dev:backend   # delegates to scripts/quick-backend-start.sh
 3. **LOCAL_DEVELOPMENT.md** - Running backend on host (dev mode)
 
 ### Key Guides
-- **Frontend**: frontend/ESLINT_FIXES_COMPLETE.md
+- **Frontend**: frontend/PRODUCTION_GUIDE.md
 - **Docker**: DOCKER_COMPOSE_PORTABILITY_FIXES.md
 - **Backend**: BACKEND_DEPLOYMENT_REMEDIATION.md
 - **Networking**: INGRESS_AND_REVERSE_PROXY.md

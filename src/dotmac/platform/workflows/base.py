@@ -15,11 +15,11 @@ import asyncio
 import functools
 import logging
 import time
-from collections.abc import Awaitable, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any, AsyncIterator, ParamSpec, TypeVar, cast
+from typing import Any, ParamSpec, TypeVar, cast
 
 import structlog
 from pydantic import BaseModel, ValidationError

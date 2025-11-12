@@ -156,7 +156,34 @@ class TicketDetail(TicketSummary):
     escalated_to_user_id: UUID | None = None
 
 
+class AgentPerformanceMetrics(BaseModel):
+    """Performance metrics for a support agent."""
+
+    model_config = ConfigDict()
+
+    agent_id: UUID
+    agent_name: str | None = None
+    agent_email: str | None = None
+    total_assigned: int = Field(0, description="Total tickets assigned to agent")
+    total_resolved: int = Field(0, description="Total tickets resolved by agent")
+    total_open: int = Field(0, description="Currently open tickets")
+    total_in_progress: int = Field(0, description="Tickets currently in progress")
+    avg_resolution_time_minutes: float | None = Field(
+        None, description="Average time to resolve tickets"
+    )
+    avg_first_response_time_minutes: float | None = Field(
+        None, description="Average time to first response"
+    )
+    sla_compliance_rate: float | None = Field(
+        None, description="Percentage of tickets meeting SLA (0-100)"
+    )
+    escalation_rate: float | None = Field(
+        None, description="Percentage of tickets escalated (0-100)"
+    )
+
+
 __all__ = [
+    "AgentPerformanceMetrics",
     "TicketCreate",
     "TicketMessageCreate",
     "TicketUpdate",

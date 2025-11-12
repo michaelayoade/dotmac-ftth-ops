@@ -563,9 +563,7 @@ class Settings(BaseSettings):
     )
 
     # Server configuration
-    host: str = Field(
-        "0.0.0.0", description="Server host"
-    )  # nosec B104 - Production deployments use proxy
+    host: str = Field("0.0.0.0", description="Server host")  # nosec B104 - Production deployments use proxy
     port: int = Field(8000, description="Server port")
     workers: int = Field(4, description="Number of worker processes")
     reload: bool = Field(False, description="Auto-reload on changes")
@@ -579,6 +577,94 @@ class Settings(BaseSettings):
     # Development: empty list means "trust all" for convenience
     trusted_hosts: list[str] = Field(
         default_factory=list, description="Trusted hosts (required in production, empty=all in dev)"
+    )
+
+    # Trusted proxy IPs/networks for rate limiting and IP extraction
+    # Only requests from these IPs can set X-Forwarded-For/X-Real-IP
+    # Production MUST configure this to prevent rate limit bypass via IP spoofing
+    # Common values: ["127.0.0.1", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16"]
+    trusted_proxies: list[str] = Field(
+        default_factory=lambda: ["127.0.0.1", "::1"],  # localhost only by default
+        description="Trusted proxy IPs/networks (CIDR notation) for X-Forwarded-For validation",
+    )
+
+    # ============================================================
+    # Branding & Experience
+    # ============================================================
+
+    class BrandSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Branding and contact defaults."""
+
+        model_config = ConfigDict()
+
+        product_name: str = Field("DotMac Platform", description="Customer-facing product name")
+        product_tagline: str = Field(
+            "Reusable SaaS backend and APIs to launch faster.", description="Marketing tagline"
+        )
+        company_name: str = Field("DotMac Platform", description="Legal/company name")
+        support_email: str = Field(
+            "support@example.com", description="Primary support contact email"
+        )
+        success_email: str = Field(
+            "success@example.com", description="Customer success contact email"
+        )
+        operations_email: str = Field(
+            "ops@example.com", description="Operations/NOC contact email (fallback)"
+        )
+        partner_support_email: str = Field(
+            "partner@example.com", description="Partner escalation contact email"
+        )
+        notification_domain: str = Field(
+            "dotmac.com",
+            description="Domain used for message IDs and transactional communications",
+        )
+
+    brand: BrandSettings = Field(  # type: ignore[call-arg]
+        default_factory=BrandSettings,
+        description="Branding defaults for communications and UI copy",
+    )
+
+    # ============================================================
+    # URL Templates & External Links
+    # ============================================================
+
+    class URLSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """URL templates used when endpoints are not provided externally."""
+
+        model_config = ConfigDict()
+
+        tenant_url_template: str = Field(
+            "https://tenant-{tenant_id}.example.com",
+            description="Format string for fallback tenant URLs (expects tenant_id)",
+        )
+        partner_subdomain_template: str = Field(
+            "https://{subdomain}.platform.example.com",
+            description="Format string for partner white-label subdomains",
+        )
+        activation_domain_template: str = Field(
+            "https://{slug}.dotmac.io",
+            description="Format string for tenant activation URLs (expects slug)",
+        )
+        billing_portal_base_url: str = Field(
+            "https://platform.dotmac.com",
+            description="Base URL for invoice/billing portal links",
+        )
+        customer_billing_dashboard_url: str = Field(
+            "https://app.example.com/tenant/billing/subscription",
+            description="Default dashboard URL embedded in billing emails",
+        )
+        payment_method_update_url: str = Field(
+            "https://app.example.com/tenant/billing/payment-methods",
+            description="Default payment method update URL embedded in billing emails",
+        )
+        exit_survey_base_url: str = Field(
+            "https://survey.dotmac.com/exit",
+            description="Base URL for customer feedback/exit surveys",
+        )
+
+    urls: URLSettings = Field(  # type: ignore[call-arg]
+        default_factory=URLSettings,
+        description="URL templates and external links used across communications",
     )
 
     # ============================================================
@@ -923,22 +1009,25 @@ class Settings(BaseSettings):
         model_config = ConfigDict()
 
         enabled: bool = Field(True, description="Enable CORS")
-        origins: list[str] = Field(
-            default_factory=lambda: [
-                "http://localhost:3000",  # Frontend dev server
-                "http://localhost:3001",  # Alternative frontend port
-                "http://localhost:8000",  # Backend (for Swagger UI)
-                "http://127.0.0.1:3000",
-                "http://127.0.0.1:8000",
-            ],
-            description="Allowed origins for CORS",
-        )
+        origins: list[str] = Field(default_factory=list, description="Allowed origins for CORS")
         methods: list[str] = Field(default_factory=lambda: ["*"], description="Allowed methods")
         headers: list[str] = Field(default_factory=lambda: ["*"], description="Allowed headers")
         credentials: bool = Field(True, description="Allow credentials")
         max_age: int = Field(3600, description="Max age for preflight")
 
-    cors: CORSSettings = CORSSettings()  # type: ignore[call-arg]
+    cors: CORSSettings = Field(
+        default_factory=lambda: Settings.CORSSettings(
+            origins=[
+                "http://localhost:3000",
+                "http://localhost:3001",
+                "http://localhost:3002",
+                "http://localhost:8000",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8000",
+            ]
+        ),
+        description="CORS settings",
+    )
 
     # ============================================================
     # Email & SMTP Settings
@@ -1446,6 +1535,52 @@ class Settings(BaseSettings):
         aws_region: str = Field("us-east-1", description="AWS region for SNS")
 
     notifications: NotificationSettings = NotificationSettings()  # type: ignore[call-arg]
+
+    # ============================================================
+    # Audit & Logging
+    # ============================================================
+
+    class AuditSettings(BaseModel):  # BaseModel resolves to Any in isolation
+        """Audit and logging configuration."""
+
+        model_config = ConfigDict()
+
+        # Frontend log ingestion security
+        frontend_log_secret: str | None = Field(
+            default=None,
+            description="Shared secret for frontend log ingestion. Required in production to prevent audit log forgery.",
+        )
+        frontend_log_allowed_origins: list[str] = Field(
+            default_factory=lambda: ["*"],
+            description=(
+                "Allowed origins for frontend log ingestion. "
+                "Format: Full canonical URLs with scheme, host, and optional port. "
+                "Examples: ['https://app.example.com', 'https://app.example.com:8443'] "
+                "Use '*' to allow all origins (NOT recommended for production). "
+                "HTTPS is enforced for security unless explicitly using http://localhost or http://127.0.0.1 for development."
+            ),
+        )
+        frontend_log_require_auth: bool = Field(
+            default=False,
+            description="Require authentication for frontend log ingestion (recommended for production)",
+        )
+
+        # Audit retention
+        audit_retention_days: int = Field(
+            default=90,
+            ge=1,
+            description="Number of days to retain audit logs before archiving",
+        )
+        audit_archive_enabled: bool = Field(
+            default=True,
+            description="Enable audit log archiving",
+        )
+        audit_archive_location: str = Field(
+            default="/var/audit/archive",
+            description="Directory path for audit log archives (use absolute path)",
+        )
+
+    audit: AuditSettings = AuditSettings()  # type: ignore[call-arg]
 
     # ============================================================
     # Feature Flags

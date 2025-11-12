@@ -387,7 +387,9 @@ class PlanValidator:
             priority_level = (
                 "high"
                 if self.plan.qos_priority >= 70
-                else "medium" if self.plan.qos_priority >= 40 else "low"
+                else "medium"
+                if self.plan.qos_priority >= 40
+                else "low"
             )
             self._add_result(
                 "qos_configured",

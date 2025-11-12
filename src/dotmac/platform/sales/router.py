@@ -25,6 +25,7 @@ from ..dependencies import (
 from ..deployment.service import DeploymentService
 from ..events.bus import EventBus
 from ..notifications.service import NotificationService
+from ..settings import settings
 from ..tenant.service import TenantService
 from .models import OrderStatus
 from .schemas import (
@@ -48,6 +49,14 @@ public_router = APIRouter(
 router = APIRouter(
     prefix="/orders",
 )
+
+
+def _format_activation_url(slug: str) -> str:
+    template = settings.urls.activation_domain_template
+    try:
+        return template.format(slug=slug, tenant_slug=slug)
+    except (KeyError, ValueError):
+        return template
 
 
 def get_order_service(
@@ -264,7 +273,7 @@ def get_public_order_status(
     # Build activation URL if ready
     activation_url = None
     if order.status == OrderStatus.ACTIVE and order.organization_slug:
-        activation_url = f"https://{order.organization_slug}.dotmac.io"
+        activation_url = _format_activation_url(order.organization_slug)
 
     return OrderStatusResponse(
         order_number=order.order_number,

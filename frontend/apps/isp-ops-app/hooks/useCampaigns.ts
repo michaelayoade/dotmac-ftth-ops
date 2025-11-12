@@ -1,4 +1,3 @@
-import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
@@ -44,50 +43,8 @@ export function useUpdateCampaign() {
   });
 }
 
-export function useCampaignWebSocket(campaignId: string | null) {
-  const [socket, setSocket] = React.useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!campaignId) {
-      return;
-    }
-
-    const base = process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001";
-    const url = `${base}/api/v1/realtime/ws/campaigns/${campaignId}`;
-    const ws = new WebSocket(url);
-
-    ws.onopen = () => {
-      setIsConnected(true);
-    };
-    ws.onclose = () => {
-      setIsConnected(false);
-    };
-    ws.onerror = () => {
-      setIsConnected(false);
-    };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, [campaignId]);
-
-  const sendCommand = React.useCallback(
-    (type: "pause_campaign" | "resume_campaign" | "cancel_campaign") => {
-      if (socket && isConnected) {
-        socket.send(JSON.stringify({ type }));
-      }
-    },
-    [socket, isConnected],
-  );
-
-  return {
-    socket,
-    isConnected,
-    pause: React.useCallback(() => sendCommand("pause_campaign"), [sendCommand]),
-    resume: React.useCallback(() => sendCommand("resume_campaign"), [sendCommand]),
-    cancel: React.useCallback(() => sendCommand("cancel_campaign"), [sendCommand]),
-  };
-}
+/**
+ * WebSocket hook for campaign control
+ * Re-exports the shared implementation from useRealtime which has proper auth
+ */
+export { useCampaignWebSocket } from "./useRealtime";

@@ -64,7 +64,7 @@ interface Job {
 function PlaybookDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const templateId = params?.id as string;
+  const templateId = params?.['id'] as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [showEditDialog, setShowEditDialog] = useState(false);

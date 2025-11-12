@@ -244,19 +244,19 @@ export const deleteCookie = (name: string, path = "/"): void => {
  * Check if running in development mode
  */
 export const isDevelopment = (): boolean => {
-  return process.env.NODE_ENV === "development";
+  return process.env["NODE_ENV"] === "development";
 };
 
 /**
  * Check if running in production mode
  */
 export const isProduction = (): boolean => {
-  return process.env.NODE_ENV === "production";
+  return process.env["NODE_ENV"] === "production";
 };
 
 /**
  * Check if running in test mode
  */
 export const isTest = (): boolean => {
-  return process.env.NODE_ENV === "test";
+  return process.env["NODE_ENV"] === "test";
 };

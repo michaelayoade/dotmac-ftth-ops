@@ -3,17 +3,23 @@
  * Tests complete workflows that an admin would perform
  *
  * Configuration via environment variables:
- * - E2E_BASE_URL: Base URL for the app (default: http://localhost:3000)
+ * - ISP_OPS_URL: Base URL for the ISP app (default: http://localhost:3001)
  * - E2E_ADMIN_USERNAME: Admin username (default: admin)
  * - E2E_ADMIN_PASSWORD: Admin password (default: admin123)
  */
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("Admin User Journey", () => {
   // Use environment variables with fallbacks
-  const BASE_APP_URL = process.env.E2E_BASE_URL || "http://localhost:3000";
+  const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
   const TEST_USERNAME = process.env.E2E_ADMIN_USERNAME || "admin";
   const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "admin123";
+  const BOOT_TIMEOUT = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+  const SELECTOR_TIMEOUT = parseInt(process.env.E2E_SELECTOR_TIMEOUT || "15000", 10);
+  const AUTH_STATE = path.resolve(__dirname, "../../.auth/isp-admin.json");
+
+  test.use({ storageState: AUTH_STATE });
 
   /**
    * Helper to login using test E2E hook
@@ -24,10 +30,7 @@ test.describe("Admin User Journey", () => {
    * For testing the actual login form UI, see login-form.spec.ts
    */
   async function login(page: any) {
-    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load" });
-
-    // Wait for page to be fully loaded
-    await page.waitForLoadState("domcontentloaded");
+    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load", timeout: BOOT_TIMEOUT });
 
     // Listen for console logs
     page.on("console", (msg) => console.log(`[Browser Console] ${msg.text()}`));
@@ -46,7 +49,9 @@ test.describe("Admin User Journey", () => {
     });
 
     // Wait for the E2E login function to be available
-    await page.waitForFunction(() => (window as any).__e2e_login !== undefined, { timeout: 5000 });
+    await page.waitForFunction(() => (window as any).__e2e_login !== undefined, {
+      timeout: BOOT_TIMEOUT,
+    });
 
     // Call the login function (don't await the inner promise, just trigger it)
     await page.evaluate(
@@ -60,11 +65,22 @@ test.describe("Admin User Journey", () => {
     );
 
     // Wait for redirect to dashboard (this happens after login completes)
-    await page.waitForURL(/dashboard/, { timeout: 15000 });
+    await page.waitForURL(/dashboard/, { timeout: BOOT_TIMEOUT });
+  }
+
+  async function ensureAuthenticated(page: any) {
+    await page.goto(`${BASE_APP_URL}/dashboard`, {
+      waitUntil: "load",
+      timeout: BOOT_TIMEOUT,
+    });
+
+    if (page.url().includes("/login")) {
+      await login(page);
+    }
   }
 
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await ensureAuthenticated(page);
   });
 
   test("admin can navigate dashboard", async ({ page }) => {
@@ -86,7 +102,7 @@ test.describe("Admin User Journey", () => {
 
     // FIXED: Assert the link is visible instead of silently logging
     await expect(userManagementLink).toBeVisible({
-      timeout: 5000,
+      timeout: SELECTOR_TIMEOUT,
     });
 
     await userManagementLink.click();
@@ -97,7 +113,7 @@ test.describe("Admin User Journey", () => {
 
     // Look for user list - assert it exists
     const userList = page.locator('[data-testid="user-list"], table, .user-table').first();
-    await expect(userList).toBeVisible({ timeout: 5000 });
+    await expect(userList).toBeVisible({ timeout: SELECTOR_TIMEOUT });
 
     console.log("✅ User management page accessible and user list displayed");
   });
@@ -110,7 +126,7 @@ test.describe("Admin User Journey", () => {
 
     // FIXED: Assert the link is visible instead of silently logging
     await expect(settingsLink).toBeVisible({
-      timeout: 5000,
+      timeout: SELECTOR_TIMEOUT,
     });
 
     await settingsLink.click();
@@ -121,7 +137,7 @@ test.describe("Admin User Journey", () => {
 
     // Look for settings content - assert it exists
     const settingsContent = page.locator('[data-testid="settings"], .settings, form').first();
-    await expect(settingsContent).toBeVisible({ timeout: 5000 });
+    await expect(settingsContent).toBeVisible({ timeout: SELECTOR_TIMEOUT });
 
     console.log("✅ Settings page accessible and settings content displayed");
   });
@@ -135,7 +151,7 @@ test.describe("Admin User Journey", () => {
       .first();
 
     // FIXED: Try both direct logout button and user menu, but fail if neither found
-    const hasDirectLogout = await logoutButton.isVisible({ timeout: 2000 }).catch(() => false);
+    const hasDirectLogout = await logoutButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
 
     if (hasDirectLogout) {
       await logoutButton.click();
@@ -146,7 +162,7 @@ test.describe("Admin User Journey", () => {
         .first();
 
       await expect(userMenu).toBeVisible({
-        timeout: 5000,
+        timeout: SELECTOR_TIMEOUT,
       });
 
       await userMenu.click();
@@ -155,12 +171,12 @@ test.describe("Admin User Journey", () => {
         .locator('button:has-text("Logout"), button:has-text("Sign out")')
         .first();
 
-      await expect(logoutInMenu).toBeVisible({ timeout: 5000 });
+      await expect(logoutInMenu).toBeVisible({ timeout: SELECTOR_TIMEOUT });
       await logoutInMenu.click();
     }
 
     // Assert redirect to login page
-    await page.waitForURL(/login/, { timeout: 5000 });
+    await page.waitForURL(/login/, { timeout: BOOT_TIMEOUT });
     await expect(page).toHaveURL(/login/);
 
     console.log("✅ Admin successfully logged out");
@@ -190,7 +206,7 @@ test.describe("Admin User Journey", () => {
     // Validate critical features exist
     for (const feature of criticalFeatures) {
       const element = page.locator(feature.selector).first();
-      const isVisible = await element.isVisible({ timeout: 2000 }).catch(() => false);
+      const isVisible = await element.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
 
       if (isVisible) {
         availableFeatures.push(feature.name);
@@ -202,7 +218,7 @@ test.describe("Admin User Journey", () => {
     // Document optional features
     for (const feature of optionalFeatures) {
       const element = page.locator(feature.selector).first();
-      const isVisible = await element.isVisible({ timeout: 1000 }).catch(() => false);
+      const isVisible = await element.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
 
       if (isVisible) {
         availableFeatures.push(feature.name);

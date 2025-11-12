@@ -97,7 +97,7 @@ export default function SubscriptionManagementPage() {
     const matchesSearch =
       !searchQuery ||
       plan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (plan.description ?? "").toLowerCase().includes(searchQuery.toLowerCase());
+      (plan['description']?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
     return matchesSearch;
   });

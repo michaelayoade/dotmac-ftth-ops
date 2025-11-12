@@ -10,6 +10,7 @@ from fastapi import HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.background import BackgroundTasks
 from strawberry.fastapi import BaseContext
+from strawberry.types import Info
 
 from dotmac.platform.auth.core import TokenType, UserInfo, jwt_service
 from dotmac.platform.db import AsyncSessionLocal
@@ -204,3 +205,39 @@ class Context(BaseContext):
         except Exception:
             await db_session.close()
             raise
+
+
+async def get_context(info: Info) -> dict[str, Any]:
+    """
+    Compatibility helper returning dict-style context.
+
+    Args:
+        info: Strawberry execution info
+    """
+    ctx = info.context
+
+    if isinstance(ctx, Context):
+        return {
+            "db_session": ctx.db,
+            "tenant_id": ctx.get_active_tenant_id(),
+            "current_user": ctx.current_user,
+            "loaders": ctx.loaders,
+            "request": ctx.request,
+        }
+
+    if isinstance(ctx, dict):
+        return ctx
+
+    db_session = getattr(ctx, "db", None)
+    tenant_id = getattr(ctx, "tenant_id", None)
+    current_user = getattr(ctx, "current_user", None)
+
+    get_tenant = getattr(ctx, "get_active_tenant_id", None)
+    if tenant_id is None and callable(get_tenant):
+        tenant_id = get_tenant()
+
+    return {
+        "db_session": db_session,
+        "tenant_id": tenant_id,
+        "current_user": current_user,
+    }

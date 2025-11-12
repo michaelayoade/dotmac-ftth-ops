@@ -46,7 +46,7 @@ export function AuditIntegrationWrapper({
   batchSize = 10,
   batchTimeout = 5000,
   enableLocalStorage = true,
-  enableConsoleLogging = process.env.NODE_ENV === "development",
+  enableConsoleLogging = process.env["NODE_ENV"] === "development",
   interceptFetch = true,
   interceptClicks = true,
   interceptForms = true,

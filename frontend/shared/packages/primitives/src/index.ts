@@ -35,6 +35,7 @@ export * from "./utils/bundle-optimization";
 export * from "./utils/performance";
 export * from "./utils/ssr";
 export * from "./utils/accessibility";
+export * from "./utils/icon-helpers";
 // Skeleton loading components
 export * from "./skeletons";
 

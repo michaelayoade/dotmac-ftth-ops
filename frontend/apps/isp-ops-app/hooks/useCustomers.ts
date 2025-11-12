@@ -16,9 +16,9 @@ export interface CustomerActivity {
   customer_id: string;
   activity_type: string;
   title: string;
-  description?: string;
+  description: string | undefined;
   metadata: Record<string, unknown>;
-  performed_by?: string;
+  performed_by: string | undefined;
   created_at: string;
 }
 
@@ -62,10 +62,10 @@ export const useCustomers = () => {
   const fetchMetrics = useCallback(async () => {
     try {
       const response = await apiClient.get("/customers/metrics/overview");
-      const data = (response.data || {}) as Record<string, any>;
+      const data = (response['data'] || {}) as Record<string, any>;
       logger.debug("Customer metrics fetched", {
         metricKeys: Object.keys(data ?? {}),
-        topSegmentCount: Array.isArray(data.top_segments) ? data.top_segments.length : 0,
+        topSegmentCount: Array.isArray(data['top_segments']) ? data['top_segments'].length : 0,
       });
       setMetrics(data as CustomerMetrics);
     } catch (err) {
@@ -83,18 +83,18 @@ export const useCustomers = () => {
     try {
       const response = await apiClient.post("/customers/search", {
         ...params,
-        page: params.page || 1,
-        page_size: (params as any).page_size || params.pageSize || 50,
+        page: params['page'] || 1,
+        page_size: (params as any).page_size || params['pageSize'] || 50,
       });
 
-      const data = response.data as any;
-      setCustomers(data.customers || []);
+      const data = response['data'] as any;
+      setCustomers(data['customers'] || []);
       setPagination({
-        total: data.total || 0,
-        page: data.page || 1,
-        page_size: data.page_size || 50,
-        has_next: data.has_next || false,
-        has_prev: data.has_prev || false,
+        total: data['total'] || 0,
+        page: data['page'] || 1,
+        page_size: data['page_size'] || 50,
+        has_next: data['has_next'] || false,
+        has_prev: data['has_prev'] || false,
       });
     } catch (err) {
       logger.error(
@@ -117,7 +117,7 @@ export const useCustomers = () => {
 
       try {
         const response = await apiClient.post("/customers/", customerData);
-        return response.data as Customer;
+        return response['data'] as Customer;
       } catch (err) {
         logger.error(
           "Failed to create customer",
@@ -141,7 +141,7 @@ export const useCustomers = () => {
 
       try {
         const response = await apiClient.patch(`/customers/${customerId}`, customerData);
-        const updatedCustomer = response.data as Customer;
+        const updatedCustomer = response['data'] as Customer;
 
         // Update the customer in the local state
         setCustomers((prev) =>
@@ -175,7 +175,7 @@ export const useCustomers = () => {
       });
 
       // Remove from local state
-      setCustomers((prev) => prev.filter((customer) => customer.id !== customerId));
+      setCustomers((prev) => prev.filter((customer) => customer['id'] !== customerId));
       return true;
     } catch (err) {
       logger.error(
@@ -206,7 +206,7 @@ export const useCustomers = () => {
         const url = `/customers/${customerId}${queryString ? `?${queryString}` : ""}`;
 
         const response = await apiClient.get(url);
-        return response.data;
+        return response['data'];
       } catch (err) {
         logger.error("Failed to get customer", err instanceof Error ? err : new Error(String(err)));
         setError("Failed to get customer");
@@ -265,7 +265,7 @@ export const useCustomerActivities = (customerId: string) => {
         const url = `/customers/${customerId}/activities?${queryString}`;
 
         const response = await apiClient.get(url);
-        setActivities((response.data as CustomerActivity[]) || []);
+        setActivities((response['data'] as CustomerActivity[]) || []);
       } catch (err) {
         logger.error(
           "Failed to fetch activities",
@@ -287,7 +287,7 @@ export const useCustomerActivities = (customerId: string) => {
 
       try {
         const response = await apiClient.post(`/customers/${customerId}/activities`, activityData);
-        const newActivity = response.data as CustomerActivity;
+        const newActivity = response['data'] as CustomerActivity;
         setActivities((prev) => [newActivity, ...prev]);
         return newActivity;
       } catch (err) {
@@ -338,7 +338,7 @@ export const useCustomerNotes = (customerId: string) => {
         const url = `/customers/${customerId}/notes?${queryString}`;
 
         const response = await apiClient.get(url);
-        setNotes((response.data as CustomerNote[]) || []);
+        setNotes((response['data'] as CustomerNote[]) || []);
       } catch (err) {
         logger.error("Failed to fetch notes", err instanceof Error ? err : new Error(String(err)));
         setError("Failed to fetch notes");
@@ -357,7 +357,7 @@ export const useCustomerNotes = (customerId: string) => {
 
       try {
         const response = await apiClient.post(`/customers/${customerId}/notes`, noteData);
-        const newNote = response.data as CustomerNote;
+        const newNote = response['data'] as CustomerNote;
         setNotes((prev) => [newNote, ...prev]);
         return newNote;
       } catch (err) {
@@ -407,7 +407,7 @@ export const useCustomer = () => {
         const url = `/customers/${customerId}${queryString ? `?${queryString}` : ""}`;
 
         const response = await apiClient.get(url);
-        return response.data;
+        return response['data'];
       } catch (err) {
         logger.error("Failed to get customer", err instanceof Error ? err : new Error(String(err)));
         setError("Failed to get customer");

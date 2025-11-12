@@ -23,7 +23,7 @@ from pyrad.client import Client, Timeout
 from pyrad.dictionary import Dictionary
 from pyrad.packet import AccessAccept, AccessReject, AccessRequest
 
-from tests.helpers.docker_env import get_service_host, is_running_in_docker
+from tests.helpers.docker_env import get_service_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.infra]
 

@@ -294,7 +294,7 @@ export default function IntegrationsPage() {
   const filteredPlugins = availablePlugins.filter(
     (plugin) =>
       plugin.name.toLowerCase().includes(searchLower) ||
-      (plugin.description?.toLowerCase() ?? "").includes(searchLower),
+      (plugin['description']?.toLowerCase() ?? "").includes(searchLower),
   );
 
   if (isLoading) {
@@ -554,8 +554,8 @@ export default function IntegrationsPage() {
                               <Button
                                 variant="ghost"
                                 className="h-8 w-8 p-0"
-                                aria-label={`Open actions for webhook ${webhook.description ?? webhook.url}`}
-                                title={`Open actions for webhook ${webhook.description ?? webhook.url}`}
+                                aria-label={`Open actions for webhook ${webhook['description']?? webhook.url}`}
+                                title={`Open actions for webhook ${webhook['description']?? webhook.url}`}
                               >
                                 <MoreHorizontal className="h-4 w-4" />
                               </Button>

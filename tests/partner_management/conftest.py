@@ -20,6 +20,7 @@ def partner_management_test_environment(monkeypatch):
     monkeypatch.setenv("TESTING", "1")
     monkeypatch.setenv("DATABASE_URL", "sqlite+aiosqlite:///:memory:")
 
+
 # Import partner management models to ensure they're registered
 
 
@@ -81,3 +82,24 @@ def tenant_context(test_tenant_id):
         yield context
     finally:
         set_current_tenant_id(previous)
+
+
+@pytest_asyncio.fixture
+async def async_client(db_session):
+    """Create async test client."""
+    from httpx import ASGITransport, AsyncClient
+
+    # Override database dependency
+    from dotmac.platform.db import get_async_session
+    from dotmac.platform.main import app
+
+    async def override_get_db():
+        yield db_session
+
+    app.dependency_overrides[get_async_session] = override_get_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        yield client
+
+    app.dependency_overrides.clear()

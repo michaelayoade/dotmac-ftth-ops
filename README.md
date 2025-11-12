@@ -5,7 +5,7 @@
 [![Next.js](https://img.shields.io/badge/Next.js-14-black.svg)](https://nextjs.org)
 [![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://docker.com)
 
-**Complete ISP Operations & Management Platform** - A comprehensive SaaS solution for managing Internet Service Providers (ISPs), Fiber-to-the-Home (FTTH) networks, and Wireless ISP (WISP) operations.
+**Complete ISP Operations & Management Platform** – A per-tenant infrastructure framework for Internet Service Providers (ISPs), Fiber-to-the-Home (FTTH) networks, and Wireless ISP (WISP) operations. Each ISP receives its own isolated stack (API, frontend, data-plane services, RADIUS) while DotMac supplies the shared control plane, automation tooling, and observability needed to run fleets of tenants efficiently—whether DotMac hosts the stack or the ISP deploys it on their own hardware.
 
 ## 🎯 What is DotMac ISP Ops?
 
@@ -14,20 +14,29 @@ A **full-stack ISP management platform** that combines Business Support Systems 
 ### Purpose
 
 Built for ISPs, WISPs, and fiber network operators who need:
-- 🌐 **Multi-tenant SaaS** for managing multiple ISP customers
+- 🌐 **Per-tenant ISP stacks** with shared automation (framework, not a single shared SaaS)
 - 📡 **FTTH Management** - GPON/XGS-PON OLT/ONU provisioning
 - 📶 **Wireless Management** - Point-to-point and point-to-multipoint networks
-- 🔐 **AAA Services** - FreeRADIUS integration for subscriber authentication
-- 📊 **Network Inventory** - NetBox IPAM/DCIM for IP and device management
-- 🛠️ **Device Management** - GenieACS TR-069 for CPE configuration
-- 🔒 **Secure Connectivity** - WireGuard VPN for OLT-to-cloud connections
-- 📈 **Monitoring** - LibreNMS, Prometheus, and Grafana dashboards
+- 🔐 **AAA Services** - Multi-tenant RADIUS for subscriber authentication
+- 📊 **Network Inventory** - Integrated IPAM/DCIM for IP and device management
+- 🛠️ **Device Management** - TR-069 ACS for CPE configuration
+- 🔒 **Secure Connectivity** - Per-tenant VPN for OLT-to-cloud connections
+- 📈 **Monitoring** - Unified SNMP, metrics, and dashboard tooling
 
 ## 🏗️ Platform Architecture
 
-### Docker Compose Layout
+### Per-Tenant Deployment Model
 
-Infrastructure now runs through two Compose files only. Each file contains the backend API and its paired frontend. Databases, caches, storage, and observability tooling should be provided externally (for example managed cloud services or self-hosted deployments). Use the Makefile wrappers—or call Compose directly—to launch what you need:
+DotMac separates responsibilities:
+
+- **Control plane (shared):** platform-admin portal, licensing, AWX/Terraform automation, observability, and artifact registry run once.
+- **Data plane (per tenant):** each ISP gets its own FastAPI backend, Next.js frontend, PostgreSQL schema or database, Redis slice, FreeRADIUS instance, Celery workers, ingress, and SSL/DNS configuration. Deployments can target DotMac-managed clusters or customer-hosted infrastructure using the same playbooks.
+
+This repository focuses on the application code and the automation templates that stamp out tenant environments. Local development and CI use Docker Compose bundles to model a single tenant stack end-to-end.
+
+### Docker Compose Layout (Dev & Single-Tenant Runs)
+
+Infrastructure for development/testing runs through two Compose files. Each file contains the backend API and its paired frontend for a *single tenant environment*. Databases, caches, storage, and observability tooling should be provided externally (managed cloud services or per-tenant deployments). Use the Makefile wrappers—or call Compose directly—to launch what you need when building or validating a tenant bundle:
 
 ```bash
 # Platform API + admin frontend
@@ -40,7 +49,7 @@ make start-isp
 make start-all
 ```
 
-Under the hood the targets execute:
+Under the hood the targets execute (per tenant/dev environment):
 
 ```bash
 docker compose -f docker-compose.base.yml up -d platform-backend platform-frontend
@@ -66,43 +75,43 @@ The helper script `./scripts/infra.sh` powers these targets and supports `start`
 
 ✅ **Communications**
 - Email service with templates
-- SMS notifications (Twilio)
+- SMS notifications (carrier gateway)
 - Webhook management
 - Event-driven architecture
 
 ### Operations Support Systems (OSS) - Newly Added
 
 🆕 **Network Authentication (AAA)**
-- **FreeRADIUS** - RADIUS authentication and accounting
+- **RADIUS AAA service** - Authentication and accounting
 - Multi-tenant RADIUS with bandwidth profiles
 - Session tracking and usage monitoring
 - NAS (Network Access Server) management
 
 🆕 **Network Inventory & Management**
-- **NetBox** - IPAM (IP Address Management) and DCIM
+- **IPAM/DCIM platform** - IP address management and infrastructure modeling
 - IP pool management and allocation
 - Device inventory and rack management
 - Cable management and connections
 
 🆕 **FTTH Management**
-- **VOLTHA** - Virtual OLT Hardware Abstraction (planned)
-- **GenieACS** - TR-069 ACS for CPE management
+- **OLT controller** - Virtual hardware abstraction (planned)
+- **TR-069 ACS** - CPE management
 - OLT/ONU provisioning and management
 - Fiber infrastructure tracking
 
 🆕 **Network Connectivity**
-- **WireGuard** - VPN for secure OLT-to-cloud connections
+- **VPN gateway** - Secure OLT-to-cloud connections
 - Per-tenant VPN isolation
 - Automated VPN provisioning
 
 🆕 **Monitoring & Observability**
-- **LibreNMS** - Network device monitoring via SNMP
+- **SNMP monitoring stack** - Network device telemetry
 - **Prometheus** - Metrics collection
 - **Grafana** - Visualization dashboards
 - **Jaeger** - Distributed tracing
 
 🆕 **Automation**
-- **Ansible AWX** - Network automation (planned)
+- **Automation controller** - Network automation (planned)
 - Service lifecycle automation
 - Zero-touch provisioning
 
@@ -118,18 +127,18 @@ The platform continues to expect the supporting infrastructure listed below, but
 | **Redis** | Cache & sessions | 6379 | External (required) |
 | **MinIO / Object storage** | File & asset storage | 9000/9001 | External (optional) |
 | **OpenBao / Vault** | Secrets management | 8200 | External (optional) |
-| **MongoDB** | GenieACS database | 27017 | External (if GenieACS enabled) |
+| **MongoDB** | ACS database | 27017 | External (if ACS enabled) |
 | **TimescaleDB** | Time-series metrics | 5433 | External (if metrics required) |
 
 ### ISP-Specific Services
 
 | Service | Purpose | Port | Provisioning |
 |---------|---------|------|--------------|
-| **FreeRADIUS** | AAA authentication | 1812/1813 (UDP) | External (recommended) |
-| **NetBox** | Network inventory | 8080 | External (recommended) |
-| **GenieACS** | TR-069 CPE management | 7547, 7557, 7567 | External (recommended) |
-| **WireGuard** | VPN gateway | 51820 (UDP) | External (optional) |
-| **LibreNMS** | Network monitoring | 8000 | External (optional) |
+| **RADIUS AAA service** | Authentication | 1812/1813 (UDP) | External (recommended) |
+| **IPAM/DCIM platform** | Network inventory | 8080 | External (recommended) |
+| **TR-069 ACS** | CPE management | 7547, 7557, 7567 | External (recommended) |
+| **VPN gateway** | Encrypted transport | 51820 (UDP) | External (optional) |
+| **SNMP monitoring stack** | Network monitoring | 8000 | External (optional) |
 
 ### Monitoring Services
 
@@ -218,6 +227,34 @@ pnpm dev:admin        # http://localhost:3002
 Press `Ctrl+C` in the `make dev` terminal to stop the API container, and use `make stop-platform` /
 `make stop-isp` when you are done.
 
+### 8. Branding & URL Customization
+
+Use the new centralized settings to rebrand the platform without touching code:
+
+```bash
+# backend/.env
+BRAND__PRODUCT_NAME="FiberCloud Control"
+BRAND__COMPANY_NAME="FiberCloud Networks"
+BRAND__SUPPORT_EMAIL="support@fibercloud.example"
+BRAND__NOTIFICATION_DOMAIN="alerts.fibercloud.example"
+URLS__ACTIVATION_DOMAIN_TEMPLATE="https://{slug}.fibercloud.example"
+URLS__BILLING_PORTAL_BASE_URL="https://billing.fibercloud.example"
+URLS__EXIT_SURVEY_BASE_URL="https://feedback.fibercloud.example/exit"
+
+# frontend/apps/*/.env.local
+NEXT_PUBLIC_PRODUCT_NAME="FiberCloud Control"
+NEXT_PUBLIC_SUPPORT_EMAIL="support@fibercloud.example"
+NEXT_PUBLIC_DOCS_URL="https://docs.fibercloud.example"
+NEXT_PUBLIC_SUPPORT_PORTAL_URL="https://support.fibercloud.example"
+NEXT_PUBLIC_TERMS_URL="https://fibercloud.example/terms"
+NEXT_PUBLIC_PRIVACY_URL="https://fibercloud.example/privacy"
+```
+
+All backend emails, provisioning flows, and frontend headers automatically pick up these values. See
+[`docs/ENVIRONMENT_VARIABLES.md`](docs/ENVIRONMENT_VARIABLES.md) for the complete matrix of `BRAND__*`,
+`URLS__*`, and `NEXT_PUBLIC_*` options. After onboarding, each ISP can fine-tune its own branding
+directly inside the ISP Operations UI under **Settings → Branding**—no platform-admin changes needed.
+
 ## 🌐 Access Services
 
 Once deployed, access these services:
@@ -229,9 +266,9 @@ Once deployed, access these services:
 - **Platform Admin App**: http://localhost:3002/dashboard/platform-admin – super-admin controls (feature flags, plugins, licensing, jobs)
 
 ### Network Services
-- **NetBox**: http://localhost:8080 (admin / admin)
-- **GenieACS**: http://localhost:7567 (TR-069 management)
-- **LibreNMS**: http://localhost:8000 (admin / admin)
+- **IPAM/DCIM portal**: http://localhost:8080 (admin / admin)
+- **TR-069 ACS**: http://localhost:7567 (device management)
+- **SNMP monitoring console**: http://localhost:8000 (admin / admin)
 
 ### Monitoring
 - **Grafana**: http://localhost:3400 (admin / admin)
@@ -252,7 +289,8 @@ Start with these active resources:
 - **[docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md)** – canonical entity model overview
 - **[docs/API_SPECIFICATIONS.md](docs/API_SPECIFICATIONS.md)** – REST and integration surface area
 - **[docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md](docs/FIBER_INFRASTRUCTURE_IMPLEMENTATION_OVERVIEW.md)** – fiber data model and workflows
-- **Frontend architecture**: see [frontend/ARCHITECTURE_OVERVIEW.md](frontend/ARCHITECTURE_OVERVIEW.md), [frontend/MULTI_APP_ARCHITECTURE.md](frontend/MULTI_APP_ARCHITECTURE.md), and [frontend/PRODUCTION_DEPLOYMENT_K8S.md](frontend/PRODUCTION_DEPLOYMENT_K8S.md)
+- **Frontend architecture**: see [frontend/PRODUCTION_GUIDE.md](frontend/PRODUCTION_GUIDE.md) for the current production layout and deployment plan
+- **Backend architecture**: see [BACKEND_PRODUCTION_GUIDE.md](BACKEND_PRODUCTION_GUIDE.md) for service topology, configuration, and deployment
 
 ## 🛠️ Technology Stack
 
@@ -285,13 +323,13 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 - **OpenTelemetry** (observability)
 
 ### ISP-Specific Technologies
-- **FreeRADIUS** - AAA server
-- **NetBox** - IPAM/DCIM
-- **GenieACS** - TR-069 ACS
-- **WireGuard** - VPN
-- **LibreNMS** - SNMP monitoring
-- **VOLTHA** - OLT management (planned)
-- **Ansible AWX** - Automation (planned)
+- **RADIUS AAA service** - Authentication and accounting
+- **IPAM/DCIM platform** - Inventory and addressing
+- **TR-069 ACS** - Device configuration
+- **VPN gateway** - Secure transport
+- **SNMP monitoring stack** - Network telemetry
+- **OLT controller** - Fiber access management (planned)
+- **Automation controller** - Workflow engine (planned)
 
 ## 🗺️ Key Features
 
@@ -303,11 +341,11 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 
 ### Service Lifecycle Automation
 1. **Subscriber activation** → RADIUS credentials
-2. **IP allocation** from pools → NetBox
-3. **ONU provisioning** → VOLTHA/GenieACS
-4. **CPE configuration** → GenieACS TR-069
+2. **IP allocation** from pools → IPAM/DCIM
+3. **ONU provisioning** → OLT controller + ACS
+4. **CPE configuration** → TR-069 ACS
 5. **Billing activation** → Usage tracking
-6. **Monitoring setup** → LibreNMS
+6. **Monitoring setup** → SNMP monitoring stack
 
 ### Network Management
 - **IPAM** - IP address planning and allocation
@@ -339,7 +377,7 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 - **API key management** for service-to-service
 - **Secrets in Vault** (never in code)
 - **Encryption at rest** (PostgreSQL TDE, MinIO SSE)
-- **Encryption in transit** (TLS 1.3, WireGuard)
+- **Encryption in transit** (TLS 1.3, per-tenant VPN overlay)
 - **Audit logging** (7-year retention)
 - **GDPR-ready** (data retention, right-to-delete)
 
@@ -354,7 +392,7 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 
 ### Current Status
 - **BSS modules**: 95% complete ✅
-- **OSS modules**: 85% complete ✅ (RADIUS, NetBox, GenieACS, VOLTHA, Wireless, LibreNMS integrated)
+- **OSS modules**: 85% complete ✅ (AAA, IPAM/DCIM, ACS, OLT controller, wireless, monitoring stack integrated)
 - **Service Lifecycle**: 90% complete ✅ (Orchestration with Saga pattern)
 - **Infrastructure**: Docker-based deployment ready ✅
 - **Test coverage**: **92.24% for critical services** ✅ (115 comprehensive tests across 5 core modules)
@@ -370,18 +408,18 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 
 ### Phase 1: MVP (12 weeks) - ✅ COMPLETE
 - ✅ RADIUS authentication & session management
-- ✅ NetBox IPAM/DCIM integration
-- ✅ GenieACS TR-069 CPE management
+- ✅ IPAM/DCIM integration
+- ✅ TR-069 ACS CPE management
 - ✅ Service lifecycle automation (provision, activate, suspend, deprovision)
-- ✅ LibreNMS network monitoring integration
-- ✅ WireGuard VPN management
+- ✅ SNMP monitoring integration
+- ✅ Per-tenant VPN management
 - ✅ Admin portal (13 pages, all functional)
 - ✅ Orchestration service with Saga pattern
 - ✅ ISP-specific customer fields (26 fields)
 - ✅ Dunning & collections system
 
 ### Phase 2: FTTH (Weeks 13-24) - ✅ COMPLETE
-- ✅ VOLTHA integration (OLT/ONU management)
+- ✅ OLT controller integration (OLT/ONU management)
 - ✅ ONU discovery and provisioning workflows
 - ✅ PON statistics and alarm management
 - ✅ Device management API endpoints
@@ -395,7 +433,7 @@ Each app shares the same domain-focused portals (operations, billing, diagnostic
 - ✅ Wireless infrastructure API
 
 ### Phase 4: Advanced Features (Weeks 37-48) - ✅ COMPLETE
-- ✅ Ansible AWX automation (router implemented)
+- ✅ Automation controller integration (router implemented)
 - ✅ Advanced analytics (metrics, billing, customer KPIs)
 - ✅ Fault management (alarms, SLA monitoring)
 - ✅ Diagnostics tools (ping, traceroute, bandwidth tests)
@@ -465,10 +503,10 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 
 Built on top of:
 - **DotMac Platform Services** - Core BSS framework
-- **NetBox** - Network inventory
-- **FreeRADIUS** - AAA server
-- **GenieACS** - TR-069 ACS
-- **LibreNMS** - Network monitoring
+- **IPAM/DCIM platform** - Network inventory
+- **RADIUS AAA service** - Authentication
+- **TR-069 ACS** - Device management
+- **SNMP monitoring stack** - Network monitoring
 
 ---
 

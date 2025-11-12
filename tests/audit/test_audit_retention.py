@@ -122,6 +122,41 @@ class TestAuditRetentionPolicy:
         assert policy.batch_size == 500
         assert policy.severity_retention == custom_retention
 
+    def test_retention_policy_loads_from_settings(self, tmp_path, monkeypatch):
+        """Test that retention policy loads configuration from settings."""
+        from dotmac.platform.settings import settings
+
+        # Override settings for this test
+        monkeypatch.setattr(settings.audit, "audit_retention_days", 42)
+        monkeypatch.setattr(settings.audit, "audit_archive_enabled", False)
+        monkeypatch.setattr(settings.audit, "audit_archive_location", "/custom/archive/path")
+
+        # Create policy without explicit parameters (should load from settings)
+        policy = AuditRetentionPolicy()
+
+        # Verify settings were loaded
+        assert policy.retention_days == 42
+        assert policy.archive_enabled is False
+        assert str(policy.archive_location) == "/custom/archive/path"
+
+    def test_retention_policy_explicit_params_override_settings(self, tmp_path, monkeypatch):
+        """Test that explicit parameters override settings."""
+        from dotmac.platform.settings import settings
+
+        # Override settings
+        monkeypatch.setattr(settings.audit, "audit_retention_days", 42)
+        monkeypatch.setattr(settings.audit, "audit_archive_enabled", False)
+
+        # Create policy with explicit parameters
+        policy = AuditRetentionPolicy(
+            retention_days=100, archive_enabled=True, archive_location=str(tmp_path / "test")
+        )
+
+        # Verify explicit params took precedence
+        assert policy.retention_days == 100
+        assert policy.archive_enabled is True
+        assert str(policy.archive_location) == str(tmp_path / "test")
+
 
 @pytest.mark.integration
 class TestAuditRetentionService:

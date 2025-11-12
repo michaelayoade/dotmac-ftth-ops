@@ -9,7 +9,7 @@ import { MSWProvider } from "./MSWProvider";
 import { platformConfig } from "@/lib/config";
 import { TenantProvider } from "@/lib/contexts/tenant-context";
 import { RBACProvider } from "@/contexts/RBACContext";
-import { AuthProvider } from "@/hooks/useAuth";
+import { PartnerTenantProvider } from "@/contexts/PartnerTenantContext";
 import { ToastContainer } from "@dotmac/ui";
 import { BrandingProvider } from "@/providers/BrandingProvider";
 import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
@@ -52,15 +52,15 @@ export function ClientProviders({ children }: { children: ReactNode }) {
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
             <QueryClientProvider client={queryClient}>
               <ApolloProvider>
-                <TenantProvider>
-                  <AuthProvider>
+                <PartnerTenantProvider>
+                  <TenantProvider>
                     {shouldWrapWithRBAC ? (
                       <RBACProvider>{appProviders}</RBACProvider>
                     ) : (
                       appProviders
                     )}
-                  </AuthProvider>
-                </TenantProvider>
+                  </TenantProvider>
+                </PartnerTenantProvider>
               </ApolloProvider>
             </QueryClientProvider>
           </ThemeProvider>

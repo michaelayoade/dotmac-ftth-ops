@@ -18,8 +18,17 @@ test.describe("Visual Regression - IP Input Components", () => {
   test("IPAddressInput - empty state", async ({ page }) => {
     await page.goto("/components/ip-input-demo");
 
+    // Wait for page to be fully loaded
+    await page.waitForLoadState("networkidle");
+
+    // Ensure component is visible
     const component = page.locator('[data-testid="ip-address-input"]');
-    await expect(component).toHaveScreenshot("ip-address-input-empty.png");
+    await expect(component).toBeVisible();
+
+    // Take screenshot after ensuring stability
+    await expect(component).toHaveScreenshot("ip-address-input-empty.png", {
+      animations: "disabled",
+    });
   });
 
   test("IPAddressInput - with valid IPv4", async ({ page }) => {
@@ -62,11 +71,22 @@ test.describe("Visual Regression - IP Input Components", () => {
   test("IPCalculator - with calculations", async ({ page }) => {
     await page.goto("/tools/ip-calculator");
 
-    await page.fill('input[name="cidr"]', "192.168.1.0/24");
-    await page.waitForTimeout(500); // Wait for calculations
+    // Wait for page to be fully loaded
+    await page.waitForLoadState("networkidle");
 
+    await page.fill('input[name="cidr"]', "192.168.1.0/24");
+
+    // Wait for calculations to complete by checking for result elements
     const component = page.locator('[data-testid="ip-calculator"]');
-    await expect(component).toHaveScreenshot("ip-calculator-calculated.png");
+    await expect(component).toBeVisible();
+
+    // Additional wait to ensure all calculations are rendered
+    await page.waitForTimeout(500);
+
+    // Take screenshot with animations disabled
+    await expect(component).toHaveScreenshot("ip-calculator-calculated.png", {
+      animations: "disabled",
+    });
   });
 });
 
@@ -113,8 +133,22 @@ test.describe("Visual Regression - IPAM Management", () => {
   test("IPAMDashboard - with statistics", async ({ page }) => {
     await page.goto("/ipam/dashboard");
 
+    // Wait for page and network requests to complete
+    await page.waitForLoadState("networkidle");
+
+    // Ensure dashboard is visible and data is loaded
     const dashboard = page.locator('[data-testid="ipam-dashboard"]');
-    await expect(dashboard).toHaveScreenshot("ipam-dashboard.png");
+    await expect(dashboard).toBeVisible();
+
+    // Wait for statistics to be fully rendered (check for at least one stats card)
+    const statsCards = page.locator(".stats-card, [data-testid*='stat']");
+    await expect(statsCards.first()).toBeVisible();
+
+    // Take screenshot after ensuring stability
+    await expect(dashboard).toHaveScreenshot("ipam-dashboard.png", {
+      fullPage: true,
+      animations: "disabled",
+    });
   });
 });
 

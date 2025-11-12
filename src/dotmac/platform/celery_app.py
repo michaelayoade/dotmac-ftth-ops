@@ -28,6 +28,8 @@ celery_app = Celery(
         "dotmac.platform.radius.tasks",
         "dotmac.platform.services.internet_plans.usage_monitoring_tasks",
         "dotmac.platform.services.internet_plans.usage_billing_tasks",
+        "dotmac.platform.data_transfer.tasks",
+        "dotmac.platform.network.tasks",  # IPv6 lifecycle cleanup tasks
     ],  # Auto-discover task modules
 )
 
@@ -181,6 +183,25 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
             name="services-process-usage-billing",
         )
 
+    # IPv6 Lifecycle Management (Phase 4) - Cleanup and metrics
+    # Cleanup stale IPv6 prefixes daily at 2:00 AM UTC
+    from celery.schedules import crontab
+
+    from dotmac.platform.network.tasks import cleanup_ipv6_stale_prefixes, emit_ipv6_metrics
+
+    sender.add_periodic_task(
+        crontab(hour=2, minute=0),  # Daily at 2 AM UTC
+        cleanup_ipv6_stale_prefixes.s(),
+        name="network-cleanup-ipv6-stale-prefixes",
+    )
+
+    # Emit IPv6 lifecycle metrics every 5 minutes
+    sender.add_periodic_task(
+        300.0,  # 5 minutes
+        emit_ipv6_metrics.s(),
+        name="network-emit-ipv6-metrics",
+    )
+
     logger = structlog.get_logger(__name__)
 
     # Build periodic tasks list dynamically
@@ -191,6 +212,8 @@ def setup_periodic_tasks(sender: Any, **kwargs: Any) -> None:
         "lifecycle-process-auto-resume",
         "lifecycle-perform-health-checks",
         "genieacs-check-scheduled-upgrades",
+        "network-cleanup-ipv6-stale-prefixes",
+        "network-emit-ipv6-metrics",
     ]
 
     if settings.timescaledb.is_configured:

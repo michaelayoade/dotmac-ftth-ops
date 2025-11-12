@@ -32,6 +32,7 @@ class WebhookEvent(str, Enum):
 
     # Billing events
     INVOICE_CREATED = "invoice.created"
+    INVOICE_FINALIZED = "invoice.finalized"
     INVOICE_PAID = "invoice.paid"
     INVOICE_PAYMENT_FAILED = "invoice.payment_failed"
     INVOICE_VOIDED = "invoice.voided"
@@ -43,6 +44,12 @@ class WebhookEvent(str, Enum):
     SUBSCRIPTION_CANCELLED = "subscription.cancelled"
     SUBSCRIPTION_RENEWED = "subscription.renewed"
     SUBSCRIPTION_TRIAL_ENDING = "subscription.trial_ending"
+
+    # Credit note events
+    CREDIT_NOTE_CREATED = "credit_note.created"
+    CREDIT_NOTE_ISSUED = "credit_note.issued"
+    CREDIT_NOTE_VOIDED = "credit_note.voided"
+    CREDIT_NOTE_APPLIED = "credit_note.applied"
 
     # Customer events
     CUSTOMER_CREATED = "customer.created"
@@ -65,6 +72,7 @@ class WebhookEvent(str, Enum):
 
     # File storage events
     FILE_UPLOADED = "file.uploaded"
+    FILE_DOWNLOADED = "file.downloaded"
     FILE_DELETED = "file.deleted"
     FILE_SCAN_COMPLETED = "file.scan_completed"
     STORAGE_QUOTA_EXCEEDED = "storage.quota_exceeded"

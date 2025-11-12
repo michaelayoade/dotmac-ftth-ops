@@ -140,7 +140,7 @@ function DiagnosticRunDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const runId = params.runId as string;
+  const runId = params['runId'] as string;
 
   // Fetch diagnostic run details
   const { data: run, isLoading } = useQuery<DiagnosticRun>({
@@ -449,33 +449,33 @@ function DiagnosticRunDetailsContent() {
               ) : (
                 <div className="space-y-4">
                   {/* Key Metrics (if available) */}
-                  {(run.results.signal_level ||
-                    run.results.session_count ||
-                    run.results.latency ||
-                    run.results.packet_loss) && (
+                  {(run.results['signal_level'] ||
+                    run.results['session_count'] ||
+                    run.results['latency'] ||
+                    run.results['packet_loss']) && (
                     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4">
-                      {run.results.signal_level && (
+                      {run.results['signal_level'] && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Signal Level</div>
-                          <div className="text-2xl font-bold">{run.results.signal_level}</div>
+                          <div className="text-2xl font-bold">{run.results['signal_level']}</div>
                         </div>
                       )}
-                      {run.results.session_count !== undefined && (
+                      {run.results['session_count'] !== undefined && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Sessions</div>
-                          <div className="text-2xl font-bold">{run.results.session_count}</div>
+                          <div className="text-2xl font-bold">{run.results['session_count']}</div>
                         </div>
                       )}
-                      {run.results.latency && (
+                      {run.results['latency'] && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Latency</div>
-                          <div className="text-2xl font-bold">{run.results.latency}ms</div>
+                          <div className="text-2xl font-bold">{run.results['latency']}ms</div>
                         </div>
                       )}
-                      {run.results.packet_loss !== undefined && (
+                      {run.results['packet_loss'] !== undefined && (
                         <div className="p-3 border rounded-lg">
                           <div className="text-sm text-muted-foreground">Packet Loss</div>
-                          <div className="text-2xl font-bold">{run.results.packet_loss}%</div>
+                          <div className="text-2xl font-bold">{run.results['packet_loss']}%</div>
                         </div>
                       )}
                     </div>

@@ -1,15 +1,285 @@
 ---
+# Ansible Playbook: Decommission Tenant
+#
+# This playbook completely removes a tenant deployment including all
+# infrastructure, data, configurations, and services.
+#
+# Variables required:
+#   - tenant_id: Tenant identifier
+#   - deployment_mode: dotmac_hosted or customer_hosted
+#   - backup_before_delete: Whether to backup data before deletion (default: true)
+
 - name: "Decommission DotMac tenant environment"
   hosts: "{{ target_hosts | default('all') }}"
-  gather_facts: false
+  become: yes
+  vars:
+    install_dir: "/opt/dotmac/tenant-{{ tenant_id }}"
+    data_dir: "/var/lib/dotmac/tenant-{{ tenant_id }}"
+    backup_dir: "/var/backups/dotmac/tenant-{{ tenant_id }}"
+    app_user: "dotmac-{{ tenant_id }}"
+    app_group: "dotmac"
+    compose_project_name: "dotmac-tenant-{{ tenant_id }}"
+
   tasks:
-    - name: "Stop tenant systemd unit if present"
-      ansible.builtin.systemd:
+    # ========================================================================
+    # Backup (Optional but Recommended)
+    # ========================================================================
+    - name: Create backup directory
+      file:
+        path: "{{ backup_dir }}"
+        state: directory
+        mode: '0700'
+      when: backup_before_delete | default(true)
+
+    - name: Backup database
+      postgresql_db:
+        name: "tenant_{{ tenant_id }}"
+        state: dump
+        target: "{{ backup_dir }}/database-{{ ansible_date_time.iso8601 }}.sql"
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] | default('localhost') }}"
+      when: backup_before_delete | default(true)
+      ignore_errors: yes
+
+    - name: Archive data directory
+      archive:
+        path: "{{ data_dir }}"
+        dest: "{{ backup_dir }}/data-{{ ansible_date_time.iso8601 }}.tar.gz"
+      when: backup_before_delete | default(true)
+      ignore_errors: yes
+
+    - name: Archive configuration
+      archive:
+        path: "{{ install_dir }}"
+        dest: "{{ backup_dir }}/config-{{ ansible_date_time.iso8601 }}.tar.gz"
+      when: backup_before_delete | default(true)
+      ignore_errors: yes
+
+    # ========================================================================
+    # Stop All Services (Systemd Mode)
+    # ========================================================================
+    - name: Stop frontend service
+      systemd:
+        name: "frontend-tenant-{{ tenant_id }}"
+        state: stopped
+      ignore_errors: yes
+
+    - name: Stop Celery worker service
+      systemd:
+        name: "celery-worker-tenant-{{ tenant_id }}"
+        state: stopped
+      ignore_errors: yes
+
+    - name: Stop API service
+      systemd:
         name: "dotmac-tenant-{{ tenant_id }}"
         state: stopped
-      ignore_errors: true
+      ignore_errors: yes
 
-    - name: "Remove tenant workspace"
-      ansible.builtin.file:
-        path: "{{ tenant_workspace_root }}/{{ tenant_id }}"
+    - name: Stop FreeRADIUS service
+      systemd:
+        name: "freeradius-tenant-{{ tenant_id }}"
+        state: stopped
+      ignore_errors: yes
+
+    - name: Stop Redis service
+      systemd:
+        name: "redis-tenant-{{ tenant_id }}"
+        state: stopped
+      ignore_errors: yes
+
+    # ========================================================================
+    # Stop All Services (Docker Compose Mode)
+    # ========================================================================
+    - name: Stop Docker Compose stack
+      community.docker.docker_compose:
+        project_src: "{{ install_dir }}"
+        project_name: "{{ compose_project_name }}"
         state: absent
+        remove_orphans: yes
+      when: deployment_mode == 'dotmac_hosted'
+      ignore_errors: yes
+
+    - name: Remove Docker volumes
+      command: docker volume rm {{ compose_project_name }}_postgres_data {{ compose_project_name }}_redis_data
+      when: deployment_mode == 'dotmac_hosted'
+      ignore_errors: yes
+
+    # ========================================================================
+    # Remove Systemd Service Files
+    # ========================================================================
+    - name: Disable and remove systemd service files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/etc/systemd/system/dotmac-tenant-{{ tenant_id }}.service"
+        - "/etc/systemd/system/frontend-tenant-{{ tenant_id }}.service"
+        - "/etc/systemd/system/celery-worker-tenant-{{ tenant_id }}.service"
+        - "/etc/systemd/system/freeradius-tenant-{{ tenant_id }}.service"
+        - "/etc/systemd/system/redis-tenant-{{ tenant_id }}.service"
+      notify: Reload systemd
+
+    # ========================================================================
+    # Remove Nginx Configuration
+    # ========================================================================
+    - name: Disable nginx site
+      file:
+        path: "/etc/nginx/sites-enabled/tenant-{{ tenant_id }}.conf"
+        state: absent
+      notify: Reload nginx
+
+    - name: Remove nginx site configuration
+      file:
+        path: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        state: absent
+      notify: Reload nginx
+
+    # ========================================================================
+    # Remove SSL Certificates
+    # ========================================================================
+    - name: Revoke SSL certificate
+      command: certbot revoke --cert-name {{ tenant_subdomain }}.{{ domain }} --non-interactive
+      ignore_errors: yes
+
+    - name: Delete SSL certificate
+      command: certbot delete --cert-name {{ tenant_subdomain }}.{{ domain }} --non-interactive
+      ignore_errors: yes
+
+    - name: Remove certificate renewal cron job
+      cron:
+        name: "Renew SSL certificate for tenant {{ tenant_id }}"
+        state: absent
+
+    # ========================================================================
+    # Remove FreeRADIUS Configuration
+    # ========================================================================
+    - name: Disable RADIUS site
+      file:
+        path: "/etc/freeradius/3.0/sites-enabled/tenant-{{ tenant_id }}"
+        state: absent
+
+    - name: Remove RADIUS configuration files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/etc/freeradius/3.0/radiusd-tenant-{{ tenant_id }}.conf"
+        - "/etc/freeradius/3.0/clients-tenant-{{ tenant_id }}.conf"
+        - "/etc/freeradius/3.0/sites-available/tenant-{{ tenant_id }}"
+        - "/etc/freeradius/3.0/mods-enabled/sql-tenant-{{ tenant_id }}"
+        - "/etc/freeradius/3.0/mods-available/sql-tenant-{{ tenant_id }}"
+
+    # ========================================================================
+    # Remove Redis Configuration
+    # ========================================================================
+    - name: Remove Redis configuration files
+      file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "/etc/redis/redis-tenant-{{ tenant_id }}.conf"
+
+    # ========================================================================
+    # Drop Database
+    # ========================================================================
+    - name: Terminate active database connections
+      postgresql_query:
+        db: postgres
+        query: >
+          SELECT pg_terminate_backend(pg_stat_activity.pid)
+          FROM pg_stat_activity
+          WHERE pg_stat_activity.datname = 'tenant_{{ tenant_id }}'
+            AND pid <> pg_backend_pid();
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] | default('localhost') }}"
+      ignore_errors: yes
+
+    - name: Drop database
+      postgresql_db:
+        name: "tenant_{{ tenant_id }}"
+        state: absent
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] | default('localhost') }}"
+      ignore_errors: yes
+
+    - name: Drop database user
+      postgresql_user:
+        name: "tenant_{{ tenant_id }}_user"
+        state: absent
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] | default('localhost') }}"
+      ignore_errors: yes
+
+    # ========================================================================
+    # Remove Vault Secrets (if using Vault)
+    # ========================================================================
+    - name: Delete Vault secrets
+      uri:
+        url: "{{ vault_addr }}/v1/secret/data/tenant/{{ tenant_id }}"
+        method: DELETE
+        headers:
+          X-Vault-Token: "{{ vault_token }}"
+        status_code: [204, 404]
+      when: vault_addr is defined and vault_token is defined
+      ignore_errors: yes
+
+    # ========================================================================
+    # Remove Directories
+    # ========================================================================
+    - name: Remove installation directory
+      file:
+        path: "{{ install_dir }}"
+        state: absent
+
+    - name: Remove data directory
+      file:
+        path: "{{ data_dir }}"
+        state: absent
+
+    - name: Remove tenant workspace (legacy)
+      file:
+        path: "{{ tenant_workspace_root | default('/opt/dotmac') }}/{{ tenant_id }}"
+        state: absent
+      when: tenant_workspace_root is defined
+
+    # ========================================================================
+    # Remove User & Group
+    # ========================================================================
+    - name: Remove application user
+      user:
+        name: "{{ app_user }}"
+        state: absent
+        remove: yes
+
+    # Note: We don't remove the group as other tenants may use it
+
+    # ========================================================================
+    # Clean Up Logs
+    # ========================================================================
+    - name: Remove journald logs for tenant services
+      command: journalctl --vacuum-time=1s --identifier={{ item }}
+      loop:
+        - "dotmac-tenant-{{ tenant_id }}"
+        - "frontend-tenant-{{ tenant_id }}"
+        - "celery-worker-tenant-{{ tenant_id }}"
+        - "freeradius-tenant-{{ tenant_id }}"
+        - "redis-tenant-{{ tenant_id }}"
+      ignore_errors: yes
+
+    # ========================================================================
+    # Verification
+    # ========================================================================
+    - name: Verify cleanup completion
+      debug:
+        msg: "Tenant {{ tenant_id }} decommissioned successfully. Backups available at {{ backup_dir }}"
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

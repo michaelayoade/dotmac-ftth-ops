@@ -26,8 +26,15 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+_SKIP_DB_FIXTURES = os.environ.get("DOTMAC_TEST_SKIP_DB", "").strip().lower() in {
+    "1",
+    "true",
+    "yes",
+    "on",
+}
 
-if HAS_SQLALCHEMY:
+
+if HAS_SQLALCHEMY and not _SKIP_DB_FIXTURES:
     from tests.fixtures.environment import HAS_DATABASE_BASE, _import_base_and_models
 
     @pytest.fixture(scope="session")
@@ -70,7 +77,9 @@ if HAS_SQLALCHEMY:
         if "sqlite" in db_url:
 
             @event.listens_for(engine.sync_engine, "connect")
-            def _set_sqlite_pragma(dbapi_connection, connection_record):  # pragma: no cover - setup hook
+            def _set_sqlite_pragma(
+                dbapi_connection, connection_record
+            ):  # pragma: no cover - setup hook
                 cursor = dbapi_connection.cursor()
                 cursor.execute("PRAGMA foreign_keys=ON")
                 cursor.close()
@@ -85,7 +94,9 @@ if HAS_SQLALCHEMY:
                 logger.exception("Failed to initialize SQLite schema for tests")
                 raise
         elif "postgresql" in db_url:
-            logger.info("PostgreSQL database URL detected; ensuring lifecycle schema is up to date.")
+            logger.info(
+                "PostgreSQL database URL detected; ensuring lifecycle schema is up to date."
+            )
 
             async def ensure_lifecycle_schema():
                 async with engine.begin() as conn:
@@ -307,4 +318,27 @@ if HAS_SQLALCHEMY:
 
     __all__ = ["async_db_engine_sync", "async_db_engine", "async_session", "async_db_session"]
 else:
+
+    @pytest.fixture(scope="session")
+    def async_db_engine_sync():
+        yield None
+
+    @pytest.fixture(scope="session")
+    def async_db_engine(async_db_engine_sync):  # pragma: no cover - stub
+        return async_db_engine_sync
+
+    @asynccontextmanager
+    async def _session_scope(engine=None):
+        yield None
+
+    @pytest_asyncio.fixture
+    async def async_session():
+        yield None
+
+    async_db_session = async_session
+
+    @pytest.fixture
+    def db_session():
+        yield None
+
     __all__ = []

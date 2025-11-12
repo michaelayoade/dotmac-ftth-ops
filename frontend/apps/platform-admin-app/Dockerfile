@@ -20,8 +20,12 @@ COPY tailwind.config.ts ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build the platform admin app
-RUN pnpm --filter @dotmac/platform-admin-app build
+# Build the platform admin app from its directory
+WORKDIR /app/apps/platform-admin-app
+RUN pnpm build
+
+# Reset workdir for runner stage
+WORKDIR /app
 
 FROM node:20-alpine AS runner
 WORKDIR /app

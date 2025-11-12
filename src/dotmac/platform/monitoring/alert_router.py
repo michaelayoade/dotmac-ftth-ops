@@ -13,7 +13,7 @@ from __future__ import annotations
 import secrets
 from datetime import datetime
 from time import time
-from typing import Annotated, Any, cast
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Body, Depends, Header, HTTPException, Request, status

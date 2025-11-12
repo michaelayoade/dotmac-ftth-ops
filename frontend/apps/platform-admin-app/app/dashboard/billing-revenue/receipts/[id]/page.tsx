@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useMemo, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -33,12 +33,13 @@ import {
   TableHeader,
   TableRow,
 } from "@dotmac/ui";
-import { formatCurrency } from "@/lib/utils/currency";
 import { useToast } from "@dotmac/ui";
+import { formatCurrency } from "@dotmac/features/billing";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { handleApiError } from "@/lib/error-handler";
 import { logger } from "@/lib/logger";
+import { sanitizeRichHtml } from "@dotmac/primitives";
 
 export default function ReceiptDetailPage() {
   const params = useParams();
@@ -47,7 +48,7 @@ export default function ReceiptDetailPage() {
   const queryClient = useQueryClient();
   const printRef = useRef<HTMLDivElement>(null);
 
-  const receiptId = params.id as string;
+  const receiptId = params['id'] as string;
 
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -64,6 +65,11 @@ export default function ReceiptDetailPage() {
       return response.data;
     },
   });
+
+  const sanitizedReceiptHtml = useMemo(
+    () => sanitizeRichHtml(receipt?.html_content ?? ""),
+    [receipt?.html_content],
+  );
 
   // Download PDF
   const handleDownloadPdf = async () => {
@@ -607,7 +613,7 @@ export default function ReceiptDetailPage() {
           <CardContent>
             <div
               className="border rounded-lg p-4 bg-white text-black"
-              dangerouslySetInnerHTML={{ __html: receipt.html_content }}
+              dangerouslySetInnerHTML={{ __html: sanitizedReceiptHtml }}
             />
           </CardContent>
         </Card>

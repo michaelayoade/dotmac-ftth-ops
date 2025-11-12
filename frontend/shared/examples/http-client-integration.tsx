@@ -21,7 +21,7 @@ export const apiClient = createAuthClient(
     refreshTokenKey: "refresh_token",
   },
   {
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+    baseURL: process.env["NEXT_PUBLIC_API_URL"] || "/api",
     timeout: 30000,
     retries: 3,
   },
@@ -137,12 +137,12 @@ export class TenantAwareApiService {
     if (tenantId) {
       // Specific tenant client
       this.client = createTenantClient(tenantId, {
-        baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+        baseURL: process.env["NEXT_PUBLIC_API_URL"] || "/api",
       }).enableAuth();
     } else {
       // Auto-detect tenant from hostname
       this.client = HttpClient.createFromHostname({
-        baseURL: process.env.NEXT_PUBLIC_API_URL || "/api",
+        baseURL: process.env["NEXT_PUBLIC_API_URL"] || "/api",
       }).enableAuth();
     }
   }
@@ -245,12 +245,12 @@ export const clients = {
 
   // Management platform client (specific tenant)
   management: createTenantClient("management", {
-    baseURL: process.env.NEXT_PUBLIC_MANAGEMENT_API_URL,
+    baseURL: process.env["NEXT_PUBLIC_MANAGEMENT_API_URL"],
   }).enableAuth(),
 
   // Public API client (no auth)
   public: HttpClient.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL,
+    baseURL: process.env["NEXT_PUBLIC_API_URL"],
   }),
 
   // Admin client with elevated permissions
@@ -259,7 +259,7 @@ export const clients = {
       tokenKey: "admin_token",
     },
     {
-      baseURL: process.env.NEXT_PUBLIC_ADMIN_API_URL,
+      baseURL: process.env["NEXT_PUBLIC_ADMIN_API_URL"],
     },
   ),
 };

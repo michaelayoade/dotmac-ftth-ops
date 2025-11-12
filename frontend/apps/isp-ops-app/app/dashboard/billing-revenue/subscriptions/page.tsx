@@ -76,7 +76,7 @@ interface Subscription {
   billing_cycle: "monthly" | "quarterly" | "annual";
   current_period_start: string;
   current_period_end: string;
-  trial_end?: string;
+  trial_end?: string | null;
   cancel_at_period_end: boolean;
   created_at: string;
   next_billing_date: string;
@@ -114,19 +114,21 @@ export default function SubscriptionsPage() {
   const [cancelReason, setCancelReason] = useState("");
 
   // Fetch subscriptions using GraphQL
+  const subscriptionQueryOptions = {
+    pageSize: 100,
+    includeCustomer: true,
+    includePlan: true,
+    pollInterval: 30000, // Auto-refresh every 30 seconds
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(searchQuery ? { search: searchQuery } : {}),
+  } as const;
+
   const {
     subscriptions: graphqlSubscriptions,
     isLoading: subscriptionsLoading,
     error: subscriptionsError,
     refetch: refetchSubscriptions,
-  } = useSubscriptionListGraphQL({
-    pageSize: 100,
-    status: statusFilter,
-    search: searchQuery || undefined,
-    includeCustomer: true,
-    includePlan: true,
-    pollInterval: 30000, // Auto-refresh every 30 seconds
-  });
+  } = useSubscriptionListGraphQL(subscriptionQueryOptions);
 
   // Fetch subscription metrics
   const { metrics: metricsData } = useSubscriptionMetricsGraphQL({
@@ -162,7 +164,7 @@ export default function SubscriptionsPage() {
       (sub.plan?.billingCycle?.toLowerCase() as Subscription["billing_cycle"]) || "monthly",
     current_period_start: sub.currentPeriodStart,
     current_period_end: sub.currentPeriodEnd,
-    trial_end: sub.trialEnd || undefined,
+    trial_end: sub.trialEnd || null,
     cancel_at_period_end: false, // Would need to add this field to GraphQL schema
     created_at: sub.createdAt,
     next_billing_date: sub.currentPeriodEnd,

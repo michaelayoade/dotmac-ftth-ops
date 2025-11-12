@@ -33,7 +33,8 @@ from dotmac.platform.services.internet_plans.schemas import (
 )
 from dotmac.platform.services.internet_plans.service import InternetPlanService
 from dotmac.platform.subscribers.models import Subscriber
-from dotmac.platform.tenant.models import BillingCycle as TenantBillingCycle, Tenant, TenantPlanType, TenantStatus
+from dotmac.platform.tenant.models import BillingCycle as TenantBillingCycle
+from dotmac.platform.tenant.models import Tenant, TenantPlanType, TenantStatus
 
 
 @pytest_asyncio.fixture

@@ -150,34 +150,42 @@ export default function BulkNotificationSenderPage() {
       return;
     }
 
+    const subscriberIds = recipientFilter.subscriberIds
+      ? recipientFilter.subscriberIds.split(",").map((id) => id.trim())
+      : undefined;
+    const customerIds = recipientFilter.customerIds
+      ? recipientFilter.customerIds.split(",").map((id) => id.trim())
+      : undefined;
+    const status = recipientFilter.status.length > 0 ? recipientFilter.status : undefined;
+    const connectionType = recipientFilter.connectionType.length > 0 ? recipientFilter.connectionType : undefined;
+
+    const recipientFiltersPresent =
+      subscriberIds || customerIds || status || connectionType;
+
     const request: BulkNotificationRequest = {
       channels,
-      schedule_at: scheduleAt || undefined,
-      recipient_filter: {
-        subscriber_ids: recipientFilter.subscriberIds
-          ? recipientFilter.subscriberIds.split(",").map((id) => id.trim())
-          : undefined,
-        customer_ids: recipientFilter.customerIds
-          ? recipientFilter.customerIds.split(",").map((id) => id.trim())
-          : undefined,
-        status: recipientFilter.status.length > 0 ? recipientFilter.status : undefined,
-        connection_type:
-          recipientFilter.connectionType.length > 0 ? recipientFilter.connectionType : undefined,
-      },
+      ...(scheduleAt ? { schedule_at: scheduleAt } : {}),
+      ...(recipientFiltersPresent && {
+        recipient_filter: {
+          ...(subscriberIds && { subscriber_ids: subscriberIds }),
+          ...(customerIds && { customer_ids: customerIds }),
+          ...(status && { status }),
+          ...(connectionType && { connection_type: connectionType }),
+        },
+      }),
+      ...(useCustomMessage
+        ? {
+            custom_notification: {
+              user_id: "", // Will be set by backend per recipient
+              type: "custom",
+              title: customMessage.title,
+              message: customMessage.message,
+              priority: customMessage.priority,
+              channels,
+            },
+          }
+        : { template_id: selectedTemplate }),
     };
-
-    if (useCustomMessage) {
-      request.custom_notification = {
-        user_id: "", // Will be set by backend per recipient
-        type: "custom",
-        title: customMessage.title,
-        message: customMessage.message,
-        priority: customMessage.priority,
-        channels,
-      };
-    } else {
-      request.template_id = selectedTemplate;
-    }
 
     try {
       const result = await sendBulkNotification(request);

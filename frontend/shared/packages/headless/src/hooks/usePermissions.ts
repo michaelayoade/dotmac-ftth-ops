@@ -342,11 +342,7 @@ export function usePermissions() {
         { cache: true, cacheTTL: 5 * 60 * 1000 }, // Cache for 5 minutes
       );
 
-      if (response.success && response.data) {
-        return response.data.permissions;
-      }
-
-      return [];
+      return response?.data?.permissions ?? [];
     } catch (error) {
       console.error("Failed to refresh permissions:", error);
       return [];
@@ -368,7 +364,7 @@ export function usePermissions() {
           context: context || {},
         });
 
-        return response.success && response.data?.allowed === true;
+        return response?.data?.allowed === true;
       } catch (error) {
         console.error("Permission check API call failed:", error);
         return false;

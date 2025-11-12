@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Label } from "@dotmac/ui";
@@ -32,78 +32,6 @@ import { handleApiError } from "@/lib/error-handler";
 // - sonner: toast.success('msg') -> useToast: toast({ title: 'Success', description: 'msg' })
 // - sonner: toast.error('msg') -> useToast: toast({ title: 'Error', description: 'msg', variant: 'destructive' })
 // - For complex options, refer to useToast documentation
-
-// Mock notification preferences
-const mockPreferences = {
-  email: {
-    enabled: true,
-    digest: "daily",
-    categories: {
-      security: true,
-      billing: true,
-      updates: true,
-      marketing: false,
-      team: true,
-      system: true,
-    },
-  },
-  push: {
-    enabled: true,
-    sound: true,
-    vibrate: true,
-    categories: {
-      security: true,
-      billing: true,
-      updates: false,
-      marketing: false,
-      team: true,
-      system: true,
-    },
-  },
-  inApp: {
-    enabled: true,
-    showBadge: true,
-    categories: {
-      security: true,
-      billing: true,
-      updates: true,
-      marketing: true,
-      team: true,
-      system: true,
-    },
-  },
-  sms: {
-    enabled: false,
-    onlyUrgent: true,
-    categories: {
-      security: true,
-      billing: false,
-      updates: false,
-      marketing: false,
-      team: false,
-      system: true,
-    },
-  },
-  slack: {
-    enabled: true,
-    channel: "#notifications",
-    categories: {
-      security: true,
-      billing: true,
-      updates: false,
-      marketing: false,
-      team: true,
-      system: true,
-    },
-  },
-  quietHours: {
-    enabled: true,
-    start: "22:00",
-    end: "08:00",
-    timezone: "America/Los_Angeles",
-    allowUrgent: true,
-  },
-};
 
 // Notification categories with descriptions
 const notificationCategories = [
@@ -151,44 +79,208 @@ const notificationCategories = [
   },
 ];
 
+type ChannelKey = "email" | "push" | "inApp" | "sms" | "slack";
+
+type ChannelCategories = Record<string, boolean>;
+
+interface BaseChannelPreferences {
+  enabled: boolean;
+  categories: ChannelCategories;
+}
+
+interface EmailPreferences extends BaseChannelPreferences {
+  digest: "immediate" | "hourly" | "daily" | "weekly";
+}
+
+interface PushPreferences extends BaseChannelPreferences {
+  sound: boolean;
+  vibrate: boolean;
+}
+
+interface InAppPreferences extends BaseChannelPreferences {
+  showBadge: boolean;
+}
+
+interface SmsPreferences extends BaseChannelPreferences {
+  onlyUrgent: boolean;
+}
+
+interface SlackPreferences extends BaseChannelPreferences {
+  channel: string;
+}
+
+interface QuietHoursPreferences {
+  enabled: boolean;
+  start: string;
+  end: string;
+  timezone: string;
+  allowUrgent: boolean;
+}
+
+interface NotificationPreferences {
+  pauseAll: boolean;
+  email: EmailPreferences;
+  push: PushPreferences;
+  inApp: InAppPreferences;
+  sms: SmsPreferences;
+  slack: SlackPreferences;
+  quietHours: QuietHoursPreferences;
+}
+
+const createCategoryMap = (): ChannelCategories =>
+  notificationCategories.reduce((acc, category) => {
+    acc[category.id] = false;
+    return acc;
+  }, {} as ChannelCategories);
+
+const createDefaultPreferences = (): NotificationPreferences => ({
+  pauseAll: false,
+  email: {
+    enabled: false,
+    digest: "daily",
+    categories: createCategoryMap(),
+  },
+  push: {
+    enabled: false,
+    sound: true,
+    vibrate: true,
+    categories: createCategoryMap(),
+  },
+  inApp: {
+    enabled: true,
+    showBadge: true,
+    categories: createCategoryMap(),
+  },
+  sms: {
+    enabled: false,
+    onlyUrgent: true,
+    categories: createCategoryMap(),
+  },
+  slack: {
+    enabled: false,
+    channel: "#notifications",
+    categories: createCategoryMap(),
+  },
+  quietHours: {
+    enabled: false,
+    start: "22:00",
+    end: "08:00",
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC",
+    allowUrgent: true,
+  },
+});
+
+const normalizePreferences = (data?: Partial<NotificationPreferences> | null): NotificationPreferences => {
+  const defaults = createDefaultPreferences();
+  return {
+    pauseAll: data?.pauseAll ?? defaults.pauseAll,
+    email: {
+      ...defaults.email,
+      ...(data?.email ?? {}),
+      categories: {
+        ...defaults.email.categories,
+        ...(data?.email?.categories ?? {}),
+      },
+    },
+    push: {
+      ...defaults.push,
+      ...(data?.push ?? {}),
+      categories: {
+        ...defaults.push.categories,
+        ...(data?.push?.categories ?? {}),
+      },
+    },
+    inApp: {
+      ...defaults.inApp,
+      ...(data?.inApp ?? {}),
+      categories: {
+        ...defaults.inApp.categories,
+        ...(data?.inApp?.categories ?? {}),
+      },
+    },
+    sms: {
+      ...defaults.sms,
+      ...(data?.sms ?? {}),
+      categories: {
+        ...defaults.sms.categories,
+        ...(data?.sms?.categories ?? {}),
+      },
+    },
+    slack: {
+      ...defaults.slack,
+      ...(data?.slack ?? {}),
+      categories: {
+        ...defaults.slack.categories,
+        ...(data?.slack?.categories ?? {}),
+      },
+    },
+    quietHours: {
+      ...defaults.quietHours,
+      ...(data?.quietHours ?? {}),
+    },
+  };
+};
+
 export default function NotificationSettingsPage() {
   const { toast } = useToast();
 
-  const [preferences, setPreferences] = useState(mockPreferences);
+  const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  const handleChannelToggle = (channel: string, enabled: boolean) => {
+  const fetchPreferences = useCallback(async () => {
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const response = await apiClient.get("/users/me/notification-preferences");
+      setPreferences(normalizePreferences(response.data as NotificationPreferences));
+      setHasChanges(false);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to load notification preferences.";
+      setLoadError(message);
+      setPreferences(null);
+    } finally {
+      setLoading(false);
+    }
+  }, [setHasChanges, setLoadError, setLoading, setPreferences]);
+
+  useEffect(() => {
+    void fetchPreferences();
+  }, [fetchPreferences]);
+
+  const handleChannelToggle = (channel: ChannelKey, enabled: boolean) => {
+    if (!preferences) return;
     setPreferences({
       ...preferences,
       [channel]: {
-        ...preferences[channel as keyof typeof preferences],
+        ...preferences[channel],
         enabled,
       },
     });
     setHasChanges(true);
   };
 
-  const handleCategoryToggle = (channel: string, category: string, enabled: boolean) => {
-    const channelPrefs = preferences[channel as keyof typeof preferences];
-
-    // Type guard to check if channel has categories
-    if (channelPrefs && typeof channelPrefs === "object" && "categories" in channelPrefs) {
-      setPreferences({
-        ...preferences,
-        [channel]: {
-          ...channelPrefs,
-          categories: {
-            ...(channelPrefs.categories as Record<string, boolean>),
-            [category]: enabled,
-          },
+  const handleCategoryToggle = (channel: ChannelKey, category: string, enabled: boolean) => {
+    if (!preferences) return;
+    const channelPrefs = preferences[channel];
+    setPreferences({
+      ...preferences,
+      [channel]: {
+        ...channelPrefs,
+        categories: {
+          ...channelPrefs.categories,
+          [category]: enabled,
         },
-      });
-      setHasChanges(true);
-    }
+      },
+    });
+    setHasChanges(true);
   };
 
   const handleQuietHoursToggle = (enabled: boolean) => {
+    if (!preferences) return;
     setPreferences({
       ...preferences,
       quietHours: {
@@ -199,13 +291,24 @@ export default function NotificationSettingsPage() {
     setHasChanges(true);
   };
 
+  const handlePauseAllToggle = (enabled: boolean) => {
+    if (!preferences) return;
+    setPreferences({
+      ...preferences,
+      pauseAll: enabled,
+    });
+    setHasChanges(true);
+  };
+
   const handleSavePreferences = async () => {
+    if (!preferences) return;
     setIsLoading(true);
     try {
       await apiClient.put("/users/me/notification-preferences", preferences);
+      const channelKeys = ["email", "push", "inApp", "sms", "slack"] as const;
       logger.info("Notification preferences saved", {
-        channels: Object.keys(preferences).filter(
-          (k) => k !== "quietHours" && preferences[k as keyof typeof preferences]?.enabled
+        channels: channelKeys.filter(
+          (k) => preferences[k]?.enabled === true
         ),
       });
       setHasChanges(false);
@@ -227,8 +330,7 @@ export default function NotificationSettingsPage() {
     try {
       await apiClient.delete("/users/me/notification-preferences");
       logger.info("Notification preferences reset to defaults");
-      setPreferences(mockPreferences);
-      setHasChanges(false);
+      await fetchPreferences();
       toast({ title: "Success", description: "Reset to default preferences" });
     } catch (error) {
       logger.error("Failed to reset notification preferences", error);
@@ -238,7 +340,7 @@ export default function NotificationSettingsPage() {
     }
   };
 
-  const handleTestNotification = async (channel: string) => {
+  const handleTestNotification = async (channel: ChannelKey) => {
     try {
       await apiClient.post("/notifications/test", { channel });
       logger.info("Test notification sent", { channel });
@@ -253,6 +355,47 @@ export default function NotificationSettingsPage() {
       });
     }
   };
+
+  if (loading) {
+    return (
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        <Card>
+          <CardHeader>
+            <CardTitle>Notification Settings</CardTitle>
+            <CardDescription>Loading your current preferences…</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground">
+              Please wait while we retrieve your notification configuration.
+            </p>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
+
+  if (!preferences) {
+    return (
+      <main className="max-w-5xl mx-auto px-6 py-12">
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardHeader>
+            <CardTitle>Notification Settings Unavailable</CardTitle>
+            <CardDescription>
+              {loadError || "We could not load your notification settings at this time."}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              Try again or contact support if the problem persists.
+            </p>
+            <Button variant="outline" onClick={() => fetchPreferences()}>
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -290,7 +433,7 @@ export default function NotificationSettingsPage() {
               <Label className="text-base">Pause All Notifications</Label>
               <p className="text-sm text-muted-foreground">Temporarily disable all notifications</p>
             </div>
-            <Switch />
+            <Switch checked={preferences.pauseAll} onCheckedChange={handlePauseAllToggle} />
           </div>
           <Separator />
           <div className="flex items-center justify-between">
@@ -351,24 +494,24 @@ export default function NotificationSettingsPage() {
                     <div className="flex items-center space-x-2">
                       <input
                         type="radio"
-                        value="instant"
-                        id="instant"
+                        value="immediate"
+                        id="immediate"
                         name="email-digest"
-                        checked={preferences.email.digest === "instant"}
+                        checked={preferences.email.digest === "immediate"}
                         onChange={() => {
                           setPreferences({
                             ...preferences,
                             email: {
                               ...preferences.email,
-                              digest: "instant",
+                              digest: "immediate",
                             },
                           });
                           setHasChanges(true);
                         }}
                         className="h-4 w-4 rounded-full border-gray-300"
                       />
-                      <Label htmlFor="instant" className="font-normal cursor-pointer">
-                        Instant
+                      <Label htmlFor="immediate" className="font-normal cursor-pointer">
+                        Immediate
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">

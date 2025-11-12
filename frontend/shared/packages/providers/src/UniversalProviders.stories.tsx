@@ -3,7 +3,6 @@ import { fn } from '@storybook/test';
 import React from 'react';
 import { UniversalProviders, type FeatureFlags } from './UniversalProviders';
 import { Card, Button } from '@dotmac/primitives';
-import { useAuth } from '@dotmac/auth';
 
 const meta: Meta<typeof UniversalProviders> = {
   title: 'Providers/UniversalProviders',
@@ -73,19 +72,8 @@ type Story = StoryObj<typeof meta>;
 
 // Demo component that uses various providers
 const ProviderDemo: React.FC<{ portal: string }> = ({ portal }) => {
-  const { user, isAuthenticated, login, logout, permissions } = useAuth();
+  const { user, isAuthenticated, login, logout, permissions } = useMockAuth(portal);
   const [notifications, setNotifications] = React.useState<string[]>([]);
-
-  const handleLogin = async () => {
-    try {
-      await login({
-        email: `demo@${portal}.dotmac.cloud`,
-        password: 'demo123'
-      });
-    } catch (error) {
-      console.log('Demo login - would handle error in real app');
-    }
-  };
 
   const addNotification = () => {
     setNotifications(prev => [...prev, `Notification ${Date.now()}`]);
@@ -120,7 +108,7 @@ const ProviderDemo: React.FC<{ portal: string }> = ({ portal }) => {
           <div className="flex gap-3">
             {!isAuthenticated ? (
               <Button
-                onClick={handleLogin}
+                onClick={login}
                 variant={portal === 'admin' ? 'admin' : 'default'}
               >
                 Login as Demo User
@@ -203,6 +191,29 @@ const getMaxNotifications = (portal: string) => {
   };
   return maxNotifications[portal] || 3;
 };
+
+function useMockAuth(portal: string) {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+
+  const user = isAuthenticated
+    ? {
+        email: `demo@${portal}.dotmac.cloud`,
+        role: portal === 'admin' ? 'super_admin' : 'member',
+      }
+    : null;
+
+  const login = async () => {
+    setIsAuthenticated(true);
+  };
+
+  const logout = async () => {
+    setIsAuthenticated(false);
+  };
+
+  const permissions = isAuthenticated ? ['system.manage'] : [];
+
+  return { user, isAuthenticated, login, logout, permissions };
+}
 
 // Basic usage
 export const Default: Story = {

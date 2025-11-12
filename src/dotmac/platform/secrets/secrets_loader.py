@@ -7,7 +7,7 @@ and update the application settings with secure values at runtime.
 
 import inspect
 import logging
-from typing import Any, cast
+from typing import Any
 
 from dotmac.platform.secrets.vault_client import AsyncVaultClient, VaultClient, VaultError
 from dotmac.platform.settings import Settings, settings

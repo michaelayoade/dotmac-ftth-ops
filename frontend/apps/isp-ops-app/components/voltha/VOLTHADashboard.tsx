@@ -119,7 +119,7 @@ export function VOLTHADashboard() {
   ) => {
     try {
       const device = onus.find((d) => d.id === deviceId);
-      const query = (device as any)?.metadata?.olt_id || device?.parent_id;
+      const query = (device as any)?.metadata?.['olt_id'] || device?.parent_id;
       const url = query
         ? `/access/devices/${deviceId}/${operation}?olt_id=${encodeURIComponent(query)}`
         : `/access/devices/${deviceId}/${operation}`;

@@ -231,8 +231,7 @@ async def sample_customers(test_tenant):
     from dotmac.platform.customer_management.models import Customer
 
     return [
-        Customer(**_build_customer_kwargs(index=i, tenant_id=test_tenant.id))
-        for i in range(1, 4)
+        Customer(**_build_customer_kwargs(index=i, tenant_id=test_tenant.id)) for i in range(1, 4)
     ]
 
 

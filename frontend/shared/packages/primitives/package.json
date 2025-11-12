@@ -46,7 +46,7 @@
     "dompurify": "^3.0.5",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.363.0",
-    "react-hook-form": "^7.51.1",
+    "react-hook-form": "^7.66.0",
     "react-window": "^2.2.1",
     "recharts": "^2.12.2",
     "tailwind-merge": "^2.0.0",

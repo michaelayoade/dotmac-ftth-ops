@@ -5,10 +5,10 @@ All routes except /health, /ready, and /metrics require authentication.
 """
 
 import importlib
-from collections.abc import Sequence
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Awaitable, Callable, cast
+from typing import Any, cast
 
 import structlog
 from fastapi import Depends, FastAPI
@@ -97,6 +97,15 @@ ROUTER_CONFIGS = [
         requires_auth=True,
         description="Legacy platform administration path (deprecated)",
     ),
+    # NEW: Cross-tenant platform admin endpoints (billing, analytics, audit)
+    RouterConfig(
+        module_path="dotmac.platform.platform_admin",
+        router_name="router",
+        prefix="/api/v1",  # Module has /platform prefix
+        tags=["Platform Admin - Cross-Tenant"],
+        requires_auth=True,  # Uses require_permission("platform.admin") internally
+        description="Cross-tenant data access for platform administrators (billing, analytics, audit)",
+    ),
     RouterConfig(
         module_path="dotmac.platform.access.router",
         router_name="router",
@@ -120,6 +129,22 @@ ROUTER_CONFIGS = [
         tags=["Analytics"],
         requires_auth=True,  # Analytics requires authentication
         description="Analytics and metrics endpoints",
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.network.router",
+        router_name="router",
+        prefix="/api/v1",
+        tags=["Network"],
+        requires_auth=True,
+        description="Subscriber network profile management (VLAN, IPv6, static IP bindings)",
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.ip_management.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /ip-management prefix
+        tags=["IP Management"],
+        requires_auth=True,
+        description="Static IP pool management, reservations, and conflict detection",
     ),
     RouterConfig(
         module_path="dotmac.platform.file_storage.router",
@@ -306,6 +331,14 @@ ROUTER_CONFIGS = [
         description="Audit trails and activity tracking",
     ),
     RouterConfig(
+        module_path="dotmac.platform.audit.router",
+        router_name="public_router",
+        prefix="/api/v1",  # Module has /audit prefix
+        tags=["Audit - Public"],
+        requires_auth=False,  # Public endpoints for frontend error logging
+        description="Public audit endpoints (frontend error logging with rate limiting)",
+    ),
+    RouterConfig(
         module_path="dotmac.platform.metrics.router",
         router_name="router",
         prefix="/api/v1",  # Module has /metrics prefix
@@ -319,7 +352,7 @@ ROUTER_CONFIGS = [
         prefix="/api/v1",  # Module has /realtime prefix
         tags=["Real-Time"],
         description="Real-time updates via SSE and WebSocket",
-        requires_auth=True,
+        requires_auth=False,  # Endpoints handle auth individually with get_current_user_optional
     ),
     RouterConfig(
         module_path="dotmac.platform.rate_limit.router",
@@ -514,11 +547,27 @@ ROUTER_CONFIGS = [
         requires_auth=True,
     ),
     RouterConfig(
+        module_path="dotmac.platform.partner_management.partner_multitenant_router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /partner prefix
+        tags=["Partner Multi-Tenant"],
+        description="Partner multi-tenant account management (MSP/Enterprise HQ)",
+        requires_auth=True,
+    ),
+    RouterConfig(
         module_path="dotmac.platform.ticketing.router",
         router_name="router",
         prefix="/api/v1",  # Module has /tickets prefix
         tags=["Ticketing"],
         description="Cross-organization ticketing workflows",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.ticketing.availability_router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /tickets/agents prefix
+        tags=["Agent Availability"],
+        description="Agent availability status management",
         requires_auth=True,
     ),
     RouterConfig(
@@ -793,6 +842,72 @@ ROUTER_CONFIGS = [
         description="Public order creation and status checking (no auth required)",
         requires_auth=False,
     ),
+    RouterConfig(
+        module_path="dotmac.platform.field_service.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /field-service prefix
+        tags=["Field Service"],
+        description="Technician management, location tracking, and job assignment",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.project_management.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /project-management prefix
+        tags=["Project Management"],
+        description="Project, task, and team management for field service operations",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.project_management.template_router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /project-management/templates prefix
+        tags=["Project Templates"],
+        description="Template builder for auto-generating projects from orders",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.project_management.scheduling_router",
+        router_name="router",
+        prefix="",  # Router has /api/v1/scheduling prefix built-in
+        tags=["Scheduling"],
+        description="Technician scheduling, task assignment, and availability management",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.project_management.time_resource_router",
+        router_name="router",
+        prefix="",  # Router has /api/v1 prefix built-in
+        tags=["Time Tracking", "Resource Management"],
+        description="Clock in/out time tracking and equipment/vehicle resource management",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.geo.router",
+        router_name="router",
+        prefix="/api/v1",  # Module has /geo prefix
+        tags=["Geographic Services"],
+        description="Geocoding and routing services using OpenStreetMap",
+        requires_auth=True,
+    ),
+    RouterConfig(
+        module_path="dotmac.platform.push.router",
+        router_name="router",
+        prefix="",  # Router has /api/v1/push prefix built-in
+        tags=["Push Notifications"],
+        description="PWA push notification subscriptions and sending",
+        requires_auth=True,
+    ),
+    # DISABLED: AI chat integration - needs data access, function calling, and ticket/email integration
+    # See docs/AI_INTEGRATION_GUIDE.md for implementation roadmap
+    # RouterConfig(
+    #     module_path="dotmac.platform.ai.router",
+    #     router_name="router",
+    #     prefix="/api/v1",  # Module has /ai prefix
+    #     tags=["AI - Chat"],
+    #     description="AI-powered chat for customer support and admin assistance",
+    #     requires_auth=True,
+    # ),
 ]
 
 

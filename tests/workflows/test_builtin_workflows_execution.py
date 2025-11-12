@@ -254,7 +254,9 @@ async def test_lead_to_customer_workflow_executes_all_services(async_db_session)
         ("ticketing_service", "create_ticket"),
     ]
     assert execution.result["steps"]["create_customer"]["customer_id"] == "cust-100"
-    assert execution.result["steps"]["provision_tenant"]["tenant_url"].startswith("https://cust-100")
+    assert execution.result["steps"]["provision_tenant"]["tenant_url"].startswith(
+        "https://cust-100"
+    )
     assert publisher.events and publisher.events[0][0] == "workflow.execution.completed"
 
     reloaded = await workflow_service.get_execution(execution.id, include_steps=True)

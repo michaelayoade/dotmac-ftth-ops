@@ -38,6 +38,7 @@ import { useManualPayments, useVerifyPayment } from "@/hooks/useBankAccounts";
 import type {
   ManualPaymentResponse,
   PaymentMethodType,
+  PaymentSearchFilters,
 } from "@/lib/services/bank-accounts-service";
 import { PaymentRecordDialog } from "./PaymentRecordDialog";
 import { format } from "date-fns";
@@ -52,13 +53,17 @@ export function ManualPaymentsTab() {
     endDate: "",
   });
 
-  const { data: payments, isLoading } = useManualPayments({
-    status: filters.status !== "all" ? filters.status : undefined,
-    payment_method: filters.method !== "all" ? (filters.method as PaymentMethodType) : undefined,
-    search: filters.search || undefined,
-    date_from: filters.startDate || undefined,
-    date_to: filters.endDate || undefined,
-  });
+  const manualPaymentFilters: PaymentSearchFilters = {
+    ...(filters.status !== "all" && { status: filters.status }),
+    ...(filters.method !== "all" && {
+      payment_method: filters.method as PaymentMethodType,
+    }),
+    ...(filters.search && { search: filters.search }),
+    ...(filters.startDate && { date_from: filters.startDate }),
+    ...(filters.endDate && { date_to: filters.endDate }),
+  };
+
+  const { data: payments, isLoading } = useManualPayments(manualPaymentFilters);
 
   const verifyPayment = useVerifyPayment();
 

@@ -363,7 +363,7 @@ function CampaignManagementContent() {
   const filteredCampaigns = campaigns.filter((campaign) => {
     const matchesSearch =
       campaign.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      campaign.description?.toLowerCase().includes(searchTerm.toLowerCase());
+      campaign['description']?.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus =
       statusFilter === "all" ||
       (statusFilter === "active" && campaign.is_active) ||

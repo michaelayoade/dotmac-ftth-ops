@@ -1,4 +1,8 @@
 import { FullConfig } from "@playwright/test";
+import fs from "fs";
+import path from "path";
+
+const SERVER_STATE_PATH = path.join(__dirname, ".server-state.json");
 
 /**
  * Global teardown for E2E tests
@@ -8,6 +12,7 @@ async function globalTeardown(config: FullConfig) {
   console.log("🧹 Cleaning up E2E test environment...");
 
   try {
+    await stopFrontendServers();
     // Clean up test database
     await cleanupTestData();
 
@@ -28,7 +33,7 @@ async function cleanupTestData() {
 
   try {
     // Login as admin to get token for cleanup
-    const loginResponse = await fetch(`${baseUrl}/auth/login`, {
+    const loginResponse = await fetch(`${baseUrl}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -64,6 +69,30 @@ async function cleanupTestData() {
   } catch (error) {
     console.log("⚠️  Test data cleanup failed:", error.message);
   }
+}
+
+type ServerInfo = {
+  name: string;
+  pid: number;
+};
+
+async function stopFrontendServers() {
+  if (!fs.existsSync(SERVER_STATE_PATH)) {
+    return;
+  }
+
+  const data = JSON.parse(fs.readFileSync(SERVER_STATE_PATH, "utf-8")) as ServerInfo[];
+  for (const server of data) {
+    if (!server?.pid) continue;
+    try {
+      process.kill(server.pid);
+      console.log(`🛑 Stopped ${server.name} (pid ${server.pid})`);
+    } catch (error: any) {
+      console.log(`⚠️  Failed to stop ${server.name}:`, error.message);
+    }
+  }
+
+  fs.rmSync(SERVER_STATE_PATH, { force: true });
 }
 
 export default globalTeardown;

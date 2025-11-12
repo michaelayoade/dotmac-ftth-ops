@@ -21,7 +21,7 @@ import {
   Headphones,
   Loader2,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@dotmac/features/billing";
 import {
   useCustomerProfile,
   useCustomerService,

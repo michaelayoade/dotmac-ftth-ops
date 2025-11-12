@@ -237,7 +237,7 @@ function PresetsPageContent() {
   };
 
   const handleCreate = () => {
-    if (!formData.name.trim()) {
+    if (!formData['name'].trim()) {
       toast({
         title: "Validation error",
         description: "Preset name is required",
@@ -250,7 +250,7 @@ function PresetsPageContent() {
   };
 
   const handleUpdate = () => {
-    if (!selectedPreset || !formData.name.trim()) {
+    if (!selectedPreset || !formData['name'].trim()) {
       toast({
         title: "Validation error",
         description: "Preset name is required",
@@ -441,7 +441,7 @@ function PresetsPageContent() {
               <Input
                 id="create-name"
                 placeholder="e.g., Basic ONT Setup"
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
@@ -451,7 +451,7 @@ function PresetsPageContent() {
               <Textarea
                 id="create-description"
                 placeholder="Describe what this preset does..."
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />
@@ -541,7 +541,7 @@ function PresetsPageContent() {
               <Input
                 id="edit-name"
                 placeholder="e.g., Basic ONT Setup"
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
@@ -551,7 +551,7 @@ function PresetsPageContent() {
               <Textarea
                 id="edit-description"
                 placeholder="Describe what this preset does..."
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={2}
               />

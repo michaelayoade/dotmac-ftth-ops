@@ -21,7 +21,6 @@ from uuid import uuid4
 import pytest
 import pytest_asyncio
 
-from dotmac.platform.core.http_client import RobustHTTPClient
 from dotmac.platform.netbox.client import NetBoxClient
 from tests.helpers.docker_env import get_docker_network_url
 

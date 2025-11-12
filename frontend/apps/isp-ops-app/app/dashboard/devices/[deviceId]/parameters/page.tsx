@@ -42,7 +42,7 @@ interface ParameterGroup {
 
 function ParametersPageContent() {
   const params = useParams();
-  const deviceId = params.deviceId as string;
+  const deviceId = params['deviceId'] as string;
 
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set(["Device"]));

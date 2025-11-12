@@ -37,7 +37,7 @@ interface DiagnosticResult {
 
 function DiagnosticsPageContent() {
   const params = useParams();
-  const deviceId = params.deviceId as string;
+  const deviceId = params['deviceId'] as string;
 
   const [pingHost, setPingHost] = useState("8.8.8.8");
   const [pingCount, setPingCount] = useState("4");

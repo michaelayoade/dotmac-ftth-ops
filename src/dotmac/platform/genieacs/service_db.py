@@ -2,6 +2,7 @@
 GenieACS Service Layer with Database Integration
 
 Production-ready service with database persistence, Celery tasks,
+# mypy: disable-error-code="arg-type,assignment"
 and Prometheus metrics.
 """
 
@@ -282,8 +283,8 @@ class GenieACSServiceDB(GenieACSService):
         if schedule.status not in ("pending", "queued", "running"):
             raise ValueError(f"Cannot cancel schedule with status: {schedule.status}")
 
-        setattr(schedule, "status", "cancelled")
-        setattr(schedule, "completed_at", datetime.now(UTC))
+        schedule.status = "cancelled"
+        schedule.completed_at = datetime.now(UTC)
         await self._db.commit()
 
         # Update metrics
@@ -326,9 +327,9 @@ class GenieACSServiceDB(GenieACSService):
             raise ValueError(f"Firmware upgrade schedule {schedule_id} not found")
 
         # Mark as queued before handing off to Celery to ensure durable replay
-        setattr(schedule, "status", "queued")
-        setattr(schedule, "started_at", None)
-        setattr(schedule, "completed_at", None)
+        schedule.status = "queued"
+        schedule.started_at = None
+        schedule.completed_at = None
         await self._db.commit()
         set_firmware_upgrade_schedule_status(tenant_id, schedule_id, "queued", 1.0)
 
@@ -539,8 +540,8 @@ class GenieACSServiceDB(GenieACSService):
         if job.status not in ("pending", "running"):
             raise ValueError(f"Cannot cancel job with status: {job.status}")
 
-        setattr(job, "status", "cancelled")
-        setattr(job, "completed_at", datetime.now(UTC))
+        job.status = "cancelled"
+        job.completed_at = datetime.now(UTC)
         await self._db.commit()
 
         # Update metrics
@@ -583,13 +584,13 @@ class GenieACSServiceDB(GenieACSService):
         if job.dry_run == "true":
             raise ValueError("Cannot execute dry-run job")
 
-        setattr(job, "status", "queued")
-        setattr(job, "started_at", None)
-        setattr(job, "completed_at", None)
-        setattr(job, "completed_devices", 0)
-        setattr(job, "failed_devices", 0)
+        job.status = "queued"
+        job.started_at = None
+        job.completed_at = None
+        job.completed_devices = 0
+        job.failed_devices = 0
         total_devices = cast(int, job.total_devices)
-        setattr(job, "pending_devices", total_devices)
+        job.pending_devices = total_devices
         await self._db.commit()
         set_mass_config_job_status(tenant_id, job_id, "queued", 1.0)
 

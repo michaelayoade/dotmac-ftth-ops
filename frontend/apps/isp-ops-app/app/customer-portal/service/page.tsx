@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotm
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Wifi, Zap, CheckCircle, Info, ArrowRight, Loader2 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@dotmac/features/billing";
 import { useCustomerService } from "@/hooks/useCustomerPortal";
 import { useToast } from "@dotmac/ui";
 

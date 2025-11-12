@@ -16,8 +16,8 @@ import { useToast } from "@dotmac/ui";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
-import { Progress } from "@dotmac/ui";
 import { DiagnosticType } from "@/types/diagnostics";
+import { AnimatedProgressBar, AnimatedCounter } from "@dotmac/primitives";
 
 interface PerformanceTestingPanelProps {
   subscriberId: string;
@@ -201,13 +201,14 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
           </CardHeader>
           <CardContent className="space-y-4">
             {bandwidthTest.running && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Testing...</span>
-                  <span className="font-medium">{bandwidthTest.progress}%</span>
-                </div>
-                <Progress value={bandwidthTest.progress} className="h-2" />
-              </div>
+              <AnimatedProgressBar
+                progress={bandwidthTest.progress}
+                showLabel
+                label="Testing..."
+                color="bg-sky-500"
+                backgroundColor="bg-gray-200 dark:bg-gray-800"
+                height="h-2"
+              />
             )}
 
             {bandwidthTest.result && (
@@ -215,10 +216,13 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <div className="text-sm text-muted-foreground">Download</div>
-                    <div className="text-2xl font-bold">
-                      {bandwidthTest.result.download_mbps.toFixed(2)}
+                    <div className="text-2xl font-bold flex items-baseline gap-1">
+                      <AnimatedCounter
+                        value={bandwidthTest.result.download_mbps}
+                        duration={1.2}
+                      />
+                      <span className="text-xs text-muted-foreground">Mbps</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">Mbps</div>
                     {bandwidthTest.result.expected_download_mbps && (
                       <div className="text-xs text-muted-foreground">
                         Expected: {bandwidthTest.result.expected_download_mbps} Mbps
@@ -227,10 +231,13 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
                   </div>
                   <div className="space-y-1">
                     <div className="text-sm text-muted-foreground">Upload</div>
-                    <div className="text-2xl font-bold">
-                      {bandwidthTest.result.upload_mbps.toFixed(2)}
+                    <div className="text-2xl font-bold flex items-baseline gap-1">
+                      <AnimatedCounter
+                        value={bandwidthTest.result.upload_mbps}
+                        duration={1.2}
+                      />
+                      <span className="text-xs text-muted-foreground">Mbps</span>
                     </div>
-                    <div className="text-xs text-muted-foreground">Mbps</div>
                     {bandwidthTest.result.expected_upload_mbps && (
                       <div className="text-xs text-muted-foreground">
                         Expected: {bandwidthTest.result.expected_upload_mbps} Mbps
@@ -285,13 +292,14 @@ export function PerformanceTestingPanel({ subscriberId }: PerformanceTestingPane
           </CardHeader>
           <CardContent className="space-y-4">
             {latencyTest.running && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Testing...</span>
-                  <span className="font-medium">{latencyTest.progress}%</span>
-                </div>
-                <Progress value={latencyTest.progress} className="h-2" />
-              </div>
+              <AnimatedProgressBar
+                progress={latencyTest.progress}
+                showLabel
+                label="Testing..."
+                color="bg-purple-500"
+                backgroundColor="bg-gray-200 dark:bg-gray-800"
+                height="h-2"
+              />
             )}
 
             {latencyTest.result && (

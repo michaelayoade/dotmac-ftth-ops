@@ -26,7 +26,7 @@ export function initializeOTEL(serviceName: string) {
     return;
   }
 
-  const otelEndpoint = process.env.NEXT_PUBLIC_OTEL_ENDPOINT;
+  const otelEndpoint = process.env["NEXT_PUBLIC_OTEL_ENDPOINT"];
 
   if (!otelEndpoint) {
     console.log("OpenTelemetry endpoint not configured, skipping initialization");
@@ -39,7 +39,7 @@ export function initializeOTEL(serviceName: string) {
       new OtelResource({
         [ATTR_SERVICE_NAME]: serviceName,
         [ATTR_SERVICE_VERSION]: process.env.npm_package_version || "1.0.0",
-        [ATTR_DEPLOYMENT_ENVIRONMENT]: process.env.NODE_ENV || "development",
+        [ATTR_DEPLOYMENT_ENVIRONMENT]: process.env["NODE_ENV"] || "development",
       }),
     );
 
@@ -78,7 +78,7 @@ export function initializeOTEL(serviceName: string) {
 
     console.log(`✅ OpenTelemetry initialized for ${serviceName}`);
     console.log(`   Endpoint: ${otelEndpoint}`);
-    console.log(`   Environment: ${process.env.NODE_ENV}`);
+    console.log(`   Environment: ${process.env["NODE_ENV"]}`);
 
     // Graceful shutdown
     const gracefulShutdown = () => {
@@ -113,7 +113,7 @@ export function createSpan(name: string, attributes?: Record<string, any>) {
  */
 export function recordMetric(name: string, value: number, attributes?: Record<string, any>) {
   // This would be implemented with actual OTEL metrics API
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     console.log(`Metric: ${name} = ${value}`, attributes);
   }
 }

@@ -10,12 +10,11 @@
     "test:ci": "pnpm -r run test:ci",
     "lint": "pnpm -r run lint",
     "type-check": "pnpm --filter @dotmac/isp-ops-app run type-check && pnpm --filter @dotmac/platform-admin-app run type-check",
-    "e2e": "playwright test",
-    "e2e:headed": "playwright test --headed",
+    "e2e": "cd frontend && pnpm e2e",
+    "e2e:headed": "cd frontend && pnpm e2e:headed",
     "clean": "pnpm -r run clean"
   },
   "devDependencies": {
-    "@playwright/test": "^1.55.1",
     "prettier": "^3.1.0"
   },
   "engines": {

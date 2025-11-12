@@ -61,11 +61,6 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     serial_number: "",
     olt_device_id: "",
     pon_port: 0,
-    subscriber_id: undefined,
-    vlan: undefined,
-    bandwidth_profile: undefined,
-    line_profile_id: undefined,
-    service_profile_id: undefined,
   });
   const [provisionForm, setProvisionForm] = useState<ONUProvisionRequest>(createEmptyProvisionForm);
 
@@ -100,16 +95,16 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
   const handleSelectONU = (onu: DiscoveredONU) => {
     setSelectedONU(onu);
     const metadata = onu.metadata || {};
-    const ponPort = Number(metadata.pon_port ?? 0);
+    const ponPort = Number(metadata['pon_port'] ?? 0);
     setProvisionForm({
       serial_number: onu.serial_number,
-      olt_device_id: String(metadata.olt_id ?? ""),
+      olt_device_id: String(metadata['olt_id'] ?? ""),
       pon_port: Number.isFinite(ponPort) ? ponPort : 0,
-      subscriber_id: metadata.subscriber_id,
-      vlan: metadata.vlan,
-      bandwidth_profile: metadata.bandwidth_profile,
-      line_profile_id: metadata.line_profile_id,
-      service_profile_id: metadata.service_profile_id,
+      subscriber_id: metadata['subscriber_id'],
+      vlan: metadata['vlan'],
+      bandwidth_profile: metadata['bandwidth_profile'],
+      line_profile_id: metadata['line_profile_id'],
+      service_profile_id: metadata['service_profile_id'],
     });
     setShowDiscoveryModal(false);
     setShowProvisionModal(true);
@@ -213,7 +208,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                     const isProvisioned = (onu.state || "").toLowerCase() === "provisioned";
                     return (
                       <Card
-                        key={`${onu.serial_number}-${metadata.olt_id ?? "unknown"}-${metadata.pon_port ?? "na"}`}
+                        key={`${onu.serial_number}-${metadata['olt_id'] ?? "unknown"}-${metadata['pon_port'] ?? "na"}`}
                         className={`cursor-pointer transition-all hover:shadow-md ${
                           isProvisioned ? "opacity-60" : ""
                         }`}
@@ -226,7 +221,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                               <div>
                                 <div className="font-medium">{onu.serial_number}</div>
                                 <div className="text-xs text-muted-foreground">
-                                  OLT: {metadata.olt_id || "Unknown"} • Port: {metadata.pon_port ?? "N/A"}
+                                  OLT: {metadata['olt_id'] || "Unknown"} • Port: {metadata['pon_port'] ?? "N/A"}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
                                   State: {onu.state || "Unknown"}
@@ -359,12 +354,15 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <Input
                 id="subscriber_id"
                 value={provisionForm.subscriber_id || ""}
-                onChange={(e) =>
-                  setProvisionForm({
-                    ...provisionForm,
-                    subscriber_id: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newForm = { ...provisionForm };
+                  if (e.target.value) {
+                    newForm.subscriber_id = e.target.value;
+                  } else {
+                    delete newForm.subscriber_id;
+                  }
+                  setProvisionForm(newForm);
+                }}
               />
             </div>
 
@@ -377,12 +375,15 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 min="1"
                 max="4094"
                 value={provisionForm.vlan ?? ""}
-                onChange={(e) =>
-                  setProvisionForm({
-                    ...provisionForm,
-                    vlan: e.target.value ? parseInt(e.target.value, 10) : undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newForm = { ...provisionForm };
+                  if (e.target.value) {
+                    newForm.vlan = parseInt(e.target.value, 10);
+                  } else {
+                    delete newForm.vlan;
+                  }
+                  setProvisionForm(newForm);
+                }}
               />
               <p className="text-xs text-muted-foreground">
                 Service VLAN for subscriber traffic (1-4094)
@@ -395,12 +396,15 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <Input
                 id="bandwidth_profile"
                 value={provisionForm.bandwidth_profile || ""}
-                onChange={(e) =>
-                  setProvisionForm({
-                    ...provisionForm,
-                    bandwidth_profile: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newForm = { ...provisionForm };
+                  if (e.target.value) {
+                    newForm.bandwidth_profile = e.target.value;
+                  } else {
+                    delete newForm.bandwidth_profile;
+                  }
+                  setProvisionForm(newForm);
+                }}
               />
             </div>
 
@@ -410,12 +414,15 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <Input
                 id="line_profile_id"
                 value={provisionForm.line_profile_id || ""}
-                onChange={(e) =>
-                  setProvisionForm({
-                    ...provisionForm,
-                    line_profile_id: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newForm = { ...provisionForm };
+                  if (e.target.value) {
+                    newForm.line_profile_id = e.target.value;
+                  } else {
+                    delete newForm.line_profile_id;
+                  }
+                  setProvisionForm(newForm);
+                }}
               />
             </div>
 
@@ -425,12 +432,15 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <Input
                 id="service_profile_id"
                 value={provisionForm.service_profile_id || ""}
-                onChange={(e) =>
-                  setProvisionForm({
-                    ...provisionForm,
-                    service_profile_id: e.target.value || undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newForm = { ...provisionForm };
+                  if (e.target.value) {
+                    newForm.service_profile_id = e.target.value;
+                  } else {
+                    delete newForm.service_profile_id;
+                  }
+                  setProvisionForm(newForm);
+                }}
               />
             </div>
 

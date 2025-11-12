@@ -4,16 +4,129 @@ Rate Limiting Decorators.
 Decorators for fine-grained rate limiting on specific endpoints.
 """
 
+import hashlib
+import ipaddress
 from collections.abc import Callable
+from datetime import UTC, datetime
 from functools import wraps
 from typing import Any
 from uuid import UUID
 
+import redis.asyncio as aioredis
+import structlog
 from fastapi import HTTPException, Request, status
 
-from dotmac.platform.database import get_async_session
 from dotmac.platform.rate_limit.models import RateLimitAction, RateLimitScope, RateLimitWindow
-from dotmac.platform.rate_limit.service import RateLimitService
+from dotmac.platform.settings import settings
+
+logger = structlog.get_logger(__name__)
+
+# Global Redis connection pool for rate limiting
+# This avoids creating a new connection for every request
+_redis_pool: aioredis.Redis | None = None
+
+
+async def _get_redis() -> aioredis.Redis:
+    """
+    Get Redis connection for rate limiting.
+
+    Uses a singleton connection pool to avoid exhausting connections.
+    This is independent of the database session pool.
+    """
+    global _redis_pool
+
+    if _redis_pool is None:
+        redis_url = settings.redis.redis_url
+        _redis_pool = await aioredis.from_url(
+            redis_url,
+            encoding="utf-8",
+            decode_responses=True,
+            max_connections=50,  # Dedicated pool for rate limiting
+        )
+
+    return _redis_pool
+
+
+async def _check_rate_limit_redis(
+    tenant_id: str,
+    scope: RateLimitScope,
+    identifier: str,
+    max_requests: int,
+    window_seconds: int,
+    endpoint: str,
+) -> tuple[bool, int]:
+    """
+    Check rate limit directly against Redis without database session.
+
+    This avoids the database connection exhaustion issue for public endpoints.
+
+    Args:
+        tenant_id: Tenant identifier
+        scope: Rate limit scope
+        identifier: Unique identifier (IP, user ID, etc.)
+        max_requests: Maximum requests allowed
+        window_seconds: Time window in seconds
+        endpoint: API endpoint path
+
+    Returns:
+        Tuple of (is_allowed, current_count)
+    """
+    redis = await _get_redis()
+
+    # Generate key (same logic as RateLimitService)
+    key_parts = [tenant_id, scope.value, identifier, endpoint]
+    key_str = ":".join(key_parts)
+    id_hash = hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()[:16]
+    key = f"ratelimit:{tenant_id}:{scope.value}:{id_hash}"
+
+    # Use Redis sorted set for sliding window
+    now = datetime.now(UTC).timestamp()
+    window_start = now - window_seconds
+
+    # Remove old entries outside window
+    await redis.zremrangebyscore(key, 0, window_start)
+
+    # Count current entries in window
+    current_count = await redis.zcount(key, window_start, now)
+
+    # Check limit
+    is_allowed = current_count < max_requests
+
+    return is_allowed, current_count
+
+
+async def _increment_rate_limit_redis(
+    tenant_id: str,
+    scope: RateLimitScope,
+    identifier: str,
+    window_seconds: int,
+    endpoint: str,
+) -> None:
+    """
+    Increment rate limit counter in Redis without database session.
+
+    Args:
+        tenant_id: Tenant identifier
+        scope: Rate limit scope
+        identifier: Unique identifier (IP, user ID, etc.)
+        window_seconds: Time window in seconds
+        endpoint: API endpoint path
+    """
+    redis = await _get_redis()
+
+    # Generate key (same logic as RateLimitService)
+    key_parts = [tenant_id, scope.value, identifier, endpoint]
+    key_str = ":".join(key_parts)
+    id_hash = hashlib.md5(key_str.encode(), usedforsecurity=False).hexdigest()[:16]
+    key = f"ratelimit:{tenant_id}:{scope.value}:{id_hash}"
+
+    now = datetime.now(UTC).timestamp()
+
+    # Add current request to sorted set
+    await redis.zadd(key, {str(now): now})
+
+    # Set expiration to window + 60 seconds buffer
+    await redis.expire(key, window_seconds + 60)
 
 
 def rate_limit(
@@ -71,101 +184,186 @@ def rate_limit(
             ip_address = _get_client_ip(request)
             api_key_id = getattr(request.state, "api_key_id", None)
 
-            # Check rate limit
-            async for db in get_async_session():
-                service = RateLimitService(db)
+            # Convert window to seconds
+            window_seconds_map = {
+                RateLimitWindow.SECOND: 1,
+                RateLimitWindow.MINUTE: 60,
+                RateLimitWindow.HOUR: 3600,
+                RateLimitWindow.DAY: 86400,
+            }
+            window_seconds = window_seconds_map.get(window, 60)
 
-                # Create temporary rule for this decorator
-                from uuid import uuid4
+            # Determine identifier based on scope
+            identifier: str | None = None
+            if scope == RateLimitScope.PER_USER:
+                identifier = str(user_id) if user_id else None
+            elif scope == RateLimitScope.PER_IP:
+                identifier = ip_address
+            elif scope == RateLimitScope.PER_ENDPOINT:
+                identifier = endpoint
+            elif scope == RateLimitScope.PER_TENANT:
+                identifier = tenant_id
+            elif scope == RateLimitScope.PER_API_KEY:
+                identifier = str(api_key_id) if api_key_id else None
+            elif scope == RateLimitScope.GLOBAL:
+                identifier = "global"
 
-                from dotmac.platform.rate_limit.models import RateLimitRule
+            if identifier is None or identifier == "unknown":
+                # Can't determine identifier, allow request
+                # (e.g., PER_USER scope but no user, or IP is unknown)
+                return await func(*args, **kwargs)
 
-                temp_rule = RateLimitRule(
-                    id=uuid4(),
-                    tenant_id=tenant_id,
-                    name=f"decorator_{func.__name__}",
-                    scope=scope,
-                    max_requests=max_requests,
-                    window=window,
-                    window_seconds=service._get_window_seconds(window),
-                    action=action,
-                )
+            # Check rate limit using Redis directly (no database session)
+            is_allowed, current_count = await _check_rate_limit_redis(
+                tenant_id=tenant_id,
+                scope=scope,
+                identifier=identifier,
+                max_requests=max_requests,
+                window_seconds=window_seconds,
+                endpoint=endpoint,
+            )
 
-                # Determine identifier
-                identifier = service._get_identifier(
-                    scope,
-                    tenant_id,
-                    user_id,
-                    ip_address,
-                    api_key_id,
-                    endpoint,
-                )
+            if not is_allowed:
+                if action == RateLimitAction.BLOCK:
+                    raise HTTPException(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        detail={
+                            "error": "rate_limit_exceeded",
+                            "message": f"Rate limit exceeded: {current_count}/{max_requests} per {window.value}",
+                            "limit": max_requests,
+                            "window": window.value,
+                            "retry_after": window_seconds,
+                        },
+                        headers={"Retry-After": str(window_seconds)},
+                    )
+                elif action == RateLimitAction.LOG_ONLY:
+                    # Just log and continue
+                    logger.warning(
+                        "Rate limit exceeded (log only)",
+                        endpoint=endpoint,
+                        count=current_count,
+                        limit=max_requests,
+                    )
 
-                if identifier is None:
-                    # Can't determine identifier, allow request
-                    return await func(*args, **kwargs)
+            # Execute function
+            result = await func(*args, **kwargs)
 
-                # Check limit
-                is_allowed, current_count = await service._check_limit(
-                    tenant_id=tenant_id,
-                    rule=temp_rule,
-                    identifier=identifier,
-                )
+            # Increment counter using Redis directly (no database session)
+            await _increment_rate_limit_redis(
+                tenant_id=tenant_id,
+                scope=scope,
+                identifier=identifier,
+                window_seconds=window_seconds,
+                endpoint=endpoint,
+            )
 
-                if not is_allowed:
-                    retry_after = temp_rule.window_seconds
-
-                    if action == RateLimitAction.BLOCK:
-                        raise HTTPException(
-                            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                            detail={
-                                "error": "rate_limit_exceeded",
-                                "message": f"Rate limit exceeded: {current_count}/{max_requests} per {window.value}",
-                                "limit": max_requests,
-                                "window": window.value,
-                                "retry_after": retry_after,
-                            },
-                            headers={"Retry-After": str(retry_after)},
-                        )
-                    elif action == RateLimitAction.LOG_ONLY:
-                        # Just log and continue
-                        import structlog
-
-                        logger = structlog.get_logger(__name__)
-                        logger.warning(
-                            "Rate limit exceeded (log only)",
-                            endpoint=endpoint,
-                            count=current_count,
-                            limit=max_requests,
-                        )
-
-                # Execute function
-                result = await func(*args, **kwargs)
-
-                # Increment counter
-                await service._increment_counter(tenant_id, temp_rule, identifier)
-
-                return result
+            return result
 
         return wrapper
 
     return decorator
 
 
+def _is_trusted_proxy(ip_str: str, trusted_proxies: list[str]) -> bool:
+    """
+    Check if an IP address is in the trusted proxy list.
+
+    Args:
+        ip_str: IP address to check
+        trusted_proxies: List of trusted proxy IPs/networks in CIDR notation
+
+    Returns:
+        True if IP is trusted, False otherwise
+    """
+    try:
+        client_ip = ipaddress.ip_address(ip_str)
+
+        for proxy_spec in trusted_proxies:
+            try:
+                # Try as network first (e.g., "10.0.0.0/8")
+                if "/" in proxy_spec:
+                    network = ipaddress.ip_network(proxy_spec, strict=False)
+                    if client_ip in network:
+                        return True
+                else:
+                    # Try as single IP
+                    proxy_ip = ipaddress.ip_address(proxy_spec)
+                    if client_ip == proxy_ip:
+                        return True
+            except (ValueError, TypeError):
+                # Invalid proxy spec, skip it
+                continue
+
+        return False
+    except (ValueError, TypeError):
+        # Invalid IP format
+        return False
+
+
 def _get_client_ip(request: Request) -> str:
-    """Extract client IP address from request."""
-    forwarded = request.headers.get("X-Forwarded-For")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    """
+    Extract client IP address from request with trusted proxy validation.
 
-    real_ip = request.headers.get("X-Real-IP")
-    if real_ip:
-        return real_ip
+    SECURITY: Parses X-Forwarded-For from RIGHT to LEFT, stripping known trusted
+    proxies to find the real client IP. This prevents bypass attacks where standard
+    reverse proxies APPEND to client-supplied headers.
 
-    if request.client:
-        return request.client.host
+    Example:
+        Client sends: X-Forwarded-For: 1.2.3.4
+        NGINX appends: X-Forwarded-For: 1.2.3.4, 5.6.7.8
+        We parse right-to-left, skip 5.6.7.8 (trusted), use 1.2.3.4 (attacker)
 
-    return "unknown"
+        Better: Client real IP is 5.6.7.8 (last hop before trusted proxy)
+        Parse: [1.2.3.4, 5.6.7.8] -> 5.6.7.8 is trusted, 1.2.3.4 is client-supplied
+
+        Correct algorithm: Take rightmost IP that's NOT in trusted_proxies
+
+    Args:
+        request: FastAPI Request object
+
+    Returns:
+        Client IP address (or "unknown" if cannot be determined)
+    """
+    # Get the direct connection IP (always available)
+    direct_ip = request.client.host if request.client else "unknown"
+
+    # Only trust proxy headers if request came from a trusted proxy
+    trusted_proxies = settings.trusted_proxies
+
+    if direct_ip != "unknown" and _is_trusted_proxy(direct_ip, trusted_proxies):
+        # Request came from trusted proxy, check forwarded headers
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            # X-Forwarded-For format: "client, proxy1, proxy2, ..."
+            # Parse RIGHT to LEFT, skipping trusted proxies
+            ips = [ip.strip() for ip in forwarded.split(",")]
+
+            # Walk backwards, skipping trusted proxies
+            for ip in reversed(ips):
+                # Validate it's a real IP
+                try:
+                    ipaddress.ip_address(ip)
+                except (ValueError, TypeError):
+                    continue  # Skip invalid IPs
+
+                # If this IP is NOT a trusted proxy, it's the real client
+                if not _is_trusted_proxy(ip, trusted_proxies):
+                    return ip
+
+            # All IPs were trusted proxies or invalid, fall through
+
+        real_ip = request.headers.get("X-Real-IP")
+        if real_ip:
+            # Validate it's a real IP before using
+            try:
+                ipaddress.ip_address(real_ip)
+                return real_ip
+            except (ValueError, TypeError):
+                pass  # Invalid IP, fall through
+
+    # Either not from trusted proxy, or no valid forwarded headers
+    # Use direct connection IP
+    return direct_ip
 
 
 # Convenience decorators for common use cases

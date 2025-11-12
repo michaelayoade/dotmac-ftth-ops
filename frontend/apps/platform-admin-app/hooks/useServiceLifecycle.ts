@@ -84,10 +84,10 @@ export function useServiceInstances({
   };
 
   if (status) {
-    params.status = status;
+    params['status'] = status;
   }
   if (serviceType) {
-    params.service_type = serviceType;
+    params['service_type'] = serviceType;
   }
 
   return useQuery<ServiceInstanceSummary[], Error, ServiceInstanceSummary[], ServiceListKey>({

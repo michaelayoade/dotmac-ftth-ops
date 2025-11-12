@@ -148,9 +148,9 @@ export function PaymentRecordDialog({ open, onOpenChange, onSuccess }: PaymentRe
 
     const base = {
       customer_id: commonData.customer_id.trim(),
-      invoice_id: commonData.invoice_id ? commonData.invoice_id.trim() : null,
+      invoice_id: commonData['invoice_id']? commonData.invoice_id.trim() : null,
       amount: amountValue,
-      currency: commonData.currency || undefined,
+      currency: commonData.currency || "USD",
       payment_date: commonData.payment_date,
       notes: commonData.notes ? commonData.notes : null,
     } satisfies Omit<ManualPaymentBase, "payment_method">;

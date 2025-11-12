@@ -13,13 +13,17 @@ from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
+from dotmac.platform.database import get_session
 from dotmac.platform.tenant import get_current_tenant_id
 
+from .assignment_service import TicketAssignmentService
 from .dependencies import get_ticket_service
 from .models import TicketStatus
 from .schemas import (
+    AgentPerformanceMetrics,
     TicketCreate,
     TicketDetail,
     TicketMessageCreate,
@@ -161,6 +165,76 @@ async def update_ticket(
         return TicketDetail.model_validate(ticket, from_attributes=True)
     except Exception as exc:  # pragma: no cover
         logger.warning("ticket.update.failed", ticket_id=str(ticket_id), error=str(exc))
+        _handle_ticket_error(exc)
+
+
+@router.get(
+    "/agents/performance",
+    response_model=list[AgentPerformanceMetrics],
+    summary="Get agent performance metrics",
+)
+async def get_agent_performance(
+    start_date: str | None = Query(None, description="Start date for metrics (ISO format)"),
+    end_date: str | None = Query(None, description="End date for metrics (ISO format)"),
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> list[AgentPerformanceMetrics]:
+    """Get performance metrics for all agents (assigned users)."""
+    tenant_id = get_current_tenant_id()
+    try:
+        metrics = await service.get_agent_performance(
+            tenant_id=tenant_id,
+            start_date=start_date,
+            end_date=end_date,
+        )
+        return metrics
+    except Exception as exc:  # pragma: no cover
+        logger.warning("agent.performance.failed", error=str(exc))
+        raise HTTPException(
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve agent performance metrics",
+        ) from exc
+
+
+@router.post(
+    "/{ticket_id}/assign/auto",
+    response_model=TicketDetail,
+    summary="Automatically assign ticket to available agent",
+)
+async def auto_assign_ticket(
+    ticket_id: UUID,
+    session: AsyncSession = Depends(get_session),
+    service: TicketService = Depends(get_ticket_service),
+    current_user: UserInfo = Depends(get_current_user),
+) -> TicketDetail:
+    """Automatically assign a ticket using round-robin with load balancing."""
+    tenant_id = get_current_tenant_id()
+    try:
+        # Verify ticket exists and user has access
+        await service.get_ticket(ticket_id, current_user, tenant_id, include_messages=False)
+
+        # Use assignment service to auto-assign
+        assignment_service = TicketAssignmentService(session)
+        assigned_agent_id = await assignment_service.assign_ticket_automatically(
+            ticket_id=ticket_id,
+            tenant_id=tenant_id,
+        )
+
+        if not assigned_agent_id:
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="No available agents to assign ticket",
+            )
+
+        # Fetch updated ticket with messages
+        updated_ticket = await service.get_ticket(
+            ticket_id, current_user, tenant_id, include_messages=True
+        )
+        return TicketDetail.model_validate(updated_ticket, from_attributes=True)
+    except HTTPException:
+        raise
+    except Exception as exc:  # pragma: no cover
+        logger.warning("ticket.auto_assign.failed", ticket_id=str(ticket_id), error=str(exc))
         _handle_ticket_error(exc)
 
 

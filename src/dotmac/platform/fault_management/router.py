@@ -4,7 +4,7 @@ Fault Management API Router
 REST endpoints for alarm management, SLA monitoring, and maintenance windows.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
@@ -30,6 +30,7 @@ from dotmac.platform.fault_management.schemas import (
     MaintenanceWindowResponse,
     MaintenanceWindowUpdate,
     SLABreachResponse,
+    SLAComplianceRecord,
     SLAComplianceReport,
     SLADefinitionCreate,
     SLADefinitionResponse,
@@ -107,9 +108,13 @@ async def create_alarm(
     data: AlarmCreate,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
+    sla_service: SLAMonitoringService = Depends(get_sla_service),
 ) -> AlarmResponse:
     """Create new alarm"""
-    return await service.create(data, user_id=_to_uuid(user.user_id))
+    alarm = await service.create(data, user_id=_to_uuid(user.user_id))
+    # Invalidate SLA compliance cache
+    await sla_service.invalidate_compliance_cache()
+    return alarm
 
 
 @router.get(
@@ -184,11 +189,14 @@ async def update_alarm(
     data: AlarmUpdate,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
+    sla_service: SLAMonitoringService = Depends(get_sla_service),
 ) -> AlarmResponse:
     """Update alarm"""
     alarm = await service.update(alarm_id, data, user_id=_to_uuid(user.user_id))
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
+    # Invalidate SLA compliance cache
+    await sla_service.invalidate_compliance_cache()
     return alarm
 
 
@@ -203,6 +211,7 @@ async def acknowledge_alarm(
     data: AlarmAcknowledge,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
+    sla_service: SLAMonitoringService = Depends(get_sla_service),
 ) -> AlarmResponse:
     """Acknowledge alarm"""
     alarm = await service.acknowledge(
@@ -212,6 +221,8 @@ async def acknowledge_alarm(
     )
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
+    # Invalidate SLA compliance cache
+    await sla_service.invalidate_compliance_cache()
     return alarm
 
 
@@ -225,11 +236,14 @@ async def clear_alarm(
     alarm_id: UUID,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
+    sla_service: SLAMonitoringService = Depends(get_sla_service),
 ) -> AlarmResponse:
     """Clear alarm"""
     alarm = await service.clear(alarm_id, user_id=_to_uuid(user.user_id))
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
+    # Invalidate SLA compliance cache
+    await sla_service.invalidate_compliance_cache()
     return alarm
 
 
@@ -244,6 +258,7 @@ async def resolve_alarm(
     resolution_note: str,
     user: UserInfo = Depends(require_permission("faults.alarms.write")),
     service: AlarmService = Depends(get_alarm_service),
+    sla_service: SLAMonitoringService = Depends(get_sla_service),
 ) -> AlarmResponse:
     """Resolve alarm"""
     alarm = await service.resolve(
@@ -253,6 +268,8 @@ async def resolve_alarm(
     )
     if not alarm:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Alarm not found")
+    # Invalidate SLA compliance cache
+    await sla_service.invalidate_compliance_cache()
     return alarm
 
 
@@ -536,6 +553,97 @@ async def list_sla_breaches(
     """List SLA breaches"""
     result = await service.list_breaches(instance_id, resolved)
     return list(result)
+
+
+@router.get(
+    "/sla/compliance",
+    response_model=list[SLAComplianceRecord],
+    summary="Get SLA Compliance Time Series",
+    description="Get daily SLA compliance data for charts (Phase 4: Optimized with caching)",
+)
+async def get_sla_compliance_timeseries(
+    from_date: str = Query(..., description="ISO 8601 datetime for start of data range"),
+    to_date: str | None = Query(None, description="ISO 8601 datetime for end of data range"),
+    target_percentage: float = Query(99.9, ge=0.0, le=100.0, description="SLA target percentage"),
+    exclude_maintenance: bool = Query(
+        True, description="Exclude maintenance windows from downtime"
+    ),
+    _: UserInfo = Depends(require_permission("faults.sla.read")),
+    service: SLAMonitoringService = Depends(get_sla_service),
+) -> list[SLAComplianceRecord]:
+    """
+    Get SLA compliance time series data
+
+    Phase 4: Optimized with Redis caching, maintenance window exclusion,
+    and improved overlap handling
+
+    Features:
+    - Redis caching with 5-minute TTL
+    - Excludes planned maintenance from downtime calculation
+    - Merges overlapping alarm periods to prevent double-counting
+    - Accurate day-by-day availability tracking
+    """
+    # Parse dates
+    try:
+        start = datetime.fromisoformat(from_date.replace("Z", "+00:00"))
+        end = (
+            datetime.now(UTC)
+            if not to_date
+            else datetime.fromisoformat(to_date.replace("Z", "+00:00"))
+        )
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid date format. Expected ISO 8601: {e}",
+        )
+
+    # Validate date range (max 90 days)
+    if (end - start).days > 90:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Date range cannot exceed 90 days",
+        )
+
+    # Phase 4: Calculate with optimizations
+    data = await service.calculate_compliance_timeseries(
+        start_date=start,
+        end_date=end,
+        target_percentage=target_percentage,
+        exclude_maintenance=exclude_maintenance,
+    )
+
+    return data
+
+
+@router.get(
+    "/sla/rollup-stats",
+    summary="Get SLA Rollup Statistics",
+    description="Get aggregate SLA breach statistics for dashboard summary cards",
+)
+async def get_sla_rollup_stats(
+    days: int = Query(30, ge=1, le=90, description="Number of days to analyze"),
+    target_percentage: float = Query(99.9, ge=0.0, le=100.0, description="SLA target percentage"),
+    _: UserInfo = Depends(require_permission("faults.sla.read")),
+    service: SLAMonitoringService = Depends(get_sla_service),
+) -> dict[str, float | int]:
+    """
+    Get rollup SLA statistics for dashboard summary cards.
+
+    Returns:
+    - total_downtime_minutes: Total downtime across the period
+    - total_breaches: Count of SLA breach days
+    - worst_day_compliance: Minimum compliance percentage in period
+    - avg_compliance: Average compliance percentage
+    - days_analyzed: Number of days included in calculation
+
+    Useful for displaying high-level SLA health on dashboards
+    without fetching the full timeseries data.
+    """
+    stats = await service.get_sla_rollup_stats(
+        days=days,
+        target_percentage=target_percentage,
+    )
+    return stats
 
 
 @router.get(

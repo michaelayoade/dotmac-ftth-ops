@@ -204,8 +204,8 @@ export interface Payment extends BaseEntitySnake, WithMetadata {
   method: PaymentMethod;
 
   // References
-  invoiceId?: InvoiceID;
-  subscriptionId?: string;
+  invoiceId?: InvoiceID | null; // Allow null from API
+  subscriptionId?: string | null;
 
   // Details
   description?: string;

@@ -136,16 +136,16 @@ export function useTickets(options: UseTicketsOptions = {}) {
     try {
       setLoading(true);
       const params: Record<string, any> = {};
-      if (status) params.status = status;
+      if (status) params['status'] = status;
 
       const response = await apiClient.get<TicketSummary[]>("/tickets", {
         params,
       });
-      setTickets(response.data);
+      setTickets(response['data']);
       setError(null);
     } catch (err: any) {
       logger.error("Failed to fetch tickets", toError(err), { status });
-      setError(err.response?.data?.detail || "Failed to fetch tickets");
+      setError(err.response?.['data']?.detail || "Failed to fetch tickets");
     } finally {
       setLoading(false);
     }
@@ -192,11 +192,11 @@ export function useTicket(ticketId: string | null, autoRefresh = false) {
     try {
       setLoading(true);
       const response = await apiClient.get<TicketDetail>(`/tickets/${ticketId}`);
-      setTicket(response.data);
+      setTicket(response['data']);
       setError(null);
     } catch (err: any) {
       logger.error("Failed to fetch ticket", toError(err), { ticketId });
-      setError(err.response?.data?.detail || "Failed to fetch ticket");
+      setError(err.response?.['data']?.detail || "Failed to fetch ticket");
     } finally {
       setLoading(false);
     }
@@ -239,10 +239,10 @@ export function useCreateTicket() {
       setLoading(true);
       setError(null);
       const response = await apiClient.post<TicketDetail>("/tickets", data);
-      return response.data;
+      return response['data'];
     } catch (err: any) {
-      logger.error("Failed to create ticket", toError(err), { targetType: data.target_type });
-      setError(err.response?.data?.detail || "Failed to create ticket");
+      logger.error("Failed to create ticket", toError(err), { targetType: data['target_type'] });
+      setError(err.response?.['data']?.detail || "Failed to create ticket");
       return null;
     } finally {
       setLoading(false);
@@ -269,10 +269,10 @@ export function useUpdateTicket() {
       setLoading(true);
       setError(null);
       const response = await apiClient.patch<TicketDetail>(`/tickets/${ticketId}`, data);
-      return response.data;
+      return response['data'];
     } catch (err: any) {
       logger.error("Failed to update ticket", toError(err), { ticketId });
-      setError(err.response?.data?.detail || "Failed to update ticket");
+      setError(err.response?.['data']?.detail || "Failed to update ticket");
       return null;
     } finally {
       setLoading(false);
@@ -299,10 +299,10 @@ export function useAddMessage() {
       setLoading(true);
       setError(null);
       const response = await apiClient.post<TicketDetail>(`/tickets/${ticketId}/messages`, data);
-      return response.data;
+      return response['data'];
     } catch (err: any) {
       logger.error("Failed to add ticket message", toError(err), { ticketId });
-      setError(err.response?.data?.detail || "Failed to add message");
+      setError(err.response?.['data']?.detail || "Failed to add message");
       return null;
     } finally {
       setLoading(false);
@@ -344,7 +344,7 @@ export function useTicketStats() {
 
       // Since there's no stats endpoint, we'll calculate from tickets
       const response = await apiClient.get<TicketSummary[]>("/tickets");
-      const tickets = response.data;
+      const tickets = response['data'];
 
       const stats: TicketStats = {
         total: tickets.length,
@@ -366,7 +366,7 @@ export function useTicketStats() {
       // Count by type
       tickets.forEach((ticket) => {
         if (ticket.ticket_type) {
-          stats.by_type[ticket.ticket_type] = (stats.by_type[ticket.ticket_type] || 0) + 1;
+          stats['by_type'][ticket.ticket_type] = (stats['by_type'][ticket.ticket_type] || 0) + 1;
         }
       });
 
@@ -374,7 +374,7 @@ export function useTicketStats() {
       setError(null);
     } catch (err: any) {
       logger.error("Failed to fetch ticket stats", toError(err));
-      setError(err.response?.data?.detail || "Failed to fetch statistics");
+      setError(err.response?.['data']?.detail || "Failed to fetch statistics");
     } finally {
       setLoading(false);
     }

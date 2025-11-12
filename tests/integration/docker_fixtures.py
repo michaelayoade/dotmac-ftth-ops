@@ -7,7 +7,6 @@ Services are started once per test session and cleaned up afterward.
 
 import os
 import subprocess
-import sys
 import time
 from pathlib import Path
 
@@ -28,7 +27,7 @@ def should_start_docker_services(config):
         return True
 
     # Check if integration marker is selected
-    selected_markers = config.option.markexpr if hasattr(config.option, 'markexpr') else ""
+    selected_markers = config.option.markexpr if hasattr(config.option, "markexpr") else ""
     has_integration_marker = "integration" in selected_markers
 
     # Check if running integration tests via file path
@@ -37,9 +36,9 @@ def should_start_docker_services(config):
 
     # Also check if any collected items are integration tests
     has_integration_tests = False
-    if hasattr(config, 'hook') and hasattr(config.hook, 'pytest_collection_finish'):
+    if hasattr(config, "hook") and hasattr(config.hook, "pytest_collection_finish"):
         # This will be set during collection
-        has_integration_tests = getattr(config, '_has_integration_tests', False)
+        has_integration_tests = getattr(config, "_has_integration_tests", False)
 
     return has_integration_marker or running_integration_dir or has_integration_tests
 
@@ -96,9 +95,12 @@ def docker_services(request):
     try:
         subprocess.run(
             [
-                "docker", "compose",
-                "-f", str(compose_file),
-                "up", "-d",
+                "docker",
+                "compose",
+                "-f",
+                str(compose_file),
+                "up",
+                "-d",
                 "--wait",
                 *services,
             ],
@@ -138,8 +140,18 @@ def docker_services(request):
         try:
             # Check PostgreSQL
             result = subprocess.run(
-                ["docker", "compose", "-f", str(compose_file), "exec", "-T", "postgres",
-                 "pg_isready", "-U", "dotmac_user"],
+                [
+                    "docker",
+                    "compose",
+                    "-f",
+                    str(compose_file),
+                    "exec",
+                    "-T",
+                    "postgres",
+                    "pg_isready",
+                    "-U",
+                    "dotmac_user",
+                ],
                 cwd=project_root,
                 capture_output=True,
                 text=True,
@@ -158,17 +170,43 @@ def docker_services(request):
     print("📊 Creating test database...")
     try:
         subprocess.run(
-            ["docker", "compose", "-f", str(compose_file), "exec", "-T", "postgres",
-             "psql", "-U", "dotmac_user", "-d", "postgres", "-c",
-             "DROP DATABASE IF EXISTS dotmac_test;"],
+            [
+                "docker",
+                "compose",
+                "-f",
+                str(compose_file),
+                "exec",
+                "-T",
+                "postgres",
+                "psql",
+                "-U",
+                "dotmac_user",
+                "-d",
+                "postgres",
+                "-c",
+                "DROP DATABASE IF EXISTS dotmac_test;",
+            ],
             cwd=project_root,
             check=True,
             capture_output=True,
         )
         subprocess.run(
-            ["docker", "compose", "-f", str(compose_file), "exec", "-T", "postgres",
-             "psql", "-U", "dotmac_user", "-d", "postgres", "-c",
-             "CREATE DATABASE dotmac_test;"],
+            [
+                "docker",
+                "compose",
+                "-f",
+                str(compose_file),
+                "exec",
+                "-T",
+                "postgres",
+                "psql",
+                "-U",
+                "dotmac_user",
+                "-d",
+                "postgres",
+                "-c",
+                "CREATE DATABASE dotmac_test;",
+            ],
             cwd=project_root,
             check=True,
             capture_output=True,
@@ -253,10 +291,7 @@ def auto_docker_services(request):
 
 def pytest_configure(config):
     """Register custom markers."""
-    config.addinivalue_line(
-        "markers",
-        "requires_docker: mark test as requiring Docker services"
-    )
+    config.addinivalue_line("markers", "requires_docker: mark test as requiring Docker services")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -269,10 +304,9 @@ def pytest_collection_modifyitems(config, items):
 
     for item in items:
         # Check if test is in integration directory or has integration marker
-        is_integration = (
-            "integration" in str(item.fspath) or
-            "integration" in [mark.name for mark in item.iter_markers()]
-        )
+        is_integration = "integration" in str(item.fspath) or "integration" in [
+            mark.name for mark in item.iter_markers()
+        ]
 
         if is_integration:
             has_integration = True

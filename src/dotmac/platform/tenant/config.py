@@ -37,16 +37,42 @@ class TenantConfiguration:
         Initialize tenant configuration.
 
         Args:
-            mode: Tenant mode (single or multi). Defaults to env var or SINGLE.
+            mode: Tenant mode (single or multi). Defaults to settings.DEPLOYMENT_MODE.
             default_tenant_id: Default tenant ID for single-tenant mode.
             require_tenant_header: Whether to require tenant identification in multi-tenant mode.
             tenant_header_name: HTTP header name for tenant ID.
             tenant_query_param: Query parameter name for tenant ID.
         """
-        # Determine mode from environment or parameter
+        # Determine mode from settings or parameter
         if mode is None:
-            env_mode = os.getenv("TENANT_MODE", "single").lower()
-            self.mode = TenantMode.MULTI if env_mode == "multi" else TenantMode.SINGLE
+            # Import here to avoid circular dependency
+            from dotmac.platform.settings import settings
+
+            deployment_mode = settings.DEPLOYMENT_MODE.lower()
+
+            # Legacy TENANT_MODE env var check - warn if it conflicts with DEPLOYMENT_MODE
+            legacy_tenant_mode = os.getenv("TENANT_MODE")
+            if legacy_tenant_mode is not None:
+                expected_mode = "multi" if "multi" in deployment_mode else "single"
+                if legacy_tenant_mode.lower() != expected_mode:
+                    import structlog
+
+                    logger = structlog.get_logger(__name__)
+                    logger.error(
+                        "TENANT_MODE env var conflicts with DEPLOYMENT_MODE setting - "
+                        "this can cause tenant isolation failure. Remove TENANT_MODE and use "
+                        "DEPLOYMENT_MODE only.",
+                        tenant_mode=legacy_tenant_mode,
+                        deployment_mode=deployment_mode,
+                    )
+                    raise ValueError(
+                        f"TENANT_MODE ({legacy_tenant_mode}) conflicts with DEPLOYMENT_MODE "
+                        f"({deployment_mode}). Use DEPLOYMENT_MODE only to prevent tenant "
+                        "isolation collapse."
+                    )
+
+            # Set mode based on DEPLOYMENT_MODE
+            self.mode = TenantMode.MULTI if "multi" in deployment_mode else TenantMode.SINGLE
         else:
             self.mode = mode
 

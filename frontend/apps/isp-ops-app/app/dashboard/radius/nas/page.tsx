@@ -99,7 +99,7 @@ export default function RADIUSNASPage() {
       nas.nasname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.shortname.toLowerCase().includes(searchQuery.toLowerCase()) ||
       nas.type.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (nas.description ?? "").toLowerCase().includes(searchQuery.toLowerCase())
+      (nas['description']?? "").toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleDelete = async (nas: NASDevice) => {
@@ -240,7 +240,7 @@ export default function RADIUSNASPage() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {nas.description ?? (
+                      {nas['description']?? (
                         <span className="text-muted-foreground">No description</span>
                       )}
                     </TableCell>

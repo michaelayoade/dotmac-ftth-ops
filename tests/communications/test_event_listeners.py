@@ -13,6 +13,7 @@ import pytest
 
 from dotmac.platform.communications.email_service import EmailResponse
 from dotmac.platform.communications.event_listeners import (
+    _build_exit_survey_url,
     _email_html_message,
     init_communications_event_listeners,
     send_invoice_created_email,
@@ -24,6 +25,7 @@ from dotmac.platform.communications.event_listeners import (
     send_trial_ending_reminder,
 )
 from dotmac.platform.events.models import Event
+from dotmac.platform.settings import settings
 
 # ============================================================================
 # Helper Function Tests
@@ -57,6 +59,20 @@ class TestEmailHtmlMessage:
                 subject="Test",
                 html_body="<p>Body</p>",
             )
+
+
+@pytest.mark.unit
+def test_build_exit_survey_url_uses_configured_base():
+    """Exit survey URLs should use the configured base domain."""
+    original_base = settings.urls.exit_survey_base_url
+    try:
+        settings.urls.exit_survey_base_url = "https://survey.brand.test/exit"
+        url = _build_exit_survey_url("abc123", "cust-42")
+        assert url.startswith("https://survey.brand.test/exit")
+        assert "token=abc123" in url
+        assert "customer=cust-42" in url
+    finally:
+        settings.urls.exit_survey_base_url = original_base
 
 
 # ============================================================================

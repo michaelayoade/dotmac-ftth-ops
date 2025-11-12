@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatDistanceToNow } from "date-fns";
@@ -39,16 +39,9 @@ import {
   type AuditActivity,
 } from "@/types/audit";
 import { useSystemHealth, type SystemHealth } from "@/hooks/useOperations";
-import { getCurrentUser } from "@/lib/auth";
-import { logger } from "@/lib/logger";
 import { ROUTES } from "@/lib/routes";
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  roles?: string[];
-}
+import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 
 const TENANT_STATUS_LABELS: Record<TenantDetails["status"], string> = {
   active: "Active",
@@ -103,8 +96,8 @@ const QUICK_LINKS = [
 
 export default function PlatformAdminDashboardPage() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user as ExtendedUser | undefined;
 
   const { data: tenantData, isLoading: tenantsLoading } = usePlatformTenants({
     page: 1,
@@ -114,32 +107,12 @@ export default function PlatformAdminDashboardPage() {
   const { data: systemHealth, isLoading: systemLoading } = useSystemHealth();
 
   useEffect(() => {
-    let isMounted = true;
+    if (!authLoading && !session) {
+      router.replace(ROUTES.LOGIN);
+    }
+  }, [authLoading, session, router]);
 
-    const loadUser = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (!isMounted) return;
-        setUser(currentUser);
-      } catch (err) {
-        logger.error("Failed to fetch user", err instanceof Error ? err : new Error(String(err)));
-        if (!isMounted) return;
-        router.replace(ROUTES.LOGIN);
-      } finally {
-        if (isMounted) {
-          setInitializing(false);
-        }
-      }
-    };
-
-    void loadUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
-
-  if (initializing) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading platform administration overview…</div>

@@ -132,6 +132,11 @@ def disable_rate_limiting_globally(request):
         yield
         return
 
+    # Check if limiter has enabled attribute (some test limiters like _NoopLimiter don't)
+    if not hasattr(limiter_instance, "enabled"):
+        yield
+        return
+
     original_enabled = limiter_instance.enabled
 
     try:

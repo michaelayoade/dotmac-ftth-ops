@@ -68,9 +68,9 @@ class RadiusQueries:
             created_at = getattr(rad_check, "created_at", None)
             updated_at = getattr(rad_check, "updated_at", None)
             subscriber = Subscriber(
-                id=int(getattr(rad_check, "id")),
-                subscriber_id=str(getattr(rad_check, "id")),
-                username=str(getattr(rad_check, "username")),
+                id=int(rad_check.id),
+                subscriber_id=str(rad_check.id),
+                username=str(rad_check.username),
                 enabled=True,  # Placeholder
                 framed_ip_address=None,
                 bandwidth_profile_id=None,
@@ -91,10 +91,10 @@ class RadiusQueries:
             for subscriber, sessions in zip(subscribers, sessions_by_username, strict=False):
                 subscriber.sessions = [
                     Session(
-                        radacctid=int(getattr(s, "radacctid")),
-                        username=str(getattr(s, "username")),
-                        nasipaddress=str(getattr(s, "nasipaddress")),
-                        acctsessionid=str(getattr(s, "acctsessionid")),
+                        radacctid=int(s.radacctid),
+                        username=str(s.username),
+                        nasipaddress=str(s.nasipaddress),
+                        acctsessionid=str(s.acctsessionid),
                         acctsessiontime=getattr(s, "acctsessiontime", None),
                         acctinputoctets=getattr(s, "acctinputoctets", None),
                         acctoutputoctets=getattr(s, "acctoutputoctets", None),
@@ -159,10 +159,10 @@ class RadiusQueries:
         # Convert to GraphQL Session type
         sessions = [
             Session(
-                radacctid=int(getattr(s, "radacctid")),
-                username=str(getattr(s, "username")),
-                nasipaddress=str(getattr(s, "nasipaddress")),
-                acctsessionid=str(getattr(s, "acctsessionid")),
+                radacctid=int(s.radacctid),
+                username=str(s.username),
+                nasipaddress=str(s.nasipaddress),
+                acctsessionid=str(s.acctsessionid),
                 acctsessiontime=getattr(s, "acctsessiontime", None),
                 acctinputoctets=getattr(s, "acctinputoctets", None),
                 acctoutputoctets=getattr(s, "acctoutputoctets", None),

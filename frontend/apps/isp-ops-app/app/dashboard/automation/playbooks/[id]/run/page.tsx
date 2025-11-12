@@ -31,7 +31,7 @@ interface JobTemplate {
 function PlaybookRunPageContent() {
   const params = useParams();
   const router = useRouter();
-  const templateId = params?.id as string;
+  const templateId = params?.['id'] as string;
   const { toast } = useToast();
   const [extraVars, setExtraVars] = useState("{}");
   const [jsonError, setJsonError] = useState<string | null>(null);
@@ -111,11 +111,11 @@ function PlaybookRunPageContent() {
 
   const handleLaunch = () => {
     // Validate JSON before launching
-    let parsedExtraVars = {};
+    let parsedExtraVars: Record<string, unknown> = {};
 
     if (extraVars.trim()) {
       try {
-        parsedExtraVars = JSON.parse(extraVars);
+        parsedExtraVars = JSON.parse(extraVars) as Record<string, unknown>;
       } catch (e) {
         toast({
           title: "Error",
@@ -126,10 +126,15 @@ function PlaybookRunPageContent() {
       }
     }
 
-    launchJobMutation.mutate({
-      template_id: parseInt(templateId),
-      extra_vars: Object.keys(parsedExtraVars).length > 0 ? parsedExtraVars : undefined,
-    });
+    const payload: { template_id: number; extra_vars?: Record<string, unknown> } = {
+      template_id: Number.parseInt(templateId, 10),
+    };
+
+    if (Object.keys(parsedExtraVars).length > 0) {
+      payload.extra_vars = parsedExtraVars;
+    }
+
+    launchJobMutation.mutate(payload);
   };
 
   if (isLoading) {

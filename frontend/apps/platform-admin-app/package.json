@@ -20,6 +20,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
+    "@dotmac/features": "workspace:*",
     "@dotmac/graphql": "workspace:*",
     "@dotmac/headless": "workspace:*",
     "@dotmac/primitives": "workspace:*",
@@ -51,7 +52,7 @@
     "openapi-fetch": "^0.14.1",
     "react": "18.3.1",
     "react-dom": "18.3.1",
-    "react-hook-form": "^7.51.3",
+    "react-hook-form": "^7.66.0",
     "react-window": "^1.8.10",
     "recharts": "^2.15.4",
     "tailwind-merge": "^2.5.5",
@@ -76,6 +77,7 @@
     "jest": "^29.7.0",
     "jest-axe": "^9.0.0",
     "jest-environment-jsdom": "^29.7.0",
+    "ts-node": "^10.9.2",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.3",
     "typescript": "^5.4.5"

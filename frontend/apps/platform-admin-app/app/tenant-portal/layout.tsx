@@ -7,7 +7,7 @@ import { usePathname } from "next/navigation";
 import { PropsWithChildren, useMemo } from "react";
 import {
   LayoutDashboard,
-  Users,
+  Shield,
   CreditCard,
   GaugeCircle,
   Plug,
@@ -29,10 +29,9 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/tenant-portal", label: "Overview", icon: LayoutDashboard },
-  { href: "/tenant-portal/customers", label: "Customers", icon: Users },
+  { href: "/tenant-portal/licenses", label: "Licenses", icon: Shield },
   { href: "/tenant-portal/billing", label: "Billing & Plans", icon: CreditCard },
   { href: "/tenant-portal/users", label: "Users & Access", icon: GaugeCircle },
-  { href: "/tenant-portal/usage", label: "Usage & Limits", icon: BarChart },
   { href: "/tenant-portal/integrations", label: "Integrations", icon: Plug },
   { href: "/tenant-portal/support", label: "Support", icon: LifeBuoy },
 ];

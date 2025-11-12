@@ -9,6 +9,7 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { Plus, Edit, Trash2, Eye, Copy, CheckCircle2, XCircle } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { useNotificationTemplates } from "@/hooks/useNotifications";
 import type { CommunicationTemplate, TemplateCreateRequest } from "@/hooks/useNotifications";
 import {
@@ -27,6 +28,16 @@ import { CreateTemplateModal } from "@/components/notifications/CreateTemplateMo
 import { EditTemplateModal } from "@/components/notifications/EditTemplateModal";
 import { PreviewTemplateModal } from "@/components/notifications/PreviewTemplateModal";
 import { useConfirmDialog } from "@dotmac/ui";
+
+const createBulkIcon = (Icon: LucideIcon) => {
+  const Wrapped = ({ className }: { className?: string }) => <Icon className={className} />;
+  Wrapped.displayName = `BulkIcon(${Icon.displayName ?? Icon.name ?? "Icon"})`;
+  return Wrapped;
+};
+
+const ActivateIcon = createBulkIcon(CheckCircle2);
+const DeactivateIcon = createBulkIcon(XCircle);
+const DeleteIcon = createBulkIcon(Trash2);
 
 export default function NotificationTemplatesPage() {
   const [selectedTemplate, setSelectedTemplate] = useState<CommunicationTemplate | null>(null);
@@ -79,12 +90,12 @@ export default function NotificationTemplatesPage() {
       try {
         await createTemplate({
           name: `${template.name} (Copy)`,
-          description: template.description,
+          ...(template.description && { description: template.description }),
           type: template.type,
-          subject_template: template.subject_template,
-          text_template: template.text_template,
-          html_template: template.html_template,
-          required_variables: template.required_variables,
+          ...(template.subject_template && { subject_template: template.subject_template }),
+          ...(template.text_template && { text_template: template.text_template }),
+          ...(template.html_template && { html_template: template.html_template }),
+          ...(template.required_variables && { required_variables: template.required_variables }),
         });
         refetch();
       } catch (err) {
@@ -254,7 +265,7 @@ export default function NotificationTemplatesPage() {
     () => [
       {
         label: "Activate Templates",
-        icon: CheckCircle2,
+        icon: ActivateIcon,
         action: async (selected) => {
           for (const template of selected) {
             if (!template.is_active) {
@@ -267,7 +278,7 @@ export default function NotificationTemplatesPage() {
       },
       {
         label: "Deactivate Templates",
-        icon: XCircle,
+        icon: DeactivateIcon,
         action: async (selected) => {
           for (const template of selected) {
             if (template.is_active) {
@@ -280,7 +291,7 @@ export default function NotificationTemplatesPage() {
       },
       {
         label: "Delete Templates",
-        icon: Trash2,
+        icon: DeleteIcon,
         action: async (selected) => {
           const confirmed = await confirmDialog({
             title: "Delete templates",
@@ -455,7 +466,7 @@ export default function NotificationTemplatesPage() {
               <p className="text-sm text-red-800 dark:text-red-200">
                 Failed to load templates. Please try again.
               </p>
-              <Button variant="link" size="sm" onClick={refetch} className="mt-2">
+              <Button variant="link" size="sm" onClick={() => void refetch()} className="mt-2">
                 Retry
               </Button>
             </div>
@@ -467,7 +478,7 @@ export default function NotificationTemplatesPage() {
               columns={columns}
               searchKey="name"
               searchPlaceholder="Search templates..."
-              bulkActions={canWrite ? bulkActions : undefined}
+              bulkActions={canWrite ? bulkActions : []}
               quickFilters={quickFilters}
               isLoading={isLoading}
             />

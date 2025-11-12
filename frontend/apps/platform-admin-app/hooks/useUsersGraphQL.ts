@@ -66,11 +66,11 @@ export function useUserListGraphQL(options: UseUserListOptions = {}) {
     variables: {
       page,
       pageSize,
-      isActive,
-      isVerified,
-      isSuperuser,
-      isPlatformAdmin,
-      search: search || undefined,
+      ...(isActive !== undefined && { isActive }),
+      ...(isVerified !== undefined && { isVerified }),
+      ...(isSuperuser !== undefined && { isSuperuser }),
+      ...(isPlatformAdmin !== undefined && { isPlatformAdmin }),
+      ...(search && { search }),
       includeMetadata,
       includeRoles,
       includePermissions,
@@ -195,9 +195,9 @@ export function useRoleListGraphQL(options: UseRoleListOptions = {}) {
     variables: {
       page,
       pageSize,
-      isActive,
-      isSystem,
-      search: search || undefined,
+      ...(isActive !== undefined && { isActive }),
+      ...(isSystem !== undefined && { isSystem }),
+      ...(search && { search }),
     },
     skip: !enabled,
     fetchPolicy: "cache-and-network",
@@ -231,7 +231,7 @@ export function usePermissionsByCategoryGraphQL(options: UsePermissionsByCategor
 
   const { data, loading, error, refetch } = usePermissionsByCategoryQuery({
     variables: {
-      category,
+      ...(category !== undefined && { category }),
     },
     skip: !enabled,
     fetchPolicy: "cache-and-network",
@@ -274,8 +274,8 @@ export function useUserDashboardGraphQL(options: UseUserDashboardOptions = {}) {
     variables: {
       page,
       pageSize,
-      isActive,
-      search: search || undefined,
+      ...(isActive !== undefined && { isActive }),
+      ...(search && { search }),
     },
     skip: !enabled,
     pollInterval,

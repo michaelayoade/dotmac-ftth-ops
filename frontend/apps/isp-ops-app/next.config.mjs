@@ -65,8 +65,13 @@ const nextConfig = {
 
     return [...baseRewrites, ...adminOnlyRoutes];
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, dir }) => {
     config.resolve.alias = config.resolve.alias || {};
+
+    // Add local file-based alias for better-auth (client-side only)
+    const path = require('path');
+    config.resolve.alias['@dotmac/better-auth'] = path.resolve(dir, '../../shared/lib/better-auth/index.ts');
+
     try {
       const sharedPackages = [
         '@dotmac/ui',
@@ -74,7 +79,6 @@ const nextConfig = {
         '@dotmac/providers',
         '@dotmac/http-client',
         '@dotmac/headless',
-        '@dotmac/auth',
         '@dotmac/primitives',
       ];
       for (const pkg of sharedPackages) {

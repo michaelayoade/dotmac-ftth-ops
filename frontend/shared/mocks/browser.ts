@@ -18,7 +18,7 @@ export const worker = setupWorker(...handlers);
  *
  * Usage in app:
  * ```typescript
- * if (process.env.NODE_ENV === 'development' && process.env.NEXT_PUBLIC_MSW_ENABLED === 'true') {
+ * if (process.env["NODE_ENV"] === 'development' && process.env["NEXT_PUBLIC_MSW_ENABLED"] === 'true') {
  *   const { worker } = await import('./mocks/browser');
  *   await worker.start();
  * }

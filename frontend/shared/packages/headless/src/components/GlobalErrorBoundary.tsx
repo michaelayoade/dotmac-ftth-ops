@@ -34,7 +34,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log to console in development
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.error("GlobalErrorBoundary caught error:", error, errorInfo);
     }
 
@@ -53,7 +53,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 
   private logErrorToService(error: Error, errorInfo: React.ErrorInfo) {
     // Send to monitoring endpoint
-    if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_ERROR_ENDPOINT) {
+    if (typeof window !== "undefined" && process.env["NEXT_PUBLIC_ERROR_ENDPOINT"]) {
       const errorData = {
         message: error.message,
         stack: error.stack,
@@ -63,7 +63,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
         userAgent: window.navigator.userAgent,
       };
 
-      fetch(process.env.NEXT_PUBLIC_ERROR_ENDPOINT, {
+      fetch(process.env["NEXT_PUBLIC_ERROR_ENDPOINT"], {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(errorData),
@@ -101,7 +101,7 @@ export class GlobalErrorBoundary extends Component<Props, State> {
                 investigated.
               </p>
 
-              {process.env.NODE_ENV === "development" && this.state.error && (
+              {process.env["NODE_ENV"] === "development" && this.state.error && (
                 <details className="text-left mb-6">
                   <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                     Error Details (Development Only)
@@ -143,15 +143,15 @@ export class GlobalErrorBoundary extends Component<Props, State> {
 export function useErrorHandler() {
   return (error: Error, errorInfo?: React.ErrorInfo) => {
     // Log to console in development
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.error("Error handled:", error, errorInfo);
     }
 
     // Send to monitoring
     if (typeof window !== "undefined") {
       // Send to custom endpoint
-      if (process.env.NEXT_PUBLIC_ERROR_ENDPOINT) {
-        fetch(process.env.NEXT_PUBLIC_ERROR_ENDPOINT, {
+      if (process.env["NEXT_PUBLIC_ERROR_ENDPOINT"]) {
+        fetch(process.env["NEXT_PUBLIC_ERROR_ENDPOINT"], {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({

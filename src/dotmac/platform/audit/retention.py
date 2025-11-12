@@ -18,7 +18,6 @@ from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..db import get_async_db
-from ..settings import settings
 from .models import ActivitySeverity, AuditActivity
 
 
@@ -93,29 +92,46 @@ logger = structlog.get_logger(__name__)
 
 
 class AuditRetentionPolicy:
-    """Configuration for audit log retention."""
+    """Configuration for audit log retention.
+
+    Loads configuration from settings by default, but allows override for testing.
+    """
 
     def __init__(
         self,
-        retention_days: int = 90,
-        archive_enabled: bool = True,
-        archive_location: str = "/var/audit/archive",
+        retention_days: int | None = None,
+        archive_enabled: bool | None = None,
+        archive_location: str | None = None,
         batch_size: int = 1000,
         severity_retention: Mapping[str, int] | None = None,
     ):
         """
         Initialize retention policy.
 
+        If parameters are None, loads from settings.audit configuration.
+
         Args:
-            retention_days: Default days to retain audit logs
-            archive_enabled: Whether to archive before deletion
-            archive_location: Where to store archived logs
+            retention_days: Default days to retain audit logs (None = load from settings)
+            archive_enabled: Whether to archive before deletion (None = load from settings)
+            archive_location: Where to store archived logs (None = load from settings)
             batch_size: Number of records to process at once
             severity_retention: Custom retention by severity level
         """
-        self.retention_days = retention_days
-        self.archive_enabled = archive_enabled
-        self.archive_location = Path(archive_location)
+        # Load from settings if not explicitly provided
+        from dotmac.platform.settings import settings
+
+        self.retention_days = (
+            retention_days if retention_days is not None else settings.audit.audit_retention_days
+        )
+        self.archive_enabled = (
+            archive_enabled if archive_enabled is not None else settings.audit.audit_archive_enabled
+        )
+        archive_loc = (
+            archive_location
+            if archive_location is not None
+            else settings.audit.audit_archive_location
+        )
+        self.archive_location = Path(archive_loc)
         self.batch_size = batch_size
 
         # Custom retention by severity (e.g., keep CRITICAL longer)
@@ -243,6 +259,28 @@ class AuditRetentionService:
         """
         Archive audit logs before deletion.
 
+        SECURITY WARNING FOR PRODUCTION:
+        This current implementation writes plaintext archives to local filesystem,
+        which does NOT meet security requirements for production audit logs:
+
+        MISSING SECURITY CONTROLS:
+        1. Encryption: No encryption at rest (should use SSE-KMS or equivalent)
+        2. Integrity: No cryptographic signatures/hashes to prevent tampering
+        3. Immutability: No WORM (Write Once Read Many) policies
+        4. Access Control: Only filesystem permissions (insufficient for compliance)
+        5. Audit Trail: No access logging for archived data
+
+        PRODUCTION DEPLOYMENT REQUIREMENTS:
+        - Move to object storage (S3, GCS, Azure Blob) with server-side encryption
+        - Enable versioning and object lock (WORM) on the bucket
+        - Use KMS for encryption key management
+        - Implement integrity hashing (SHA-256) for each archive
+        - Restrict access via IAM/service accounts with least privilege
+        - Enable access logging on the archive bucket
+        - Consider using AWS S3 Glacier/GCS Archive for long-term retention
+
+        See docs/AUDIT_ARCHIVING.md for implementation guide.
+
         Args:
             session: Database session
             query: Query for records to archive
@@ -252,6 +290,18 @@ class AuditRetentionService:
         Returns:
             Number of records archived
         """
+        from dotmac.platform.settings import settings
+
+        # SECURITY: Warn if using local storage in production
+        if settings.DEPLOYMENT_MODE in ("multi_tenant", "hybrid"):
+            logger.warning(
+                "audit_archive_insecure_storage",
+                message="Audit logs are being archived to local filesystem without encryption. "
+                "This is NOT suitable for production. Configure object storage with encryption.",
+                deployment_mode=settings.DEPLOYMENT_MODE,
+                archive_location=str(self.policy.archive_location),
+            )
+
         archived_count = 0
 
         # Create archive file name
@@ -259,9 +309,14 @@ class AuditRetentionService:
         archive_file = self.policy.archive_location / f"audit_{severity}_{timestamp}.jsonl.gz"
 
         try:
+            import hashlib
+
             # Process in batches
             offset = 0
             ordered_query = query.order_by(AuditActivity.timestamp.asc(), AuditActivity.id.asc())
+
+            # SECURITY: Calculate SHA-256 hash for integrity verification
+            hash_obj = hashlib.sha256()
 
             with gzip.open(archive_file, "wt", encoding="utf-8") as f:
                 while True:
@@ -292,15 +347,26 @@ class AuditRetentionService:
                         }
 
                         # Write as JSON lines
-                        f.write(json.dumps(record_dict) + "\n")
+                        json_line = json.dumps(record_dict) + "\n"
+                        f.write(json_line)
+
+                        # Update hash for integrity verification
+                        hash_obj.update(json_line.encode("utf-8"))
                         archived_count += 1
 
                     offset += self.policy.batch_size
 
+            # SECURITY: Write integrity hash to companion file
+            hash_value = hash_obj.hexdigest()
+            hash_file = archive_file.with_suffix(".sha256")
+            hash_file.write_text(f"{hash_value}  {archive_file.name}\n")
+
             logger.info(
-                "Archived audit logs",
+                "Archived audit logs with integrity hash",
                 severity=severity,
                 archive_file=str(archive_file),
+                hash_file=str(hash_file),
+                sha256=hash_value,
                 archived_count=archived_count,
             )
 
@@ -500,12 +566,8 @@ async def cleanup_audit_logs_task() -> Any:
     This should be scheduled to run daily via cron or task scheduler.
     """
     try:
-        # Load policy from settings
-        policy = AuditRetentionPolicy(
-            retention_days=getattr(settings, "audit_retention_days", 90),
-            archive_enabled=getattr(settings, "audit_archive_enabled", True),
-            archive_location=getattr(settings, "audit_archive_location", "/var/audit/archive"),
-        )
+        # Load policy from current settings.audit configuration
+        policy = AuditRetentionPolicy()
 
         service = AuditRetentionService(policy)
 

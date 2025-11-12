@@ -5,10 +5,7 @@ Intelligent alarm correlation to reduce noise and identify root causes.
 """
 
 import re
-from datetime import datetime, timedelta, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID, uuid4
 
@@ -22,6 +19,9 @@ from dotmac.platform.fault_management.models import (
     AlarmStatus,
     CorrelationAction,
 )
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = UTC
 
 logger = structlog.get_logger(__name__)
 

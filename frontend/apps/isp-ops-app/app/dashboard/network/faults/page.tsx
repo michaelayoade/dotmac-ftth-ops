@@ -4,6 +4,10 @@ import { useState, useMemo, useCallback } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
+import { Switch } from "@dotmac/ui";
+import { Label } from "@dotmac/ui";
+import { Alert, AlertDescription } from "@dotmac/ui";
+import { Skeleton } from "@dotmac/ui";
 import { EnhancedDataTable, BulkAction } from "@dotmac/ui";
 import { createSortableHeader } from "@dotmac/ui";
 import { UniversalChart } from "@dotmac/primitives";
@@ -24,6 +28,8 @@ import {
   useAlarms,
   useAlarmStatistics,
   useAlarmOperations,
+  useSLACompliance,
+  useSLARollupStats,
   Alarm as AlarmType,
   AlarmSeverity,
   AlarmStatus,
@@ -44,103 +50,6 @@ interface AlarmFrequencyData {
   info: number;
 }
 
-interface SLAComplianceData {
-  date: string;
-  compliance: number;
-  target: number;
-}
-
-// ============================================================================
-// Mock Data (Replace with API calls)
-// ============================================================================
-
-const mockAlarms: Alarm[] = [
-  {
-    id: "1",
-    tenant_id: "demo-alpha",
-    alarm_id: "ALM-001",
-    severity: "critical",
-    status: "active",
-    source: "genieacs",
-    alarm_type: "DEVICE_OFFLINE",
-    title: "ONU Device Offline",
-    description: "ONU device has not communicated in 15 minutes",
-    resource_type: "onu",
-    resource_name: "ONU-001-ABC",
-    customer_name: "John Doe",
-    subscriber_count: 1,
-    correlation_action: "investigate",
-    first_occurrence: new Date(Date.now() - 3600000).toISOString(),
-    last_occurrence: new Date().toISOString(),
-    occurrence_count: 3,
-    is_root_cause: true,
-    tags: {},
-    metadata: {},
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: "2",
-    tenant_id: "demo-alpha",
-    alarm_id: "ALM-002",
-    severity: "major",
-    status: "acknowledged",
-    source: "voltha",
-    alarm_type: "HIGH_LATENCY",
-    title: "High Network Latency Detected",
-    resource_type: "olt",
-    resource_name: "OLT-CORE-01",
-    subscriber_count: 45,
-    correlation_action: "monitor",
-    first_occurrence: new Date(Date.now() - 7200000).toISOString(),
-    last_occurrence: new Date(Date.now() - 1800000).toISOString(),
-    occurrence_count: 12,
-    acknowledged_at: new Date(Date.now() - 3000000).toISOString(),
-    is_root_cause: false,
-    tags: {},
-    metadata: {},
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-    updated_at: new Date(Date.now() - 1800000).toISOString(),
-  },
-  {
-    id: "3",
-    tenant_id: "demo-alpha",
-    alarm_id: "ALM-003",
-    severity: "minor",
-    status: "active",
-    source: "netbox",
-    alarm_type: "CONFIG_DRIFT",
-    title: "Configuration Drift Detected",
-    resource_type: "device",
-    resource_name: "SW-DIST-02",
-    subscriber_count: 0,
-    correlation_action: "auto-remediate",
-    first_occurrence: new Date(Date.now() - 86400000).toISOString(),
-    last_occurrence: new Date(Date.now() - 86400000).toISOString(),
-    occurrence_count: 1,
-    is_root_cause: true,
-    tags: {},
-    metadata: {},
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-    updated_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
-
-const mockFrequencyData: AlarmFrequencyData[] = Array.from({ length: 24 }, (_, i) => ({
-  hour: `${i}:00`,
-  critical: Math.floor(Math.random() * 5),
-  major: Math.floor(Math.random() * 10),
-  minor: Math.floor(Math.random() * 15),
-  warning: Math.floor(Math.random() * 20),
-  info: Math.floor(Math.random() * 25),
-}));
-
-const mockSLAData: SLAComplianceData[] = Array.from({ length: 30 }, (_, i) => ({
-  date: new Date(Date.now() - (29 - i) * 86400000).toLocaleDateString(),
-  compliance: 95 + Math.random() * 5,
-  target: 99.9,
-}));
-
 // ============================================================================
 // Component
 // ============================================================================
@@ -149,6 +58,7 @@ export default function FaultManagementPage() {
   const { hasPermission } = useRBAC();
   const [selectedAlarm, setSelectedAlarm] = useState<Alarm | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [excludeMaintenance, setExcludeMaintenance] = useState(true);
 
   const hasFaultAccess = hasPermission("faults.alarms.read");
 
@@ -172,21 +82,20 @@ export default function FaultManagementPage() {
     createTickets,
     isLoading: operationsLoading,
   } = useAlarmOperations();
+  const {
+    data: slaCompliance = [],
+    isLoading: slaLoading,
+    error: slaError,
+    refetch: refetchSla,
+  } = useSLACompliance({ days: 30, excludeMaintenance });
 
-  // Only use mock data in development mode with explicit flag
-  const isDevelopment = process.env.NODE_ENV === "development";
-  const useMockData = isDevelopment && process.env.NEXT_PUBLIC_USE_MOCK_DATA === "true";
+  const {
+    stats: slaRollupStats,
+    isLoading: slaRollupLoading,
+  } = useSLARollupStats(30, 99.9);
 
-  // In production, never fall back to mock data
-  const alarms = useMockData && apiAlarms.length === 0 ? mockAlarms : apiAlarms;
+  const alarms = apiAlarms;
   const isLoading = alarmsLoading || operationsLoading;
-
-  // Production safety: log warning if using mock data
-  if (useMockData && apiAlarms.length === 0) {
-    console.warn(
-      "⚠️ DEVELOPMENT MODE: Using mock alarm data. Set NEXT_PUBLIC_USE_MOCK_DATA=false to test real API.",
-    );
-  }
 
   // Calculate statistics (prefer API statistics, fallback to calculated)
   const statistics = useMemo(() => {
@@ -211,6 +120,50 @@ export default function FaultManagementPage() {
 
     return { active, critical, acknowledged, totalImpacted };
   }, [alarms, apiStatistics]);
+
+  const alarmFrequencyData = useMemo(() => {
+    if (!alarms.length) {
+      return [];
+    }
+
+    const buckets = Array.from({ length: 24 }, (_, hour) => ({
+      hour: `${hour.toString().padStart(2, "0")}:00`,
+      critical: 0,
+      major: 0,
+      minor: 0,
+      warning: 0,
+      info: 0,
+    }));
+
+    alarms.forEach((alarm) => {
+      const timestamp =
+        alarm.last_occurrence || alarm.first_occurrence || alarm.created_at || new Date().toISOString();
+      const hour = new Date(timestamp).getHours();
+      const severity = (alarm.severity || "info").toLowerCase();
+      const bucket = buckets[hour];
+      if (!bucket) {
+        return;
+      }
+      if (severity in bucket) {
+        (bucket as any)[severity] += 1;
+      } else {
+        bucket.info += 1;
+      }
+    });
+
+    return buckets;
+  }, [alarms]);
+
+  const slaChartData = useMemo(() => {
+    return slaCompliance.map((entry) => ({
+      dateLabel: new Date(entry.date).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+      compliance: entry.compliance_percentage,
+      target: entry.target_percentage,
+    }));
+  }, [slaCompliance]);
 
   // ============================================================================
   // Table Configuration
@@ -450,6 +403,58 @@ export default function FaultManagementPage() {
         </Card>
       </div>
 
+      {/* SLA Rollup Statistics */}
+      <Card>
+        <CardHeader>
+          <CardTitle>SLA Performance Summary (Last 30 Days)</CardTitle>
+          <CardDescription>
+            Aggregate downtime, breach metrics, and compliance tracking
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">Total Downtime</span>
+              <span className="text-2xl font-bold">
+                {slaRollupLoading
+                  ? "..."
+                  : `${((slaRollupStats?.total_downtime_minutes ?? 0) / 60).toFixed(1)}h`}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {slaRollupStats?.total_downtime_minutes ?? 0} minutes total
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">Total Breaches</span>
+              <span className="text-2xl font-bold">
+                {slaRollupLoading ? "..." : slaRollupStats?.total_breaches ?? 0}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                Days below {99.9}% uptime
+              </span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">Worst Day</span>
+              <span className="text-2xl font-bold">
+                {slaRollupLoading
+                  ? "..."
+                  : `${(slaRollupStats?.worst_day_compliance ?? 100).toFixed(2)}%`}
+              </span>
+              <span className="text-xs text-muted-foreground">Minimum compliance in period</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-medium text-muted-foreground">Average Compliance</span>
+              <span className="text-2xl font-bold">
+                {slaRollupLoading
+                  ? "..."
+                  : `${(slaRollupStats?.avg_compliance ?? 100).toFixed(2)}%`}
+              </span>
+              <span className="text-xs text-muted-foreground">Mean uptime across all days</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Alarm Frequency Chart */}
       <Card>
         <CardHeader>
@@ -457,37 +462,72 @@ export default function FaultManagementPage() {
           <CardDescription>Alarms by severity over time</CardDescription>
         </CardHeader>
         <CardContent>
-          <UniversalChart
-            {...({
-              type: "bar",
-              data: mockFrequencyData,
-              series: [
-                { key: "critical", name: "Critical", color: "#dc2626" },
-                { key: "major", name: "Major", color: "#f97316" },
-                { key: "minor", name: "Minor", color: "#eab308" },
-                { key: "warning", name: "Warning", color: "#facc15" },
-                { key: "info", name: "Info", color: "#3b82f6" },
-              ],
-              xAxis: { dataKey: "hour" },
-              height: 300,
-              stacked: true,
-            } as any)}
-          />
+          {alarmFrequencyData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No alarm telemetry available for the past 24 hours.
+            </p>
+          ) : (
+            <UniversalChart
+              {...({
+                type: "bar",
+                data: alarmFrequencyData,
+                series: [
+                  { key: "critical", name: "Critical", color: "#dc2626" },
+                  { key: "major", name: "Major", color: "#f97316" },
+                  { key: "minor", name: "Minor", color: "#eab308" },
+                  { key: "warning", name: "Warning", color: "#facc15" },
+                  { key: "info", name: "Info", color: "#3b82f6" },
+                ],
+                xAxis: { dataKey: "hour" },
+                height: 300,
+                stacked: true,
+              } as any)}
+            />
+          )}
         </CardContent>
       </Card>
 
       {/* SLA Compliance Chart */}
       <Card>
-        <CardHeader>
-          <CardTitle>SLA Compliance Trends</CardTitle>
-          <CardDescription>Network availability compliance over the last 30 days</CardDescription>
+        <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+          <div>
+            <CardTitle>SLA Compliance Trends</CardTitle>
+            <CardDescription>Network availability over the last 30 days</CardDescription>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label htmlFor="exclude-maintenance" className="text-sm text-muted-foreground">
+              Exclude maintenance windows
+            </Label>
+            <Switch
+              id="exclude-maintenance"
+              checked={excludeMaintenance}
+              onCheckedChange={(checked) => setExcludeMaintenance(checked)}
+            />
+          </div>
         </CardHeader>
         <CardContent>
-          <UniversalChart
-            {...({
-              type: "line",
-              data: mockSLAData,
-              series: [
+          {slaLoading ? (
+            <Skeleton className="h-[320px] w-full" />
+          ) : slaError ? (
+            <Alert variant="destructive">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="flex items-center justify-between gap-4">
+                <span>Unable to load SLA compliance data.</span>
+                <Button variant="outline" size="sm" onClick={() => refetchSla()}>
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  Retry
+                </Button>
+              </AlertDescription>
+            </Alert>
+          ) : slaChartData.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No SLA telemetry is available for this period.
+            </p>
+          ) : (
+            <UniversalChart
+              type="line"
+              data={slaChartData}
+              series={[
                 {
                   key: "compliance",
                   name: "Actual Compliance",
@@ -496,22 +536,22 @@ export default function FaultManagementPage() {
                 },
                 {
                   key: "target",
-                  name: "Target (99.9%)",
-                  strokeDashArray: "5 5",
+                  name: "Target",
+                  strokeDasharray: "5 5",
                   color: "#6b7280",
                 },
-              ],
-              xAxis: { dataKey: "date" },
-              yAxis: {
+              ]}
+              xAxis={{ dataKey: "dateLabel" }}
+              yAxis={{
                 left: {
                   format: (v: number) => `${v.toFixed(1)}%`,
                   domain: [95, 100],
                 },
-              },
-              height: 300,
-              smooth: true,
-            } as any)}
-          />
+              }}
+              height={300}
+              smooth
+            />
+          )}
         </CardContent>
       </Card>
 

@@ -124,6 +124,7 @@ class UserPermissionsResponse(BaseModel):
 
     user_id: UUID
     permissions: list[str]
+    denied_permissions: list[str] = []
     roles: list[RoleResponse]
     direct_grants: list[PermissionResponse]
     effective_permissions: list[str]  # All permissions after inheritance
@@ -466,7 +467,7 @@ async def get_user_permissions(
 ) -> UserPermissionsResponse:
     """Get all permissions for a user"""
     # Get effective permissions
-    permissions = await rbac_service.get_user_permissions(user_id)
+    permissions_snapshot = await rbac_service.get_user_permissions(user_id)
 
     # Get roles
     roles = await rbac_service.get_user_roles(user_id)
@@ -483,7 +484,8 @@ async def get_user_permissions(
 
     return UserPermissionsResponse(
         user_id=user_id,
-        permissions=list(permissions),
+        permissions=list(permissions_snapshot),
+        denied_permissions=list(permissions_snapshot.denies),
         roles=[
             RoleResponse(
                 id=r.id,
@@ -509,7 +511,7 @@ async def get_user_permissions(
             )
             for p in direct_perms
         ],
-        effective_permissions=list(permissions),
+        effective_permissions=list(permissions_snapshot),
     )
 
 

@@ -70,9 +70,9 @@ export default function LogsPage() {
     const a = document.createElement("a");
     a.href = url;
     a.download = `logs-${new Date().toISOString()}.json`;
-    document.body.appendChild(a);
+    document['body'].appendChild(a);
     a.click();
-    document.body.removeChild(a);
+    document['body'].removeChild(a);
     URL.revokeObjectURL(url);
     toast({ title: "Success", description: "Logs exported successfully" });
   };
@@ -124,12 +124,12 @@ export default function LogsPage() {
   // Log statistics from API
   const logStats = stats
     ? {
-        total: stats.by_level ? Object.values(stats.by_level).reduce((a, b) => a + b, 0) : 0,
-        info: stats.by_level?.INFO || 0,
-        debug: stats.by_level?.DEBUG || 0,
-        warning: stats.by_level?.WARNING || 0,
-        error: stats.by_level?.ERROR || 0,
-        critical: stats.by_level?.CRITICAL || 0,
+        total: stats['by_level'] ? Object.values(stats['by_level']).reduce((a, b) => a + b, 0) : 0,
+        info: stats['by_level']?.['INFO'] || 0,
+        debug: stats['by_level']?.['DEBUG'] || 0,
+        warning: stats['by_level']?.['WARNING'] || 0,
+        error: stats['by_level']?.['ERROR'] || 0,
+        critical: stats['by_level']?.['CRITICAL'] || 0,
       }
     : {
         total: logs.length,
@@ -260,9 +260,9 @@ export default function LogsPage() {
         <CardHeader>
           <div className="flex justify-between items-center">
             <CardTitle>Log Stream</CardTitle>
-            {pagination.has_more && (
+            {pagination['has_more'] && (
               <Badge variant="outline">
-                Showing {logs.length} of {pagination.total}
+                Showing {logs.length} of {pagination['total']}
               </Badge>
             )}
           </div>
@@ -291,37 +291,37 @@ export default function LogsPage() {
               <div className="space-y-1">
                 {logs.map((log) => (
                   <div
-                    key={log.id}
+                    key={log['id']}
                     className="group flex items-start gap-2 p-2 hover:bg-muted rounded"
                   >
-                    <div className="flex-shrink-0 mt-0.5">{getLevelIcon(log.level)}</div>
+                    <div className="flex-shrink-0 mt-0.5">{getLevelIcon(log['level'])}</div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-xs text-muted-foreground">
-                          {new Date(log.timestamp).toLocaleTimeString()}
+                          {new Date(log['timestamp']).toLocaleTimeString()}
                         </span>
-                        <Badge variant={getLevelBadgeVariant(log.level)} className="text-xs">
-                          {log.level}
+                        <Badge variant={getLevelBadgeVariant(log['level'])} className="text-xs">
+                          {log['level']}
                         </Badge>
                         <Badge variant="outline" className="text-xs">
-                          {log.service}
+                          {log['service']}
                         </Badge>
-                        {log.metadata.request_id && (
+                        {log['metadata']['request_id'] && (
                           <span className="text-xs text-muted-foreground">
-                            {log.metadata.request_id}
+                            {log['metadata']['request_id']}
                           </span>
                         )}
                       </div>
                       <div className="mt-1 break-all">
-                        <span className="text-foreground">{log.message}</span>
+                        <span className="text-foreground">{log['message']}</span>
                       </div>
-                      {(log.metadata.user_id || log.metadata.duration) && (
+                      {(log['metadata']['user_id'] || log['metadata']['duration']) && (
                         <div className="mt-1 flex gap-4 text-xs text-muted-foreground">
-                          {log.metadata.user_id && <span>User: {log.metadata.user_id}</span>}
-                          {log.metadata.duration && (
-                            <span>Duration: {log.metadata.duration}ms</span>
+                          {log['metadata']['user_id'] && <span>User: {log['metadata']['user_id']}</span>}
+                          {log['metadata']['duration'] && (
+                            <span>Duration: {log['metadata']['duration']}ms</span>
                           )}
-                          {log.metadata.ip && <span>IP: {log.metadata.ip}</span>}
+                          {log['metadata']['ip'] && <span>IP: {log['metadata']['ip']}</span>}
                         </div>
                       )}
                     </div>

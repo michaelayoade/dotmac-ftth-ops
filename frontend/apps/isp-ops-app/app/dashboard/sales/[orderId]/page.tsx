@@ -91,7 +91,7 @@ interface ActivationProgress {
 
 function OrderDetailsPageContent() {
   const params = useParams();
-  const orderId = params?.orderId as string;
+  const orderId = params?.['orderId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

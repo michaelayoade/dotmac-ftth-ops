@@ -24,20 +24,25 @@ import { extractDataOrThrow } from "@/lib/api/response-helpers";
 // Types matching backend admin/settings models
 // ============================================
 
-export type SettingsCategory =
-  | "database"
-  | "jwt"
-  | "redis"
-  | "vault"
-  | "storage"
-  | "email"
-  | "tenant"
-  | "cors"
-  | "rate_limit"
-  | "observability"
-  | "celery"
-  | "features"
-  | "billing";
+export const SETTINGS_CATEGORY_VALUES = [
+  "database",
+  "jwt",
+  "redis",
+  "vault",
+  "storage",
+  "email",
+  "tenant",
+  "cors",
+  "rate_limit",
+  "observability",
+  "celery",
+  "features",
+  "billing",
+  "branding",
+  "urls",
+] as const;
+
+export type SettingsCategory = (typeof SETTINGS_CATEGORY_VALUES)[number];
 
 export interface SettingField {
   name: string;
@@ -293,8 +298,10 @@ export function getCategoryDisplayName(category: SettingsCategory): string {
     celery: "Background Tasks",
     features: "Feature Flags",
     billing: "Billing & Subscriptions",
+    branding: "Branding & Identity",
+    urls: "External Links & Templates",
   };
-  return displayNames[category] || category;
+  return displayNames[category] ?? category;
 }
 
 /**

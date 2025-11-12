@@ -4,11 +4,12 @@ GenieACS Service Layer
 Business logic for CPE management via GenieACS TR-069/CWMP.
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4
 
 import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.genieacs.client import GenieACSClient
 from dotmac.platform.genieacs.schemas import (
@@ -16,14 +17,14 @@ from dotmac.platform.genieacs.schemas import (
     BulkOperationRequest,
     BulkSetParametersRequest,
     CPEConfigRequest,
-    DiagnosticRequest,
     DeviceInfo,
     DeviceListResponse,
+    DeviceOperationRequest,
     DeviceQuery,
     DeviceResponse,
     DeviceStatsResponse,
     DeviceStatusResponse,
-    DeviceOperationRequest,
+    DiagnosticRequest,
     FactoryResetRequest,
     FaultResponse,
     FileResponse,
@@ -53,7 +54,6 @@ from dotmac.platform.genieacs.schemas import (
     WANConfig,
     WiFiConfig,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 
@@ -155,7 +155,7 @@ class GenieACSService:
         if not device_id:
             raise ValueError("device_id or serial_number is required")
 
-        now_iso = datetime.now(timezone.utc).isoformat()
+        now_iso = datetime.now(UTC).isoformat()
         normalized: dict[str, Any] = {
             "device_id": device_id,
             "serial_number": device_data.get("serial_number"),
@@ -326,9 +326,7 @@ class GenieACSService:
             deleted = bool(result)
 
         # Remove from client cache if present
-        if hasattr(self.client, "devices") and isinstance(
-            self.client.devices, dict
-        ):  # type: ignore[attr-defined]
+        if hasattr(self.client, "devices") and isinstance(self.client.devices, dict):  # type: ignore[attr-defined]
             removed = self.client.devices.pop(device_id, None)  # type: ignore[index]
             deleted = deleted or removed is not None
 
@@ -750,7 +748,7 @@ class GenieACSService:
         scheduled_at = (
             datetime.fromisoformat(request.schedule_time.replace("Z", "+00:00"))
             if request.schedule_time
-            else datetime.now(timezone.utc)
+            else datetime.now(UTC)
         )
 
         schedule = FirmwareUpgradeSchedule(
@@ -764,7 +762,7 @@ class GenieACSService:
             timezone=scheduled_at.tzinfo.tzname(None) if scheduled_at.tzinfo else "UTC",
             max_concurrent=1,
             status="scheduled",
-            created_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
         )
 
         self._firmware_schedules[schedule_id] = schedule
@@ -1095,10 +1093,22 @@ class GenieACSService:
 
     @staticmethod
     def _build_wan_params(wan: WANConfig) -> dict[str, Any]:
-        """Build WAN TR-069 parameters"""
-        params = {
+        """
+        Build WAN TR-069 parameters.
+
+        Configures WAN connection including:
+        - Connection type (DHCP, PPPoE, Static, DHCPv6)
+        - PPPoE credentials
+        - IPv6 settings (static IPv6, DHCPv6-PD)
+
+        Phase 2: Added DHCPv6-PD (Prefix Delegation) support for distributing
+        delegated IPv6 prefixes to subscriber networks.
+        """
+        params: dict[str, Any] = {
             "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ConnectionType": wan.connection_type,
         }
+
+        # PPPoE credentials
         if wan.username:
             params[
                 "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Username"
@@ -1107,6 +1117,41 @@ class GenieACSService:
             params[
                 "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANPPPConnection.1.Password"
             ] = wan.password
+
+        # Phase 2: IPv6 Prefix Delegation (DHCPv6-PD)
+        # Configure CPE to request/use delegated IPv6 prefix from ISP
+        if wan.ipv6_pd_enabled:
+            # Enable IPv6 on WAN interface
+            params[
+                "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_IPV6_Enable"
+            ] = True
+
+            # Enable DHCPv6 client for prefix delegation
+            # Note: Parameter paths may vary by CPE vendor (TR-069/TR-181)
+            # Common paths:
+            # - InternetGatewayDevice (TR-069)
+            # - Device.DHCPv6.Client (TR-181)
+            params[
+                "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_DHCPv6_Enable"
+            ] = True
+
+            # Request prefix delegation (IA_PD - Identity Association for Prefix Delegation)
+            params[
+                "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_DHCPv6_RequestPrefixes"
+            ] = True
+
+            # If a specific delegated prefix is provided (from NetBox allocation),
+            # configure it as a hint to the DHCPv6 client
+            if wan.delegated_ipv6_prefix:
+                # Some CPEs support setting a hint for the preferred prefix
+                params[
+                    "InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.X_DHCPv6_PrefixHint"
+                ] = wan.delegated_ipv6_prefix
+
+                # TR-181 alternative (newer standard)
+                params["Device.DHCPv6.Client.1.RequestAddresses"] = True
+                params["Device.DHCPv6.Client.1.RequestPrefixes"] = True
+
         return params
 
     # =========================================================================

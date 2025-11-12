@@ -5,9 +5,10 @@ Provides customer-facing endpoints for usage tracking, billing, and invoice mana
 """
 
 import io
+from collections.abc import Callable
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime, timedelta
 from typing import Any
-from uuid import UUID
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -25,7 +26,6 @@ from reportlab.platypus import (
 )
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import AsyncContextManager, Callable
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
@@ -41,7 +41,7 @@ from dotmac.platform.radius.models import RadAcct
 from dotmac.platform.settings import settings
 
 # TimescaleDB imports (optional - will fallback to PostgreSQL if not available)
-TimeSeriesSessionFactory = Callable[[], AsyncContextManager[AsyncSession]]
+TimeSeriesSessionFactory = Callable[[], AbstractAsyncContextManager[AsyncSession]]
 
 try:
     from dotmac.platform.timeseries import TimeSeriesSessionLocal as _TimeSeriesSessionLocal
@@ -85,6 +85,13 @@ class UsageHistoryResponse(BaseModel):
     total_gb: float
     daily_usage: list[UsageDataPoint]
     hourly_usage: list[UsageDataPoint]
+    # Trend analysis fields
+    highest_usage_day_gb: float | None = Field(None, description="Highest usage day in GB")
+    highest_usage_date: str | None = Field(None, description="Date of highest usage")
+    usage_trend_percent: float | None = Field(
+        None, description="Usage trend: last 7 days vs prior 7 days (percentage change)"
+    )
+    overage_gb: float | None = Field(None, description="Overage GB if exceeding plan limit")
 
 
 class UsageReportRequest(BaseModel):
@@ -620,6 +627,34 @@ async def get_usage_history(
         # Get hourly breakdown (last 24h)
         hourly_usage = await get_hourly_usage_breakdown(customer, start_date, end_date, db)
 
+        # Calculate trend analysis metrics
+        highest_day_gb = None
+        highest_date = None
+        if daily_usage:
+            highest_day = max(daily_usage, key=lambda d: d.total)
+            highest_day_gb = round(highest_day.total, 2)
+            highest_date = highest_day.date
+
+        # Calculate usage trend (last 7 days vs prior 7 days)
+        usage_trend_percent = None
+        if len(daily_usage) >= 14:
+            # Last 7 days
+            last_7_days = daily_usage[-7:]
+            last_7_total = sum(d.total for d in last_7_days)
+
+            # Prior 7 days
+            prior_7_days = daily_usage[-14:-7]
+            prior_7_total = sum(d.total for d in prior_7_days)
+
+            if prior_7_total > 0:
+                usage_trend_percent = round(
+                    ((last_7_total - prior_7_total) / prior_7_total) * 100, 2
+                )
+
+        # Calculate overage (placeholder - would need plan limit from subscription)
+        # For now, we'll leave it as None unless we have a plan limit
+        overage_gb = None
+
         return UsageHistoryResponse(
             period_start=start_date,
             period_end=end_date,
@@ -628,6 +663,10 @@ async def get_usage_history(
             total_gb=round(download_gb + upload_gb, 2),
             daily_usage=daily_usage,
             hourly_usage=hourly_usage,
+            highest_usage_day_gb=highest_day_gb,
+            highest_usage_date=highest_date,
+            usage_trend_percent=usage_trend_percent,
+            overage_gb=overage_gb,
         )
 
     except HTTPException:

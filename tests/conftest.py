@@ -20,8 +20,7 @@ _load_env_flag = os.environ.get("DOTMAC_TEST_LOAD_ENV")
 if _load_env_flag is None:
     # Auto-enable when dedicated test env files are present (keeps old opt-in behaviour otherwise)
     _load_env_for_tests = any(
-        (_project_root / candidate).exists()
-        for candidate in (".env.integration", ".env.testing")
+        (_project_root / candidate).exists() for candidate in (".env.integration", ".env.testing")
     )
 else:
     _load_env_for_tests = _load_env_flag.strip().lower() in {"1", "true", "yes", "on"}
@@ -50,10 +49,10 @@ if _load_env_for_tests and _selected_env:
     with open(_selected_env) as f:
         for line in f:
             line = line.strip()
-            if not line or line.startswith('#') or '=' not in line:
+            if not line or line.startswith("#") or "=" not in line:
                 continue
 
-            key, _, value = line.partition('=')
+            key, _, value = line.partition("=")
             key = key.strip()
             value = value.strip()
 
@@ -70,7 +69,7 @@ if _load_env_for_tests and _selected_env:
     def expand_vars(value, env_dict):
         """Expand ${VAR} references in value using env_dict."""
         # Match ${VAR_NAME} pattern
-        pattern = r'\$\{([^}]+)\}'
+        pattern = r"\$\{([^}]+)\}"
 
         def replacer(match):
             var_name = match.group(1)
@@ -114,4 +113,5 @@ pytest_plugins = [
     "tests.fixtures.billing_support",
     "tests.fixtures.async_db",
     "tests.fixtures.cache_bypass",
+    "tests.conftest_rls_helpers",  # RLS test helpers with auto-bypass
 ]

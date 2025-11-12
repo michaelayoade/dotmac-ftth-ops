@@ -605,6 +605,7 @@ def _import_base_and_models():
         "dotmac.platform.ticketing.models",
         "dotmac.platform.services.lifecycle.models",
         "dotmac.platform.subscribers.models",
+        "dotmac.platform.network.models",
         "dotmac.platform.radius.models",
         "dotmac.platform.fault_management.models",
         "dotmac.platform.notifications.models",

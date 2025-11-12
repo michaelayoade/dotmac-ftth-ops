@@ -1,14 +1,16 @@
 """Data transfer API router."""
 
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID, uuid4
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.rbac_dependencies import require_admin
+from dotmac.platform.database import get_async_session as get_db
 
 from .core import DataFormat, TransferStatus
 from .models import (
@@ -20,6 +22,7 @@ from .models import (
     TransferJobResponse,
     TransferType,
 )
+from .repository import TransferJobRepository
 
 logger = structlog.get_logger(__name__)
 data_transfer_router = APIRouter(
@@ -36,7 +39,9 @@ def _safe_user_context(user: Any | None) -> tuple[str | None, str | None]:
 
 @data_transfer_router.post("/import", response_model=TransferJobResponse)
 async def import_data(
-    request: ImportRequest, current_user: UserInfo | None = Depends(require_admin)
+    request: ImportRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> TransferJobResponse:
     """Import data from external source."""
     try:
@@ -49,8 +54,35 @@ async def import_data(
             source_type=request.source_type.value,
         )
 
-        # Create job response
+        # Create database record for job
         job_id = uuid4()
+        repo = TransferJobRepository(db)
+
+        await repo.create_job(
+            job_id=job_id,
+            name=f"Import from {request.source_type.value}",
+            job_type=TransferType.IMPORT,
+            tenant_id=tenant_id or "unknown",
+            config={
+                "source_type": request.source_type.value,
+                "format": request.format.value,
+                "batch_size": request.batch_size,
+            },
+            metadata={"user_id": user_id or "unknown"},
+            import_source=request.source_type.value,
+            source_path=request.source_path,
+        )
+
+        # Queue background task for actual import processing
+        from .tasks import process_import_job
+
+        process_import_job.delay(
+            job_id=str(job_id),
+            import_request=request.model_dump(),
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+
         return TransferJobResponse(
             job_id=job_id,
             name=f"Import from {request.source_type.value}",
@@ -80,7 +112,9 @@ async def import_data(
 
 @data_transfer_router.post("/export", response_model=TransferJobResponse)
 async def export_data(
-    request: ExportRequest, current_user: UserInfo | None = Depends(require_admin)
+    request: ExportRequest,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> TransferJobResponse:
     """Export data to external target."""
     try:
@@ -93,8 +127,36 @@ async def export_data(
             target_type=request.target_type.value,
         )
 
-        # Create job response
+        # Create database record for job
         job_id = uuid4()
+        repo = TransferJobRepository(db)
+
+        await repo.create_job(
+            job_id=job_id,
+            name=f"Export to {request.target_type.value}",
+            job_type=TransferType.EXPORT,
+            tenant_id=tenant_id or "unknown",
+            config={
+                "target_type": request.target_type.value,
+                "format": request.format.value,
+                "compression": request.compression.value,
+                "batch_size": request.batch_size,
+            },
+            metadata={"user_id": user_id or "unknown"},
+            export_target=request.target_type.value,
+            target_path=request.target_path,
+        )
+
+        # Queue background task for actual export processing
+        from .tasks import process_export_job
+
+        process_export_job.delay(
+            job_id=str(job_id),
+            export_request=request.model_dump(),
+            tenant_id=tenant_id,
+            user_id=user_id,
+        )
+
         return TransferJobResponse(
             job_id=job_id,
             name=f"Export to {request.target_type.value}",
@@ -125,7 +187,9 @@ async def export_data(
 
 @data_transfer_router.get("/jobs/{job_id}", response_model=TransferJobResponse)
 async def get_job_status(
-    job_id: str, current_user: UserInfo | None = Depends(require_admin)
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> TransferJobResponse:
     """Get data transfer job status."""
     try:
@@ -146,21 +210,31 @@ async def get_job_status(
                 detail="Invalid job ID format",
             )
 
-        # Return mock completed job
+        # Get job from database
+        repo = TransferJobRepository(db)
+        job = await repo.get_job(job_uuid, tenant_id or "unknown")
+
+        if not job:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found",
+            )
+
+        # Convert to response model
         return TransferJobResponse(
-            job_id=job_uuid,
-            name="Sample Transfer Job",
-            type=TransferType.IMPORT,
-            status=TransferStatus.COMPLETED,
-            progress=100.0,
-            created_at=datetime.now(UTC) - timedelta(hours=1),
-            started_at=datetime.now(UTC) - timedelta(minutes=55),
-            completed_at=datetime.now(UTC) - timedelta(minutes=5),
-            records_processed=1000,
-            records_failed=0,
-            records_total=1000,
-            error_message=None,
-            metadata=None,
+            job_id=job.id,
+            name=job.name,
+            type=TransferType(job.job_type),
+            status=TransferStatus(job.status),
+            progress=job.progress_percentage,
+            created_at=job.created_at,
+            started_at=job.started_at,
+            completed_at=job.completed_at,
+            records_processed=job.processed_records,
+            records_failed=job.failed_records,
+            records_total=job.total_records if job.total_records > 0 else None,
+            error_message=job.error_message,
+            metadata=job.config,
         )
     except HTTPException:
         raise
@@ -178,6 +252,7 @@ async def list_jobs(
     job_status: TransferStatus | None = Query(None, description="Filter by status"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(20, ge=1, le=100, description="Page size"),
+    db: AsyncSession = Depends(get_db),
     current_user: UserInfo | None = Depends(require_admin),
 ) -> TransferJobListResponse:
     """List data transfer jobs."""
@@ -191,13 +266,50 @@ async def list_jobs(
             transfer_type=type.value if type else None,
         )
 
-        # Return empty list for now
+        # Get jobs from database
+        repo = TransferJobRepository(db)
+        offset = (page - 1) * page_size
+
+        jobs = await repo.list_jobs(
+            tenant_id=tenant_id or "unknown",
+            job_type=type,
+            status=job_status,
+            limit=page_size,
+            offset=offset,
+        )
+
+        total = await repo.count_jobs(
+            tenant_id=tenant_id or "unknown",
+            job_type=type,
+            status=job_status,
+        )
+
+        # Convert to response models
+        job_responses = [
+            TransferJobResponse(
+                job_id=job.id,
+                name=job.name,
+                type=TransferType(job.job_type),
+                status=TransferStatus(job.status),
+                progress=job.progress_percentage,
+                created_at=job.created_at,
+                started_at=job.started_at,
+                completed_at=job.completed_at,
+                records_processed=job.processed_records,
+                records_failed=job.failed_records,
+                records_total=job.total_records if job.total_records > 0 else None,
+                error_message=job.error_message,
+                metadata=job.config,
+            )
+            for job in jobs
+        ]
+
         return TransferJobListResponse(
-            jobs=[],
-            total=0,
+            jobs=job_responses,
+            total=total,
             page=page,
             page_size=page_size,
-            has_more=False,
+            has_more=(offset + page_size) < total,
         )
     except Exception as e:
         logger.exception("Error listing jobs", error=str(e))
@@ -209,17 +321,52 @@ async def list_jobs(
 
 @data_transfer_router.delete("/jobs/{job_id}")
 async def cancel_job(
-    job_id: str, current_user: UserInfo | None = Depends(require_admin)
+    job_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: UserInfo | None = Depends(require_admin),
 ) -> dict[str, Any]:
     """Cancel a data transfer job."""
-    user_id, tenant_id = _safe_user_context(current_user)
-    logger.info(
-        "data_transfer.job.cancel.request",
-        user_id=user_id or "unknown",
-        tenant_id=tenant_id,
-        job_id=job_id,
-    )
-    return {"message": f"Job {job_id} cancelled"}
+    try:
+        user_id, tenant_id = _safe_user_context(current_user)
+        logger.info(
+            "data_transfer.job.cancel.request",
+            user_id=user_id or "unknown",
+            tenant_id=tenant_id,
+            job_id=job_id,
+        )
+
+        # Parse UUID
+        try:
+            job_uuid = UUID(job_id)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid job ID format",
+            )
+
+        # Cancel job in database
+        repo = TransferJobRepository(db)
+        success = await repo.cancel_job(job_uuid, tenant_id or "unknown")
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Job {job_id} not found or cannot be cancelled",
+            )
+
+        return {
+            "message": f"Job {job_id} cancelled successfully",
+            "job_id": job_id,
+            "cancelled_at": datetime.now(UTC).isoformat(),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Error cancelling job", job_id=job_id, error=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to cancel job",
+        )
 
 
 @data_transfer_router.get("/formats", response_model=FormatsResponse)

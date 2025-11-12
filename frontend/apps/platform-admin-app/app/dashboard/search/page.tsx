@@ -71,7 +71,7 @@ export default function GlobalSearchPage() {
   } = useSearch(
     {
       q: query,
-      type: selectedType || undefined,
+      ...(selectedType ? { type: selectedType } : {}),
       limit: 20,
       page: currentPage,
     },
@@ -325,7 +325,7 @@ export default function GlobalSearchPage() {
 
 function SearchResultCard({ result }: { result: SearchResult }) {
   const Icon = TYPE_ICONS[result.type] || FileText;
-  const typeColor = TYPE_COLORS[result.type] || TYPE_COLORS.unknown;
+  const typeColor = TYPE_COLORS[result.type] || TYPE_COLORS['unknown'];
   const detailRoute = getEntityRoute(result.type, result.id);
 
   return (

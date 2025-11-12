@@ -229,7 +229,7 @@ function DiagnosticsHistoryPageContent() {
           <CardContent>
             <div className="text-2xl font-bold">{stats.successRate}%</div>
             <p className="text-xs text-muted-foreground">
-              {stats.byStatus.completed || 0} completed
+              {stats.byStatus['completed'] || 0} completed
             </p>
           </CardContent>
         </Card>
@@ -252,10 +252,10 @@ function DiagnosticsHistoryPageContent() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {stats.bySeverity.critical || 0}
+              {stats.bySeverity['critical'] || 0}
             </div>
             <p className="text-xs text-muted-foreground">
-              {stats.bySeverity.error || 0} errors
+              {stats.bySeverity['error'] || 0} errors
             </p>
           </CardContent>
         </Card>

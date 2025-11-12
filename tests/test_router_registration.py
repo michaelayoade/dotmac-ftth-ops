@@ -128,9 +128,8 @@ class TestRouterRegistration:
             if len(router_ids) > 1 and prefix not in allowed_duplicate_prefixes
         }
 
-        assert not unexpected_duplicates, (
-            "Unexpected duplicate prefixes found: "
-            + ", ".join(f"{prefix}: {ids}" for prefix, ids in unexpected_duplicates.items())
+        assert not unexpected_duplicates, "Unexpected duplicate prefixes found: " + ", ".join(
+            f"{prefix}: {ids}" for prefix, ids in unexpected_duplicates.items()
         )
 
     def test_router_requires_auth_flag(self):

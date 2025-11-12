@@ -115,7 +115,7 @@ class MetricsService:
         """Compute subscriber metrics."""
         session = self._require_session()
 
-        status_counts: dict[SubscriberStatus, int] = {status: 0 for status in SubscriberStatus}
+        status_counts: dict[SubscriberStatus, int] = dict.fromkeys(SubscriberStatus, 0)
         subscriber_rows = (
             await session.execute(
                 select(

@@ -533,7 +533,7 @@ class QuotaContext:
         self.metadata = metadata or {}
         self.service = LicensingFrameworkService(db)
 
-    async def __aenter__(self) -> "QuotaContext":
+    async def __aenter__(self) -> QuotaContext:
         """Check quota before entering context."""
         try:
             result = await self.service.check_quota(

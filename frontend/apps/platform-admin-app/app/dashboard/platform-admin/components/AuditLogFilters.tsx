@@ -43,10 +43,13 @@ export function AuditLogFilters({
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      onFilterChange({
-        ...filters,
-        search: searchInput || undefined,
-      });
+      const newFilters = { ...filters };
+      if (searchInput) {
+        newFilters.search = searchInput;
+      } else {
+        delete newFilters.search;
+      }
+      onFilterChange(newFilters);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
@@ -87,7 +90,7 @@ export function AuditLogFilters({
 
         {/* Days Filter */}
         <Select
-          value={filters.days?.toString()}
+          value={filters.days?.toString() || "30"}
           onValueChange={(value) =>
             handleFilterChange("days", value === "all" ? undefined : parseInt(value))
           }
@@ -135,7 +138,7 @@ export function AuditLogFilters({
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Severity Filter */}
         <Select
-          value={filters.severity}
+          value={filters.severity || "all"}
           onValueChange={(value) =>
             handleFilterChange("severity", value === "all" ? undefined : value)
           }

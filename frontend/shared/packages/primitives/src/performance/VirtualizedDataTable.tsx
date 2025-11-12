@@ -61,15 +61,15 @@ export function VirtualizedDataTable<T = Record<string, unknown>>({
     [columns, selectable],
   );
 
-  const resolveRowKey = useCallback(
-    (row: T, index: number) => {
-      const maybeId = (row as Record<string, unknown>).id;
-      return typeof maybeId === "string" || typeof maybeId === "number"
-        ? String(maybeId)
-        : String(index);
-    },
-    [],
-  );
+  const resolveRowKey = useCallback((row: T, index: number) => {
+    if (row && typeof row === "object" && "id" in (row as Record<string, unknown>)) {
+      const maybeId = (row as { id?: unknown }).id;
+      if (typeof maybeId === "string" || typeof maybeId === "number") {
+        return String(maybeId);
+      }
+    }
+    return String(index);
+  }, []);
 
   const handleSort = useCallback(
     (columnKey: string) => {

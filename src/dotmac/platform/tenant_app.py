@@ -91,6 +91,20 @@ TENANT_ROUTER_CONFIGS = [
         "description": "Network inventory and IPAM",
     },
     {
+        "module_path": "dotmac.platform.tenant.branding_router",
+        "router_name": "router",
+        "prefix": "",  # Router defines /branding prefix
+        "tags": ["ISP - Branding"],
+        "description": "Tenant-managed branding configuration",
+    },
+    {
+        "module_path": "dotmac.platform.tenant.isp_settings_router",
+        "router_name": "router",
+        "prefix": "",  # Router defines /isp-settings prefix
+        "tags": ["ISP - Settings"],
+        "description": "ISP-specific configuration settings",
+    },
+    {
         "module_path": "dotmac.platform.genieacs.router",
         "router_name": "router",
         "prefix": "",  # Module has /genieacs prefix

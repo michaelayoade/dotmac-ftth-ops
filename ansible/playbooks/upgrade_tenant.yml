@@ -1,16 +1,283 @@
 ---
+# Ansible Playbook: Upgrade Tenant Deployment
+#
+# This playbook upgrades an existing tenant deployment to a new version.
+# Supports both Docker Compose (dotmac_hosted) and systemd (customer_hosted) modes.
+#
+# Variables required:
+#   - tenant_id: Tenant identifier
+#   - deployment_mode: dotmac_hosted or customer_hosted
+#   - version: New platform version to deploy
+#   - backup_before_upgrade: Whether to backup before upgrade (default: true)
+
 - name: "Upgrade DotMac tenant deployment"
   hosts: "{{ target_hosts | default('all') }}"
-  gather_facts: false
+  become: yes
+  vars:
+    install_dir: "/opt/dotmac/tenant-{{ tenant_id }}"
+    data_dir: "/var/lib/dotmac/tenant-{{ tenant_id }}"
+    backup_dir: "/var/backups/dotmac/tenant-{{ tenant_id }}"
+    venv_dir: "{{ install_dir }}/venv"
+    app_user: "dotmac-{{ tenant_id }}"
+    app_group: "dotmac"
+    compose_project_name: "dotmac-tenant-{{ tenant_id }}"
+
   tasks:
-    - name: "Pull latest tenant container images"
+    # ========================================================================
+    # Pre-Upgrade Checks & Backup
+    # ========================================================================
+    - name: Check if deployment exists
+      stat:
+        path: "{{ install_dir }}"
+      register: deployment_exists
+      failed_when: not deployment_exists.stat.exists
+
+    - name: Get current version
+      slurp:
+        src: "{{ install_dir }}/VERSION"
+      register: current_version_file
+      ignore_errors: yes
+
+    - name: Set current version fact
+      set_fact:
+        current_version: "{{ (current_version_file.content | b64decode).strip() if current_version_file is succeeded else 'unknown' }}"
+
+    - name: Display upgrade information
+      debug:
+        msg: "Upgrading tenant {{ tenant_id }} from {{ current_version }} to {{ version }}"
+
+    - name: Create backup directory
+      file:
+        path: "{{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}"
+        state: directory
+        mode: '0700'
+      when: backup_before_upgrade | default(true)
+
+    - name: Backup database
+      postgresql_db:
+        name: "tenant_{{ tenant_id }}"
+        state: dump
+        target: "{{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}/database.sql"
+      become_user: postgres
+      delegate_to: "{{ groups['db_servers'][0] | default('localhost') }}"
+      when: backup_before_upgrade | default(true)
+
+    - name: Archive current configuration
+      archive:
+        path: "{{ install_dir }}/.env"
+        dest: "{{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}/config.tar.gz"
+      when: backup_before_upgrade | default(true)
+
+    # ========================================================================
+    # Upgrade: Docker Compose Mode
+    # ========================================================================
+    - name: Pull latest Docker images
       community.docker.docker_image:
         name: "{{ item }}"
         source: pull
-      loop: "{{ tenant_container_images | default([]) }}"
+        force_source: yes
+      loop:
+        - "{{ docker_registry | default('ghcr.io') }}/{{ docker_image_name | default('dotmac/platform') }}:{{ version }}"
+        - "{{ docker_registry | default('ghcr.io') }}/{{ docker_image_name | default('dotmac/platform') }}-frontend:{{ version }}"
+      when: deployment_mode == 'dotmac_hosted'
 
-    - name: "Recreate tenant compose stack"
-      community.docker.docker_compose_v2:
-        project_src: "{{ tenant_workspace_root }}/{{ tenant_id }}/compose"
-        pull: true
+    - name: Update Docker Compose configuration
+      template:
+        src: docker-compose-tenant.yml.j2
+        dest: "{{ install_dir }}/docker-compose.yml"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+      when: deployment_mode == 'dotmac_hosted'
+
+    - name: Stop Docker Compose stack
+      community.docker.docker_compose:
+        project_src: "{{ install_dir }}"
+        project_name: "{{ compose_project_name }}"
+        state: absent
+      when: deployment_mode == 'dotmac_hosted'
+
+    - name: Start upgraded Docker Compose stack
+      community.docker.docker_compose:
+        project_src: "{{ install_dir }}"
+        project_name: "{{ compose_project_name }}"
         state: present
+        pull: yes
+        recreate: always
+      when: deployment_mode == 'dotmac_hosted'
+      register: compose_upgrade
+
+    - name: Wait for Docker stack to be healthy
+      community.docker.docker_container_info:
+        name: "{{ compose_project_name }}-api-1"
+      register: api_container
+      until: api_container.container.State.Health.Status == "healthy"
+      retries: 30
+      delay: 5
+      when: deployment_mode == 'dotmac_hosted'
+
+    # ========================================================================
+    # Upgrade: Systemd Mode (Customer Hosted)
+    # ========================================================================
+    - name: Stop all tenant services (systemd)
+      systemd:
+        name: "{{ item }}"
+        state: stopped
+      loop:
+        - "frontend-tenant-{{ tenant_id }}"
+        - "celery-worker-tenant-{{ tenant_id }}"
+        - "dotmac-tenant-{{ tenant_id }}"
+      when: deployment_mode == 'customer_hosted'
+      ignore_errors: yes
+
+    - name: Backup current virtualenv
+      command: mv {{ venv_dir }} {{ venv_dir }}.backup.{{ ansible_date_time.epoch }}
+      args:
+        removes: "{{ venv_dir }}"
+      when: deployment_mode == 'customer_hosted'
+
+    - name: Create new Python virtual environment
+      command: python3 -m venv "{{ venv_dir }}"
+      args:
+        creates: "{{ venv_dir }}/bin/python"
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted'
+
+    - name: Upgrade DotMac platform package
+      pip:
+        name: "dotmac-platform=={{ version }}"
+        virtualenv: "{{ venv_dir }}"
+        state: forcereinstall
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted'
+
+    - name: Clone/update frontend repository
+      git:
+        repo: "{{ frontend_repo_url | default('https://github.com/yourusername/dotmac-ftth-ops.git') }}"
+        dest: "{{ install_dir }}/frontend"
+        version: "{{ version }}"
+        force: yes
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted' and frontend_deploy_mode == 'build'
+
+    - name: Install frontend dependencies
+      command: pnpm install
+      args:
+        chdir: "{{ install_dir }}/frontend/frontend/apps/isp-ops-app"
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted' and frontend_deploy_mode == 'build'
+
+    - name: Build frontend
+      command: pnpm build
+      args:
+        chdir: "{{ install_dir }}/frontend/frontend/apps/isp-ops-app"
+      environment:
+        NEXT_PUBLIC_API_BASE_URL: "https://{{ tenant_subdomain }}.{{ domain }}"
+        NEXT_PUBLIC_WS_URL: "wss://{{ tenant_subdomain }}.{{ domain }}/ws"
+        NEXT_PUBLIC_ENVIRONMENT: "{{ environment }}"
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted' and frontend_deploy_mode == 'build'
+
+    # ========================================================================
+    # Database Migrations (Both Modes)
+    # ========================================================================
+    - name: Run database migrations (Docker)
+      community.docker.docker_container_exec:
+        container: "{{ compose_project_name }}-api-1"
+        command: alembic upgrade head
+      when: deployment_mode == 'dotmac_hosted'
+
+    - name: Run database migrations (systemd)
+      command: "{{ venv_dir }}/bin/alembic upgrade head"
+      args:
+        chdir: "{{ install_dir }}"
+      environment:
+        DATABASE_URL: "postgresql://tenant_{{ tenant_id }}_user:{{ db_password }}@{{ db_host }}/tenant_{{ tenant_id }}"
+      become_user: "{{ app_user }}"
+      when: deployment_mode == 'customer_hosted'
+
+    # ========================================================================
+    # Restart Services (Systemd Mode)
+    # ========================================================================
+    - name: Start all tenant services (systemd)
+      systemd:
+        name: "{{ item }}"
+        state: started
+        daemon_reload: yes
+      loop:
+        - "dotmac-tenant-{{ tenant_id }}"
+        - "celery-worker-tenant-{{ tenant_id }}"
+        - "frontend-tenant-{{ tenant_id }}"
+      when: deployment_mode == 'customer_hosted'
+
+    # ========================================================================
+    # Post-Upgrade Verification
+    # ========================================================================
+    - name: Wait for API to be healthy
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: health_check
+      until: health_check.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Verify database connectivity
+      uri:
+        url: "http://localhost:{{ app_port }}/health/db"
+        status_code: 200
+      register: db_health
+      until: db_health.status == 200
+      retries: 10
+      delay: 3
+      ignore_errors: yes
+
+    - name: Verify RADIUS connectivity
+      wait_for:
+        host: 127.0.0.1
+        port: "{{ radius_port }}"
+        state: started
+        timeout: 30
+      ignore_errors: yes
+
+    - name: Update version file
+      copy:
+        content: "{{ version }}"
+        dest: "{{ install_dir }}/VERSION"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Record upgrade in audit log
+      lineinfile:
+        path: "{{ data_dir }}/logs/upgrades.log"
+        line: "{{ ansible_date_time.iso8601 }} - Upgraded from {{ current_version }} to {{ version }}"
+        create: yes
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Display upgrade completion message
+      debug:
+        msg: "Tenant {{ tenant_id }} successfully upgraded to version {{ version }}. Backup available at {{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}"
+
+    # ========================================================================
+    # Rollback Support (if verification fails)
+    # ========================================================================
+    - name: Rollback instructions
+      debug:
+        msg: |
+          If the upgrade failed, you can rollback using:
+          {% if deployment_mode == 'dotmac_hosted' %}
+          docker compose -p {{ compose_project_name }} down
+          # Restore database from {{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}/database.sql
+          # Restore previous Docker Compose config
+          docker compose -p {{ compose_project_name }} up -d
+          {% else %}
+          systemctl stop dotmac-tenant-{{ tenant_id }} celery-worker-tenant-{{ tenant_id }} frontend-tenant-{{ tenant_id }}
+          rm -rf {{ venv_dir }}
+          mv {{ venv_dir }}.backup.* {{ venv_dir }}
+          # Restore database from {{ backup_dir }}/upgrade-{{ ansible_date_time.iso8601 }}/database.sql
+          systemctl start dotmac-tenant-{{ tenant_id }} celery-worker-tenant-{{ tenant_id }} frontend-tenant-{{ tenant_id }}
+          {% endif %}
+      when: health_check is failed or db_health is failed

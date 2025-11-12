@@ -73,7 +73,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     setLoading(true);
     try {
       const response = await apiClient.get<DiscoveredONU[]>("/access/discover-onus");
-      const discoveries = (response.data || []).map((onu) => ({ ...onu, metadata: onu.metadata ?? {} }));
+      const discoveries = (response['data'] || []).map((onu) => ({ ...onu, metadata: onu['metadata'] ?? {} }));
       setDiscoveredONUs(discoveries);
 
       toast({
@@ -83,7 +83,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     } catch (err: any) {
       toast({
         title: "Discovery Failed",
-        description: err?.response?.data?.detail || "Could not discover ONUs",
+        description: err?.response?.['data']?.detail || "Could not discover ONUs",
         variant: "destructive",
       });
     } finally {
@@ -99,17 +99,17 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
 
   const handleSelectONU = (onu: DiscoveredONU) => {
     setSelectedONU(onu);
-    const metadata = onu.metadata || {};
-    const ponPort = Number(metadata.pon_port ?? 0);
+    const metadata = onu['metadata'] || {};
+    const ponPort = Number(metadata['pon_port'] ?? 0);
     setProvisionForm({
-      serial_number: onu.serial_number,
-      olt_device_id: String(metadata.olt_id ?? ""),
+      serial_number: onu['serial_number'],
+      olt_device_id: String(metadata['olt_id'] ?? ""),
       pon_port: Number.isFinite(ponPort) ? ponPort : 0,
-      subscriber_id: metadata.subscriber_id,
-      vlan: metadata.vlan,
-      bandwidth_profile: metadata.bandwidth_profile,
-      line_profile_id: metadata.line_profile_id,
-      service_profile_id: metadata.service_profile_id,
+      subscriber_id: metadata['subscriber_id'],
+      vlan: metadata['vlan'],
+      bandwidth_profile: metadata['bandwidth_profile'],
+      line_profile_id: metadata['line_profile_id'],
+      service_profile_id: metadata['service_profile_id'],
     });
     setShowDiscoveryModal(false);
     setShowProvisionModal(true);
@@ -132,7 +132,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
         provisionForm,
       );
 
-      const message = response.data?.message || "Provisioning request submitted";
+      const message = response['data']?.message || "Provisioning request submitted";
       toast({
         title: "ONU Provisioned",
         description: message,
@@ -149,7 +149,7 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
     } catch (err: any) {
       toast({
         title: "Provisioning Failed",
-        description: err?.response?.data?.detail || "Could not provision ONU",
+        description: err?.response?.['data']?.detail || "Could not provision ONU",
         variant: "destructive",
       });
     } finally {
@@ -209,11 +209,11 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
               <>
                 <div className="grid gap-3">
                   {discoveredONUs.map((onu) => {
-                    const metadata = onu.metadata || {};
-                    const isProvisioned = (onu.state || "").toLowerCase() === "provisioned";
+                    const metadata = onu['metadata'] || {};
+                    const isProvisioned = (onu['state'] || "").toLowerCase() === "provisioned";
                     return (
                       <Card
-                        key={`${onu.serial_number}-${metadata.olt_id ?? "unknown"}-${metadata.pon_port ?? "na"}`}
+                        key={`${onu['serial_number']}-${metadata['olt_id'] ?? "unknown"}-${metadata['pon_port'] ?? "na"}`}
                         className={`cursor-pointer transition-all hover:shadow-md ${
                           isProvisioned ? "opacity-60" : ""
                         }`}
@@ -224,12 +224,12 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                             <div className="flex items-center gap-3">
                               <Server className="w-5 h-5" />
                               <div>
-                                <div className="font-medium">{onu.serial_number}</div>
+                                <div className="font-medium">{onu['serial_number']}</div>
                                 <div className="text-xs text-muted-foreground">
-                                  OLT: {metadata.olt_id || "Unknown"} • Port: {metadata.pon_port ?? "N/A"}
+                                  OLT: {metadata['olt_id'] || "Unknown"} • Port: {metadata['pon_port'] ?? "N/A"}
                                 </div>
                                 <div className="text-xs text-muted-foreground">
-                                  State: {onu.state || "Unknown"}
+                                  State: {onu['state'] || "Unknown"}
                                 </div>
                               </div>
                             </div>
@@ -325,8 +325,8 @@ export function ONUProvisioningWorkflow({ olts }: ONUProvisioningWorkflowProps) 
                 </SelectTrigger>
                 <SelectContent>
                   {olts.map((olt) => (
-                    <SelectItem key={olt.id} value={olt.root_device_id || olt.id}>
-                      {olt.id} ({olt.desc?.serial_num || "N/A"})
+                    <SelectItem key={olt['id']} value={olt['root_device_id'] || olt['id']}>
+                      {olt['id']} ({olt['desc']?.serial_num || "N/A"})
                     </SelectItem>
                   ))}
                 </SelectContent>

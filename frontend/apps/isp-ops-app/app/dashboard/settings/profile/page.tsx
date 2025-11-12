@@ -35,7 +35,8 @@ import {
   Clock,
 } from "lucide-react";
 import { useToast } from "@dotmac/ui";
-import { useAuth } from "@/hooks/useAuth";
+import { useSession } from "@dotmac/better-auth";
+import { signOut } from "@dotmac/better-auth";
 import {
   useUpdateProfile,
   useChangePassword,
@@ -60,7 +61,8 @@ import { logger } from "@/lib/logger";
 
 export default function ProfileSettingsPage() {
   const { toast } = useToast();
-  const { user, refreshUser } = useAuth();
+  const { data: session, refetch: refreshSession } = useSession();
+  const user = session?.user;
   const { data: sessionsData, isLoading: sessionsLoading } = useListSessions();
   const revokeSession = useRevokeSession();
   const revokeAllSessions = useRevokeAllSessions();
@@ -214,7 +216,7 @@ export default function ProfileSettingsPage() {
 
       // Update profile
       await updateProfile.mutateAsync(formData);
-      await refreshUser();
+      await refreshSession();
 
       // Reset avatar state
       setAvatarFile(null);
@@ -364,7 +366,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(true);
       setIsSetup2FAOpen(false);
-      await refreshUser();
+      await refreshSession();
     } catch (error) {
       logger.error(
         "Failed to verify 2FA",
@@ -404,7 +406,7 @@ export default function ProfileSettingsPage() {
       });
       setMfaEnabled(false);
       setIsDisable2FAOpen(false);
-      await refreshUser();
+      await refreshSession();
     } catch (error) {
       logger.error(
         "Failed to disable 2FA",
@@ -447,9 +449,9 @@ export default function ProfileSettingsPage() {
 
   const handleVerifyPhone = async () => {
     try {
-      logger.info("Verifying phone number", { phone: formData.phone });
-      await verifyPhone.mutateAsync(formData.phone);
-      await refreshUser();
+      logger.info("Verifying phone number", { phone: formData['phone'] });
+      await verifyPhone.mutateAsync(formData['phone']);
+      await refreshSession();
       toast({
         title: "Success",
         description: "Phone number verified successfully",
@@ -649,7 +651,7 @@ export default function ProfileSettingsPage() {
                   <Input
                     id="email"
                     type="email"
-                    value={formData.email}
+                    value={formData['email']}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -666,12 +668,12 @@ export default function ProfileSettingsPage() {
                       <Input
                         id="phone"
                         type="tel"
-                        value={formData.phone}
+                        value={formData['phone']}
                         onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                         disabled={!isEditing}
                         placeholder="Enter phone number"
                       />
-                      {isEditing && formData.phone && (
+                      {isEditing && formData['phone'] && (
                         <Button size="sm" variant="outline" onClick={handleVerifyPhone}>
                           Verify
                         </Button>

@@ -97,7 +97,7 @@ import { AddSubscriberModal } from '@/components/subscribers/AddSubscriberModal'
 
 - `hooks/useSubscribers.ts` - Subscriber data hooks
 - `app/dashboard/subscribers/page.tsx` - Main page
-- `docs/SUBSCRIBER_MANAGEMENT.md` - Full documentation
+- `frontend/PRODUCTION_GUIDE.md` - Production-ready subscriber workflow notes
 
 ## Type Safety
 

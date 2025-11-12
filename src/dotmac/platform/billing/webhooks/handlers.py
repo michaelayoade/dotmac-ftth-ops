@@ -26,6 +26,8 @@ from dotmac.platform.billing.subscriptions.models import (
     SubscriptionUpdateRequest,
 )
 from dotmac.platform.billing.subscriptions.service import SubscriptionService
+from dotmac.platform.webhooks.events import get_event_bus
+from dotmac.platform.webhooks.models import WebhookEvent
 
 logger = logging.getLogger(__name__)
 
@@ -340,6 +342,27 @@ class StripeWebhookHandler(WebhookHandler):
             if invoice:
                 invoice.payment_status = PaymentStatus.FAILED
                 await self.db.commit()
+
+                # Publish webhook event
+                try:
+                    await get_event_bus().publish(
+                        event_type=WebhookEvent.INVOICE_PAYMENT_FAILED.value,
+                        event_data={
+                            "invoice_id": invoice_id,
+                            "invoice_number": invoice.invoice_number,
+                            "customer_id": invoice.customer_id,
+                            "amount": invoice.total_amount,
+                            "currency": invoice.currency,
+                            "status": invoice.status.value,
+                            "payment_status": invoice.payment_status.value,
+                            "stripe_invoice_id": stripe_invoice_id,
+                            "failed_at": datetime.now(UTC).isoformat(),
+                        },
+                        tenant_id=tenant_id,
+                        db=self.db,
+                    )
+                except Exception as e:
+                    logger.warning("Failed to publish invoice.payment_failed event", error=str(e))
 
         return {
             "status": "processed",

@@ -27,15 +27,15 @@ def pytest_configure(config):
             line = line.strip()
 
             # Skip empty lines and comments
-            if not line or line.startswith('#'):
+            if not line or line.startswith("#"):
                 continue
 
             # Skip lines that don't contain '='
-            if '=' not in line:
+            if "=" not in line:
                 continue
 
             # Parse key=value
-            key, _, value = line.partition('=')
+            key, _, value = line.partition("=")
             key = key.strip()
             value = value.strip()
 

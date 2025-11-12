@@ -34,6 +34,8 @@ from dotmac.platform.billing.core.exceptions import (
 )
 from dotmac.platform.billing.core.models import CreditNote
 from dotmac.platform.billing.metrics import get_billing_metrics
+from dotmac.platform.webhooks.events import get_event_bus
+from dotmac.platform.webhooks.models import WebhookEvent
 
 logger = logging.getLogger(__name__)
 
@@ -131,6 +133,29 @@ class CreditNoteService:
             reason=reason.value,
         )
 
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CREDIT_NOTE_CREATED.value,
+                event_data={
+                    "credit_note_id": credit_note_entity.credit_note_id,
+                    "credit_note_number": credit_note_entity.credit_note_number,
+                    "invoice_id": invoice_id,
+                    "customer_id": credit_note_entity.customer_id,
+                    "amount": total_amount,
+                    "currency": credit_note_entity.currency,
+                    "status": credit_note_entity.status.value,
+                    "reason": reason.value,
+                    "credit_type": credit_note_entity.credit_type.value,
+                    "auto_apply": auto_apply,
+                    "created_at": credit_note_entity.created_at.isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish credit_note.created event", error=str(e))
+
         credit_note_model = CreditNote.model_validate(credit_note_entity)
 
         if auto_apply:
@@ -224,6 +249,27 @@ class CreditNoteService:
             credit_note_id=credit_note_id,
         )
 
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CREDIT_NOTE_ISSUED.value,
+                event_data={
+                    "credit_note_id": credit_note.credit_note_id,
+                    "credit_note_number": credit_note.credit_note_number,
+                    "invoice_id": credit_note.invoice_id,
+                    "customer_id": credit_note.customer_id,
+                    "amount": credit_note.total_amount,
+                    "currency": credit_note.currency,
+                    "status": credit_note.status.value,
+                    "remaining_credit_amount": credit_note.remaining_credit_amount,
+                    "issued_at": credit_note.updated_at.isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish credit_note.issued event", error=str(e))
+
         return CreditNote.model_validate(credit_note)
 
     async def void_credit_note(
@@ -272,6 +318,30 @@ class CreditNoteService:
             tenant_id=tenant_id,
             credit_note_id=credit_note_id,
         )
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CREDIT_NOTE_VOIDED.value,
+                event_data={
+                    "credit_note_id": credit_note.credit_note_id,
+                    "credit_note_number": credit_note.credit_note_number,
+                    "invoice_id": credit_note.invoice_id,
+                    "customer_id": credit_note.customer_id,
+                    "amount": credit_note.total_amount,
+                    "currency": credit_note.currency,
+                    "status": credit_note.status.value,
+                    "void_reason": reason,
+                    "voided_by": voided_by,
+                    "voided_at": credit_note.voided_at.isoformat()
+                    if credit_note.voided_at
+                    else None,
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish credit_note.voided event", error=str(e))
 
         return CreditNote.model_validate(credit_note)
 
@@ -329,6 +399,28 @@ class CreditNoteService:
 
         # Update invoice balance
         await self._update_invoice_balance(tenant_id, invoice_id, amount)
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CREDIT_NOTE_APPLIED.value,
+                event_data={
+                    "credit_note_id": credit_note.credit_note_id,
+                    "credit_note_number": credit_note.credit_note_number,
+                    "invoice_id": invoice_id,
+                    "customer_id": credit_note.customer_id,
+                    "applied_amount": amount,
+                    "remaining_credit_amount": credit_note.remaining_credit_amount,
+                    "currency": credit_note.currency,
+                    "status": credit_note.status.value,
+                    "fully_applied": credit_note.status == CreditNoteStatus.APPLIED,
+                    "applied_at": credit_note.updated_at.isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish credit_note.applied event", error=str(e))
 
         return CreditNote.model_validate(credit_note)
 

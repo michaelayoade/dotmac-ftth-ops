@@ -34,7 +34,7 @@ import {
   Receipt,
   Loader2,
 } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@dotmac/features/billing";
 import {
   useCustomerInvoices,
   useCustomerPayments,
@@ -45,6 +45,11 @@ import { AddPaymentMethodModal } from "@/components/tenant/billing/AddPaymentMet
 import { PaymentMethodCard } from "@/components/tenant/billing/PaymentMethodCard";
 import { platformConfig } from "@/lib/config";
 import type { AddPaymentMethodRequest } from "@/hooks/useTenantPaymentMethods";
+import {
+  CUSTOMER_PORTAL_TOKEN_KEY,
+  getPortalAuthToken,
+  setPortalAuthToken,
+} from "../../../../../shared/utils/operatorAuth";
 
 const API_BASE = platformConfig.api.baseUrl;
 
@@ -150,7 +155,14 @@ export default function CustomerBillingPage() {
 
       const params = new URLSearchParams(window.location.search);
       const urlToken = params.get("token");
-      const token = urlToken || localStorage.getItem("customer_access_token");
+      const storedToken = getPortalAuthToken({
+        tokenKey: CUSTOMER_PORTAL_TOKEN_KEY,
+        required: false,
+      });
+      const token = urlToken || storedToken;
+      if (!token) {
+        throw new Error("Customer session expired");
+      }
       const response = await fetch(`${API_BASE}/api/v1/customer/invoices/${invoiceId}/download`, {
         method: "GET",
         headers: {
@@ -160,11 +172,7 @@ export default function CustomerBillingPage() {
       });
 
       if (urlToken) {
-        try {
-          localStorage.setItem("customer_access_token", urlToken);
-        } catch {
-          // ignore storage write errors
-        }
+        setPortalAuthToken(urlToken, CUSTOMER_PORTAL_TOKEN_KEY);
       }
 
       if (!response.ok) {

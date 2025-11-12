@@ -170,7 +170,9 @@ def test_client(monkeypatch):
     app.dependency_overrides[get_activation_orchestrator] = lambda: mock_activation_orchestrator
     app.dependency_overrides[get_current_user] = lambda: mock_user
     app.dependency_overrides[get_db] = lambda: MagicMock()
-    app.dependency_overrides[get_async_session] = lambda: AsyncMock()  # Mock async session for permission checks
+    app.dependency_overrides[get_async_session] = (
+        lambda: AsyncMock()
+    )  # Mock async session for permission checks
     app.dependency_overrides[get_tenant_service] = lambda: MagicMock()
     app.dependency_overrides[get_deployment_service] = lambda: MagicMock()
     app.dependency_overrides[get_notification_service] = lambda: MagicMock()

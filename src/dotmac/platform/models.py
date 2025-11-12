@@ -15,6 +15,19 @@ to ensure all models are registered.
 # Core platform models
 import dotmac.platform.analytics.models  # noqa: F401
 
+# Communications
+import dotmac.platform.communications.models  # noqa: F401
+
+# Deployment
+import dotmac.platform.deployment.models  # noqa: F401
+
+# Webhooks and events
+import dotmac.platform.webhooks.models  # noqa: F401
+
+# Wireless
+import dotmac.platform.wireless.models  # noqa: F401
+import dotmac.platform.workflows.models  # noqa: F401
+
 # Audit and analytics
 from dotmac.platform.audit.models import AuditActivity  # noqa: F401
 
@@ -40,9 +53,6 @@ from dotmac.platform.billing.core.models import (  # noqa: F401
     Subscription,
     Transaction,
 )
-
-# Communications
-import dotmac.platform.communications.models  # noqa: F401
 from dotmac.platform.contacts.models import Contact  # noqa: F401
 
 # CRM
@@ -50,9 +60,6 @@ from dotmac.platform.crm.models import Lead, SiteSurvey  # noqa: F401
 
 # Customer and user management
 from dotmac.platform.customer_management.models import Customer  # noqa: F401
-
-# Deployment
-import dotmac.platform.deployment.models  # noqa: F401
 
 # Jobs
 from dotmac.platform.jobs.models import Job, JobChain  # noqa: F401
@@ -81,13 +88,6 @@ from dotmac.platform.tenant.models import Tenant, TenantInvitation  # noqa: F401
 # Ticketing
 from dotmac.platform.ticketing.models import Ticket, TicketMessage  # noqa: F401
 from dotmac.platform.user_management.models import User  # noqa: F401
-
-# Webhooks and events
-import dotmac.platform.webhooks.models  # noqa: F401
-
-# Wireless
-import dotmac.platform.wireless.models  # noqa: F401
-import dotmac.platform.workflows.models  # noqa: F401
 
 # Services
 try:

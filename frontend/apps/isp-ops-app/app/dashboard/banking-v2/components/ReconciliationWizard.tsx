@@ -87,13 +87,14 @@ export function ReconciliationWizard({
         return;
       }
 
+      const notesValue = setupData.notes.trim();
       const data: ReconciliationStart = {
         bank_account_id: bankAccountId,
         period_start: setupData.period_start,
         period_end: setupData.period_end,
         opening_balance: statementBalance,
         statement_balance: statementBalance,
-        notes: setupData.notes || undefined,
+        ...(notesValue && { notes: notesValue }),
       };
 
       const result = await startReconciliation.mutateAsync(data);
@@ -128,10 +129,11 @@ export function ReconciliationWizard({
     if (!reconciliationId) return;
 
     try {
+      const notesValue = setupData.notes.trim();
       await completeReconciliation.mutateAsync({
         reconciliationId,
         data: {
-          notes: setupData.notes || undefined,
+          ...(notesValue && { notes: notesValue }),
         },
       });
 

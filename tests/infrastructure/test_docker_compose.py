@@ -112,7 +112,9 @@ class TestPlatformCompose:
         if isinstance(env, dict):
             env_keys = set(env)
         else:
-            env_keys = {item.split("=", 1)[0] for item in env if isinstance(item, str) and "=" in item}
+            env_keys = {
+                item.split("=", 1)[0] for item in env if isinstance(item, str) and "=" in item
+            }
 
         required_keys = {
             "ENVIRONMENT",
@@ -130,7 +132,9 @@ class TestPlatformCompose:
     def test_platform_frontend_configuration(self, platform_compose: dict[str, Any]):
         frontend = platform_compose["services"]["platform-frontend"]
 
-        assert "build" in frontend or "image" in frontend, "Frontend must be buildable or use an image"
+        assert "build" in frontend or "image" in frontend, (
+            "Frontend must be buildable or use an image"
+        )
         ports = frontend.get("ports", [])
         assert any("3002" in str(port) for port in ports), "Frontend must expose port 3002"
 
@@ -163,7 +167,9 @@ class TestISPCompose:
         if isinstance(env, dict):
             env_keys = set(env)
         else:
-            env_keys = {item.split("=", 1)[0] for item in env if isinstance(item, str) and "=" in item}
+            env_keys = {
+                item.split("=", 1)[0] for item in env if isinstance(item, str) and "=" in item
+            }
 
         required_keys = {
             "ENVIRONMENT",
@@ -181,7 +187,9 @@ class TestISPCompose:
     def test_isp_frontend_configuration(self, isp_compose: dict[str, Any]):
         frontend = isp_compose["services"]["isp-frontend"]
 
-        assert "build" in frontend or "image" in frontend, "Frontend must be buildable or use an image"
+        assert "build" in frontend or "image" in frontend, (
+            "Frontend must be buildable or use an image"
+        )
         ports = frontend.get("ports", [])
         assert any("3001" in str(port) for port in ports), "Frontend must expose port 3001"
 

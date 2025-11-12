@@ -504,3 +504,78 @@ class RADIUSAuthTestResponse(BaseModel):
     message: str
     attributes: dict[str, Any] | None = None
     response_time_ms: float | None = None
+
+
+# ============================================================================
+# Phase 3: Option 82 Authorization Schemas
+# ============================================================================
+
+
+class RADIUSAuthorizationRequest(BaseModel):
+    """
+    RADIUS Access-Request with Option 82 for authorization.
+
+    This schema represents the RADIUS Access-Request packet sent by the NAS,
+    including DHCP Option 82 (Relay Agent Information) for subscriber location
+    validation.
+
+    FreeRADIUS can forward this request to our API via rlm_rest module.
+    """
+
+    model_config = ConfigDict(populate_by_name=True)
+
+    # Standard RADIUS attributes
+    username: str = Field(..., description="RADIUS username")
+    password: str | None = Field(None, description="RADIUS password (optional for CoA)")
+    nas_ip_address: str | None = Field(None, description="NAS IP address")
+    nas_port: int | None = Field(None, description="NAS port number")
+    nas_port_id: str | None = Field(None, description="NAS port identifier")
+    calling_station_id: str | None = Field(None, description="Client MAC address")
+
+    # Option 82 attributes (DHCP Relay Agent Information)
+    agent_circuit_id: str | None = Field(
+        None,
+        description="Circuit-Id (port identifier, e.g., 'OLT1/1/1/1:1')",
+        alias="Agent-Circuit-Id",
+    )
+    agent_remote_id: str | None = Field(
+        None, description="Remote-Id (CPE identifier, e.g., ONU serial)", alias="Agent-Remote-Id"
+    )
+
+    # Vendor-specific variants (Alcatel-Lucent, Cisco, etc.)
+    alcatel_agent_circuit_id: str | None = Field(
+        None,
+        description="Alcatel-Lucent variant of Agent-Circuit-Id",
+        alias="Alcatel-Lucent-Agent-Circuit-Id",
+    )
+    alcatel_agent_remote_id: str | None = Field(
+        None,
+        description="Alcatel-Lucent variant of Agent-Remote-Id",
+        alias="Alcatel-Lucent-Agent-Remote-Id",
+    )
+
+
+class RADIUSAuthorizationResponse(BaseModel):
+    """
+    RADIUS authorization decision with attributes.
+
+    Returns:
+    - accept: True for Access-Accept, False for Access-Reject
+    - reply_attributes: Attributes to include in RADIUS reply (IP, VLAN, bandwidth)
+    - reason: Human-readable reason for acceptance/rejection
+    - option82_validation: Details about Option 82 validation
+    """
+
+    model_config = ConfigDict()
+
+    accept: bool = Field(..., description="True for Access-Accept, False for Access-Reject")
+    reason: str = Field(..., description="Reason for authorization decision")
+    reply_attributes: dict[str, Any] = Field(
+        default_factory=dict,
+        description="RADIUS reply attributes (Framed-IP-Address, bandwidth, VLAN, etc.)",
+    )
+
+    # Option 82 validation details
+    option82_validation: dict[str, Any] | None = Field(
+        None, description="Option 82 validation results"
+    )

@@ -60,7 +60,7 @@ function resolveStatusBadge(
 }
 
 function getPortStatus(port: LogicalPort) {
-  if (port?.ofp_port?.state === 0) {
+  if (port?.['ofp_port']?.['state'] === 0) {
     return { label: "Active", color: "bg-green-100 text-green-800", icon: CheckCircle };
   }
   return { label: "Down", color: "bg-red-100 text-red-800", icon: XCircle };
@@ -78,7 +78,7 @@ function formatSpeed(value?: number) {
 
 function LogicalDeviceDetails() {
   const params = useParams();
-  const oltId = params.oltId as string;
+  const oltId = params['oltId'] as string;
   const [activeTab, setActiveTab] = useState<"overview" | "ports" | "flows">("overview");
 
   const {
@@ -89,7 +89,7 @@ function LogicalDeviceDetails() {
     queryKey: ["access-logical-device", oltId],
     queryFn: async () => {
       const response = await apiClient.get<LogicalDeviceDetailResponse>(`/api/v1/access/logical-devices/${oltId}`);
-      return response.data;
+      return response['data'];
     },
     refetchInterval: 30000,
   });
@@ -98,7 +98,7 @@ function LogicalDeviceDetails() {
     queryKey: ["access-olt-overview", oltId],
     queryFn: async () => {
       const response = await apiClient.get<OLTOverview>(`/api/v1/access/olts/${oltId}/overview`);
-      return response.data;
+      return response['data'];
     },
     enabled: Boolean(oltId),
     refetchInterval: 60000,
@@ -111,7 +111,7 @@ function LogicalDeviceDetails() {
   const switchFeatures = logicalDevice?.switch_features ?? DEFAULT_SWITCH_FEATURES;
   const desc = logicalDevice?.desc ?? {};
 
-  const activePorts = ports.filter((port) => port?.ofp_port?.state === 0);
+  const activePorts = ports.filter((port) => port?.['ofp_port']?.['state'] === 0);
 
   if (isLoading) {
     return (
@@ -301,50 +301,50 @@ function LogicalDeviceDetails() {
                 <div className="space-y-3">
                   {ports.map((port) => {
                     const status = getPortStatus(port);
-                    const StatusIcon = status.icon;
+                    const StatusIcon = status['icon'];
 
                     return (
-                      <div key={port.id} className="border rounded-lg p-4">
+                      <div key={port['id']} className="border rounded-lg p-4">
                         <div className="flex items-start justify-between mb-3">
                           <div>
                             <div className="flex items-center gap-2 mb-1">
                               <Zap className="h-4 w-4 text-primary" />
-                              <h4 className="font-medium">{port.ofp_port?.name || port.id}</h4>
+                              <h4 className="font-medium">{port['ofp_port']?.['name'] || port['id']}</h4>
                             </div>
                             <p className="text-xs text-muted-foreground">
-                              Port ID: {port.id}
+                              Port ID: {port['id']}
                             </p>
                           </div>
-                          <Badge className={status.color}>
+                          <Badge className={status['color']}>
                             <StatusIcon className="h-3 w-3 mr-1" />
-                            {status.label}
+                            {status['label']}
                           </Badge>
                         </div>
 
                         <div className="grid gap-2 md:grid-cols-3 text-sm">
                           <div>
                             <p className="text-muted-foreground">Port Number</p>
-                            <p className="font-medium">{port.ofp_port?.port_no ?? "N/A"}</p>
+                            <p className="font-medium">{port['ofp_port']?.['port_no'] ?? "N/A"}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Device Port</p>
-                            <p className="font-medium">{port.device_port_no ?? "N/A"}</p>
+                            <p className="font-medium">{port['device_port_no'] ?? "N/A"}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Current Speed</p>
-                            <p className="font-medium">{formatSpeed(port.ofp_port?.curr_speed)}</p>
+                            <p className="font-medium">{formatSpeed(port['ofp_port']?.['curr_speed'])}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Max Speed</p>
-                            <p className="font-medium">{formatSpeed(port.ofp_port?.max_speed)}</p>
+                            <p className="font-medium">{formatSpeed(port['ofp_port']?.['max_speed'])}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">State</p>
-                            <p className="font-mono text-xs">{port.ofp_port?.state ?? "N/A"}</p>
+                            <p className="font-mono text-xs">{port['ofp_port']?.['state'] ?? "N/A"}</p>
                           </div>
                           <div>
                             <p className="text-muted-foreground">Config</p>
-                            <p className="font-mono text-xs">{port.ofp_port?.config ?? "N/A"}</p>
+                            <p className="font-mono text-xs">{port['ofp_port']?.['config'] ?? "N/A"}</p>
                           </div>
                         </div>
                       </div>
@@ -371,7 +371,7 @@ function LogicalDeviceDetails() {
               ) : (
                 <div className="space-y-3">
                   {flows.map((flow, index) => (
-                    <div key={(flow.id as string) || index} className="border rounded-lg p-4">
+                    <div key={(flow['id'] as string) || index} className="border rounded-lg p-4">
                       <div className="flex items-start justify-between mb-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -379,36 +379,36 @@ function LogicalDeviceDetails() {
                             <h4 className="font-medium">Flow {index + 1}</h4>
                           </div>
                           <p className="text-xs text-muted-foreground font-mono break-all">
-                            ID: {flow.id ?? "N/A"}
+                            ID: {flow['id']?? "N/A"}
                           </p>
                         </div>
                         <Badge variant="secondary">
-                          Priority: {flow.priority ?? "N/A"}
+                          Priority: {flow['priority'] ?? "N/A"}
                         </Badge>
                       </div>
 
                       <div className="grid gap-2 md:grid-cols-3 text-sm mb-3">
                         <div>
                           <p className="text-muted-foreground">Table ID</p>
-                          <p className="font-medium">{flow.table_id ?? "N/A"}</p>
+                          <p className="font-medium">{flow['table_id'] ?? "N/A"}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Cookie</p>
-                          <p className="font-mono text-xs break-all">{flow.cookie ?? "N/A"}</p>
+                          <p className="font-mono text-xs break-all">{flow['cookie'] ?? "N/A"}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Flags</p>
-                          <p className="font-medium">{flow.flags ?? "N/A"}</p>
+                          <p className="font-medium">{flow['flags'] ?? "N/A"}</p>
                         </div>
                       </div>
 
-                      {flow.match && Object.keys(flow.match).length > 0 && (
+                      {flow['match'] && Object.keys(flow['match']).length > 0 && (
                         <details className="mt-2">
                           <summary className="text-xs font-medium cursor-pointer mb-2">
                             Match Fields
                           </summary>
                           <div className="bg-muted/50 rounded-md p-3 text-xs font-mono space-y-1">
-                            {Object.entries(flow.match).map(([key, value]) => (
+                            {Object.entries(flow['match']).map(([key, value]) => (
                               <div key={key} className="flex justify-between gap-4">
                                 <span className="text-muted-foreground">{key}</span>
                                 <span>{JSON.stringify(value)}</span>
@@ -418,13 +418,13 @@ function LogicalDeviceDetails() {
                         </details>
                       )}
 
-                      {flow.instructions && flow.instructions.length > 0 && (
+                      {flow['instructions'] && flow['instructions'].length > 0 && (
                         <details className="mt-2">
                           <summary className="text-xs font-medium cursor-pointer mb-2">
                             Instructions
                           </summary>
                           <div className="bg-muted/50 rounded-md p-3 text-xs font-mono space-y-1">
-                            {flow.instructions.map((instruction: any, idx: number) => (
+                            {flow['instructions'].map((instruction: any, idx: number) => (
                               <div key={idx} className="flex justify-between gap-4">
                                 <span className="text-muted-foreground">Instruction {idx + 1}</span>
                                 <span>{JSON.stringify(instruction)}</span>
@@ -447,7 +447,7 @@ function LogicalDeviceDetails() {
 
 export default function OLTDetailsPage() {
   return (
-    <RouteGuard permission="isp.network.pon.read">
+    <RouteGuard permission="isp.network['pon'].read">
       <LogicalDeviceDetails />
     </RouteGuard>
   );

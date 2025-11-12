@@ -10,9 +10,11 @@ from typing import Any
 from uuid import uuid4
 
 import structlog
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.netbox.client import NetBoxClient
 from dotmac.platform.netbox.schemas import (
+    BulkIPAllocationRequest,
     CableCreate,
     CableResponse,
     CableUpdate,
@@ -34,12 +36,11 @@ from dotmac.platform.netbox.schemas import (
     IPAddressResponse,
     IPAddressUpdate,
     IPAllocationRequest,
-    BulkIPAllocationRequest,
     IPUpdateRequest,
     NetBoxHealthResponse,
+    PrefixAllocationRequest,
     PrefixCreate,
     PrefixResponse,
-    PrefixAllocationRequest,
     SiteCreate,
     SiteResponse,
     TenantCreate,
@@ -49,7 +50,6 @@ from dotmac.platform.netbox.schemas import (
     VRFCreate,
     VRFResponse,
 )
-from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 
@@ -363,7 +363,7 @@ class NetBoxService:
                     return False
             # Fallback for mock clients storing ip_addresses
             if hasattr(self.client, "ip_addresses"):
-                ip_store = getattr(self.client, "ip_addresses")
+                ip_store = self.client.ip_addresses
                 removed = ip_store.pop(ip_id, None)
                 removed_local = self._ip_store.pop(ip_id, None)
                 return (removed is not None) or (removed_local is not None)
@@ -716,6 +716,308 @@ class NetBoxService:
             self.client.ip_addresses[ip_id] = entry.copy()  # type: ignore[index]
 
         return entry.copy()
+
+    async def allocate_ipv6_delegated_prefix(
+        self,
+        *,
+        parent_prefix_id: int,
+        prefix_length: int,
+        subscriber_id: str,
+        tenant: str | None = None,
+        description: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Allocate an IPv6 delegated prefix from a parent aggregate.
+
+        Used for DHCPv6-PD scenarios where subscriber needs a /56 or /60 prefix.
+
+        Args:
+            parent_prefix_id: ID of parent prefix (e.g., /48 aggregate)
+            prefix_length: Desired prefix length (e.g., 56 for /56, 60 for /60)
+            subscriber_id: Subscriber ID for tracking
+            tenant: Tenant identifier
+            description: Human-readable description
+
+        Returns:
+            dict with allocated prefix details (id, prefix, parent_id, status)
+
+        Example:
+            # Allocate /56 from parent /48
+            result = await allocate_ipv6_delegated_prefix(
+                parent_prefix_id=123,
+                prefix_length=56,
+                subscriber_id="sub-456",
+            )
+            # Returns: {"id": 789, "prefix": "2001:db8:1::/56", ...}
+        """
+        # Get parent prefix
+        parent_prefix = self._prefix_store.get(parent_prefix_id)
+        if not parent_prefix:
+            raise ValueError(f"Parent prefix not found: {parent_prefix_id}")
+
+        parent_network = ipaddress.ip_network(parent_prefix["prefix"], strict=False)
+
+        # Validate IPv6
+        if not isinstance(parent_network, ipaddress.IPv6Network):
+            raise ValueError("Parent prefix must be IPv6")
+
+        # Validate prefix length
+        if prefix_length <= parent_network.prefixlen:
+            raise ValueError(
+                f"Delegated prefix length ({prefix_length}) must be greater than "
+                f"parent prefix length ({parent_network.prefixlen})"
+            )
+
+        if prefix_length > 64:
+            logger.warning(
+                "ipv6_pd.unusual_prefix_length",
+                prefix_length=prefix_length,
+                message="Delegated prefixes larger than /64 are unusual",
+            )
+
+        # Find already allocated delegated prefixes from this parent
+        allocated_prefixes = set()
+        for prefix_entry in self._prefix_store.values():
+            prefix = prefix_entry.get("prefix", "")
+            if not prefix:
+                continue
+
+            try:
+                subnet = ipaddress.ip_network(prefix, strict=False)
+                # Check if this subnet is within parent and has the target prefix length
+                if (
+                    isinstance(subnet, ipaddress.IPv6Network)
+                    and subnet.subnet_of(parent_network)
+                    and subnet.prefixlen == prefix_length
+                ):
+                    allocated_prefixes.add(subnet)
+            except (ValueError, TypeError):
+                continue
+
+        # Find next available subnet
+        delegated_prefix = None
+        for subnet in parent_network.subnets(new_prefix=prefix_length):
+            if subnet not in allocated_prefixes:
+                delegated_prefix = subnet
+                break
+
+        if delegated_prefix is None:
+            raise ValueError(f"No available /{prefix_length} prefixes in parent {parent_network}")
+
+        # Create prefix entry
+        prefix_id = self._next_id("prefix")
+        tenant_value = tenant or self.tenant_id
+
+        entry = {
+            "id": prefix_id,
+            "prefix": str(delegated_prefix),
+            "parent_id": parent_prefix_id,
+            "tenant": tenant_value,
+            "status": "active",
+            "is_pool": False,  # Delegated prefixes are assigned, not pools
+            "description": description
+            or f"IPv6 PD for subscriber {subscriber_id} (/{prefix_length})",
+            "tags": [f"subscriber:{subscriber_id}", "ipv6-pd", f"pd-size:{prefix_length}"],
+            "custom_fields": {
+                "subscriber_id": subscriber_id,
+                "delegation_type": "dhcpv6-pd",
+                "prefix_length": prefix_length,
+            },
+        }
+
+        self._prefix_store[prefix_id] = entry.copy()
+
+        logger.info(
+            "ipv6_pd.allocated",
+            prefix=str(delegated_prefix),
+            prefix_id=prefix_id,
+            parent_prefix=str(parent_network),
+            subscriber_id=subscriber_id,
+            prefix_length=prefix_length,
+        )
+
+        return entry
+
+    async def get_available_ipv6_pd_prefixes(
+        self,
+        parent_prefix_id: int,
+        prefix_length: int,
+        limit: int = 10,
+    ) -> list[str]:
+        """
+        Get list of available IPv6 delegated prefixes without allocating.
+
+        Useful for capacity planning and UI display.
+
+        Args:
+            parent_prefix_id: ID of parent prefix
+            prefix_length: Desired delegation size
+            limit: Maximum number of prefixes to return
+
+        Returns:
+            List of available prefix strings (e.g., ["2001:db8:1::/56", ...])
+        """
+        parent_prefix = self._prefix_store.get(parent_prefix_id)
+        if not parent_prefix:
+            raise ValueError(f"Parent prefix not found: {parent_prefix_id}")
+
+        parent_network = ipaddress.ip_network(parent_prefix["prefix"], strict=False)
+
+        if not isinstance(parent_network, ipaddress.IPv6Network):
+            raise ValueError("Parent prefix must be IPv6")
+
+        # Find allocated prefixes
+        allocated_prefixes = set()
+        for prefix_entry in self._prefix_store.values():
+            prefix = prefix_entry.get("prefix", "")
+            if not prefix:
+                continue
+
+            try:
+                subnet = ipaddress.ip_network(prefix, strict=False)
+                if (
+                    isinstance(subnet, ipaddress.IPv6Network)
+                    and subnet.subnet_of(parent_network)
+                    and subnet.prefixlen == prefix_length
+                ):
+                    allocated_prefixes.add(subnet)
+            except (ValueError, TypeError):
+                continue
+
+        # Collect available prefixes
+        available = []
+        for subnet in parent_network.subnets(new_prefix=prefix_length):
+            if subnet not in allocated_prefixes:
+                available.append(str(subnet))
+                if len(available) >= limit:
+                    break
+
+        return available
+
+    async def allocate_dual_stack_ips(
+        self,
+        *,
+        ipv4_prefix_id: int,
+        ipv6_prefix_id: int,
+        description: str | None = None,
+        dns_name: str | None = None,
+        tenant: str | None = None,
+        subscriber_id: str | None = None,
+        ipv6_pd_parent_prefix_id: int | None = None,
+        ipv6_pd_size: int | None = None,
+    ) -> (
+        tuple[dict[str, Any], dict[str, Any]]
+        | tuple[dict[str, Any], dict[str, Any], dict[str, Any]]
+    ):
+        """
+        Allocate dual-stack IPs (IPv4 + IPv6) with optional IPv6 prefix delegation.
+
+        This method extends the client's allocate_dual_stack_ips with Phase 2 support
+        for IPv6 prefix delegation (DHCPv6-PD).
+
+        Args:
+            ipv4_prefix_id: ID of IPv4 prefix to allocate from
+            ipv6_prefix_id: ID of IPv6 prefix to allocate from
+            description: Description for allocated IPs
+            dns_name: DNS name for allocated IPs
+            tenant: Tenant identifier (string format)
+            subscriber_id: Subscriber ID for tracking
+            ipv6_pd_parent_prefix_id: Optional parent prefix for IPv6 PD allocation
+            ipv6_pd_size: Optional IPv6 PD size (e.g., 56 for /56, 60 for /60)
+
+        Returns:
+            Tuple of (ipv4_response, ipv6_response) or
+            Tuple of (ipv4_response, ipv6_response, ipv6_pd_response) if PD requested
+
+        Example:
+            # Basic dual-stack allocation
+            ipv4, ipv6 = await service.allocate_dual_stack_ips(
+                ipv4_prefix_id=10,
+                ipv6_prefix_id=20,
+                description="Subscriber sub-123",
+            )
+
+            # With IPv6 prefix delegation
+            ipv4, ipv6, ipv6_pd = await service.allocate_dual_stack_ips(
+                ipv4_prefix_id=10,
+                ipv6_prefix_id=20,
+                subscriber_id="sub-123",
+                ipv6_pd_parent_prefix_id=30,
+                ipv6_pd_size=56,
+            )
+        """
+        # Convert tenant string to int for client (if needed)
+        tenant_int: int | None = None
+        if tenant:
+            try:
+                tenant_int = int(tenant)
+            except (ValueError, TypeError):
+                logger.warning(
+                    "netbox.allocate_dual_stack_ips.invalid_tenant",
+                    tenant=tenant,
+                )
+
+        # Allocate IPv4 and IPv6 addresses
+        ipv4_response, ipv6_response = await self.client.allocate_dual_stack_ips(
+            ipv4_prefix_id=ipv4_prefix_id,
+            ipv6_prefix_id=ipv6_prefix_id,
+            description=description,
+            dns_name=dns_name,
+            tenant=tenant_int,
+        )
+
+        # Audit log: Dynamic IP allocation
+        logger.info(
+            "ip_allocation.dynamic_dual_stack",
+            ipv4_id=ipv4_response.get("id"),
+            ipv4_address=ipv4_response.get("address"),
+            ipv4_prefix_id=ipv4_prefix_id,
+            ipv6_id=ipv6_response.get("id"),
+            ipv6_address=ipv6_response.get("address"),
+            ipv6_prefix_id=ipv6_prefix_id,
+            subscriber_id=subscriber_id,
+            tenant=tenant,
+            dns_name=dns_name,
+            allocation_source="netbox_dynamic",
+        )
+
+        # Phase 2: Optionally allocate IPv6 delegated prefix for DHCPv6-PD
+        if ipv6_pd_parent_prefix_id and ipv6_pd_size and subscriber_id:
+            try:
+                ipv6_pd_response = await self.allocate_ipv6_delegated_prefix(
+                    parent_prefix_id=ipv6_pd_parent_prefix_id,
+                    prefix_length=ipv6_pd_size,
+                    subscriber_id=subscriber_id,
+                    tenant=tenant,
+                    description=f"{description} - IPv6 PD" if description else None,
+                )
+
+                logger.info(
+                    "netbox.allocate_dual_stack_ips.with_pd",
+                    ipv4=ipv4_response.get("address"),
+                    ipv6=ipv6_response.get("address"),
+                    ipv6_pd=ipv6_pd_response.get("prefix"),
+                    subscriber_id=subscriber_id,
+                )
+
+                return (ipv4_response, ipv6_response, ipv6_pd_response)
+
+            except Exception as e:
+                # IPv6 PD allocation failed - log but don't fail the entire allocation
+                logger.warning(
+                    "netbox.allocate_dual_stack_ips.pd_failed",
+                    subscriber_id=subscriber_id,
+                    error=str(e),
+                    message="IPv6 PD allocation failed, continuing with regular dual-stack IPs",
+                )
+
+        logger.info(
+            "netbox.allocate_dual_stack_ips.success",
+            ipv4=ipv4_response.get("address"),
+            ipv6=ipv6_response.get("address"),
+        )
+
+        return (ipv4_response, ipv6_response)
 
     async def list_vrfs(
         self,

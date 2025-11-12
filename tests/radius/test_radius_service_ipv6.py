@@ -5,6 +5,7 @@ Test dual-stack IP assignment in RADIUS subscriber management.
 """
 
 from datetime import datetime
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -178,6 +179,52 @@ class TestRADIUSServiceCreateSubscriberIPv6:
         assert result.framed_ipv4_address == "10.1.1.50"
         assert result.framed_ipv6_address == "2001:db8::50"
         assert result.delegated_ipv6_prefix == "2001:db8:1::/64"
+
+    @pytest.mark.asyncio
+    async def test_create_subscriber_applies_network_profile(self, radius_service):
+        """Ensure network profile values populate IP + VLAN attributes."""
+        radius_service.repository.get_radcheck_by_username = AsyncMock(return_value=None)
+
+        mock_radcheck = MagicMock()
+        mock_radcheck.id = 1
+        mock_radcheck.tenant_id = "test_tenant"
+        mock_radcheck.subscriber_id = "sub123"
+        mock_radcheck.username = "testuser"
+        mock_radcheck.created_at = datetime.utcnow()
+        mock_radcheck.updated_at = datetime.utcnow()
+
+        radius_service.repository.create_radcheck = AsyncMock(return_value=mock_radcheck)
+        radius_service.repository.create_radreply = AsyncMock()
+        radius_service._get_network_profile = AsyncMock(
+            return_value=SimpleNamespace(
+                static_ipv4="172.16.0.9",
+                static_ipv6="2001:db8::9",
+                delegated_ipv6_prefix="2001:db8:feed::/56",
+                service_vlan=3100,
+            )
+        )
+
+        data = RADIUSSubscriberCreate(
+            subscriber_id="sub123",
+            username="testuser",
+            password="securepass123",
+        )
+
+        result = await radius_service.create_subscriber(data)
+
+        attributes_created = {
+            call.kwargs["attribute"]: call.kwargs["value"]
+            for call in radius_service.repository.create_radreply.call_args_list
+        }
+
+        assert attributes_created["Framed-IP-Address"] == "172.16.0.9"
+        assert attributes_created["Framed-IPv6-Address"] == "2001:db8::9"
+        assert attributes_created["Delegated-IPv6-Prefix"] == "2001:db8:feed::/56"
+        assert attributes_created["Tunnel-Private-Group-ID"] == "3100"
+
+        assert result.framed_ipv4_address == "172.16.0.9"
+        assert result.framed_ipv6_address == "2001:db8::9"
+        assert result.delegated_ipv6_prefix == "2001:db8:feed::/56"
 
     @pytest.mark.asyncio
     async def test_create_subscriber_ipv6_prefix_delegation_only(self, radius_service):

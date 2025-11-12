@@ -279,6 +279,7 @@ export function TenantOnboardingWizard({
           postal_code: postalCode || undefined,
           country: country || undefined,
         },
+        tenant_id: undefined,
         options: {
           apply_default_settings: applyDefaultSettings,
           mark_onboarding_complete: markComplete,
@@ -310,6 +311,7 @@ export function TenantOnboardingWizard({
           .map((inv) => ({
             email: inv.email,
             role: inv.role,
+            message: undefined,
           })),
       };
 

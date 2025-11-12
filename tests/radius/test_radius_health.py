@@ -168,8 +168,8 @@ class TestRADIUSHealthCheckEndpoint:
 
         app.dependency_overrides[get_async_session] = override_get_async_session
 
-        # Register router (it has prefix /api/v1/radius)
-        app.include_router(radius_router)
+        # Register router with /api/v1 prefix (router itself has /radius prefix)
+        app.include_router(radius_router, prefix="/api/v1")
 
         async def override_permission_checker():
             return await mock_get_current_user()

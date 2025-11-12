@@ -86,7 +86,7 @@ class ManagementErrorBoundary extends React.Component<
     this.setState({ errorInfo });
 
     // Log error to monitoring service
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.error("[ManagementProvider] Error caught:", error, errorInfo);
     }
 
@@ -125,7 +125,7 @@ class ManagementErrorBoundary extends React.Component<
                   Refresh Page
                 </button>
               </div>
-              {process.env.NODE_ENV === "development" && (
+              {process.env["NODE_ENV"] === "development" && (
                 <details className="mt-4">
                   <summary className="cursor-pointer text-sm font-medium text-red-800">
                     Error Details (Development)
@@ -256,7 +256,7 @@ export function ManagementProvider({
 
         setIsInitialized(true);
       } catch (error) {
-        if (process.env.NODE_ENV === "development") {
+        if (process.env["NODE_ENV"] === "development") {
           console.error("[ManagementProvider] Initialization failed:", error);
         }
       }
@@ -466,7 +466,7 @@ export function useManagementConfig() {
     },
     enableFeature: (feature: keyof ManagementContextType["features"]) => {
       // This would require additional logic to dynamically enable features
-      if (process.env.NODE_ENV === "development") {
+      if (process.env["NODE_ENV"] === "development") {
         console.warn("Dynamic feature toggling not implemented");
       }
     },

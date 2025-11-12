@@ -97,7 +97,7 @@ export const PaymentMethodCard: React.FC<PaymentMethodCardProps> = ({
   };
 
   const display = getMethodDisplay();
-  const statusColor = statusColors[paymentMethod.status] || statusColors.active;
+  const statusColor = statusColors[paymentMethod.status] || statusColors['active'];
 
   const needsVerification =
     paymentMethod.status === "pending_verification" && paymentMethod.method_type === "bank_account";

@@ -1,9 +1,12 @@
 /**
  * Enhanced Error Logging and Tracing Service
  * Provides comprehensive error logging, metrics, and distributed tracing
+ * Now includes persistent error queue for offline support
  */
 
 import { EnhancedISPError, type ErrorContext, ErrorCode } from "../utils/enhancedErrorHandling";
+import { getErrorQueue } from "./PersistentErrorQueue";
+import { createStandardError, type StandardErrorResponse } from "../types/error-contract";
 
 // Structured log entry for enhanced error tracking
 export interface ErrorLogEntry {
@@ -97,7 +100,7 @@ class ErrorLoggingService {
 
   constructor(config: Partial<ErrorLoggingConfig> = {}) {
     this.config = {
-      enableConsoleLogging: process.env.NODE_ENV === "development",
+      enableConsoleLogging: process.env["NODE_ENV"] === "development",
       enableRemoteLogging: true,
       enableMetrics: true,
       enableTracing: true,
@@ -261,12 +264,104 @@ class ErrorLoggingService {
 
     try {
       if (this.config.endpoints.logs) {
-        await this.sendLogsToEndpoint(logsToSend, this.config.endpoints.logs);
+        // Try to send logs to endpoint
+        if (this.isOnline) {
+          await this.sendLogsToEndpoint(logsToSend, this.config.endpoints.logs);
+        } else {
+          // Offline - save to persistent queue
+          this.saveToPersistentQueue(logsToSend);
+        }
       }
     } catch (error) {
-      // Put logs back in buffer on failure
-      this.logBuffer.unshift(...logsToSend);
-      console.error("Failed to flush error logs:", error);
+      // Failed to send - save to persistent queue for retry
+      this.saveToPersistentQueue(logsToSend);
+      console.error("Failed to flush error logs, saved to persistent queue:", error);
+    }
+  }
+
+  /**
+   * Save logs to persistent queue for offline support
+   */
+  private saveToPersistentQueue(logs: ErrorLogEntry[]): void {
+    const persistentQueue = getErrorQueue({
+      errorEndpoint: this.config.endpoints.logs,
+      maxQueueSize: 100,
+      autoSync: true,
+    });
+
+    // Convert logs to standard error format
+    logs.forEach((log) => {
+      const standardError: StandardErrorResponse = {
+        error_code: log.errorCode,
+        message: log.message,
+        user_message: log.message, // Use same message for now
+        correlation_id: log.correlationId || `err_${Date.now()}`,
+        timestamp: log.timestamp,
+        status: 500, // Default status for logged errors
+        severity: this.mapSeverity(log.severity),
+        category: this.mapCategory(log.category),
+        retryable: true,
+        details: {
+          ...log.technicalDetails,
+          errorId: log.errorId,
+          component: log.component,
+          operation: log.operation,
+          resource: log.resource,
+          businessProcess: log.businessProcess,
+          workflowStep: log.workflowStep,
+          customerImpact: log.customerImpact,
+        },
+        trace_id: log.traceId,
+        request_id: log.requestId,
+      };
+
+      persistentQueue.enqueue(standardError);
+    });
+  }
+
+  /**
+   * Map severity to standard format
+   */
+  private mapSeverity(severity: string): import("../types/error-contract").ErrorSeverity {
+    const { ErrorSeverity } = require("../types/error-contract");
+    switch (severity.toLowerCase()) {
+      case "low":
+        return ErrorSeverity.LOW;
+      case "medium":
+        return ErrorSeverity.MEDIUM;
+      case "high":
+        return ErrorSeverity.HIGH;
+      case "critical":
+        return ErrorSeverity.CRITICAL;
+      default:
+        return ErrorSeverity.MEDIUM;
+    }
+  }
+
+  /**
+   * Map category to standard format
+   */
+  private mapCategory(category: string): import("../types/error-contract").ErrorCategory {
+    const { ErrorCategory } = require("../types/error-contract");
+    switch (category.toLowerCase()) {
+      case "network":
+        return ErrorCategory.NETWORK;
+      case "validation":
+        return ErrorCategory.VALIDATION;
+      case "authentication":
+        return ErrorCategory.AUTHENTICATION;
+      case "authorization":
+        return ErrorCategory.AUTHORIZATION;
+      case "business":
+        return ErrorCategory.BUSINESS;
+      case "system":
+        return ErrorCategory.SYSTEM;
+      case "database":
+        return ErrorCategory.DATABASE;
+      case "external_service":
+        return ErrorCategory.EXTERNAL_SERVICE;
+      default:
+        return ErrorCategory.UNKNOWN;
     }
   }
 

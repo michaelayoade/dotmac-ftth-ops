@@ -178,7 +178,7 @@ class RADIUSRepository:
     async def create_radreply(
         self,
         tenant_id: str,
-        subscriber_id: str,
+        subscriber_id: str | None,
         username: str,
         attribute: str,
         value: str,

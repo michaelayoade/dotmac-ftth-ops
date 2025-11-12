@@ -1,0 +1,417 @@
+---
+# Ansible Playbook: Provision Tenant Using Docker Compose
+#
+# This playbook provisions a complete DotMac ISP Operations deployment
+# for a tenant using Docker Compose (dotmac_hosted mode).
+#
+# Variables required:
+#   - tenant_id: Tenant identifier
+#   - instance_id: Deployment instance ID
+#   - environment: Environment name (production, staging, dev)
+#   - version: Platform version to deploy
+#   - config: Deployment configuration dictionary
+#   - resources: Resource allocation (cpu_cores, memory_gb, storage_gb)
+
+- name: Provision Tenant Deployment (Docker Compose)
+  hosts: app_servers
+  become: yes
+  vars:
+    install_dir: "/opt/dotmac/tenant-{{ tenant_id }}"
+    data_dir: "/var/lib/dotmac/tenant-{{ tenant_id }}"
+    app_user: "dotmac-{{ tenant_id }}"
+    app_group: "dotmac"
+    compose_project_name: "dotmac-tenant-{{ tenant_id }}"
+
+  tasks:
+    # ========================================================================
+    # Prerequisites
+    # ========================================================================
+    - name: Install Docker and Docker Compose
+      apt:
+        name:
+          - docker.io
+          - docker-compose-plugin
+          - python3-docker
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: present
+        update_cache: yes
+
+    - name: Create application group
+      group:
+        name: "{{ app_group }}"
+        system: yes
+
+    - name: Create application user
+      user:
+        name: "{{ app_user }}"
+        group: "{{ app_group }}"
+        groups: docker
+        system: yes
+        create_home: no
+        shell: /bin/false
+
+    - name: Create installation directories
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+      loop:
+        - "{{ install_dir }}"
+        - "{{ data_dir }}"
+        - "{{ data_dir }}/postgres"
+        - "{{ data_dir }}/redis"
+        - "{{ data_dir }}/radius"
+        - "{{ data_dir }}/logs"
+        - "{{ data_dir }}/uploads"
+        - "{{ data_dir }}/frontend"
+
+    # ========================================================================
+    # Generate Required Variables (if not provided)
+    # ========================================================================
+    - name: Generate database password
+      set_fact:
+        db_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: db_password is not defined
+
+    - name: Generate Redis password
+      set_fact:
+        redis_password: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: redis_password is not defined
+
+    - name: Generate RADIUS secret
+      set_fact:
+        radius_secret: "{{ lookup('password', '/dev/null length=32 chars=ascii_letters,digits') }}"
+      when: radius_secret is not defined
+
+    - name: Generate JWT secret key
+      set_fact:
+        jwt_secret_key: "{{ lookup('password', '/dev/null length=64 chars=ascii_letters,digits') }}"
+      when: jwt_secret_key is not defined
+
+    - name: Generate secret key
+      set_fact:
+        secret_key: "{{ lookup('password', '/dev/null length=64 chars=ascii_letters,digits') }}"
+      when: secret_key is not defined
+
+    - name: Capture numeric tenant suffix for port allocation
+      set_fact:
+        tenant_numeric_suffix: "{{ tenant_id | regex_search('\\d+') }}"
+
+    - name: Normalize tenant numeric suffix
+      set_fact:
+        tenant_numeric_suffix_clean: "{{ tenant_numeric_suffix | default('', true) }}"
+
+    - name: Derive tenant port offset
+      set_fact:
+        tenant_port_offset: >-
+          {{
+            (tenant_port_offset | int)
+            if (tenant_port_offset is defined)
+            else (
+              (tenant_numeric_suffix_clean | int)
+              if (tenant_numeric_suffix_clean | length > 0)
+              else (((tenant_id | hash('md5'))[:4]) | int(base=16))
+            )
+          }}
+
+    - name: Set default API port
+      set_fact:
+        app_port: "{{ 8000 + ((tenant_port_offset % 400) * 10) }}"
+      when: app_port is not defined
+
+    - name: Set default frontend port
+      set_fact:
+        frontend_port: "{{ app_port + 1000 }}"
+      when: frontend_port is not defined
+
+    - name: Set default Redis port
+      set_fact:
+        redis_port: "{{ 15000 + (tenant_port_offset % 400) }}"
+      when: redis_port is not defined
+
+    - name: Set default RADIUS auth port
+      set_fact:
+        radius_port: "{{ 1812 + (tenant_port_offset % 200) }}"
+      when: radius_port is not defined
+
+    - name: Set default RADIUS accounting port
+      set_fact:
+        radius_acct_port: "{{ 1813 + (tenant_port_offset % 200) }}"
+      when: radius_acct_port is not defined
+
+    - name: Set default RADIUS CoA port
+      set_fact:
+        radius_coa_port: "{{ 3799 + (tenant_port_offset % 200) }}"
+      when: radius_coa_port is not defined
+
+    - name: Set default configuration values
+      set_fact:
+        db_host: "postgres"
+        db_port: "{{ db_port | default('5432') }}"
+        redis_host: "redis"
+        tenant_name: "{{ tenant_name | default('Tenant ' + tenant_id) }}"
+        environment: "{{ environment | default('production') }}"
+        log_level: "{{ log_level | default('INFO') }}"
+        debug: "{{ debug | default('false') }}"
+        vault_addr: "{{ vault_addr | default('') }}"
+        vault_token: "{{ vault_token | default('') }}"
+        netbox_url: "{{ netbox_url | default('') }}"
+        netbox_api_token: "{{ netbox_api_token | default('') }}"
+        genieacs_url: "{{ genieacs_url | default('') }}"
+        genieacs_username: "{{ genieacs_username | default('') }}"
+        genieacs_password: "{{ genieacs_password | default('') }}"
+        awx_url: "{{ awx_url | default('') }}"
+        awx_api_token: "{{ awx_api_token | default('') }}"
+        smtp_host: "{{ smtp_host | default('localhost') }}"
+        smtp_port: "{{ smtp_port | default('587') }}"
+        smtp_user: "{{ smtp_user | default('') }}"
+        smtp_password: "{{ smtp_password | default('') }}"
+        custom_domain: "{{ custom_domain | default('') }}"
+        ssl_enabled: "{{ ssl_enabled | default(true) }}"
+        docker_registry: "{{ docker_registry | default('ghcr.io') }}"
+        docker_image_name: "{{ docker_image_name | default('dotmac/platform') }}"
+        radius_host: "{{ ansible_default_ipv4.address }}"
+        radius_sql_module_name: "sql"
+
+    - name: Set default resource limits
+      set_fact:
+        resources: "{{ resources | default({}) | combine({'max_workers': 4, 'celery_workers': 4, 'redis_max_memory': '256mb', 'postgres_cpu_limit': '2.0', 'postgres_memory_limit': '2G'}, recursive=True) }}"
+
+    - name: Set default features
+      set_fact:
+        features: "{{ features | default({}) | combine({'radius_enabled': true, 'billing_enabled': true, 'graphql_enabled': true, 'webhooks_enabled': true, 'wireguard_enabled': false}, recursive=True) }}"
+
+    # ========================================================================
+    # Create RADIUS Configuration Files (before Docker Compose)
+    # ========================================================================
+    - name: Create RADIUS configuration directory
+      file:
+        path: "{{ install_dir }}/radius"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    - name: Create RADIUS mods-enabled directory for Docker
+      file:
+        path: "{{ install_dir }}/radius/mods-enabled"
+        state: directory
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0755'
+
+    - name: Deploy RADIUS server configuration
+      template:
+        src: radiusd-tenant.conf.j2
+        dest: "{{ install_dir }}/radius/radiusd.conf"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+        vars:
+          radius_log_dir: "/var/log/freeradius"
+          radius_radacct_dir: "/var/log/freeradius/radacct"
+          radius_sql_module_name: "sql"
+
+    - name: Deploy RADIUS clients configuration
+      template:
+        src: radius-clients.conf.j2
+        dest: "{{ install_dir }}/radius/clients.conf"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Deploy RADIUS SQL module configuration
+      template:
+        src: radius-sql.conf.j2
+        dest: "{{ install_dir }}/radius/mods-enabled/sql"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Deploy RADIUS schema
+      template:
+        src: radius-schema.sql.j2
+        dest: "{{ data_dir }}/radius/schema.sql"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    # ========================================================================
+    # Deploy Docker Compose Stack
+    # ========================================================================
+    - name: Deploy Docker Compose configuration
+      template:
+        src: docker-compose-tenant.yml.j2
+        dest: "{{ install_dir }}/docker-compose.yml"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0644'
+
+    - name: Deploy environment configuration
+      template:
+        src: config.env.j2
+        dest: "{{ install_dir }}/.env"
+        owner: "{{ app_user }}"
+        group: "{{ app_group }}"
+        mode: '0600'
+
+    - name: Pull Docker images
+      community.docker.docker_compose:
+        project_src: "{{ install_dir }}"
+        project_name: "{{ compose_project_name }}"
+        pull: yes
+      become_user: "{{ app_user }}"
+
+    - name: Start Docker Compose stack
+      community.docker.docker_compose:
+        project_src: "{{ install_dir }}"
+        project_name: "{{ compose_project_name }}"
+        state: present
+        recreate: smart
+      become_user: "{{ app_user }}"
+      register: compose_output
+
+    # ========================================================================
+    # Initialize Database
+    # ========================================================================
+    - name: Wait for PostgreSQL to be ready
+      community.docker.docker_container_exec:
+        container: "{{ compose_project_name }}-postgres"
+        command: pg_isready -U postgres
+      register: pg_ready
+      until: pg_ready.rc == 0
+      retries: 30
+      delay: 2
+
+    - name: Run database migrations
+      community.docker.docker_container_exec:
+        container: "{{ compose_project_name }}-api"
+        command: alembic upgrade head
+      become_user: "{{ app_user }}"
+
+    - name: Initialize RADIUS schema
+      community.docker.docker_container_exec:
+        container: "{{ compose_project_name }}-postgres"
+        command: psql -U tenant_{{ tenant_id }}_user -d tenant_{{ tenant_id }} -f /tmp/radius-schema.sql
+      become_user: "{{ app_user }}"
+
+    # ========================================================================
+    # Nginx Reverse Proxy
+    # ========================================================================
+    - name: Install Nginx
+      apt:
+        name:
+          - nginx
+          - certbot
+          - python3-certbot-nginx
+        state: present
+
+    - name: Configure nginx reverse proxy
+      template:
+        src: nginx-site.conf.j2
+        dest: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        mode: '0644'
+      notify: Reload nginx
+
+    - name: Enable nginx site
+      file:
+        src: "/etc/nginx/sites-available/tenant-{{ tenant_id }}.conf"
+        dest: "/etc/nginx/sites-enabled/tenant-{{ tenant_id }}.conf"
+        state: link
+      notify: Reload nginx
+
+    # ========================================================================
+    # SSL/TLS Certificate
+    # ========================================================================
+    - name: Check if certificate already exists
+      stat:
+        path: "/etc/letsencrypt/live/{{ tenant_subdomain }}.{{ domain }}/fullchain.pem"
+      register: cert_exists
+
+    - name: Obtain SSL certificate with certbot
+      command: >
+        certbot --nginx
+        --non-interactive
+        --agree-tos
+        --email {{ ssl_admin_email | default('admin@' + domain) }}
+        -d {{ tenant_subdomain }}.{{ domain }}
+        {% if custom_domain %}
+        -d {{ custom_domain }}
+        {% endif %}
+      when: not cert_exists.stat.exists and ssl_enabled | default(true)
+
+    - name: Setup certificate renewal cron job
+      cron:
+        name: "Renew SSL certificate for tenant {{ tenant_id }}"
+        minute: "0"
+        hour: "3"
+        day: "*/7"
+        job: "/usr/bin/certbot renew --quiet --nginx --deploy-hook 'systemctl reload nginx'"
+        user: root
+      when: ssl_enabled | default(true)
+
+    # ========================================================================
+    # Systemd Integration (for auto-start on boot)
+    # ========================================================================
+    - name: Deploy Docker Compose systemd service
+      template:
+        src: docker-compose-tenant.service.j2
+        dest: "/etc/systemd/system/dotmac-tenant-{{ tenant_id }}.service"
+        mode: '0644'
+      notify: Reload systemd
+
+    - name: Enable Docker Compose systemd service
+      systemd:
+        name: "dotmac-tenant-{{ tenant_id }}"
+        enabled: yes
+        daemon_reload: yes
+
+    # ========================================================================
+    # Health Checks & Verification
+    # ========================================================================
+    - name: Wait for API to be ready
+      uri:
+        url: "http://localhost:{{ app_port }}/health"
+        status_code: 200
+      register: result
+      until: result.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Wait for frontend to be ready
+      uri:
+        url: "http://localhost:{{ frontend_port | default('3000') }}"
+        status_code: 200
+      register: frontend_result
+      until: frontend_result.status == 200
+      retries: 30
+      delay: 5
+
+    - name: Verify RADIUS is listening
+      wait_for:
+        host: 127.0.0.1
+        port: "{{ radius_port }}"
+        state: started
+        timeout: 30
+
+    - name: Set endpoint facts
+      set_fact:
+        endpoints:
+          api: "https://{{ tenant_subdomain }}.{{ domain }}/api/v1"
+          ui: "https://{{ tenant_subdomain }}.{{ domain }}"
+          health: "https://{{ tenant_subdomain }}.{{ domain }}/health"
+          radius: "{{ ansible_default_ipv4.address }}:{{ radius_port }}"
+
+  handlers:
+    - name: Reload systemd
+      systemd:
+        daemon_reload: yes
+
+    - name: Reload nginx
+      service:
+        name: nginx
+        state: reloaded

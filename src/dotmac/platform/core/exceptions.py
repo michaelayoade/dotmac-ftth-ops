@@ -9,6 +9,15 @@ See docs/EXCEPTION_HANDLING_GUIDE.md for usage patterns and best practices.
 
 from typing import Any
 
+from dotmac.platform.core.error_contract import (
+    ErrorCategory,
+    ErrorSeverity,
+    StandardErrorResponse,
+    is_retryable_status,
+    status_to_category,
+    status_to_severity,
+)
+
 
 class DotMacError(Exception):
     """Base exception for all DotMac Platform errors.
@@ -21,6 +30,13 @@ class DotMacError(Exception):
         error_code: Machine-readable error code (default: class name)
         details: Additional contextual information about the error
         status_code: HTTP status code for API responses (default: 500)
+        user_message: User-friendly error message (auto-generated if None)
+        category: Error category for classification
+        severity: Error severity level
+        retryable: Whether the operation can be retried
+        recovery_hint: Optional suggestion for error recovery
+        trace_id: Optional distributed tracing ID
+        request_id: Optional request identifier
     """
 
     def __init__(
@@ -29,6 +45,13 @@ class DotMacError(Exception):
         error_code: str | None = None,
         details: dict[str, Any] | None = None,
         status_code: int = 500,
+        user_message: str | None = None,
+        category: ErrorCategory | None = None,
+        severity: ErrorSeverity | None = None,
+        retryable: bool | None = None,
+        recovery_hint: str | None = None,
+        trace_id: str | None = None,
+        request_id: str | None = None,
     ) -> None:
         """Initialize DotMacError.
 
@@ -37,15 +60,29 @@ class DotMacError(Exception):
             error_code: Machine-readable error code (defaults to class name)
             details: Additional error context
             status_code: HTTP status code for API responses
+            user_message: User-friendly message (auto-generated if None)
+            category: Error category (auto-detected from status if None)
+            severity: Error severity (auto-detected from status if None)
+            retryable: Whether retryable (auto-detected from status if None)
+            recovery_hint: Optional recovery suggestion
+            trace_id: Optional distributed tracing ID
+            request_id: Optional request identifier
         """
         self.message = message
         self.error_code = error_code or self.__class__.__name__
         self.details = details or {}
         self.status_code = status_code
+        self.user_message = user_message
+        self.category = category or status_to_category(status_code)
+        self.severity = severity or status_to_severity(status_code)
+        self.retryable = retryable if retryable is not None else is_retryable_status(status_code)
+        self.recovery_hint = recovery_hint
+        self.trace_id = trace_id
+        self.request_id = request_id
         super().__init__(self.message)
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert exception to dictionary for API responses.
+        """Convert exception to dictionary for API responses (legacy format).
 
         Returns:
             Dictionary with error, message, and details keys
@@ -55,6 +92,26 @@ class DotMacError(Exception):
             "message": self.message,
             "details": self.details,
         }
+
+    def to_standard_response(self) -> StandardErrorResponse:
+        """Convert exception to standard error response format.
+
+        Returns:
+            StandardErrorResponse instance conforming to the platform contract
+        """
+        return StandardErrorResponse.from_exception(
+            error_code=self.error_code,
+            message=self.message,
+            status=self.status_code,
+            severity=self.severity,
+            category=self.category,
+            retryable=self.retryable,
+            user_message=self.user_message,
+            details=self.details,
+            recovery_hint=self.recovery_hint,
+            trace_id=self.trace_id,
+            request_id=self.request_id,
+        )
 
 
 class ValidationError(DotMacError):

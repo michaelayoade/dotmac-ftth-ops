@@ -5,9 +5,10 @@ Periodic Celery task that processes overage charges for subscribers who exceed
 their data caps. Integrates TimescaleDB usage data with the billing system.
 """
 
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, AsyncContextManager, cast
+from typing import Any, cast
 from uuid import UUID
 
 import structlog
@@ -34,9 +35,9 @@ except ImportError:
     TIMESCALEDB_AVAILABLE = False
 
 
-def _session_context() -> AsyncContextManager[AsyncSession]:
+def _session_context() -> AbstractAsyncContextManager[AsyncSession]:
     """Typed helper for acquiring an async session."""
-    return cast(AsyncContextManager[AsyncSession], async_session_maker())
+    return cast(AbstractAsyncContextManager[AsyncSession], async_session_maker())
 
 
 logger = structlog.get_logger(__name__)

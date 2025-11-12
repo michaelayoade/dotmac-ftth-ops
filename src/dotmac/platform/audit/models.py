@@ -15,7 +15,6 @@ from sqlalchemy.orm import Mapped, mapped_column
 from ..db import Base as BaseRuntime
 from ..db import TenantMixin, TimestampMixin
 
-
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase as Base
 else:
@@ -228,6 +227,18 @@ class AuditActivityList(BaseModel):  # BaseModel resolves to Any in isolation
     has_prev: bool
 
 
+class AuditLog(AuditActivityResponse):  # type: ignore[misc]
+    """
+    Backward-compatible alias for legacy audit log imports.
+
+    Several routers import `AuditLog` directly from `dotmac.platform.audit.models`.
+    We keep that symbol around by reusing the AuditActivityResponse schema.
+    """
+
+    activity_type: str = Field(description="Activity type identifier")
+    action: str = Field(description="Action performed")
+
+
 class AuditFilterParams(BaseModel):  # BaseModel resolves to Any in isolation
     """Model for audit activity filtering parameters."""
 
@@ -258,14 +269,79 @@ class FrontendLogLevel(str, Enum):
 
 
 class FrontendLogEntry(BaseModel):  # BaseModel resolves to Any in isolation
-    """Single frontend log entry from the client."""
+    """Single frontend log entry from the client.
+
+    SECURITY: Metadata is validated to prevent DoS attacks via unbounded payloads.
+    """
 
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     level: FrontendLogLevel
     message: str = Field(min_length=1, max_length=1000)
-    service: str = Field(default="frontend")
+    service: str = Field(default="frontend", max_length=100)
     metadata: dict[str, Any] = Field(default_factory=lambda: {})
+
+    @field_validator("metadata")
+    @classmethod
+    def validate_metadata(cls, value: dict[str, Any]) -> dict[str, Any]:
+        """
+        Validate metadata to prevent DoS attacks via unbounded payloads.
+
+        SECURITY CONTROLS:
+        - Maximum payload size: 10KB (serialized JSON)
+        - Maximum nesting depth: 5 levels
+        - Maximum string length: 2000 characters per value
+        - No key restrictions (allows arbitrary frontend metadata)
+
+        This flexible approach allows frontend hooks to send any metadata keys
+        (e.g., visible, filename, lineno, reason from useAuditLogger) without
+        breaking ingestion when new fields are added.
+        """
+        import json
+
+        def check_depth(obj: Any, current_depth: int = 0, max_depth: int = 5) -> None:
+            """Check nesting depth to prevent deeply nested structures."""
+            if current_depth > max_depth:
+                raise ValueError(f"Metadata nesting depth exceeds maximum of {max_depth} levels")
+
+            if isinstance(obj, dict):
+                for v in obj.values():
+                    check_depth(v, current_depth + 1, max_depth)
+            elif isinstance(obj, list):
+                for item in obj:
+                    check_depth(item, current_depth + 1, max_depth)
+
+        def check_string_lengths(obj: Any, max_length: int = 2000) -> None:
+            """Check string lengths to prevent unbounded strings."""
+            if isinstance(obj, str):
+                if len(obj) > max_length:
+                    raise ValueError(
+                        f"Metadata string exceeds maximum length of {max_length} characters"
+                    )
+            elif isinstance(obj, dict):
+                for v in obj.values():
+                    check_string_lengths(v, max_length)
+            elif isinstance(obj, list):
+                for item in obj:
+                    check_string_lengths(item, max_length)
+
+        # Validate nesting depth
+        check_depth(value)
+
+        # Validate string lengths
+        check_string_lengths(value)
+
+        # Check serialized size (10KB limit)
+        try:
+            serialized = json.dumps(value)
+            if len(serialized) > 10240:  # 10KB
+                raise ValueError(
+                    f"Metadata payload size ({len(serialized)} bytes) exceeds maximum of 10KB"
+                )
+        except (TypeError, ValueError) as e:
+            raise ValueError(f"Metadata must be JSON-serializable: {e}") from e
+
+        return value
 
 
 class FrontendLogsRequest(BaseModel):  # BaseModel resolves to Any in isolation
@@ -284,3 +360,19 @@ class FrontendLogsResponse(BaseModel):  # BaseModel resolves to Any in isolation
     status: str = "success"
     logs_received: int
     logs_stored: int
+
+
+__all__ = [
+    "ActivityType",
+    "ActivitySeverity",
+    "AuditActivity",
+    "AuditActivityCreate",
+    "AuditActivityResponse",
+    "AuditActivityList",
+    "AuditFilterParams",
+    "AuditLog",
+    "FrontendLogLevel",
+    "FrontendLogEntry",
+    "FrontendLogsRequest",
+    "FrontendLogsResponse",
+]

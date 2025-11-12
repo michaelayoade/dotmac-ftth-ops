@@ -221,11 +221,11 @@ export default function TenantCustomersView() {
       </div>
 
       <CustomersList
-        customers={customers}
+        customers={customers as any}
         loading={loading}
-        onCustomerSelect={handleViewCustomer}
-        onEditCustomer={handleEditCustomer}
-        onDeleteCustomer={handleDeleteCustomer}
+        onCustomerSelect={handleViewCustomer as any}
+        onEditCustomer={handleEditCustomer as any}
+        onDeleteCustomer={handleDeleteCustomer as any}
       />
 
       {showCreateModal && (

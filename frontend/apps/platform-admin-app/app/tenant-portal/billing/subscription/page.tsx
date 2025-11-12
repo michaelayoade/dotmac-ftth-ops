@@ -198,7 +198,7 @@ export default function SubscriptionPage() {
           </div>
           <PlanComparison
             plans={availablePlans}
-            currentPlanId={subscription?.plan_id}
+            {...(subscription?.plan_id ? { currentPlanId: subscription.plan_id } : {})}
             onSelectPlan={handleSelectPlan}
           />
         </div>

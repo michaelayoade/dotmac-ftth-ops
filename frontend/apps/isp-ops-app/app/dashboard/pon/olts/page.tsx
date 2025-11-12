@@ -52,7 +52,7 @@ function OLTListPageContent() {
     queryKey: ["access-logical-devices"],
     queryFn: async () => {
       const response = await apiClient.get<LogicalDeviceListResponse>("/access/logical-devices");
-      return response.data;
+      return response['data'];
     },
     refetchInterval: 30000,
   });
@@ -64,7 +64,7 @@ function OLTListPageContent() {
     queryKey: ["access-devices"],
     queryFn: async () => {
       const response = await apiClient.get<DeviceListResponse>("/access/devices");
-      return response.data;
+      return response['data'];
     },
     refetchInterval: 30000,
   });
@@ -76,7 +76,7 @@ function OLTListPageContent() {
     queryKey: ["access-statistics"],
     queryFn: async () => {
       const response = await apiClient.get<AccessStatistics>("/access/statistics");
-      return response.data;
+      return response['data'];
     },
     refetchInterval: 30000,
   });
@@ -88,11 +88,11 @@ function OLTListPageContent() {
   const rootDeviceMap = useMemo(() => {
     const map = new Map<string, Device>();
     (devicesData?.devices || [])
-      .filter((device) => device.root)
+      .filter((device) => device['root'])
       .forEach((device) => {
-        map.set(device.id, device);
-        if (device.metadata?.olt_id) {
-          map.set(String(device.metadata.olt_id), device);
+        map.set(device['id'], device);
+        if (device['metadata']?.['olt_id']) {
+          map.set(String(device['metadata']['olt_id']), device);
         }
       });
     return map;
@@ -104,10 +104,10 @@ function OLTListPageContent() {
       return logicalDevices;
     }
     return logicalDevices.filter((olt) => {
-      const serial = olt.desc?.serial_num?.toLowerCase() ?? "";
-      const rootId = olt.root_device_id?.toLowerCase() ?? "";
+      const serial = olt['desc']?.serial_num?.toLowerCase() ?? "";
+      const rootId = olt['root_device_id']?.toLowerCase() ?? "";
       return (
-        olt.id.toLowerCase().includes(query) ||
+        olt['id'].toLowerCase().includes(query) ||
         serial.includes(query) ||
         rootId.includes(query)
       );
@@ -115,9 +115,9 @@ function OLTListPageContent() {
   }, [logicalDevices, searchQuery]);
 
   const getOLTStatus = (olt: LogicalDevice) => {
-    const ports = olt.ports ?? [];
+    const ports = olt['ports'] ?? [];
     const activePortCount = ports.filter(
-      (port) => port?.ofp_port?.state === 0,
+      (port) => port?.['ofp_port']?.['state'] === 0,
     ).length;
 
     if (ports.length > 0) {
@@ -131,8 +131,8 @@ function OLTListPageContent() {
     }
 
     const rootDevice =
-      rootDeviceMap.get(olt.root_device_id || "") ||
-      rootDeviceMap.get(olt.id);
+      rootDeviceMap.get(olt['root_device_id'] || "") ||
+      rootDeviceMap.get(olt['id']);
 
     if (rootDevice) {
       const oper = (rootDevice.oper_status || "").toUpperCase();
@@ -178,9 +178,9 @@ function OLTListPageContent() {
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_olts ?? 0}</div>
+            <div className="text-2xl font-bold">{stats?.['total_olts'] ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.active_olts ?? 0} active
+              {stats?.['active_olts'] ?? 0} active
             </p>
           </CardContent>
         </Card>
@@ -191,9 +191,9 @@ function OLTListPageContent() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_onus ?? 0}</div>
+            <div className="text-2xl font-bold">{stats?.['total_onus'] ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.active_onus ?? stats?.online_onus ?? 0} active
+              {stats?.['active_onus'] ?? stats?.['online_onus'] ?? 0} active
             </p>
           </CardContent>
         </Card>
@@ -204,9 +204,9 @@ function OLTListPageContent() {
             <Zap className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_ports ?? 0}</div>
+            <div className="text-2xl font-bold">{stats?.['total_ports'] ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.active_ports ?? 0} active
+              {stats?.['active_ports'] ?? 0} active
             </p>
           </CardContent>
         </Card>
@@ -217,7 +217,7 @@ function OLTListPageContent() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_flows ?? 0}</div>
+            <div className="text-2xl font-bold">{stats?.['total_flows'] ?? 0}</div>
             <p className="text-xs text-muted-foreground">Across all OLTs</p>
           </CardContent>
         </Card>
@@ -255,27 +255,27 @@ function OLTListPageContent() {
         ) : (
           filteredOLTs.map((olt) => {
             const status = getOLTStatus(olt);
-            const StatusIcon = status.icon;
-            const ports = olt.ports ?? [];
-            const activePorts = ports.filter((p) => p?.ofp_port?.state === 0).length;
-            const flowsCount = Array.isArray(olt.flows) ? olt.flows.length : 0;
-            const datapath = olt.datapath_id || "N/A";
+            const StatusIcon = status['icon'];
+            const ports = olt['ports'] ?? [];
+            const activePorts = ports.filter((p) => p?.ofp_port?.['state'] === 0).length;
+            const flowsCount = Array.isArray(olt['flows']) ? olt['flows'].length : 0;
+            const datapath = olt['datapath_id'] || "N/A";
             const datapathDisplay = datapath.length > 12 ? `${datapath.slice(0, 12)}...` : datapath;
 
             return (
-              <Link key={olt.id} href={`/dashboard/pon/olts/${olt.id}`}>
+              <Link key={olt['id']} href={`/dashboard/pon/olts/${olt['id']}`}>
                 <Card className="hover:border-primary transition-colors cursor-pointer h-full">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <Server className="h-8 w-8 text-primary" />
-                      <Badge className={status.color}>
+                      <Badge className={status['color']}>
                         <StatusIcon className="h-3 w-3 mr-1" />
-                        {status.label}
+                        {status['label']}
                       </Badge>
                     </div>
-                    <CardTitle className="mt-2 truncate">{olt.id}</CardTitle>
+                    <CardTitle className="mt-2 truncate">{olt['id']}</CardTitle>
                     <CardDescription>
-                      S/N: {olt.desc?.serial_num || "Unknown"}
+                      S/N: {olt['desc']?.serial_num || "Unknown"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-3">
@@ -283,19 +283,19 @@ function OLTListPageContent() {
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Hardware:</span>
                         <span className="font-medium truncate ml-2">
-                          {olt.desc?.hw_desc || "Unknown"}
+                          {olt['desc']?.hw_desc || "Unknown"}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Software:</span>
                         <span className="font-medium truncate ml-2">
-                          {olt.desc?.sw_desc || "Unknown"}
+                          {olt['desc']?.sw_desc || "Unknown"}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Root Device:</span>
                         <span className="font-medium truncate ml-2">
-                          {olt.root_device_id || "N/A"}
+                          {olt['root_device_id'] || "N/A"}
                         </span>
                       </div>
                     </div>
@@ -335,7 +335,7 @@ function OLTListPageContent() {
 
 export default function OLTListPage() {
   return (
-    <RouteGuard permission="isp.network.pon.read">
+    <RouteGuard permission="isp.network['pon'].read">
       <OLTListPageContent />
     </RouteGuard>
   );

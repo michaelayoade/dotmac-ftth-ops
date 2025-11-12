@@ -3,6 +3,6 @@
 // Force dynamic rendering to avoid SSR issues with React Query hooks
 export const dynamic = "force-dynamic";
 
-import TenantCustomersView from "@/components/tenant/TenantCustomersView";
+import ISPCustomersView from "@/components/customers/ISPCustomersView";
 
-export default TenantCustomersView;
+export default ISPCustomersView;

@@ -400,7 +400,7 @@ export default function NewContactPage() {
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
                   <Select
-                    value={formData.status}
+                    value={formData['status']}
                     onValueChange={(value) =>
                       setFormData({ ...formData, status: value })
                     }

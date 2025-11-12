@@ -87,8 +87,11 @@ async def test_tenant(async_db_session):
 
     yield tenant
 
-    await async_db_session.delete(tenant)
-    await async_db_session.commit()
+    try:
+        await async_db_session.delete(tenant)
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()
 
 
 @pytest_asyncio.fixture
@@ -109,8 +112,11 @@ async def test_tenant_2(async_db_session):
 
     yield tenant
 
-    await async_db_session.delete(tenant)
-    await async_db_session.commit()
+    try:
+        await async_db_session.delete(tenant)
+        await async_db_session.commit()
+    except Exception:
+        await async_db_session.rollback()
 
 
 @pytest_asyncio.fixture

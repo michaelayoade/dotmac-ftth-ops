@@ -74,7 +74,7 @@ export default function PaymentMethodDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { toast } = useToast();
-  const paymentMethodId = params.id as string;
+  const paymentMethodId = params['id'] as string;
 
   const {
     paymentMethods,
@@ -595,7 +595,7 @@ export default function PaymentMethodDetailPage() {
                       <div className="max-w-[300px] truncate">{transaction.description}</div>
                     </TableCell>
                     <TableCell>
-                      {transaction.invoice_id ? (
+                      {transaction['invoice_id']? (
                         <Link
                           href={`/dashboard/billing-revenue/invoices/${transaction.invoice_id}`}
                           className="text-blue-600 hover:underline"

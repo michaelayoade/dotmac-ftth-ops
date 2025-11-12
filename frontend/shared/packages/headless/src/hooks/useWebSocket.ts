@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { getOperatorAccessToken } from "../../../utils/operatorAuth";
+import { getOperatorAccessToken } from "../utils/operatorAuth";
 import { useISPTenant } from "./useISPTenant";
 import { usePortalIdAuth } from "./usePortalIdAuth";
 
@@ -43,7 +43,7 @@ export function useWebSocket(config: WebSocketConfig = {}): UseWebSocketReturn {
   const { isAuthenticated } = usePortalIdAuth();
 
   const {
-    url = process.env.NEXT_PUBLIC_WS_URL || "wss://localhost:8001/ws",
+    url = process.env["NEXT_PUBLIC_WS_URL"] || "ws://localhost:8000/ws",
     reconnectInterval = 3000,
     maxReconnectAttempts = 10,
     heartbeatInterval = 30000,

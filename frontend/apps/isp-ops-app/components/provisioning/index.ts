@@ -4,8 +4,8 @@
  * Centralized exports for provisioning forms with dual-stack support
  */
 
-export { SubscriberProvisionForm } from "./SubscriberProvisionForm";
-export type { SubscriberProvisionFormProps } from "./SubscriberProvisionForm";
+export { SubscriberProvisionFormWrapper as SubscriberProvisionForm } from "./SubscriberProvisionForm";
+export type { FormData } from "./SubscriberProvisionForm";
 
 export { WireGuardServerForm } from "./WireGuardServerForm";
 export type { WireGuardServerFormProps } from "./WireGuardServerForm";

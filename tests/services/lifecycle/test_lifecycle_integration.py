@@ -4,7 +4,6 @@ Integration tests for service lifecycle workflows.
 Tests complete lifecycle: provision → activate → suspend → resume → terminate
 """
 
-import inspect
 from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import uuid4

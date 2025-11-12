@@ -2,18 +2,18 @@
 
 ## Executive Summary
 
-This document outlines the ingress/reverse proxy architecture for DotMac FTTH Operations Platform across different deployment scenarios. It addresses the critical decision between **single-host nginx** and **Kubernetes ingress-nginx** for multi-tenant deployments.
+This document outlines the ingress/reverse proxy architecture for DotMac FTTH Operations Platform across different deployment scenarios. The focus is now on **per-tenant ingress**—each ISP receives its own frontend/backend endpoints, TLS certificates, and custom domains—while the shared control plane (platform-admin, automation, observability) remains centralized. We still compare single-host nginx vs Kubernetes ingress-nginx, but always through the lens of stamping out isolated tenant environments.
 
 **Key Components:**
 - nginx production config (`nginx/nginx.prod.conf`)
-- Ansible tenant provisioning (`ansible/playbooks/deployment/provision-tenant.yml`)
+- Ansible tenant provisioning (`ansible/playbooks/provision_tenant.yml` → roles → `deployment/provision-tenant.yml` tasks)
 - Domain verification APIs (`src/dotmac/platform/tenant/domain_verification_router.py`)
 - White-labeling system (`frontend/apps/base-app/scripts/init-branding.cjs`)
 
 **Deployment Scenarios:**
-1. **Single-Host VM** - nginx with per-tenant virtual hosts (current)
-2. **Multi-Server Cluster** - nginx load balancer + tenant backends
-3. **Kubernetes** - ingress-nginx controller with namespace isolation
+1. **Single-Host VM** – nginx with per-tenant virtual hosts (current dev/pilot state, driven by the deployment playbook).
+2. **Multi-Server Cluster** – nginx load balancer + tenant backends per VM group.
+3. **Kubernetes** – ingress-nginx controller with namespace isolation (DotMac- or ISP-hosted clusters).
 
 ---
 
@@ -1233,7 +1233,7 @@ export function useTenantSettings() {
 - ✅ Support 50-100 tenants
 
 **Phase 3: Migrate to Kubernetes (Year 2+)**
-- ✅ Use Helm charts from `PRODUCTION_DEPLOYMENT_K8S.md`
+- ✅ Follow the per-namespace deployment plan in `frontend/PRODUCTION_GUIDE.md`
 - ✅ Leverage ingress-nginx for routing
 - ✅ Auto-scale based on tenant traffic
 - ✅ Support 100-1000+ tenants
@@ -1253,9 +1253,8 @@ export function useTenantSettings() {
 
 - **`nginx/nginx.prod.conf`** - Production nginx configuration (current)
 - **`ansible/playbooks/deployment/provision-tenant.yml`** - Tenant provisioning playbook
-- **`frontend/PRODUCTION_DEPLOYMENT_K8S.md`** - Kubernetes deployment plan for frontend
+- **`frontend/PRODUCTION_GUIDE.md`** - Consolidated frontend architecture/deployment reference
 - **`BACKEND_DEPLOYMENT_REMEDIATION.md`** - Backend configuration fixes for cross-environment deployment
-- **`frontend/ARCHITECTURE_OVERVIEW.md`** - Current frontend architecture and ownership guide
 - **`src/dotmac/platform/tenant/domain_verification_router.py`** - Domain verification API
 - **`frontend/apps/platform-admin-app/components/tenant/DomainVerificationCard.tsx`** - Domain verification UI
 

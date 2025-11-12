@@ -44,6 +44,11 @@ class NotificationContext:
     recipient_push_tokens: list[str] | None = None
     recipient_name: str | None = None
 
+    # Branding metadata for channel renderers
+    branding: dict[str, Any] | None = None
+    product_name: str | None = None
+    support_email: str | None = None
+
     # Metadata
     metadata: dict[str, Any] | None = None
     created_at: datetime | None = None

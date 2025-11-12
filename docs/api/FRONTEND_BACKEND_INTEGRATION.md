@@ -215,65 +215,24 @@ export function AuditDashboard() {
 Integrate frontend auth hooks with backend authentication services:
 
 ```typescript
-// frontend/shared/packages/headless/src/providers/AuthProvider.tsx
-import React, { createContext, useContext, useEffect } from 'react';
-import { useAuthStore } from '../stores/authStore';
-import { apiClient } from '../api/client';
+import { useSession } from '@dotmac/better-auth';
+import { apiClient } from '@dotmac/headless/api';
 
-const AuthContext = createContext(null);
+export function useAuthenticatedApi() {
+  const { data: session, isPending } = useSession();
+  const token = session?.accessToken;
 
-export function AuthProvider({ children }) {
-  const {
-    user,
-    isAuthenticated,
-    login,
-    logout,
-  } = useAuthStore();
-
-  // Configure API client for HttpOnly-cookie sessions
-  useEffect(() => {
-    apiClient.interceptors.request.use((config) => {
-      config.withCredentials = true;
-      return config;
-    });
-
-    apiClient.interceptors.response.use(
-      (response) => response,
-      async (error) => {
-        if (error.response?.status === 401) {
-          // Cookie session expired or missing – force a re-login
-          logout();
-          window.location.href = '/login';
-        }
-        return Promise.reject(error);
-      }
-    );
-  }, [logout]);
-
-  // Session heartbeat for audit trail
-  useEffect(() => {
-    if (isAuthenticated) {
-      const interval = setInterval(async () => {
-        try {
-          await apiClient.post(
-            '/api/auth/session-heartbeat',
-            undefined,
-            { withCredentials: true }
-          );
-        } catch (error) {
-          console.warn('Session heartbeat failed:', error);
-        }
-      }, 300000); // Every 5 minutes
-
-      return () => clearInterval(interval);
-    }
-  }, [isAuthenticated]);
-
-  return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return {
+    user: session?.user ?? null,
+    isLoading: isPending,
+    client: apiClient.extend({
+      headers: {
+        Authorization: token ? `Bearer ${token}` : undefined,
+      },
+      withCredentials: true,
+    }),
+    logout: session?.logout,
+  };
 }
 ```
 

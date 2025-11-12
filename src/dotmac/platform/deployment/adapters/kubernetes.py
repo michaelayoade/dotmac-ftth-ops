@@ -6,8 +6,9 @@ Handles deployment to Kubernetes clusters using Helm charts.
 
 import asyncio
 import json
+from collections.abc import Sequence
 from datetime import datetime
-from typing import Any, Sequence
+from typing import Any
 
 from .base import DeploymentAdapter, DeploymentResult, ExecutionContext, ExecutionStatus
 

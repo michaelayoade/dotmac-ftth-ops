@@ -69,7 +69,7 @@ class EmailService:
         smtp_user: str | None = None,
         smtp_password: str | None = None,
         use_tls: bool = True,
-        default_from: str = "noreply@dotmac.com",
+        default_from: str | None = None,
         tenant_id: str | None = None,
         db: AsyncSession | None = None,
         use_vault: bool = False,
@@ -80,7 +80,10 @@ class EmailService:
         self.smtp_host = smtp_host
         self.smtp_port = smtp_port
         self.use_tls = use_tls
-        self.default_from = default_from
+        configured_from = default_from or getattr(settings.email, "from_address", None)
+        if not configured_from:
+            configured_from = f"noreply@{settings.brand.notification_domain}"
+        self.default_from = configured_from
         self.tenant_id = tenant_id
         self.db = db
         self.use_vault = use_vault or os.getenv("SMTP_USE_VAULT", "false").lower() == "true"
@@ -206,7 +209,8 @@ class EmailService:
         msg["Subject"] = message.subject
         msg["From"] = self._format_from_address(message.from_email, message.from_name)
         msg["To"] = ", ".join(str(email) for email in message.to)
-        msg["Message-ID"] = f"<{message_id}@dotmac.com>"
+        message_domain = settings.brand.notification_domain or "example.com"
+        msg["Message-ID"] = f"<{message_id}@{message_domain}>"
         msg["Date"] = datetime.now(UTC).strftime("%a, %d %b %Y %H:%M:%S %z")
 
         if message.cc:

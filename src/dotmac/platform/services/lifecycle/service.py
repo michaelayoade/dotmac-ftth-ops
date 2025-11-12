@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from typing import Any, cast
 from uuid import UUID, uuid4
 
+import structlog
 from sqlalchemy import and_, case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import attributes
@@ -38,6 +39,8 @@ from dotmac.platform.services.lifecycle.schemas import (
     ServiceSuspensionRequest,
     ServiceTerminationRequest,
 )
+
+logger = structlog.get_logger(__name__)
 
 User: Any | None
 try:  # pragma: no cover - optional dependency during minimized installs
@@ -822,7 +825,51 @@ class LifecycleOrchestrationService:
             service.service_metadata.update(data.metadata)
             attributes.flag_modified(service, "service_metadata")
 
+        # Phase 4: Revoke IPv6 prefix on service termination
+        ipv6_revocation_result = None
+        if service.status == ServiceStatus.TERMINATED and hasattr(service, "subscriber_id"):
+            try:
+                from dotmac.platform.network.ipv6_lifecycle_service import IPv6LifecycleService
+
+                ipv6_service = IPv6LifecycleService(
+                    session=self.session,
+                    tenant_id=tenant_id,
+                    netbox_client=None,  # Will be injected when available
+                )
+                ipv6_revocation_result = await ipv6_service.revoke_ipv6(
+                    subscriber_id=service.subscriber_id,
+                    release_to_netbox=True,
+                    commit=False,  # Will commit with service termination
+                )
+                logger.info(
+                    "ipv6.revoked_on_termination",
+                    tenant_id=tenant_id,
+                    service_instance_id=service.id,
+                    subscriber_id=service.subscriber_id,
+                    prefix=ipv6_revocation_result.get("prefix"),
+                )
+            except Exception as e:
+                # Don't fail termination if IPv6 revocation fails
+                logger.warning(
+                    "ipv6.revocation_failed_on_termination",
+                    tenant_id=tenant_id,
+                    service_instance_id=service.id,
+                    subscriber_id=getattr(service, "subscriber_id", None),
+                    error=str(e),
+                )
+
         # Create lifecycle event
+        event_data_dict = {
+            "termination_reason": data.termination_reason,
+            "termination_type": data.termination_type,
+            "termination_date": termination_date.isoformat(),
+            "return_equipment": data.return_equipment,
+            "send_notification": data.send_notification,
+        }
+        if ipv6_revocation_result:
+            event_data_dict["ipv6_revoked"] = True
+            event_data_dict["ipv6_prefix_revoked"] = ipv6_revocation_result.get("prefix")
+
         event = await self._create_lifecycle_event(
             tenant_id=tenant_id,
             service_instance_id=service.id,
@@ -835,13 +882,7 @@ class LifecycleOrchestrationService:
             new_status=service.status,
             description=f"Service termination: {data.termination_reason}",
             triggered_by_user_id=terminated_by_user_id,
-            event_data={
-                "termination_reason": data.termination_reason,
-                "termination_type": data.termination_type,
-                "termination_date": termination_date.isoformat(),
-                "return_equipment": data.return_equipment,
-                "send_notification": data.send_notification,
-            },
+            event_data=event_data_dict,
         )
 
         await self.session.commit()

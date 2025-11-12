@@ -60,7 +60,7 @@ interface PluginHealthCheck {
 
 function PluginDetailsPageContent() {
   const params = useParams();
-  const pluginId = params?.pluginId as string;
+  const pluginId = params?.['pluginId'] as string;
   const { toast } = useToast();
   const [isTestingConnection, setIsTestingConnection] = useState(false);
 

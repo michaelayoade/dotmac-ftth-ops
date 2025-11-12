@@ -265,7 +265,7 @@ export const useAnalytics = (options: UseAnalyticsOptions) => {
   useEffect(() => {
     if (!isRealTimeActive) return;
 
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:3001"}/analytics`;
+    const wsUrl = `${process.env["NEXT_PUBLIC_WS_URL"] || "ws://localhost:3001"}/analytics`;
     websocketRef.current = new WebSocket(wsUrl);
 
     websocketRef.current.onopen = () => {

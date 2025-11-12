@@ -120,7 +120,7 @@ function PlaybooksPageContent() {
     const search = searchQuery.toLowerCase();
     return (
       template.name.toLowerCase().includes(search) ||
-      ((template.description ?? "").toLowerCase().includes(search) ?? false) ||
+      ((template['description']?? "").toLowerCase().includes(search) ?? false) ||
       ((template.playbook ?? "").toLowerCase().includes(search) ?? false)
     );
   });

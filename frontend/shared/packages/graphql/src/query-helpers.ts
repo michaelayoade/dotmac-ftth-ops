@@ -2,8 +2,8 @@
  * Query Result Helpers
  *
  * Utilities to normalize TanStack Query results to Apollo-compatible shapes,
- * making page-level migrations trivial.
- */
+ * making page-level integrations trivial.
+*/
 
 import type { UseQueryResult } from '@tanstack/react-query';
 

@@ -168,14 +168,14 @@ export function PerformanceMonitoredApp() {
 
   React.useEffect(() => {
     // Log performance violations in development
-    if (process.env.NODE_ENV === "development" && budgetViolations.length > 0) {
+    if (process.env["NODE_ENV"] === "development" && budgetViolations.length > 0) {
       console.warn("Performance budget violations:", budgetViolations);
     }
   }, [budgetViolations]);
 
   return (
     <div>
-      {process.env.NODE_ENV === "development" && (
+      {process.env["NODE_ENV"] === "development" && (
         <div className="fixed bottom-4 right-4 bg-white border border-gray-200 rounded-lg p-3 shadow-lg text-xs">
           <div>Performance Score: {performanceScore}</div>
           <div>FCP: {metrics.fcp}ms</div>

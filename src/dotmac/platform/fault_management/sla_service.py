@@ -11,9 +11,12 @@ import structlog
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.cache.models import CacheNamespace
+from dotmac.platform.cache.service import get_cache_service
 from dotmac.platform.fault_management.models import (
     Alarm,
     AlarmSeverity,
+    MaintenanceWindow,
     SLABreach,
     SLADefinition,
     SLAInstance,
@@ -21,6 +24,7 @@ from dotmac.platform.fault_management.models import (
 )
 from dotmac.platform.fault_management.schemas import (
     SLABreachResponse,
+    SLAComplianceRecord,
     SLAComplianceReport,
     SLADefinitionCreate,
     SLADefinitionResponse,
@@ -637,3 +641,325 @@ class SLAMonitoringService:
 
         breaches = result.scalars().all()
         return [SLABreachResponse.model_validate(b) for b in breaches]
+
+    def _merge_intervals(
+        self,
+        intervals: list[tuple[datetime, datetime]],
+    ) -> list[tuple[datetime, datetime]]:
+        """
+        Merge overlapping time intervals to prevent double-counting downtime.
+
+        Args:
+            intervals: List of (start, end) datetime tuples
+
+        Returns:
+            List of merged non-overlapping intervals
+        """
+        if not intervals:
+            return []
+
+        # Sort by start time
+        sorted_intervals = sorted(intervals, key=lambda x: x[0])
+
+        merged = [sorted_intervals[0]]
+
+        for current_start, current_end in sorted_intervals[1:]:
+            last_start, last_end = merged[-1]
+
+            # Check if intervals overlap
+            if current_start <= last_end:
+                # Merge by extending the end time
+                merged[-1] = (last_start, max(last_end, current_end))
+            else:
+                # No overlap, add as new interval
+                merged.append((current_start, current_end))
+
+        return merged
+
+    async def _get_maintenance_windows(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[tuple[datetime, datetime]]:
+        """
+        Get maintenance windows in the date range.
+
+        Args:
+            start_date: Start of date range
+            end_date: End of date range
+
+        Returns:
+            List of (start, end) datetime tuples for maintenance windows
+        """
+        result = await self.session.execute(
+            select(MaintenanceWindow).where(
+                and_(
+                    MaintenanceWindow.tenant_id == self.tenant_id,
+                    MaintenanceWindow.start_time <= end_date,
+                    MaintenanceWindow.end_time >= start_date,
+                    MaintenanceWindow.status.in_(["scheduled", "in_progress", "completed"]),
+                )
+            )
+        )
+
+        windows = result.scalars().all()
+        return [(w.start_time, w.end_time) for w in windows]
+
+    async def calculate_compliance_timeseries(
+        self,
+        start_date: datetime,
+        end_date: datetime,
+        target_percentage: float = 99.9,
+        exclude_maintenance: bool = True,
+    ) -> list[SLAComplianceRecord]:
+        """
+        Calculate daily SLA compliance from alarm data.
+
+        Phase 4: Optimized with caching, maintenance window exclusion,
+        and overlap handling
+
+        Args:
+            start_date: Start of date range
+            end_date: End of date range
+            target_percentage: SLA target (default 99.9%)
+            exclude_maintenance: Exclude maintenance windows from downtime
+
+        Returns:
+            List of daily compliance records
+        """
+        # Try cache first
+        cache_service = get_cache_service()
+        cache_key = f"{start_date.isoformat()}:{end_date.isoformat()}:{target_percentage}:{exclude_maintenance}"
+
+        cached_data = await cache_service.get(
+            key=cache_key,
+            namespace=CacheNamespace.SLA_COMPLIANCE,
+            tenant_id=self.tenant_id,
+        )
+
+        if cached_data:
+            logger.debug(
+                "sla.cache_hit",
+                tenant_id=self.tenant_id,
+                start_date=start_date.isoformat(),
+            )
+            # Convert cached data back to SLAComplianceRecord objects
+            return [SLAComplianceRecord(**record) for record in cached_data]
+
+        # Cache miss - calculate
+        logger.debug(
+            "sla.cache_miss",
+            tenant_id=self.tenant_id,
+            start_date=start_date.isoformat(),
+        )
+
+        # Query all alarms in the date range for this tenant
+        result = await self.session.execute(
+            select(Alarm).where(
+                and_(
+                    Alarm.tenant_id == self.tenant_id,
+                    Alarm.first_occurrence <= end_date,
+                    (Alarm.cleared_at.is_(None)) | (Alarm.cleared_at >= start_date),
+                )
+            )
+        )
+        alarms = list(result.scalars().all())
+
+        # Get maintenance windows if exclusion is enabled
+        maintenance_windows = []
+        if exclude_maintenance:
+            maintenance_windows = await self._get_maintenance_windows(start_date, end_date)
+
+        logger.info(
+            "sla.calculate_timeseries",
+            tenant_id=self.tenant_id,
+            start_date=start_date.isoformat(),
+            end_date=end_date.isoformat(),
+            alarm_count=len(alarms),
+            maintenance_windows=len(maintenance_windows),
+        )
+
+        # Calculate compliance for each day
+        compliance_records = []
+        current_day = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
+
+        while current_day <= end_date:
+            day_start = current_day
+            day_end = current_day + timedelta(days=1)
+
+            # Collect all downtime intervals for this day
+            downtime_intervals = []
+
+            for alarm in alarms:
+                alarm_start = alarm.first_occurrence
+                alarm_end = alarm.cleared_at or alarm.resolved_at or datetime.now(UTC)
+
+                # Check if alarm overlaps with this day
+                if alarm_end <= day_start or alarm_start >= day_end:
+                    continue
+
+                # Calculate overlap with current day
+                overlap_start = max(alarm_start, day_start)
+                overlap_end = min(alarm_end, day_end)
+
+                downtime_intervals.append((overlap_start, overlap_end))
+
+            # Merge overlapping intervals to prevent double-counting
+            merged_downtime = self._merge_intervals(downtime_intervals)
+
+            # Subtract maintenance windows from downtime if needed
+            if exclude_maintenance and maintenance_windows:
+                # Merge maintenance windows for this day
+                maintenance_intervals_today = []
+                for maint_start, maint_end in maintenance_windows:
+                    if maint_end <= day_start or maint_start >= day_end:
+                        continue
+                    overlap_start = max(maint_start, day_start)
+                    overlap_end = min(maint_end, day_end)
+                    maintenance_intervals_today.append((overlap_start, overlap_end))
+
+                merged_maintenance = self._merge_intervals(maintenance_intervals_today)
+
+                # Subtract maintenance from downtime
+                final_downtime = []
+                for down_start, down_end in merged_downtime:
+                    # Check if this downtime overlaps with any maintenance
+                    overlaps_maintenance = False
+                    for maint_start, maint_end in merged_maintenance:
+                        if down_end <= maint_start or down_start >= maint_end:
+                            continue  # No overlap
+                        overlaps_maintenance = True
+
+                        # Add non-overlapping portions
+                        if down_start < maint_start:
+                            final_downtime.append((down_start, maint_start))
+                        if down_end > maint_end:
+                            final_downtime.append((maint_end, down_end))
+
+                    if not overlaps_maintenance:
+                        final_downtime.append((down_start, down_end))
+
+                merged_downtime = self._merge_intervals(final_downtime)
+
+            # Calculate total downtime minutes
+            total_downtime_minutes = sum(
+                int((end - start).total_seconds() / 60) for start, end in merged_downtime
+            )
+
+            # Cap downtime at 1440 minutes (24 hours)
+            total_downtime_minutes = min(total_downtime_minutes, 1440)
+
+            # Calculate uptime and compliance
+            uptime_minutes = 1440 - total_downtime_minutes
+            compliance_percentage = (uptime_minutes / 1440) * 100
+
+            # Count breaches
+            sla_breaches = 1 if compliance_percentage < target_percentage else 0
+
+            compliance_records.append(
+                SLAComplianceRecord(
+                    date=day_start,
+                    compliance_percentage=round(compliance_percentage, 2),
+                    target_percentage=target_percentage,
+                    uptime_minutes=uptime_minutes,
+                    downtime_minutes=total_downtime_minutes,
+                    sla_breaches=sla_breaches,
+                )
+            )
+
+            current_day += timedelta(days=1)
+
+        logger.info(
+            "sla.compliance_calculated",
+            tenant_id=self.tenant_id,
+            days_calculated=len(compliance_records),
+            avg_compliance=round(
+                sum(r.compliance_percentage for r in compliance_records) / len(compliance_records),
+                2,
+            )
+            if compliance_records
+            else 0,
+        )
+
+        # Cache the results (5 minutes TTL)
+        serializable_data = [record.model_dump() for record in compliance_records]
+        await cache_service.set(
+            key=cache_key,
+            value=serializable_data,
+            namespace=CacheNamespace.SLA_COMPLIANCE,
+            tenant_id=self.tenant_id,
+            ttl=300,  # 5 minutes
+        )
+
+        return compliance_records
+
+    async def invalidate_compliance_cache(self) -> None:
+        """
+        Invalidate SLA compliance cache for this tenant.
+
+        Call this when alarms or maintenance windows are created/updated.
+        """
+        cache_service = get_cache_service()
+        deleted_count = await cache_service.clear_namespace(
+            namespace=CacheNamespace.SLA_COMPLIANCE,
+            tenant_id=self.tenant_id,
+        )
+
+        logger.info(
+            "sla.cache_invalidated",
+            tenant_id=self.tenant_id,
+            deleted_keys=deleted_count,
+        )
+
+    async def get_sla_rollup_stats(
+        self,
+        days: int = 30,
+        target_percentage: float = 99.9,
+    ) -> dict[str, float | int]:
+        """
+        Get rollup SLA statistics for the dashboard.
+
+        Args:
+            days: Number of days to look back (default 30)
+            target_percentage: SLA target percentage (default 99.9%)
+
+        Returns:
+            Dict with rollup metrics:
+            - total_downtime_minutes: Total downtime in the period
+            - total_breaches: Number of SLA breaches
+            - worst_day_compliance: Lowest compliance percentage in the period
+            - avg_compliance: Average compliance across all days
+            - days_analyzed: Number of days in the calculation
+        """
+        end_date = datetime.now(UTC)
+        start_date = end_date - timedelta(days=days)
+
+        # Get daily compliance records
+        records = await self.calculate_compliance_timeseries(
+            start_date=start_date,
+            end_date=end_date,
+            target_percentage=target_percentage,
+            exclude_maintenance=True,
+        )
+
+        if not records:
+            return {
+                "total_downtime_minutes": 0,
+                "total_breaches": 0,
+                "worst_day_compliance": 100.0,
+                "avg_compliance": 100.0,
+                "days_analyzed": 0,
+            }
+
+        total_downtime = sum(r.downtime_minutes for r in records)
+        total_breaches = sum(r.sla_breaches for r in records)
+        worst_day = min(r.compliance_percentage for r in records)
+        avg_compliance = sum(r.compliance_percentage for r in records) / len(records)
+
+        return {
+            "total_downtime_minutes": total_downtime,
+            "total_breaches": total_breaches,
+            "worst_day_compliance": round(worst_day, 2),
+            "avg_compliance": round(avg_compliance, 2),
+            "days_analyzed": len(records),
+        }

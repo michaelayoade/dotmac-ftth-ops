@@ -2,7 +2,6 @@
  * React hooks for managing active jobs with WebSocket controls
  */
 
-import React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
@@ -11,7 +10,7 @@ export interface Job {
   id: string;
   tenant_id: string;
   job_type: string;
-  status: "pending" | "running" | "completed" | "failed" | "cancelled" | "paused";
+  status: "pending" | "running" | "completed" | "failed" | "cancelled" | "paused" | "assigned";
   title: string;
   description?: string | null;
   items_total: number;
@@ -25,6 +24,33 @@ export interface Job {
   completed_at?: string | null;
   cancelled_at?: string | null;
   cancelled_by?: string | null;
+  // Field service specific fields
+  assigned_technician_id?: string | null;
+  assigned_to?: string | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
+  actual_start?: string | null;
+  actual_end?: string | null;
+  location_lat?: number | null;
+  location_lng?: number | null;
+  service_address?: string | null;
+}
+
+export interface FieldInstallationJob extends Job {
+  job_type: "field_installation";
+  location_lat: number;
+  location_lng: number;
+  service_address: string;
+  parameters: {
+    ticket_id?: string;
+    ticket_number?: string;
+    customer_id?: string;
+    order_id?: string;
+    order_number?: string;
+    priority?: string;
+    required_skills?: string[];
+    [key: string]: unknown;
+  };
 }
 
 export interface JobsResponse {
@@ -36,6 +62,7 @@ export interface JobsResponse {
 
 interface UseJobsOptions {
   status?: string;
+  jobType?: string;
   limit?: number;
   offset?: number;
 }
@@ -44,13 +71,14 @@ interface UseJobsOptions {
  * Fetch active jobs
  */
 export function useJobs(options: UseJobsOptions = {}) {
-  const { status, limit = 50, offset = 0 } = options;
+  const { status, jobType, limit = 50, offset = 0 } = options;
 
   return useQuery({
-    queryKey: ["jobs", status, limit, offset],
+    queryKey: ["jobs", status, jobType, limit, offset],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (status) params.append("status", status);
+      if (jobType) params.append("job_type", jobType);
       params.append("limit", String(limit));
       params.append("offset", String(offset));
 
@@ -58,6 +86,41 @@ export function useJobs(options: UseJobsOptions = {}) {
       return extractDataOrThrow(response);
     },
     staleTime: 5000, // 5 seconds
+  });
+}
+
+/**
+ * Fetch field installation jobs with location data for map display
+ */
+export function useFieldInstallationJobs(options: { status?: string } = {}) {
+  const { status } = options;
+
+  return useQuery({
+    queryKey: ["field-installation-jobs", status],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("job_type", "field_installation");
+      if (status) params.append("status", status);
+      params.append("limit", "100");
+
+      const response = await apiClient.get<JobsResponse>(`/jobs?${params.toString()}`);
+      const data = extractDataOrThrow(response);
+
+      // Filter to only jobs with location data
+      const jobsWithLocation = data.jobs.filter(
+        (job): job is FieldInstallationJob =>
+          job.job_type === "field_installation" &&
+          job.location_lat != null &&
+          job.location_lng != null
+      );
+
+      return {
+        ...data,
+        jobs: jobsWithLocation,
+      };
+    },
+    staleTime: 5000, // 5 seconds - refresh frequently for real-time updates
+    refetchInterval: 10000, // Auto-refetch every 10 seconds
   });
 }
 
@@ -81,61 +144,6 @@ export function useCancelJob() {
 
 /**
  * WebSocket hook for real-time job control
+ * Re-exports the shared implementation from useRealtime which has proper auth
  */
-export function useJobWebSocket(jobId: string | null) {
-  const [socket, setSocket] = React.useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = React.useState(false);
-
-  React.useEffect(() => {
-    if (!jobId) return;
-
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8001"}/api/v1/realtime/ws/jobs/${jobId}`;
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log("WebSocket connected for job:", jobId);
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log("WebSocket disconnected for job:", jobId);
-    };
-
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, [jobId]);
-
-  const cancelJob = React.useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "cancel_job" }));
-    }
-  }, [socket, isConnected]);
-
-  const pauseJob = React.useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "pause_job" }));
-    }
-  }, [socket, isConnected]);
-
-  const resumeJob = React.useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "resume_job" }));
-    }
-  }, [socket, isConnected]);
-
-  return {
-    socket,
-    isConnected,
-    cancelJob,
-    pauseJob,
-    resumeJob,
-  };
-}
+export { useJobWebSocket } from "./useRealtime";

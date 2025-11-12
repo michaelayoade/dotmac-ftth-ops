@@ -126,8 +126,7 @@ frontend/
 ├── shared/
 │   └── packages/             # Shared primitives, headless hooks, auth, etc.
 ├── e2e/                      # Playwright config & tests
-├── ARCHITECTURE_OVERVIEW.md  # Current architecture summary
-├── PRODUCTION_DEPLOYMENT_K8S.md
+├── PRODUCTION_GUIDE.md       # Architecture + deployment reference
 └── QUICK_START.md            # This document
 ```
 
@@ -139,6 +138,6 @@ frontend/
 - **Update navigation.** Sidebar items live in each app’s `app/dashboard/layout.tsx`.
 - **Keep shared code generic.** Only move logic to `shared/packages` when both apps consume it.
 - **Verify lint/tests.** Run `pnpm lint`, `pnpm type-check`, and relevant Playwright suites before submitting PRs.
-- **Docs first.** Architecture changes should be reflected in `ARCHITECTURE_OVERVIEW.md` and this quick-start guide to keep downstream teams aligned.
+- **Docs first.** Architecture or deployment changes should be reflected in `PRODUCTION_GUIDE.md` and this quick-start guide to keep downstream teams aligned.
 
 With this split, each portal can evolve independently while sharing a common design system and tooling. Happy shipping!

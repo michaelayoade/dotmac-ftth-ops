@@ -92,18 +92,50 @@ const customerSchema = z
 
 type CustomerFormData = z.infer<typeof customerSchema>;
 
+const assignIfDefined = <T extends keyof Customer>(
+  target: Partial<Customer>,
+  key: T,
+  value: Customer[T] | undefined,
+) => {
+  if (value !== undefined) {
+    target[key] = value;
+  }
+};
+
 function buildPayload(values: CustomerFormData): Partial<Customer> {
-  return {
-    ...values,
-    credit_limit:
-      values.credit_limit !== undefined && Number.isFinite(values.credit_limit)
-        ? values.credit_limit
-        : undefined,
-    payment_terms:
-      values.payment_terms !== undefined && Number.isFinite(values.payment_terms)
-        ? values.payment_terms
-        : undefined,
+  const payload: Partial<Customer> = {
+    customer_type: values.customer_type,
+    status: values.status,
+    tier: values.tier,
   };
+
+  assignIfDefined(payload, "first_name", values.first_name);
+  assignIfDefined(payload, "middle_name", values.middle_name);
+  assignIfDefined(payload, "last_name", values.last_name);
+  assignIfDefined(payload, "display_name", values.display_name);
+  assignIfDefined(payload, "company_name", values.company_name);
+  assignIfDefined(payload, "email", values.email);
+  assignIfDefined(payload, "phone", values.phone);
+  assignIfDefined(payload, "website", values.website);
+  assignIfDefined(payload, "tax_id", values.tax_id);
+  assignIfDefined(payload, "vat_number", values.vat_number);
+  assignIfDefined(payload, "address_line_1", values.address_line_1);
+  assignIfDefined(payload, "address_line_2", values.address_line_2);
+  assignIfDefined(payload, "city", values.city);
+  assignIfDefined(payload, "state_province", values.state_province);
+  assignIfDefined(payload, "postal_code", values.postal_code);
+  assignIfDefined(payload, "country", values.country);
+  assignIfDefined(payload, "notes", values.notes);
+
+  if (values.credit_limit !== undefined && Number.isFinite(values.credit_limit)) {
+    payload.credit_limit = Number(values.credit_limit);
+  }
+
+  if (values.payment_terms !== undefined && Number.isFinite(values.payment_terms)) {
+    payload.payment_terms = Number(values.payment_terms);
+  }
+
+  return payload;
 }
 
 export function CustomerEditModalRefactored({

@@ -38,8 +38,8 @@ export default function PartnerCustomerManagement({
         partnerId,
         customerData: formData,
         engagementType,
-        customCommissionRate,
-        tenantId,
+        ...(customCommissionRate !== undefined && { customCommissionRate }),
+        ...(tenantId && { tenantId }),
       });
 
       alert(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@dotmac/ui";
@@ -235,7 +235,7 @@ function CampaignDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const campaignId = params.id as string;
+  const campaignId = params['id'] as string;
 
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -296,18 +296,32 @@ function CampaignDetailsContent() {
 
   const form = useForm<CampaignFormValues>({
     resolver: zodResolver(campaignFormSchema),
-    values: campaign
-      ? {
-          name: campaign.name,
-          description: campaign.description || "",
-          trigger_after_days: campaign.trigger_after_days,
-          max_retries: campaign.max_retries,
-          retry_interval_days: campaign.retry_interval_days,
-          priority: campaign.priority,
-          is_active: campaign.is_active,
-        }
-      : undefined,
+    defaultValues: {
+      name: "",
+      description: "",
+      trigger_after_days: 1,
+      max_retries: 1,
+      retry_interval_days: 1,
+      priority: 1,
+      is_active: true,
+    },
   });
+
+  useEffect(() => {
+    if (!campaign) {
+      return;
+    }
+
+    form.reset({
+      name: campaign.name,
+      description: campaign.description || "",
+      trigger_after_days: campaign.trigger_after_days,
+      max_retries: campaign.max_retries,
+      retry_interval_days: campaign.retry_interval_days,
+      priority: campaign.priority,
+      is_active: campaign.is_active,
+    });
+  }, [campaign, form]);
 
   // Update campaign mutation
   const updateCampaignMutation = useMutation({
@@ -419,6 +433,8 @@ function CampaignDetailsContent() {
       description: "Campaign data has been refreshed",
     });
   };
+
+  const formContext = form as any;
 
   const onSubmit = (data: CampaignFormValues) => {
     updateCampaignMutation.mutate(data);
@@ -952,10 +968,10 @@ function CampaignDetailsContent() {
             <DialogTitle>Edit Campaign</DialogTitle>
             <DialogDescription>Update campaign settings</DialogDescription>
           </DialogHeader>
-          <Form {...form}>
+          <Form {...formContext}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
-                control={form.control}
+                control={formContext.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
@@ -969,7 +985,7 @@ function CampaignDetailsContent() {
               />
 
               <FormField
-                control={form.control}
+                control={formContext.control}
                 name="description"
                 render={({ field }) => (
                   <FormItem>
@@ -984,7 +1000,7 @@ function CampaignDetailsContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
-                  control={form.control}
+                  control={formContext.control}
                   name="trigger_after_days"
                   render={({ field }) => (
                     <FormItem>
@@ -998,7 +1014,7 @@ function CampaignDetailsContent() {
                 />
 
                 <FormField
-                  control={form.control}
+                  control={formContext.control}
                   name="max_retries"
                   render={({ field }) => (
                     <FormItem>
@@ -1014,7 +1030,7 @@ function CampaignDetailsContent() {
 
               <div className="grid grid-cols-2 gap-4">
                 <FormField
-                  control={form.control}
+                  control={formContext.control}
                   name="retry_interval_days"
                   render={({ field }) => (
                     <FormItem>
@@ -1028,7 +1044,7 @@ function CampaignDetailsContent() {
                 />
 
                 <FormField
-                  control={form.control}
+                  control={formContext.control}
                   name="priority"
                   render={({ field }) => (
                     <FormItem>
@@ -1043,7 +1059,7 @@ function CampaignDetailsContent() {
               </div>
 
               <FormField
-                control={form.control}
+                control={formContext.control}
                 name="is_active"
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">

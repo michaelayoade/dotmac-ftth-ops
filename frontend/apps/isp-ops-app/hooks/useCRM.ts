@@ -216,14 +216,14 @@ export interface LeadCreateRequest {
   first_name: string;
   last_name: string;
   email: string;
-  phone?: string;
-  company_name?: string;
+  phone?: string | undefined;
+  company_name?: string | undefined;
   service_address_line1: string;
-  service_address_line2?: string;
+  service_address_line2?: string | undefined;
   service_city: string;
   service_state_province: string;
   service_postal_code: string;
-  service_country?: string;
+  service_country?: string | undefined;
   service_coordinates?: { lat: number; lon: number };
   source: LeadSource;
   interested_service_types?: string[];
@@ -479,7 +479,7 @@ export function useLeads(options: UseLeadsOptions = {}) {
                   ...l,
                   is_serviceable: serviceability,
                   serviceability_checked_at: new Date().toISOString(),
-                  serviceability_notes: notes,
+                  serviceability_notes: notes || undefined,
                 }
               : l,
           ),
@@ -546,8 +546,8 @@ export function useLeads(options: UseLeadsOptions = {}) {
 // ============================================================================
 
 export interface UseQuotesOptions {
-  leadId?: string;
-  status?: QuoteStatus;
+  leadId?: string | undefined;
+  status?: QuoteStatus | undefined;
 }
 
 export function useQuotes(options: UseQuotesOptions = {}) {
@@ -630,7 +630,7 @@ export function useQuotes(options: UseQuotesOptions = {}) {
                   ...q,
                   status: "accepted" as QuoteStatus,
                   accepted_at: new Date().toISOString(),
-                  signature_data: signatureData,
+                  signature_data: signatureData || undefined,
                 }
               : q,
           ),

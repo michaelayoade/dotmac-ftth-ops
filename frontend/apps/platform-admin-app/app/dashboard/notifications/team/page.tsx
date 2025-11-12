@@ -67,21 +67,18 @@ export default function TeamNotificationPage() {
         message,
         priority,
         notification_type: notificationType,
-        action_url: actionUrl || undefined,
-        action_label: actionLabel || undefined,
         auto_send: true,
+        ...(actionUrl ? { action_url: actionUrl } : {}),
+        ...(actionLabel ? { action_label: actionLabel } : {}),
+        ...(targetMode === "role"
+          ? { role_filter: selectedRole }
+          : {
+              team_members: userIds
+                .split(",")
+                .map((id) => id.trim())
+                .filter((id) => id.length > 0),
+            }),
       };
-
-      if (targetMode === "role") {
-        request.role_filter = selectedRole;
-      } else {
-        // Parse comma-separated user IDs
-        const userIdList = userIds
-          .split(",")
-          .map((id) => id.trim())
-          .filter((id) => id.length > 0);
-        request.team_members = userIdList;
-      }
 
       const response = await sendTeamNotification(request);
       setSuccessResponse(response);

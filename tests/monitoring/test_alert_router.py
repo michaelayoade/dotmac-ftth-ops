@@ -25,6 +25,8 @@ from dotmac.platform.monitoring.alert_router import (
     _ensure_channel_state,
     _parse_rate_limit_config,
     _refresh_channel_state,
+)
+from dotmac.platform.monitoring.alert_router import (
     router as alert_router,
 )
 from dotmac.platform.monitoring.alert_webhook_router import (
@@ -212,7 +214,9 @@ async def test_refresh_channel_state_populates_cache(async_db_session, monkeypat
     await async_db_session.commit()
 
     module.get_alert_router().replace_channels([])
-    monkeypatch.setattr(module, "cache_channels", lambda channels: record.setdefault("channels", channels))
+    monkeypatch.setattr(
+        module, "cache_channels", lambda channels: record.setdefault("channels", channels)
+    )
 
     await _refresh_channel_state(async_db_session)
 
@@ -241,7 +245,9 @@ async def test_ensure_channel_state_loads_when_empty(async_db_session, monkeypat
     )
     await async_db_session.commit()
 
-    monkeypatch.setattr(module, "cache_channels", lambda channels: record.setdefault("channels", channels))
+    monkeypatch.setattr(
+        module, "cache_channels", lambda channels: record.setdefault("channels", channels)
+    )
 
     await _ensure_channel_state(async_db_session)
 
@@ -270,6 +276,8 @@ async def test_ensure_channel_state_skips_when_cache_populated(monkeypatch):
     await _ensure_channel_state(None)  # type: ignore[arg-type]
 
     assert called is False
+
+
 def _webhook_payload() -> dict[str, object]:
     timestamp = datetime(2024, 1, 1, tzinfo=UTC).isoformat().replace("+00:00", "Z")
     return {

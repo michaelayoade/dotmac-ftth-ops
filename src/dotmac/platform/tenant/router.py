@@ -24,7 +24,7 @@ from ..auth.platform_admin import (
     require_platform_permission,
 )
 from ..database import get_async_session
-from .models import TenantInvitationStatus, TenantPlanType, TenantStatus
+from .models import Tenant, TenantInvitationStatus, TenantPlanType, TenantStatus
 from .provisioning_service import (
     TenantProvisioningConflictError,
     TenantProvisioningJobNotFoundError,
@@ -81,6 +81,51 @@ TENANT_READ_PERMISSION = "platform:tenants:read"
 TENANT_WRITE_PERMISSION = "platform:tenants:write"
 
 
+def _can_view_sensitive_tenant_data(user: UserInfo) -> bool:
+    """Determine if the user can see sensitive tenant settings/metadata."""
+    if is_platform_admin(user) or has_platform_permission(user, TENANT_READ_PERMISSION):
+        return True
+
+    # Accept legacy alias permissions
+    user_permissions = set(user.permissions or [])
+    if "tenants:read" in user_permissions or "tenants:*" in user_permissions:
+        return True
+
+    return False
+
+
+def _build_tenant_response(
+    tenant: TenantResponse | Tenant,
+    *,
+    include_sensitive: bool,
+) -> TenantResponse:
+    """Normalize tenant response while optionally removing sensitive blobs."""
+    if isinstance(tenant, TenantResponse):
+        response = tenant
+    else:
+        response = TenantResponse.model_validate(tenant)
+
+    response.is_trial = getattr(tenant, "is_trial", response.is_trial)  # type: ignore[misc]
+    response.is_active = getattr(tenant, "status_is_active", response.is_active)  # type: ignore[misc]
+    response.trial_expired = getattr(tenant, "trial_expired", response.trial_expired)  # type: ignore[misc]
+    response.has_exceeded_user_limit = getattr(  # type: ignore[misc]
+        tenant, "has_exceeded_user_limit", response.has_exceeded_user_limit
+    )
+    response.has_exceeded_api_limit = getattr(  # type: ignore[misc]
+        tenant, "has_exceeded_api_limit", response.has_exceeded_api_limit
+    )
+    response.has_exceeded_storage_limit = getattr(  # type: ignore[misc]
+        tenant, "has_exceeded_storage_limit", response.has_exceeded_storage_limit
+    )
+
+    if not include_sensitive:
+        # Strip potentially sensitive blobs (may contain secrets/API keys).
+        response.settings = {}  # type: ignore[misc]
+        response.custom_metadata = {}  # type: ignore[misc]
+
+    return response
+
+
 def _ensure_can_read_tenant(user: UserInfo, tenant_id: str) -> None:
     """Validate that the current user can view the requested tenant."""
     if tenant_id == user.tenant_id:
@@ -111,6 +156,29 @@ def _ensure_can_write_tenant(user: UserInfo, tenant_id: str) -> None:
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Insufficient permissions to modify this tenant.",
     )
+
+
+def _has_tenant_admin_role(user: UserInfo) -> bool:
+    """Return True if the user has a tenant admin style role."""
+    roles = {role.lower() for role in (user.roles or []) if isinstance(role, str)}
+    return bool(roles & {"tenant_admin", "admin", "owner"})
+
+
+def _user_can_view_sensitive_tenant_data(user: UserInfo, tenant_id: str) -> bool:
+    """
+    Determine whether the requester may view sensitive tenant metadata.
+
+    Platform administrators and holders of the explicit platform permission retain access.
+    Within a tenant, only users with an admin-style role may view secrets.
+    """
+    if is_platform_admin(user) or has_platform_permission(user, TENANT_READ_PERMISSION):
+        return True
+
+    permissions = set(user.permissions or [])
+    if "tenants:*" in permissions or "tenants:read" in permissions:
+        return True
+
+    return user.tenant_id == tenant_id and _has_tenant_admin_role(user)
 
 
 def require_tenant_permission(permission: str) -> Callable[..., Awaitable[UserInfo]]:
@@ -160,16 +228,7 @@ async def create_tenant(
                 service_enum = OSSService(service_name)
                 await update_service_config(session, tenant.id, service_enum, overrides)
 
-        # Convert to response model
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        return _build_tenant_response(tenant, include_sensitive=True)
     except TenantAlreadyExistsError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -202,16 +261,9 @@ async def list_tenants(
     )
 
     # Convert to response models
-    tenant_responses = []
-    for tenant in tenants:
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-        tenant_responses.append(response)
+    tenant_responses = [
+        _build_tenant_response(tenant, include_sensitive=True) for tenant in tenants
+    ]
 
     total_pages = math.ceil(total / page_size) if total > 0 else 0
 
@@ -255,15 +307,8 @@ async def get_current_tenant(
             detail="Failed to load current tenant",
         ) from exc
 
-    response = TenantResponse.model_validate(tenant)
-    response.is_trial = tenant.is_trial
-    response.is_active = tenant.status_is_active
-    response.trial_expired = tenant.trial_expired
-    response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-    response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-    response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-    return response
+    include_sensitive = _user_can_view_sensitive_tenant_data(current_user, tenant.id)
+    return _build_tenant_response(tenant, include_sensitive=include_sensitive)
 
 
 @router.get("/{tenant_id}", response_model=TenantResponse)
@@ -280,16 +325,8 @@ async def get_tenant(
     try:
         _ensure_can_read_tenant(current_user, tenant_id)
         tenant = await service.get_tenant(tenant_id)
-
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        include_sensitive = _user_can_view_sensitive_tenant_data(current_user, tenant.id)
+        return _build_tenant_response(tenant, include_sensitive=include_sensitive)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -308,16 +345,8 @@ async def get_tenant_by_slug(
     try:
         tenant = await service.get_tenant_by_slug(slug)
         _ensure_can_read_tenant(current_user, tenant.id)
-
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        include_sensitive = _user_can_view_sensitive_tenant_data(current_user, tenant.id)
+        return _build_tenant_response(tenant, include_sensitive=include_sensitive)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -339,16 +368,8 @@ async def update_tenant(
         tenant = await service.update_tenant(
             tenant_id, tenant_data, updated_by=current_user.user_id
         )
-
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        include_sensitive = _user_can_view_sensitive_tenant_data(current_user, tenant.id)
+        return _build_tenant_response(tenant, include_sensitive=include_sensitive)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -386,16 +407,8 @@ async def restore_tenant(
     try:
         _ensure_can_write_tenant(current_user, tenant_id)
         tenant = await service.restore_tenant(tenant_id, restored_by=current_user.user_id)
-
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        include_sensitive = _user_can_view_sensitive_tenant_data(current_user, tenant.id)
+        return _build_tenant_response(tenant, include_sensitive=include_sensitive)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
@@ -650,15 +663,8 @@ async def update_tenant_features(
             tenant_id, feature_data.features, updated_by=current_user.user_id
         )
 
-        response = TenantResponse.model_validate(tenant)
-        response.is_trial = tenant.is_trial
-        response.is_active = tenant.status_is_active
-        response.trial_expired = tenant.trial_expired
-        response.has_exceeded_user_limit = tenant.has_exceeded_user_limit
-        response.has_exceeded_api_limit = tenant.has_exceeded_api_limit
-        response.has_exceeded_storage_limit = tenant.has_exceeded_storage_limit
-
-        return response
+        include_sensitive = _can_view_sensitive_tenant_data(current_user)
+        return _build_tenant_response(tenant, include_sensitive=include_sensitive)
     except TenantNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 

@@ -294,7 +294,9 @@ class TestRADIUSRepository:
         assert profile is not None
         assert profile.id == "profile-10mbps"
 
-    async def test_tenant_isolation_radcheck(self, async_db_session, test_tenant, test_tenant_2, test_subscriber):
+    async def test_tenant_isolation_radcheck(
+        self, async_db_session, test_tenant, test_tenant_2, test_subscriber
+    ):
         """Test that radcheck entries are tenant-isolated"""
         repo = RADIUSRepository(async_db_session)
 

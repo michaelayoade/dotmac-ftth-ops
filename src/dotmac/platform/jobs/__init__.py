@@ -5,6 +5,8 @@ Generic job tracking and management for async operations.
 Enhanced with scheduling and job chain capabilities.
 """
 
+# Import handlers to register event subscriptions
+from dotmac.platform.jobs import handlers  # noqa: F401
 from dotmac.platform.jobs.decorators import (
     background_job,
     job_chain,

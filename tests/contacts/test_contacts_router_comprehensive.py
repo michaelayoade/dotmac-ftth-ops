@@ -36,6 +36,7 @@ except AttributeError:  # pragma: no cover - older Python versions
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
+
 @pytest.fixture
 def sample_contact_id():
     return uuid4()
@@ -985,8 +986,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.create"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_get_contact_requires_read_permission(self, test_client):
@@ -1000,8 +1000,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.read"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_update_contact_requires_update_permission(self, test_client):
@@ -1018,8 +1017,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.update"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_delete_contact_requires_delete_permission(self, test_client):
@@ -1033,8 +1031,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.delete"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_search_contacts_requires_read_permission(self, test_client):
@@ -1051,8 +1048,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.read"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_add_contact_method_requires_update_permission(self, test_client):
@@ -1073,8 +1069,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.update"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_record_activity_requires_manage_permission(self, test_client):
@@ -1095,8 +1090,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.manage"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_bulk_update_requires_update_permission(self, test_client):
@@ -1116,8 +1110,7 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.update"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]
 
     async def test_bulk_delete_requires_delete_permission(self, test_client):
@@ -1137,6 +1130,5 @@ class TestContactsPermissions:
 
             # Verify correct permission was checked
             assert ["contacts.delete"] in [
-                call[0][1]
-                for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
+                call[0][1] for call in self.mock_rbac_deny.user_has_all_permissions.call_args_list
             ]

@@ -21,6 +21,7 @@ import {
   Clock,
   AlertTriangle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   useCommunicationLogs,
   type CommunicationLog,
@@ -51,6 +52,15 @@ import { useRBAC } from "@/contexts/RBACContext";
 import { formatDistanceToNow, format } from "date-fns";
 import { CommunicationDetailModal } from "@/components/notifications/CommunicationDetailModal";
 
+const createBulkIcon = (Icon: LucideIcon) => {
+  const Wrapped = ({ className }: { className?: string }) => <Icon className={className} />;
+  Wrapped.displayName = `BulkIcon(${Icon.displayName ?? Icon.name ?? "Icon"})`;
+  return Wrapped;
+};
+
+const RetryIcon = createBulkIcon(RefreshCw);
+const DownloadIcon = createBulkIcon(Download);
+
 export default function NotificationHistoryPage() {
   const { hasPermission } = useRBAC();
   const canRead = hasPermission("notifications.read") || hasPermission("admin");
@@ -66,11 +76,11 @@ export default function NotificationHistoryPage() {
 
   const { logs, total, isLoading, error, refetch, retryFailedCommunication } = useCommunicationLogs(
     {
-      type: typeFilter || undefined,
-      status: statusFilter || undefined,
-      recipient: recipientFilter || undefined,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
+      ...(typeFilter && { type: typeFilter }),
+      ...(statusFilter && { status: statusFilter }),
+      ...(recipientFilter && { recipient: recipientFilter }),
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
       page,
       pageSize,
     },
@@ -304,7 +314,7 @@ export default function NotificationHistoryPage() {
     () => [
       {
         label: "Retry Failed",
-        icon: RefreshCw,
+        icon: RetryIcon,
         action: async (selected) => {
           const failedLogs = selected.filter(
             (log) => log.status === "failed" || log.status === "bounced",
@@ -328,16 +338,16 @@ export default function NotificationHistoryPage() {
           }
           refetch();
         },
-        variant: "default",
+        variant: "default" as const,
       },
       {
         label: "Export Selected",
-        icon: Download,
+        icon: DownloadIcon,
         action: async (selected) => {
           const csv = convertToCSV(selected);
           downloadCSV(csv, "communication-logs.csv");
         },
-        variant: "outline",
+        variant: "outline" as const,
       },
     ],
     [retryFailedCommunication, refetch, confirmDialog],
@@ -604,7 +614,7 @@ export default function NotificationHistoryPage() {
               <p className="text-sm text-red-800 dark:text-red-200">
                 Failed to load logs. Please try again.
               </p>
-              <Button variant="link" size="sm" onClick={refetch} className="mt-2">
+              <Button variant="link" size="sm" onClick={() => void refetch()} className="mt-2">
                 Retry
               </Button>
             </div>

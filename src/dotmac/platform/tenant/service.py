@@ -28,6 +28,9 @@ from .models import (
     TenantUsage,
 )
 from .schemas import (
+    TenantBrandingConfig,
+    TenantBrandingResponse,
+    TenantBrandingUpdate,
     TenantCreate,
     TenantInvitationCreate,
     TenantSettingCreate,
@@ -131,6 +134,12 @@ class TenantService:
 
             # Set default features based on plan
             tenant.features = self._get_default_features(tenant_data.plan_type)
+
+            if tenant_data.branding:
+                tenant.custom_metadata = tenant.custom_metadata or {}
+                tenant.custom_metadata["branding"] = tenant_data.branding.model_dump(
+                    exclude_none=True
+                )
 
             self.db.add(tenant)
             await self.db.commit()
@@ -755,3 +764,76 @@ class TenantService:
             )
 
         return features
+
+    # Branding helpers
+    @staticmethod
+    def _get_branding_defaults() -> dict[str, Any]:
+        """Return global branding defaults."""
+        return {
+            "product_name": settings.brand.product_name,
+            "product_tagline": settings.brand.product_tagline,
+            "company_name": settings.brand.company_name,
+            "support_email": settings.brand.support_email,
+            "success_email": settings.brand.success_email,
+            "operations_email": settings.brand.operations_email,
+            "partner_support_email": settings.brand.partner_support_email,
+            "primary_color": None,
+            "secondary_color": None,
+            "accent_color": None,
+            "logo_light_url": None,
+            "logo_dark_url": None,
+            "favicon_url": None,
+            "docs_url": None,
+            "support_portal_url": None,
+            "status_page_url": None,
+            "terms_url": None,
+            "privacy_url": None,
+        }
+
+    @staticmethod
+    def get_default_branding_config() -> TenantBrandingConfig:
+        """Return branding config constructed from global defaults."""
+        return TenantBrandingConfig.model_validate(TenantService._get_branding_defaults())
+
+    def _build_tenant_branding_response(self, tenant: Tenant) -> TenantBrandingResponse:
+        """Merge tenant overrides with defaults."""
+        tenant_branding: dict[str, Any] = {}
+        if isinstance(tenant.custom_metadata, dict):
+            tenant_branding = tenant.custom_metadata.get("branding") or {}
+
+        branding_payload = self._get_branding_defaults()
+        branding_payload.update(
+            {k: v for k, v in (tenant_branding or {}).items() if v not in (None, "")}
+        )
+
+        return TenantBrandingResponse(
+            tenant_id=tenant.id,
+            branding=TenantBrandingConfig.model_validate(branding_payload),
+            updated_at=tenant.updated_at,
+        )
+
+    async def get_tenant_branding(self, tenant_id: str) -> TenantBrandingResponse:
+        """Retrieve branding for a tenant."""
+        tenant = await self.get_tenant(tenant_id)
+        return self._build_tenant_branding_response(tenant)
+
+    async def update_tenant_branding(
+        self, tenant_id: str, branding_update: TenantBrandingUpdate
+    ) -> TenantBrandingResponse:
+        """Persist tenant branding overrides."""
+        tenant = await self.get_tenant(tenant_id)
+
+        if not isinstance(tenant.custom_metadata, dict):
+            tenant.custom_metadata = {}
+
+        branding_data = tenant.custom_metadata.get("branding") or {}
+        updates = branding_update.branding.model_dump(exclude_unset=True)
+        branding_data.update({k: v for k, v in updates.items() if v is not None})
+
+        tenant.custom_metadata["branding"] = branding_data
+        tenant.updated_at = datetime.now(UTC)
+
+        await self.db.commit()
+        await self.db.refresh(tenant)
+
+        return self._build_tenant_branding_response(tenant)

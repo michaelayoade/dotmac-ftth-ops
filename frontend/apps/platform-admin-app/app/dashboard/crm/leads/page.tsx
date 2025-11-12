@@ -39,7 +39,16 @@ import {
 } from "@dotmac/ui";
 import { MetricCardEnhanced } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
-import { useLeads, type Lead, type LeadStatus, type LeadSource } from "@/hooks/useCRM";
+import {
+  useLeads,
+  useCreateLead,
+  useUpdateLeadStatus,
+  useQualifyLead,
+  useDisqualifyLead,
+  type Lead,
+  type LeadStatus,
+  type LeadSource,
+} from "@/hooks/useCRM";
 import { LeadStatusBadge, LeadSourceBadge, LeadPriorityBadge } from "@/components/crm/Badges";
 import { CreateLeadModal } from "@/components/crm/CreateLeadModal";
 import { LeadDetailModal } from "@/components/crm/LeadDetailModal";
@@ -79,20 +88,21 @@ export default function LeadsManagementPage() {
 
   // Fetch leads with filters
   const {
-    leads,
+    data: leads = [],
     isLoading,
     error,
     refetch,
-    createLead,
-    updateLeadStatus,
-    qualifyLead,
-    disqualifyLead,
   } = useLeads({
-    status: statusFilter || undefined,
-    source: sourceFilter || undefined,
+    ...(statusFilter && { status: statusFilter }),
+    ...(sourceFilter && { source: sourceFilter }),
     autoRefresh: true,
     refreshInterval: 60000,
   });
+
+  const createLeadMutation = useCreateLead();
+  const updateLeadStatusMutation = useUpdateLeadStatus();
+  const qualifyLeadMutation = useQualifyLead();
+  const disqualifyLeadMutation = useDisqualifyLead();
 
   // Filter leads by search query and priority
   const filteredLeads = useMemo(() => {
@@ -106,7 +116,7 @@ export default function LeadsManagementPage() {
           lead.first_name.toLowerCase().includes(query) ||
           lead.last_name.toLowerCase().includes(query) ||
           lead.email.toLowerCase().includes(query) ||
-          lead.phone?.toLowerCase().includes(query) ||
+          lead['phone']?.toLowerCase().includes(query) ||
           lead.lead_number.toLowerCase().includes(query),
       );
     }
@@ -158,33 +168,49 @@ export default function LeadsManagementPage() {
 
   const handleQualify = useCallback(
     async (leadId: string) => {
-      const success = await qualifyLead(leadId);
-      if (success) {
+      try {
+        await qualifyLeadMutation.mutateAsync(leadId);
         toast({
           title: "Lead Qualified",
           description: "Lead has been marked as qualified.",
         });
         refetch();
+      } catch (err) {
+        toast({
+          title: "Qualification Failed",
+          description:
+            err instanceof Error ? err.message : "Unable to qualify lead right now.",
+          variant: "destructive",
+        });
       }
     },
-    [qualifyLead, refetch, toast],
+    [qualifyLeadMutation, refetch, toast],
   );
 
   const handleDisqualify = useCallback(
     async (leadId: string) => {
       const reason = prompt("Reason for disqualification:");
-      if (reason) {
-        const success = await disqualifyLead(leadId, reason);
-        if (success) {
-          toast({
-            title: "Lead Disqualified",
-            description: "Lead has been disqualified.",
-          });
-          refetch();
-        }
+      if (!reason) {
+        return;
+      }
+
+      try {
+        await disqualifyLeadMutation.mutateAsync({ id: leadId, reason });
+        toast({
+          title: "Lead Disqualified",
+          description: "Lead has been disqualified.",
+        });
+        refetch();
+      } catch (err) {
+        toast({
+          title: "Disqualification Failed",
+          description:
+            err instanceof Error ? err.message : "Unable to disqualify lead right now.",
+          variant: "destructive",
+        });
       }
     },
-    [disqualifyLead, refetch, toast],
+    [disqualifyLeadMutation, refetch, toast],
   );
 
   const columns: ColumnDef<Lead>[] = useMemo(
@@ -315,11 +341,11 @@ export default function LeadsManagementPage() {
     () => [
       {
         label: "Mark as Contacted",
-        icon: UserCheck,
+        icon: UserCheck as any,
         action: async (selected) => {
           for (const lead of selected) {
             if (lead.status === "new") {
-              await updateLeadStatus(lead.id, "contacted");
+              await updateLeadStatusMutation.mutateAsync({ id: lead.id, status: "contacted" });
             }
           }
           toast({
@@ -328,14 +354,15 @@ export default function LeadsManagementPage() {
           });
           refetch();
         },
+        variant: "default" as const,
       },
       {
         label: "Qualify Leads",
-        icon: CheckCircle,
+        icon: CheckCircle as any,
         action: async (selected) => {
           for (const lead of selected) {
             if (lead.status === "contacted" || lead.status === "site_survey_completed") {
-              await qualifyLead(lead.id);
+              await qualifyLeadMutation.mutateAsync(lead.id);
             }
           }
           toast({
@@ -344,10 +371,11 @@ export default function LeadsManagementPage() {
           });
           refetch();
         },
+        variant: "default" as const,
       },
       {
         label: "Delete Leads",
-        icon: Trash2,
+        icon: Trash2 as any,
         action: async (selected) => {
           // Implement delete logic
           toast({
@@ -357,10 +385,10 @@ export default function LeadsManagementPage() {
           });
           refetch();
         },
-        variant: "destructive",
+        variant: "destructive" as const,
       },
     ],
-    [updateLeadStatus, qualifyLead, refetch, toast],
+    [updateLeadStatusMutation, qualifyLeadMutation, refetch, toast],
   );
 
   // Handlers
@@ -410,7 +438,7 @@ export default function LeadsManagementPage() {
           value={stats.total}
           icon={Users}
           loading={isLoading}
-          error={error?.message}
+          {...(error?.message && { error: error.message })}
         />
         <MetricCardEnhanced
           title="New Leads"
@@ -561,7 +589,9 @@ export default function LeadsManagementPage() {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={() => refetch()}
-        onCreate={createLead}
+        onCreate={async (data) => {
+          await createLeadMutation.mutateAsync(data as any);
+        }}
       />
       <LeadDetailModal
         isOpen={isDetailModalOpen}

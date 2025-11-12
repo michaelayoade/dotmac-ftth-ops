@@ -119,6 +119,34 @@
 | `VAULT__TOKEN` | string | - | Vault token |
 | `VAULT__NAMESPACE` | string | - | Vault namespace |
 
+### Branding & Contact (Backend)
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `BRAND__PRODUCT_NAME` | string | `DotMac Platform` | Customer-facing product name |
+| `BRAND__PRODUCT_TAGLINE` | string | `Reusable SaaS backend and APIs to launch faster.` | Marketing tagline |
+| `BRAND__COMPANY_NAME` | string | `DotMac Platform` | Legal/company name |
+| `BRAND__SUPPORT_EMAIL` | string | `support@example.com` | Primary support contact |
+| `BRAND__SUCCESS_EMAIL` | string | `success@example.com` | Customer success contact |
+| `BRAND__OPERATIONS_EMAIL` | string | `ops@example.com` | Operations/NOC fallback contact |
+| `BRAND__PARTNER_SUPPORT_EMAIL` | string | `partner@example.com` | Partner escalation contact |
+| `BRAND__NOTIFICATION_DOMAIN` | string | `dotmac.com` | Domain used for transactional emails/message IDs |
+
+> These serve as onboarding defaults. Each ISP tenant can override its branding inside the ISP
+> Operations UI (Settings → Branding) without touching platform-level environment variables.
+
+### URL Templates & External Links
+
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `URLS__TENANT_URL_TEMPLATE` | string | `https://tenant-{tenant_id}.example.com` | Fallback tenant UI URL template |
+| `URLS__PARTNER_SUBDOMAIN_TEMPLATE` | string | `https://{subdomain}.platform.example.com` | Partner white-label subdomain template |
+| `URLS__ACTIVATION_DOMAIN_TEMPLATE` | string | `https://{slug}.dotmac.io` | Activation link format used by sales APIs |
+| `URLS__BILLING_PORTAL_BASE_URL` | string | `https://platform.dotmac.com` | Billing portal hostname for invoices |
+| `URLS__CUSTOMER_BILLING_DASHBOARD_URL` | string | `https://app.example.com/tenant/billing/subscription` | Dashboard link embedded in billing emails |
+| `URLS__PAYMENT_METHOD_UPDATE_URL` | string | `https://app.example.com/tenant/billing/payment-methods` | Payment method update link |
+| `URLS__EXIT_SURVEY_BASE_URL` | string | `https://survey.dotmac.com/exit` | Base URL for churn/feedback surveys |
+
 ### OSS Integrations
 
 | Variable | Type | Default | Description |
@@ -166,6 +194,14 @@
 | `NEXT_PUBLIC_LOGO_DARK` | string | - | Dark theme logo |
 | `NEXT_PUBLIC_PRIMARY_COLOR` | string | `#3b82f6` | Primary color |
 | `NEXT_PUBLIC_SECONDARY_COLOR` | string | `#8b5cf6` | Secondary color |
+| `NEXT_PUBLIC_SUPPORT_EMAIL` | string | `support@example.com` | Support contact surfaced in the UI |
+| `NEXT_PUBLIC_SUCCESS_EMAIL` | string | `support@example.com` | Customer success contact |
+| `NEXT_PUBLIC_PARTNER_SUPPORT_EMAIL` | string | `support@example.com` | Partner escalation contact |
+| `NEXT_PUBLIC_DOCS_URL` | string | `https://docs.example.com` | Link to docs/knowledge base |
+| `NEXT_PUBLIC_SUPPORT_PORTAL_URL` | string | `/customer-portal/support` | Support portal URL |
+| `NEXT_PUBLIC_STATUS_PAGE_URL` | string | - | Optional status/incident page |
+| `NEXT_PUBLIC_TERMS_URL` | string | `/customer-portal/terms` | Terms of service link |
+| `NEXT_PUBLIC_PRIVACY_URL` | string | `/customer-portal/privacy` | Privacy policy link |
 
 ### Feature Flags (DEPRECATED - Use `/api/v1/platform/config` instead)
 

@@ -14,6 +14,7 @@ from dotmac.platform.communications.email_service import (
     get_email_service,
     send_email,
 )
+from dotmac.platform.settings import settings
 
 pytestmark = pytest.mark.asyncio
 
@@ -197,11 +198,46 @@ class TestEmailServiceMIME:
             mock_smtp.return_value.__enter__.return_value = mock_server
 
             await service.send_email(message)
-
             call_args = mock_server.send_message.call_args
             mime_msg = call_args[0][0]
             # Should add empty text part
             assert mime_msg["Subject"] == "No Body"
+
+    async def test_default_from_falls_back_to_brand_domain(self):
+        """EmailService should build a noreply@domain sender when settings.email is blank."""
+        original_from = settings.email.from_address
+        original_domain = settings.brand.notification_domain
+        try:
+            settings.email.from_address = ""
+            settings.brand.notification_domain = "alerts.brand.test"
+            service = EmailService()
+            assert service.default_from == "noreply@alerts.brand.test"
+        finally:
+            settings.email.from_address = original_from
+            settings.brand.notification_domain = original_domain
+
+    async def test_message_id_uses_brand_notification_domain(self):
+        """Message-ID header should include the configured notification domain."""
+        original_domain = settings.brand.notification_domain
+        settings.brand.notification_domain = "alerts.brand.test"
+        try:
+            service = EmailService()
+            message = EmailMessage(
+                to=["recipient@example.com"],
+                subject="Brand Message ID",
+                text_body="Body",
+            )
+
+            with patch("smtplib.SMTP") as mock_smtp:
+                mock_server = MagicMock()
+                mock_smtp.return_value.__enter__.return_value = mock_server
+
+                await service.send_email(message)
+
+                mime_msg = mock_server.send_message.call_args[0][0]
+                assert mime_msg["Message-ID"].endswith("@alerts.brand.test>")
+        finally:
+            settings.brand.notification_domain = original_domain
 
 
 @pytest.mark.integration

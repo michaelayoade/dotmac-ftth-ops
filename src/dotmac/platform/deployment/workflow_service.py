@@ -10,11 +10,21 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.settings import settings
+
 from .models import DeploymentBackend, DeploymentTemplate
 from .schemas import ProvisionRequest
 from .service import DeploymentService
 
 logger = logging.getLogger(__name__)
+
+
+def _format_url(template: str, **values: Any) -> str:
+    """Render simple string templates with fallbacks."""
+    try:
+        return template.format(**values)
+    except (KeyError, ValueError):
+        return template
 
 
 class WorkflowDeploymentService:
@@ -190,7 +200,11 @@ class WorkflowDeploymentService:
             )
 
             # Build tenant URL from endpoints
-            tenant_url = f"https://tenant-{tenant_id_int}.example.com"
+            tenant_url = _format_url(
+                settings.urls.tenant_url_template,
+                tenant_id=tenant_id_int,
+                tenant=str(tenant_id_int),
+            )
             if instance.endpoints and "ui" in instance.endpoints:
                 tenant_url = instance.endpoints["ui"]
             elif instance.endpoints and "api" in instance.endpoints:
@@ -504,7 +518,12 @@ class WorkflowDeploymentService:
             else:
                 # Generate subdomain based on partner and customer
                 subdomain = f"{partner.partner_number.lower()}-{customer_uuid.hex[:8]}"
-                tenant_url = f"https://{subdomain}.platform.example.com"
+                tenant_url = _format_url(
+                    settings.urls.partner_subdomain_template,
+                    subdomain=subdomain,
+                    partner_number=partner.partner_number,
+                    customer_hash=customer_uuid.hex[:8],
+                )
 
             # Update tenant_info with partner-specific details
             tenant_info.update(

@@ -157,7 +157,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           cacheTTL: cacheTimeout,
         });
 
-        if (response.success && response.data) {
+        if (response?.data) {
           let processedData = response.data.items;
 
           // Apply transformation if provided
@@ -218,7 +218,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       try {
         const response = await apiClient.post<T>(endpoint, data);
 
-        if (response.success && response.data) {
+        if (response?.data) {
           // Add to local state
           const currentData = contextState?.data || [];
           appStore.setContextData(contextId, [response.data, ...currentData]);
@@ -259,7 +259,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       try {
         const response = await apiClient.put<T>(`${endpoint}/${id}`, data);
 
-        if (response.success && response.data) {
+        if (response?.data) {
           // Update local state
           const currentData = contextState?.data || [];
           const updatedData = currentData.map((item) =>
@@ -315,7 +315,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
       try {
         const response = await apiClient.delete(`${endpoint}/${id}`);
 
-        if (response.success) {
+        if (response.status >= 200 && response.status < 300) {
           // Remove from local state
           const currentData = contextState?.data || [];
           const filteredData = currentData.filter((item) => (item as any).id !== id);
@@ -360,7 +360,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           items,
         });
 
-        if (response.success && response.data) {
+        if (response?.data) {
           // Reload data for consistency
           await load();
 
@@ -398,7 +398,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           updates,
         });
 
-        if (response.success && response.data) {
+        if (response?.data) {
           // Reload data for consistency
           await load();
 
@@ -448,7 +448,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           data: { ids },
         });
 
-        if (response.success) {
+        if (response.status >= 200 && response.status < 300) {
           // Reload data for consistency
           await load();
 
@@ -493,7 +493,7 @@ export function useDataManager<T = any>(config: DataManagerConfig<T>): DataManag
           cache: false,
         });
 
-        if (response.success && response.data) {
+        if (response?.data) {
           const blob = response.data;
           const url = window.URL.createObjectURL(blob);
           const link = document.createElement("a");

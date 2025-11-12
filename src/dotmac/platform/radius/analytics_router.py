@@ -6,11 +6,12 @@ Requires TimescaleDB to be configured and enabled.
 """
 
 from datetime import datetime
-from typing import Annotated, Callable
+from typing import Annotated
 
 import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
@@ -27,7 +28,6 @@ from dotmac.platform.radius.analytics_schemas import (
 from dotmac.platform.settings import settings
 from dotmac.platform.timeseries import TimeSeriesSessionLocal
 from dotmac.platform.timeseries.repository import RadiusTimeSeriesRepository
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 logger = structlog.get_logger(__name__)
 

@@ -37,19 +37,19 @@ export default function CRMOverviewPage() {
   const router = useRouter();
   const { toast } = useToast();
   const {
-    leads,
+    data: leads = [],
     isLoading: leadsLoading,
     error: leadsError,
     refetch: refetchLeads,
   } = useLeads({ autoRefresh: true, refreshInterval: 60000 });
   const {
-    quotes,
+    data: quotes = [],
     isLoading: quotesLoading,
     error: quotesError,
     refetch: refetchQuotes,
   } = useQuotes();
   const {
-    surveys,
+    data: surveys = [],
     isLoading: surveysLoading,
     error: surveysError,
     refetch: refetchSurveys,
@@ -301,7 +301,7 @@ export default function CRMOverviewPage() {
           icon={Users}
           href="/dashboard/crm/leads"
           loading={leadsLoading}
-          error={leadsError?.message}
+          {...(leadsError?.message && { error: leadsError.message })}
           emptyStateMessage="No leads captured yet"
         />
         <MetricCardEnhanced
@@ -311,7 +311,7 @@ export default function CRMOverviewPage() {
           icon={ClipboardList}
           href="/dashboard/crm/leads"
           loading={leadsLoading}
-          error={leadsError?.message}
+          {...(leadsError?.message && { error: leadsError.message })}
           emptyStateMessage="No qualified leads yet"
         />
         <MetricCardEnhanced
@@ -322,7 +322,7 @@ export default function CRMOverviewPage() {
           href="/dashboard/crm/quotes"
           currency
           loading={quotesLoading}
-          error={quotesError?.message}
+          {...(quotesError?.message && { error: quotesError.message })}
           emptyStateMessage="No quotes generated"
         />
         <MetricCardEnhanced
@@ -332,7 +332,7 @@ export default function CRMOverviewPage() {
           icon={Calendar}
           href="/dashboard/crm/site-surveys"
           loading={surveysLoading}
-          error={surveysError?.message}
+          {...(surveysError?.message && { error: surveysError.message })}
           emptyStateMessage="No surveys scheduled"
         />
       </div>
@@ -358,7 +358,7 @@ export default function CRMOverviewPage() {
                 data={recentLeads}
                 columns={leadColumns}
                 isLoading={leadsLoading}
-                error={leadsError?.message}
+                {...(leadsError?.message && { error: leadsError.message })}
                 pagination={false}
                 hideToolbar
               />
@@ -388,7 +388,7 @@ export default function CRMOverviewPage() {
                 data={recentQuotes}
                 columns={quoteColumns}
                 isLoading={quotesLoading}
-                error={quotesError?.message}
+                {...(quotesError?.message && { error: quotesError.message })}
                 pagination={false}
                 hideToolbar
               />
@@ -419,7 +419,7 @@ export default function CRMOverviewPage() {
               data={upcomingSurveys}
               columns={surveyColumns}
               isLoading={surveysLoading}
-              error={surveysError?.message}
+              {...(surveysError?.message && { error: surveysError.message })}
               pagination={false}
               hideToolbar
             />

@@ -74,8 +74,6 @@ export default function DCIMPage() {
     status: "active",
     description: "",
     physical_address: "",
-    latitude: undefined,
-    longitude: undefined,
   });
 
   const [newDevice, setNewDevice] = useState<CreateDeviceRequest>({
@@ -98,12 +96,12 @@ export default function DCIMPage() {
   // Data fetching
   const { data: netboxHealth } = useNetBoxHealth();
   const { data: sites = [], isLoading: sitesLoading } = useSites({});
-  const { data: devices = [], isLoading: devicesLoading } = useDevices({
-    site: selectedSiteForDevices?.toString(),
-  });
-  const { data: interfaces = [], isLoading: interfacesLoading } = useInterfaces({
-    device: selectedDeviceForInterfaces,
-  });
+  const deviceParams = selectedSiteForDevices
+    ? { site: selectedSiteForDevices.toString() }
+    : {};
+  const { data: devices = [], isLoading: devicesLoading } = useDevices(deviceParams);
+  const interfaceParams = selectedDeviceForInterfaces !== undefined ? { device: selectedDeviceForInterfaces } : {};
+  const { data: interfaces = [], isLoading: interfacesLoading } = useInterfaces(interfaceParams);
 
   // Mutations
   const createSite = useCreateSite();
@@ -133,7 +131,7 @@ export default function DCIMPage() {
   const filteredInterfaces = interfaces.filter((iface) => {
     const matchesSearch =
       iface.name.toLowerCase().includes(interfaceSearch.toLowerCase()) ||
-      iface.description?.toLowerCase().includes(interfaceSearch.toLowerCase());
+      iface['description']?.toLowerCase().includes(interfaceSearch.toLowerCase());
     return matchesSearch;
   });
 
@@ -381,7 +379,7 @@ export default function DCIMPage() {
                     className="pl-8"
                   />
                 </div>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -479,7 +477,7 @@ export default function DCIMPage() {
                   />
                 </div>
                 <Select
-                  value={selectedSiteForDevices?.toString() || "all"}
+                  value={selectedSiteForDevices?.toString() ?? "all"}
                   onValueChange={(value) =>
                     setSelectedSiteForDevices(value === "all" ? undefined : parseInt(value))
                   }
@@ -496,7 +494,7 @@ export default function DCIMPage() {
                     ))}
                   </SelectContent>
                 </Select>
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter || "all"} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -616,7 +614,7 @@ export default function DCIMPage() {
                   />
                 </div>
                 <Select
-                  value={selectedDeviceForInterfaces?.toString() || "all"}
+                  value={selectedDeviceForInterfaces?.toString() ?? "all"}
                   onValueChange={(value) =>
                     setSelectedDeviceForInterfaces(value === "all" ? undefined : parseInt(value))
                   }
@@ -744,7 +742,7 @@ export default function DCIMPage() {
             <div className="space-y-2">
               <Label htmlFor="site-status">Status</Label>
               <Select
-                value={newSite.status}
+                value={newSite.status || "active"}
                 onValueChange={(value) => setNewSite({ ...newSite, status: value })}
               >
                 <SelectTrigger id="site-status">
@@ -774,13 +772,19 @@ export default function DCIMPage() {
                   type="number"
                   step="0.000001"
                   placeholder="40.712776"
-                  value={newSite.latitude || ""}
-                  onChange={(e) =>
-                    setNewSite({
-                      ...newSite,
-                      latitude: parseFloat(e.target.value) || undefined,
-                    })
-                  }
+                  value={newSite.latitude ?? ""}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    setNewSite((prev) => {
+                      const next = { ...prev };
+                      if (Number.isNaN(parsed)) {
+                        delete next.latitude;
+                      } else {
+                        next.latitude = parsed;
+                      }
+                      return next;
+                    });
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -790,13 +794,19 @@ export default function DCIMPage() {
                   type="number"
                   step="0.000001"
                   placeholder="-74.005974"
-                  value={newSite.longitude || ""}
-                  onChange={(e) =>
-                    setNewSite({
-                      ...newSite,
-                      longitude: parseFloat(e.target.value) || undefined,
-                    })
-                  }
+                  value={newSite.longitude ?? ""}
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    setNewSite((prev) => {
+                      const next = { ...prev };
+                      if (Number.isNaN(parsed)) {
+                        delete next.longitude;
+                      } else {
+                        next.longitude = parsed;
+                      }
+                      return next;
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -898,7 +908,7 @@ export default function DCIMPage() {
               <div className="space-y-2">
                 <Label htmlFor="device-status">Status</Label>
                 <Select
-                  value={newDevice.status}
+                  value={newDevice.status || "active"}
                   onValueChange={(value) => setNewDevice({ ...newDevice, status: value })}
                 >
                   <SelectTrigger id="device-status">

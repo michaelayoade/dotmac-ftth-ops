@@ -4,7 +4,6 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { useState } from "react";
-import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -13,26 +12,40 @@ import { Alert, AlertDescription } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
 import { Wifi, Lock, Mail, AlertCircle, Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useBranding } from "@/hooks/useBranding";
+import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 
 export default function CustomerLoginPage() {
-  const { login, loading, error: authError } = useCustomerAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const { login } = useCustomerAuth();
+
+  const { branding } = useBranding();
+  const companyName = branding.companyName || branding.productName || "DotMac";
+  const currentYear = new Date().getFullYear();
+  const supportLink = branding.supportPortalUrl || "/customer-portal/support";
+  const termsLink = branding.termsUrl || "/customer-portal/terms";
+  const privacyLink = branding.privacyUrl || "/customer-portal/privacy";
+  const helpLink = branding.supportPortalUrl || "/customer-portal/help";
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     // Validation
     if (!email || !password) {
       setError("Please enter both email and password");
+      setLoading(false);
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
       setError("Please enter a valid email address");
+      setLoading(false);
       return;
     }
 
@@ -44,7 +57,11 @@ export default function CustomerLoginPage() {
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed");
+      setLoading(false);
+      return;
     }
+
+    setLoading(false);
   };
 
   return (
@@ -68,10 +85,10 @@ export default function CustomerLoginPage() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Error Alert */}
-              {(error || authError) && (
+              {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>{error || authError}</AlertDescription>
+                  <AlertDescription>{error}</AlertDescription>
                 </Alert>
               )}
 
@@ -160,7 +177,7 @@ export default function CustomerLoginPage() {
               <p className="text-slate-400">
                 Need assistance?{" "}
                 <Link
-                  href="/customer-portal/support"
+                  href={supportLink}
                   className="text-primary hover:underline font-medium"
                 >
                   Contact Support
@@ -172,17 +189,19 @@ export default function CustomerLoginPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-slate-500">
-          <p>© 2025 DotMac FTTH Operations. All rights reserved.</p>
+          <p>
+            © {currentYear} {companyName}. All rights reserved.
+          </p>
           <div className="flex items-center justify-center gap-4 mt-2">
-            <Link href="/customer-portal/terms" className="hover:text-slate-300">
+            <Link href={termsLink} className="hover:text-slate-300">
               Terms
             </Link>
             <span>•</span>
-            <Link href="/customer-portal/privacy" className="hover:text-slate-300">
+            <Link href={privacyLink} className="hover:text-slate-300">
               Privacy
             </Link>
             <span>•</span>
-            <Link href="/customer-portal/help" className="hover:text-slate-300">
+            <Link href={helpLink} className="hover:text-slate-300">
               Help
             </Link>
           </div>

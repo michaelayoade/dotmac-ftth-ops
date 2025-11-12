@@ -406,7 +406,9 @@ class BillingCacheManager:
             "status": (
                 "healthy"
                 if health_score >= 75
-                else "degraded" if health_score >= 50 else "unhealthy"
+                else "degraded"
+                if health_score >= 50
+                else "unhealthy"
             ),
         }
 

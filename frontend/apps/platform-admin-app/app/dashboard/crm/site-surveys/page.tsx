@@ -20,7 +20,7 @@ import {
   Eye,
   Ban,
 } from "lucide-react";
-import { useSiteSurveys } from "@/hooks/useCRM";
+import { useSiteSurveys, useStartSurvey, useCancelSurvey } from "@/hooks/useCRM";
 import type { SiteSurvey, SiteSurveyStatus, Serviceability } from "@/hooks/useCRM";
 import { Button } from "@dotmac/ui";
 import { Input } from "@dotmac/ui";
@@ -64,7 +64,13 @@ export default function SiteSurveysPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch surveys
-  const { surveys, isLoading, refetch, startSurvey, cancelSurvey } = useSiteSurveys({});
+  const {
+    data: surveys = [],
+    isLoading,
+    refetch,
+  } = useSiteSurveys({});
+  const startSurveyMutation = useStartSurvey();
+  const cancelSurveyMutation = useCancelSurvey();
 
   useEffect(() => {
     // Auto-refresh every 60 seconds
@@ -146,13 +152,19 @@ export default function SiteSurveysPage() {
   };
 
   const handleStartSurvey = async (survey: SiteSurvey) => {
-    const success = await startSurvey(survey.id);
-    if (success) {
+    try {
+      await startSurveyMutation.mutateAsync(survey.id);
       toast({
         title: "Survey Started",
         description: `Survey ${survey.survey_number} is now in progress`,
       });
       refetch();
+    } catch (error) {
+      toast({
+        title: "Start Failed",
+        description: error instanceof Error ? error.message : "Unable to start survey.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -172,13 +184,20 @@ export default function SiteSurveysPage() {
       return;
     }
 
-    const success = await cancelSurvey(survey.id, "Canceled by user");
-    if (success) {
+    try {
+      await cancelSurveyMutation.mutateAsync({ id: survey.id, reason: "Canceled by user" });
       toast({
         title: "Survey Canceled",
         description: `Survey ${survey.survey_number} has been canceled`,
       });
       refetch();
+    } catch (error) {
+      toast({
+        title: "Cancellation Failed",
+        description:
+          error instanceof Error ? error.message : "Unable to cancel survey right now.",
+        variant: "destructive",
+      });
     }
   };
 

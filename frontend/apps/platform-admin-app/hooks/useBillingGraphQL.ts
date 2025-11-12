@@ -703,7 +703,7 @@ export function useActiveBillingPlans(
   return useBillingPlans(
     {
       isActive: true,
-      billingCycle,
+      ...(billingCycle && { billingCycle }),
       pageSize: 100, // Get all active plans
     },
     enabled,

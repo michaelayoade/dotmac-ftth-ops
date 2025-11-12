@@ -61,6 +61,7 @@ class CacheNamespace(str, Enum):
     ANALYTICS = "analytics"
     METRICS = "metrics"
     REPORTS = "reports"
+    SLA_COMPLIANCE = "sla_compliance"
 
     # Session data
     SESSION = "session"

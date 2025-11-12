@@ -16,6 +16,7 @@ import { platformConfig } from "@/lib/config";
 import { NetworkTopologyMap } from "@dotmac/primitives";
 import type { NetworkTopologyNode as NetworkNode } from "@dotmac/primitives";
 import { logger } from "@/lib/logger";
+import { NetworkProfileStats } from "@/components/network/NetworkProfileStats";
 
 export default function NetworkOverviewPage() {
   const { hasPermission } = useRBAC();
@@ -106,6 +107,8 @@ export default function NetworkOverviewPage() {
           )}
         </CardContent>
       </Card>
+
+      <NetworkProfileStats />
 
       <Card>
         <CardHeader>

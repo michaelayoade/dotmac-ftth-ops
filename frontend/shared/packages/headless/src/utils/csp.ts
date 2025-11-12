@@ -50,7 +50,7 @@ export function generateCSP(nonce: string, isDevelopment = false): string {
  * Generate CSP meta tag for client-side enforcement
  */
 export function generateCSPMeta(nonce: string): string {
-  const csp = generateCSP(nonce, process.env.NODE_ENV === "development");
+  const csp = generateCSP(nonce, process.env["NODE_ENV"] === "development");
   return `<meta http-equiv="Content-Security-Policy" content="${csp}">`;
 }
 

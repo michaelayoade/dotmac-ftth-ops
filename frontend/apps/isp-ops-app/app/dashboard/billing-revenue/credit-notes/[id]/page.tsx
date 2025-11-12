@@ -39,7 +39,7 @@ import {
   TableHeader,
   TableRow,
 } from "@dotmac/ui";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency } from "@dotmac/features/billing";
 import { useToast } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 
@@ -65,7 +65,7 @@ export default function CreditNoteDetailPage() {
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();
 
-  const creditNoteId = params.id as string;
+  const creditNoteId = params['id'] as string;
 
   const [creditNote, setCreditNote] = useState<CreditNote | null>(null);
   const [loading, setLoading] = useState(true);

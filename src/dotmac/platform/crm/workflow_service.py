@@ -13,7 +13,6 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..billing.subscriptions.service import SubscriptionService
-
 from .service import LeadService, QuoteService, SiteSurveyService
 
 
@@ -157,6 +156,7 @@ class CRMService:
         try:
             # Fetch subscription details
             from sqlalchemy import select
+
             from ..billing.subscriptions.models import Subscription, SubscriptionPlan
             from ..customer_management.models import Customer
 

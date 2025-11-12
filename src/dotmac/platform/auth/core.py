@@ -32,11 +32,16 @@ from fastapi.security import (
 from passlib.context import CryptContext
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
+from dotmac.platform.utils.crypto_compat import ensure_bcrypt_metadata
+
 redis_async: Any | None
 try:
     import redis.asyncio as redis_async
 except ImportError:  # pragma: no cover - optional dependency
     redis_async = None
+
+# Ensure bcrypt metadata is available
+ensure_bcrypt_metadata()
 
 REDIS_AVAILABLE = redis_async is not None
 
@@ -119,6 +124,11 @@ class UserInfo(BaseModel):
         - tenant_id=None: Platform admins are not assigned to any specific tenant
         - Platform admins can set X-Target-Tenant-ID header to impersonate tenants
 
+    Partner Multi-Tenant Access:
+        - partner_id: UUID of partner organization (if user belongs to a partner)
+        - managed_tenant_ids: List of tenant IDs this partner can manage
+        - active_managed_tenant_id: Currently active managed tenant context (via X-Active-Tenant-Id header)
+
     Important: When using user_id with database models that expect UUID,
     convert using UUID(user_info.user_id) or the ensure_uuid() helper.
 
@@ -132,6 +142,13 @@ class UserInfo(BaseModel):
         >>> if current_user.is_platform_admin:
         >>>     # Can access all tenants
         >>>     pass
+
+        >>> # Partner multi-tenant checking:
+        >>> if current_user.partner_id and current_user.active_managed_tenant_id:
+        >>>     # Partner accessing a managed tenant
+        >>>     effective_tenant_id = current_user.active_managed_tenant_id
+        >>> else:
+        >>>     effective_tenant_id = current_user.tenant_id
     """
 
     model_config = ConfigDict(extra="forbid")
@@ -145,6 +162,42 @@ class UserInfo(BaseModel):
     is_platform_admin: bool = Field(
         default=False, description="Platform admin with cross-tenant access"
     )
+
+    # Partner multi-tenant access fields
+    partner_id: str | None = Field(
+        default=None, description="Partner organization UUID (if user belongs to a partner)"
+    )
+    managed_tenant_ids: list[str] = Field(
+        default_factory=lambda: [],
+        description="Tenant IDs this partner can manage (empty for non-partner users)",
+    )
+    active_managed_tenant_id: str | None = Field(
+        default=None,
+        description="Currently active managed tenant context (set via X-Active-Tenant-Id header)",
+    )
+
+    @property
+    def effective_tenant_id(self) -> str | None:
+        """Get the effective tenant ID for the current request context.
+
+        Returns:
+            - active_managed_tenant_id if partner is in cross-tenant context
+            - tenant_id otherwise (user's home tenant)
+        """
+        return self.active_managed_tenant_id or self.tenant_id
+
+    @property
+    def is_cross_tenant_access(self) -> bool:
+        """Check if this is a cross-tenant access request.
+
+        Returns:
+            True if partner is accessing a managed tenant, False otherwise
+        """
+        return bool(
+            self.partner_id
+            and self.active_managed_tenant_id
+            and self.active_managed_tenant_id != self.tenant_id
+        )
 
 
 class TokenData(BaseModel):
@@ -979,13 +1032,42 @@ async def get_current_user(
     api_key: str | None = Depends(api_key_header),
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> UserInfo:
-    """Get current authenticated user from Bearer token, OAuth2, API key, or HttpOnly cookie.
+    """Get current authenticated user from Better Auth, Bearer token, OAuth2, API key, or HttpOnly cookie.
+
+    Authentication priority:
+    1. Better Auth session (cookie-based)
+    2. Bearer token (JWT)
+    3. OAuth2 token (JWT)
+    4. HttpOnly cookie (legacy JWT)
+    5. API key
 
     SECURITY: All JWT tokens are validated for ACCESS token type to prevent
     refresh token reuse attacks. API keys are handled separately.
     """
 
-    # Try Bearer token first - must be ACCESS token
+    # Try Better Auth session first (cookie-based authentication)
+    # Better Auth uses cookies like 'better-auth.session_token' or 'session_token'
+    better_auth_session = request.cookies.get("better-auth.session_token") or request.cookies.get("session_token")
+    if better_auth_session:
+        try:
+            from dotmac.platform.auth.better_auth_service import get_better_auth_user
+            from dotmac.platform.database import get_async_session
+
+            # Get database session for Better Auth validation
+            db_gen = get_async_session()
+            db = await anext(db_gen)
+            try:
+                user_info = await get_better_auth_user(better_auth_session, db)
+                if user_info:
+                    logger.info("User authenticated via Better Auth", user_id=user_info.user_id)
+                    return user_info
+            finally:
+                await db.close()
+        except Exception as e:
+            logger.debug("Better Auth session validation failed", error=str(e))
+            # Continue to next auth method
+
+    # Try Bearer token - must be ACCESS token
     if credentials and credentials.credentials:
         try:
             claims = await _verify_token_with_fallback(credentials.credentials, TokenType.ACCESS)
@@ -1053,6 +1135,10 @@ def _claims_to_user_info(claims: dict[str, Any]) -> UserInfo:
         permissions=claims.get("permissions", []),
         tenant_id=claims.get("tenant_id"),
         is_platform_admin=claims.get("is_platform_admin", False),
+        # Partner multi-tenant fields
+        partner_id=claims.get("partner_id"),
+        managed_tenant_ids=claims.get("managed_tenant_ids", []),
+        active_managed_tenant_id=claims.get("active_managed_tenant_id"),
     )
 
 
@@ -1107,7 +1193,12 @@ def configure_auth(
     redis_url: str | None = None,
 ) -> None:
     """Configure auth services."""
-    global JWT_SECRET, JWT_ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS, REDIS_URL
+    global \
+        JWT_SECRET, \
+        JWT_ALGORITHM, \
+        ACCESS_TOKEN_EXPIRE_MINUTES, \
+        REFRESH_TOKEN_EXPIRE_DAYS, \
+        REDIS_URL
     global jwt_service, session_manager, oauth_service, api_key_service
 
     # Dynamic configuration requires "constant" reassignment

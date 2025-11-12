@@ -1,0 +1,379 @@
+{
+  "dashboard": {
+    "title": "IPv6 Lifecycle Management",
+    "tags": ["ipv6", "networking", "lifecycle"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "IPv6 Prefix State Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum by (state) (ipv6_lifecycle_state_total)",
+            "legendFormat": "{{state}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "pieType": "pie",
+          "tooltip": {"mode": "single"}
+        }
+      },
+      {
+        "id": 2,
+        "title": "IPv6 Utilization Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(ipv6_lifecycle_state_total{state=\"active\"}) / sum(ipv6_lifecycle_state_total)) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 3,
+        "title": "IPv6 Pool Utilization",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "ipv6_pool_utilization_percent",
+            "legendFormat": "{{pool}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 85, "color": "red"}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        }
+      },
+      {
+        "id": 4,
+        "title": "IPv6 Allocation Rate (Last Hour)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(ipv6_allocation_duration_seconds_count[5m]) * 60",
+            "legendFormat": "Allocations/min",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never",
+              "stacking": {"mode": "none", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "id": 5,
+        "title": "IPv6 Revocation Rate (Last Hour)",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(ipv6_revocation_duration_seconds_count[5m]) * 60",
+            "legendFormat": "Revocations/min",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never",
+              "stacking": {"mode": "none", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "ops"
+          }
+        }
+      },
+      {
+        "id": 6,
+        "title": "IPv6 Prefix Leaks (Stuck in ALLOCATED >24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(ipv6_prefix_leak_total)",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        }
+      },
+      {
+        "id": 7,
+        "title": "NetBox Integration Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 16},
+        "targets": [
+          {
+            "expr": "(sum(ipv6_prefixes_with_netbox_id) / sum(ipv6_total_prefixes)) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        }
+      },
+      {
+        "id": 8,
+        "title": "IPv6 Allocation Duration (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ipv6_allocation_duration_seconds_bucket[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        }
+      },
+      {
+        "id": 9,
+        "title": "IPv6 Revocation Duration (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(ipv6_revocation_duration_seconds_bucket[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 2,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        }
+      },
+      {
+        "id": 10,
+        "title": "IPv6 Lifecycle State Timeline",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"pending\"}",
+            "legendFormat": "Pending",
+            "refId": "A"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"allocated\"}",
+            "legendFormat": "Allocated",
+            "refId": "B"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"active\"}",
+            "legendFormat": "Active",
+            "refId": "C"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"suspended\"}",
+            "legendFormat": "Suspended",
+            "refId": "D"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"revoking\"}",
+            "legendFormat": "Revoking",
+            "refId": "E"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"revoked\"}",
+            "legendFormat": "Revoked",
+            "refId": "F"
+          },
+          {
+            "expr": "ipv6_lifecycle_state_total{state=\"failed\"}",
+            "legendFormat": "Failed",
+            "refId": "G"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity",
+              "showPoints": "never",
+              "stacking": {"mode": "normal", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        }
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "tenant",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(ipv6_lifecycle_state_total, tenant)",
+          "multi": true,
+          "includeAll": true,
+          "current": {"text": "All", "value": "$__all"}
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "IPv6 Alerts",
+          "datasource": "Prometheus",
+          "expr": "ALERTS{alertname=~\"IPv6.*\"}",
+          "step": "60s",
+          "tagKeys": "alertname,severity",
+          "textFormat": "{{alertname}}: {{summary}}",
+          "titleFormat": "Alert"
+        }
+      ]
+    }
+  },
+  "overwrite": true
+}

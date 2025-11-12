@@ -111,7 +111,7 @@ export default function PriceSimulatorPage() {
   });
 
   const handleCalculate = () => {
-    if (!formData.product_id || !formData.customer_id || !formData.quantity) {
+    if (!formData.product_id || !formData['customer_id'] || !formData.quantity) {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -130,14 +130,16 @@ export default function PriceSimulatorPage() {
       return;
     }
 
+    const customerSegments = formData.customer_segments
+      ? formData.customer_segments.split(",").map((s) => s.trim())
+      : undefined;
+
     const requestData: PriceCalculationRequest = {
       product_id: formData.product_id,
-      customer_id: formData.customer_id,
+      customer_id: formData["customer_id"],
       quantity,
       currency: formData.currency,
-      customer_segments: formData.customer_segments
-        ? formData.customer_segments.split(",").map((s) => s.trim())
-        : undefined,
+      ...(customerSegments ? { customer_segments: customerSegments } : {}),
     };
 
     calculatePriceMutation.mutate(requestData);
@@ -251,7 +253,7 @@ export default function PriceSimulatorPage() {
               </Label>
               <Input
                 id="customer_id"
-                value={formData.customer_id}
+                value={formData['customer_id']}
                 onChange={(e) =>
                   setFormData({ ...formData, customer_id: e.target.value })
                 }

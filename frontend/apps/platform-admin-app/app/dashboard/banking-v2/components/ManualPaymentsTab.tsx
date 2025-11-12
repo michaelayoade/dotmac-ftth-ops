@@ -53,11 +53,11 @@ export function ManualPaymentsTab() {
   });
 
   const { data: payments, isLoading } = useManualPayments({
-    status: filters.status !== "all" ? filters.status : undefined,
-    payment_method: filters.method !== "all" ? (filters.method as PaymentMethodType) : undefined,
-    search: filters.search || undefined,
-    date_from: filters.startDate || undefined,
-    date_to: filters.endDate || undefined,
+    ...(filters.status !== "all" && { status: filters.status }),
+    ...(filters.method !== "all" && { payment_method: filters.method as PaymentMethodType }),
+    ...(filters.search && { search: filters.search }),
+    ...(filters.startDate && { date_from: filters.startDate }),
+    ...(filters.endDate && { date_to: filters.endDate }),
   });
 
   const verifyPayment = useVerifyPayment();

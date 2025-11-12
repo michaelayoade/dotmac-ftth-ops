@@ -89,8 +89,8 @@ export function useEnhancedErrorHandler(
         tenantId: finalConfig.context?.tenantId,
         service: "isp-frontend",
         component: "error-handler",
-        version: process.env.REACT_APP_VERSION || "1.0.0",
-        environment: process.env.NODE_ENV || "development",
+        version: process.env["REACT_APP_VERSION"] || "1.0.0",
+        environment: process.env["NODE_ENV"] || "development",
         ...finalConfig.context,
       };
     },

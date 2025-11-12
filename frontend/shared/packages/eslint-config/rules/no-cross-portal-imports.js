@@ -65,8 +65,6 @@ module.exports = {
       unknownPortal:
         'Cannot determine portal for file "{{filename}}". Ensure proper directory structure.',
       restrictedImport: 'Import "{{importPath}}" is not allowed in portal "{{portal}}".',
-      suggestionUseShared:
-        "Consider moving shared components to @dotmac/styled-components/shared or @dotmac/primitives.",
     },
   },
 
@@ -212,13 +210,6 @@ module.exports = {
               sourcePortal: importPortal,
               targetPortal: currentPortal,
             },
-            suggest: [
-              {
-                desc: "Consider using shared components instead",
-                messageId: "suggestionUseShared",
-                fix: null, // We don't auto-fix this as it requires architectural decisions
-              },
-            ],
           });
         }
       },

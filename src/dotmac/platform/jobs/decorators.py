@@ -7,16 +7,16 @@ Decorators for easy background job creation and management.
 import asyncio
 import functools
 from collections.abc import Callable
-from datetime import datetime, timezone
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+from datetime import UTC, datetime
 from typing import Any, TypedDict, TypeVar, cast
 from uuid import uuid4
 
 import structlog
 
 from dotmac.platform.jobs.models import JobPriority, JobStatus
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = UTC
 
 logger = structlog.get_logger(__name__)
 

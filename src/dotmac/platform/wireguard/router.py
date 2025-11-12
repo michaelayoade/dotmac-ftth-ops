@@ -7,7 +7,6 @@ FastAPI router for WireGuard VPN management endpoints.
 import logging
 from typing import Annotated
 from uuid import UUID
-from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select

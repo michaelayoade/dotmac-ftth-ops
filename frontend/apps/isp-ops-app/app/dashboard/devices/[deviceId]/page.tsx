@@ -87,7 +87,7 @@ interface DeviceEvent {
 
 function DeviceDetailsPageContent() {
   const params = useParams();
-  const deviceId = params.deviceId as string;
+  const deviceId = params['deviceId'] as string;
   const [activeTab, setActiveTab] = useState("overview");
   const [refreshKey, setRefreshKey] = useState(0);
 

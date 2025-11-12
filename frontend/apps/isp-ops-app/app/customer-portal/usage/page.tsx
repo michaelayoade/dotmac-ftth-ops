@@ -3,7 +3,7 @@
 export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
@@ -32,20 +32,81 @@ import {
   Upload,
   Calendar,
   TrendingUp,
+  TrendingDown,
   AlertCircle,
   Wifi,
   Loader2,
+  Activity,
 } from "lucide-react";
 import { format } from "date-fns";
 import { useCustomerUsage } from "@/hooks/useCustomerPortal";
 import { useToast } from "@dotmac/ui";
 import { platformConfig } from "@/lib/config";
+import {
+  CUSTOMER_PORTAL_TOKEN_KEY,
+  getPortalAuthToken,
+  setPortalAuthToken,
+} from "../../../../../shared/utils/operatorAuth";
 
 export default function CustomerUsagePage() {
   const [timeRange, setTimeRange] = useState("7d");
   const { usage, loading } = useCustomerUsage();
   const { toast } = useToast();
   const API_BASE = platformConfig.api.baseUrl;
+  const [usageHistory, setUsageHistory] = useState<{
+    dailyUsage: Array<{ date: string; download: number; upload: number }>;
+    hourlyUsage: Array<{ hour: string; download: number; upload: number }>;
+    highestUsageDayGb?: number;
+    highestUsageDate?: string;
+    usageTrendPercent?: number;
+    overageGb?: number;
+  } | null>(null);
+
+  useEffect(() => {
+    const fetchUsageHistory = async () => {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const urlToken = params.get("token");
+        const storedToken = getPortalAuthToken({
+          tokenKey: CUSTOMER_PORTAL_TOKEN_KEY,
+          required: false,
+        });
+        const token = urlToken || storedToken;
+        if (!token || loading) {
+          return;
+        }
+
+        const response = await fetch(
+          `${API_BASE}/api/v1/customer/usage/history?time_range=${timeRange}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+
+        if (urlToken) {
+          setPortalAuthToken(urlToken, CUSTOMER_PORTAL_TOKEN_KEY);
+        }
+
+        if (!response.ok) return;
+
+        const data = await response.json();
+        setUsageHistory({
+          dailyUsage: data.daily_usage || [],
+          hourlyUsage: data.hourly_usage || [],
+          highestUsageDayGb: data.highest_usage_day_gb,
+          highestUsageDate: data.highest_usage_date,
+          usageTrendPercent: data.usage_trend_percent,
+          overageGb: data.overage_gb,
+        });
+      } catch (error) {
+        console.error("Error fetching usage history:", error);
+      }
+    };
+
+    fetchUsageHistory();
+  }, [API_BASE, timeRange, loading]);
 
   if (loading) {
     return (
@@ -79,11 +140,9 @@ export default function CustomerUsagePage() {
   const usagePercentage =
     currentMonth.limit_gb > 0 ? (currentMonth.total_gb / currentMonth.limit_gb) * 100 : 0;
 
-  // TODO: Implement usage history API endpoint to fetch real daily/hourly usage data
-  // For now, hide the charts until real data is available to prevent misleading customers
-  const dailyUsage: Array<{ date: string; download: number; upload: number }> = [];
-  const hourlyUsage: Array<{ hour: string; download: number; upload: number }> = [];
-  const usageHistoryAvailable = false; // Set to true when API endpoint is ready
+  const dailyUsage = usageHistory?.dailyUsage || [];
+  const hourlyUsage = usageHistory?.hourlyUsage || [];
+  const usageHistoryAvailable = dailyUsage.length > 0 || hourlyUsage.length > 0;
 
   const handleDownloadReport = async () => {
     try {
@@ -107,7 +166,11 @@ export default function CustomerUsagePage() {
 
       const params = new URLSearchParams(window.location.search);
       const urlToken = params.get("token");
-      const token = urlToken || localStorage.getItem("customer_access_token");
+      const storedToken = getPortalAuthToken({
+        tokenKey: CUSTOMER_PORTAL_TOKEN_KEY,
+        required: false,
+      });
+      const token = urlToken || storedToken;
       if (!token) {
         throw new Error("Customer session expired");
       }
@@ -121,11 +184,7 @@ export default function CustomerUsagePage() {
       });
 
       if (urlToken) {
-        try {
-          localStorage.setItem("customer_access_token", urlToken);
-        } catch {
-          // ignore storage exceptions
-        }
+        setPortalAuthToken(urlToken, CUSTOMER_PORTAL_TOKEN_KEY);
       }
 
       if (!response.ok) {
@@ -223,6 +282,69 @@ export default function CustomerUsagePage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Usage Insights */}
+      {(usageHistory?.highestUsageDayGb || usageHistory?.usageTrendPercent !== undefined) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5" />
+              Usage Insights
+            </CardTitle>
+            <CardDescription>Trends and patterns in your data usage</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-4 md:grid-cols-3">
+              {usageHistory?.highestUsageDayGb && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Highest Usage Day</p>
+                  <p className="text-2xl font-bold text-blue-500">
+                    {usageHistory.highestUsageDayGb.toFixed(1)} GB
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {usageHistory.highestUsageDate
+                      ? format(new Date(usageHistory.highestUsageDate), "MMM dd, yyyy")
+                      : "N/A"}
+                  </p>
+                </div>
+              )}
+              {usageHistory?.usageTrendPercent !== undefined && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Usage Trend (7 days)</p>
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={`text-2xl font-bold ${
+                        usageHistory.usageTrendPercent > 0 ? "text-red-500" : "text-green-500"
+                      }`}
+                    >
+                      {usageHistory.usageTrendPercent > 0 ? "+" : ""}
+                      {usageHistory.usageTrendPercent.toFixed(1)}%
+                    </p>
+                    {usageHistory.usageTrendPercent > 0 ? (
+                      <TrendingUp className="h-5 w-5 text-red-500" />
+                    ) : (
+                      <TrendingDown className="h-5 w-5 text-green-500" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {usageHistory.usageTrendPercent > 0 ? "Increasing" : "Decreasing"} compared to
+                    prior week
+                  </p>
+                </div>
+              )}
+              {usageHistory?.overageGb !== undefined && usageHistory.overageGb > 0 && (
+                <div className="space-y-1">
+                  <p className="text-sm text-muted-foreground">Overage</p>
+                  <p className="text-2xl font-bold text-orange-500">
+                    {usageHistory.overageGb.toFixed(1)} GB
+                  </p>
+                  <p className="text-xs text-muted-foreground">Exceeds plan limit</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Data Cap Progress */}
       <Card>

@@ -125,7 +125,7 @@ export default function IPAMDashboardPage() {
     (ip) =>
       ip.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ip.dns_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ip.description?.toLowerCase().includes(searchTerm.toLowerCase()),
+      ip['description']?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   // Calculate statistics
@@ -469,7 +469,7 @@ export default function IPAMDashboardPage() {
                       <div className="grid gap-2">
                         <Label htmlFor="ip-status">Status</Label>
                         <Select
-                          value={newIP.status}
+                          value={newIP.status || "active"}
                           onValueChange={(value) => setNewIP({ ...newIP, status: value })}
                         >
                           <SelectTrigger>
@@ -684,7 +684,7 @@ export default function IPAMDashboardPage() {
                         <div className="grid gap-2">
                           <Label htmlFor="prefix-status">Status</Label>
                           <Select
-                            value={newPrefix.status}
+                            value={newPrefix.status || "active"}
                             onValueChange={(value) => setNewPrefix({ ...newPrefix, status: value })}
                           >
                             <SelectTrigger>
@@ -755,8 +755,7 @@ export default function IPAMDashboardPage() {
                       <div
                         key={prefix.id}
                         className={`rounded-lg border p-4 cursor-pointer transition-colors ${
-                          selectedPrefix === prefix.id
-                            ? "border-primary bg-primary/5"
+                          selectedPrefix === prefix['id']? "border-primary bg-primary/5"
                             : "hover:bg-muted/50"
                         }`}
                         onClick={() => setSelectedPrefix(prefix.id)}
@@ -883,7 +882,7 @@ export default function IPAMDashboardPage() {
                       <div className="grid gap-2">
                         <Label htmlFor="vlan-status">Status</Label>
                         <Select
-                          value={newVLAN.status}
+                          value={newVLAN.status || "active"}
                           onValueChange={(value) => setNewVLAN({ ...newVLAN, status: value })}
                         >
                           <SelectTrigger>

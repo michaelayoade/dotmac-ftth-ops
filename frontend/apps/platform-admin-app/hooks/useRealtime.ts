@@ -3,11 +3,18 @@
  *
  * Provides hooks for SSE and WebSocket connections with automatic
  * connection management, reconnection, and cleanup.
+ *
+ * NOTE: This hook intentionally does NOT use TanStack Query because:
+ * - It manages persistent connections (SSE/WebSocket) rather than REST API calls
+ * - TanStack Query is designed for HTTP request/response patterns
+ * - Connection lifecycle requires useEffect for cleanup
+ * - Real-time subscriptions don't fit the query/mutation model
  */
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { useAuth } from "./useAuth";
-import { apiClient } from "../lib/api/client";
+import { useSession } from "@dotmac/better-auth";
+import { platformConfig } from "../lib/config";
+import { logger } from "../lib/logger";
 import { SSEClient, SSEEndpoints } from "../lib/realtime/sse-client";
 import {
   WebSocketClient,
@@ -28,8 +35,16 @@ import {
   type TicketEvent,
 } from "../types/realtime";
 
-// Get API base URL from environment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+/**
+ * Get auth token from operator auth storage
+ * Reuses the same token accessor as REST/GraphQL clients
+ */
+function getAuthToken(): string | null {
+  if (typeof window === "undefined") return null;
+  // Import dynamically to avoid issues with SSR
+  const { getOperatorAccessToken } = require("../../../shared/utils/operatorAuth");
+  return getOperatorAccessToken();
+}
 
 // ============================================================================
 // SSE Hooks
@@ -44,32 +59,42 @@ export function useSSE<T extends BaseEvent>(
   handler: EventHandler<T>,
   enabled = true,
 ) {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<SSEClient | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
-
-    // Get token from auth context - using optional chaining to prevent crashes
-    const token =
-      apiClient?.defaults?.headers?.common?.["Authorization"]?.toString().replace("Bearer ", "") ||
-      "";
-
-    if (!token) {
-      setError("No authentication token available");
+    if (!enabled) {
+      logger.debug("SSE hook disabled", { endpoint, eventType });
       return;
     }
+
+    // Get token from operator auth storage (persists across reloads)
+    const token = getAuthToken();
+
+    if (!token) {
+      const errorMsg = "No authentication token available";
+      setError(errorMsg);
+      logger.error("SSE connection failed: No auth token", undefined, { endpoint, eventType });
+      return;
+    }
+
+    logger.info("Establishing SSE connection", { endpoint, eventType });
 
     // Create SSE client
     const client = new SSEClient({
       endpoint,
       token,
-      onOpen: () => setStatus(ConnectionStatus.CONNECTED),
+      onOpen: () => {
+        setStatus(ConnectionStatus.CONNECTED);
+        logger.info("SSE connection established", { endpoint, eventType });
+      },
       onError: () => {
         setStatus(ConnectionStatus.ERROR);
         setError("Connection error");
+        logger.error("SSE connection error", undefined, { endpoint, eventType });
       },
       reconnect: true,
       reconnectInterval: 3000,
@@ -85,6 +110,7 @@ export function useSSE<T extends BaseEvent>(
     setStatus(client.getStatus());
 
     return () => {
+      logger.debug("Cleaning up SSE connection", { endpoint, eventType });
       unsubscribe();
       client.close();
       clientRef.current = null;
@@ -93,9 +119,10 @@ export function useSSE<T extends BaseEvent>(
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
+      logger.info("Manually reconnecting SSE", { endpoint, eventType });
       clientRef.current.reconnect();
     }
-  }, []);
+  }, [endpoint, eventType]);
 
   return { status, error, reconnect };
 }
@@ -105,7 +132,7 @@ export function useSSE<T extends BaseEvent>(
  */
 export function useONUStatusEvents(handler: EventHandler<ONUStatusEvent>, enabled = true) {
   return useSSE(
-    `${API_BASE_URL}/api/v1/realtime/onu-status`,
+    platformConfig.api.buildUrl("/realtime/onu-status"),
     "*", // Listen to all ONU events
     handler,
     enabled,
@@ -116,28 +143,28 @@ export function useONUStatusEvents(handler: EventHandler<ONUStatusEvent>, enable
  * Hook for alerts
  */
 export function useAlertEvents(handler: EventHandler<AlertEvent>, enabled = true) {
-  return useSSE(`${API_BASE_URL}/api/v1/realtime/alerts`, "*", handler, enabled);
+  return useSSE(platformConfig.api.buildUrl("/realtime/alerts"), "*", handler, enabled);
 }
 
 /**
  * Hook for ticket events
  */
 export function useTicketEvents(handler: EventHandler<TicketEvent>, enabled = true) {
-  return useSSE(`${API_BASE_URL}/api/v1/realtime/tickets`, "*", handler, enabled);
+  return useSSE(platformConfig.api.buildUrl("/realtime/tickets"), "*", handler, enabled);
 }
 
 /**
  * Hook for subscriber events
  */
 export function useSubscriberEvents(handler: EventHandler<SubscriberEvent>, enabled = true) {
-  return useSSE(`${API_BASE_URL}/api/v1/realtime/subscribers`, "*", handler, enabled);
+  return useSSE(platformConfig.api.buildUrl("/realtime/subscribers"), "*", handler, enabled);
 }
 
 /**
  * Hook for RADIUS session events
  */
 export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
-  return useSSE(`${API_BASE_URL}/api/v1/realtime/radius-sessions`, "*", handler, enabled);
+  return useSSE(platformConfig.api.buildUrl("/realtime/radius-sessions"), "*", handler, enabled);
 }
 
 // ============================================================================
@@ -148,32 +175,46 @@ export function useRADIUSSessionEvents(handler: EventHandler<RADIUSSessionEvent>
  * Base WebSocket hook
  */
 export function useWebSocket(endpoint: string, enabled = true) {
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
   const [status, setStatus] = useState<ConnectionStatus>(ConnectionStatus.DISCONNECTED);
   const [error, setError] = useState<string | null>(null);
   const clientRef = useRef<WebSocketClient | null>(null);
 
   useEffect(() => {
-    if (!enabled) return;
-
-    const token =
-      apiClient?.defaults?.headers?.common?.["Authorization"]?.toString().replace("Bearer ", "") ||
-      "";
-
-    if (!token) {
-      setError("No authentication token available");
+    if (!enabled) {
+      logger.debug("WebSocket hook disabled", { endpoint });
       return;
     }
+
+    // Get token from operator auth storage (persists across reloads)
+    const token = getAuthToken();
+
+    if (!token) {
+      const errorMsg = "No authentication token available";
+      setError(errorMsg);
+      logger.error("WebSocket connection failed: No auth token", undefined, { endpoint });
+      return;
+    }
+
+    logger.info("Establishing WebSocket connection", { endpoint });
 
     const client = new WebSocketClient({
       endpoint,
       token,
-      onOpen: () => setStatus(ConnectionStatus.CONNECTED),
+      onOpen: () => {
+        setStatus(ConnectionStatus.CONNECTED);
+        logger.info("WebSocket connection established", { endpoint });
+      },
       onError: () => {
         setStatus(ConnectionStatus.ERROR);
         setError("Connection error");
+        logger.error("WebSocket connection error", undefined, { endpoint });
       },
-      onClose: () => setStatus(ConnectionStatus.DISCONNECTED),
+      onClose: () => {
+        setStatus(ConnectionStatus.DISCONNECTED);
+        logger.info("WebSocket connection closed", { endpoint });
+      },
       reconnect: true,
       maxReconnectAttempts: 10,
       heartbeatInterval: 30000,
@@ -185,6 +226,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
     setStatus(client.getStatus());
 
     return () => {
+      logger.debug("Cleaning up WebSocket connection", { endpoint });
       client.close();
       clientRef.current = null;
     };
@@ -193,24 +235,30 @@ export function useWebSocket(endpoint: string, enabled = true) {
   const subscribe = useCallback(
     <T extends BaseEvent>(eventType: EventType | string, handler: EventHandler<T>) => {
       if (!clientRef.current) {
+        logger.warn("Cannot subscribe: WebSocket client not initialized", { eventType, endpoint });
         return () => {};
       }
+      logger.debug("Subscribing to WebSocket event", { eventType, endpoint });
       return clientRef.current.subscribe(eventType, handler);
     },
-    [],
+    [endpoint],
   );
 
   const send = useCallback((message: any) => {
     if (clientRef.current) {
+      logger.debug("Sending WebSocket message", { endpoint });
       clientRef.current.send(message);
+    } else {
+      logger.warn("Cannot send: WebSocket client not initialized", { endpoint });
     }
-  }, []);
+  }, [endpoint]);
 
   const reconnect = useCallback(() => {
     if (clientRef.current) {
+      logger.info("Manually reconnecting WebSocket", { endpoint });
       clientRef.current.reconnect();
     }
-  }, []);
+  }, [endpoint]);
 
   return {
     status,
@@ -228,7 +276,7 @@ export function useWebSocket(endpoint: string, enabled = true) {
  */
 export function useSessionsWebSocket(handler: EventHandler<RADIUSSessionEvent>, enabled = true) {
   const { subscribe, ...rest } = useWebSocket(
-    `${API_BASE_URL}/api/v1/realtime/ws/sessions`,
+    platformConfig.api.buildUrl("/realtime/ws/sessions"),
     enabled,
   );
 
@@ -247,7 +295,7 @@ export function useSessionsWebSocket(handler: EventHandler<RADIUSSessionEvent>, 
  * Hook for job progress WebSocket with control commands
  */
 export function useJobWebSocket(jobId: string | null, enabled = true) {
-  const endpoint = jobId ? `${API_BASE_URL}/api/v1/realtime/ws/jobs/${jobId}` : "";
+  const endpoint = jobId ? platformConfig.api.buildUrl(`/realtime/ws/jobs/${jobId}`) : "";
   const { client, subscribe, ...rest } = useWebSocket(endpoint, enabled && !!jobId);
   const [jobProgress, setJobProgress] = useState<JobProgressEvent | null>(null);
   const controlRef = useRef<JobControl | null>(null);
@@ -271,16 +319,25 @@ export function useJobWebSocket(jobId: string | null, enabled = true) {
   }, [rest.isConnected, subscribe]);
 
   const cancelJob = useCallback(() => {
-    controlRef.current?.cancel();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Cancelling job", { jobId });
+      controlRef.current.cancel();
+    }
+  }, [jobId]);
 
   const pauseJob = useCallback(() => {
-    controlRef.current?.pause();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Pausing job", { jobId });
+      controlRef.current.pause();
+    }
+  }, [jobId]);
 
   const resumeJob = useCallback(() => {
-    controlRef.current?.resume();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Resuming job", { jobId });
+      controlRef.current.resume();
+    }
+  }, [jobId]);
 
   return {
     ...rest,
@@ -295,7 +352,7 @@ export function useJobWebSocket(jobId: string | null, enabled = true) {
  * Hook for campaign progress WebSocket with control commands
  */
 export function useCampaignWebSocket(campaignId: string | null, enabled = true) {
-  const endpoint = campaignId ? `${API_BASE_URL}/api/v1/realtime/ws/campaigns/${campaignId}` : "";
+  const endpoint = campaignId ? platformConfig.api.buildUrl(`/realtime/ws/campaigns/${campaignId}`) : "";
   const { client, subscribe, ...rest } = useWebSocket(endpoint, enabled && !!campaignId);
   const [campaignProgress, setCampaignProgress] = useState<any>(null);
   const controlRef = useRef<CampaignControl | null>(null);
@@ -319,16 +376,25 @@ export function useCampaignWebSocket(campaignId: string | null, enabled = true) 
   }, [rest.isConnected, subscribe]);
 
   const cancelCampaign = useCallback(() => {
-    controlRef.current?.cancel();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Cancelling campaign", { campaignId });
+      controlRef.current.cancel();
+    }
+  }, [campaignId]);
 
   const pauseCampaign = useCallback(() => {
-    controlRef.current?.pause();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Pausing campaign", { campaignId });
+      controlRef.current.pause();
+    }
+  }, [campaignId]);
 
   const resumeCampaign = useCallback(() => {
-    controlRef.current?.resume();
-  }, []);
+    if (controlRef.current) {
+      logger.info("Resuming campaign", { campaignId });
+      controlRef.current.resume();
+    }
+  }, [campaignId]);
 
   return {
     ...rest,
@@ -345,85 +411,12 @@ export function useCampaignWebSocket(campaignId: string | null, enabled = true) 
 
 /**
  * Hook for all realtime connections
+ *
+ * IMPORTANT: These hooks now re-export from RealtimeProvider context to prevent
+ * duplicate SSE connections. The RealtimeProvider manages all SSE subscriptions
+ * in a single place and these hooks consume from that shared context.
+ *
+ * If you use these hooks, ensure your component tree is wrapped with RealtimeProvider
+ * (already done in the dashboard layout).
  */
-export function useRealtimeConnections() {
-  const [onuEvents, setOnuEvents] = useState<ONUStatusEvent[]>([]);
-  const [alerts, setAlerts] = useState<AlertEvent[]>([]);
-  const [tickets, setTickets] = useState<TicketEvent[]>([]);
-  const [subscribers, setSubscribers] = useState<SubscriberEvent[]>([]);
-  const [sessions, setSessions] = useState<RADIUSSessionEvent[]>([]);
-
-  // SSE connections
-  const onuStatus = useONUStatusEvents((event) => {
-    setOnuEvents((prev) => [...prev.slice(-99), event]); // Keep last 100
-  });
-
-  const alertStatus = useAlertEvents((event) => {
-    setAlerts((prev) => [...prev.slice(-99), event]);
-  });
-
-  const ticketStatus = useTicketEvents((event) => {
-    setTickets((prev) => [...prev.slice(-99), event]);
-  });
-
-  const subscriberStatus = useSubscriberEvents((event) => {
-    setSubscribers((prev) => [...prev.slice(-99), event]);
-  });
-
-  const sessionStatus = useRADIUSSessionEvents((event) => {
-    setSessions((prev) => [...prev.slice(-99), event]);
-  });
-
-  const clearEvents = useCallback(() => {
-    setOnuEvents([]);
-    setAlerts([]);
-    setTickets([]);
-    setSubscribers([]);
-    setSessions([]);
-  }, []);
-
-  return {
-    onuEvents,
-    alerts,
-    tickets,
-    subscribers,
-    sessions,
-    clearEvents,
-    statuses: {
-      onu: onuStatus.status,
-      alerts: alertStatus.status,
-      tickets: ticketStatus.status,
-      subscribers: subscriberStatus.status,
-      sessions: sessionStatus.status,
-    },
-  };
-}
-
-/**
- * Hook for connection health monitoring
- */
-export function useRealtimeHealth() {
-  const { statuses } = useRealtimeConnections();
-
-  const allConnected = Object.values(statuses).every((status) => status === "connected");
-  const anyConnecting = Object.values(statuses).some(
-    (status) => status === "connecting" || status === "reconnecting",
-  );
-  const anyError = Object.values(statuses).some((status) => status === "error");
-
-  const overallStatus: ConnectionStatus = allConnected
-    ? ConnectionStatus.CONNECTED
-    : anyError
-      ? ConnectionStatus.ERROR
-      : anyConnecting
-        ? ConnectionStatus.CONNECTING
-        : ConnectionStatus.DISCONNECTED;
-
-  return {
-    overallStatus,
-    allConnected,
-    anyConnecting,
-    anyError,
-    statuses,
-  };
-}
+export { useRealtimeConnections, useRealtimeHealth } from "../contexts/RealtimeProvider";

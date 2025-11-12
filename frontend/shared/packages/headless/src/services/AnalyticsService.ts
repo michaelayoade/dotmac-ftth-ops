@@ -105,7 +105,7 @@ class AnalyticsService {
   constructor(config: Partial<AnalyticsConfig> = {}) {
     this.config = {
       enabled: true,
-      debug: process.env.NODE_ENV === "development",
+      debug: process.env["NODE_ENV"] === "development",
       anonymizeIp: true,
       respectDoNotTrack: true,
       sampling: {

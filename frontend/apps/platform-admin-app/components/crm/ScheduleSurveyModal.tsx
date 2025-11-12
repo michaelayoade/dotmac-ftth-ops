@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Calendar, User, FileText, Loader2, MapPin } from "lucide-react";
-import { useLeads, useSiteSurveys } from "@/hooks/useCRM";
+import { useLeads, useScheduleSurvey } from "@/hooks/useCRM";
 import type { Lead } from "@/hooks/useCRM";
 import {
   Dialog,
@@ -40,8 +40,8 @@ export function ScheduleSurveyModal({
   onSuccess,
 }: ScheduleSurveyModalProps) {
   const { toast } = useToast();
-  const { leads } = useLeads({});
-  const { scheduleSurvey } = useSiteSurveys({});
+  const { data: leads = [] } = useLeads({});
+  const scheduleSurveyMutation = useScheduleSurvey();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -92,11 +92,11 @@ export function ScheduleSurveyModal({
       const surveyData = {
         lead_id: formData.lead_id,
         scheduled_date: scheduledDateTime,
-        technician_id: formData.technician_id || undefined,
-        notes: formData.notes || undefined,
+        ...(formData.technician_id && { technician_id: formData.technician_id }),
+        ...(formData.notes && { notes: formData.notes }),
       };
 
-      const survey = await scheduleSurvey(surveyData);
+      const survey = await scheduleSurveyMutation.mutateAsync(surveyData);
 
       if (survey) {
         toast({

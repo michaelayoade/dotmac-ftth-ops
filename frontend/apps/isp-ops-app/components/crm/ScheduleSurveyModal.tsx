@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Calendar, User, FileText, Loader2, MapPin } from "lucide-react";
 import { useLeads, useSiteSurveys } from "@/hooks/useCRM";
-import type { Lead } from "@/hooks/useCRM";
+import type { Lead, SiteSurveyScheduleRequest } from "@/hooks/useCRM";
 import {
   Dialog,
   DialogContent,
@@ -89,12 +89,16 @@ export function ScheduleSurveyModal({
         `${formData.scheduled_date}T${formData.scheduled_time}`,
       ).toISOString();
 
-      const surveyData = {
+      const surveyData: SiteSurveyScheduleRequest = {
         lead_id: formData.lead_id,
         scheduled_date: scheduledDateTime,
-        technician_id: formData.technician_id || undefined,
-        notes: formData.notes || undefined,
       };
+      if (formData.technician_id) {
+        surveyData.technician_id = formData.technician_id;
+      }
+      if (formData.notes.trim()) {
+        surveyData.notes = formData.notes.trim();
+      }
 
       const survey = await scheduleSurvey(surveyData);
 

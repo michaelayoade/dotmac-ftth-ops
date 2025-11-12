@@ -141,6 +141,68 @@ connectivity_ipv6_percentage = Gauge(
     ["tenant_id"],
 )
 
+# Phase 4: IPv6 Lifecycle Metrics
+ipv6_lifecycle_state_total = Gauge(
+    "dotmac_ipv6_lifecycle_state_total",
+    "Total number of IPv6 prefixes by lifecycle state",
+    ["tenant_id", "state"],
+)
+
+ipv6_lifecycle_utilization_rate = Gauge(
+    "dotmac_ipv6_lifecycle_utilization_rate",
+    "Percentage of network profiles with active IPv6 prefixes",
+    ["tenant_id"],
+)
+
+ipv6_lifecycle_operations_total = Counter(
+    "dotmac_ipv6_lifecycle_operations_total",
+    "Total number of IPv6 lifecycle operations",
+    ["tenant_id", "operation", "status"],
+)
+
+ipv6_netbox_integration_rate = Gauge(
+    "dotmac_ipv6_netbox_integration_rate",
+    "Percentage of IPv6 prefixes tracked in NetBox",
+    ["tenant_id"],
+)
+
+ipv6_prefix_allocations_active = Gauge(
+    "dotmac_ipv6_prefix_allocations_active",
+    "Number of active IPv6 prefix allocations",
+    ["tenant_id"],
+)
+
+ipv6_prefix_allocations_pending = Gauge(
+    "dotmac_ipv6_prefix_allocations_pending",
+    "Number of pending IPv6 prefix allocations",
+    ["tenant_id"],
+)
+
+ipv6_prefix_allocations_revoked = Gauge(
+    "dotmac_ipv6_prefix_allocations_revoked",
+    "Number of revoked IPv6 prefix allocations",
+    ["tenant_id"],
+)
+
+ipv6_lifecycle_operation_duration = Histogram(
+    "dotmac_ipv6_lifecycle_operation_duration_seconds",
+    "Duration of IPv6 lifecycle operations in seconds",
+    ["tenant_id", "operation"],
+)
+
+# Phase 5: IPv4 Lifecycle Metrics
+ipv4_lifecycle_operations_total = Counter(
+    "dotmac_ipv4_lifecycle_operations_total",
+    "Total IPv4 lifecycle operations performed",
+    ["tenant_id", "operation", "status"],
+)
+
+ipv4_lifecycle_operation_duration = Histogram(
+    "dotmac_ipv4_lifecycle_operation_duration_seconds",
+    "Duration of IPv4 lifecycle operations in seconds",
+    ["tenant_id", "operation"],
+)
+
 # Performance metrics
 latency_ipv4_ms = Gauge(
     "dotmac_latency_ipv4_milliseconds",
@@ -356,6 +418,91 @@ class PrometheusExporter:
     def record_latency(tenant_id: str, ip_version: str, latency_ms: float) -> None:
         """Record a latency measurement."""
         latency_histogram.labels(tenant_id=tenant_id, ip_version=ip_version).observe(latency_ms)
+
+    # Phase 4: IPv6 Lifecycle Metrics
+    @staticmethod
+    def export_ipv6_lifecycle_metrics(lifecycle_summary: dict, tenant_id: str = "global") -> None:
+        """
+        Export IPv6 lifecycle metrics to Prometheus.
+
+        Args:
+            lifecycle_summary: Dictionary from IPv6Metrics.get_ipv6_lifecycle_summary()
+            tenant_id: Tenant identifier
+        """
+        state_counts = lifecycle_summary.get("state_counts", {})
+        utilization = lifecycle_summary.get("utilization", {})
+        netbox_integration = lifecycle_summary.get("netbox_integration", {})
+
+        # Update state counts for each lifecycle state
+        for state, count in state_counts.items():
+            ipv6_lifecycle_state_total.labels(tenant_id=tenant_id, state=state).set(count)
+
+        # Update utilization metrics
+        ipv6_lifecycle_utilization_rate.labels(tenant_id=tenant_id).set(
+            utilization.get("utilization_rate", 0.0)
+        )
+        ipv6_prefix_allocations_active.labels(tenant_id=tenant_id).set(
+            utilization.get("active_prefixes", 0)
+        )
+        ipv6_prefix_allocations_pending.labels(tenant_id=tenant_id).set(
+            state_counts.get("pending", 0)
+        )
+        ipv6_prefix_allocations_revoked.labels(tenant_id=tenant_id).set(
+            utilization.get("revoked_prefixes", 0)
+        )
+
+        # Update NetBox integration metrics
+        ipv6_netbox_integration_rate.labels(tenant_id=tenant_id).set(
+            netbox_integration.get("netbox_integration_rate", 0.0)
+        )
+
+        logger.debug(f"Exported IPv6 lifecycle metrics for tenant: {tenant_id}")
+
+    @staticmethod
+    def record_ipv6_lifecycle_operation(
+        tenant_id: str, operation: str, success: bool, duration_seconds: float | None = None
+    ) -> None:
+        """
+        Record an IPv6 lifecycle operation (allocate, activate, suspend, revoke).
+
+        Args:
+            tenant_id: Tenant identifier
+            operation: Operation type (allocate, activate, suspend, revoke)
+            success: Whether the operation succeeded
+            duration_seconds: Optional duration of the operation in seconds
+        """
+        status = "success" if success else "failed"
+        ipv6_lifecycle_operations_total.labels(
+            tenant_id=tenant_id, operation=operation, status=status
+        ).inc()
+
+        if duration_seconds is not None:
+            ipv6_lifecycle_operation_duration.labels(
+                tenant_id=tenant_id, operation=operation
+            ).observe(duration_seconds)
+
+    @staticmethod
+    def record_ipv4_lifecycle_operation(
+        tenant_id: str, operation: str, success: bool, duration_seconds: float | None = None
+    ) -> None:
+        """
+        Record an IPv4 lifecycle operation (allocate, activate, suspend, revoke, reactivate).
+
+        Args:
+            tenant_id: Tenant identifier
+            operation: Operation type (allocate, activate, suspend, reactivate, revoke)
+            success: Whether the operation succeeded
+            duration_seconds: Optional duration of the operation in seconds
+        """
+        status = "success" if success else "failed"
+        ipv4_lifecycle_operations_total.labels(
+            tenant_id=tenant_id, operation=operation, status=status
+        ).inc()
+
+        if duration_seconds is not None:
+            ipv4_lifecycle_operation_duration.labels(
+                tenant_id=tenant_id, operation=operation
+            ).observe(duration_seconds)
 
     @staticmethod
     def set_platform_info(version: str, environment: str) -> None:

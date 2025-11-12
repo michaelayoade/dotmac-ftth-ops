@@ -1,7 +1,6 @@
 """TimescaleDB Database Connection."""
 
 from collections.abc import AsyncIterator
-from typing import Optional
 
 import structlog
 from sqlalchemy.ext.asyncio import (
@@ -16,8 +15,8 @@ from dotmac.platform.settings import settings
 logger = structlog.get_logger(__name__)
 
 # Globals
-timescaledb_engine: Optional[AsyncEngine] = None
-TimeSeriesSessionLocal: Optional[async_sessionmaker[AsyncSession]] = None
+timescaledb_engine: AsyncEngine | None = None
+TimeSeriesSessionLocal: async_sessionmaker[AsyncSession] | None = None
 
 
 def init_timescaledb() -> None:

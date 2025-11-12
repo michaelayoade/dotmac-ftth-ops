@@ -48,7 +48,7 @@ export default function WireGuardPeersPage() {
   const [filters, setFilters] = useState<ListPeersParams>({
     limit: 50,
     offset: 0,
-    server_id: serverIdFromQuery || undefined,
+    server_id: serverIdFromQuery || null,
   });
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -104,7 +104,7 @@ export default function WireGuardPeersPage() {
     searchTerm
       ? peer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         peer.peer_ipv4.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (peer.customer_id ?? "").toLowerCase().includes(searchTerm.toLowerCase())
+        (peer['customer_id']?? "").toLowerCase().includes(searchTerm.toLowerCase())
       : true,
   );
 

@@ -44,6 +44,8 @@ from dotmac.platform.user_management.models import User
 from dotmac.platform.user_management.service import UserService
 
 from ..audit import ActivitySeverity, ActivityType, log_api_activity, log_user_activity
+from ..webhooks.events import get_event_bus
+from ..webhooks.models import WebhookEvent
 
 logger = structlog.get_logger(__name__)
 
@@ -482,6 +484,25 @@ async def _authenticate_and_issue_tokens(
         tenant_id=user.tenant_id,
         session=session,
     )
+
+    # Publish webhook event
+    try:
+        await get_event_bus().publish(
+            event_type=WebhookEvent.USER_LOGIN.value,
+            event_data={
+                "user_id": str(user.id),
+                "username": user.username,
+                "email": user.email,
+                "roles": user.roles or [],
+                "ip_address": request.client.host if request.client else None,
+                "user_agent": request.headers.get("user-agent"),
+                "login_at": datetime.now(UTC).isoformat(),
+            },
+            tenant_id=user.tenant_id,
+            db=session,
+        )
+    except Exception as e:
+        logger.warning("Failed to publish user.login event", error=str(e))
 
     # Set HttpOnly authentication cookies
     set_auth_cookies(response, access_token, refresh_token)
@@ -1111,6 +1132,9 @@ async def register(
         tenant_id=new_user.tenant_id,
         session=session,
     )
+
+    # Commit all database changes (user, roles, audit log)
+    await session.commit()
 
     # Send welcome email
     try:

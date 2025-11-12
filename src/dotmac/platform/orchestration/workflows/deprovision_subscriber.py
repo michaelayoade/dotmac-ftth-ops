@@ -9,8 +9,8 @@ Workflow Steps:
 3. Unconfigure CPE in GenieACS
 4. Release IP address in NetBox
 5. Delete RADIUS authentication account
-6. Archive subscriber record (soft delete)
-7. Send confirmation email
+6. Delete network profile (soft delete, preserves audit trail)
+7. Archive subscriber record (soft delete)
 
 Cleanup Order: Reverse of provisioning to ensure proper cleanup.
 """
@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 from ...billing.core.entities import ServiceEntity
 from ...genieacs.service import GenieACSService
 from ...netbox.service import NetBoxService
+from ...network.profile_service import SubscriberNetworkProfileService
 from ...radius.service import RADIUSService
 from ...subscribers.models import Subscriber
 from ...voltha.service import VOLTHAService
@@ -86,6 +87,26 @@ def get_deprovision_subscriber_workflow() -> WorkflowDefinition:
                 required=False,  # Can continue if CPE not found
             ),
             StepDefinition(
+                step_name="revoke_ipv6_lifecycle",
+                step_type="database",
+                target_system="database",
+                handler="revoke_ipv6_lifecycle_handler",
+                compensation_handler="reactivate_ipv6_lifecycle_handler",
+                max_retries=3,
+                timeout_seconds=15,
+                required=False,  # Optional Phase 4 enhancement
+            ),
+            StepDefinition(
+                step_name="revoke_ipv4_lifecycle",
+                step_type="database",
+                target_system="database",
+                handler="revoke_ipv4_lifecycle_handler",
+                compensation_handler="reactivate_ipv4_lifecycle_handler",
+                max_retries=3,
+                timeout_seconds=15,
+                required=False,  # Optional Phase 5 enhancement
+            ),
+            StepDefinition(
                 step_name="release_ip_address",
                 step_type="api",
                 target_system="netbox",
@@ -104,6 +125,16 @@ def get_deprovision_subscriber_workflow() -> WorkflowDefinition:
                 max_retries=3,
                 timeout_seconds=30,
                 required=False,  # Can continue if RADIUS account not found
+            ),
+            StepDefinition(
+                step_name="delete_network_profile",
+                step_type="database",
+                target_system="database",
+                handler="delete_network_profile_handler",
+                compensation_handler="restore_network_profile_handler",
+                max_retries=3,
+                timeout_seconds=10,
+                required=False,  # Can continue if network profile not found
             ),
             StepDefinition(
                 step_name="archive_subscriber",
@@ -400,6 +431,84 @@ async def recreate_radius_account_handler(
     pass
 
 
+async def delete_network_profile_handler(
+    input_data: dict[str, Any],
+    context: dict[str, Any],
+    db: Session,
+) -> dict[str, Any]:
+    """Delete (soft-delete) network profile to preserve audit trail."""
+    subscriber_id = context["subscriber_id"]
+
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+    if not tenant_id:
+        # Try to get tenant from subscriber
+        subscriber = db.query(Subscriber).filter(Subscriber.id == subscriber_id).first()
+        if subscriber:
+            tenant_id = subscriber.tenant_id
+
+    if not tenant_id:
+        logger.warning(
+            f"Cannot delete network profile without tenant_id for subscriber {subscriber_id}"
+        )
+        return {
+            "output_data": {"skipped": True},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
+    logger.info(f"Deleting network profile for subscriber: {subscriber_id}")
+
+    profile_service = SubscriberNetworkProfileService(db, tenant_id)
+
+    try:
+        profile = await profile_service.get_by_subscriber_id(subscriber_id)
+        if profile:
+            # Soft delete the profile (preserves audit trail)
+            await profile_service.delete_profile(subscriber_id)
+            logger.info(
+                f"Network profile deleted for subscriber {subscriber_id} "
+                f"(VLAN: {profile.service_vlan}, profile ID: {profile.id})"
+            )
+            return {
+                "output_data": {"network_profile_deleted": True},
+                "compensation_data": {
+                    "subscriber_id": subscriber_id,
+                    "tenant_id": tenant_id,
+                    "profile_id": str(profile.id),
+                },
+                "context_updates": {},
+            }
+        else:
+            logger.info(f"No network profile found for subscriber {subscriber_id}")
+            return {
+                "output_data": {"skipped": True},
+                "compensation_data": {},
+                "context_updates": {},
+            }
+    except Exception as e:
+        logger.warning(f"Failed to delete network profile (continuing anyway): {e}")
+        return {
+            "output_data": {"skipped": True, "error": str(e)},
+            "compensation_data": {},
+            "context_updates": {},
+        }
+
+
+async def restore_network_profile_handler(
+    step_data: dict[str, Any],
+    compensation_data: dict[str, Any],
+    db: Session,
+) -> None:
+    """Compensate network profile deletion (restore from soft delete)."""
+    if compensation_data.get("skipped"):
+        return
+
+    logger.info("Restoring network profile (compensation)")
+    # TODO: Implement restore from soft delete if needed
+    # For now, network profile restore requires manual intervention
+    pass
+
+
 async def archive_subscriber_handler(
     input_data: dict[str, Any],
     context: dict[str, Any],
@@ -454,6 +563,342 @@ async def restore_subscriber_handler(
         db.flush()
 
 
+async def revoke_ipv6_lifecycle_handler(
+    input_data: dict[str, Any],
+    context: dict[str, Any],
+    db: Session,
+) -> dict[str, Any]:
+    """
+    Revoke IPv6 lifecycle state during deprovisioning (Phase 4).
+
+    Transitions: ACTIVE -> REVOKING -> REVOKED
+
+    This step releases the IPv6 prefix back to NetBox and clears lifecycle state.
+    """
+    from ...network.ipv6_lifecycle_service import IPv6LifecycleService
+
+    subscriber_id = context.get("subscriber_id")
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+
+    # Check if subscriber has IPv6 prefix to revoke
+    ipv6_prefix = context.get("delegated_ipv6_prefix") or context.get("ipv6_prefix")
+
+    if not ipv6_prefix:
+        logger.info(
+            f"No IPv6 prefix found for subscriber {subscriber_id}, skipping IPv6 lifecycle revocation"
+        )
+        return {
+            "output_data": {"skipped": True, "reason": "no_ipv6_prefix"},
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+    if not subscriber_id or not tenant_id:
+        logger.warning(
+            f"Missing subscriber_id or tenant_id for IPv6 lifecycle revocation: "
+            f"subscriber_id={subscriber_id}, tenant_id={tenant_id}"
+        )
+        return {
+            "output_data": {"skipped": True, "reason": "missing_ids"},
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+    try:
+        logger.info(f"Revoking IPv6 lifecycle for subscriber {subscriber_id}: prefix={ipv6_prefix}")
+
+        service = IPv6LifecycleService(db, tenant_id)
+
+        # Revoke IPv6 prefix (ACTIVE -> REVOKING -> REVOKED)
+        result = await service.revoke_ipv6(
+            subscriber_id=subscriber_id,
+            username=context.get("radius_username"),
+            nas_ip=None,  # Could be added if NAS info is in context
+            send_disconnect=True,  # Send RADIUS disconnect during deprovisioning
+            release_to_netbox=True,  # Release prefix back to NetBox pool
+            commit=True,
+        )
+
+        logger.info(
+            f"IPv6 lifecycle revoked: subscriber={subscriber_id}, "
+            f"prefix={result.get('prefix')}, state={result.get('state')}"
+        )
+
+        return {
+            "output_data": {
+                "ipv6_lifecycle_revoked": True,
+                "ipv6_state": str(result.get("state")),
+                "ipv6_revoked_at": str(result.get("revoked_at")),
+                "prefix_released_to_netbox": True,
+            },
+            "compensation_data": {
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv6_prefix": result.get("prefix"),
+                "previous_state": str(result.get("previous_state")),
+            },
+            "context_updates": {
+                "ipv6_lifecycle_state": str(result.get("state")),
+            },
+        }
+
+    except Exception as e:
+        # Log error but don't fail deprovisioning - IPv6 lifecycle is optional
+        logger.error(
+            f"Failed to revoke IPv6 lifecycle for subscriber {subscriber_id}: {e}",
+            exc_info=True,
+            extra={
+                "event": "ipv6_lifecycle.revocation_failed",
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv6_prefix": ipv6_prefix,
+                "error": str(e),
+            },
+        )
+        return {
+            "output_data": {
+                "skipped": True,
+                "reason": "revocation_error",
+                "error": str(e),
+            },
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+
+async def reactivate_ipv6_lifecycle_handler(
+    step_data: dict[str, Any],
+    compensation_data: dict[str, Any],
+    db: Session,
+) -> None:
+    """
+    Compensate IPv6 lifecycle revocation by reactivating (Phase 4).
+
+    Transitions: REVOKED -> ACTIVE (best effort)
+    """
+    from ...network.ipv6_lifecycle_service import IPv6LifecycleService
+
+    if compensation_data.get("skipped"):
+        logger.info("Skipping IPv6 lifecycle reactivation (was not revoked)")
+        return
+
+    subscriber_id = compensation_data.get("subscriber_id")
+    tenant_id = compensation_data.get("tenant_id")
+    ipv6_prefix = compensation_data.get("ipv6_prefix")
+    previous_state = compensation_data.get("previous_state")
+
+    if not subscriber_id or not tenant_id:
+        logger.warning(
+            f"Missing data for IPv6 lifecycle reactivation: "
+            f"subscriber_id={subscriber_id}, tenant_id={tenant_id}"
+        )
+        return
+
+    try:
+        logger.info(
+            f"Attempting to reactivate IPv6 lifecycle for subscriber {subscriber_id}: "
+            f"prefix={ipv6_prefix}, previous_state={previous_state}"
+        )
+
+        IPv6LifecycleService(db, tenant_id)
+
+        # Note: This is best-effort compensation. The prefix was already released
+        # to NetBox, so we can only restore the database state, not the allocation.
+        # In a real compensation scenario, you might need to re-allocate from NetBox.
+
+        # For now, just log that compensation is needed but can't be fully done
+        logger.warning(
+            f"IPv6 lifecycle revocation cannot be fully compensated - "
+            f"prefix {ipv6_prefix} was already released to NetBox. "
+            f"Manual intervention may be required for subscriber {subscriber_id}."
+        )
+
+    except Exception as e:
+        # Log error but don't fail compensation - best effort
+        logger.error(
+            f"Failed to reactivate IPv6 lifecycle for subscriber {subscriber_id}: {e}",
+            exc_info=True,
+            extra={
+                "event": "ipv6_lifecycle.reactivation_failed",
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv6_prefix": ipv6_prefix,
+                "error": str(e),
+            },
+        )
+
+
+async def revoke_ipv4_lifecycle_handler(
+    input_data: dict[str, Any],
+    context: dict[str, Any],
+    db: Session,
+) -> dict[str, Any]:
+    """
+    Revoke IPv4 lifecycle state during deprovisioning (Phase 5).
+
+    Transitions: ACTIVE -> REVOKING -> REVOKED
+
+    This step releases the IPv4 address back to the pool and clears lifecycle state.
+    """
+    from uuid import UUID
+
+    from ...network.ipv4_lifecycle_service import IPv4LifecycleService
+
+    subscriber_id = context.get("subscriber_id")
+    tenant_id = context.get("tenant_id") or input_data.get("tenant_id")
+
+    # Check if subscriber has IPv4 address to revoke
+    ipv4_address = context.get("static_ipv4_address") or context.get("ipv4_address")
+
+    if not ipv4_address:
+        logger.info(
+            f"No static IPv4 address found for subscriber {subscriber_id}, skipping IPv4 lifecycle revocation"
+        )
+        return {
+            "output_data": {"skipped": True, "reason": "no_ipv4_address"},
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+    if not subscriber_id or not tenant_id:
+        logger.warning(
+            f"Missing subscriber_id or tenant_id for IPv4 lifecycle revocation: "
+            f"subscriber_id={subscriber_id}, tenant_id={tenant_id}"
+        )
+        return {
+            "output_data": {"skipped": True, "reason": "missing_ids"},
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+    try:
+        logger.info(
+            f"Revoking IPv4 lifecycle for subscriber {subscriber_id}: address={ipv4_address}"
+        )
+
+        service = IPv4LifecycleService(db, tenant_id)
+
+        # Convert subscriber_id to UUID
+        subscriber_uuid = UUID(subscriber_id) if isinstance(subscriber_id, str) else subscriber_id
+
+        # Revoke IPv4 address (ACTIVE -> REVOKING -> REVOKED)
+        result = await service.revoke(
+            subscriber_id=subscriber_uuid,
+            username=context.get("radius_username"),
+            nas_ip=None,  # Could be added if NAS info is in context
+            send_disconnect=True,  # Send RADIUS disconnect during deprovisioning
+            release_to_pool=True,  # Release address back to pool
+            update_netbox=True,  # Update NetBox if available
+            commit=True,
+        )
+
+        logger.info(
+            f"IPv4 lifecycle revoked: subscriber={subscriber_id}, "
+            f"address={result.address}, state={result.state}"
+        )
+
+        return {
+            "output_data": {
+                "ipv4_lifecycle_revoked": True,
+                "ipv4_state": result.state.value,
+                "ipv4_revoked_at": result.revoked_at.isoformat() if result.revoked_at else None,
+                "address_released_to_pool": True,
+            },
+            "compensation_data": {
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv4_address": ipv4_address,
+            },
+            "context_updates": {
+                "ipv4_lifecycle_state": result.state.value,
+            },
+        }
+
+    except Exception as e:
+        # Log error but don't fail deprovisioning - IPv4 lifecycle is optional
+        logger.error(
+            f"Failed to revoke IPv4 lifecycle for subscriber {subscriber_id}: {e}",
+            exc_info=True,
+            extra={
+                "event": "ipv4_lifecycle.revocation_failed",
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv4_address": ipv4_address,
+                "error": str(e),
+            },
+        )
+        return {
+            "output_data": {
+                "skipped": True,
+                "reason": "revocation_error",
+                "error": str(e),
+            },
+            "compensation_data": {"skipped": True},
+            "context_updates": {},
+        }
+
+
+async def reactivate_ipv4_lifecycle_handler(
+    step_data: dict[str, Any],
+    compensation_data: dict[str, Any],
+    db: Session,
+) -> None:
+    """
+    Compensate IPv4 lifecycle revocation by reactivating (Phase 5).
+
+    Transitions: REVOKED -> ACTIVE (best effort)
+    """
+    from ...network.ipv4_lifecycle_service import IPv4LifecycleService
+
+    if compensation_data.get("skipped"):
+        logger.info("Skipping IPv4 lifecycle reactivation (was not revoked)")
+        return
+
+    subscriber_id = compensation_data.get("subscriber_id")
+    tenant_id = compensation_data.get("tenant_id")
+    ipv4_address = compensation_data.get("ipv4_address")
+
+    if not subscriber_id or not tenant_id:
+        logger.warning(
+            f"Missing data for IPv4 lifecycle reactivation: "
+            f"subscriber_id={subscriber_id}, tenant_id={tenant_id}"
+        )
+        return
+
+    try:
+        logger.info(
+            f"Attempting to reactivate IPv4 lifecycle for subscriber {subscriber_id}: "
+            f"address={ipv4_address}"
+        )
+
+        IPv4LifecycleService(db, tenant_id)
+
+        # Note: This is best-effort compensation. The address was already released
+        # to the pool, so we can only restore the database state, not the allocation.
+        # In a real compensation scenario, you might need to re-allocate from the pool.
+
+        # For now, just log that compensation is needed but can't be fully done
+        logger.warning(
+            f"IPv4 lifecycle revocation cannot be fully compensated - "
+            f"address {ipv4_address} was already released to pool. "
+            f"Manual intervention may be required for subscriber {subscriber_id}."
+        )
+
+    except Exception as e:
+        # Log error but don't fail compensation - best effort
+        logger.error(
+            f"Failed to reactivate IPv4 lifecycle for subscriber {subscriber_id}: {e}",
+            exc_info=True,
+            extra={
+                "event": "ipv4_lifecycle.reactivation_failed",
+                "subscriber_id": subscriber_id,
+                "tenant_id": tenant_id,
+                "ipv4_address": ipv4_address,
+                "error": str(e),
+            },
+        )
+
+
 # ============================================================================
 # Handler Registry
 # ============================================================================
@@ -466,8 +911,11 @@ def register_handlers(saga: Any) -> None:
     saga.register_step_handler("suspend_billing_service_handler", suspend_billing_service_handler)
     saga.register_step_handler("deactivate_onu_handler", deactivate_onu_handler)
     saga.register_step_handler("unconfigure_cpe_handler", unconfigure_cpe_handler)
+    saga.register_step_handler("revoke_ipv6_lifecycle_handler", revoke_ipv6_lifecycle_handler)
+    saga.register_step_handler("revoke_ipv4_lifecycle_handler", revoke_ipv4_lifecycle_handler)
     saga.register_step_handler("release_ip_handler", release_ip_handler)
     saga.register_step_handler("delete_radius_account_handler", delete_radius_account_handler)
+    saga.register_step_handler("delete_network_profile_handler", delete_network_profile_handler)
     saga.register_step_handler("archive_subscriber_handler", archive_subscriber_handler)
 
     # Compensation handlers
@@ -476,9 +924,18 @@ def register_handlers(saga: Any) -> None:
     )
     saga.register_compensation_handler("reactivate_onu_handler", reactivate_onu_handler)
     saga.register_compensation_handler("reconfigure_cpe_handler", reconfigure_cpe_handler)
+    saga.register_compensation_handler(
+        "reactivate_ipv6_lifecycle_handler", reactivate_ipv6_lifecycle_handler
+    )
+    saga.register_compensation_handler(
+        "reactivate_ipv4_lifecycle_handler", reactivate_ipv4_lifecycle_handler
+    )
     saga.register_compensation_handler("reallocate_ip_handler", reallocate_ip_handler)
     saga.register_compensation_handler(
         "recreate_radius_account_handler", recreate_radius_account_handler
+    )
+    saga.register_compensation_handler(
+        "restore_network_profile_handler", restore_network_profile_handler
     )
     saga.register_compensation_handler("restore_subscriber_handler", restore_subscriber_handler)
 

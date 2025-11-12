@@ -1,0 +1,641 @@
+{
+  "dashboard": {
+    "title": "IPv4 Lifecycle Management",
+    "tags": ["ipv4", "networking", "lifecycle", "ipam"],
+    "timezone": "browser",
+    "schemaVersion": 36,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "IPv4 Address State Distribution",
+        "type": "piechart",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+        "targets": [
+          {
+            "expr": "sum by (state) (ipv4_lifecycle_state_count{tenant_id=\"$tenant\"})",
+            "legendFormat": "{{state}}",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "legend": {"displayMode": "list", "placement": "bottom"},
+          "pieType": "pie",
+          "tooltip": {"mode": "single"}
+        },
+        "description": "Distribution of IPv4 addresses across lifecycle states (pending, allocated, active, suspended, revoking, revoked, failed)"
+      },
+      {
+        "id": 2,
+        "title": "IPv4 Utilization Rate",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 12, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(ipv4_lifecycle_state_count{state=\"active\",tenant_id=\"$tenant\"}) / sum(ipv4_lifecycle_state_count{tenant_id=\"$tenant\"})) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 50, "color": "yellow"},
+                {"value": 80, "color": "green"}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "description": "Percentage of IPv4 addresses in ACTIVE state vs total addresses"
+      },
+      {
+        "id": 3,
+        "title": "IPv4 Pool Utilization",
+        "type": "gauge",
+        "gridPos": {"h": 8, "w": 6, "x": 18, "y": 0},
+        "targets": [
+          {
+            "expr": "(sum(ipv4_lifecycle_state_count{state=~\"allocated|active\",tenant_id=\"$tenant\"}) / sum(ipv4_pool_total_addresses{tenant_id=\"$tenant\"})) * 100",
+            "refId": "A"
+          }
+        ],
+        "options": {
+          "orientation": "auto",
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 70, "color": "yellow"},
+                {"value": 85, "color": "orange"},
+                {"value": 95, "color": "red"}
+              ]
+            },
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "description": "Overall pool utilization: (allocated + active) / total pool capacity"
+      },
+      {
+        "id": 4,
+        "title": "IPv4 Allocation Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"allocate\",status=\"success\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Successful Allocations/min",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"allocate\",status=\"failed\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Failed Allocations/min",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never",
+              "stacking": {"mode": "none", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "ops"
+          }
+        },
+        "description": "IPv4 address allocation rate over time (success vs failed)"
+      },
+      {
+        "id": 5,
+        "title": "IPv4 Activation Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+        "targets": [
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"activate\",status=\"success\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Successful Activations/min",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"activate\",status=\"failed\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Failed Activations/min",
+            "refId": "B"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never",
+              "stacking": {"mode": "none", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "ops"
+          }
+        },
+        "description": "IPv4 address activation rate with RADIUS CoA integration"
+      },
+      {
+        "id": 6,
+        "title": "IPv4 Suspension/Revocation Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+        "targets": [
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"suspend\",status=\"success\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Suspensions/min",
+            "refId": "A"
+          },
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"revoke\",status=\"success\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Revocations/min",
+            "refId": "B"
+          },
+          {
+            "expr": "rate(dotmac_ipv4_lifecycle_operations_total{operation=\"reactivate\",status=\"success\",tenant_id=\"$tenant\"}[5m]) * 60",
+            "legendFormat": "Reactivations/min",
+            "refId": "C"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never",
+              "stacking": {"mode": "none", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "ops"
+          }
+        },
+        "description": "IPv4 lifecycle state change operations rate"
+      },
+      {
+        "id": 7,
+        "title": "IPv4 Address Leaks (Stuck >24h)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 16},
+        "targets": [
+          {
+            "expr": "sum(ipv4_address_leak_count{tenant_id=\"$tenant\"})",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 1, "color": "orange"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "IPv4 addresses stuck in ALLOCATED state for more than 24 hours"
+      },
+      {
+        "id": 8,
+        "title": "NetBox IPAM Integration Rate",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 16},
+        "targets": [
+          {
+            "expr": "(sum(ipv4_netbox_integrated_count{tenant_id=\"$tenant\"}) / sum(ipv4_lifecycle_state_count{state=~\"allocated|active\",tenant_id=\"$tenant\"})) * 100",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 80, "color": "yellow"},
+                {"value": 95, "color": "green"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "Percentage of active IPv4 addresses synchronized with NetBox IPAM"
+      },
+      {
+        "id": 9,
+        "title": "IPv4 Allocation Duration (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(dotmac_ipv4_lifecycle_operation_duration_seconds_bucket{operation=\"allocate\",tenant_id=\"$tenant\"}[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 2, "color": "yellow"},
+                {"value": 5, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "95th percentile allocation duration (database + NetBox)"
+      },
+      {
+        "id": 10,
+        "title": "IPv4 Activation Duration (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(dotmac_ipv4_lifecycle_operation_duration_seconds_bucket{operation=\"activate\",tenant_id=\"$tenant\"}[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 3, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "95th percentile activation duration (includes RADIUS CoA latency)"
+      },
+      {
+        "id": 11,
+        "title": "IPv4 Revocation Duration (p95)",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 20},
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(dotmac_ipv4_lifecycle_operation_duration_seconds_bucket{operation=\"revoke\",tenant_id=\"$tenant\"}[5m])) by (le))",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 3, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            },
+            "color": {"mode": "thresholds"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "95th percentile revocation duration (includes RADIUS disconnect + NetBox cleanup)"
+      },
+      {
+        "id": 12,
+        "title": "Total Active IPv4 Addresses",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 20},
+        "targets": [
+          {
+            "expr": "sum(ipv4_lifecycle_state_count{state=\"active\",tenant_id=\"$tenant\"})",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "color": {"mode": "palette-classic"}
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "auto",
+          "orientation": "auto",
+          "text": {},
+          "textMode": "auto"
+        },
+        "description": "Total number of IPv4 addresses in ACTIVE state"
+      },
+      {
+        "id": 13,
+        "title": "IPv4 Lifecycle State Timeline",
+        "type": "timeseries",
+        "gridPos": {"h": 10, "w": 24, "x": 0, "y": 24},
+        "targets": [
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"pending\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Pending",
+            "refId": "A"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"allocated\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Allocated",
+            "refId": "B"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"active\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Active",
+            "refId": "C"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"suspended\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Suspended",
+            "refId": "D"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"revoking\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Revoking",
+            "refId": "E"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"revoked\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Revoked",
+            "refId": "F"
+          },
+          {
+            "expr": "ipv4_lifecycle_state_count{state=\"failed\",tenant_id=\"$tenant\"}",
+            "legendFormat": "Failed",
+            "refId": "G"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "gradientMode": "opacity",
+              "showPoints": "never",
+              "stacking": {"mode": "normal", "group": "A"}
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "short"
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        },
+        "description": "Stacked area chart showing IPv4 address distribution across all lifecycle states over time"
+      },
+      {
+        "id": 14,
+        "title": "IPv4 Operation Success Rate",
+        "type": "timeseries",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 34},
+        "targets": [
+          {
+            "expr": "(sum(rate(dotmac_ipv4_lifecycle_operations_total{status=\"success\",tenant_id=\"$tenant\"}[5m])) by (operation) / sum(rate(dotmac_ipv4_lifecycle_operations_total{tenant_id=\"$tenant\"}[5m])) by (operation)) * 100",
+            "legendFormat": "{{operation}}",
+            "refId": "A"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "barAlignment": 0,
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "gradientMode": "none",
+              "showPoints": "never"
+            },
+            "color": {"mode": "palette-classic"},
+            "unit": "percent",
+            "min": 0,
+            "max": 100
+          }
+        },
+        "options": {
+          "tooltip": {"mode": "multi"},
+          "legend": {"displayMode": "list", "placement": "bottom"}
+        },
+        "description": "Success rate percentage for each IPv4 lifecycle operation type"
+      },
+      {
+        "id": 15,
+        "title": "IPv4 Pool Health by Tenant",
+        "type": "table",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 34},
+        "targets": [
+          {
+            "expr": "sum by (tenant_id, pool_name) (ipv4_pool_total_addresses)",
+            "format": "table",
+            "instant": true,
+            "refId": "A"
+          },
+          {
+            "expr": "sum by (tenant_id, pool_name) (ipv4_lifecycle_state_count{state=~\"allocated|active\"})",
+            "format": "table",
+            "instant": true,
+            "refId": "B"
+          }
+        ],
+        "transformations": [
+          {
+            "id": "merge",
+            "options": {}
+          },
+          {
+            "id": "organize",
+            "options": {
+              "excludeByName": {"Time": true},
+              "indexByName": {},
+              "renameByName": {
+                "tenant_id": "Tenant",
+                "pool_name": "Pool",
+                "Value #A": "Total",
+                "Value #B": "Used"
+              }
+            }
+          },
+          {
+            "id": "calculateField",
+            "options": {
+              "mode": "binary",
+              "reduce": {
+                "reducer": "sum"
+              },
+              "replaceFields": false,
+              "binary": {
+                "left": "Used",
+                "operator": "/",
+                "right": "Total"
+              },
+              "alias": "Utilization %"
+            }
+          }
+        ],
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "displayName": "Utilization %",
+              "desc": true
+            }
+          ]
+        },
+        "fieldConfig": {
+          "overrides": [
+            {
+              "matcher": {"id": "byName", "options": "Utilization %"},
+              "properties": [
+                {
+                  "id": "unit",
+                  "value": "percentunit"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                },
+                {
+                  "id": "thresholds",
+                  "value": {
+                    "mode": "absolute",
+                    "steps": [
+                      {"value": 0, "color": "green"},
+                      {"value": 0.7, "color": "yellow"},
+                      {"value": 0.85, "color": "orange"},
+                      {"value": 0.95, "color": "red"}
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "description": "IPv4 pool utilization breakdown by tenant and pool"
+      }
+    ],
+    "templating": {
+      "list": [
+        {
+          "name": "tenant",
+          "type": "query",
+          "datasource": "Prometheus",
+          "query": "label_values(ipv4_lifecycle_state_count, tenant_id)",
+          "multi": false,
+          "includeAll": true,
+          "current": {"text": "All", "value": "$__all"},
+          "refresh": 1
+        }
+      ]
+    },
+    "annotations": {
+      "list": [
+        {
+          "name": "IPv4 Lifecycle Alerts",
+          "datasource": "Prometheus",
+          "expr": "ALERTS{alertname=~\"IPv4.*|IPPool.*\"}",
+          "step": "60s",
+          "tagKeys": "alertname,severity,tenant_id",
+          "textFormat": "{{alertname}}: {{summary}}",
+          "titleFormat": "Alert",
+          "iconColor": "red"
+        }
+      ]
+    },
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m", "15m", "30m", "1h"]
+    }
+  },
+  "overwrite": true
+}

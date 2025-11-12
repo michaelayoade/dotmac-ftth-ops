@@ -1,0 +1,106 @@
+/**
+ * Shared environment variable declarations for frontend apps.
+ * Keeping the list centralized lets us access process.env values
+ * without tripping noPropertyAccessFromIndexSignature.
+ */
+declare namespace NodeJS {
+  interface ProcessEnv {
+    ACCESS_TOKEN_EXPIRY?: string;
+    ADMIN_MFA_ENABLED?: string;
+    ADMIN_SSO_ENABLED?: string;
+    ANALYZE?: string;
+    AUTH_AUTO_CLEANUP?: string;
+    AUTH_CLEANUP_INTERVAL?: string;
+    AUTH_COOKIE_NAME?: string;
+    AUTH_ENCRYPT_STORAGE?: string;
+    AUTH_STORAGE_PREFIX?: string;
+    AUTH_STORAGE_TYPE?: string;
+    BACKEND_URL?: string;
+    BRUTE_FORCE_PROTECTION?: string;
+    CI?: string;
+    COOKIE_DOMAIN?: string;
+    COOKIE_MAX_AGE?: string;
+    COOKIE_SAME_SITE?: string;
+    CSRF_COOKIE_NAME?: string;
+    CSRF_ENABLED?: string;
+    CSRF_HEADER_NAME?: string;
+    CSRF_TOKEN_NAME?: string;
+    CUSTOMER_EMAIL_VERIFICATION?: string;
+    CUSTOMER_MFA_ENABLED?: string;
+    CUSTOMER_SOCIAL_LOGIN?: string;
+    DATABASE_URL?: string;
+    DOTMAC_JWT_SECRET_KEY?: string;
+    DOTMAC_REDIS_URL?: string;
+    E2E_ADMIN_PASSWORD?: string;
+    E2E_ADMIN_USERNAME?: string;
+    E2E_AUTH_TOKEN?: string;
+    E2E_BASE_URL?: string;
+    E2E_SKIP_SERVER?: string;
+    HTTPS?: string;
+    INACTIVITY_TIMEOUT?: string;
+    IP_WHITELIST?: string;
+    ISP_OPS_URL?: string;
+    JWT_AUDIENCE?: string;
+    JWT_ISSUER?: string;
+    JWT_REFRESH_SECRET?: string;
+    JWT_SECRET?: string;
+    MANAGEMENT_MFA_ENABLED?: string;
+    MANAGEMENT_SSO_ENABLED?: string;
+    MAX_CONCURRENT_SESSIONS?: string;
+    MSW_MODE?: string;
+    NEXT_PUBLIC_ADMIN_API_URL?: string;
+    NEXT_PUBLIC_API_BASE_URL?: string;
+    NEXT_PUBLIC_API_KEY?: string;
+    NEXT_PUBLIC_API_URL?: string;
+    NEXT_PUBLIC_CHAT_URL?: string;
+    NEXT_PUBLIC_ERROR_ENDPOINT?: string;
+    NEXT_PUBLIC_FAVICON?: string;
+    NEXT_PUBLIC_GOOGLE_MAPS_API_KEY?: string;
+    NEXT_PUBLIC_JWT_AUDIENCE?: string;
+    NEXT_PUBLIC_JWT_ISSUER?: string;
+    NEXT_PUBLIC_MANAGEMENT_API_URL?: string;
+    NEXT_PUBLIC_MOCK_API?: string;
+    NEXT_PUBLIC_MSW_ENABLED?: string;
+    NEXT_PUBLIC_OTEL_ENDPOINT?: string;
+    NEXT_PUBLIC_TENANT_ID?: string;
+    NEXT_PUBLIC_WEBSOCKET_URL?: string;
+    NEXT_PUBLIC_WS_URL?: string;
+    NODE_ENV?: "development" | "production" | "test";
+    PASSWORD_EXPIRY?: string;
+    PASSWORD_HISTORY?: string;
+    PASSWORD_MIN_LENGTH?: string;
+    PASSWORD_REQUIRE_LOWERCASE?: string;
+    PASSWORD_REQUIRE_NUMBERS?: string;
+    PASSWORD_REQUIRE_SPECIAL?: string;
+    PASSWORD_REQUIRE_UPPERCASE?: string;
+    PLATFORM_ADMIN_URL?: string;
+    PLAYWRIGHT_BASE_URL?: string;
+    RATE_LIMIT_BLOCK_DURATION?: string;
+    RATE_LIMIT_ENABLED?: string;
+    RATE_LIMIT_MAX_ATTEMPTS?: string;
+    RATE_LIMIT_WINDOW?: string;
+    REACT_APP_ACCENT_COLOR?: string;
+    REACT_APP_BRAND_COLOR?: string;
+    REACT_APP_BRAND_NAME?: string;
+    REACT_APP_CUSTOM_CSS?: string;
+    REACT_APP_FONT_FAMILY?: string;
+    REACT_APP_LOGO_URL?: string;
+    REACT_APP_VERSION?: string;
+    REDIS_URL?: string;
+    REFRESH_COOKIE_NAME?: string;
+    REFRESH_TOKEN_EXPIRY?: string;
+    RESELLER_MFA_ENABLED?: string;
+    RESELLER_SSO_ENABLED?: string;
+    SESSION_TIMEOUT?: string;
+    TECHNICIAN_MFA_ENABLED?: string;
+    TEST_CUSTOMER_EMAIL?: string;
+    TEST_CUSTOMER_PASSWORD?: string;
+    TEST_OPERATOR_EMAIL?: string;
+    TEST_OPERATOR_PASSWORD?: string;
+    TEST_USER_EMAIL?: string;
+    TEST_USER_PASSWORD?: string;
+    USER_AGENT_VALIDATION?: string;
+    VITE_APP_VERSION?: string;
+    npm_package_version?: string;
+  }
+}

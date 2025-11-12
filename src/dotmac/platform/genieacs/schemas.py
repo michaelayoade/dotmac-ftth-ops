@@ -429,8 +429,12 @@ class WANConfig(BaseModel):  # BaseModel resolves to Any in isolation
         None, ge=1, le=128, description="Static IPv6 prefix length"
     )
 
-    # IPv6 prefix delegation
+    # IPv6 prefix delegation (DHCPv6-PD)
     ipv6_pd_enabled: bool = Field(default=True, description="Enable IPv6 prefix delegation")
+    delegated_ipv6_prefix: str | None = Field(
+        None,
+        description="Delegated IPv6 prefix from ISP (e.g., 2001:db8:1::/56)",
+    )
 
     @field_validator("static_ipv4", "static_ipv4_gateway", "static_ipv4_netmask")
     @classmethod

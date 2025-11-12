@@ -27,14 +27,14 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
     if (partner) {
       setFormData({
         company_name: partner.company_name,
-        legal_name: partner.legal_name,
-        website: partner.website,
         primary_email: partner.primary_email,
-        billing_email: partner.billing_email,
-        phone: partner.phone,
-        tier: partner.tier,
-        commission_model: partner.commission_model,
-        default_commission_rate: partner.default_commission_rate,
+        ...(partner.legal_name && { legal_name: partner.legal_name }),
+        ...(partner.website && { website: partner.website }),
+        ...(partner.billing_email && { billing_email: partner.billing_email }),
+        ...(partner.phone && { phone: partner.phone }),
+        ...(partner.tier && { tier: partner.tier }),
+        ...(partner.commission_model && { commission_model: partner.commission_model }),
+        ...(partner.default_commission_rate !== null && partner.default_commission_rate !== undefined && { default_commission_rate: partner.default_commission_rate }),
       });
     }
   }, [partner]);
@@ -48,10 +48,10 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
           partnerId: partner.id,
           data: {
             company_name: formData.company_name,
-            tier: formData.tier,
-            default_commission_rate: formData.default_commission_rate,
-            billing_email: formData.billing_email,
-            phone: formData.phone,
+            ...(formData.tier && { tier: formData.tier }),
+            ...(formData.default_commission_rate !== undefined && { default_commission_rate: formData.default_commission_rate }),
+            ...(formData.billing_email && { billing_email: formData.billing_email }),
+            ...(formData.phone && { phone: formData.phone }),
           },
         });
       } else {
@@ -196,14 +196,15 @@ export default function CreatePartnerModal({ partner, onClose }: CreatePartnerMo
                 value={
                   formData.default_commission_rate ? formData.default_commission_rate * 100 : ""
                 }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    default_commission_rate: e.target.value
-                      ? parseFloat(e.target.value) / 100
-                      : undefined,
-                  })
-                }
+                onChange={(e) => {
+                  const newData = { ...formData };
+                  if (e.target.value) {
+                    newData.default_commission_rate = parseFloat(e.target.value) / 100;
+                  } else {
+                    delete newData.default_commission_rate;
+                  }
+                  setFormData(newData);
+                }}
                 className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-blue-500"
                 placeholder="15.00"
               />

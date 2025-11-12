@@ -104,7 +104,7 @@ export function DomainVerificationWizard({
     if (!validation.valid) {
       toast({
         title: "Invalid Domain",
-        description: validation.error,
+        ...(validation.error && { description: validation.error }),
         variant: "destructive",
       });
       return;

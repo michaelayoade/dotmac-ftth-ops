@@ -140,7 +140,6 @@ async def test_invoice(async_session: AsyncSession, tenant_id: str, customer_id:
     await async_session.flush()
     await async_session.refresh(invoice)
     # Store the invoice_id before making transient
-    invoice_id = invoice.invoice_id
     # Expunge to prevent cleanup issues with detached instances
     async_session.expunge(invoice)
     return invoice

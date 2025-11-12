@@ -70,7 +70,7 @@ export default function ProductCatalogPage() {
     const matchesSearch =
       !searchQuery ||
       product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      product['description']?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory = selectedCategory === "all" || product.category_id === selectedCategory;
 

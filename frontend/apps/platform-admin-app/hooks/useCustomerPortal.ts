@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   createPortalAuthFetch,
   CUSTOMER_PORTAL_TOKEN_KEY,
@@ -14,6 +14,13 @@ const customerPortalFetch = createPortalAuthFetch(CUSTOMER_PORTAL_TOKEN_KEY);
 
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
+
+const toMessage = (error: unknown, fallback: string) =>
+  error instanceof PortalAuthError
+    ? error.message
+    : error instanceof Error
+      ? error.message
+      : fallback;
 
 // ============================================================================
 // Types
@@ -97,83 +104,224 @@ export interface CustomerTicket {
 }
 
 // ============================================================================
+// Query Keys Factory
+// ============================================================================
+
+export const customerPortalKeys = {
+  all: ["customerPortal"] as const,
+  profile: () => [...customerPortalKeys.all, "profile"] as const,
+  service: () => [...customerPortalKeys.all, "service"] as const,
+  invoices: () => [...customerPortalKeys.all, "invoices"] as const,
+  payments: () => [...customerPortalKeys.all, "payments"] as const,
+  usage: () => [...customerPortalKeys.all, "usage"] as const,
+  tickets: () => [...customerPortalKeys.all, "tickets"] as const,
+  settings: () => [...customerPortalKeys.all, "settings"] as const,
+};
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+const customerPortalApi = {
+  fetchProfile: async (): Promise<CustomerProfile> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch profile");
+    }
+    return response.json();
+  },
+
+  updateProfile: async (updates: Partial<CustomerProfile>): Promise<CustomerProfile> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update profile");
+    }
+    return response.json();
+  },
+
+  fetchService: async (): Promise<CustomerService> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch service");
+    }
+    return response.json();
+  },
+
+  upgradePlan: async (planId: string): Promise<CustomerService> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
+      method: "POST",
+      body: JSON.stringify({ plan_id: planId }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to upgrade plan");
+    }
+    return response.json();
+  },
+
+  fetchInvoices: async (): Promise<CustomerInvoice[]> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/invoices`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch invoices");
+    }
+    return response.json();
+  },
+
+  fetchPayments: async (): Promise<CustomerPayment[]> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch payments");
+    }
+    return response.json();
+  },
+
+  makePayment: async (
+    invoiceId: string,
+    amount: number,
+    paymentMethodId: string,
+  ): Promise<CustomerPayment> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/payments`, {
+      method: "POST",
+      body: JSON.stringify({
+        invoice_id: invoiceId,
+        amount,
+        payment_method_id: paymentMethodId,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to process payment");
+    }
+    return response.json();
+  },
+
+  fetchUsage: async (): Promise<CustomerUsage> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/usage`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch usage");
+    }
+    return response.json();
+  },
+
+  fetchTickets: async (): Promise<CustomerTicket[]> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch tickets");
+    }
+    return response.json();
+  },
+
+  createTicket: async (ticketData: {
+    subject: string;
+    description: string;
+    category: string;
+    priority: string;
+  }): Promise<CustomerTicket> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/tickets`, {
+      method: "POST",
+      body: JSON.stringify(ticketData),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to create ticket");
+    }
+    return response.json();
+  },
+
+  fetchSettings: async (): Promise<any> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch settings");
+    }
+    return response.json();
+  },
+
+  updateSettings: async (updates: any): Promise<any> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/settings`, {
+      method: "PUT",
+      body: JSON.stringify(updates),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update settings");
+    }
+    return response.json();
+  },
+
+  changePassword: async (currentPassword: string, newPassword: string): Promise<any> => {
+    const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/change-password`, {
+      method: "POST",
+      body: JSON.stringify({
+        current_password: currentPassword,
+        new_password: newPassword,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to change password");
+    }
+    return response.json();
+  },
+};
+
+// ============================================================================
 // useCustomerProfile Hook
 // ============================================================================
 
 export function useCustomerProfile() {
-  const [profile, setProfile] = useState<CustomerProfile | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchProfile = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: customerPortalKeys.profile(),
+    queryFn: customerPortalApi.fetchProfile,
+    staleTime: 5 * 60 * 1000, // 5 minutes - profile data doesn't change often
+    retry: 1,
+  });
 
-      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`);
+  const updateMutation = useMutation({
+    mutationFn: customerPortalApi.updateProfile,
+    onMutate: async (updates) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: customerPortalKeys.profile() });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch profile");
+      // Snapshot previous value
+      const previousProfile = queryClient.getQueryData<CustomerProfile>(
+        customerPortalKeys.profile(),
+      );
+
+      // Optimistically update
+      if (previousProfile) {
+        queryClient.setQueryData<CustomerProfile>(customerPortalKeys.profile(), {
+          ...previousProfile,
+          ...updates,
+        });
       }
 
-      const data = await response.json();
-      setProfile(data);
-    } catch (err) {
-      const message =
-        err instanceof PortalAuthError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer profile", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      logger.info("Updating customer profile optimistically", { updates });
 
-  const updateProfile = useCallback(async (updates: Partial<CustomerProfile>) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/profile`, {
-        method: "PUT",
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update profile");
+      return { previousProfile };
+    },
+    onError: (error, variables, context) => {
+      // Roll back on error
+      if (context?.previousProfile) {
+        queryClient.setQueryData(customerPortalKeys.profile(), context.previousProfile);
       }
-
-      const data = await response.json();
-      setProfile(data);
-      return data;
-    } catch (err) {
-      const message =
-        err instanceof PortalAuthError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "An error occurred";
-      setError(message);
-      logger.error("Error updating customer profile", toError(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [fetchProfile]);
+      logger.error("Error updating customer profile", toError(error));
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(customerPortalKeys.profile(), data);
+      logger.info("Customer profile updated successfully", { data });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.profile() });
+    },
+  });
 
   return {
-    profile,
-    loading,
-    error,
-    refetch: fetchProfile,
-    updateProfile,
+    profile: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
+    updateProfile: updateMutation.mutateAsync,
+    isUpdating: updateMutation.isPending,
   };
 }
 
@@ -182,79 +330,47 @@ export function useCustomerProfile() {
 // ============================================================================
 
 export function useCustomerService() {
-  const [service, setService] = useState<CustomerService | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchService = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: customerPortalKeys.service(),
+    queryFn: customerPortalApi.fetchService,
+    staleTime: 3 * 60 * 1000, // 3 minutes - service details may change with plan upgrades
+    retry: 1,
+  });
 
-      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service`);
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch service");
+  const upgradeMutation = useMutation({
+    mutationFn: customerPortalApi.upgradePlan,
+    onMutate: async (planId) => {
+      await queryClient.cancelQueries({ queryKey: customerPortalKeys.service() });
+      const previousService = queryClient.getQueryData<CustomerService>(
+        customerPortalKeys.service(),
+      );
+      logger.info("Upgrading plan", { planId });
+      return { previousService };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousService) {
+        queryClient.setQueryData(customerPortalKeys.service(), context.previousService);
       }
-
-      const data = await response.json();
-      setService(data);
-    } catch (err) {
-      const message =
-        err instanceof PortalAuthError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer service", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const upgradePlan = useCallback(async (planId: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await customerPortalFetch(`${API_BASE}/api/v1/customer/service/upgrade`, {
-        method: "POST",
-        body: JSON.stringify({ plan_id: planId }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to upgrade plan");
-      }
-
-      const data = await response.json();
-      setService(data);
-      return data;
-    } catch (err) {
-      const message =
-        err instanceof PortalAuthError
-          ? err.message
-          : err instanceof Error
-            ? err.message
-            : "An error occurred";
-      setError(message);
-      logger.error("Error upgrading plan", toError(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchService();
-  }, [fetchService]);
+      logger.error("Error upgrading plan", toError(error));
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(customerPortalKeys.service(), data);
+      logger.info("Plan upgraded successfully", { data });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.service() });
+    },
+  });
 
   return {
-    service,
-    loading,
-    error,
-    refetch: fetchService,
-    upgradePlan,
+    service: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
+    upgradePlan: upgradeMutation.mutateAsync,
+    isUpgrading: upgradeMutation.isPending,
   };
 }
 
@@ -263,47 +379,18 @@ export function useCustomerService() {
 // ============================================================================
 
 export function useCustomerInvoices() {
-  const [invoices, setInvoices] = useState<CustomerInvoice[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchInvoices = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/invoices`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch invoices");
-      }
-
-      const data = await response.json();
-      setInvoices(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer invoices", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+  const query = useQuery({
+    queryKey: customerPortalKeys.invoices(),
+    queryFn: customerPortalApi.fetchInvoices,
+    staleTime: 2 * 60 * 1000, // 2 minutes - invoices may be updated with payments
+    retry: 1,
+  });
 
   return {
-    invoices,
-    loading,
-    error,
-    refetch: fetchInvoices,
+    invoices: query.data ?? [],
+    loading: query.isLoading,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
   };
 }
 
@@ -312,86 +399,49 @@ export function useCustomerInvoices() {
 // ============================================================================
 
 export function useCustomerPayments() {
-  const [payments, setPayments] = useState<CustomerPayment[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchPayments = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: customerPortalKeys.payments(),
+    queryFn: customerPortalApi.fetchPayments,
+    staleTime: 1 * 60 * 1000, // 1 minute - payments may change frequently
+    retry: 1,
+  });
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/payments`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch payments");
-      }
-
-      const data = await response.json();
-      setPayments(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer payments", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const makePayment = useCallback(
-    async (invoiceId: string, amount: number, paymentMethodId: string) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/payments`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            invoice_id: invoiceId,
-            amount,
-            payment_method_id: paymentMethodId,
-          }),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to process payment");
-        }
-
-        const data = await response.json();
-        await fetchPayments(); // Refresh payments list
-        return data;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-        logger.error("Error making payment", toError(err));
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+  const makePaymentMutation = useMutation({
+    mutationFn: ({
+      invoiceId,
+      amount,
+      paymentMethodId,
+    }: {
+      invoiceId: string;
+      amount: number;
+      paymentMethodId: string;
+    }) => customerPortalApi.makePayment(invoiceId, amount, paymentMethodId),
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: customerPortalKeys.payments() });
+      logger.info("Making payment");
     },
-    [fetchPayments],
-  );
-
-  useEffect(() => {
-    fetchPayments();
-  }, [fetchPayments]);
+    onError: (error) => {
+      logger.error("Error making payment", toError(error));
+    },
+    onSuccess: (data) => {
+      logger.info("Payment processed successfully", { data });
+    },
+    onSettled: () => {
+      // Invalidate both payments and invoices as they're related
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.payments() });
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.invoices() });
+    },
+  });
 
   return {
-    payments,
-    loading,
-    error,
-    refetch: fetchPayments,
-    makePayment,
+    payments: query.data ?? [],
+    loading: query.isLoading || makePaymentMutation.isPending,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
+    makePayment: makePaymentMutation.mutateAsync,
+    isProcessingPayment: makePaymentMutation.isPending,
   };
 }
 
@@ -400,47 +450,18 @@ export function useCustomerPayments() {
 // ============================================================================
 
 export function useCustomerUsage() {
-  const [usage, setUsage] = useState<CustomerUsage | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchUsage = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/usage`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch usage");
-      }
-
-      const data = await response.json();
-      setUsage(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer usage", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUsage();
-  }, [fetchUsage]);
+  const query = useQuery({
+    queryKey: customerPortalKeys.usage(),
+    queryFn: customerPortalApi.fetchUsage,
+    staleTime: 30 * 1000, // 30 seconds - usage data changes frequently
+    retry: 1,
+  });
 
   return {
-    usage,
-    loading,
-    error,
-    refetch: fetchUsage,
+    usage: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
   };
 }
 
@@ -449,87 +470,39 @@ export function useCustomerUsage() {
 // ============================================================================
 
 export function useCustomerTickets() {
-  const [tickets, setTickets] = useState<CustomerTicket[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchTickets = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: customerPortalKeys.tickets(),
+    queryFn: customerPortalApi.fetchTickets,
+    staleTime: 1 * 60 * 1000, // 1 minute - tickets may be updated frequently
+    retry: 1,
+  });
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/tickets`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch tickets");
-      }
-
-      const data = await response.json();
-      setTickets(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer tickets", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const createTicket = useCallback(
-    async (ticketData: {
-      subject: string;
-      description: string;
-      category: string;
-      priority: string;
-    }) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const token = localStorage.getItem("customer_access_token");
-        const response = await fetch(`${API_BASE}/api/v1/customer/tickets`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(ticketData),
-        });
-
-        if (!response.ok) {
-          throw new Error("Failed to create ticket");
-        }
-
-        const data = await response.json();
-        await fetchTickets(); // Refresh tickets list
-        return data;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
-        logger.error("Error creating ticket", toError(err));
-        throw err;
-      } finally {
-        setLoading(false);
-      }
+  const createTicketMutation = useMutation({
+    mutationFn: customerPortalApi.createTicket,
+    onMutate: async (ticketData) => {
+      await queryClient.cancelQueries({ queryKey: customerPortalKeys.tickets() });
+      logger.info("Creating ticket", { ticketData });
     },
-    [fetchTickets],
-  );
-
-  useEffect(() => {
-    fetchTickets();
-  }, [fetchTickets]);
+    onError: (error) => {
+      logger.error("Error creating ticket", toError(error));
+    },
+    onSuccess: (data) => {
+      logger.info("Ticket created successfully", { data });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.tickets() });
+    },
+  });
 
   return {
-    tickets,
-    loading,
-    error,
-    refetch: fetchTickets,
-    createTicket,
+    tickets: query.data ?? [],
+    loading: query.isLoading || createTicketMutation.isPending,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
+    createTicket: createTicketMutation.mutateAsync,
+    isCreatingTicket: createTicketMutation.isPending,
   };
 }
 
@@ -538,113 +511,69 @@ export function useCustomerTickets() {
 // ============================================================================
 
 export function useCustomerSettings() {
-  const [settings, setSettings] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchSettings = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const query = useQuery({
+    queryKey: customerPortalKeys.settings(),
+    queryFn: customerPortalApi.fetchSettings,
+    staleTime: 5 * 60 * 1000, // 5 minutes - settings don't change often
+    retry: 1,
+  });
 
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/settings`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+  const updateSettingsMutation = useMutation({
+    mutationFn: customerPortalApi.updateSettings,
+    onMutate: async (updates) => {
+      await queryClient.cancelQueries({ queryKey: customerPortalKeys.settings() });
+      const previousSettings = queryClient.getQueryData(customerPortalKeys.settings());
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch settings");
+      // Optimistically update
+      if (previousSettings) {
+        queryClient.setQueryData(customerPortalKeys.settings(), {
+          ...previousSettings,
+          ...updates,
+        });
       }
 
-      const data = await response.json();
-      setSettings(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error fetching customer settings", toError(err));
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const updateSettings = useCallback(async (updates: any) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/settings`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updates),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to update settings");
+      logger.info("Updating customer settings optimistically", { updates });
+      return { previousSettings };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previousSettings) {
+        queryClient.setQueryData(customerPortalKeys.settings(), context.previousSettings);
       }
+      logger.error("Error updating customer settings", toError(error));
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(customerPortalKeys.settings(), data);
+      logger.info("Customer settings updated successfully", { data });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: customerPortalKeys.settings() });
+    },
+  });
 
-      const data = await response.json();
-      setSettings(data);
-      return data;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error updating customer settings", toError(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const token = localStorage.getItem("customer_access_token");
-      const response = await fetch(`${API_BASE}/api/v1/customer/change-password`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          current_password: currentPassword,
-          new_password: newPassword,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to change password");
-      }
-
-      return await response.json();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "An error occurred";
-      setError(message);
-      logger.error("Error changing password", toError(err));
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+  const changePasswordMutation = useMutation({
+    mutationFn: ({ currentPassword, newPassword }: { currentPassword: string; newPassword: string }) =>
+      customerPortalApi.changePassword(currentPassword, newPassword),
+    onMutate: () => {
+      logger.info("Changing password");
+    },
+    onError: (error) => {
+      logger.error("Error changing password", toError(error));
+    },
+    onSuccess: (data) => {
+      logger.info("Password changed successfully", { data });
+    },
+  });
 
   return {
-    settings,
-    loading,
-    error,
-    refetch: fetchSettings,
-    updateSettings,
-    changePassword,
+    settings: query.data ?? null,
+    loading: query.isLoading,
+    error: query.error ? toMessage(query.error, "An error occurred") : null,
+    refetch: query.refetch,
+    updateSettings: updateSettingsMutation.mutateAsync,
+    changePassword: changePasswordMutation.mutateAsync,
+    isUpdatingSettings: updateSettingsMutation.isPending,
+    isChangingPassword: changePasswordMutation.isPending,
   };
 }

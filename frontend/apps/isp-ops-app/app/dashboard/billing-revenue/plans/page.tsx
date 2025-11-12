@@ -106,7 +106,6 @@ export default function PlansPage() {
   } = useBillingPlansGraphQL(
     {
       pageSize: 100, // Get all plans
-      isActive: undefined, // Show both active and inactive
     },
     true,
   );
@@ -149,7 +148,7 @@ export default function PlansPage() {
     currency: plan.currency,
     status: plan.isActive ? "active" : ("inactive" as "active" | "inactive" | "archived"),
     tier:
-      (plan.name?.toLowerCase() as "starter" | "professional" | "enterprise" | "custom") ||
+      (plan['name']?.toLowerCase() as "starter" | "professional" | "enterprise" | "custom") ||
       "custom",
     features: [],
     popular: false,

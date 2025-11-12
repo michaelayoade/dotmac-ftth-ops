@@ -101,6 +101,18 @@ class ReferralStatus(str, Enum):
     INVALID = "invalid"  # Invalid/duplicate lead
 
 
+class PartnerTenantAccessRole(str, Enum):
+    """Access roles for partner-tenant relationships."""
+
+    MSP_FULL = "msp_full"  # Full MSP access (billing, support, provisioning)
+    MSP_BILLING = "msp_billing"  # Billing and revenue only
+    MSP_SUPPORT = "msp_support"  # Support/ticketing only
+    ENTERPRISE_HQ = "enterprise_hq"  # Enterprise HQ full access
+    AUDITOR = "auditor"  # Read-only audit access
+    RESELLER = "reseller"  # Reseller with limited provisioning
+    DELEGATE = "delegate"  # Custom delegate role
+
+
 class Partner(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin):  # type: ignore[misc]
     """
     Core partner model for SaaS vendors, agencies, and resellers.
@@ -732,3 +744,168 @@ class ReferralLead(Base, TimestampMixin, TenantMixin, SoftDeleteMixin):  # type:
         Index("ix_referral_dates", "submitted_date", "conversion_date"),
         Index("ix_referral_email", "contact_email"),
     )
+
+
+class PartnerTenantLink(Base, TimestampMixin, AuditMixin):  # type: ignore[misc]
+    """
+    Join table linking partners to managed tenant accounts.
+
+    Enables MSPs and enterprise HQs to manage multiple ISP tenants
+    with scoped permissions.
+    """
+
+    __tablename__ = "partner_tenant_links"
+
+    id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid4,
+        nullable=False,
+    )
+
+    # The partner organization (MSP/enterprise HQ)
+    partner_id: Mapped[UUID] = mapped_column(
+        PostgresUUID(as_uuid=True),
+        ForeignKey("partners.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="Partner organization managing the tenant",
+    )
+
+    # The managed tenant (ISP operator)
+    managed_tenant_id: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="Tenant being managed by the partner",
+    )
+
+    # Foreign key to owning tenant (the partner's tenant)
+    partner_tenant_id: Mapped[str] = mapped_column(
+        String(255),
+        ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+        comment="The partner's own tenant (not the managed tenant)",
+    )
+
+    # Access role and permissions
+    access_role: Mapped[PartnerTenantAccessRole] = mapped_column(
+        SQLEnum(PartnerTenantAccessRole),
+        nullable=False,
+        index=True,
+        comment="Defines scope of partner access to tenant",
+    )
+
+    # Custom permissions override (JSON)
+    custom_permissions: Mapped[dict[str, bool]] = mapped_column(
+        JSON,
+        default=dict,
+        nullable=False,
+        comment="Custom permission overrides for granular control",
+    )
+
+    # Relationship metadata
+    relationship_type: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        comment="Type: msp_managed, enterprise_subsidiary, reseller_channel, audit_only",
+    )
+
+    # Engagement dates
+    start_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(UTC),
+        nullable=False,
+    )
+
+    end_date: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="NULL = ongoing relationship",
+    )
+
+    # Status
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+        index=True,
+    )
+
+    # Notifications configuration
+    notify_on_sla_breach: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+
+    notify_on_billing_threshold: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
+    )
+
+    billing_alert_threshold: Mapped[Decimal | None] = mapped_column(
+        Numeric(15, 2),
+        nullable=True,
+        comment="Alert when AR exceeds this amount",
+    )
+
+    # Service Level Agreement
+    sla_response_hours: Mapped[int | None] = mapped_column(
+        nullable=True,
+        comment="Partner's committed response time for this tenant",
+    )
+
+    sla_uptime_target: Mapped[Decimal | None] = mapped_column(
+        Numeric(5, 2),
+        nullable=True,
+        comment="Partner's uptime commitment (e.g., 99.95)",
+    )
+
+    # Metadata
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    metadata_: Mapped[dict[str, Any]] = mapped_column(
+        "metadata",
+        JSON,
+        default=dict,
+        nullable=False,
+    )
+
+    # Relationships
+    partner: Mapped["Partner"] = relationship(
+        "Partner",
+        foreign_keys=[partner_id],
+        backref="managed_tenant_links",
+    )
+
+    # Table constraints
+    __table_args__ = (
+        UniqueConstraint(
+            "partner_id",
+            "managed_tenant_id",
+            name="uq_partner_managed_tenant",
+        ),
+        Index("ix_partner_tenant_active", "partner_id", "is_active"),
+        Index("ix_managed_tenant_active", "managed_tenant_id", "is_active"),
+        Index("ix_partner_tenant_role", "partner_id", "access_role"),
+        Index("ix_partner_tenant_dates", "start_date", "end_date"),
+    )
+
+    @property
+    def is_expired(self) -> bool:
+        """Check if the link has expired."""
+        if not self.end_date:
+            return False
+        # Handle both timezone-aware and naive datetimes (SQLite returns naive)
+        end_date = (
+            self.end_date.replace(tzinfo=UTC) if self.end_date.tzinfo is None else self.end_date
+        )
+        return datetime.now(UTC) > end_date
+
+    @property
+    def is_valid(self) -> bool:
+        """Check if link is active and not expired."""
+        return self.is_active and not self.is_expired

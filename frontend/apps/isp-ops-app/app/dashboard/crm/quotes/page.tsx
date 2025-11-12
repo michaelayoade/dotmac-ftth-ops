@@ -373,7 +373,7 @@ export default function QuotesPage() {
   const bulkActions: BulkAction<Quote>[] = [
     {
       label: "Send Quotes",
-      icon: Send,
+      icon: ({ className }) => <Send className={className} />,
       action: async (selectedQuotes) => {
         const draftQuotes = selectedQuotes.filter((q) => q.status === "draft");
         if (draftQuotes.length === 0) {
@@ -402,7 +402,7 @@ export default function QuotesPage() {
     },
     {
       label: "Delete Quotes",
-      icon: Trash2,
+      icon: ({ className }) => <Trash2 className={className} />,
       variant: "destructive",
       action: async (selectedQuotes) => {
         const confirmed = await confirmDialog({
@@ -619,7 +619,6 @@ export default function QuotesPage() {
           setIsCreateModalOpen(false);
           setSelectedQuote(null);
         }}
-        onCreate={createQuote}
         onSuccess={() => refetch()}
         quote={selectedQuote}
       />

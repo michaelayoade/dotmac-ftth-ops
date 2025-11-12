@@ -14,8 +14,9 @@ For simple retry logic, use tenacity directly:
 
 import asyncio
 import time
+from collections.abc import Callable
 from enum import Enum
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 import structlog
 from redis.exceptions import RedisError
@@ -133,7 +134,7 @@ class CircuitBreaker:
             await self._on_success()
             return result
 
-        except (RedisError, Exception) as e:
+        except (RedisError, Exception):
             await self._on_failure()
             raise
 

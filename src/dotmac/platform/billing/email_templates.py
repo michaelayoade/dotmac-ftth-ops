@@ -7,6 +7,8 @@ All templates support HTML and plain text versions.
 
 from typing import Any
 
+from dotmac.platform.settings import settings
+
 # Email template registry
 EMAIL_TEMPLATES = {
     # Subscription Events
@@ -398,7 +400,7 @@ def build_subscription_created_context(subscription: Any, tenant: Any) -> dict[s
             if subscription.trial_end
             else ""
         ),
-        "dashboard_url": "https://app.example.com/tenant/billing/subscription",
+        "dashboard_url": settings.urls.customer_billing_dashboard_url,
     }
 
 
@@ -409,5 +411,5 @@ def build_payment_failed_context(payment: Any, subscription: Any) -> dict[str, A
         "payment_method": f"••••{payment.payment_method_last4}",
         "failure_reason": payment.error_message or "Payment declined",
         "retry_date": "within 3 days",
-        "update_payment_url": "https://app.example.com/tenant/billing/payment-methods",
+        "update_payment_url": settings.urls.payment_method_update_url,
     }

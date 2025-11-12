@@ -300,56 +300,6 @@ module.exports = {
             data: {
               componentName: name,
             },
-            suggest: [
-              {
-                desc: "Add @registerComponent decorator",
-                fix(fixer) {
-                  const sourceCode = context.getSourceCode();
-                  const imports = sourceCode.ast.body.find(
-                    (n) => n.type === "ImportDeclaration" && n.source.value === "@dotmac/registry",
-                  );
-
-                  const fixes = [];
-
-                  // Add import if missing
-                  if (!imports) {
-                    const firstImport = sourceCode.ast.body.find(
-                      (n) => n.type === "ImportDeclaration",
-                    );
-                    const insertAfter = firstImport || sourceCode.ast.body[0];
-
-                    fixes.push(
-                      fixer.insertTextAfter(
-                        insertAfter,
-                        "\nimport { registerComponent } from '@dotmac/registry';",
-                      ),
-                    );
-                  } else {
-                    // Check if registerComponent is already imported
-                    const hasRegisterComponent = imports.specifiers.some(
-                      (spec) => spec.imported && spec.imported.name === "registerComponent",
-                    );
-
-                    if (!hasRegisterComponent) {
-                      // Add to existing import
-                      const lastSpecifier = imports.specifiers[imports.specifiers.length - 1];
-                      fixes.push(fixer.insertTextAfter(lastSpecifier, ", registerComponent"));
-                    }
-                  }
-
-                  // Add decorator with inferred metadata
-                  const metadata = inferMetadata();
-                  fixes.push(
-                    fixer.insertTextBefore(
-                      node,
-                      `@registerComponent({\n  name: '${name}',\n  category: '${metadata.category}',\n  portal: '${metadata.portal}',\n  version: '1.0.0'\n})\n`,
-                    ),
-                  );
-
-                  return fixes;
-                },
-              },
-            ],
           });
         });
       },

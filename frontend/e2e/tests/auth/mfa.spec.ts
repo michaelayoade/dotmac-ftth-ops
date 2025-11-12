@@ -6,13 +6,15 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("Multi-Factor Authentication", () => {
-  const BASE_APP_URL = "http://localhost:3000";
-  const TEST_USERNAME = "admin";
-  const TEST_PASSWORD = "admin123";
+  const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+  const TEST_USERNAME = process.env.E2E_USER_USERNAME || "admin";
+  const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || "admin123";
+  const BOOT_TIMEOUT = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+  const SELECTOR_TIMEOUT = parseInt(process.env.E2E_SELECTOR_TIMEOUT || "15000", 10);
 
   test.beforeEach(async ({ page }) => {
-    await page.goto(`${BASE_APP_URL}/login`);
-    await page.waitForLoadState("networkidle");
+    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load", timeout: BOOT_TIMEOUT });
+    await page.waitForLoadState("domcontentloaded");
   });
 
   test("should redirect to MFA verification if enabled for user", async ({ page }) => {
@@ -24,7 +26,7 @@ test.describe("Multi-Factor Authentication", () => {
     // If MFA is enabled, should redirect to MFA verification page
     const currentUrl = page.url();
     if (currentUrl.includes("/mfa/verify") || currentUrl.includes("/verify-mfa")) {
-      await expect(page).toHaveURL(/mfa|verify/);
+      await expect(page).toHaveURL(/mfa|verify/, { timeout: BOOT_TIMEOUT });
 
       // Should show MFA code input
       const mfaInput = page
@@ -32,10 +34,10 @@ test.describe("Multi-Factor Authentication", () => {
           '[data-testid="mfa-code-input"], input[type="text"][name="code"], input[placeholder*="code"]',
         )
         .first();
-      await expect(mfaInput).toBeVisible();
+      await expect(mfaInput).toBeVisible({ timeout: SELECTOR_TIMEOUT });
     } else {
       // MFA not enabled, should go to dashboard
-      await expect(page).toHaveURL(/dashboard/);
+      await expect(page).toHaveURL(/dashboard/, { timeout: BOOT_TIMEOUT });
     }
   });
 
@@ -45,7 +47,7 @@ test.describe("Multi-Factor Authentication", () => {
     await page.getByTestId("password-input").fill(TEST_PASSWORD);
     await page.getByTestId("submit-button").click();
 
-    await page.waitForURL(/dashboard/, { timeout: 10000 });
+    await page.waitForURL(/dashboard/, { timeout: BOOT_TIMEOUT });
 
     // Navigate to security settings
     await page.goto(`${BASE_APP_URL}/dashboard/settings/security`);
@@ -57,14 +59,14 @@ test.describe("Multi-Factor Authentication", () => {
       )
       .first();
 
-    if (await mfaSection.isVisible({ timeout: 2000 }).catch(() => false)) {
-      await expect(mfaSection).toBeVisible();
+    if (await mfaSection.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
+      await expect(mfaSection).toBeVisible({ timeout: SELECTOR_TIMEOUT });
 
       // Should have enable/disable toggle
       const mfaToggle = page
         .locator('[data-testid="mfa-toggle"], button:has-text("Enable"), button:has-text("Setup")')
         .first();
-      await expect(mfaToggle).toBeVisible();
+      await expect(mfaToggle).toBeVisible({ timeout: SELECTOR_TIMEOUT });
     }
   });
 
@@ -74,7 +76,7 @@ test.describe("Multi-Factor Authentication", () => {
 
     const mfaInput = page.locator('[data-testid="mfa-code-input"], input[name="code"]').first();
 
-    if (await mfaInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await mfaInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       // Test invalid formats
       await mfaInput.fill("123"); // Too short
       await mfaInput.blur();
@@ -83,14 +85,14 @@ test.describe("Multi-Factor Authentication", () => {
       const errorMessage = page
         .locator('[data-testid="mfa-error"], .error-message, .field-error')
         .first();
-      if (await errorMessage.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await expect(errorMessage).toBeVisible();
+      if (await errorMessage.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
+        await expect(errorMessage).toBeVisible({ timeout: SELECTOR_TIMEOUT });
       }
 
       // Test valid format
       await mfaInput.fill("123456"); // 6 digits
       // Validation error should clear
-      await expect(errorMessage).not.toBeVisible();
+      await expect(errorMessage).not.toBeVisible({ timeout: SELECTOR_TIMEOUT });
     }
   });
 
@@ -102,14 +104,14 @@ test.describe("Multi-Factor Authentication", () => {
       .locator('[data-testid="use-backup-code"], a:has-text("backup"), button:has-text("backup")')
       .first();
 
-    if (await backupCodeLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await backupCodeLink.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       await backupCodeLink.click();
 
       // Should show backup code input
       const backupInput = page
         .locator('[data-testid="backup-code-input"], input[name="backup_code"]')
         .first();
-      await expect(backupInput).toBeVisible();
+      await expect(backupInput).toBeVisible({ timeout: SELECTOR_TIMEOUT });
     }
   });
 
@@ -121,7 +123,7 @@ test.describe("Multi-Factor Authentication", () => {
       .locator('[data-testid="verify-button"], button[type="submit"]')
       .first();
 
-    if (await mfaInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await mfaInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       // Make multiple failed attempts
       for (let i = 0; i < 5; i++) {
         await mfaInput.fill("000000");
@@ -131,15 +133,15 @@ test.describe("Multi-Factor Authentication", () => {
 
       // Should show rate limit message
       const rateLimitMessage = page.locator("text=/too many|rate limit|try again/i").first();
-      if (await rateLimitMessage.isVisible({ timeout: 1000 }).catch(() => false)) {
-        await expect(rateLimitMessage).toBeVisible();
+      if (await rateLimitMessage.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
+        await expect(rateLimitMessage).toBeVisible({ timeout: SELECTOR_TIMEOUT });
       }
     }
   });
 
   test("MFA implementation status check", async ({ page }) => {
     // This test documents current MFA implementation status
-    await page.goto(`${BASE_APP_URL}/login`);
+    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load", timeout: BOOT_TIMEOUT });
 
     // Check if MFA routes exist by trying to access them
     const mfaRoutes = ["/verify-mfa", "/mfa/verify", "/mfa/setup", "/dashboard/settings/security"];
@@ -147,12 +149,12 @@ test.describe("Multi-Factor Authentication", () => {
     const results: { route: string; exists: boolean }[] = [];
 
     for (const route of mfaRoutes) {
-      await page.goto(`${BASE_APP_URL}${route}`);
-      await page.waitForLoadState("networkidle");
+      await page.goto(`${BASE_APP_URL}${route}`, { waitUntil: "load", timeout: BOOT_TIMEOUT });
+      await page.waitForLoadState("domcontentloaded");
 
       const is404 = await page
         .locator("text=/404|not found/i")
-        .isVisible({ timeout: 1000 })
+        .isVisible({ timeout: SELECTOR_TIMEOUT })
         .catch(() => false);
       const isLogin = page.url().includes("/login");
 

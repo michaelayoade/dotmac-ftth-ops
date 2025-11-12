@@ -15,12 +15,12 @@ class NotificationChannelPlugin(Protocol):
 
     plugin_id: str
     channel: NotificationChannel
-    provider_class: type["NotificationChannelProvider"]
+    provider_class: type[NotificationChannelProvider]
 
     def build_config(self) -> dict[str, Any]:
         """Return provider configuration derived from settings/environment."""
 
-    def create_provider(self, config: dict[str, Any]) -> "NotificationChannelProvider":
+    def create_provider(self, config: dict[str, Any]) -> NotificationChannelProvider:
         """Instantiate and return a NotificationChannelProvider."""
 
 

@@ -11,7 +11,7 @@ import threading
 import time
 from collections.abc import Callable
 from hashlib import sha256
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 import redis.asyncio as redis
 import structlog

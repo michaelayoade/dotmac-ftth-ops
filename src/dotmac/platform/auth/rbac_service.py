@@ -2,7 +2,10 @@
 RBAC Service Layer - Handles role and permission management
 """
 
+from __future__ import annotations
+
 import logging
+from collections.abc import Iterable, Iterator
 from datetime import datetime, timezone
 from typing import Any
 from uuid import UUID
@@ -37,6 +40,69 @@ except AttributeError:  # pragma: no cover - older Python versions
 logger = logging.getLogger(__name__)
 
 
+class PermissionSnapshot(Iterable[str]):
+    """
+    Container for a user's effective permissions, including explicit denies.
+    """
+
+    __slots__ = ("allows", "denies")
+
+    def __init__(
+        self,
+        allows: set[str] | None = None,
+        denies: set[str] | None = None,
+    ) -> None:
+        self.allows: set[str] = set(allows or [])
+        self.denies: set[str] = set(denies or [])
+        self._prune_conflicting_allows()
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self.allows)
+
+    def __len__(self) -> int:
+        return len(self.allows)
+
+    def __contains__(self, item: object) -> bool:
+        return item in self.allows
+
+    def _prune_conflicting_allows(self) -> None:
+        """Remove allow-listed permissions that are explicitly denied."""
+        to_remove = {perm for perm in self.allows if self.is_denied(perm)}
+        if to_remove:
+            self.allows.difference_update(to_remove)
+
+    def allows_permission(self, permission: str) -> bool:
+        return self._matches(self.allows, permission)
+
+    def is_denied(self, permission: str) -> bool:
+        return self._matches(self.denies, permission)
+
+    def to_cache_payload(self) -> dict[str, list[str]]:
+        return {"allows": list(self.allows), "denies": list(self.denies)}
+
+    @classmethod
+    def from_cache_payload(cls, payload: Any) -> PermissionSnapshot | None:
+        if isinstance(payload, dict):
+            return cls(set(payload.get("allows", [])), set(payload.get("denies", [])))
+        if isinstance(payload, list):
+            # Backwards compatibility with older cache entries that only stored allows.
+            return cls(set(payload), set())
+        return None
+
+    def _matches(self, bucket: set[str], permission: str) -> bool:
+        if permission in bucket or "*" in bucket:
+            return True
+
+        for entry in bucket:
+            if not entry.endswith(".*"):
+                continue
+            prefix = entry[:-2]
+            if permission == prefix or permission.startswith(f"{prefix}."):
+                return True
+
+        return False
+
+
 class RBACService:
     """Service for managing roles and permissions"""
 
@@ -55,7 +121,7 @@ class RBACService:
 
     async def get_user_permissions(
         self, user_id: UUID | str, include_expired: bool = False
-    ) -> set[str]:
+    ) -> PermissionSnapshot:
         """Get all permissions for a user (from roles and direct grants)"""
         # Convert string to UUID if needed
         if isinstance(user_id, str):
@@ -66,10 +132,12 @@ class RBACService:
 
         # Check cache first
         cached = cache_get(cache_key)
-        if isinstance(cached, list):
-            return {str(permission) for permission in cached}
+        snapshot = PermissionSnapshot.from_cache_payload(cached)
+        if snapshot is not None:
+            return snapshot
 
         permissions: set[str] = set()
+        denied_permissions: set[str] = set()
         now = datetime.now(UTC)
 
         # Get permissions from roles
@@ -109,17 +177,20 @@ class RBACService:
         for perm_name, granted in direct_perms.all():
             if granted:
                 permissions.add(perm_name)
+                denied_permissions.discard(perm_name)
             else:
                 permissions.discard(perm_name)  # Revoke permission
+                denied_permissions.add(perm_name)
 
-        # Include inherited permissions
-        permissions = await self._expand_permissions(permissions)
+        permissions = await self._include_parent_permissions(permissions)
+
+        snapshot = PermissionSnapshot(permissions, denied_permissions)
 
         # Cache for 5 minutes
-        cache_set(cache_key, list(permissions), ttl=300)
+        cache_set(cache_key, snapshot.to_cache_payload(), ttl=300)
 
-        logger.info(f"Loaded {len(permissions)} permissions for user {user_id}")
-        return permissions
+        logger.info(f"Loaded {len(snapshot)} permissions for user {user_id}")
+        return snapshot
 
     async def user_has_permission(
         self, user_id: UUID | str, permission: str, is_platform_admin: bool = False
@@ -168,26 +239,15 @@ class RBACService:
         return all(self._permission_matches(user_perms, perm) for perm in permissions)
 
     @staticmethod
-    def _permission_matches(user_perms: set[str], permission: str) -> bool:
+    def _permission_matches(snapshot: PermissionSnapshot, permission: str) -> bool:
         """Evaluate whether a permission is satisfied by a user's permission set."""
-        if not user_perms:
+        if not snapshot:
             return False
 
-        # Super-admin style overrides
-        if "*" in user_perms or "platform:admin" in user_perms:
-            return True
+        if snapshot.is_denied(permission):
+            return False
 
-        if permission in user_perms:
-            return True
-
-        # Wildcard matching (e.g., "ticket.*" covers "ticket.read")
-        for user_perm in user_perms:
-            if user_perm.endswith(".*"):
-                prefix = user_perm[:-2]
-                if permission.startswith(f"{prefix}."):
-                    return True
-
-        return False
+        return snapshot.allows_permission(permission)
 
     # ==================== Role Management ====================
 
@@ -605,26 +665,16 @@ class RBACService:
 
         return permission
 
-    async def _expand_permissions(self, permissions: set[str]) -> set[str]:
-        """Expand permissions to include inherited ones"""
+    async def _include_parent_permissions(self, permissions: set[str]) -> set[str]:
+        """Add parent permissions defined via the permission hierarchy."""
         expanded = set(permissions)
 
-        # Add parent permissions
         for perm_name in list(permissions):
             permission_record = await self._get_permission_by_name(perm_name)
             if permission_record and permission_record.parent_id:
                 parent = await self.db.get(Permission, permission_record.parent_id)
                 if parent:
                     expanded.add(parent.name)
-
-        # Add wildcard expansions
-        # e.g., "ticket.read.all" implies "ticket.read.assigned" and "ticket.read.own"
-        for permission_name in list(expanded):
-            parts = permission_name.split(".")
-            if len(parts) > 1:
-                # Add broader permissions
-                for i in range(1, len(parts)):
-                    expanded.add(".".join(parts[:i]) + ".*")
 
         return expanded
 

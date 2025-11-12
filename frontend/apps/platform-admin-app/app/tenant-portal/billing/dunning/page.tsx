@@ -18,6 +18,7 @@ import {
   TrendingUp,
   XCircle,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   EnhancedDataTable,
   type ColumnDef,
@@ -37,6 +38,16 @@ import {
   type DunningCampaign,
   type DunningExecution,
 } from "@/hooks/useDunning";
+
+const createBulkIcon = (Icon: LucideIcon) => {
+  const Wrapped = ({ className }: { className?: string }) => <Icon className={className} />;
+  Wrapped.displayName = `BulkIcon(${Icon.displayName ?? Icon.name ?? "Icon"})`;
+  return Wrapped;
+};
+
+const PauseIcon = createBulkIcon(PauseCircle);
+const PlayIcon = createBulkIcon(PlayCircle);
+const CancelIcon = createBulkIcon(XCircle);
 
 export default function DunningDashboardPage() {
   const { hasPermission } = useRBAC();
@@ -258,7 +269,7 @@ export default function DunningDashboardPage() {
     () => [
       {
         label: "Pause Campaigns",
-        icon: PauseCircle,
+        icon: PauseIcon,
         action: async (selected) => {
           for (const campaign of selected) {
             await pauseCampaign(campaign.id);
@@ -269,7 +280,7 @@ export default function DunningDashboardPage() {
       },
       {
         label: "Resume Campaigns",
-        icon: PlayCircle,
+        icon: PlayIcon,
         action: async (selected) => {
           for (const campaign of selected) {
             await resumeCampaign(campaign.id);
@@ -287,7 +298,7 @@ export default function DunningDashboardPage() {
     () => [
       {
         label: "Cancel Executions",
-        icon: XCircle,
+        icon: CancelIcon,
         action: async (selected) => {
           const reason = prompt("Enter cancellation reason:");
           if (!reason) return;

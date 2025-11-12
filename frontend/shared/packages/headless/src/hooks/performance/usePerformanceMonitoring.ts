@@ -15,7 +15,7 @@ const defaultConfig: PerformanceObserverConfig = {
   enableNavigationTiming: true,
   enableCustomMetrics: true,
   reportingInterval: 30000, // 30 seconds
-  enableConsoleLogging: process.env.NODE_ENV === "development",
+  enableConsoleLogging: process.env["NODE_ENV"] === "development",
 };
 
 export function usePerformanceMonitoring(config: PerformanceObserverConfig = {}) {

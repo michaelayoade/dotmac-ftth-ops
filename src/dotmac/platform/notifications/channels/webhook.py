@@ -165,7 +165,7 @@ class WebhookChannelProvider(NotificationChannelProvider):
 
     def _format_standard(self, context: NotificationContext) -> dict[str, Any]:
         """Standard webhook payload format."""
-        return {
+        payload = {
             "notification_id": str(context.notification_id),
             "tenant_id": context.tenant_id,
             "user_id": str(context.user_id),
@@ -180,6 +180,13 @@ class WebhookChannelProvider(NotificationChannelProvider):
             "metadata": context.metadata,
             "created_at": context.created_at.isoformat() if context.created_at else None,
         }
+        if context.product_name:
+            payload["product_name"] = context.product_name
+        if context.support_email:
+            payload["support_email"] = context.support_email
+        if context.branding:
+            payload["branding"] = context.branding
+        return payload
 
     def _format_slack(self, context: NotificationContext) -> dict[str, Any]:
         """
@@ -194,6 +201,12 @@ class WebhookChannelProvider(NotificationChannelProvider):
             NotificationPriority.HIGH: "#fd7e14",
             NotificationPriority.URGENT: "#dc3545",
         }
+
+        brand_line = []
+        if context.product_name:
+            brand_line.append(context.product_name)
+        if context.support_email:
+            brand_line.append(f"<mailto:{context.support_email}|Support>")
 
         blocks = [
             {
@@ -230,6 +243,14 @@ class WebhookChannelProvider(NotificationChannelProvider):
                 }
             )
 
+        if brand_line:
+            blocks.append(
+                {
+                    "type": "context",
+                    "elements": [{"type": "mrkdwn", "text": " • ".join(brand_line)}],
+                }
+            )
+
         return {
             "attachments": [
                 {
@@ -251,6 +272,15 @@ class WebhookChannelProvider(NotificationChannelProvider):
             NotificationPriority.URGENT: "DC143C",
         }
 
+        facts = [
+            {"name": "Priority", "value": context.priority.value.upper()},
+            {"name": "Type", "value": context.notification_type.value},
+        ]
+        if context.product_name:
+            facts.append({"name": "Product", "value": context.product_name})
+        if context.support_email:
+            facts.append({"name": "Support", "value": context.support_email})
+
         card = {
             "@type": "MessageCard",
             "@context": "https://schema.org/extensions",
@@ -260,14 +290,7 @@ class WebhookChannelProvider(NotificationChannelProvider):
             ),
             "title": context.title,
             "text": context.message,
-            "sections": [
-                {
-                    "facts": [
-                        {"name": "Priority", "value": context.priority.value.upper()},
-                        {"name": "Type", "value": context.notification_type.value},
-                    ]
-                }
-            ],
+            "sections": [{"facts": facts}],
         }
 
         # Add action button if present
@@ -292,7 +315,7 @@ class WebhookChannelProvider(NotificationChannelProvider):
             NotificationPriority.URGENT: 15158332,  # Red
         }
 
-        embed = {
+        embed: dict[str, Any] = {
             "title": context.title,
             "description": context.message,
             "color": priority_colors.get(
@@ -303,6 +326,14 @@ class WebhookChannelProvider(NotificationChannelProvider):
                 {"name": "Type", "value": context.notification_type.value, "inline": True},
             ],
         }
+        if context.product_name:
+            embed["fields"].append(
+                {"name": "Product", "value": context.product_name, "inline": True}
+            )
+        if context.support_email:
+            embed["fields"].append(
+                {"name": "Support", "value": context.support_email, "inline": False}
+            )
 
         # Add action URL if present
         if context.action_url:

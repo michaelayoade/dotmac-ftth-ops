@@ -88,7 +88,7 @@ export default function AddonsPage() {
       filtered = filtered.filter(
         (addon) =>
           addon.name.toLowerCase().includes(query) ||
-          (addon.description?.toLowerCase() ?? "").includes(query),
+          (addon['description']?.toLowerCase() ?? "").includes(query),
       );
     }
 

@@ -54,7 +54,7 @@ interface WorkflowExecution {
 
 function WorkflowDetailsPageContent() {
   const params = useParams();
-  const workflowId = params?.workflowId as string;
+  const workflowId = params?.['workflowId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

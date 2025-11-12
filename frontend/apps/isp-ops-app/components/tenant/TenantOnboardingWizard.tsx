@@ -310,6 +310,7 @@ export function TenantOnboardingWizard({
           .map((inv) => ({
             email: inv.email,
             role: inv.role,
+            message: undefined,
           })),
       };
 

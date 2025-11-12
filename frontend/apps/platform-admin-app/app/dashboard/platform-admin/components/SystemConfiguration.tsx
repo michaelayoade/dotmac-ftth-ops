@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
@@ -30,14 +31,21 @@ import {
   useUpdateCategorySettings,
   formatLastUpdated,
   maskSensitiveValue,
+  SETTINGS_CATEGORY_VALUES,
   type SettingsCategory as SettingsCategoryType,
   type SettingField,
 } from "@/hooks/useSettings";
+
+const isValidSettingsCategory = (value: string): value is SettingsCategoryType =>
+  SETTINGS_CATEGORY_VALUES.includes(value as SettingsCategoryType);
 
 export function SystemConfiguration() {
   const [config, setConfig] = useState<SystemConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [initializedFromQuery, setInitializedFromQuery] = useState(false);
 
   // Settings management state
   const [activeTab, setActiveTab] = useState<"overview" | "settings">("overview");
@@ -76,6 +84,24 @@ export function SystemConfiguration() {
     void fetchSystemConfig();
   }, [fetchSystemConfig]);
 
+  useEffect(() => {
+    if (initializedFromQuery) {
+      return;
+    }
+
+    const tabParam = searchParams?.get("tab");
+    if (tabParam === "overview" || tabParam === "settings") {
+      setActiveTab(tabParam);
+    }
+
+    const categoryParam = searchParams?.get("category");
+    if (categoryParam && isValidSettingsCategory(categoryParam)) {
+      setSelectedCategory(categoryParam);
+    }
+
+    setInitializedFromQuery(true);
+  }, [initializedFromQuery, searchParams]);
+
   const handleClearCache = useCallback(
     async (cacheType: string = "all") => {
       try {
@@ -96,11 +122,37 @@ export function SystemConfiguration() {
     [fetchSystemConfig, toast],
   );
 
+  const updateQueryParams = useCallback(
+    (tab: "overview" | "settings", category?: SettingsCategoryType) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.set("tab", tab);
+      if (category) {
+        params.set("category", category);
+      } else {
+        params.delete("category");
+      }
+      router.replace(`?${params.toString()}`, { scroll: false });
+    },
+    [router, searchParams],
+  );
+
   // Settings management handlers
-  const handleCategoryChange = (category: SettingsCategoryType) => {
-    setSelectedCategory(category);
-    setFormData({});
-  };
+  const handleCategoryChange = useCallback(
+    (category: SettingsCategoryType) => {
+      setSelectedCategory(category);
+      setFormData({});
+      updateQueryParams("settings", category);
+    },
+    [updateQueryParams],
+  );
+
+  const handleTabChange = useCallback(
+    (tab: "overview" | "settings") => {
+      setActiveTab(tab);
+      updateQueryParams(tab, tab === "settings" ? selectedCategory : undefined);
+    },
+    [selectedCategory, updateQueryParams],
+  );
 
   const getFieldValue = (field: SettingField): any => {
     if (formData[field.name] !== undefined) {
@@ -263,7 +315,10 @@ export function SystemConfiguration() {
 
   return (
     <div className="space-y-6">
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "overview" | "settings")}>
+      <Tabs
+        value={activeTab}
+        onValueChange={(v) => handleTabChange(v as "overview" | "settings")}
+      >
         <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <Database className="h-4 w-4" />

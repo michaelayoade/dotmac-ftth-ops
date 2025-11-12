@@ -166,11 +166,11 @@ export function useFiberCableListGraphQL(
     variables: {
       limit,
       offset,
-      status,
-      fiberType,
-      installationType,
-      siteId,
-      search,
+      ...(status && { status }),
+      ...(fiberType && { fiberType }),
+      ...(installationType && { installationType }),
+      ...(siteId && { siteId }),
+      ...(search && { search }),
     },
     pollInterval,
     fetchPolicy: "cache-and-network",
@@ -325,8 +325,8 @@ export function useFiberHealthMetricsGraphQL(
 
   const { data, loading, error, refetch } = useFiberHealthMetricsQuery({
     variables: {
-      cableId,
-      healthStatus,
+      ...(cableId && { cableId }),
+      ...(healthStatus && { healthStatus }),
     },
     pollInterval,
     fetchPolicy: "cache-and-network",
@@ -421,9 +421,9 @@ export function useSplicePointListGraphQL(
     variables: {
       limit,
       offset,
-      status,
-      cableId,
-      distributionPointId,
+      ...(status && { status }),
+      ...(cableId && { cableId }),
+      ...(distributionPointId && { distributionPointId }),
     },
     pollInterval,
     fetchPolicy: "cache-and-network",
@@ -525,10 +525,10 @@ export function useDistributionPointListGraphQL(
     variables: {
       limit,
       offset,
-      pointType,
-      status,
-      siteId,
-      nearCapacity,
+      ...(pointType && { pointType }),
+      ...(status && { status }),
+      ...(siteId && { siteId }),
+      ...(nearCapacity !== undefined && { nearCapacity }),
     },
     pollInterval,
     fetchPolicy: "cache-and-network",
@@ -628,9 +628,9 @@ export function useServiceAreaListGraphQL(
     variables: {
       limit,
       offset,
-      areaType,
-      isServiceable,
-      constructionStatus,
+      ...(areaType && { areaType }),
+      ...(isServiceable !== undefined && { isServiceable }),
+      ...(constructionStatus && { constructionStatus }),
     },
     pollInterval,
     fetchPolicy: "cache-and-network",
@@ -727,7 +727,7 @@ export function useServiceAreasByPostalCodeGraphQL(postalCode: string | undefine
  */
 export function useFiberCableDetailsAggregated(cableId: string | undefined) {
   const cableQuery = useFiberCableDetailGraphQL(cableId);
-  const healthQuery = useFiberHealthMetricsGraphQL({ cableId });
+  const healthQuery = useFiberHealthMetricsGraphQL(cableId ? { cableId } : {});
   const spliceQuery = useSplicePointsByCableGraphQL(cableId);
 
   return {

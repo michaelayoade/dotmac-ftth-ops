@@ -6,8 +6,6 @@ import os
 from pathlib import Path
 from unittest.mock import mock_open, patch
 
-import pytest
-
 from tests.helpers.docker_env import (
     get_docker_network_url,
     get_service_host,

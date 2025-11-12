@@ -451,15 +451,12 @@ class TestInvoiceDownload:
             mock_service.generate_invoice_pdf = AsyncMock(return_value=b"%PDF-1.4\ntest content")
             mock_service_class.return_value = mock_service
 
-            response = client.get(
-                _url(client, "download_invoice_pdf", invoice_id=str(invoice_id))
-            )
+            response = client.get(_url(client, "download_invoice_pdf", invoice_id=str(invoice_id)))
 
             assert response.status_code == 200
             assert response.headers["content-type"] == "application/pdf"
             assert (
-                f"invoice-{invoice.invoice_number}.pdf"
-                in response.headers["content-disposition"]
+                f"invoice-{invoice.invoice_number}.pdf" in response.headers["content-disposition"]
             )
 
     def test_download_invoice_not_found(

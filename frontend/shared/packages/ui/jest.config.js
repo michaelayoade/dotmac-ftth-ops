@@ -1,3 +1,7 @@
+const esModules = ["react-leaflet", "@react-leaflet", "leaflet"];
+const esmPattern = esModules.join("|");
+const transformIgnorePattern = `node_modules/(?!((?:\\.pnpm/[^/]+/node_modules/)?(${esmPattern}))/)`;
+
 /** @type {import('jest').Config} */
 const config = {
   displayName: "@dotmac/ui",
@@ -28,21 +32,22 @@ const config = {
     },
   },
   transform: {
-    "^.+\\.(js|jsx|ts|tsx)$": "ts-jest",
+    "^.+\\.(js|jsx|ts|tsx)$": [
+      "ts-jest",
+      {
+        useESM: true,
+        tsconfig: {
+          jsx: "react-jsx",
+        },
+      },
+    ],
   },
+  transformIgnorePatterns: [transformIgnorePattern],
   moduleFileExtensions: ["js", "jsx", "ts", "tsx", "json", "node"],
   testTimeout: 10000,
   verbose: true,
   preset: "ts-jest/presets/js-with-ts",
   extensionsToTreatAsEsm: [".ts", ".tsx"],
-  globals: {
-    "ts-jest": {
-      useESM: true,
-      tsconfig: {
-        jsx: "react-jsx",
-      },
-    },
-  },
 };
 
 module.exports = config;
