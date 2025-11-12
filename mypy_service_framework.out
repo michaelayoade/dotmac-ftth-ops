@@ -1,7 +1,0 @@
-src/dotmac/platform/licensing/service_framework.py: note: In member "check_quota" of class "LicensingFrameworkService":
-src/dotmac/platform/licensing/service_framework.py:968:32: error: Incompatible
-types in assignment (expression has type "datetime | None", variable has type
-"SQLCoreOperations[datetime] | datetime")  [assignment]
-                usage.period_end = self._calculate_quota_period_end(now, q...
-                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~...
-Found 1 error in 1 file (checked 1 source file)

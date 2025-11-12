@@ -262,14 +262,25 @@ export function useNotifications(options?: {
   refreshInterval?: number;
 }) {
   const queryClient = useQueryClient();
+  const listFilters: {
+    unreadOnly?: boolean;
+    priority?: NotificationPriority;
+    notificationType?: NotificationType;
+  } = {};
+
+  if (typeof options?.unreadOnly !== "undefined") {
+    listFilters.unreadOnly = options.unreadOnly;
+  }
+  if (options?.priority) {
+    listFilters.priority = options.priority;
+  }
+  if (options?.notificationType) {
+    listFilters.notificationType = options.notificationType;
+  }
 
   // Query for notifications list
   const notificationsQuery = useQuery({
-    queryKey: notificationsKeys.list({
-      unreadOnly: options?.unreadOnly,
-      priority: options?.priority,
-      notificationType: options?.notificationType,
-    }),
+    queryKey: notificationsKeys.list(listFilters),
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
@@ -311,21 +322,13 @@ export function useNotifications(options?: {
 
       // Snapshot previous value
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list({
-          unreadOnly: options?.unreadOnly,
-          priority: options?.priority,
-          notificationType: options?.notificationType,
-        })
+        notificationsKeys.list(listFilters)
       );
 
       // Optimistically update
       if (previousData) {
         queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           {
             ...previousData,
             notifications: previousData.notifications.map((n) =>
@@ -342,11 +345,7 @@ export function useNotifications(options?: {
       // Rollback on error
       if (context?.previousData) {
         queryClient.setQueryData(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           context.previousData
         );
       }
@@ -366,20 +365,12 @@ export function useNotifications(options?: {
       await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list({
-          unreadOnly: options?.unreadOnly,
-          priority: options?.priority,
-          notificationType: options?.notificationType,
-        })
+        notificationsKeys.list(listFilters)
       );
 
       if (previousData) {
         queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           {
             ...previousData,
             notifications: previousData.notifications.map((n) =>
@@ -395,11 +386,7 @@ export function useNotifications(options?: {
     onError: (err, notificationId, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           context.previousData
         );
       }
@@ -419,20 +406,12 @@ export function useNotifications(options?: {
       await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
       const previousData = queryClient.getQueryData<NotificationListResponse>(
-        notificationsKeys.list({
-          unreadOnly: options?.unreadOnly,
-          priority: options?.priority,
-          notificationType: options?.notificationType,
-        })
+        notificationsKeys.list(listFilters)
       );
 
       if (previousData) {
         queryClient.setQueryData<NotificationListResponse>(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           {
             ...previousData,
             notifications: previousData.notifications.map((n) => ({
@@ -450,11 +429,7 @@ export function useNotifications(options?: {
     onError: (err, variables, context) => {
       if (context?.previousData) {
         queryClient.setQueryData(
-          notificationsKeys.list({
-            unreadOnly: options?.unreadOnly,
-            priority: options?.priority,
-            notificationType: options?.notificationType,
-          }),
+          notificationsKeys.list(listFilters),
           context.previousData
         );
       }

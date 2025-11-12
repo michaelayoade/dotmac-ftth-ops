@@ -332,7 +332,7 @@ export function useLicensing(): UseLicensingReturn {
     ]);
   };
 
-  return {
+  const licensingReturn: UseLicensingReturn = {
     // Feature Modules
     modules: modulesQuery.data ?? [],
     modulesLoading: modulesQuery.isLoading,
@@ -355,13 +355,13 @@ export function useLicensing(): UseLicensingReturn {
     plansLoading: plansQuery.isLoading,
     plansError: plansQuery.error,
     createPlan: createPlanMutation.mutateAsync,
-    updatePlan: async (id: string, data: Partial<ServicePlan>) => updatePlanMutation.mutateAsync({ id, data }),
+    updatePlan: async (id: string, data: Partial<ServicePlan>) =>
+      updatePlanMutation.mutateAsync({ id, data }),
     getPlan,
     duplicatePlan: duplicatePlanMutation.mutateAsync,
     calculatePlanPrice,
 
     // Subscriptions
-    currentSubscription: subscriptionQuery.data,
     subscriptionLoading: subscriptionQuery.isLoading,
     subscriptionError: subscriptionQuery.error,
     createSubscription: createSubscriptionMutation.mutateAsync,
@@ -377,6 +377,12 @@ export function useLicensing(): UseLicensingReturn {
     // Utilities
     refetch,
   };
+
+  if (subscriptionQuery.data) {
+    licensingReturn.currentSubscription = subscriptionQuery.data;
+  }
+
+  return licensingReturn;
 }
 
 // ============================================================================

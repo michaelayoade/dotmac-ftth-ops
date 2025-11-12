@@ -1,15 +1,24 @@
-node_modules
+# Dependencies and lockfiles (frontend is managed via the repo root)
+node_modules/
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
-dist
-.storybook
-storybook-static
-coverage
-playwright-report
-reports
-.DS_Store
+
+# Build and Storybook artifacts
+dist/
+.storybook/
+storybook-static/
 apps/*/.next
+
+# Local test and coverage output
+coverage/
+playwright-report/
+reports/
+
+# Environment files generated per app
 apps/*/.env
 apps/*/.env.local
 apps/*/.env.production
+
+# OS metadata
+.DS_Store
