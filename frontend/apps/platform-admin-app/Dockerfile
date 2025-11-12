@@ -20,9 +20,6 @@ COPY tailwind.config.ts ./
 # Install dependencies
 RUN pnpm install --frozen-lockfile
 
-# Build shared workspace packages (UI/primitives/etc.) before compiling the app
-RUN pnpm -r --filter "./shared/packages/**" run build
-
 # Build the platform admin app from its directory
 WORKDIR /app/apps/platform-admin-app
 RUN pnpm build
