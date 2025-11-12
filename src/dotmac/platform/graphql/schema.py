@@ -10,7 +10,20 @@ from dotmac.platform.graphql.mutations.orchestration import OrchestrationMutatio
 from dotmac.platform.graphql.queries.analytics import AnalyticsQueries
 from dotmac.platform.graphql.queries.customer import CustomerQueries
 from dotmac.platform.graphql.queries.fiber import FiberQueries
+from dotmac.platform.graphql.queries.field_service import FieldServiceQueries
+from dotmac.platform.graphql.queries.ip_management import (
+    IPManagementMutations,
+    IPManagementQueries,
+)
+from dotmac.platform.graphql.queries.ipv4_lifecycle import (
+    IPv4LifecycleMutations,
+    IPv4LifecycleQueries,
+)
 from dotmac.platform.graphql.queries.network import NetworkQueries
+from dotmac.platform.graphql.queries.network_profile import (
+    NetworkProfileMutations,
+    NetworkProfileQueries,
+)
 from dotmac.platform.graphql.queries.orchestration import OrchestrationQueries
 from dotmac.platform.graphql.queries.payment import PaymentQueries
 from dotmac.platform.graphql.queries.radius import RadiusQueries
@@ -33,9 +46,13 @@ class Query(
     TenantQueries,  # type: ignore[misc]
     UserQueries,  # type: ignore[misc]
     NetworkQueries,  # type: ignore[misc]
+    NetworkProfileQueries,  # type: ignore[misc]
+    IPManagementQueries,  # type: ignore[misc]
+    IPv4LifecycleQueries,  # type: ignore[misc]
     OrchestrationQueries,  # type: ignore[misc]
     WirelessQueries,  # type: ignore[misc]
     FiberQueries,  # type: ignore[misc]
+    FieldServiceQueries,  # type: ignore[misc]
 ):
     """
     Root GraphQL query type.
@@ -50,8 +67,12 @@ class Query(
     - Tenant management queries with conditional field loading
     - User management queries with role/permission batching
     - Network monitoring queries with device/traffic/alert batching
+    - Network profile queries for subscriber VLAN/IP configuration
+    - IP management queries for pool and reservation management with conflict detection
+    - IPv4 lifecycle queries for address state management and tracking
     - Orchestration workflow queries for multi-system operations
     - Wireless infrastructure queries (access points, clients, coverage, RF analytics)
+    - Field service management queries for technicians, scheduling, time tracking, and resources
 
     Note: Fiber infrastructure queries temporarily disabled pending database model implementation
     """
@@ -63,7 +84,12 @@ class Query(
 
 
 @strawberry.type
-class Mutation(OrchestrationMutations):  # type: ignore[misc]
+class Mutation(
+    OrchestrationMutations,  # type: ignore[misc]
+    NetworkProfileMutations,  # type: ignore[misc]
+    IPManagementMutations,  # type: ignore[misc]
+    IPv4LifecycleMutations,  # type: ignore[misc]
+):
     """
     Root GraphQL mutation type.
 
@@ -71,6 +97,9 @@ class Mutation(OrchestrationMutations):  # type: ignore[misc]
     - Orchestration mutations for atomic multi-system operations
     - Subscriber provisioning with automatic rollback
     - Workflow management (retry, cancel)
+    - Network profile management (create, update, delete)
+    - IP management mutations (create/update pools, reserve/release IPs, auto-assign)
+    - IPv4 lifecycle mutations (allocate, activate, suspend, reactivate, revoke)
 
     Note: Most CRUD operations should use REST endpoints.
     GraphQL mutations are primarily for complex orchestrated operations.

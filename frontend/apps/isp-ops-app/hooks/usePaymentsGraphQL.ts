@@ -360,17 +360,16 @@ export function useCustomerPayments(
 ): UseQueryResult<PaymentConnection, Error> {
   const { limit = 20, offset = 0, status, includeInvoice = true, enabled = true } = options;
 
-  return usePayments(
-    {
-      customerId,
-      limit,
-      offset,
-      status,
-      includeCustomer: false, // Already know the customer
-      includeInvoice,
-    },
-    enabled && !!customerId,
-  );
+  const filters: PaymentFilters = {
+    customerId,
+    limit,
+    offset,
+    includeCustomer: false, // Already know the customer
+    includeInvoice,
+    ...(status !== undefined && { status }),
+  };
+
+  return usePayments(filters, enabled && !!customerId);
 }
 
 /**

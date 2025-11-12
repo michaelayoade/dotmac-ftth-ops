@@ -406,6 +406,103 @@ class PartnerCommissionEventListResponse(BaseModel):  # BaseModel resolves to An
 
 
 # ============================================================================
+# Commission Rule Schemas
+# ============================================================================
+
+
+class PartnerCommissionRuleBase(BaseModel):  # BaseModel resolves to Any in isolation
+    """Base commission rule schema."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid",
+        from_attributes=True,
+    )
+
+    rule_name: str = Field(min_length=1, max_length=100)
+    description: str | None = None
+    commission_type: CommissionModel
+    commission_rate: Decimal | None = Field(
+        None,
+        ge=Decimal("0"),
+        le=Decimal("1"),
+        description="Commission rate (0-1, e.g., 0.15 for 15%)",
+    )
+    flat_fee_amount: Decimal | None = Field(None, ge=Decimal("0"))
+    tier_config: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Tier configuration for tiered commission model",
+    )
+    applies_to_products: list[str] | None = Field(
+        None,
+        description="List of product IDs this rule applies to (empty = all products)",
+    )
+    applies_to_customers: list[str] | None = Field(
+        None,
+        description="List of customer IDs this rule applies to (empty = all customers)",
+    )
+    effective_from: datetime
+    effective_to: datetime | None = None
+    is_active: bool = True
+    priority: int = Field(
+        default=1,
+        ge=1,
+        description="Priority for rule evaluation (lower number = higher priority)",
+    )
+
+
+class PartnerCommissionRuleCreate(PartnerCommissionRuleBase):  # PartnerCommissionRuleBase resolves to Any in isolation
+    """Schema for creating commission rule."""
+
+    partner_id: UUID
+
+
+class PartnerCommissionRuleUpdate(BaseModel):  # BaseModel resolves to Any in isolation
+    """Schema for updating commission rule."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        extra="forbid",
+    )
+
+    rule_name: str | None = Field(None, min_length=1, max_length=100)
+    description: str | None = None
+    commission_type: CommissionModel | None = None
+    commission_rate: Decimal | None = Field(None, ge=Decimal("0"), le=Decimal("1"))
+    flat_fee_amount: Decimal | None = Field(None, ge=Decimal("0"))
+    tier_config: dict[str, Any] | None = None
+    applies_to_products: list[str] | None = None
+    applies_to_customers: list[str] | None = None
+    effective_from: datetime | None = None
+    effective_to: datetime | None = None
+    is_active: bool | None = None
+    priority: int | None = Field(None, ge=1)
+
+
+class PartnerCommissionRuleResponse(PartnerCommissionRuleBase):  # PartnerCommissionRuleBase resolves to Any in isolation
+    """Schema for commission rule response."""
+
+    id: UUID
+    partner_id: UUID
+    tenant_id: UUID
+    created_at: datetime
+    updated_at: datetime
+
+
+class PartnerCommissionRuleListResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response for commission rule list."""
+
+    model_config = ConfigDict()
+
+    rules: list[PartnerCommissionRuleResponse]
+    total: int
+    page: int = Field(ge=1)
+    page_size: int = Field(ge=1, le=100)
+
+
+# ============================================================================
 # Referral Lead Schemas
 # ============================================================================
 

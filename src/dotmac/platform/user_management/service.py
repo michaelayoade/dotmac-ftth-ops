@@ -15,8 +15,14 @@ from sqlalchemy import Text, and_, func, or_, select
 from sqlalchemy.exc import IntegrityError, MultipleResultsFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.utils.crypto_compat import ensure_bcrypt_metadata
+
 from ..settings import settings
+from ..webhooks.events import get_event_bus
+from ..webhooks.models import WebhookEvent
 from .models import User
+
+ensure_bcrypt_metadata()
 
 logger = structlog.get_logger(__name__)
 
@@ -138,6 +144,31 @@ class UserService:
             await self.session.commit()
             await self.session.refresh(user)
             logger.info(f"Created user: {username} (ID: {user.id})")
+
+            tenant_for_event = tenant_id or user.tenant_id
+            if tenant_for_event:
+                try:
+                    await get_event_bus().publish(
+                        event_type=WebhookEvent.USER_REGISTERED.value,
+                        event_data={
+                            "user_id": str(user.id),
+                            "username": user.username,
+                            "email": user.email,
+                            "full_name": user.full_name,
+                            "roles": user.roles,
+                            "is_active": user.is_active,
+                            "registered_at": user.created_at.isoformat()
+                            if user.created_at
+                            else None,
+                        },
+                        tenant_id=tenant_for_event,
+                        db=self.session,
+                    )
+                except Exception as e:
+                    logger.warning("Failed to publish user.registered event", error=str(e))
+            else:
+                logger.debug("Skipping user.registered event publish (no tenant_id)")
+
             return user
         except IntegrityError as e:
             await self.session.rollback()
@@ -226,6 +257,30 @@ class UserService:
             await self.session.commit()
             await self.session.refresh(user)
             logger.info(f"Updated user: {user.username} (ID: {user.id})")
+
+            tenant_for_event = tenant_id or user.tenant_id
+            if tenant_for_event:
+                try:
+                    await get_event_bus().publish(
+                        event_type=WebhookEvent.USER_UPDATED.value,
+                        event_data={
+                            "user_id": str(user.id),
+                            "username": user.username,
+                            "email": user.email,
+                            "full_name": user.full_name,
+                            "roles": user.roles,
+                            "is_active": user.is_active,
+                            "is_verified": user.is_verified,
+                            "updated_at": user.updated_at.isoformat() if user.updated_at else None,
+                        },
+                        tenant_id=tenant_for_event,
+                        db=self.session,
+                    )
+                except Exception as e:
+                    logger.warning("Failed to publish user.updated event", error=str(e))
+            else:
+                logger.debug("Skipping user.updated event publish (no tenant_id)")
+
             return user
         except IntegrityError as e:
             await self.session.rollback()
@@ -238,9 +293,33 @@ class UserService:
         if not user:
             return False
 
+        # Store user info for webhook before deletion
+        user_data = {
+            "user_id": str(user.id),
+            "username": user.username,
+            "email": user.email,
+            "full_name": user.full_name,
+            "deleted_at": datetime.now(UTC).isoformat(),
+        }
+
         await self.session.delete(user)
         await self.session.commit()
         logger.info(f"Deleted user: {user.username} (ID: {user.id})")
+
+        tenant_for_event = tenant_id or user.tenant_id
+        if tenant_for_event:
+            try:
+                await get_event_bus().publish(
+                    event_type=WebhookEvent.USER_DELETED.value,
+                    event_data=user_data,
+                    tenant_id=tenant_for_event,
+                    db=self.session,
+                )
+            except Exception as e:
+                logger.warning("Failed to publish user.deleted event", error=str(e))
+        else:
+            logger.debug("Skipping user.deleted event publish (no tenant_id)")
+
         return True
 
     async def list_users(

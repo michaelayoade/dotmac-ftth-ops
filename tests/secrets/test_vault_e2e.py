@@ -23,8 +23,9 @@ parameters accordingly:
 import os
 import subprocess
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 from unittest.mock import patch
 
 import pytest

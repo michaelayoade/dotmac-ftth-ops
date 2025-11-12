@@ -44,20 +44,20 @@ let currentConfig: ApiConfig | null = null;
 
 export function initializeApi(config?: Partial<ApiConfig>): ApiClient {
   // Determine environment
-  const environment = (process.env.NODE_ENV || "development") as keyof ApiEnvironments;
+  const environment = (process.env["NODE_ENV"] || "development") as keyof ApiEnvironments;
   const baseConfig = defaultConfigs[environment];
 
   // Override with environment variables
   const envConfig: Partial<ApiConfig> = {};
 
-  if (process.env.NEXT_PUBLIC_API_BASE_URL) {
-    envConfig.baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (process.env["NEXT_PUBLIC_API_BASE_URL"]) {
+    envConfig.baseUrl = process.env["NEXT_PUBLIC_API_BASE_URL"];
   }
-  if (process.env.NEXT_PUBLIC_API_KEY) {
-    envConfig.apiKey = process.env.NEXT_PUBLIC_API_KEY;
+  if (process.env["NEXT_PUBLIC_API_KEY"]) {
+    envConfig.apiKey = process.env["NEXT_PUBLIC_API_KEY"];
   }
-  if (process.env.NEXT_PUBLIC_TENANT_ID) {
-    envConfig.tenantId = process.env.NEXT_PUBLIC_TENANT_ID;
+  if (process.env["NEXT_PUBLIC_TENANT_ID"]) {
+    envConfig.tenantId = process.env["NEXT_PUBLIC_TENANT_ID"];
   }
 
   // Merge configurations
@@ -157,7 +157,7 @@ export async function checkApiHealth(): Promise<{
 }
 
 // Initialize API client automatically if environment variables are present
-if (typeof window !== "undefined" && process.env.NEXT_PUBLIC_API_BASE_URL) {
+if (typeof window !== "undefined" && process.env["NEXT_PUBLIC_API_BASE_URL"]) {
   try {
     initializeApi();
   } catch (_error) {

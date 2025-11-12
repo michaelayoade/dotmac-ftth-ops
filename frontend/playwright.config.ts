@@ -12,16 +12,20 @@ import { defineConfig, devices } from "@playwright/test";
  * - __tests__/ - Jest unit tests
  * - node_modules/ - Third-party code
  */
+const ISP_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+const useDevServer = process.env.E2E_USE_DEV_SERVER === "true";
+const testTimeout = parseInt(process.env.E2E_TEST_TIMEOUT || "120000", 10);
+const expectTimeout = parseInt(process.env.E2E_EXPECT_TIMEOUT || "20000", 10);
+const actionTimeout = parseInt(process.env.E2E_ACTION_TIMEOUT || "30000", 10);
+const navigationTimeout = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+
 export default defineConfig({
   // Match E2E test files only (*.spec.ts in e2e folders)
-  testMatch: [
-    "**/e2e/**/*.spec.ts",
-  ],
+  testMatch: ["**/e2e/**/*.spec.ts"],
 
   // Ignore Jest unit test directories and Jest test files
   testIgnore: [
     "**/__tests__/**",
-    "**/tests/**", // Ignore Jest tests/ directories
     "**/node_modules/**",
     "**/*.test.ts",
     "**/*.test.tsx",
@@ -37,10 +41,12 @@ export default defineConfig({
   reporter: process.env.CI ? [["github"], ["html"]] : "html",
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3001",
+    baseURL: ISP_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
+    actionTimeout,
+    navigationTimeout,
   },
 
   projects: [
@@ -51,18 +57,18 @@ export default defineConfig({
     // Additional browsers can be added here
   ],
 
-  webServer: process.env.E2E_SKIP_SERVER
-    ? undefined
-    : {
+  webServer: useDevServer
+    ? {
         command: "pnpm dev:isp",
         url: "http://localhost:3001",
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
-      },
+      }
+    : undefined,
 
-  timeout: 30000,
+  timeout: testTimeout,
   expect: {
-    timeout: 10000,
+    timeout: expectTimeout,
   },
 
   outputDir: "test-results/",

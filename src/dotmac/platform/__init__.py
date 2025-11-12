@@ -1,3 +1,13 @@
+from __future__ import annotations
+
+import os
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:  # pragma: no cover - typings only
+    from .observability import ObservabilityManager as _ObservabilityManager
+
+from .version import get_version as _load_version
+
 """
 DotMac Platform Services - Unified platform infrastructure.
 
@@ -13,14 +23,6 @@ Design Principles:
 4. Clear Dependencies: core → platform-services → business-logic
 5. Extensible: Plugin architecture for custom providers
 """
-
-import os
-from typing import TYPE_CHECKING, Any
-
-if TYPE_CHECKING:  # pragma: no cover - typings only
-    from .observability import ObservabilityManager as _ObservabilityManager
-
-from .version import get_version as _load_version
 
 __version__ = _load_version()
 __author__ = "DotMac Team"
@@ -268,7 +270,7 @@ def create_observability_manager(
     *,
     auto_initialize: bool = False,
     **kwargs: Any,
-) -> "_ObservabilityManager":
+) -> _ObservabilityManager:
     """Create an observability manager backed by the telemetry helpers."""
 
     try:

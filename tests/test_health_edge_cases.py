@@ -5,6 +5,7 @@ Tests complex scenarios, error conditions, and edge cases
 to achieve maximum coverage of health_checks.py.
 """
 
+import os
 from unittest.mock import MagicMock, patch
 
 import httpx

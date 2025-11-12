@@ -4,6 +4,8 @@ Pydantic schemas for tenant management API.
 Request and response models following Pydantic v2 patterns.
 """
 
+from __future__ import annotations
+
 from datetime import datetime
 from typing import Any
 
@@ -64,6 +66,10 @@ class TenantCreate(TenantBase):  # TenantBase resolves to Any in isolation
     oss_config: dict[str, dict[str, Any]] | None = Field(
         default=None,
         description="Optional VOLTHA/GenieACS/NetBox/AWX overrides per service",
+    )
+    branding: TenantBrandingConfig | None = Field(
+        default=None,
+        description="Initial branding configuration applied to the ISP portal",
     )
 
     @field_validator("slug")
@@ -156,6 +162,52 @@ class TenantResponse(TenantBase):  # TenantBase resolves to Any in isolation
     has_exceeded_user_limit: bool = False
     has_exceeded_api_limit: bool = False
     has_exceeded_storage_limit: bool = False
+
+
+class TenantBrandingConfig(BaseModel):  # BaseModel resolves to Any in isolation
+    """Tenant-specific branding configuration."""
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
+
+    product_name: str | None = Field(None, description="Customer-facing product name")
+    product_tagline: str | None = Field(None, description="Marketing tagline")
+    company_name: str | None = Field(None, description="Company or brand name")
+    support_email: EmailStr | None = Field(None, description="Primary support contact email")
+    success_email: EmailStr | None = Field(None, description="Customer success contact email")
+    operations_email: EmailStr | None = Field(
+        None, description="Operations/NOC fallback contact email"
+    )
+    partner_support_email: EmailStr | None = Field(
+        None, description="Partner escalation contact email"
+    )
+    primary_color: str | None = Field(None, description="Primary brand color (hex/RGB)")
+    secondary_color: str | None = Field(None, description="Secondary brand color")
+    accent_color: str | None = Field(None, description="Accent brand color")
+    logo_light_url: str | None = Field(None, description="Light theme logo URL")
+    logo_dark_url: str | None = Field(None, description="Dark theme logo URL")
+    favicon_url: str | None = Field(None, description="Favicon URL")
+    docs_url: str | None = Field(None, description="Documentation or knowledge base URL")
+    support_portal_url: str | None = Field(None, description="Support portal URL")
+    status_page_url: str | None = Field(None, description="Status page URL")
+    terms_url: str | None = Field(None, description="Terms of service URL")
+    privacy_url: str | None = Field(None, description="Privacy policy URL")
+
+
+class TenantBrandingResponse(BaseModel):  # BaseModel resolves to Any in isolation
+    """Response containing tenant branding."""
+
+    tenant_id: str
+    branding: TenantBrandingConfig
+    updated_at: datetime | None = Field(None, description="Last time branding was updated")
+
+
+class TenantBrandingUpdate(BaseModel):  # BaseModel resolves to Any in isolation
+    """Payload for updating tenant branding."""
+
+    branding: TenantBrandingConfig = Field(default_factory=TenantBrandingConfig)
 
 
 class TenantListResponse(BaseModel):  # BaseModel resolves to Any in isolation

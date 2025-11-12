@@ -14,6 +14,7 @@ import { Card } from "@dotmac/ui";
 import { Activity, AlertCircle, CheckCircle, RefreshCw, Wifi, WifiOff, X } from "lucide-react";
 import { useRealtimeHealth } from "../../hooks/useRealtime";
 import type { ConnectionStatus } from "../../types/realtime";
+import { PulseIndicator } from "@dotmac/primitives";
 
 export interface ConnectionStatusIndicatorProps {
   /**
@@ -173,19 +174,23 @@ function StatusBadge({
 
   if (!showLabel) {
     return (
-      <div
-        className={`flex items-center gap-1 px-2 py-1 rounded-full ${color} text-white cursor-pointer hover:opacity-90 transition-opacity`}
-      >
-        <Icon className={`h-3 w-3 ${animate || ""}`} />
-      </div>
+      <PulseIndicator active={status === "connected"}>
+        <div
+          className={`flex items-center gap-1 px-2 py-1 rounded-full ${color} text-white cursor-pointer hover:opacity-90 transition-opacity`}
+        >
+          <Icon className={`h-3 w-3 ${animate || ""}`} />
+        </div>
+      </PulseIndicator>
     );
   }
 
   return (
-    <Badge className={`${color} text-white flex items-center gap-1`}>
-      <Icon className={`h-3 w-3 ${animate || ""}`} />
-      <span className="text-xs font-medium">{label}</span>
-    </Badge>
+    <PulseIndicator active={status === "connected"}>
+      <Badge className={`${color} text-white flex items-center gap-1`}>
+        <Icon className={`h-3 w-3 ${animate || ""}`} />
+        <span className="text-xs font-medium">{label}</span>
+      </Badge>
+    </PulseIndicator>
   );
 }
 
@@ -209,10 +214,12 @@ function ConnectionRow({
     <div className="flex items-center justify-between py-2">
       <div className="flex-1">
         <div className="flex items-center gap-2">
-          {isConnected && <Wifi className="h-3 w-3 text-green-500" />}
-          {isError && <AlertCircle className="h-3 w-3 text-red-500" />}
-          {isConnecting && <RefreshCw className="h-3 w-3 text-yellow-500 animate-spin" />}
-          {status === "disconnected" && <WifiOff className="h-3 w-3 text-gray-500" />}
+          <PulseIndicator active={isConnected}>
+            {isConnected && <Wifi className="h-3 w-3 text-green-500" />}
+            {isError && <AlertCircle className="h-3 w-3 text-red-500" />}
+            {isConnecting && <RefreshCw className="h-3 w-3 text-yellow-500 animate-spin" />}
+            {status === "disconnected" && <WifiOff className="h-3 w-3 text-gray-500" />}
+          </PulseIndicator>
           <span className="text-sm font-medium">{label}</span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5">{description}</p>

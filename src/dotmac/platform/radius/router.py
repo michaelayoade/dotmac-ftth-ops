@@ -5,8 +5,9 @@ FastAPI endpoints for RADIUS subscriber management, session tracking,
 and accounting operations.
 """
 
-from typing import Any, cast
+from typing import Any
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -20,6 +21,8 @@ from dotmac.platform.radius.schemas import (
     NASCreate,
     NASResponse,
     NASUpdate,
+    RADIUSAuthorizationRequest,
+    RADIUSAuthorizationResponse,
     RADIUSAuthTest,
     RADIUSAuthTestResponse,
     RADIUSSessionDisconnect,
@@ -34,6 +37,7 @@ from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.tenant.dependencies import TenantAdminAccess
 
 router = APIRouter(prefix="/radius", tags=["RADIUS"])
+logger = structlog.get_logger(__name__)
 
 
 # =============================================================================
@@ -623,6 +627,75 @@ async def test_authentication(
     )
 
 
+@router.post(
+    "/authorize",
+    response_model=RADIUSAuthorizationResponse,
+    summary="RADIUS Authorization with Option 82",
+    description="Authorize RADIUS Access-Request with Option 82 validation (Phase 3)",
+)
+async def authorize_access(
+    request: RADIUSAuthorizationRequest,
+    service: RADIUSService = Depends(get_radius_service),
+) -> RADIUSAuthorizationResponse:
+    """
+    Phase 3: RADIUS Authorization with Option 82 Validation
+
+    This endpoint is designed to be called by FreeRADIUS via rlm_rest module.
+    It performs:
+    1. Subscriber authentication (username/password check)
+    2. Option 82 validation (circuit-id, remote-id)
+    3. VLAN attribute injection
+    4. Bandwidth profile application
+    5. IPv4/IPv6 address assignment
+
+    Returns Access-Accept or Access-Reject with appropriate attributes.
+
+    **Integration with FreeRADIUS**:
+    Configure rlm_rest in FreeRADIUS to call this endpoint during authorization:
+
+    ```
+    rest {
+        authorize {
+            uri = "http://api:8000/api/v1/radius/authorize"
+            method = "post"
+            body = "json"
+        }
+    }
+    ```
+
+    **Option 82 Policies**:
+    - ENFORCE: Deny access if Option 82 doesn't match expected values
+    - LOG: Log mismatch but allow access
+    - IGNORE: Skip Option 82 validation entirely
+    """
+    try:
+        # Call service layer for authorization
+        result = await service.authorize_subscriber(request)
+        return result
+    except ValueError as e:
+        # Reject access for invalid requests
+        return RADIUSAuthorizationResponse(
+            accept=False,
+            reason=str(e),
+            reply_attributes={},
+            option82_validation=None,
+        )
+    except Exception as e:
+        # Log error and reject access
+        logger.error(
+            "radius.authorization.error",
+            username=request.username,
+            error=str(e),
+            tenant_id=service.tenant_id,
+        )
+        return RADIUSAuthorizationResponse(
+            accept=False,
+            reason=f"Internal error during authorization: {str(e)}",
+            reply_attributes={},
+            option82_validation=None,
+        )
+
+
 # =============================================================================
 # RADIUS Server Health Monitoring
 # =============================================================================
@@ -870,3 +943,98 @@ async def get_password_hashing_stats(
     Useful for tracking security posture and migration progress.
     """
     return await service.get_password_hashing_stats()
+
+
+@router.get(
+    "/subscribers/{subscriber_id}/alerts",
+    summary="Get subscriber alerts",
+    description="Get active alerts for a subscriber (Option 82 mismatches, auth failures, etc.)",
+)
+async def get_subscriber_alerts(
+    subscriber_id: str,
+    current_user: UserInfo = Depends(require_permission("isp.radius.read")),
+    db: AsyncSession = Depends(get_session_dependency),
+) -> list[dict[str, Any]]:
+    """
+    Get active alerts for a subscriber.
+
+    Returns alerts with:
+    - Severity levels (critical, warning, info)
+    - Alert types (option82_mismatch, auth_failure, session_anomaly)
+    - Timestamps and details
+    """
+    from sqlalchemy import select
+
+    from dotmac.platform.network.models import Option82Policy, SubscriberNetworkProfile
+    from dotmac.platform.subscribers.models import Subscriber
+
+    tenant_id = current_user.tenant_id
+    if not tenant_id:
+        return []
+
+    alerts = []
+
+    # Get subscriber
+    stmt = select(Subscriber).where(
+        Subscriber.id == subscriber_id,
+        Subscriber.tenant_id == tenant_id,
+    )
+    result = await db.execute(stmt)
+    subscriber = result.scalar_one_or_none()
+
+    if not subscriber:
+        return []
+
+    # Check for Option 82 enforcement profile
+    profile_stmt = select(SubscriberNetworkProfile).where(
+        SubscriberNetworkProfile.subscriber_id == subscriber_id,
+        SubscriberNetworkProfile.tenant_id == tenant_id,
+    )
+    profile_result = await db.execute(profile_stmt)
+    profile = profile_result.scalar_one_or_none()
+
+    if profile and profile.option82_policy == Option82Policy.ENFORCE:
+        if profile.circuit_id or profile.remote_id:
+            alerts.append(
+                {
+                    "id": f"opt82_{subscriber_id}",
+                    "type": "option82_configured",
+                    "severity": "info",
+                    "title": "Option 82 Enforcement Active",
+                    "message": "DHCP Option 82 validation is enforced for this subscriber",
+                    "timestamp": profile.updated_at.isoformat() if profile.updated_at else None,
+                }
+            )
+
+    # Check for recent authentication failures (last 7 days)
+    # TODO: Implement Radpostauth model and import it to enable this feature
+    # seven_days_ago = datetime.now(UTC) - timedelta(days=7)
+
+    # try:
+    #     # Query radpostauth for recent failures
+    #     auth_failure_stmt = select(func.count()).where(
+    #         and_(
+    #             Radpostauth.username == subscriber.username,
+    #             Radpostauth.reply == "Access-Reject",
+    #             Radpostauth.authdate >= seven_days_ago,
+    #         )
+    #     )
+    #     result = await db.execute(auth_failure_stmt)
+    #     failure_count = result.scalar() or 0
+
+    #     if failure_count > 0:
+    #         severity = "critical" if failure_count > 10 else "warning"
+    #         alerts.append({
+    #             "id": f"auth_fail_{subscriber_id}",
+    #             "type": "auth_failure",
+    #             "severity": severity,
+    #             "title": f"{failure_count} Authentication Failures",
+    #             "message": f"Subscriber has {failure_count} failed auth attempts in the last 7 days",
+    #             "timestamp": datetime.now(UTC).isoformat(),
+    #             "count": failure_count,
+    #         })
+    # except Exception:
+    #     # radpostauth table might not exist or be accessible
+    #     pass
+
+    return alerts

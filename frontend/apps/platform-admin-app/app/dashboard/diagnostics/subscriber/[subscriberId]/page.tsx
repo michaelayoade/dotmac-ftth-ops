@@ -146,7 +146,7 @@ function SubscriberDiagnosticsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const subscriberId = params.subscriberId as string;
+  const subscriberId = params['subscriberId'] as string;
 
   const [isRestartDialogOpen, setIsRestartDialogOpen] = useState(false);
   const [latestRunId, setLatestRunId] = useState<string | null>(null);

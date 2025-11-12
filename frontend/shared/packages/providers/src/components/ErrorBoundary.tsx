@@ -1,5 +1,5 @@
 import * as React from "react";
-import { PortalType } from "@dotmac/auth";
+import type { PortalType } from "../UniversalProviders";
 
 declare global {
   interface Window {
@@ -166,7 +166,7 @@ function DefaultErrorFallback({ error, resetError, portal }: ErrorFallbackProps)
           </button>
         </div>
 
-        {process.env.NODE_ENV === "development" && (
+        {process.env["NODE_ENV"] === "development" && (
           <details className="mt-6 p-4 bg-red-50 rounded-md">
             <summary className="cursor-pointer text-sm font-medium text-red-800">
               Error Details (Development)

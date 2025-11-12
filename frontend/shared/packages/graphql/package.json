@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@apollo/client": "^3.14.0",
-    "@dotmac/auth": "workspace:*",
     "@dotmac/http-client": "workspace:*",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@tanstack/react-query": "^5.90.5",

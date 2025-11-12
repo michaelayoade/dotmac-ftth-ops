@@ -25,9 +25,9 @@ pytestmark = [
 ]
 
 try:
+    import strawberry
     from fastapi import Body, FastAPI, HTTPException, Request, Response, status
     from pydantic import BaseModel
-    import strawberry
     from strawberry.fastapi import GraphQLRouter
 except ImportError as exc:  # pragma: no cover - environment without FastAPI
     pytest.skip(f"FastAPI/GraphQL dependencies unavailable: {exc}", allow_module_level=True)
@@ -226,9 +226,7 @@ async def test_graphql_cookie_auth(graphql_env: GraphQLTestEnv):
         json={"query": graphql_query},
         cookies=cookies,
     )
-    assert graphql_response.status_code == 200, (
-        f"GraphQL request failed: {graphql_response.text}"
-    )
+    assert graphql_response.status_code == 200, f"GraphQL request failed: {graphql_response.text}"
     print(f"✅ GraphQL query successful: {graphql_response.json()}")
 
     subscribers_query = """

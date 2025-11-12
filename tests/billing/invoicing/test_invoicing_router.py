@@ -209,7 +209,9 @@ class TestInvoiceLifecycle:
         """Test finalize non-existent invoice."""
         # Arrange
         invoice_id = "inv-missing"
-        mock_invoice_service.finalize_invoice.side_effect = InvoiceNotFoundError("Invoice not found")
+        mock_invoice_service.finalize_invoice.side_effect = InvoiceNotFoundError(
+            "Invoice not found"
+        )
 
         # Act
         response = await async_client.post(
@@ -321,7 +323,9 @@ class TestInvoiceCredits:
         """Test applying credit to non-existent invoice."""
         # Arrange
         invoice_id = "inv-missing"
-        mock_invoice_service.apply_credit_to_invoice.side_effect = InvoiceNotFoundError("Invoice not found")
+        mock_invoice_service.apply_credit_to_invoice.side_effect = InvoiceNotFoundError(
+            "Invoice not found"
+        )
 
         # Act
         response = await async_client.post(

@@ -143,7 +143,10 @@ class TenantQueries:
         context = info.context
         current_user = context.require_authenticated_user()
         permissions = set(current_user.permissions or [])
-        if not current_user.is_platform_admin and PLATFORM_TENANT_READ_PERMISSION not in permissions:
+        if (
+            not current_user.is_platform_admin
+            and PLATFORM_TENANT_READ_PERMISSION not in permissions
+        ):
             raise Exception("Platform administrator access required to list tenants.")
 
         db: AsyncSession = context.db
@@ -237,7 +240,10 @@ class TenantQueries:
         context = info.context
         current_user = context.require_authenticated_user()
         permissions = set(current_user.permissions or [])
-        if not current_user.is_platform_admin and PLATFORM_TENANT_READ_PERMISSION not in permissions:
+        if (
+            not current_user.is_platform_admin
+            and PLATFORM_TENANT_READ_PERMISSION not in permissions
+        ):
             raise Exception("Platform administrator access required to view tenant metrics.")
 
         db: AsyncSession = context.db

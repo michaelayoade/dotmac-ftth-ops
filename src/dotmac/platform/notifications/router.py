@@ -29,6 +29,16 @@ from dotmac.platform.notifications.service import NotificationService
 router = APIRouter(prefix="/notifications", tags=["Notifications"])
 
 
+def _ensure_tenant_id(user: UserInfo) -> str:
+    """Ensure user has a tenant_id and return it."""
+    if not user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Tenant context is required for notifications",
+        )
+    return user.tenant_id
+
+
 # Notification Endpoints
 @router.get("", response_model=NotificationListResponse)
 async def list_notifications(
@@ -54,7 +64,7 @@ async def list_notifications(
     user_uuid = ensure_uuid(current_user.user_id)
 
     notifications = await service.get_user_notifications(
-        tenant_id=current_user.tenant_id,
+        tenant_id=_ensure_tenant_id(current_user),
         user_id=user_uuid,
         unread_only=unread_only,
         priority=priority,
@@ -63,7 +73,9 @@ async def list_notifications(
         limit=limit,
     )
 
-    unread_count = await service.get_unread_count(tenant_id=current_user.tenant_id, user_id=user_uuid)
+    unread_count = await service.get_unread_count(
+        tenant_id=_ensure_tenant_id(current_user), user_id=user_uuid
+    )
 
     return NotificationListResponse(
         notifications=[NotificationResponse.model_validate(n) for n in notifications],
@@ -81,7 +93,7 @@ async def get_unread_count(
     service = NotificationService(db)
 
     count = await service.get_unread_count(
-        tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
+        tenant_id=_ensure_tenant_id(current_user), user_id=ensure_uuid(current_user.user_id)
     )
 
     return {"unread_count": count}
@@ -104,7 +116,7 @@ async def create_notification(
 
     try:
         notification = await service.create_notification(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             user_id=request.user_id,
             notification_type=request.type,
             title=request.title,
@@ -144,7 +156,7 @@ async def create_notification_from_template(
 
     try:
         notification = await service.create_from_template(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             user_id=request.user_id,
             notification_type=request.type,
             variables=request.variables,
@@ -172,7 +184,7 @@ async def mark_notification_as_read(
 
     try:
         notification = await service.mark_as_read(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             user_id=ensure_uuid(current_user.user_id),
             notification_id=notification_id,
         )
@@ -194,7 +206,7 @@ async def mark_all_as_read(
 
     try:
         count = await service.mark_all_as_read(
-            tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
+            tenant_id=_ensure_tenant_id(current_user), user_id=ensure_uuid(current_user.user_id)
         )
         await db.commit()
 
@@ -215,7 +227,7 @@ async def archive_notification(
 
     try:
         notification = await service.archive_notification(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             user_id=ensure_uuid(current_user.user_id),
             notification_id=notification_id,
         )
@@ -237,7 +249,7 @@ async def get_notification_preferences(
     service = NotificationService(db)
 
     preferences = await service.get_user_preferences(
-        tenant_id=current_user.tenant_id, user_id=ensure_uuid(current_user.user_id)
+        tenant_id=_ensure_tenant_id(current_user), user_id=ensure_uuid(current_user.user_id)
     )
 
     return NotificationPreferenceResponse.model_validate(preferences)
@@ -263,7 +275,7 @@ async def update_notification_preferences(
 
     try:
         preferences = await service.update_user_preferences(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             user_id=ensure_uuid(current_user.user_id),
             enabled=request.enabled,
             email_enabled=request.email_enabled,
@@ -303,7 +315,7 @@ async def get_notification_stats(
     user_uuid = ensure_uuid(current_user.user_id)
 
     all_notifications = await service.get_user_notifications(
-        tenant_id=current_user.tenant_id,
+        tenant_id=_ensure_tenant_id(current_user),
         user_id=user_uuid,
         unread_only=False,
         offset=0,
@@ -311,7 +323,7 @@ async def get_notification_stats(
     )
 
     unread_count = await service.get_unread_count(
-        tenant_id=current_user.tenant_id, user_id=user_uuid
+        tenant_id=_ensure_tenant_id(current_user), user_id=user_uuid
     )
 
     # Count by priority
@@ -388,7 +400,7 @@ async def notify_team(
 
     try:
         notifications = await service.notify_team(
-            tenant_id=current_user.tenant_id,
+            tenant_id=_ensure_tenant_id(current_user),
             team_members=request.team_members,
             role_filter=request.role_filter,
             notification_type=request.notification_type,

@@ -75,7 +75,7 @@ export default function ContactsPage() {
     queryFn: async () => {
       try {
         const result = await apiClient.post("/contacts/search", {
-          query: searchQuery || undefined,
+          query: searchQuery || null,
           page,
           page_size: 20,
           include_deleted: false,

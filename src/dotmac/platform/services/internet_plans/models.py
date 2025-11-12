@@ -14,7 +14,6 @@ from uuid import UUID, uuid4
 from sqlalchemy import (
     JSON,
     CheckConstraint,
-    Enum as SQLEnum,
     ForeignKey,
     Index,
     Integer,
@@ -22,6 +21,9 @@ from sqlalchemy import (
     String,
     Time,
     UniqueConstraint,
+)
+from sqlalchemy import (
+    Enum as SQLEnum,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 

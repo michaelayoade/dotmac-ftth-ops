@@ -232,7 +232,7 @@ export default function RolesPage() {
       setOperationLoading(true);
       await updateRole(selectedRole.name, {
         display_name: selectedRole.display_name,
-        description: selectedRole.description,
+        ...(selectedRole.description && { description: selectedRole.description }),
         permissions: Array.from(selectedPermissions),
       });
 
@@ -293,7 +293,7 @@ export default function RolesPage() {
       await createRole({
         name: `${role.name}_copy`,
         display_name: `${role.display_name} (Copy)`,
-        description: role.description,
+        ...(role.description && { description: role.description }),
         permissions: role.permissions.map((p) => p.name),
       });
     } catch (error) {

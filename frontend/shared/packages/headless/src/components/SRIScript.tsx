@@ -27,7 +27,7 @@ export function SRIScript({
   const nonce = useNonce();
 
   // If no integrity hash provided, warn in development
-  if (!integrity && process.env.NODE_ENV === "development") {
+  if (!integrity && process.env["NODE_ENV"] === "development") {
     console.warn(`No SRI hash provided for script: ${src}`);
   }
 
@@ -77,7 +77,7 @@ export function SRILink({
   crossOrigin = "anonymous",
 }: SRILinkProps) {
   // Warn if no integrity for external stylesheets
-  if (!integrity && href.startsWith("http") && process.env.NODE_ENV === "development") {
+  if (!integrity && href.startsWith("http") && process.env["NODE_ENV"] === "development") {
     console.warn(`No SRI hash provided for stylesheet: ${href}`);
   }
 

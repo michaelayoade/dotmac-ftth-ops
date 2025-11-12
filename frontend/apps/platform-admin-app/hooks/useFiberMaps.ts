@@ -2,11 +2,16 @@
  * FiberMaps Custom Hooks
  *
  * React hooks for managing fiber infrastructure data, maps, and analytics
+ * Migrated to TanStack Query for improved caching and state management
  */
 
-import { useState, useEffect, useCallback } from "react";
+"use client";
+
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { useToast } from "@dotmac/ui";
+import { logger } from "@/lib/logger";
 import type {
   FiberCable,
   FiberCablesResponse,
@@ -26,6 +31,142 @@ import type {
 } from "@/types/fibermaps";
 
 // ============================================================================
+// Utility Functions
+// ============================================================================
+
+const toError = (error: unknown) =>
+  error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
+
+const toMessage = (error: unknown, fallback: string) =>
+  error instanceof Error ? error.message : fallback;
+
+// ============================================================================
+// Query Keys Factory
+// ============================================================================
+
+export const fiberMapsKeys = {
+  all: ["fiberMaps"] as const,
+  cables: (filters?: { status?: string; cable_type?: string; limit?: number }) =>
+    [...fiberMapsKeys.all, "cables", filters] as const,
+  splicePoints: (filters?: { cable_id?: string; limit?: number }) =>
+    [...fiberMapsKeys.all, "splicePoints", filters] as const,
+  distributionPoints: (filters?: { type?: string; limit?: number }) =>
+    [...fiberMapsKeys.all, "distributionPoints", filters] as const,
+  serviceAreas: (filters?: { coverage_status?: string; limit?: number }) =>
+    [...fiberMapsKeys.all, "serviceAreas", filters] as const,
+  stats: () => [...fiberMapsKeys.all, "stats"] as const,
+};
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+const fiberMapsApi = {
+  fetchCables: async (options: { status?: string; cable_type?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options.status) params.append("status", options.status);
+    if (options.cable_type) params.append("cable_type", options.cable_type);
+    if (options.limit) params.append("limit", options.limit.toString());
+
+    const response = await apiClient.get<FiberCablesResponse>(
+      `/fibermaps/cables?${params.toString()}`,
+    );
+    return response.data.cables;
+  },
+
+  createCable: async (data: CreateFiberCableRequest): Promise<FiberCable> => {
+    const response = await apiClient.post<FiberCable>("/fibermaps/cables", data);
+    return response.data;
+  },
+
+  updateCable: async (id: string, data: Partial<FiberCable>): Promise<FiberCable> => {
+    const response = await apiClient.patch<FiberCable>(`/fibermaps/cables/${id}`, data);
+    return response.data;
+  },
+
+  deleteCable: async (id: string): Promise<void> => {
+    await apiClient.delete(`/fibermaps/cables/${id}`);
+  },
+
+  fetchSplicePoints: async (options: { cable_id?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options.cable_id) params.append("cable_id", options.cable_id);
+    if (options.limit) params.append("limit", options.limit.toString());
+
+    const response = await apiClient.get<SplicePointsResponse>(
+      `/fibermaps/splice-points?${params.toString()}`,
+    );
+    return response.data.splice_points;
+  },
+
+  createSplicePoint: async (data: CreateSplicePointRequest): Promise<SplicePoint> => {
+    const response = await apiClient.post<SplicePoint>("/fibermaps/splice-points", data);
+    return response.data;
+  },
+
+  updateSplicePoint: async (id: string, data: Partial<SplicePoint>): Promise<SplicePoint> => {
+    const response = await apiClient.patch<SplicePoint>(`/fibermaps/splice-points/${id}`, data);
+    return response.data;
+  },
+
+  deleteSplicePoint: async (id: string): Promise<void> => {
+    await apiClient.delete(`/fibermaps/splice-points/${id}`);
+  },
+
+  fetchDistributionPoints: async (options: { type?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options.type) params.append("type", options.type);
+    if (options.limit) params.append("limit", options.limit.toString());
+
+    const response = await apiClient.get<DistributionPointsResponse>(
+      `/fibermaps/distribution-points?${params.toString()}`,
+    );
+    return response.data.distribution_points;
+  },
+
+  createDistributionPoint: async (
+    data: CreateDistributionPointRequest,
+  ): Promise<DistributionPoint> => {
+    const response = await apiClient.post<DistributionPoint>(
+      "/fibermaps/distribution-points",
+      data,
+    );
+    return response.data;
+  },
+
+  updateDistributionPoint: async (
+    id: string,
+    data: Partial<DistributionPoint>,
+  ): Promise<DistributionPoint> => {
+    const response = await apiClient.patch<DistributionPoint>(
+      `/fibermaps/distribution-points/${id}`,
+      data,
+    );
+    return response.data;
+  },
+
+  deleteDistributionPoint: async (id: string): Promise<void> => {
+    await apiClient.delete(`/fibermaps/distribution-points/${id}`);
+  },
+
+  fetchServiceAreas: async (options: { coverage_status?: string; limit?: number }) => {
+    const params = new URLSearchParams();
+    if (options.coverage_status) params.append("coverage_status", options.coverage_status);
+    if (options.limit) params.append("limit", options.limit.toString());
+
+    const response = await apiClient.get<ServiceAreasResponse>(
+      `/fibermaps/service-areas?${params.toString()}`,
+    );
+    return response.data.service_areas;
+  },
+
+  fetchStats: async (): Promise<FiberInfrastructureStats> => {
+    const response = await apiClient.get<FiberInfrastructureStats>("/fibermaps/statistics");
+    return response.data;
+  },
+};
+
+// ============================================================================
 // Fiber Cables Hook
 // ============================================================================
 
@@ -38,126 +179,116 @@ interface UseFiberCablesOptions {
 
 export function useFiberCables(options: UseFiberCablesOptions = {}) {
   const { toast } = useToast();
-  const [cables, setCables] = useState<FiberCable[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchCables = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const query = useQuery({
+    queryKey: fiberMapsKeys.cables(filters),
+    queryFn: () => fiberMapsApi.fetchCables(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes - map data changes moderately
+    enabled: autoFetch,
+    retry: 1,
+  });
 
-    try {
-      const params = new URLSearchParams();
-      if (options.status) params.append("status", options.status);
-      if (options.cable_type) params.append("cable_type", options.cable_type);
-      if (options.limit) params.append("limit", options.limit.toString());
-
-      const response = await apiClient.get<FiberCablesResponse>(
-        `/fibermaps/cables?${params.toString()}`,
-      );
-
-      setCables(response.data.cables);
-      return response.data.cables;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch fiber cables");
-      setError(error);
+  const createMutation = useMutation({
+    mutationFn: fiberMapsApi.createCable,
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.cables(filters) });
+      logger.info("Creating fiber cable", { data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to create fiber cable");
+      logger.error("Error creating fiber cable", toError(error));
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.status, options.cable_type, options.limit, toast]);
-
-  const createCable = useCallback(
-    async (data: CreateFiberCableRequest) => {
-      try {
-        const response = await apiClient.post<FiberCable>("/fibermaps/cables", data);
-
-        toast({
-          title: "Cable Created",
-          description: `Fiber cable ${response.data.cable_name} has been created successfully`,
-        });
-
-        await fetchCables();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create fiber cable",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchCables, toast],
-  );
-
-  const updateCable = useCallback(
-    async (id: string, data: Partial<FiberCable>) => {
-      try {
-        const response = await apiClient.patch<FiberCable>(`/fibermaps/cables/${id}`, data);
-
-        toast({
-          title: "Cable Updated",
-          description: "Fiber cable has been updated successfully",
-        });
-
-        await fetchCables();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update fiber cable",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("Fiber cable created successfully", { cable: data });
+      toast({
+        title: "Cable Created",
+        description: `Fiber cable ${data.cable_name} has been created successfully`,
+      });
     },
-    [fetchCables, toast],
-  );
-
-  const deleteCable = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/fibermaps/cables/${id}`);
-
-        toast({
-          title: "Cable Deleted",
-          description: "Fiber cable has been deleted successfully",
-        });
-
-        await fetchCables();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete fiber cable",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.cables(filters) });
     },
-    [fetchCables, toast],
-  );
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchCables();
-    }
-  }, [fetchCables, options.autoFetch]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<FiberCable> }) =>
+      fiberMapsApi.updateCable(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.cables(filters) });
+      logger.info("Updating fiber cable", { id, data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to update fiber cable");
+      logger.error("Error updating fiber cable", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("Fiber cable updated successfully", { cable: data });
+      toast({
+        title: "Cable Updated",
+        description: "Fiber cable has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.cables(filters) });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: fiberMapsApi.deleteCable,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.cables(filters) });
+      logger.info("Deleting fiber cable", { id });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to delete fiber cable");
+      logger.error("Error deleting fiber cable", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Fiber cable deleted successfully");
+      toast({
+        title: "Cable Deleted",
+        description: "Fiber cable has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.cables(filters) });
+    },
+  });
 
   return {
-    cables,
-    isLoading,
-    error,
-    refetch: fetchCables,
-    createCable,
-    updateCable,
-    deleteCable,
+    cables: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error ? toError(query.error) : null,
+    refetch: query.refetch,
+    createCable: async (data: CreateFiberCableRequest) => {
+      const result = await createMutation.mutateAsync(data);
+      return result;
+    },
+    updateCable: async (id: string, data: Partial<FiberCable>) => {
+      const result = await updateMutation.mutateAsync({ id, data });
+      return result;
+    },
+    deleteCable: async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+      return true;
+    },
   };
 }
 
@@ -173,125 +304,116 @@ interface UseSplicePointsOptions {
 
 export function useSplicePoints(options: UseSplicePointsOptions = {}) {
   const { toast } = useToast();
-  const [splicePoints, setSplicePoints] = useState<SplicePoint[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchSplicePoints = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const query = useQuery({
+    queryKey: fiberMapsKeys.splicePoints(filters),
+    queryFn: () => fiberMapsApi.fetchSplicePoints(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes - map data changes moderately
+    enabled: autoFetch,
+    retry: 1,
+  });
 
-    try {
-      const params = new URLSearchParams();
-      if (options.cable_id) params.append("cable_id", options.cable_id);
-      if (options.limit) params.append("limit", options.limit.toString());
-
-      const response = await apiClient.get<SplicePointsResponse>(
-        `/fibermaps/splice-points?${params.toString()}`,
-      );
-
-      setSplicePoints(response.data.splice_points);
-      return response.data.splice_points;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch splice points");
-      setError(error);
+  const createMutation = useMutation({
+    mutationFn: fiberMapsApi.createSplicePoint,
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
+      logger.info("Creating splice point", { data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to create splice point");
+      logger.error("Error creating splice point", toError(error));
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.cable_id, options.limit, toast]);
-
-  const createSplicePoint = useCallback(
-    async (data: CreateSplicePointRequest) => {
-      try {
-        const response = await apiClient.post<SplicePoint>("/fibermaps/splice-points", data);
-
-        toast({
-          title: "Splice Point Created",
-          description: `Splice point ${response.data.name} has been created successfully`,
-        });
-
-        await fetchSplicePoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create splice point",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchSplicePoints, toast],
-  );
-
-  const updateSplicePoint = useCallback(
-    async (id: string, data: Partial<SplicePoint>) => {
-      try {
-        const response = await apiClient.patch<SplicePoint>(`/fibermaps/splice-points/${id}`, data);
-
-        toast({
-          title: "Splice Point Updated",
-          description: "Splice point has been updated successfully",
-        });
-
-        await fetchSplicePoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update splice point",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("Splice point created successfully", { splicePoint: data });
+      toast({
+        title: "Splice Point Created",
+        description: `Splice point ${data.name} has been created successfully`,
+      });
     },
-    [fetchSplicePoints, toast],
-  );
-
-  const deleteSplicePoint = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/fibermaps/splice-points/${id}`);
-
-        toast({
-          title: "Splice Point Deleted",
-          description: "Splice point has been deleted successfully",
-        });
-
-        await fetchSplicePoints();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete splice point",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
     },
-    [fetchSplicePoints, toast],
-  );
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchSplicePoints();
-    }
-  }, [fetchSplicePoints, options.autoFetch]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<SplicePoint> }) =>
+      fiberMapsApi.updateSplicePoint(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
+      logger.info("Updating splice point", { id, data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to update splice point");
+      logger.error("Error updating splice point", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("Splice point updated successfully", { splicePoint: data });
+      toast({
+        title: "Splice Point Updated",
+        description: "Splice point has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: fiberMapsApi.deleteSplicePoint,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
+      logger.info("Deleting splice point", { id });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to delete splice point");
+      logger.error("Error deleting splice point", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Splice point deleted successfully");
+      toast({
+        title: "Splice Point Deleted",
+        description: "Splice point has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.splicePoints(filters) });
+    },
+  });
 
   return {
-    splicePoints,
-    isLoading,
-    error,
-    refetch: fetchSplicePoints,
-    createSplicePoint,
-    updateSplicePoint,
-    deleteSplicePoint,
+    splicePoints: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error ? toError(query.error) : null,
+    refetch: query.refetch,
+    createSplicePoint: async (data: CreateSplicePointRequest) => {
+      const result = await createMutation.mutateAsync(data);
+      return result;
+    },
+    updateSplicePoint: async (id: string, data: Partial<SplicePoint>) => {
+      const result = await updateMutation.mutateAsync({ id, data });
+      return result;
+    },
+    deleteSplicePoint: async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+      return true;
+    },
   };
 }
 
@@ -307,131 +429,116 @@ interface UseDistributionPointsOptions {
 
 export function useDistributionPoints(options: UseDistributionPointsOptions = {}) {
   const { toast } = useToast();
-  const [distributionPoints, setDistributionPoints] = useState<DistributionPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchDistributionPoints = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
+  const query = useQuery({
+    queryKey: fiberMapsKeys.distributionPoints(filters),
+    queryFn: () => fiberMapsApi.fetchDistributionPoints(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes - map data changes moderately
+    enabled: autoFetch,
+    retry: 1,
+  });
 
-    try {
-      const params = new URLSearchParams();
-      if (options.type) params.append("type", options.type);
-      if (options.limit) params.append("limit", options.limit.toString());
-
-      const response = await apiClient.get<DistributionPointsResponse>(
-        `/fibermaps/distribution-points?${params.toString()}`,
-      );
-
-      setDistributionPoints(response.data.distribution_points);
-      return response.data.distribution_points;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch distribution points");
-      setError(error);
+  const createMutation = useMutation({
+    mutationFn: fiberMapsApi.createDistributionPoint,
+    onMutate: async (data) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
+      logger.info("Creating distribution point", { data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to create distribution point");
+      logger.error("Error creating distribution point", toError(error));
       toast({
         title: "Error",
-        description: error.message,
+        description: message,
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.type, options.limit, toast]);
-
-  const createDistributionPoint = useCallback(
-    async (data: CreateDistributionPointRequest) => {
-      try {
-        const response = await apiClient.post<DistributionPoint>(
-          "/fibermaps/distribution-points",
-          data,
-        );
-
-        toast({
-          title: "Distribution Point Created",
-          description: `Distribution point ${response.data.name} has been created successfully`,
-        });
-
-        await fetchDistributionPoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create distribution point",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchDistributionPoints, toast],
-  );
-
-  const updateDistributionPoint = useCallback(
-    async (id: string, data: Partial<DistributionPoint>) => {
-      try {
-        const response = await apiClient.patch<DistributionPoint>(
-          `/fibermaps/distribution-points/${id}`,
-          data,
-        );
-
-        toast({
-          title: "Distribution Point Updated",
-          description: "Distribution point has been updated successfully",
-        });
-
-        await fetchDistributionPoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update distribution point",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("Distribution point created successfully", { distributionPoint: data });
+      toast({
+        title: "Distribution Point Created",
+        description: `Distribution point ${data.name} has been created successfully`,
+      });
     },
-    [fetchDistributionPoints, toast],
-  );
-
-  const deleteDistributionPoint = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/fibermaps/distribution-points/${id}`);
-
-        toast({
-          title: "Distribution Point Deleted",
-          description: "Distribution point has been deleted successfully",
-        });
-
-        await fetchDistributionPoints();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete distribution point",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
     },
-    [fetchDistributionPoints, toast],
-  );
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchDistributionPoints();
-    }
-  }, [fetchDistributionPoints, options.autoFetch]);
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Partial<DistributionPoint> }) =>
+      fiberMapsApi.updateDistributionPoint(id, data),
+    onMutate: async ({ id, data }) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
+      logger.info("Updating distribution point", { id, data });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to update distribution point");
+      logger.error("Error updating distribution point", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("Distribution point updated successfully", { distributionPoint: data });
+      toast({
+        title: "Distribution Point Updated",
+        description: "Distribution point has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: fiberMapsApi.deleteDistributionPoint,
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
+      logger.info("Deleting distribution point", { id });
+    },
+    onError: (error) => {
+      const message = toMessage(error, "Failed to delete distribution point");
+      logger.error("Error deleting distribution point", toError(error));
+      toast({
+        title: "Error",
+        description: message,
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Distribution point deleted successfully");
+      toast({
+        title: "Distribution Point Deleted",
+        description: "Distribution point has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: fiberMapsKeys.distributionPoints(filters) });
+    },
+  });
 
   return {
-    distributionPoints,
-    isLoading,
-    error,
-    refetch: fetchDistributionPoints,
-    createDistributionPoint,
-    updateDistributionPoint,
-    deleteDistributionPoint,
+    distributionPoints: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error ? toError(query.error) : null,
+    refetch: query.refetch,
+    createDistributionPoint: async (data: CreateDistributionPointRequest) => {
+      const result = await createMutation.mutateAsync(data);
+      return result;
+    },
+    updateDistributionPoint: async (id: string, data: Partial<DistributionPoint>) => {
+      const result = await updateMutation.mutateAsync({ id, data });
+      return result;
+    },
+    deleteDistributionPoint: async (id: string) => {
+      await deleteMutation.mutateAsync(id);
+      return true;
+    },
   };
 }
 
@@ -446,51 +553,21 @@ interface UseServiceAreasOptions {
 }
 
 export function useServiceAreas(options: UseServiceAreasOptions = {}) {
-  const { toast } = useToast();
-  const [serviceAreas, setServiceAreas] = useState<ServiceArea[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchServiceAreas = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const params = new URLSearchParams();
-      if (options.coverage_status) params.append("coverage_status", options.coverage_status);
-      if (options.limit) params.append("limit", options.limit.toString());
-
-      const response = await apiClient.get<ServiceAreasResponse>(
-        `/fibermaps/service-areas?${params.toString()}`,
-      );
-
-      setServiceAreas(response.data.service_areas);
-      return response.data.service_areas;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch service areas");
-      setError(error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.coverage_status, options.limit, toast]);
-
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchServiceAreas();
-    }
-  }, [fetchServiceAreas, options.autoFetch]);
+  const query = useQuery({
+    queryKey: fiberMapsKeys.serviceAreas(filters),
+    queryFn: () => fiberMapsApi.fetchServiceAreas(filters),
+    staleTime: 2 * 60 * 1000, // 2 minutes - map data changes moderately
+    enabled: autoFetch,
+    retry: 1,
+  });
 
   return {
-    serviceAreas,
-    isLoading,
-    error,
-    refetch: fetchServiceAreas,
+    serviceAreas: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error ? toError(query.error) : null,
+    refetch: query.refetch,
   };
 }
 
@@ -499,38 +576,17 @@ export function useServiceAreas(options: UseServiceAreasOptions = {}) {
 // ============================================================================
 
 export function useFiberInfrastructureStats() {
-  const { toast } = useToast();
-  const [stats, setStats] = useState<FiberInfrastructureStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
-      const response = await apiClient.get<FiberInfrastructureStats>("/fibermaps/statistics");
-
-      setStats(response.data);
-      return response.data;
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.response?.data?.detail || "Failed to fetch infrastructure statistics",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+  const query = useQuery({
+    queryKey: fiberMapsKeys.stats(),
+    queryFn: fiberMapsApi.fetchStats,
+    staleTime: 2 * 60 * 1000, // 2 minutes - stats change moderately
+    retry: 1,
+  });
 
   return {
-    stats,
-    isLoading,
-    refetch: fetchStats,
+    stats: query.data ?? null,
+    isLoading: query.isLoading,
+    refetch: query.refetch,
   };
 }
 

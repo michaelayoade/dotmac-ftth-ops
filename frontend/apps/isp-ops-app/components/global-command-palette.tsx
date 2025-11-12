@@ -102,72 +102,78 @@ export function GlobalCommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Quick actions
+  // Quick actions - ISP Operations workspace
   const quickActions: QuickAction[] = [
     {
       id: "home",
-      label: "Go to Dashboard",
+      label: "Overview Dashboard",
       icon: Home,
       shortcut: "⌘H",
       action: () => router.push("/dashboard"),
       keywords: ["home", "dashboard", "overview"],
     },
     {
-      id: "search",
-      label: "Open Search Page",
-      icon: Search,
-      shortcut: "⌘S",
-      action: () => router.push("/dashboard/search"),
-      keywords: ["search", "find", "query"],
+      id: "crm",
+      label: "CRM Workspace",
+      icon: Users,
+      action: () => router.push("/dashboard/crm"),
+      keywords: ["crm", "leads", "contacts", "sales"],
     },
     {
       id: "subscribers",
-      label: "View Subscribers",
+      label: "Subscribers",
       icon: Users,
       action: () => router.push("/dashboard/subscribers"),
-      keywords: ["subscribers", "users", "accounts"],
-    },
-    {
-      id: "billing",
-      label: "Billing & Revenue",
-      icon: Receipt,
-      action: () => router.push("/dashboard/billing-revenue"),
-      keywords: ["billing", "invoices", "revenue", "payments"],
-    },
-    {
-      id: "support",
-      label: "Support Tickets",
-      icon: Ticket,
-      action: () => router.push("/dashboard/support"),
-      keywords: ["support", "tickets", "help"],
+      keywords: ["subscribers", "radius", "accounts", "customers"],
     },
     {
       id: "network",
       label: "Network Inventory",
       icon: Server,
       action: () => router.push("/dashboard/network"),
-      keywords: ["network", "devices", "infrastructure"],
+      keywords: ["network", "devices", "infrastructure", "ipam"],
+    },
+    {
+      id: "fiber",
+      label: "Fiber Management",
+      icon: Activity,
+      action: () => router.push("/dashboard/network/fiber"),
+      keywords: ["fiber", "cables", "optical", "infrastructure"],
+    },
+    {
+      id: "operations",
+      label: "Operations Center",
+      icon: Activity,
+      action: () => router.push("/dashboard/operations"),
+      keywords: ["operations", "automation", "workflows"],
+    },
+    {
+      id: "billing",
+      label: "Billing & Revenue",
+      icon: Receipt,
+      action: () => router.push("/dashboard/billing-revenue"),
+      keywords: ["billing", "invoices", "revenue", "payments", "subscriptions"],
+    },
+    {
+      id: "tickets",
+      label: "Tickets",
+      icon: Ticket,
+      action: () => router.push("/dashboard/ticketing"),
+      keywords: ["tickets", "support", "help", "issues"],
     },
     {
       id: "communications",
       label: "Communications",
       icon: Mail,
       action: () => router.push("/dashboard/communications"),
-      keywords: ["email", "sms", "communications", "messages"],
-    },
-    {
-      id: "audit",
-      label: "Audit & Compliance",
-      icon: Shield,
-      action: () => router.push("/dashboard/platform-admin/audit"),
-      keywords: ["audit", "security", "compliance", "logs"],
+      keywords: ["email", "sms", "communications", "messages", "campaigns"],
     },
     {
       id: "settings",
       label: "Settings",
       icon: Settings,
       action: () => router.push("/dashboard/settings"),
-      keywords: ["settings", "preferences", "configuration"],
+      keywords: ["settings", "preferences", "configuration", "account"],
     },
   ];
 

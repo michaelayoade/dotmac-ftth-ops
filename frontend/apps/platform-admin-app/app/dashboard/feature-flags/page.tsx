@@ -214,7 +214,7 @@ function FeatureFlagsPageContent() {
     toggleFlagMutation.mutate({
       name: flag.name,
       enabled: !flag.enabled,
-      description: flag.description,
+      ...(flag.description && { description: flag.description }),
     });
   };
 
@@ -243,7 +243,7 @@ function FeatureFlagsPageContent() {
     createFlagMutation.mutate({
       name: newFlagName.trim(),
       enabled: newFlagEnabled,
-      description: newFlagDescription.trim() || undefined,
+      ...(newFlagDescription.trim() && { description: newFlagDescription.trim() }),
     });
   };
 

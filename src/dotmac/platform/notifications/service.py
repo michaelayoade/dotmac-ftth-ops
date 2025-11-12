@@ -15,7 +15,11 @@ import structlog
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from dotmac.platform.communications.email_service import EmailMessage
+from dotmac.platform.communications.branding_utils import (
+    derive_brand_tokens,
+    render_branded_email_html,
+    render_branded_sms_text,
+)
 from dotmac.platform.communications.task_service import queue_email
 from dotmac.platform.communications.template_service import TemplateService
 from dotmac.platform.core.exceptions import NotFoundError
@@ -29,6 +33,8 @@ from dotmac.platform.notifications.models import (
     NotificationTemplate,
     NotificationType,
 )
+from dotmac.platform.tenant.schemas import TenantBrandingConfig
+from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 
 logger = structlog.get_logger(__name__)
 
@@ -619,6 +625,12 @@ class NotificationService:
             except Exception as e:
                 logger.error("Failed to send push notification", error=str(e))
 
+        if NotificationChannel.WEBHOOK in channels:
+            try:
+                await self._send_webhook(notification)
+            except Exception as e:
+                logger.error("Failed to send webhook notification", error=str(e))
+
         await self.db.flush()
 
     async def _send_email(self, notification: Notification) -> None:
@@ -637,16 +649,15 @@ class NotificationService:
             )
             return
 
-        # Queue email for async delivery
-        email_message = EmailMessage(
+        branding = await self._get_tenant_branding(notification.tenant_id)
+        html_body = self._render_html_email(notification, branding)
+
+        queue_email(
             to=[user.email],
             subject=notification.title,
             text_body=notification.message,
-            html_body=self._render_html_email(notification),
+            html_body=html_body,
         )
-
-        # Use communications service to send
-        queue_email(email_message)
 
         logger.info(
             "Email notification queued", notification_id=str(notification.id), email=user.email
@@ -679,6 +690,10 @@ class NotificationService:
             return
 
         # Create notification context
+        branding = await self._get_tenant_branding(notification.tenant_id)
+        product_name, _, support_email = derive_brand_tokens(branding)
+        branded_message = render_branded_sms_text(notification.message, branding)
+
         context = NotificationContext(
             notification_id=notification.id,
             tenant_id=notification.tenant_id,
@@ -686,7 +701,7 @@ class NotificationService:
             notification_type=notification.type,
             priority=notification.priority,
             title=notification.title,
-            message=notification.message,
+            message=branded_message,
             action_url=notification.action_url,
             action_label=notification.action_label,
             recipient_phone=user.phone,
@@ -695,6 +710,9 @@ class NotificationService:
             created_at=notification.created_at,
             related_entity_type=notification.related_entity_type,
             related_entity_id=notification.related_entity_id,
+            branding=branding.model_dump(),
+            product_name=product_name,
+            support_email=support_email,
         )
 
         # Send via SMS provider
@@ -755,6 +773,9 @@ class NotificationService:
         push_tokens = [device.device_token for device in devices]
 
         # Create notification context
+        branding = await self._get_tenant_branding(notification.tenant_id)
+        product_name, _, support_email = derive_brand_tokens(branding)
+
         context = NotificationContext(
             notification_id=notification.id,
             tenant_id=notification.tenant_id,
@@ -772,6 +793,9 @@ class NotificationService:
             created_at=notification.created_at,
             related_entity_type=notification.related_entity_type,
             related_entity_id=notification.related_entity_id,
+            branding=branding.model_dump(),
+            product_name=product_name,
+            support_email=support_email,
         )
 
         # Send via push provider
@@ -782,6 +806,51 @@ class NotificationService:
             notification_id=str(notification.id),
             device_count=len(push_tokens),
         )
+
+    async def _send_webhook(self, notification: Notification) -> None:
+        """Send webhook notification via configured provider."""
+        provider = ChannelProviderFactory.get_provider(NotificationChannel.WEBHOOK)
+        if not provider:
+            logger.warning(
+                "Webhook provider not configured or disabled",
+                notification_id=str(notification.id),
+            )
+            return
+
+        from dotmac.platform.user_management.models import User
+
+        stmt = select(User).where(User.id == notification.user_id)
+        result = await self.db.execute(stmt)
+        user = result.scalar_one_or_none()
+
+        branding = await self._get_tenant_branding(notification.tenant_id)
+        product_name, _, support_email = derive_brand_tokens(branding)
+
+        context = NotificationContext(
+            notification_id=notification.id,
+            tenant_id=notification.tenant_id,
+            user_id=notification.user_id,
+            notification_type=notification.type,
+            priority=notification.priority,
+            title=notification.title,
+            message=notification.message,
+            action_url=notification.action_url,
+            action_label=notification.action_label,
+            recipient_email=user.email if user else None,
+            recipient_phone=user.phone if user else None,
+            recipient_name=f"{(user.first_name if user else '')} {(user.last_name if user else '')}".strip()
+            if user
+            else None,
+            metadata=notification.metadata,
+            created_at=notification.created_at,
+            related_entity_type=notification.related_entity_type,
+            related_entity_id=notification.related_entity_id,
+            branding=branding.model_dump(),
+            product_name=product_name,
+            support_email=support_email,
+        )
+
+        await provider.send(context)
 
     async def notify_team(
         self,
@@ -922,7 +991,7 @@ class NotificationService:
 
         return notifications
 
-    def _render_html_email(self, notification: Notification) -> str:
+    def _render_html_email(self, notification: Notification, branding: TenantBrandingConfig) -> str:
         """Render HTML email for notification."""
         action_button = ""
         if notification.action_url and notification.action_label:
@@ -943,31 +1012,39 @@ class NotificationService:
             NotificationPriority.URGENT: "#dc3545",
         }
 
-        return f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-        </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-            <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                <div style="border-left: 4px solid {priority_color[notification.priority]}; padding-left: 15px; margin-bottom: 20px;">
-                    <h2 style="margin: 0; color: #333;">{notification.title}</h2>
-                    <p style="margin: 5px 0 0; color: #666; font-size: 0.9em;">
-                        Priority: {notification.priority.value.upper()}
-                    </p>
-                </div>
-                <div style="margin: 20px 0;">
-                    <p style="white-space: pre-line;">{notification.message}</p>
-                </div>
-                {action_button}
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; color: #666; font-size: 0.85em;">
-                    <p>This is an automated notification from your ISP platform.</p>
-                </div>
-            </div>
-        </body>
-        </html>
+        content = f"""
+        <div style="border-left: 4px solid {priority_color[notification.priority]}; padding-left: 15px; margin-bottom: 20px;">
+            <h2 style="margin: 0; color: #0f172a;">{notification.title}</h2>
+            <p style="margin: 5px 0 0; color: #475569; font-size: 0.9em;">
+                Priority: {notification.priority.value.upper()}
+            </p>
+        </div>
+        <div style="margin: 20px 0;">
+            <p style="white-space: pre-line; color: #0f172a;">{notification.message}</p>
+        </div>
+        {action_button}
         """
+
+        return render_branded_email_html(branding, content)
+
+    async def _get_tenant_branding(self, tenant_id: str | None) -> TenantBrandingConfig:
+        """Resolve tenant branding data."""
+        service = TenantService(self.db)
+        if tenant_id:
+            try:
+                return (await service.get_tenant_branding(tenant_id)).branding
+            except TenantNotFoundError:
+                logger.warning(
+                    "Tenant not found while resolving notification branding",
+                    tenant_id=tenant_id,
+                )
+            except Exception as exc:  # pragma: no cover - defensive logging
+                logger.error(
+                    "Failed to resolve tenant branding for notifications",
+                    tenant_id=tenant_id,
+                    error=str(exc),
+                )
+        return TenantService.get_default_branding_config()
 
     @staticmethod
     def _mask_phone(phone: str) -> str:

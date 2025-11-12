@@ -12,8 +12,8 @@ from contextlib import suppress
 
 import pytest
 import pytest_asyncio
-from sqlalchemy.ext.asyncio import AsyncSession
 from redis.exceptions import RedisError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from tests.fixtures.environment import HAS_FAKEREDIS, fakeredis
 

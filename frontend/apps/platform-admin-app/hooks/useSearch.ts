@@ -53,7 +53,7 @@ export function useSearch(params: SearchParams, enabled = true) {
  */
 export function useQuickSearch(query: string, type?: string, limit: number = 10, enabled = true) {
   return useQuery<SearchResponse, Error, SearchResponse, any>({
-    queryKey: searchKeys.searches({ q: query, type, limit, page: 1 }),
+    queryKey: searchKeys.searches({ q: query, ...(type && { type }), limit, page: 1 }),
     queryFn: () => searchService.quickSearch(query, type, limit),
     enabled: enabled && !!query && query.trim().length > 0,
     staleTime: 30000, // 30 seconds
@@ -101,7 +101,7 @@ export function useDebouncedSearch(query: string, type?: string, debounceMs = 30
   return useSearch(
     {
       q: debouncedQuery,
-      type,
+      ...(type && { type }),
       limit: 10,
       page: 1,
     },

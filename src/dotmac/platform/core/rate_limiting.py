@@ -14,8 +14,6 @@ from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
 
-from dotmac.platform.core.caching import redis_client
-
 logger = structlog.get_logger(__name__)
 
 
@@ -23,23 +21,47 @@ _limiter: Limiter | None = None
 
 
 def _create_limiter() -> Limiter:
-    """Create a limiter instance using the best available storage backend."""
+    """Create a limiter instance using the best available storage backend.
+
+    SECURITY: Eagerly initializes Redis to prevent per-process rate limiting.
+    In production, this function will fail fast if Redis is unavailable, preventing
+    silent degradation to in-memory storage which can be bypassed by distributing
+    requests across pods or waiting for process restarts.
+    """
+    from dotmac.platform.core.caching import get_redis
     from dotmac.platform.settings import settings
 
     storage_uri = settings.rate_limit.storage_url
-    client = redis_client
     enabled = settings.rate_limit.enabled
+
+    # SECURITY FIX: Eagerly call get_redis() to initialize Redis client
+    # before checking if we should use it. This prevents silent fallback
+    # to in-memory storage during app startup.
+    client = get_redis()
 
     if not storage_uri and client:
         storage_uri = settings.redis.cache_url
 
     if storage_uri:
-        logger.debug("rate_limit.storage.initialized", storage=storage_uri)
+        logger.info("rate_limit.storage.initialized", storage=storage_uri)
         return Limiter(key_func=get_remote_address, storage_uri=storage_uri, enabled=enabled)
+
+    # SECURITY: In production, fail fast if Redis is not available
+    # to prevent silent degradation to per-process rate limiting
+    if settings.DEPLOYMENT_MODE == "multi_tenant" or settings.DEPLOYMENT_MODE == "hybrid":
+        logger.error(
+            "rate_limit.storage.redis_required",
+            message="Redis is required for rate limiting in multi-tenant/hybrid mode",
+            deployment_mode=settings.DEPLOYMENT_MODE,
+        )
+        raise RuntimeError(
+            "Redis storage is required for rate limiting in production. "
+            "Configure REDIS_CACHE_URL or RATE_LIMIT_STORAGE_URL environment variables."
+        )
 
     logger.warning(
         "rate_limit.storage.memory",
-        message="Falling back to in-memory rate limiting; enable Redis for production",
+        message="Falling back to in-memory rate limiting (single-tenant mode only)",
     )
     return Limiter(key_func=get_remote_address, enabled=enabled)
 

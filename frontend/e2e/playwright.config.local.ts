@@ -2,10 +2,12 @@ import { defineConfig, devices } from "@playwright/test";
 
 /**
  * E2E test configuration for local development
- * Assumes backend (port 8000) and frontend (port 3000) are already running
+ * Assumes backend (port 8000) and ISP frontend (port 3001) are already running
  *
  * Usage: pnpm exec playwright test --config=playwright.config.local.ts
  */
+const LOCAL_BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -16,7 +18,7 @@ export default defineConfig({
   reporter: [["list"], ["html", { open: "never" }]],
 
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: LOCAL_BASE_URL,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "retain-on-failure",

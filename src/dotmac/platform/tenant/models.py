@@ -29,12 +29,14 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import Mapped, declared_attr, mapped_column, relationship
 
-from ..db import AuditMixin, Base as BaseRuntime, SoftDeleteMixin, TimestampMixin
+from ..db import AuditMixin, SoftDeleteMixin, TimestampMixin
+from ..db import Base as BaseRuntime
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase as Base
 else:
     Base = BaseRuntime
+
 
 # Ensure optional RADIUS models are registered with SQLAlchemy when available.
 _radius_models: ModuleType | None

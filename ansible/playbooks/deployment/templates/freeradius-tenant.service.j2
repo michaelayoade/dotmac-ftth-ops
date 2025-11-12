@@ -1,0 +1,41 @@
+[Unit]
+Description=FreeRADIUS Server - Tenant {{ tenant_id }}
+After=network.target postgresql.service
+Wants=postgresql.service
+PartOf=dotmac-tenant-{{ tenant_id }}.service
+
+[Service]
+Type=notify
+User=freerad
+Group=freerad
+
+# Run FreeRADIUS with tenant-specific config
+ExecStart=/usr/sbin/freeradius -f -d /etc/freeradius/3.0 -n radiusd-tenant-{{ tenant_id }} -p {{ radius_port }} -P
+ExecReload=/bin/kill -HUP $MAINPID
+
+Restart=on-failure
+RestartSec=5s
+StartLimitInterval=60s
+StartLimitBurst=3
+
+# Resource limits
+{% if resources.radius_cpu_limit is defined %}
+CPUQuota={{ resources.radius_cpu_limit }}%
+{% endif %}
+{% if resources.radius_memory_limit is defined %}
+MemoryLimit={{ resources.radius_memory_limit }}
+{% endif %}
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths={{ data_dir }}/radius
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=freeradius-tenant-{{ tenant_id }}
+
+[Install]
+WantedBy=multi-user.target

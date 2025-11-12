@@ -40,7 +40,7 @@ const initialForm: ProvisionForm = {
 
 const normalizeDiscovery = (onu: DiscoveredONU): DiscoveredONU => ({
   ...onu,
-  metadata: onu.metadata ?? {},
+  metadata: onu['metadata']?? {},
 });
 
 function ONUDiscoverPageContent() {
@@ -59,27 +59,27 @@ function ONUDiscoverPageContent() {
     queryKey: ["access-discover-onus"],
     queryFn: async () => {
       const response = await apiClient.get<DiscoveredONU[]>("/access/discover-onus");
-      return (response.data || []).map(normalizeDiscovery);
+      return (response['data'] || []).map(normalizeDiscovery);
     },
   });
 
   const provisionMutation = useMutation({
     mutationFn: async (form: ProvisionForm) => {
       const payload: ONUProvisionRequest = {
-        serial_number: form.serial_number,
-        olt_device_id: form.olt_device_id,
-        pon_port: form.pon_port,
-        subscriber_id: form.subscriber_id,
-        vlan: form.vlan,
-        bandwidth_profile: form.bandwidth_profile,
-        line_profile_id: form.line_profile_id,
-        service_profile_id: form.service_profile_id,
+        serial_number: form['serial_number'],
+        olt_device_id: form['olt_device_id'],
+        pon_port: form['pon_port'],
+        subscriber_id: form['subscriber_id'],
+        vlan: form['vlan'],
+        bandwidth_profile: form['bandwidth_profile'],
+        line_profile_id: form['line_profile_id'],
+        service_profile_id: form['service_profile_id'],
       };
       const response = await apiClient.post(
-        `/access/olts/${encodeURIComponent(form.olt_device_id)}/onus`,
+        `/access/olts/${encodeURIComponent(form['olt_device_id'])}/onus`,
         payload,
       );
-      return response.data;
+      return response['data'];
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["access-discover-onus"] });
@@ -91,7 +91,7 @@ function ONUDiscoverPageContent() {
     onError: (error: any) => {
       toast({
         title: "Provisioning failed",
-        description: error?.response?.data?.detail || error?.message || "Failed to provision ONU",
+        description: error?.['response']?.['data']?.detail || error?.['message'] || "Failed to provision ONU",
         variant: "destructive",
       });
     },
@@ -103,11 +103,11 @@ function ONUDiscoverPageContent() {
       return discoveredONUs;
     }
     return discoveredONUs.filter((onu) => {
-      const metadata = onu.metadata || {};
-      const oltId = String(metadata.olt_id ?? "").toLowerCase();
-      const vendor = String(metadata.vendor_id ?? "").toLowerCase();
+      const metadata = onu['metadata'] || {};
+      const oltId = String(metadata['olt_id'] ?? "").toLowerCase();
+      const vendor = String(metadata['vendor_id'] ?? "").toLowerCase();
       return (
-        onu.serial_number.toLowerCase().includes(query) ||
+        onu['serial_number'].toLowerCase().includes(query) ||
         oltId.includes(query) ||
         vendor.includes(query)
       );
@@ -115,18 +115,18 @@ function ONUDiscoverPageContent() {
   }, [discoveredONUs, searchQuery]);
 
   const handleSelectONU = (onu: DiscoveredONU) => {
-    const metadata = onu.metadata || {};
-    const ponPort = Number(metadata.pon_port ?? metadata.port ?? 0);
+    const metadata = onu['metadata'] || {};
+    const ponPort = Number(metadata['pon_port'] ?? metadata['port'] ?? 0);
     setSelectedONU(onu);
     setProvisionForm({
-      serial_number: onu.serial_number,
-      olt_device_id: String(metadata.olt_id ?? onu.onu_id.split(":")[0] ?? ""),
+      serial_number: onu['serial_number'],
+      olt_device_id: String(metadata['olt_id'] ?? onu['onu_id'].split(":")[0] ?? ""),
       pon_port: Number.isFinite(ponPort) ? ponPort : 0,
-      subscriber_id: metadata.subscriber_id,
-      vlan: metadata.vlan,
-      bandwidth_profile: metadata.bandwidth_profile,
-      line_profile_id: metadata.line_profile_id,
-      service_profile_id: metadata.service_profile_id,
+      subscriber_id: metadata['subscriber_id'],
+      vlan: metadata['vlan'],
+      bandwidth_profile: metadata['bandwidth_profile'],
+      line_profile_id: metadata['line_profile_id'],
+      service_profile_id: metadata['service_profile_id'],
     });
   };
 
@@ -219,30 +219,30 @@ function ONUDiscoverPageContent() {
             ) : (
               <div className="space-y-2 max-h-96 overflow-y-auto">
                 {filteredONUs.map((onu) => {
-                  const metadata = onu.metadata || {};
+                  const metadata = onu['metadata'] || {};
                   return (
                     <button
                       type="button"
-                      key={`${onu.serial_number}-${metadata.olt_id ?? ""}-${metadata.pon_port ?? ""}`}
+                      key={`${onu['serial_number']}-${metadata['olt_id'] ?? ""}-${metadata['pon_port'] ?? ""}`}
                       className={`w-full text-left border rounded-lg p-3 transition-colors ${
-                        selectedONU?.serial_number === onu.serial_number ? "border-primary bg-accent" : "hover:bg-accent"
+                        selectedONU?.serial_number === onu['serial_number'] ? "border-primary bg-accent" : "hover:bg-accent"
                       }`}
                       onClick={() => handleSelectONU(onu)}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <Zap className="h-4 w-4 text-amber-600" />
-                          <span className="font-medium">{onu.serial_number}</span>
+                          <span className="font-medium">{onu['serial_number']}</span>
                         </div>
-                        <Badge variant={onu.state.toLowerCase() === "provisioned" ? "secondary" : "outline"}>
-                          {onu.state}
+                        <Badge variant={onu['state'].toLowerCase() === "provisioned" ? "secondary" : "outline"}>
+                          {onu['state']}
                         </Badge>
                       </div>
                       <div className="text-xs space-y-1 text-muted-foreground">
-                        <p>OLT: {metadata.olt_id ?? "Unknown"}</p>
-                        <p>PON Port: {metadata.pon_port ?? "Unknown"}</p>
-                        {metadata.vendor_id && <p>Vendor: {metadata.vendor_id}</p>}
-                        {metadata.rssi && <p>RSSI: {metadata.rssi}</p>}
+                        <p>OLT: {metadata['olt_id'] ?? "Unknown"}</p>
+                        <p>PON Port: {metadata['pon_port'] ?? "Unknown"}</p>
+                        {metadata['vendor_id'] && <p>Vendor: {metadata['vendor_id']}</p>}
+                        {metadata['rssi'] && <p>RSSI: {metadata['rssi']}</p>}
                       </div>
                     </button>
                   );
@@ -336,7 +336,7 @@ function ONUDiscoverPageContent() {
                     onChange={(e) =>
                       setProvisionForm({
                         ...provisionForm,
-                        bandwidth_profile: e.target.value || undefined,
+                        bandwidth_profile: e.target.value || null,
                       })
                     }
                   />
@@ -351,7 +351,7 @@ function ONUDiscoverPageContent() {
                     onChange={(e) =>
                       setProvisionForm({
                         ...provisionForm,
-                        line_profile_id: e.target.value || undefined,
+                        line_profile_id: e.target.value || null,
                       })
                     }
                   />
@@ -366,7 +366,7 @@ function ONUDiscoverPageContent() {
                     onChange={(e) =>
                       setProvisionForm({
                         ...provisionForm,
-                        service_profile_id: e.target.value || undefined,
+                        service_profile_id: e.target.value || null,
                       })
                     }
                   />
@@ -403,7 +403,7 @@ function ONUDiscoverPageContent() {
 
 export default function ONUDiscoverPage() {
   return (
-    <RouteGuard permission="isp.network.pon.write">
+    <RouteGuard permission="isp.network['pon'].write">
       <ONUDiscoverPageContent />
     </RouteGuard>
   );

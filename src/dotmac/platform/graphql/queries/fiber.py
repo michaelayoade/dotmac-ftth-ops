@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
-from typing import Any, Sequence
+from typing import Any
 from uuid import UUID
 
 import strawberry
@@ -1470,9 +1470,7 @@ def map_service_area_model_to_graphql(area_model: ServiceAreaModel) -> ServiceAr
     businesses_connected = area_model.businesses_connected or 0
 
     penetration_rate = (homes_connected * 100.0 / homes_passed) if homes_passed > 0 else 0.0
-    business_penetration_rate = (
-        (businesses_connected * 100.0 / businesses_passed) if businesses_passed > 0 else 0.0
-    )
+    ((businesses_connected * 100.0 / businesses_passed) if businesses_passed > 0 else 0.0)
 
     return ServiceArea(
         id=strawberry.ID(str(area_model.id)),

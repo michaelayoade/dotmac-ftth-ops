@@ -80,37 +80,6 @@ import { logger } from "@/lib/logger";
 import { apiClient } from "@/lib/api/client";
 import { handleApiError } from "@/lib/error-handler";
 
-// Mock audit history
-const mockAuditHistory = [
-  {
-    id: "1",
-    flagName: "new-dashboard-ui",
-    action: "enabled",
-    user: "admin@example.com",
-    timestamp: "2024-01-20T15:30:00Z",
-    oldValue: false,
-    newValue: true,
-  },
-  {
-    id: "2",
-    flagName: "beta-features",
-    action: "rollout_changed",
-    user: "qa@example.com",
-    timestamp: "2024-01-22T10:00:00Z",
-    oldValue: 10,
-    newValue: 25,
-  },
-  {
-    id: "3",
-    flagName: "api-rate-limit",
-    action: "value_changed",
-    user: "engineering@example.com",
-    timestamp: "2024-01-05T10:00:00Z",
-    oldValue: 500,
-    newValue: 1000,
-  },
-];
-
 export default function FeatureFlagsPage() {
   const { toast } = useToast();
   const {
@@ -137,10 +106,8 @@ export default function FeatureFlagsPage() {
     type: "boolean",
     environment: "production",
     targeting: "all",
-    segment: undefined,
     rolloutPercentage: flag.enabled ? 100 : 0,
-    createdAt: flag.created_at
-      ? new Date(flag.created_at * 1000).toISOString()
+    createdAt: flag['created_at']? new Date(flag.created_at * 1000).toISOString()
       : new Date().toISOString(),
     updatedAt: new Date(flag.updated_at * 1000).toISOString(),
     lastModifiedBy: "system",
@@ -645,8 +612,8 @@ export default function FeatureFlagsPage() {
                             <Button
                               variant="ghost"
                               className="h-8 w-8 p-0"
-                              aria-label={`Open actions for ${flag.name ?? "feature flag"}`}
-                              title={`Open actions for ${flag.name ?? "feature flag"}`}
+                              aria-label={`Open actions for ${flag['name']?? "feature flag"}`}
+                              title={`Open actions for ${flag['name']?? "feature flag"}`}
                             >
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -686,38 +653,10 @@ export default function FeatureFlagsPage() {
               <CardDescription>Recent changes to feature flags</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Timestamp</TableHead>
-                    <TableHead>Flag</TableHead>
-                    <TableHead>Action</TableHead>
-                    <TableHead>User</TableHead>
-                    <TableHead>Changes</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mockAuditHistory.map((entry) => (
-                    <TableRow key={entry.id}>
-                      <TableCell>{new Date(entry.timestamp).toLocaleString()}</TableCell>
-                      <TableCell className="font-medium">{entry.flagName}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">{entry.action}</Badge>
-                      </TableCell>
-                      <TableCell>{entry.user}</TableCell>
-                      <TableCell>
-                        <span className="text-red-600 dark:text-red-400 line-through">
-                          {String(entry.oldValue)}
-                        </span>
-                        {" → "}
-                        <span className="text-green-600 dark:text-green-400">
-                          {String(entry.newValue)}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <p className="text-sm text-muted-foreground">
+                Flag audit logs will appear here once the observability service publishes change
+                events. Enable audit streaming on the backend to populate this view.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

@@ -26,6 +26,7 @@ from sqlalchemy.orm import Session
 
 from ...billing.core.entities import ServiceEntity
 from ...genieacs.service import GenieACSService
+from ...network.profile_service import SubscriberNetworkProfileService
 from ...radius.service import RADIUSService
 from ...subscribers.models import Subscriber
 from ...voltha.service import VOLTHAService
@@ -145,6 +146,24 @@ async def verify_subscriber_handler(
 
     logger.info(f"Verified subscriber: {subscriber.id} (current status: {subscriber.status})")
 
+    # Load network profile for context (if exists)
+    network_profile_context = {}
+    tenant_id = input_data.get("tenant_id") or subscriber.tenant_id
+    if tenant_id:
+        try:
+            profile_service = SubscriberNetworkProfileService(db, tenant_id)
+            profile = await profile_service.get_by_subscriber_id(subscriber.id)
+            if profile:
+                network_profile_context = {
+                    "network_profile_id": str(profile.id),
+                    "service_vlan": profile.service_vlan,
+                    "inner_vlan": profile.inner_vlan,
+                    "ipv6_assignment_mode": profile.ipv6_assignment_mode.value,
+                }
+                logger.info(f"Loaded network profile for subscriber {subscriber.id}")
+        except Exception as e:
+            logger.warning(f"Failed to load network profile (continuing without it): {e}")
+
     # Store configuration for suspension
     return {
         "output_data": {
@@ -163,6 +182,8 @@ async def verify_subscriber_handler(
             "cpe_mac": subscriber.ont_mac_address,
             "suspension_reason": input_data.get("reason", "Service suspended"),
             "suspend_until": input_data.get("suspend_until"),
+            "tenant_id": tenant_id,
+            **network_profile_context,  # Add network profile data to context
         },
     }
 

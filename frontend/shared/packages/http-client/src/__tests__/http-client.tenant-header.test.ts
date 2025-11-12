@@ -16,19 +16,30 @@ function createCaptureAdapter(capture: (config: any) => void) {
 }
 
 describe("HttpClient tenant header injection", () => {
-  const originalLocation = global.location;
+  const globalAny = globalThis as typeof globalThis & { location?: any; window?: any };
+  const originalLocation = globalAny.location;
+  const originalWindow = globalAny.window;
 
   beforeAll(() => {
     // Mock location.hostname used by TenantResolver.fromHostname()
-    // @ts-ignore
-    delete (global as any).location;
-    // @ts-ignore
-    (global as any).location = { hostname: "acme.isp.dotmac.local" };
+    delete globalAny.location;
+    globalAny.location = { hostname: "acme.isp.dotmac.local" };
+    globalAny.window = {
+      ...(globalAny.window || {}),
+      location: {
+        hostname: "acme.isp.dotmac.local",
+        search: "",
+      },
+    };
   });
 
   afterAll(() => {
-    // @ts-ignore
-    (global as any).location = originalLocation;
+    globalAny.location = originalLocation;
+    if (originalWindow) {
+      globalAny.window = originalWindow;
+    } else {
+      delete globalAny.window;
+    }
   });
 
   it("adds X-Tenant-ID header from hostname", async () => {
@@ -42,8 +53,8 @@ describe("HttpClient tenant header injection", () => {
     await client.get("/api/test");
 
     expect(captured).toBeTruthy();
-    expect(captured.headers).toBeTruthy();
+    expect(captured!.headers).toBeTruthy();
     // Expect header present with derived tenant id `acme`
-    expect(captured.headers["X-Tenant-ID"]).toBe("acme");
+    expect(captured!.headers["X-Tenant-ID"]).toBe("acme");
   });
 });

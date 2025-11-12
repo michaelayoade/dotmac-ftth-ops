@@ -29,11 +29,11 @@ export function AuditLogViewer() {
     isRefetching,
   } = useAuditActivities(
     {
-      user_id: filters.userId,
-      activity_type: filters.activityType,
-      severity: filters.severity as ActivitySeverity | undefined,
-      resource_type: filters.resourceType,
-      resource_id: filters.resourceId,
+      ...(filters.userId && { user_id: filters.userId }),
+      ...(filters.activityType && { activity_type: filters.activityType }),
+      ...(filters.severity && { severity: filters.severity as ActivitySeverity }),
+      ...(filters.resourceType && { resource_type: filters.resourceType }),
+      ...(filters.resourceId && { resource_id: filters.resourceId }),
       days: filters.days || 30,
       page: currentPage,
       per_page: ITEMS_PER_PAGE,

@@ -80,10 +80,10 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     error,
     refetch,
   } = useQuery({
-    queryKey: ["pricing-rule", params.id],
+    queryKey: ["pricing-rule", params['id']],
     queryFn: async () => {
       const response = await apiClient.get<PricingRule>(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params.id}`
+        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}`
       );
       return response.data;
     },
@@ -94,7 +94,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
     mutationFn: async (activate: boolean) => {
       const endpoint = activate ? "activate" : "deactivate";
       const response = await apiClient.post(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params.id}/${endpoint}`
+        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}/${endpoint}`
       );
       return response.data;
     },
@@ -103,7 +103,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
         title: "Success",
         description: `Pricing rule ${activate ? "activated" : "deactivated"} successfully`,
       });
-      queryClient.invalidateQueries({ queryKey: ["pricing-rule", params.id] });
+      queryClient.invalidateQueries({ queryKey: ["pricing-rule", params['id']] });
       queryClient.invalidateQueries({ queryKey: ["pricing-rules"] });
     },
     onError: (error: any) => {
@@ -119,7 +119,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
   const deleteRuleMutation = useMutation({
     mutationFn: async () => {
       await apiClient.delete(
-        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params.id}`
+        `${platformConfig.api.baseUrl}/api/v1/billing/pricing/rules/${params['id']}`
       );
     },
     onSuccess: () => {
@@ -236,7 +236,7 @@ export default function PricingRuleDetailsPage({ params }: PricingRuleDetailsPro
             <Button
               variant="outline"
               onClick={() =>
-                router.push(`/dashboard/billing-revenue/pricing?edit=${params.id}`)
+                router.push(`/dashboard/billing-revenue/pricing?edit=${params['id']}`)
               }
             >
               <Edit className="mr-2 h-4 w-4" />

@@ -6,8 +6,8 @@ Provides reusable fixtures for testing billing components.
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
-from uuid import uuid4
 from unittest.mock import AsyncMock, MagicMock
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
@@ -22,11 +22,13 @@ def billing_test_environment(monkeypatch):
     monkeypatch.setenv("DOTMAC_AUTOSTART_SERVICES", "0")
     try:
         from dotmac.platform.settings import settings
+
         settings.rate_limit.storage_url = "memory://"
         settings.rate_limit.enabled = False
         settings.redis.cache_url = "memory://"
     except Exception:
         pass
+
 
 # Import models with error handling
 try:
@@ -657,8 +659,8 @@ class _NoopLimiter:
     def limit(self, limit):
         def decorator(func):
             return func
-        return decorator
 
+        return decorator
 
 
 # ========================================
@@ -795,7 +797,11 @@ async def unauth_client(async_db_session, async_db_engine):
     app.dependency_overrides[get_async_session] = override_get_session
 
     transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://testserver", headers={"X-Tenant-ID": "test-tenant-123"}) as client:
+    async with AsyncClient(
+        transport=transport,
+        base_url="http://testserver",
+        headers={"X-Tenant-ID": "test-tenant-123"},
+    ) as client:
         yield client
 
     app.dependency_overrides.clear()
@@ -829,7 +835,6 @@ This module provides:
 """
 
 from unittest.mock import MagicMock  # noqa: E402
-from uuid import uuid4  # noqa: E402
 
 import pytest  # noqa: E402
 from sqlalchemy.ext.asyncio import AsyncSession  # noqa: E402

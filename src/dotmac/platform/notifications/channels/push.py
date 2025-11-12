@@ -339,13 +339,28 @@ class PushChannelProvider(NotificationChannelProvider):
             Push payload dictionary
         """
         # Basic notification
+        branding = context.branding or {}
+        brand_suffix = ""
+        if context.product_name or context.support_email:
+            suffix_parts = []
+            if context.product_name:
+                suffix_parts.append(context.product_name)
+            if context.support_email:
+                suffix_parts.append(context.support_email)
+            brand_suffix = " • ".join(suffix_parts)
+
+        body = context.message
+        if brand_suffix:
+            body = f"{context.message}\n{brand_suffix}"
+
         payload: dict[str, Any] = {
             "title": context.title,
-            "body": context.message,
+            "body": body,
             "data": {
                 "notification_id": str(context.notification_id),
                 "notification_type": context.notification_type.value,
                 "priority": context.priority.value,
+                "branding": branding,
             },
         }
         data_payload = cast(dict[str, Any], payload["data"])

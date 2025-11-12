@@ -170,12 +170,13 @@ function ProvisionPageContent() {
       return;
     }
 
-    provisionMutation.mutate({
+    const payload: DeviceProvisionRequest = {
       serialNumber,
       productClass,
       oui,
-      presetName: selectedPreset || undefined,
-    });
+      ...(selectedPreset ? { presetName: selectedPreset } : {}),
+    };
+    provisionMutation.mutate(payload);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {

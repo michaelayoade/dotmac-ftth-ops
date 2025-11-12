@@ -121,8 +121,8 @@ export default function SubscriptionsPage() {
     refetch: refetchSubscriptions,
   } = useSubscriptionListGraphQL({
     pageSize: 100,
-    status: statusFilter,
-    search: searchQuery || undefined,
+    ...(statusFilter !== undefined ? { status: statusFilter } : {}),
+    ...(searchQuery ? { search: searchQuery } : {}),
     includeCustomer: true,
     includePlan: true,
     pollInterval: 30000, // Auto-refresh every 30 seconds
@@ -162,7 +162,7 @@ export default function SubscriptionsPage() {
       (sub.plan?.billingCycle?.toLowerCase() as Subscription["billing_cycle"]) || "monthly",
     current_period_start: sub.currentPeriodStart,
     current_period_end: sub.currentPeriodEnd,
-    trial_end: sub.trialEnd || undefined,
+    ...(sub.trialEnd ? { trial_end: sub.trialEnd } : {}),
     cancel_at_period_end: false, // Would need to add this field to GraphQL schema
     created_at: sub.createdAt,
     next_billing_date: sub.currentPeriodEnd,

@@ -166,7 +166,7 @@ export default function PricingPage() {
       const searchLower = searchQuery.toLowerCase();
       if (
         !rule.name.toLowerCase().includes(searchLower) &&
-        !rule.description?.toLowerCase().includes(searchLower)
+        !rule['description']?.toLowerCase().includes(searchLower)
       ) {
         return false;
       }
@@ -321,9 +321,14 @@ export default function PricingPage() {
   };
 
   const handleCreateRule = () => {
+    const description = formData.description.trim();
+    const minQuantity = formData.min_quantity ? parseInt(formData.min_quantity, 10) : undefined;
+    const maxUses = formData.max_uses ? parseInt(formData.max_uses, 10) : undefined;
+    const startsAt = formData.starts_at.trim();
+    const endsAt = formData.ends_at.trim();
+
     const ruleData: Partial<PricingRule> = {
       name: formData.name,
-      description: formData.description || undefined,
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -331,16 +336,17 @@ export default function PricingPage() {
         ? formData.applies_to_categories.split(",").map((s) => s.trim())
         : [],
       applies_to_all: formData.applies_to_all,
-      min_quantity: formData.min_quantity ? parseInt(formData.min_quantity) : undefined,
       customer_segments: formData.customer_segments
         ? formData.customer_segments.split(",").map((s) => s.trim())
         : [],
       discount_type: formData.discount_type,
       discount_value: parseFloat(formData.discount_value),
-      starts_at: formData.starts_at || undefined,
-      ends_at: formData.ends_at || undefined,
-      max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
-      priority: parseInt(formData.priority),
+      priority: parseInt(formData.priority, 10),
+      ...(description ? { description } : {}),
+      ...(minQuantity !== undefined ? { min_quantity: minQuantity } : {}),
+      ...(maxUses !== undefined ? { max_uses: maxUses } : {}),
+      ...(startsAt ? { starts_at: startsAt } : {}),
+      ...(endsAt ? { ends_at: endsAt } : {}),
     };
 
     createRuleMutation.mutate(ruleData);
@@ -349,9 +355,14 @@ export default function PricingPage() {
   const handleEditRule = () => {
     if (!selectedRule) return;
 
+    const description = formData.description.trim();
+    const minQuantity = formData.min_quantity ? parseInt(formData.min_quantity, 10) : undefined;
+    const maxUses = formData.max_uses ? parseInt(formData.max_uses, 10) : undefined;
+    const startsAt = formData.starts_at.trim();
+    const endsAt = formData.ends_at.trim();
+
     const ruleData: Partial<PricingRule> = {
       name: formData.name,
-      description: formData.description || undefined,
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -359,16 +370,17 @@ export default function PricingPage() {
         ? formData.applies_to_categories.split(",").map((s) => s.trim())
         : [],
       applies_to_all: formData.applies_to_all,
-      min_quantity: formData.min_quantity ? parseInt(formData.min_quantity) : undefined,
       customer_segments: formData.customer_segments
         ? formData.customer_segments.split(",").map((s) => s.trim())
         : [],
       discount_type: formData.discount_type,
       discount_value: parseFloat(formData.discount_value),
-      starts_at: formData.starts_at || undefined,
-      ends_at: formData.ends_at || undefined,
-      max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
-      priority: parseInt(formData.priority),
+      priority: parseInt(formData.priority, 10),
+      ...(description ? { description } : {}),
+      ...(minQuantity !== undefined ? { min_quantity: minQuantity } : {}),
+      ...(maxUses !== undefined ? { max_uses: maxUses } : {}),
+      ...(startsAt ? { starts_at: startsAt } : {}),
+      ...(endsAt ? { ends_at: endsAt } : {}),
     };
 
     updateRuleMutation.mutate({ id: selectedRule.rule_id, data: ruleData });
@@ -856,7 +868,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -864,7 +876,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}
@@ -1020,7 +1032,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -1028,7 +1040,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}

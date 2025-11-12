@@ -377,7 +377,7 @@ interface FilterConfig {
 
 ## Migration from DataTable
 
-If you're using the basic `DataTable`, migration is simple:
+If you're using the basic `DataTable`, switching over is simple:
 
 **Before:**
 

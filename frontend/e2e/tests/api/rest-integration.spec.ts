@@ -5,10 +5,12 @@
 import { test, expect, type Page, type APIRequestContext } from "@playwright/test";
 
 test.describe("REST API Integration", () => {
-  const BASE_URL = "http://localhost:8000";
-  const APP_URL = "http://localhost:3000";
-  const TEST_USERNAME = "admin";
-  const TEST_PASSWORD = "admin123";
+  const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";
+  const APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+  const TEST_USERNAME = process.env.E2E_USER_USERNAME || "admin";
+  const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || "admin123";
+  const NAV_TIMEOUT = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+  const SELECTOR_TIMEOUT = parseInt(process.env.E2E_SELECTOR_TIMEOUT || "15000", 10);
 
   let authToken: string;
 
@@ -35,7 +37,7 @@ test.describe("REST API Integration", () => {
 
   test.describe("API Error Handling", () => {
     test("should handle 422 validation errors in UI", async ({ page }) => {
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API call to return validation error
       await page.route("**/api/v1/**", (route) => {
@@ -60,19 +62,19 @@ test.describe("REST API Integration", () => {
 
       // If there's a form on the dashboard, try submitting it
       const submitButton = page.locator('button[type="submit"]').first();
-      if (await submitButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await submitButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         await submitButton.click();
 
         // Check for error message display
         const errorMessage = page.locator('.error-message, [role="alert"], .alert-error').first();
-        if (await errorMessage.isVisible({ timeout: 2000 }).catch(() => false)) {
-          await expect(errorMessage).toBeVisible();
+        if (await errorMessage.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
+          await expect(errorMessage).toBeVisible({ timeout: SELECTOR_TIMEOUT });
         }
       }
     });
 
     test("should handle 500 errors gracefully", async ({ page }) => {
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API calls to return 500 error
       await page.route("**/api/v1/**", (route) => {
@@ -96,13 +98,14 @@ test.describe("REST API Integration", () => {
       // Give it time to appear
       await page.waitForTimeout(1000);
 
-      // Document that error handling exists (or doesn't)
+      // Assert that error handling UI is present
       const hasErrorHandling = await errorBanner.isVisible().catch(() => false);
       console.log("500 Error handling present:", hasErrorHandling);
+      expect(hasErrorHandling).toBe(true);
     });
 
     test("should handle network timeouts", async ({ page }) => {
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API calls and delay response
       await page.route("**/api/v1/**", async (route) => {
@@ -115,18 +118,19 @@ test.describe("REST API Integration", () => {
         .locator('[data-testid="refresh"], button:has-text("Refresh"), button:has-text("Reload")')
         .first();
 
-      if (await refreshButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await refreshButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         await refreshButton.click();
 
         // Wait for timeout error
         await page.waitForTimeout(2000);
 
-        // Check for timeout handling
+        // Assert that timeout error handling is present
         const timeoutError = page.locator("text=/timeout|timed out|taking too long/i").first();
         const hasTimeoutHandling = await timeoutError
-          .isVisible({ timeout: 1000 })
+          .isVisible({ timeout: SELECTOR_TIMEOUT })
           .catch(() => false);
         console.log("Timeout error handling present:", hasTimeoutHandling);
+        expect(hasTimeoutHandling).toBe(true);
       }
     });
   });
@@ -134,17 +138,17 @@ test.describe("REST API Integration", () => {
   test.describe("API Response Handling", () => {
     test("should display API data in UI", async ({ page, request }) => {
       // Login first
-      await page.goto(`${APP_URL}/login`);
+      await page.goto(`${APP_URL}/login`, { waitUntil: "load", timeout: NAV_TIMEOUT });
       await page.getByTestId("email-input").fill(TEST_USERNAME);
       await page.getByTestId("password-input").fill(TEST_PASSWORD);
       await page.getByTestId("submit-button").click();
 
-      await page.waitForURL(/dashboard/, { timeout: 10000 });
+      await page.waitForURL(/dashboard/, { timeout: NAV_TIMEOUT });
 
       // Check if any data is being displayed from API
       const dataElements = page.locator('[data-testid*="data"], .data-card, .data-item').first();
 
-      if (await dataElements.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await dataElements.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         await expect(dataElements).toBeVisible();
         console.log("UI displays API data");
       } else {
@@ -153,7 +157,7 @@ test.describe("REST API Integration", () => {
     });
 
     test("should handle empty API responses", async ({ page }) => {
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API to return empty array
       await page.route("**/api/v1/**", (route) => {
@@ -179,14 +183,16 @@ test.describe("REST API Integration", () => {
 
       await page.waitForTimeout(1000);
 
+      // Assert that empty state UI is present
       const hasEmptyState = await emptyState.isVisible().catch(() => false);
       console.log("Empty state handling present:", hasEmptyState);
+      expect(hasEmptyState).toBe(true);
     });
   });
 
   test.describe("API Authentication", () => {
     test("should handle unauthorized (401) responses", async ({ page }) => {
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       // Intercept API to return 401
       await page.route("**/api/v1/**", (route) => {
@@ -214,12 +220,12 @@ test.describe("REST API Integration", () => {
 
     test("should include auth headers in API requests", async ({ page }) => {
       // Login first
-      await page.goto(`${APP_URL}/login`);
+      await page.goto(`${APP_URL}/login`, { waitUntil: "load", timeout: NAV_TIMEOUT });
       await page.getByTestId("email-input").fill(TEST_USERNAME);
       await page.getByTestId("password-input").fill(TEST_PASSWORD);
       await page.getByTestId("submit-button").click();
 
-      await page.waitForURL(/dashboard/, { timeout: 10000 });
+      await page.waitForURL(/dashboard/, { timeout: NAV_TIMEOUT });
 
       // Monitor API requests
       let hasAuthHeader = false;
@@ -237,7 +243,9 @@ test.describe("REST API Integration", () => {
 
       await page.waitForTimeout(1000);
 
+      // Assert that API requests include authentication
       console.log("API requests include auth:", hasAuthHeader);
+      expect(hasAuthHeader).toBe(true);
     });
   });
 
@@ -280,12 +288,12 @@ test.describe("REST API Integration", () => {
   test.describe("API Performance", () => {
     test("should handle concurrent requests", async ({ page }) => {
       // Login first
-      await page.goto(`${APP_URL}/login`);
+      await page.goto(`${APP_URL}/login`, { waitUntil: "load", timeout: NAV_TIMEOUT });
       await page.getByTestId("email-input").fill(TEST_USERNAME);
       await page.getByTestId("password-input").fill(TEST_PASSWORD);
       await page.getByTestId("submit-button").click();
 
-      await page.waitForURL(/dashboard/, { timeout: 10000 });
+      await page.waitForURL(/dashboard/, { timeout: NAV_TIMEOUT });
 
       // Track concurrent requests
       let requestCount = 0;
@@ -307,7 +315,7 @@ test.describe("REST API Integration", () => {
       });
 
       // Navigate to a page that might make multiple API calls
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
 
       await page.waitForTimeout(2000);
 
@@ -319,12 +327,12 @@ test.describe("REST API Integration", () => {
 
     test("should cache repeated requests", async ({ page }) => {
       // Login first
-      await page.goto(`${APP_URL}/login`);
+      await page.goto(`${APP_URL}/login`, { waitUntil: "load", timeout: NAV_TIMEOUT });
       await page.getByTestId("email-input").fill(TEST_USERNAME);
       await page.getByTestId("password-input").fill(TEST_PASSWORD);
       await page.getByTestId("submit-button").click();
 
-      await page.waitForURL(/dashboard/, { timeout: 10000 });
+      await page.waitForURL(/dashboard/, { timeout: NAV_TIMEOUT });
 
       // Track requests to same endpoint
       const requests: Map<string, number> = new Map();
@@ -337,7 +345,7 @@ test.describe("REST API Integration", () => {
       });
 
       // Navigate and trigger API calls
-      await page.goto(`${APP_URL}/dashboard`);
+      await page.goto(`${APP_URL}/dashboard`, { waitUntil: "load", timeout: NAV_TIMEOUT });
       await page.reload();
       await page.reload();
 

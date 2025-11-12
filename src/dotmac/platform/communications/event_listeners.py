@@ -5,16 +5,33 @@ This module contains event handlers that react to events from other
 modules (e.g., billing) and trigger appropriate communications.
 """
 
-from datetime import UTC
+from datetime import UTC, datetime
 from smtplib import SMTPException
+from urllib.parse import urlencode
 
 import structlog
 
+from dotmac.platform.communications.branding_utils import (
+    derive_brand_tokens,
+    render_branded_email_html,
+)
 from dotmac.platform.communications.email_service import EmailMessage, EmailService
+from dotmac.platform.db import get_async_session
 from dotmac.platform.events import subscribe
 from dotmac.platform.events.models import Event
+from dotmac.platform.settings import settings
+from dotmac.platform.tenant.schemas import TenantBrandingConfig
+from dotmac.platform.tenant.service import TenantNotFoundError, TenantService
 
 logger = structlog.get_logger(__name__)
+
+
+def _build_exit_survey_url(survey_token: str, customer_id: str | None) -> str:
+    """Construct fully-qualified survey URL with query parameters."""
+    base_url = settings.urls.exit_survey_base_url or "https://survey.dotmac.com/exit"
+    separator = "&" if "?" in base_url else "?"
+    query = urlencode({"token": survey_token, "customer": customer_id or "unknown"})
+    return f"{base_url}{separator}{query}"
 
 
 def _email_html_message(recipient: str, subject: str, html_body: str) -> EmailMessage:
@@ -25,6 +42,34 @@ def _email_html_message(recipient: str, subject: str, html_body: str) -> EmailMe
         subject=subject,
         html_body=html_body,
     )
+
+
+async def _resolve_branding_for_event(event: Event) -> TenantBrandingConfig:
+    """Return tenant-specific branding for an event, falling back to global defaults."""
+    tenant_id = getattr(event.metadata, "tenant_id", None)
+
+    if tenant_id:
+        async for session in get_async_session():
+            service = TenantService(session)
+            try:
+                response = await service.get_tenant_branding(tenant_id)
+                return response.branding
+            except TenantNotFoundError:
+                logger.warning(
+                    "Tenant not found while resolving branding for event",
+                    tenant_id=tenant_id,
+                    event_id=event.event_id,
+                )
+            except Exception as branding_error:  # pragma: no cover - defensive logging
+                logger.error(
+                    "Failed to load tenant branding, falling back to defaults",
+                    tenant_id=tenant_id,
+                    event_id=event.event_id,
+                    error=str(branding_error),
+                )
+            break
+
+    return TenantService.get_default_branding_config()
 
 
 # ============================================================================
@@ -54,21 +99,24 @@ async def send_invoice_created_email(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         # Get customer email (in real implementation, fetch from customer service)
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         message = _email_html_message(
             recipient=customer_email,
-            subject=f"New Invoice #{invoice_id}",
-            html_body=(
+            subject=f"{product_name} Invoice #{invoice_id}",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Invoice Created</h2>
-                <p>A new invoice has been created for your account.</p>
+                <p>A new invoice has been generated for your account.</p>
                 <p><strong>Invoice ID:</strong> {invoice_id}</p>
                 <p><strong>Amount:</strong> {currency} {amount}</p>
                 <p>Please review and process your payment.</p>
-                """
+                """,
             ),
         )
 
@@ -112,20 +160,23 @@ async def send_invoice_paid_email(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         message = _email_html_message(
             recipient=customer_email,
-            subject=f"Payment Received for Invoice #{invoice_id}",
-            html_body=(
+            subject=f"{product_name} Payment Received for Invoice #{invoice_id}",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Payment Confirmation</h2>
                 <p>Thank you! We've received your payment.</p>
                 <p><strong>Invoice ID:</strong> {invoice_id}</p>
                 <p><strong>Payment ID:</strong> {payment_id}</p>
                 <p><strong>Amount Paid:</strong> {amount}</p>
-                """
+                """,
             ),
         )
 
@@ -169,13 +220,16 @@ async def send_invoice_overdue_reminder(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         message = _email_html_message(
             recipient=customer_email,
-            subject=f"Overdue Invoice Reminder - #{invoice_id}",
-            html_body=(
+            subject=f"{product_name} Invoice #{invoice_id} is Overdue",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Payment Reminder</h2>
                 <p>This is a reminder that your invoice is now overdue.</p>
@@ -183,7 +237,7 @@ async def send_invoice_overdue_reminder(event: Event) -> None:
                 <p><strong>Amount Due:</strong> {amount}</p>
                 <p><strong>Days Overdue:</strong> {days_overdue}</p>
                 <p>Please make your payment as soon as possible to avoid service interruption.</p>
-                """
+                """,
             ),
         )
 
@@ -232,20 +286,23 @@ async def send_payment_failed_notification(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         message = _email_html_message(
             recipient=customer_email,
-            subject=f"Payment Failed - Invoice #{invoice_id}",
-            html_body=(
+            subject=f"{product_name} Payment Failed - Invoice #{invoice_id}",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Payment Failed</h2>
                 <p>We were unable to process your payment.</p>
                 <p><strong>Invoice ID:</strong> {invoice_id}</p>
                 <p><strong>Error:</strong> {error_message}</p>
                 <p>Please update your payment method and try again.</p>
-                """
+                """,
             ),
         )
 
@@ -292,20 +349,23 @@ async def send_subscription_welcome_email(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         message = _email_html_message(
             recipient=customer_email,
-            subject="Welcome to Your New Subscription!",
-            html_body=(
+            subject=f"Welcome to {product_name}",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Subscription Activated</h2>
                 <p>Thank you for subscribing!</p>
                 <p><strong>Subscription ID:</strong> {subscription_id}</p>
                 <p><strong>Plan:</strong> {plan_id}</p>
                 <p>Your subscription is now active.</p>
-                """
+                """,
             ),
         )
 
@@ -347,21 +407,24 @@ async def send_subscription_cancelled_email(event: Event) -> None:
 
     try:
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, _, _ = derive_brand_tokens(branding)
 
         customer_email = event.payload.get("customer_email", f"customer-{customer_id}@example.com")
 
         reason_html = f"<p><strong>Reason:</strong> {reason}</p>" if reason else ""
         message = _email_html_message(
             recipient=customer_email,
-            subject="Subscription Cancelled",
-            html_body=(
+            subject=f"{product_name} Subscription Cancelled",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
                 <h2>Subscription Cancelled</h2>
                 <p>Your subscription has been cancelled as requested.</p>
                 <p><strong>Subscription ID:</strong> {subscription_id}</p>
                 {reason_html}
                 <p>We're sorry to see you go. You can resubscribe anytime.</p>
-                """
+                """,
             ),
         )
 
@@ -481,8 +544,6 @@ async def send_exit_survey_email(event: Event) -> None:
         return
 
     try:
-        from datetime import datetime
-
         # Parse churned_at timestamp
         churned_at = None
         if churned_at_str:
@@ -493,7 +554,7 @@ async def send_exit_survey_email(event: Event) -> None:
 
         # Generate unique survey link
         survey_token = event.event_id[:16]  # Use event ID prefix as token
-        survey_url = f"https://survey.dotmac.com/exit?token={survey_token}&customer={customer_id}"
+        survey_url = _build_exit_survey_url(survey_token, customer_id)
 
         # Create survey response record in database
         async for db_session in get_session_dependency():
@@ -533,76 +594,55 @@ async def send_exit_survey_email(event: Event) -> None:
             break
 
         email_service = EmailService()
+        branding = await _resolve_branding_for_event(event)
+        product_name, company_name, support_email = derive_brand_tokens(branding)
 
         # Create personalized HTML email with exit survey
         message = _email_html_message(
             recipient=customer_email,
-            subject="We Value Your Feedback - Help Us Improve",
-            html_body=(
+            subject=f"We Value Your Feedback - {product_name}",
+            html_body=render_branded_email_html(
+                branding,
                 f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <style>
-                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                        .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                        .header {{ background-color: #4A90E2; color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
-                        .content {{ background-color: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }}
-                        .survey-button {{ display: inline-block; background-color: #4A90E2; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; font-weight: bold; }}
-                        .survey-button:hover {{ background-color: #357ABD; }}
-                        .questions {{ background-color: white; padding: 20px; margin: 20px 0; border-radius: 5px; border-left: 4px solid #4A90E2; }}
-                        .question {{ margin: 15px 0; }}
-                        .footer {{ text-align: center; color: #666; font-size: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd; }}
-                    </style>
-                </head>
-                <body>
-                    <div class="container">
-                        <div class="header">
-                            <h1>We're Sorry to See You Go</h1>
-                        </div>
-                        <div class="content">
-                            <p>Dear Valued Customer,</p>
+                <h2>We're Sorry to See You Go</h2>
+                <p>Dear Valued Customer,</p>
 
-                            <p>We noticed that you recently canceled your subscription with us. While we're sorry to see you leave,
-                            we'd greatly appreciate your feedback to help us improve our service for future customers.</p>
+                <p>We noticed that you recently canceled your subscription with us. While we're sorry to see you leave,
+                we'd greatly appreciate your feedback to help us improve our service for future customers.</p>
 
-                            <p><strong>Your feedback matters!</strong> Please take 2 minutes to complete our exit survey.</p>
+                <p><strong>Your feedback matters!</strong> Please take 2 minutes to complete our exit survey.</p>
 
-                            <div style="text-align: center;">
-                                <a href="{survey_url}" class="survey-button">Take the Exit Survey</a>
-                            </div>
+                <div style="text-align: center; margin: 20px 0;">
+                    <a href="{survey_url}" style="display:inline-block;background-color:#2563eb;color:#fff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:600;">Take the Exit Survey</a>
+                </div>
 
-                            <div class="questions">
-                                <p><strong>The survey will help us understand:</strong></p>
-                                <div class="question">✓ Why you decided to leave</div>
-                                <div class="question">✓ What we could have done better</div>
-                                <div class="question">✓ What features or improvements would bring you back</div>
-                                <div class="question">✓ Your overall experience with our service</div>
-                            </div>
+                <div style="background-color:#f8fafc;padding:16px;border-radius:8px;margin:16px 0;">
+                    <p><strong>The survey will help us understand:</strong></p>
+                    <ul>
+                        <li>Why you decided to leave</li>
+                        <li>What we could have done better</li>
+                        <li>What features or improvements would bring you back</li>
+                        <li>Your overall experience with our service</li>
+                    </ul>
+                </div>
 
-                            <p><strong>Your responses are anonymous and confidential.</strong> We review all feedback carefully
-                            to continuously improve our product and service.</p>
+                <p><strong>Your responses are anonymous and confidential.</strong> We review all feedback carefully
+                to continuously improve our product and service.</p>
 
-                            <p>If you have any immediate concerns or would like to discuss your experience,
-                            please don't hesitate to contact our support team at support@dotmac.com.</p>
+                <p>If you have any immediate concerns or would like to discuss your experience,
+                please don't hesitate to contact our support team at {support_email}.</p>
 
-                            <p><strong>Thinking of coming back?</strong> You're always welcome to reactivate your account
-                            anytime. We'd love to have you back!</p>
+                <p><strong>Thinking of coming back?</strong> You're always welcome to reactivate your account
+                anytime. We'd love to have you back!</p>
 
-                            <p>Thank you for being part of our community. We wish you all the best.</p>
+                <p>Thank you for being part of our community. We wish you all the best.</p>
 
-                            <p>Best regards,<br>
-                            <strong>The DotMac Team</strong></p>
-                        </div>
-                        <div class="footer">
-                            <p>This email was sent because your account status changed to: {new_status}</p>
-                            <p>Customer ID: {customer_id}</p>
-                            <p>&copy; 2025 DotMac. All rights reserved.</p>
-                        </div>
-                    </div>
-                </body>
-                </html>
-                """
+                <p>Best regards,<br>
+                <strong>The {company_name} Team</strong></p>
+
+                <p style="font-size:12px;color:#94a3b8;">This email was sent because your account status changed to: {new_status}.<br>
+                Customer ID: {customer_id}</p>
+                """,
             ),
         )
 

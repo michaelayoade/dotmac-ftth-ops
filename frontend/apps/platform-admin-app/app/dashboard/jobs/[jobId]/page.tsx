@@ -54,7 +54,7 @@ interface Job {
 
 function JobDetailsPageContent() {
   const params = useParams();
-  const jobId = params?.jobId as string;
+  const jobId = params?.['jobId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

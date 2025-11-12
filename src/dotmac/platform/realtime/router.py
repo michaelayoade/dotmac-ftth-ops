@@ -13,6 +13,7 @@ from dotmac.platform.auth.core import (
     _claims_to_user_info,
     _verify_token_with_fallback,
 )
+from dotmac.platform.auth.dependencies import get_current_user_optional
 from dotmac.platform.realtime.sse import (
     create_alert_stream,
     create_onu_status_stream,
@@ -26,7 +27,6 @@ from dotmac.platform.realtime.websocket_authenticated import (
     handle_sessions_ws_authenticated,
 )
 from dotmac.platform.redis_client import RedisClientType, get_redis_client
-from dotmac.platform.auth.dependencies import get_current_user_optional
 
 router = APIRouter(prefix="/realtime", tags=["Real-Time"])
 

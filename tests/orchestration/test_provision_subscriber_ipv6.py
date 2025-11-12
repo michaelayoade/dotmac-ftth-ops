@@ -85,13 +85,14 @@ class TestIPAllocationHandlerDualStack:
             result = await allocate_ip_handler(input_data, base_context, mock_db_session)
 
             # Verify dual-stack allocation called
-            mock_service.allocate_dual_stack_ips.assert_called_once_with(
-                ipv4_prefix_id=10,
-                ipv6_prefix_id=20,
-                description="Subscriber SUB-ABCD1234",
-                dns_name="sub-SUB-ABCD1234.ftth.net",
-                tenant="tenant-123",
-            )
+            # Phase 2: Test is lenient about new parameters (subscriber_id, ipv6_pd_*)
+            mock_service.allocate_dual_stack_ips.assert_called_once()
+            call_kwargs = mock_service.allocate_dual_stack_ips.call_args[1]
+            assert call_kwargs["ipv4_prefix_id"] == 10
+            assert call_kwargs["ipv6_prefix_id"] == 20
+            assert call_kwargs["description"] == "Subscriber SUB-ABCD1234"
+            assert call_kwargs["dns_name"] == "sub-SUB-ABCD1234.ftth.net"
+            assert call_kwargs["tenant"] == "tenant-123"
 
             # Verify both IPs returned
             assert result["output_data"]["ipv4_address"] == "203.0.113.50/24"

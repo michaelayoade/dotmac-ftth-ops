@@ -1,7 +1,5 @@
 """Ansible/AWX API Router"""
 
-from typing import cast
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 

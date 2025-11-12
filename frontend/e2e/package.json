@@ -16,6 +16,7 @@
     "install:deps": "playwright install-deps"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.55.1",
     "@types/node": "^20.0.0",
     "typescript": "^5.0.0"

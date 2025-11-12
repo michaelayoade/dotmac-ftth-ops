@@ -8,7 +8,6 @@ from typing import Any, cast
 
 import strawberry
 import structlog
-
 from sqlalchemy import func, select
 
 from dotmac.platform.graphql.context import Context

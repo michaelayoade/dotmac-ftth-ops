@@ -4,7 +4,6 @@ Notification Event Listeners.
 Listens to domain events and creates notifications automatically.
 """
 
-from typing import Any
 from uuid import UUID
 
 import structlog

@@ -32,7 +32,7 @@ export function AuditProvider({
   batchSize = 10,
   batchTimeout = 5000,
   enableLocalStorage = true,
-  enableConsoleLogging = process.env.NODE_ENV === "development",
+  enableConsoleLogging = process.env["NODE_ENV"] === "development",
 }: AuditProviderProps) {
   const auditLogger = useAuditLogger({
     serviceName,
@@ -52,7 +52,7 @@ export function AuditProvider({
         actor: { id: "system", type: "system" },
         context: {
           source: serviceName,
-          environment: process.env.NODE_ENV || "development",
+          environment: process.env["NODE_ENV"] || "development",
         },
       });
     }

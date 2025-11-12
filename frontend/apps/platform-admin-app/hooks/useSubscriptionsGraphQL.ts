@@ -6,7 +6,7 @@
  *
  * Benefits:
  * - Consistent interface with existing REST hooks
- * - Easy migration for components
+ * - Drop-in usage for components
  * - Centralized error handling
  * - Type-safe with auto-generated types
  */
@@ -57,9 +57,9 @@ export function useSubscriptionListGraphQL(options: UseSubscriptionListOptions =
     variables: {
       page,
       pageSize,
-      status,
-      billingCycle,
-      search: search || undefined,
+      ...(status && { status }),
+      ...(billingCycle && { billingCycle }),
+      ...(search && { search }),
       includeCustomer,
       includePlan,
       includeInvoices,
@@ -185,8 +185,8 @@ export function usePlanListGraphQL(options: UsePlanListOptions = {}) {
     variables: {
       page,
       pageSize,
-      isActive,
-      billingCycle,
+      ...(isActive !== undefined && { isActive }),
+      ...(billingCycle && { billingCycle }),
     },
     skip: !enabled,
     fetchPolicy: "cache-and-network",
@@ -225,8 +225,8 @@ export function useProductListGraphQL(options: UseProductListOptions = {}) {
     variables: {
       page,
       pageSize,
-      isActive,
-      category,
+      ...(isActive !== undefined && { isActive }),
+      ...(category && { category }),
     },
     skip: !enabled,
     fetchPolicy: "cache-and-network",
@@ -266,8 +266,8 @@ export function useSubscriptionDashboardGraphQL(options: UseSubscriptionDashboar
     variables: {
       page,
       pageSize,
-      status,
-      search: search || undefined,
+      ...(status && { status }),
+      ...(search && { search }),
     },
     skip: !enabled,
     pollInterval,

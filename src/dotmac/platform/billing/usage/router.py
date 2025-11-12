@@ -9,6 +9,7 @@ pay-as-you-go charges.
 from datetime import datetime
 from uuid import UUID
 
+import structlog
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import select
@@ -20,8 +21,6 @@ from dotmac.platform.billing.settings.service import BillingSettingsService
 from dotmac.platform.billing.usage.service import UsageBillingService
 from dotmac.platform.core.exceptions import EntityNotFoundError, ValidationError
 from dotmac.platform.database import get_async_session
-
-import structlog
 
 from .models import BilledStatus, UsageAggregate, UsageRecord, UsageType
 from .schemas import (

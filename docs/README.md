@@ -27,4 +27,4 @@ Payload schemas, retry logic, onboarding flow, and usage notes.
 - **Environment setup**: [`ENVIRONMENT_SETUP.md`](ENVIRONMENT_SETUP.md)
 - **Environment variables**: [`ENVIRONMENT_VARIABLES.md`](ENVIRONMENT_VARIABLES.md)
 - **API specifications**: [`API_SPECIFICATIONS.md`](API_SPECIFICATIONS.md)
-- **Frontend multi-app architecture**: [`../frontend/MULTI_APP_ARCHITECTURE.md`](../frontend/MULTI_APP_ARCHITECTURE.md)
+- **Frontend production reference**: [`../frontend/PRODUCTION_GUIDE.md`](../frontend/PRODUCTION_GUIDE.md)

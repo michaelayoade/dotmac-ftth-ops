@@ -73,7 +73,7 @@ components/faults/
 
 ### Documentation
 
-- `docs/ALARM_DETAIL_MODAL.md` - Comprehensive component documentation
+- `frontend/PRODUCTION_GUIDE.md` – Fault management expectations for production deploys
 
 ## Component Guidelines
 

@@ -75,21 +75,21 @@ import type { ConfirmDialogVariant } from "./confirm-dialog";
 
 export interface BulkAction<TData> {
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string }> | undefined;
   action: (selectedRows: TData[]) => void | Promise<void>;
-  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  disabled?: (selectedRows: TData[]) => boolean;
-  confirmMessage?: string;
-  confirmTitle?: string;
-  confirmConfirmText?: string;
-  confirmVariant?: ConfirmDialogVariant;
+  variant: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link" | undefined;
+  disabled: ((selectedRows: TData[]) => boolean) | undefined;
+  confirmMessage: string | undefined;
+  confirmTitle: string | undefined;
+  confirmConfirmText: string | undefined;
+  confirmVariant: ConfirmDialogVariant | undefined;
 }
 
 export interface QuickFilter<TData> {
   label: string;
-  icon?: React.ComponentType<{ className?: string }>;
-  description?: string;
-  defaultActive?: boolean;
+  icon: React.ComponentType<{ className?: string }> | undefined;
+  description: string | undefined;
+  defaultActive: boolean | undefined;
   filter: (row: TData) => boolean;
 }
 
@@ -97,12 +97,12 @@ export interface FilterConfig {
   column: string;
   label: string;
   type: "text" | "select" | "date" | "number";
-  options?: { label: string; value: string }[];
+  options: { label: string; value: string }[] | undefined;
 }
 
 export interface SearchConfig<TData> {
-  placeholder?: string;
-  searchableFields?: (keyof TData)[];
+  placeholder: string | undefined;
+  searchableFields: (keyof TData)[] | undefined;
 }
 
 export interface EnhancedDataTableProps<TData, TValue> {
@@ -110,45 +110,45 @@ export interface EnhancedDataTableProps<TData, TValue> {
   data: TData[];
 
   // Search
-  searchable?: boolean;
-  searchPlaceholder?: string;
-  searchColumn?: string;
-  searchKey?: string;
-  searchConfig?: SearchConfig<TData>;
+  searchable: boolean | undefined;
+  searchPlaceholder: string | undefined;
+  searchColumn: string | undefined;
+  searchKey: string | undefined;
+  searchConfig: SearchConfig<TData> | undefined;
 
   // Pagination
-  paginated?: boolean;
-  pagination?: boolean;
-  pageSizeOptions?: number[];
-  defaultPageSize?: number;
+  paginated: boolean | undefined;
+  pagination: boolean | undefined;
+  pageSizeOptions: number[] | undefined;
+  defaultPageSize: number | undefined;
 
   // Selection & Bulk Actions
-  selectable?: boolean;
-  bulkActions?: BulkAction<TData>[];
+  selectable: boolean | undefined;
+  bulkActions: BulkAction<TData>[] | undefined;
 
   // Filtering
-  filterable?: boolean;
-  filters?: FilterConfig[];
-  quickFilters?: QuickFilter<TData>[];
+  filterable: boolean | undefined;
+  filters: FilterConfig[] | undefined;
+  quickFilters: QuickFilter<TData>[] | undefined;
 
   // Export
-  exportable?: boolean;
-  exportFilename?: string;
-  exportColumns?: (keyof TData)[];
+  exportable: boolean | undefined;
+  exportFilename: string | undefined;
+  exportColumns: (keyof TData)[] | undefined;
 
   // Additional features
-  columnVisibility?: boolean;
-  emptyMessage?: string;
-  className?: string;
-  isLoading?: boolean;
-  onRowClick?: (row: TData) => void;
-  getRowId?: (row: TData, index: number, parent?: Row<TData>) => string | number;
+  columnVisibility: boolean | undefined;
+  emptyMessage: string | undefined;
+  className: string | undefined;
+  isLoading: boolean | undefined;
+  onRowClick: ((row: TData) => void) | undefined;
+  getRowId: ((row: TData, index: number, parent?: Row<TData>) => string | number) | undefined;
 
   // Toolbar actions
-  toolbarActions?: React.ReactNode;
-  errorMessage?: string;
-  error?: string;
-  hideToolbar?: boolean;
+  toolbarActions: React.ReactNode | undefined;
+  errorMessage: string | undefined;
+  error: string | undefined;
+  hideToolbar: boolean | undefined;
 }
 
 // ============================================================================

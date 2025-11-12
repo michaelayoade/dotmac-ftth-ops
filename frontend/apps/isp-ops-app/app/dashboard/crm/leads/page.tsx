@@ -78,6 +78,13 @@ export default function LeadsManagementPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Fetch leads with filters
+  const leadQueryOptions = {
+    autoRefresh: true,
+    refreshInterval: 60000,
+    ...(statusFilter ? { status: statusFilter } : {}),
+    ...(sourceFilter ? { source: sourceFilter } : {}),
+  } as const;
+
   const {
     leads,
     isLoading,
@@ -87,12 +94,7 @@ export default function LeadsManagementPage() {
     updateLeadStatus,
     qualifyLead,
     disqualifyLead,
-  } = useLeads({
-    status: statusFilter || undefined,
-    source: sourceFilter || undefined,
-    autoRefresh: true,
-    refreshInterval: 60000,
-  });
+  } = useLeads(leadQueryOptions);
 
   // Filter leads by search query and priority
   const filteredLeads = useMemo(() => {
@@ -106,7 +108,7 @@ export default function LeadsManagementPage() {
           lead.first_name.toLowerCase().includes(query) ||
           lead.last_name.toLowerCase().includes(query) ||
           lead.email.toLowerCase().includes(query) ||
-          (lead.phone ?? "").toLowerCase().includes(query) ||
+          (lead['phone']?? "").toLowerCase().includes(query) ||
           lead.lead_number.toLowerCase().includes(query),
       );
     }
@@ -315,7 +317,7 @@ export default function LeadsManagementPage() {
     () => [
       {
         label: "Mark as Contacted",
-        icon: UserCheck,
+        icon: ({ className }) => <UserCheck className={className} />,
         action: async (selected) => {
           for (const lead of selected) {
             if (lead.status === "new") {
@@ -331,7 +333,7 @@ export default function LeadsManagementPage() {
       },
       {
         label: "Qualify Leads",
-        icon: CheckCircle,
+        icon: ({ className }) => <CheckCircle className={className} />,
         action: async (selected) => {
           for (const lead of selected) {
             if (lead.status === "contacted" || lead.status === "site_survey_completed") {
@@ -347,7 +349,7 @@ export default function LeadsManagementPage() {
       },
       {
         label: "Delete Leads",
-        icon: Trash2,
+        icon: ({ className }) => <Trash2 className={className} />,
         action: async (selected) => {
           // Implement delete logic
           toast({
@@ -410,7 +412,7 @@ export default function LeadsManagementPage() {
           value={stats.total}
           icon={Users}
           loading={isLoading}
-          error={error?.message}
+          {...(error?.message ? { error: error.message } : {})}
         />
         <MetricCardEnhanced
           title="New Leads"

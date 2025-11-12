@@ -37,6 +37,9 @@ import {
   getSubscriberSessions,
 } from "@/hooks/useSubscriberDashboardGraphQL";
 import { ApolloProvider } from "@/lib/graphql/ApolloProvider";
+import { NetworkProfileCard } from "@/components/subscribers/NetworkProfileCard";
+import { SubscriberAlertsBanner } from "@/components/subscribers/SubscriberAlertsBanner";
+import { useQuery } from "@tanstack/react-query";
 
 function SubscribersDashboardContent() {
   const { hasPermission } = useRBAC();
@@ -51,7 +54,7 @@ function SubscribersDashboardContent() {
   const { subscribers, sessions, metrics, loading, error, refetch } = useSubscriberDashboardGraphQL(
     {
       limit: 50,
-      search: search.trim() || undefined,
+      search: search.trim() || null,
       enabled: radiusEnabled,
     },
   );
@@ -64,6 +67,38 @@ function SubscribersDashboardContent() {
   const selectedSessions = selectedSubscriber
     ? getSubscriberSessions(subscribers, selectedSubscriber.username)
     : [];
+
+  // Fetch network profile for selected subscriber
+  const { data: networkProfile, refetch: refetchProfile } = useQuery({
+    queryKey: ["networkProfile", selectedSubscriber?.subscriberId],
+    queryFn: async () => {
+      if (!selectedSubscriber?.subscriberId) return null;
+      const response = await fetch(
+        `/api/v1/network/subscribers/${selectedSubscriber.subscriberId}/profile`
+      );
+      if (response.status === 404) return null;
+      if (!response.ok) throw new Error("Failed to fetch network profile");
+      return response.json();
+    },
+    enabled: !!selectedSubscriber?.subscriberId && subscriberDialogOpen,
+  });
+
+  // Fetch subscriber alerts (Option 82, auth failures, etc.)
+  const { data: subscriberAlerts } = useQuery({
+    queryKey: ["subscriberAlerts", selectedSubscriber?.subscriberId],
+    queryFn: async () => {
+      if (!selectedSubscriber?.subscriberId) return [];
+      const response = await fetch(
+        `/api/v1/radius/subscribers/${selectedSubscriber.subscriberId}/alerts`,
+        {
+          credentials: "include",
+        },
+      );
+      if (!response.ok) return [];
+      return response.json();
+    },
+    enabled: !!selectedSubscriber?.subscriberId && subscriberDialogOpen,
+  });
 
   if (!radiusEnabled) {
     return (
@@ -112,9 +147,6 @@ function SubscribersDashboardContent() {
         <p className="text-sm text-muted-foreground">
           Manage broadband subscriber credentials, service assignments, and active RADIUS sessions.
         </p>
-        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-          ⚡ Powered by GraphQL - 66% faster
-        </Badge>
       </header>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -277,7 +309,7 @@ function SubscribersDashboardContent() {
       </Card>
 
       <Dialog open={subscriberDialogOpen} onOpenChange={setSubscriberDialogOpen}>
-        <DialogContent className="max-w-xl">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Subscriber details</DialogTitle>
             <DialogDescription>
@@ -285,42 +317,61 @@ function SubscribersDashboardContent() {
             </DialogDescription>
           </DialogHeader>
           {selectedSubscriber ? (
-            <div className="space-y-4 text-sm">
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Subscriber ID</span>
-                  <span className="font-medium text-foreground">
-                    {selectedSubscriber.subscriberId}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge variant={selectedSubscriber.enabled ? "outline" : "secondary"}>
-                    {selectedSubscriber.enabled ? "Enabled" : "Disabled"}
-                  </Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Bandwidth profile</span>
-                  <span className="font-medium text-foreground">
-                    {selectedSubscriber.bandwidthProfileId ?? "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Framed IP address</span>
-                  <span className="font-medium text-foreground">
-                    {selectedSubscriber.framedIpAddress ?? "—"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Created</span>
-                  <span>{new Date(selectedSubscriber.createdAt).toLocaleString()}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">Updated</span>
-                  <span>{new Date(selectedSubscriber.updatedAt).toLocaleString()}</span>
+            <div className="space-y-6">
+              {/* Subscriber Alerts */}
+              {subscriberAlerts && subscriberAlerts.length > 0 && (
+                <SubscriberAlertsBanner alerts={subscriberAlerts} />
+              )}
+
+              {/* Basic Subscriber Information */}
+              <div className="space-y-4 text-sm">
+                <h3 className="text-sm font-semibold">Basic Information</h3>
+                <div className="grid gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Subscriber ID</span>
+                    <span className="font-medium text-foreground">
+                      {selectedSubscriber.subscriberId}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant={selectedSubscriber.enabled ? "outline" : "secondary"}>
+                      {selectedSubscriber.enabled ? "Enabled" : "Disabled"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Bandwidth profile</span>
+                    <span className="font-medium text-foreground">
+                      {selectedSubscriber.bandwidthProfileId ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Framed IP address</span>
+                    <span className="font-medium text-foreground">
+                      {selectedSubscriber.framedIpAddress ?? "—"}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Created</span>
+                    <span>{new Date(selectedSubscriber.createdAt).toLocaleString()}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-muted-foreground">Updated</span>
+                    <span>{new Date(selectedSubscriber.updatedAt).toLocaleString()}</span>
+                  </div>
                 </div>
               </div>
 
+              {/* Network Profile */}
+              <NetworkProfileCard
+                profile={networkProfile ?? null}
+                subscriberId={selectedSubscriber.subscriberId}
+                onUpdate={() => {
+                  refetchProfile();
+                }}
+              />
+
+              {/* Active Sessions */}
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Active sessions ({selectedSessions.length})
@@ -384,4 +435,3 @@ export default function SubscribersPage() {
     </ApolloProvider>
   );
 }
-

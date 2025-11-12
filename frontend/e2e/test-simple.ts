@@ -1,12 +1,13 @@
 const { chromium } = require("@playwright/test");
 
 (async () => {
+  const BASE_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
   const browser = await chromium.launch({ headless: false });
   const page = await browser.newPage();
 
   page.on("console", (msg) => console.log("[Browser]", msg.text()));
 
-  await page.goto("http://localhost:3000/login");
+  await page.goto(`${BASE_URL}/login`);
   await page.waitForLoadState("domcontentloaded");
 
   // Check if function exists

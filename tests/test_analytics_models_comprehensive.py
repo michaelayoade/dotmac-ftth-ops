@@ -840,9 +840,7 @@ class TestModelSerialization:
         series = MetricSeries(
             metric_name="requests",
             unit="count",
-            data_points=[
-                MetricDataPoint(timestamp=start, value=1.0, tags={"path": "/status"})
-            ],
+            data_points=[MetricDataPoint(timestamp=start, value=1.0, tags={"path": "/status"})],
             aggregation="sum",
         )
         response = MetricsQueryResponse(

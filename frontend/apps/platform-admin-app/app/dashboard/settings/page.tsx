@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import {
   User,
@@ -27,6 +27,8 @@ import {
 import { apiClient } from "@/lib/api/client";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import { logger } from "@/lib/logger";
+import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
 const toError = (error: unknown) =>
   error instanceof Error ? error : new Error(typeof error === "string" ? error : String(error));
 
@@ -85,6 +87,13 @@ const settingCards: SettingCard[] = [
     description: "Email alerts, push notifications, and communication preferences",
     icon: Bell,
     href: "/dashboard/settings/notifications",
+  },
+  {
+    id: "branding",
+    title: "Branding & Links",
+    description: "Customize company identity, support contacts, and portal URLs",
+    icon: Palette,
+    href: "/dashboard/platform-admin/system?tab=settings&category=branding",
   },
   {
     id: "integrations",
@@ -146,7 +155,7 @@ function SettingCard({ card }: { card: SettingCard }) {
     <Link
       href={card.href}
       className={`group relative rounded-lg border p-6 hover:border-border transition-all ${
-        card.status ? statusColors[card.status] : "border-border bg-card hover:bg-accent/50"
+        card['status']? statusColors[card.status] : "border-border bg-card hover:bg-accent/50"
       }`}
     >
       <div className="flex items-start gap-4">
@@ -166,7 +175,7 @@ function SettingCard({ card }: { card: SettingCard }) {
           {card.badge && (
             <span
               className={`inline-block mt-3 px-2 py-1 text-xs font-medium rounded-full ${
-                card.status ? badgeColors[card.status] : "bg-muted text-muted-foreground"
+                card['status']? badgeColors[card.status] : "bg-muted text-muted-foreground"
               }`}
             >
               {card.badge}
@@ -178,47 +187,101 @@ function SettingCard({ card }: { card: SettingCard }) {
   );
 }
 
+interface TenantStats {
+  tenant_id: string;
+  total_users: number;
+  active_users: number;
+  total_api_calls: number;
+  total_storage_gb: number;
+  total_bandwidth_gb: number;
+  user_limit: number;
+  api_limit: number;
+  storage_limit: number;
+  user_usage_percent: number;
+  api_usage_percent: number;
+  storage_usage_percent: number;
+  plan_type: string;
+  status: string;
+  days_until_expiry?: number | null;
+}
+
 function SettingsHubPageContent() {
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
-  const [organization, setOrganization] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user as ExtendedUser | undefined;
+  const [tenantStats, setTenantStats] = useState<TenantStats | null>(null);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
-    fetchSettingsData();
-  }, []);
-
-  const fetchSettingsData = async () => {
-    try {
-      setLoading(true);
-      // Fetch user data
-      const userResponse = await apiClient.get("/auth/me").catch(() => ({ data: null }));
-
-      // Organization endpoint not yet implemented - will be added later
-      const orgResponse = { data: null };
-
-      if (userResponse.data) {
-        setUser((userResponse.data || {}) as Record<string, unknown>);
-      }
-      if (orgResponse.data) {
-        setOrganization((orgResponse.data || {}) as Record<string, unknown>);
-      }
-    } catch (err) {
-      logger.error("Failed to fetch settings data", toError(err));
-    } finally {
-      setLoading(false);
+    if (!user?.tenant_id) {
+      return;
     }
-  };
 
-  const quickStats: QuickStat[] = [
-    { label: "Active Sessions", value: 3, icon: Smartphone },
-    { label: "API Calls Today", value: "1,234", icon: Zap },
-    { label: "Storage Used", value: "2.3 GB", icon: Cloud },
-    {
-      label: "Team Members",
-      value: (organization?.memberCount as number) || 5,
-      icon: Users,
-    },
-  ];
+    let isMounted = true;
+
+    const fetchSettingsData = async () => {
+      try {
+        setStatsLoading(true);
+        const response = await apiClient
+          .get<TenantStats>(`/tenants/${user.tenant_id}/stats`)
+          .catch(() => ({ data: null as TenantStats | null }));
+
+        if (isMounted && response.data) {
+          setTenantStats(response.data);
+        }
+      } catch (err) {
+        logger.error("Failed to fetch settings data", toError(err));
+      } finally {
+        if (isMounted) {
+          setStatsLoading(false);
+        }
+      }
+    };
+
+    void fetchSettingsData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [user?.tenant_id]);
+
+  const quickStats: QuickStat[] = useMemo(() => {
+    return [
+      {
+        label: "Active Users",
+        value: tenantStats
+          ? `${tenantStats.active_users}/${tenantStats.total_users}`
+          : "—",
+        icon: Users,
+      },
+      {
+        label: "API Calls",
+        value: tenantStats ? tenantStats.total_api_calls.toLocaleString() : "—",
+        icon: Zap,
+      },
+      {
+        label: "Storage Used",
+        value: tenantStats
+          ? `${tenantStats.total_storage_gb.toFixed(1)} GB / ${tenantStats.storage_limit} GB`
+          : "—",
+        icon: Cloud,
+      },
+      {
+        label: "Plan",
+        value: tenantStats?.plan_type ?? "—",
+        icon: Smartphone,
+      },
+    ];
+  }, [tenantStats]);
+
+  if (authLoading && statsLoading) {
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-center py-24 text-muted-foreground">
+          Loading settings…
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen p-8">
@@ -251,9 +314,9 @@ function SettingsHubPageContent() {
                   </h2>
                   <p className="text-sm text-muted-foreground">{user.email as string}</p>
                   <p className="text-xs text-foreground0 mt-1">
-                    Organization: {(organization?.name as string) || "Personal"} • Plan:{" "}
-                    {(organization?.plan as string) || "Free"} • Role:{" "}
-                    {(user.roles as string[])?.join(", ") || "User"}
+                    Organization: {user.tenant_id || "Personal"} • Plan:{" "}
+                    {tenantStats?.plan_type || "—"} • Users:{" "}
+                    {tenantStats?.total_users ?? "—"}
                   </p>
                 </div>
               </div>

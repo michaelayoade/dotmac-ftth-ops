@@ -54,6 +54,11 @@ export * from "./components/textarea";
 export * from "./components/theme-toggle";
 export * from "./components/toast";
 export * from "./components/tooltip";
+export * from "./components/sheet";
+export * from "./components/popover";
+export * from "./components/combobox";
+export * from "./components/calendar";
+export * from "./components/date-picker";
 
 // Hooks
 export * from "./hooks/use-toast";

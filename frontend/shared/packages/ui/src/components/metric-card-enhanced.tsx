@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, AlertCircle, TrendingUp } from "lucide-react";
 import { cn } from "../lib/utils";
+import { AnimatedCounter, AnimatedCard, FadeInWhenVisible } from "@dotmac/primitives";
 
 interface MetricCardEnhancedProps {
   title: string;
@@ -36,6 +37,12 @@ export function MetricCardEnhanced({
   emptyStateMessage,
   className = "",
 }: MetricCardEnhancedProps) {
+  const numericValue = React.useMemo(() => {
+    if (typeof value === "number") return value;
+    const parsed = parseFloat(String(value).replace(/[^0-9.-]/g, ""));
+    return isNaN(parsed) ? 0 : parsed;
+  }, [value]);
+
   const formattedValue = React.useMemo(() => {
     if (currency && typeof value === "number") {
       return new Intl.NumberFormat("en-US", {
@@ -50,9 +57,11 @@ export function MetricCardEnhanced({
 
   const isEmpty = value === 0 || value === "0";
   const showEmptyState = isEmpty && emptyStateMessage && !loading && !error;
+  const shouldAnimate = !loading && !error && typeof value === "number";
 
   const content = (
-    <div
+    <AnimatedCard
+      disabled={loading || !!error}
       className={cn(
         "group relative rounded-lg border p-6 transition-all duration-200",
         "bg-card border-border",
@@ -83,16 +92,30 @@ export function MetricCardEnhanced({
             </div>
           ) : (
             <>
-              <p
-                className={cn(
-                  "text-3xl font-bold transition-colors duration-200",
-                  showEmptyState
-                    ? "text-muted-foreground"
-                    : "text-foreground group-hover:text-sky-400",
-                )}
-              >
-                {formattedValue}
-              </p>
+              {shouldAnimate ? (
+                <AnimatedCounter
+                  value={numericValue}
+                  duration={1.5}
+                  prefix={currency ? "$" : ""}
+                  className={cn(
+                    "text-3xl font-bold transition-colors duration-200",
+                    showEmptyState
+                      ? "text-muted-foreground"
+                      : "text-foreground group-hover:text-sky-400",
+                  )}
+                />
+              ) : (
+                <p
+                  className={cn(
+                    "text-3xl font-bold transition-colors duration-200",
+                    showEmptyState
+                      ? "text-muted-foreground"
+                      : "text-foreground group-hover:text-sky-400",
+                  )}
+                >
+                  {formattedValue}
+                </p>
+              )}
 
               {showEmptyState ? (
                 <p className="text-xs text-muted-foreground italic">{emptyStateMessage}</p>
@@ -138,17 +161,19 @@ export function MetricCardEnhanced({
           )}
         </div>
       </div>
-    </div>
+    </AnimatedCard>
   );
 
   if (href && !error && !loading) {
     return (
-      <Link href={href} className="block relative group/link">
-        {content}
-        <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-foreground opacity-0 group-hover/link:opacity-100 transition-all duration-200 transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
-      </Link>
+      <FadeInWhenVisible>
+        <Link href={href} className="block relative group/link">
+          {content}
+          <ArrowUpRight className="absolute top-4 right-4 h-4 w-4 text-foreground opacity-0 group-hover/link:opacity-100 transition-all duration-200 transform group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5" />
+        </Link>
+      </FadeInWhenVisible>
     );
   }
 
-  return content;
+  return <FadeInWhenVisible>{content}</FadeInWhenVisible>;
 }

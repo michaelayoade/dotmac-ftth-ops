@@ -180,7 +180,7 @@ function SecretsPageContent() {
   const filteredSecrets = secrets.filter(
     (secret) =>
       secret.path.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      secret.metadata?.description?.toLowerCase().includes(searchQuery.toLowerCase()),
+      secret['metadata']?.description?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   if (loading) {
@@ -330,7 +330,7 @@ function SecretsPageContent() {
                         <div className="text-sm font-medium text-foreground font-mono">
                           {secret.path}
                         </div>
-                        {secret.metadata?.tags && (
+                        {secret['metadata']?.tags && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {secret.metadata.tags.map((tag) => (
                               <span
@@ -346,7 +346,7 @@ function SecretsPageContent() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {secret.metadata?.description || "No description"}
+                    {secret['metadata']?.description || "No description"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                     v{secret.version || 1}
@@ -358,7 +358,7 @@ function SecretsPageContent() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                    {secret.metadata?.created_by || "System"}
+                    {secret['metadata']?.created_by || "System"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex items-center space-x-2">

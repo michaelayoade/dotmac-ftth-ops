@@ -1,12 +1,17 @@
 /**
- * Custom hooks for Notification Management
+ * Custom hooks for Notification Management - TanStack Query Version
  *
- * Provides hooks for managing user notifications, templates, and bulk sending.
+ * Migrated from direct API calls to TanStack Query for:
+ * - Automatic caching and deduplication
+ * - Background refetching
+ * - Optimistic updates for mutations
+ * - Better error handling
+ * - Reduced manual state management
  */
 
-import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // Type Definitions
@@ -218,6 +223,34 @@ const buildUrlWithParams = (basePath: string, params: URLSearchParams) => {
 };
 
 // ============================================================================
+// Query Key Factory
+// ============================================================================
+
+export const notificationsKeys = {
+  all: ["notifications"] as const,
+  lists: () => [...notificationsKeys.all, "list"] as const,
+  list: (filters: {
+    unreadOnly?: boolean;
+    priority?: NotificationPriority;
+    notificationType?: NotificationType;
+  }) => [...notificationsKeys.lists(), filters] as const,
+  unreadCount: () => [...notificationsKeys.all, "unread-count"] as const,
+  templates: () => [...notificationsKeys.all, "templates"] as const,
+  templateList: (filters: { type?: CommunicationType; activeOnly?: boolean }) =>
+    [...notificationsKeys.templates(), filters] as const,
+  logs: () => [...notificationsKeys.all, "logs"] as const,
+  logList: (filters: {
+    type?: CommunicationType;
+    status?: CommunicationStatus;
+    recipient?: string;
+    startDate?: string;
+    endDate?: string;
+    page?: number;
+    pageSize?: number;
+  }) => [...notificationsKeys.logs(), filters] as const,
+};
+
+// ============================================================================
 // Hook: useNotifications
 // ============================================================================
 
@@ -228,158 +261,282 @@ export function useNotifications(options?: {
   autoRefresh?: boolean;
   refreshInterval?: number;
 }) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
+  // Query for notifications list
+  const notificationsQuery = useQuery({
+    queryKey: notificationsKeys.list({
+      unreadOnly: options?.unreadOnly,
+      priority: options?.priority,
+      notificationType: options?.notificationType,
+    }),
+    queryFn: async () => {
+      try {
+        const params = new URLSearchParams();
+        if (options?.unreadOnly) {
+          params.set("unread_only", "true");
+        }
+        if (options?.priority) {
+          params.set("priority", options.priority);
+        }
+        if (options?.notificationType) {
+          params.set("notification_type", options.notificationType);
+        }
 
-      const params = new URLSearchParams();
-      if (options?.unreadOnly) {
-        params.set("unread_only", "true");
+        const endpoint = buildUrlWithParams("/notifications", params);
+        const response = await apiClient.get<NotificationListResponse>(endpoint);
+        return response.data;
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          logger.warn("Notifications endpoint returned 403. Using empty fallback data.");
+          return { notifications: [], total: 0, unread_count: 0 };
+        }
+        logger.error("Failed to fetch notifications", err instanceof Error ? err : new Error(String(err)));
+        throw err;
       }
-      if (options?.priority) {
-        params.set("priority", options.priority);
-      }
-      if (options?.notificationType) {
-        params.set("notification_type", options.notificationType);
-      }
+    },
+    staleTime: 30000, // 30 seconds
+    refetchInterval: options?.autoRefresh ? options.refreshInterval || 30000 : false,
+    refetchOnWindowFocus: true,
+  });
 
-      const endpoint = buildUrlWithParams("/notifications", params);
-      const response = await apiClient.get<NotificationListResponse>(endpoint);
-
-      if (response.data) {
-        setNotifications(response.data.notifications);
-        setUnreadCount(response.data.unread_count);
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn("Notifications endpoint returned 403. Using empty fallback data.");
-        setNotifications([]);
-        setUnreadCount(0);
-        setError(null);
-      } else {
-        console.error("Failed to fetch notifications:", err);
-        setError(err instanceof Error ? err : new Error("Failed to fetch notifications"));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options?.unreadOnly, options?.priority, options?.notificationType]);
-
-  useEffect(() => {
-    fetchNotifications();
-
-    // Auto-refresh if enabled
-    if (options?.autoRefresh) {
-      const interval = setInterval(fetchNotifications, options.refreshInterval || 30000);
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [fetchNotifications, options?.autoRefresh, options?.refreshInterval]);
-
-  const markAsRead = useCallback(async (notificationId: string): Promise<boolean> => {
-    try {
+  // Mutation: Mark as read
+  const markAsReadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       await apiClient.post(`/notifications/${notificationId}/read`, {});
+    },
+    onMutate: async (notificationId) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
-      // Update local state
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n,
-        ),
+      // Snapshot previous value
+      const previousData = queryClient.getQueryData<NotificationListResponse>(
+        notificationsKeys.list({
+          unreadOnly: options?.unreadOnly,
+          priority: options?.priority,
+          notificationType: options?.notificationType,
+        })
       );
-      setUnreadCount((prev) => Math.max(0, prev - 1));
 
-      return true;
-    } catch (err) {
-      console.error("Failed to mark notification as read:", err);
-      return false;
-    }
-  }, []);
+      // Optimistically update
+      if (previousData) {
+        queryClient.setQueryData<NotificationListResponse>(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          {
+            ...previousData,
+            notifications: previousData.notifications.map((n) =>
+              n.id === notificationId ? { ...n, is_read: true, read_at: new Date().toISOString() } : n
+            ),
+            unread_count: Math.max(0, previousData.unread_count - 1),
+          }
+        );
+      }
 
-  const markAsUnread = useCallback(async (notificationId: string): Promise<boolean> => {
-    try {
+      return { previousData };
+    },
+    onError: (err, notificationId, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          context.previousData
+        );
+      }
+      logger.error("Failed to mark notification as read", err instanceof Error ? err : new Error(String(err)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
+    },
+  });
+
+  // Mutation: Mark as unread
+  const markAsUnreadMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       await apiClient.post(`/notifications/${notificationId}/unread`, {});
+    },
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
-      // Update local state
-      setNotifications((prev) =>
-        prev.map((n) =>
-          n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n,
-        ),
+      const previousData = queryClient.getQueryData<NotificationListResponse>(
+        notificationsKeys.list({
+          unreadOnly: options?.unreadOnly,
+          priority: options?.priority,
+          notificationType: options?.notificationType,
+        })
       );
-      setUnreadCount((prev) => prev + 1);
 
-      return true;
-    } catch (err) {
-      console.error("Failed to mark notification as unread:", err);
-      return false;
-    }
-  }, []);
+      if (previousData) {
+        queryClient.setQueryData<NotificationListResponse>(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          {
+            ...previousData,
+            notifications: previousData.notifications.map((n) =>
+              n.id === notificationId ? { ...n, is_read: false, read_at: undefined } : n
+            ),
+            unread_count: previousData.unread_count + 1,
+          }
+        );
+      }
 
-  const markAllAsRead = useCallback(async (): Promise<boolean> => {
-    try {
+      return { previousData };
+    },
+    onError: (err, notificationId, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          context.previousData
+        );
+      }
+      logger.error("Failed to mark notification as unread", err instanceof Error ? err : new Error(String(err)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
+    },
+  });
+
+  // Mutation: Mark all as read
+  const markAllAsReadMutation = useMutation({
+    mutationFn: async () => {
       await apiClient.post("/notifications/mark-all-read");
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: notificationsKeys.lists() });
 
-      // Update local state
-      setNotifications((prev) =>
-        prev.map((n) => ({
-          ...n,
-          is_read: true,
-          read_at: new Date().toISOString(),
-        })),
+      const previousData = queryClient.getQueryData<NotificationListResponse>(
+        notificationsKeys.list({
+          unreadOnly: options?.unreadOnly,
+          priority: options?.priority,
+          notificationType: options?.notificationType,
+        })
       );
-      setUnreadCount(0);
 
-      return true;
-    } catch (err) {
-      console.error("Failed to mark all as read:", err);
-      return false;
-    }
-  }, []);
+      if (previousData) {
+        queryClient.setQueryData<NotificationListResponse>(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          {
+            ...previousData,
+            notifications: previousData.notifications.map((n) => ({
+              ...n,
+              is_read: true,
+              read_at: new Date().toISOString(),
+            })),
+            unread_count: 0,
+          }
+        );
+      }
 
-  const archiveNotification = useCallback(async (notificationId: string): Promise<boolean> => {
-    try {
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(
+          notificationsKeys.list({
+            unreadOnly: options?.unreadOnly,
+            priority: options?.priority,
+            notificationType: options?.notificationType,
+          }),
+          context.previousData
+        );
+      }
+      logger.error("Failed to mark all as read", err instanceof Error ? err : new Error(String(err)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.unreadCount() });
+    },
+  });
+
+  // Mutation: Archive notification
+  const archiveNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       await apiClient.post(`/notifications/${notificationId}/archive`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
+    },
+    onError: (err) => {
+      logger.error("Failed to archive notification", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
 
-      // Remove from local state
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-
-      return true;
-    } catch (err) {
-      console.error("Failed to archive notification:", err);
-      return false;
-    }
-  }, []);
-
-  const deleteNotification = useCallback(async (notificationId: string): Promise<boolean> => {
-    try {
+  // Mutation: Delete notification
+  const deleteNotificationMutation = useMutation({
+    mutationFn: async (notificationId: string) => {
       await apiClient.delete(`/notifications/${notificationId}`);
-
-      // Remove from local state
-      setNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-
-      return true;
-    } catch (err) {
-      console.error("Failed to delete notification:", err);
-      return false;
-    }
-  }, []);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
+    },
+    onError: (err) => {
+      logger.error("Failed to delete notification", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
 
   return {
-    notifications,
-    unreadCount,
-    isLoading,
-    error,
-    refetch: fetchNotifications,
-    markAsRead,
-    markAsUnread,
-    markAllAsRead,
-    archiveNotification,
-    deleteNotification,
+    notifications: notificationsQuery.data?.notifications ?? [],
+    unreadCount: notificationsQuery.data?.unread_count ?? 0,
+    isLoading: notificationsQuery.isLoading,
+    error: notificationsQuery.error,
+    refetch: notificationsQuery.refetch,
+    markAsRead: async (notificationId: string) => {
+      try {
+        await markAsReadMutation.mutateAsync(notificationId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    markAsUnread: async (notificationId: string) => {
+      try {
+        await markAsUnreadMutation.mutateAsync(notificationId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    markAllAsRead: async () => {
+      try {
+        await markAllAsReadMutation.mutateAsync();
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    archiveNotification: async (notificationId: string) => {
+      try {
+        await archiveNotificationMutation.mutateAsync(notificationId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    deleteNotification: async (notificationId: string) => {
+      try {
+        await deleteNotificationMutation.mutateAsync(notificationId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
   };
 }
 
@@ -391,134 +548,129 @@ export function useNotificationTemplates(options?: {
   type?: CommunicationType;
   activeOnly?: boolean;
 }) {
-  const [templates, setTemplates] = useState<CommunicationTemplate[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchTemplates = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (options?.type) {
-        params.set("type", options.type);
-      }
-      if (options?.activeOnly) {
-        params.set("active_only", "true");
-      }
-
-      const endpoint = buildUrlWithParams("/communications/templates", params);
-      const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
-
-      if (response.data) {
-        setTemplates(response.data);
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn("Templates endpoint returned 403. Falling back to empty template list.");
-        setTemplates([]);
-        setError(null);
-      } else {
-        console.error("Failed to fetch templates:", err);
-        setError(err instanceof Error ? err : new Error("Failed to fetch templates"));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options?.type, options?.activeOnly]);
-
-  useEffect(() => {
-    fetchTemplates();
-  }, [fetchTemplates]);
-
-  const createTemplate = useCallback(
-    async (data: TemplateCreateRequest): Promise<CommunicationTemplate | null> => {
+  // Query for templates list
+  const templatesQuery = useQuery({
+    queryKey: notificationsKeys.templateList({
+      type: options?.type,
+      activeOnly: options?.activeOnly,
+    }),
+    queryFn: async () => {
       try {
-        const response = await apiClient.post<CommunicationTemplate>(
-          "/communications/templates",
-          data,
-        );
-
-        if (response.data) {
-          setTemplates((prev) => [...prev, response.data]);
-          return response.data;
+        const params = new URLSearchParams();
+        if (options?.type) {
+          params.set("type", options.type);
         }
-        return null;
-      } catch (err) {
-        console.error("Failed to create template:", err);
+        if (options?.activeOnly) {
+          params.set("active_only", "true");
+        }
+
+        const endpoint = buildUrlWithParams("/communications/templates", params);
+        const response = await apiClient.get<CommunicationTemplate[]>(endpoint);
+        return response.data;
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          logger.warn("Templates endpoint returned 403. Falling back to empty template list.");
+          return [];
+        }
+        logger.error("Failed to fetch templates", err instanceof Error ? err : new Error(String(err)));
         throw err;
       }
     },
-    [],
-  );
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
+  });
 
-  const updateTemplate = useCallback(
-    async (
-      templateId: string,
-      data: TemplateUpdateRequest,
-    ): Promise<CommunicationTemplate | null> => {
-      try {
-        const response = await apiClient.patch<CommunicationTemplate>(
-          `/communications/templates/${templateId}`,
-          data,
-        );
-
-        if (response.data) {
-          setTemplates((prev) => prev.map((t) => (t.id === templateId ? response.data : t)));
-          return response.data;
-        }
-        return null;
-      } catch (err) {
-        console.error("Failed to update template:", err);
-        throw err;
-      }
+  // Mutation: Create template
+  const createTemplateMutation = useMutation({
+    mutationFn: async (data: TemplateCreateRequest) => {
+      const response = await apiClient.post<CommunicationTemplate>("/communications/templates", data);
+      return response.data;
     },
-    [],
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
+    },
+    onError: (err) => {
+      logger.error("Failed to create template", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
 
-  const deleteTemplate = useCallback(async (templateId: string): Promise<boolean> => {
-    try {
+  // Mutation: Update template
+  const updateTemplateMutation = useMutation({
+    mutationFn: async ({ templateId, data }: { templateId: string; data: TemplateUpdateRequest }) => {
+      const response = await apiClient.patch<CommunicationTemplate>(
+        `/communications/templates/${templateId}`,
+        data
+      );
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
+    },
+    onError: (err) => {
+      logger.error("Failed to update template", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  // Mutation: Delete template
+  const deleteTemplateMutation = useMutation({
+    mutationFn: async (templateId: string) => {
       await apiClient.delete(`/communications/templates/${templateId}`);
-
-      setTemplates((prev) => prev.filter((t) => t.id !== templateId));
-
-      return true;
-    } catch (err) {
-      console.error("Failed to delete template:", err);
-      return false;
-    }
-  }, []);
-
-  const renderTemplatePreview = useCallback(
-    async (
-      templateId: string,
-      data: Record<string, any>,
-    ): Promise<{ subject?: string; text?: string; html?: string } | null> => {
-      try {
-        const response = await apiClient.post<{
-          subject?: string;
-          text?: string;
-          html?: string;
-        }>(`/communications/templates/${templateId}/render`, { data });
-
-        return response.data || null;
-      } catch (err) {
-        console.error("Failed to render template preview:", err);
-        return null;
-      }
     },
-    [],
-  );
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.templates() });
+    },
+    onError: (err) => {
+      logger.error("Failed to delete template", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  // Helper: Render template preview
+  const renderTemplatePreview = async (
+    templateId: string,
+    data: Record<string, any>
+  ): Promise<{ subject?: string; text?: string; html?: string } | null> => {
+    try {
+      const response = await apiClient.post<{
+        subject?: string;
+        text?: string;
+        html?: string;
+      }>(`/communications/templates/${templateId}/render`, { data });
+      return response.data || null;
+    } catch (err) {
+      logger.error("Failed to render template preview", err instanceof Error ? err : new Error(String(err)));
+      return null;
+    }
+  };
 
   return {
-    templates,
-    isLoading,
-    error,
-    refetch: fetchTemplates,
-    createTemplate,
-    updateTemplate,
-    deleteTemplate,
+    templates: templatesQuery.data ?? [],
+    isLoading: templatesQuery.isLoading,
+    error: templatesQuery.error,
+    refetch: templatesQuery.refetch,
+    createTemplate: async (data: TemplateCreateRequest) => {
+      try {
+        return await createTemplateMutation.mutateAsync(data);
+      } catch {
+        return null;
+      }
+    },
+    updateTemplate: async (templateId: string, data: TemplateUpdateRequest) => {
+      try {
+        return await updateTemplateMutation.mutateAsync({ templateId, data });
+      } catch {
+        return null;
+      }
+    },
+    deleteTemplate: async (templateId: string) => {
+      try {
+        await deleteTemplateMutation.mutateAsync(templateId);
+        return true;
+      } catch {
+        return false;
+      }
+    },
     renderTemplatePreview,
   };
 }
@@ -536,83 +688,76 @@ export function useCommunicationLogs(options?: {
   page?: number;
   pageSize?: number;
 }) {
-  const [logs, setLogs] = useState<CommunicationLog[]>([]);
-  const [total, setTotal] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchLogs = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (options?.type) params.set("type", options.type);
-      if (options?.status) params.set("status", options.status);
-      if (options?.recipient) params.set("recipient", options.recipient);
-      if (options?.startDate) params.set("start_date", options.startDate);
-      if (options?.endDate) params.set("end_date", options.endDate);
-      if (options?.page) params.set("page", options.page.toString());
-      if (options?.pageSize) params.set("page_size", options.pageSize.toString());
-
-      const endpoint = buildUrlWithParams("/communications/logs", params);
-      const response = await apiClient.get<{
-        logs: CommunicationLog[];
-        total: number;
-      }>(endpoint);
-
-      if (response.data) {
-        setLogs(response.data.logs);
-        setTotal(response.data.total);
-      }
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn("Communications logs endpoint returned 403. Falling back to empty log set.");
-        setLogs([]);
-        setTotal(0);
-        setError(null);
-      } else {
-        console.error("Failed to fetch communication logs:", err);
-        setError(err instanceof Error ? err : new Error("Failed to fetch logs"));
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, [
-    options?.type,
-    options?.status,
-    options?.recipient,
-    options?.startDate,
-    options?.endDate,
-    options?.page,
-    options?.pageSize,
-  ]);
-
-  useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
-
-  const retryFailedCommunication = useCallback(
-    async (logId: string): Promise<boolean> => {
+  // Query for communication logs
+  const logsQuery = useQuery({
+    queryKey: notificationsKeys.logList({
+      type: options?.type,
+      status: options?.status,
+      recipient: options?.recipient,
+      startDate: options?.startDate,
+      endDate: options?.endDate,
+      page: options?.page,
+      pageSize: options?.pageSize,
+    }),
+    queryFn: async () => {
       try {
-        await apiClient.post(`/communications/logs/${logId}/retry`);
-        await fetchLogs(); // Refresh logs
+        const params = new URLSearchParams();
+        if (options?.type) params.set("type", options.type);
+        if (options?.status) params.set("status", options.status);
+        if (options?.recipient) params.set("recipient", options.recipient);
+        if (options?.startDate) params.set("start_date", options.startDate);
+        if (options?.endDate) params.set("end_date", options.endDate);
+        if (options?.page) params.set("page", options.page.toString());
+        if (options?.pageSize) params.set("page_size", options.pageSize.toString());
+
+        const endpoint = buildUrlWithParams("/communications/logs", params);
+        const response = await apiClient.get<{
+          logs: CommunicationLog[];
+          total: number;
+        }>(endpoint);
+        return response.data;
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          logger.warn("Communications logs endpoint returned 403. Falling back to empty log set.");
+          return { logs: [], total: 0 };
+        }
+        logger.error("Failed to fetch communication logs", err instanceof Error ? err : new Error(String(err)));
+        throw err;
+      }
+    },
+    staleTime: 30000, // 30 seconds
+    refetchOnWindowFocus: true,
+  });
+
+  // Mutation: Retry failed communication
+  const retryFailedCommunicationMutation = useMutation({
+    mutationFn: async (logId: string) => {
+      await apiClient.post(`/communications/logs/${logId}/retry`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.logs() });
+    },
+    onError: (err) => {
+      logger.error("Failed to retry communication", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
+
+  return {
+    logs: logsQuery.data?.logs ?? [],
+    total: logsQuery.data?.total ?? 0,
+    isLoading: logsQuery.isLoading,
+    error: logsQuery.error,
+    refetch: logsQuery.refetch,
+    retryFailedCommunication: async (logId: string) => {
+      try {
+        await retryFailedCommunicationMutation.mutateAsync(logId);
         return true;
-      } catch (err) {
-        console.error("Failed to retry communication:", err);
+      } catch {
         return false;
       }
     },
-    [fetchLogs],
-  );
-
-  return {
-    logs,
-    total,
-    isLoading,
-    error,
-    refetch: fetchLogs,
-    retryFailedCommunication,
   };
 }
 
@@ -621,48 +766,43 @@ export function useCommunicationLogs(options?: {
 // ============================================================================
 
 export function useBulkNotifications() {
-  const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
 
-  const sendBulkNotification = useCallback(
-    async (data: BulkNotificationRequest): Promise<BulkNotificationResponse | null> => {
-      try {
-        setIsLoading(true);
-
-        const response = await apiClient.post<BulkNotificationResponse>(
-          "/notifications/bulk",
-          data,
-        );
-
-        return response.data || null;
-      } catch (err) {
-        console.error("Failed to send bulk notification:", err);
-        throw err;
-      } finally {
-        setIsLoading(false);
-      }
+  // Mutation: Send bulk notification
+  const sendBulkNotificationMutation = useMutation({
+    mutationFn: async (data: BulkNotificationRequest) => {
+      const response = await apiClient.post<BulkNotificationResponse>("/notifications/bulk", data);
+      return response.data;
     },
-    [],
-  );
+    onSuccess: () => {
+      // Invalidate relevant queries after bulk send
+      queryClient.invalidateQueries({ queryKey: notificationsKeys.lists() });
+    },
+    onError: (err) => {
+      logger.error("Failed to send bulk notification", err instanceof Error ? err : new Error(String(err)));
+    },
+  });
 
-  const getBulkJobStatus = useCallback(
-    async (jobId: string): Promise<BulkNotificationResponse | null> => {
+  // Helper: Get bulk job status
+  const getBulkJobStatus = async (jobId: string): Promise<BulkNotificationResponse | null> => {
+    try {
+      const response = await apiClient.get<BulkNotificationResponse>(`/notifications/bulk/${jobId}`);
+      return response.data || null;
+    } catch (err) {
+      logger.error("Failed to get bulk job status", err instanceof Error ? err : new Error(String(err)));
+      return null;
+    }
+  };
+
+  return {
+    isLoading: sendBulkNotificationMutation.isPending,
+    sendBulkNotification: async (data: BulkNotificationRequest) => {
       try {
-        const response = await apiClient.get<BulkNotificationResponse>(
-          `/notifications/bulk/${jobId}`,
-        );
-
-        return response.data || null;
-      } catch (err) {
-        console.error("Failed to get bulk job status:", err);
+        return await sendBulkNotificationMutation.mutateAsync(data);
+      } catch {
         return null;
       }
     },
-    [],
-  );
-
-  return {
-    isLoading,
-    sendBulkNotification,
     getBulkJobStatus,
   };
 }
@@ -672,46 +812,29 @@ export function useBulkNotifications() {
 // ============================================================================
 
 export function useUnreadCount(options?: { autoRefresh?: boolean; refreshInterval?: number }) {
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const fetchUnreadCount = useCallback(async () => {
-    try {
-      setIsLoading(true);
-
-      const response = await apiClient.get<{ unread_count: number }>("/notifications/unread-count");
-
-      if (response.data) {
-        setUnreadCount(response.data.unread_count);
+  const unreadCountQuery = useQuery({
+    queryKey: notificationsKeys.unreadCount(),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<{ unread_count: number }>("/notifications/unread-count");
+        return response.data?.unread_count ?? 0;
+      } catch (err: any) {
+        if (err.response?.status === 403) {
+          logger.warn("Unread count endpoint returned 403. Defaulting to zero unread notifications.");
+          return 0;
+        }
+        logger.error("Failed to fetch unread count", err instanceof Error ? err : new Error(String(err)));
+        throw err;
       }
-    } catch (err) {
-      if (axios.isAxiosError(err) && err.response?.status === 403) {
-        console.warn(
-          "Unread count endpoint returned 403. Defaulting to zero unread notifications.",
-        );
-        setUnreadCount(0);
-      } else {
-        console.error("Failed to fetch unread count:", err);
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUnreadCount();
-
-    // Auto-refresh if enabled
-    if (options?.autoRefresh) {
-      const interval = setInterval(fetchUnreadCount, options.refreshInterval || 30000);
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [fetchUnreadCount, options?.autoRefresh, options?.refreshInterval]);
+    },
+    staleTime: 30000, // 30 seconds
+    refetchInterval: options?.autoRefresh ? options.refreshInterval || 30000 : false,
+    refetchOnWindowFocus: true,
+  });
 
   return {
-    unreadCount,
-    isLoading,
-    refetch: fetchUnreadCount,
+    unreadCount: unreadCountQuery.data ?? 0,
+    isLoading: unreadCountQuery.isLoading,
+    refetch: unreadCountQuery.refetch,
   };
 }

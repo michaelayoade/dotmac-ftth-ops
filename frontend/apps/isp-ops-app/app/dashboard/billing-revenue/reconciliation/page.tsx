@@ -136,7 +136,7 @@ const fetchReconciliations = async (params: {
   if (params.page) queryParams.append('page', params.page.toString());
   if (params.page_size) queryParams.append('page_size', params.page_size.toString());
   if (params.bank_account_id) queryParams.append('bank_account_id', params.bank_account_id.toString());
-  if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+  if (params['status'] && params['status'] !== 'all') queryParams.append('status', params['status']);
   if (params.start_date) queryParams.append('start_date', params.start_date);
   if (params.end_date) queryParams.append('end_date', params.end_date);
   if (params.search) queryParams.append('search', params.search);
@@ -245,7 +245,36 @@ export default function ReconciliationPage() {
 
   const { data: reconciliations, isLoading: listLoading, refetch } = useQuery({
     queryKey: ['reconciliations', page, pageSize, filters],
-    queryFn: () => fetchReconciliations({ page, page_size: pageSize, ...filters }),
+    queryFn: () => {
+      const params: {
+        page: number;
+        page_size: number;
+        bank_account_id?: number;
+        status?: string;
+        start_date?: string;
+        end_date?: string;
+        search?: string;
+      } = {
+        page,
+        page_size: pageSize,
+      };
+      if (filters.bank_account_id !== undefined) {
+        params.bank_account_id = filters.bank_account_id;
+      }
+      if (filters.status !== 'all') {
+        params.status = filters.status;
+      }
+      if (filters.start_date) {
+        params.start_date = filters.start_date;
+      }
+      if (filters.end_date) {
+        params.end_date = filters.end_date;
+      }
+      if (filters.search) {
+        params.search = filters.search;
+      }
+      return fetchReconciliations(params);
+    },
     refetchInterval: 30000, // Auto-refresh every 30 seconds
   });
 

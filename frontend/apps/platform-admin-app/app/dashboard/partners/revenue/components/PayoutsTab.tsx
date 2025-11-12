@@ -40,7 +40,7 @@ export function PayoutsTab() {
   const pageSize = 20;
 
   const { data: payouts, isLoading } = usePayouts({
-    status: statusFilter !== "all" ? statusFilter : undefined,
+    ...(statusFilter !== "all" && { status: statusFilter }),
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });

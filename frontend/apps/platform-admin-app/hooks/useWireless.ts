@@ -2,10 +2,15 @@
  * Wireless Infrastructure Custom Hooks
  *
  * React hooks for managing wireless network data, access points, coverage, and RF analytics
+ * Migrated to TanStack Query for improved caching and state management
  */
 
-import { useState, useEffect, useCallback } from "react";
+"use client";
+
+import { useState, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import { useToast } from "@dotmac/ui";
 import type {
   AccessPoint,
@@ -31,6 +36,35 @@ import type {
 } from "@/types/wireless";
 
 // ============================================================================
+// Query Keys Factory
+// ============================================================================
+
+export const wirelessKeys = {
+  all: ["wireless"] as const,
+  accessPoints: (filters?: {
+    status?: string;
+    type?: string;
+    frequency_band?: string;
+    limit?: number;
+  }) => [...wirelessKeys.all, "accessPoints", filters] as const,
+  clients: (filters?: {
+    access_point_id?: string;
+    ssid_id?: string;
+    customer_id?: string;
+    limit?: number;
+  }) => [...wirelessKeys.all, "clients", filters] as const,
+  coverageZones: (filters?: { coverage_level?: string; type?: string; limit?: number }) =>
+    [...wirelessKeys.all, "coverageZones", filters] as const,
+  rfAnalytics: (filters?: { access_point_id?: string; frequency_band?: string; limit?: number }) =>
+    [...wirelessKeys.all, "rfAnalytics", filters] as const,
+  siteSurveys: (filters?: { status?: string; limit?: number }) =>
+    [...wirelessKeys.all, "siteSurveys", filters] as const,
+  ssids: (filters?: { access_point_id?: string; enabled?: boolean; limit?: number }) =>
+    [...wirelessKeys.all, "ssids", filters] as const,
+  stats: () => [...wirelessKeys.all, "stats"] as const,
+};
+
+// ============================================================================
 // Access Points Hook
 // ============================================================================
 
@@ -44,151 +78,184 @@ interface UseAccessPointsOptions {
 
 export function useAccessPoints(options: UseAccessPointsOptions = {}) {
   const { toast } = useToast();
-  const [accessPoints, setAccessPoints] = useState<AccessPoint[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchAccessPoints = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.accessPoints(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.status) params.append("status", options.status);
-      if (options.type) params.append("device_type", options.type); // Backend uses device_type
-      if (options.frequency_band) params.append("frequency", options.frequency_band); // Backend uses frequency
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.status) params.append("status", filters.status);
+      if (filters.type) params.append("device_type", filters.type);
+      if (filters.frequency_band) params.append("frequency", filters.frequency_band);
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
-      // Backend endpoint is /devices
-      const response = await apiClient.get<AccessPoint[]>(`/wireless/devices?${params.toString()}`);
-
-      // Backend already returns AccessPoint format
-      setAccessPoints(response.data);
+      logger.debug("Fetching access points", { filters });
+      const response = await apiClient.get<AccessPoint[]>(
+        `/wireless/devices?${params.toString()}`,
+      );
+      logger.info("Access points fetched successfully", { count: response.data.length });
       return response.data;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch access points");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds - wireless data changes frequently
+    retry: 2,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: CreateAccessPointRequest) => {
+      const response = await apiClient.post<AccessPoint>("/wireless/access-points", data);
+      return response.data;
+    },
+    onMutate: async (data) => {
+      logger.info("Creating access point", { data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.accessPoints(filters) });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to create access point", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to create access point",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.status, options.type, options.frequency_band, options.limit, toast]);
-
-  const createAccessPoint = useCallback(
-    async (data: CreateAccessPointRequest) => {
-      try {
-        const response = await apiClient.post<AccessPoint>("/wireless/access-points", data);
-
-        toast({
-          title: "Access Point Created",
-          description: `Access point ${response.data.name} has been created successfully`,
-        });
-
-        await fetchAccessPoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create access point",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchAccessPoints, toast],
-  );
-
-  const updateAccessPoint = useCallback(
-    async (id: string, data: UpdateAccessPointRequest) => {
-      try {
-        const response = await apiClient.patch<AccessPoint>(`/wireless/access-points/${id}`, data);
-
-        toast({
-          title: "Access Point Updated",
-          description: "Access point has been updated successfully",
-        });
-
-        await fetchAccessPoints();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update access point",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("Access point created successfully", { id: data.id, name: data.name });
+      toast({
+        title: "Access Point Created",
+        description: `Access point ${data.name} has been created successfully`,
+      });
     },
-    [fetchAccessPoints, toast],
-  );
-
-  const deleteAccessPoint = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/wireless/access-points/${id}`);
-
-        toast({
-          title: "Access Point Deleted",
-          description: "Access point has been deleted successfully",
-        });
-
-        await fetchAccessPoints();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete access point",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.accessPoints() });
     },
-    [fetchAccessPoints, toast],
-  );
+  });
 
-  const rebootAccessPoint = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.post(`/wireless/access-points/${id}/reboot`);
-
-        toast({
-          title: "Reboot Initiated",
-          description: "Access point reboot has been initiated",
-        });
-
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to reboot access point",
-          variant: "destructive",
-        });
-        return false;
-      }
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: UpdateAccessPointRequest }) => {
+      const response = await apiClient.patch<AccessPoint>(`/wireless/access-points/${id}`, data);
+      return response.data;
     },
-    [toast],
-  );
+    onMutate: async ({ id, data }) => {
+      logger.info("Updating access point", { id, data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.accessPoints(filters) });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchAccessPoints();
-    }
-  }, [fetchAccessPoints, options.autoFetch]);
+      const previousData = queryClient.getQueryData<AccessPoint[]>(
+        wirelessKeys.accessPoints(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<AccessPoint[]>(
+          wirelessKeys.accessPoints(filters),
+          previousData.map((ap) => (ap.id === id ? { ...ap, ...data } : ap)),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.accessPoints(filters), context.previousData);
+      }
+      logger.error("Failed to update access point", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update access point",
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("Access point updated successfully", { id: data.id });
+      toast({
+        title: "Access Point Updated",
+        description: "Access point has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.accessPoints() });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/wireless/access-points/${id}`);
+      return id;
+    },
+    onMutate: async (id) => {
+      logger.info("Deleting access point", { id });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.accessPoints(filters) });
+
+      const previousData = queryClient.getQueryData<AccessPoint[]>(
+        wirelessKeys.accessPoints(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<AccessPoint[]>(
+          wirelessKeys.accessPoints(filters),
+          previousData.filter((ap) => ap.id !== id),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.accessPoints(filters), context.previousData);
+      }
+      logger.error("Failed to delete access point", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete access point",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Access point deleted successfully");
+      toast({
+        title: "Access Point Deleted",
+        description: "Access point has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.accessPoints() });
+    },
+  });
+
+  const rebootMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`/wireless/access-points/${id}/reboot`);
+      return id;
+    },
+    onMutate: (id) => {
+      logger.info("Rebooting access point", { id });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to reboot access point", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to reboot access point",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Access point reboot initiated");
+      toast({
+        title: "Reboot Initiated",
+        description: "Access point reboot has been initiated",
+      });
+    },
+  });
 
   return {
-    accessPoints,
-    isLoading,
-    error,
-    refetch: fetchAccessPoints,
-    createAccessPoint,
-    updateAccessPoint,
-    deleteAccessPoint,
-    rebootAccessPoint,
+    accessPoints: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    createAccessPoint: createMutation.mutateAsync,
+    updateAccessPoint: (id: string, data: UpdateAccessPointRequest) =>
+      updateMutation.mutateAsync({ id, data }),
+    deleteAccessPoint: deleteMutation.mutateAsync,
+    rebootAccessPoint: rebootMutation.mutateAsync,
   };
 }
 
@@ -206,77 +273,79 @@ interface UseWirelessClientsOptions {
 
 export function useWirelessClients(options: UseWirelessClientsOptions = {}) {
   const { toast } = useToast();
-  const [clients, setClients] = useState<WirelessClient[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchClients = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.clients(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.access_point_id) params.append("access_point_id", options.access_point_id);
-      if (options.ssid_id) params.append("ssid_id", options.ssid_id);
-      if (options.customer_id) params.append("customer_id", options.customer_id);
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.access_point_id) params.append("access_point_id", filters.access_point_id);
+      if (filters.ssid_id) params.append("ssid_id", filters.ssid_id);
+      if (filters.customer_id) params.append("customer_id", filters.customer_id);
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
+      logger.debug("Fetching wireless clients", { filters });
       const response = await apiClient.get<WirelessClientsResponse>(
         `/wireless/clients?${params.toString()}`,
       );
-
-      setClients(response.data.clients);
+      logger.info("Wireless clients fetched successfully", { count: response.data.clients.length });
       return response.data.clients;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch wireless clients");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds - client connections change frequently
+    retry: 2,
+  });
+
+  const disconnectMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.post(`/wireless/clients/${id}/disconnect`);
+      return id;
+    },
+    onMutate: async (id) => {
+      logger.info("Disconnecting wireless client", { id });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.clients(filters) });
+
+      const previousData = queryClient.getQueryData<WirelessClient[]>(wirelessKeys.clients(filters));
+
+      if (previousData) {
+        queryClient.setQueryData<WirelessClient[]>(
+          wirelessKeys.clients(filters),
+          previousData.filter((client) => client.id !== id),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.clients(filters), context.previousData);
+      }
+      logger.error("Failed to disconnect client", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to disconnect client",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.access_point_id, options.ssid_id, options.customer_id, options.limit, toast]);
-
-  const disconnectClient = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.post(`/wireless/clients/${id}/disconnect`);
-
-        toast({
-          title: "Client Disconnected",
-          description: "Client has been disconnected successfully",
-        });
-
-        await fetchClients();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to disconnect client",
-          variant: "destructive",
-        });
-        return false;
-      }
     },
-    [fetchClients, toast],
-  );
-
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchClients();
-    }
-  }, [fetchClients, options.autoFetch]);
+    onSuccess: () => {
+      logger.info("Client disconnected successfully");
+      toast({
+        title: "Client Disconnected",
+        description: "Client has been disconnected successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.clients() });
+    },
+  });
 
   return {
-    clients,
-    isLoading,
-    error,
-    refetch: fetchClients,
-    disconnectClient,
+    clients: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    disconnectClient: disconnectMutation.mutateAsync,
   };
 }
 
@@ -293,129 +362,159 @@ interface UseCoverageZonesOptions {
 
 export function useCoverageZones(options: UseCoverageZonesOptions = {}) {
   const { toast } = useToast();
-  const [coverageZones, setCoverageZones] = useState<CoverageZone[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchCoverageZones = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.coverageZones(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.coverage_level) params.append("coverage_level", options.coverage_level);
-      if (options.type) params.append("type", options.type);
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.coverage_level) params.append("coverage_level", filters.coverage_level);
+      if (filters.type) params.append("type", filters.type);
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
+      logger.debug("Fetching coverage zones", { filters });
       const response = await apiClient.get<CoverageZonesResponse>(
         `/wireless/coverage-zones?${params.toString()}`,
       );
-
-      setCoverageZones(response.data.coverage_zones);
+      logger.info("Coverage zones fetched successfully", {
+        count: response.data.coverage_zones.length,
+      });
       return response.data.coverage_zones;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch coverage zones");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds
+    retry: 2,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: CreateCoverageZoneRequest) => {
+      const response = await apiClient.post<CoverageZone>("/wireless/coverage-zones", data);
+      return response.data;
+    },
+    onMutate: async (data) => {
+      logger.info("Creating coverage zone", { data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.coverageZones(filters) });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to create coverage zone", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to create coverage zone",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.coverage_level, options.type, options.limit, toast]);
-
-  const createCoverageZone = useCallback(
-    async (data: CreateCoverageZoneRequest) => {
-      try {
-        const response = await apiClient.post<CoverageZone>("/wireless/coverage-zones", data);
-
-        toast({
-          title: "Coverage Zone Created",
-          description: `Coverage zone ${response.data.name} has been created successfully`,
-        });
-
-        await fetchCoverageZones();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create coverage zone",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchCoverageZones, toast],
-  );
+    onSuccess: (data) => {
+      logger.info("Coverage zone created successfully", { id: data.id, name: data.name });
+      toast({
+        title: "Coverage Zone Created",
+        description: `Coverage zone ${data.name} has been created successfully`,
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.coverageZones() });
+    },
+  });
 
-  const updateCoverageZone = useCallback(
-    async (id: string, data: Partial<CoverageZone>) => {
-      try {
-        const response = await apiClient.patch<CoverageZone>(
-          `/wireless/coverage-zones/${id}`,
-          data,
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CoverageZone> }) => {
+      const response = await apiClient.patch<CoverageZone>(`/wireless/coverage-zones/${id}`, data);
+      return response.data;
+    },
+    onMutate: async ({ id, data }) => {
+      logger.info("Updating coverage zone", { id, data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.coverageZones(filters) });
+
+      const previousData = queryClient.getQueryData<CoverageZone[]>(
+        wirelessKeys.coverageZones(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<CoverageZone[]>(
+          wirelessKeys.coverageZones(filters),
+          previousData.map((zone) => (zone.id === id ? { ...zone, ...data } : zone)),
         );
-
-        toast({
-          title: "Coverage Zone Updated",
-          description: "Coverage zone has been updated successfully",
-        });
-
-        await fetchCoverageZones();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update coverage zone",
-          variant: "destructive",
-        });
-        return null;
       }
+
+      return { previousData };
     },
-    [fetchCoverageZones, toast],
-  );
-
-  const deleteCoverageZone = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/wireless/coverage-zones/${id}`);
-
-        toast({
-          title: "Coverage Zone Deleted",
-          description: "Coverage zone has been deleted successfully",
-        });
-
-        await fetchCoverageZones();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete coverage zone",
-          variant: "destructive",
-        });
-        return false;
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.coverageZones(filters), context.previousData);
       }
+      logger.error("Failed to update coverage zone", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update coverage zone",
+        variant: "destructive",
+      });
     },
-    [fetchCoverageZones, toast],
-  );
+    onSuccess: (data) => {
+      logger.info("Coverage zone updated successfully", { id: data.id });
+      toast({
+        title: "Coverage Zone Updated",
+        description: "Coverage zone has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.coverageZones() });
+    },
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchCoverageZones();
-    }
-  }, [fetchCoverageZones, options.autoFetch]);
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/wireless/coverage-zones/${id}`);
+      return id;
+    },
+    onMutate: async (id) => {
+      logger.info("Deleting coverage zone", { id });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.coverageZones(filters) });
+
+      const previousData = queryClient.getQueryData<CoverageZone[]>(
+        wirelessKeys.coverageZones(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<CoverageZone[]>(
+          wirelessKeys.coverageZones(filters),
+          previousData.filter((zone) => zone.id !== id),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.coverageZones(filters), context.previousData);
+      }
+      logger.error("Failed to delete coverage zone", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete coverage zone",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Coverage zone deleted successfully");
+      toast({
+        title: "Coverage Zone Deleted",
+        description: "Coverage zone has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.coverageZones() });
+    },
+  });
 
   return {
-    coverageZones,
-    isLoading,
-    error,
-    refetch: fetchCoverageZones,
-    createCoverageZone,
-    updateCoverageZone,
-    deleteCoverageZone,
+    coverageZones: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    createCoverageZone: createMutation.mutateAsync,
+    updateCoverageZone: (id: string, data: Partial<CoverageZone>) =>
+      updateMutation.mutateAsync({ id, data }),
+    deleteCoverageZone: deleteMutation.mutateAsync,
   };
 }
 
@@ -432,78 +531,65 @@ interface UseRFAnalyticsOptions {
 
 export function useRFAnalytics(options: UseRFAnalyticsOptions = {}) {
   const { toast } = useToast();
-  const [analytics, setAnalytics] = useState<RFAnalytics[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchAnalytics = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.rfAnalytics(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.access_point_id) params.append("access_point_id", options.access_point_id);
-      if (options.frequency_band) params.append("frequency_band", options.frequency_band);
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.access_point_id) params.append("access_point_id", filters.access_point_id);
+      if (filters.frequency_band) params.append("frequency_band", filters.frequency_band);
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
+      logger.debug("Fetching RF analytics", { filters });
       const response = await apiClient.get<RFAnalyticsResponse>(
         `/wireless/rf-analytics?${params.toString()}`,
       );
-
-      setAnalytics(response.data.analytics);
+      logger.info("RF analytics fetched successfully", { count: response.data.analytics.length });
       return response.data.analytics;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch RF analytics");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds - RF data changes frequently
+    retry: 2,
+  });
+
+  const runAnalysisMutation = useMutation({
+    mutationFn: async (accessPointId: string) => {
+      const response = await apiClient.post<RFAnalytics>(
+        `/wireless/access-points/${accessPointId}/spectrum-analysis`,
+      );
+      return response.data;
+    },
+    onMutate: (accessPointId) => {
+      logger.info("Running spectrum analysis", { accessPointId });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to run spectrum analysis", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to run spectrum analysis",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.access_point_id, options.frequency_band, options.limit, toast]);
-
-  const runSpectrumAnalysis = useCallback(
-    async (accessPointId: string) => {
-      try {
-        const response = await apiClient.post<RFAnalytics>(
-          `/wireless/access-points/${accessPointId}/spectrum-analysis`,
-        );
-
-        toast({
-          title: "Spectrum Analysis Complete",
-          description: "RF spectrum analysis has been completed",
-        });
-
-        await fetchAnalytics();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to run spectrum analysis",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchAnalytics, toast],
-  );
-
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchAnalytics();
-    }
-  }, [fetchAnalytics, options.autoFetch]);
+    onSuccess: (data) => {
+      logger.info("Spectrum analysis completed", { id: data.id });
+      toast({
+        title: "Spectrum Analysis Complete",
+        description: "RF spectrum analysis has been completed",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.rfAnalytics() });
+    },
+  });
 
   return {
-    analytics,
-    isLoading,
-    error,
-    refetch: fetchAnalytics,
-    runSpectrumAnalysis,
+    analytics: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    runSpectrumAnalysis: runAnalysisMutation.mutateAsync,
   };
 }
 
@@ -519,125 +605,158 @@ interface UseSiteSurveysOptions {
 
 export function useSiteSurveys(options: UseSiteSurveysOptions = {}) {
   const { toast } = useToast();
-  const [siteSurveys, setSiteSurveys] = useState<SiteSurvey[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchSiteSurveys = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.siteSurveys(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.status) params.append("status", options.status);
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.status) params.append("status", filters.status);
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
+      logger.debug("Fetching site surveys", { filters });
       const response = await apiClient.get<SiteSurveysResponse>(
         `/wireless/site-surveys?${params.toString()}`,
       );
-
-      setSiteSurveys(response.data.site_surveys);
+      logger.info("Site surveys fetched successfully", {
+        count: response.data.site_surveys.length,
+      });
       return response.data.site_surveys;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch site surveys");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds
+    retry: 2,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: CreateSiteSurveyRequest) => {
+      const response = await apiClient.post<SiteSurvey>("/wireless/site-surveys", data);
+      return response.data;
+    },
+    onMutate: async (data) => {
+      logger.info("Creating site survey", { data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.siteSurveys(filters) });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to create site survey", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to create site survey",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.status, options.limit, toast]);
-
-  const createSiteSurvey = useCallback(
-    async (data: CreateSiteSurveyRequest) => {
-      try {
-        const response = await apiClient.post<SiteSurvey>("/wireless/site-surveys", data);
-
-        toast({
-          title: "Site Survey Created",
-          description: `Site survey ${response.data.name} has been created successfully`,
-        });
-
-        await fetchSiteSurveys();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create site survey",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchSiteSurveys, toast],
-  );
-
-  const updateSiteSurvey = useCallback(
-    async (id: string, data: Partial<SiteSurvey>) => {
-      try {
-        const response = await apiClient.patch<SiteSurvey>(`/wireless/site-surveys/${id}`, data);
-
-        toast({
-          title: "Site Survey Updated",
-          description: "Site survey has been updated successfully",
-        });
-
-        await fetchSiteSurveys();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update site survey",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("Site survey created successfully", { id: data.id, name: data.name });
+      toast({
+        title: "Site Survey Created",
+        description: `Site survey ${data.name} has been created successfully`,
+      });
     },
-    [fetchSiteSurveys, toast],
-  );
-
-  const deleteSiteSurvey = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/wireless/site-surveys/${id}`);
-
-        toast({
-          title: "Site Survey Deleted",
-          description: "Site survey has been deleted successfully",
-        });
-
-        await fetchSiteSurveys();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete site survey",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.siteSurveys() });
     },
-    [fetchSiteSurveys, toast],
-  );
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchSiteSurveys();
-    }
-  }, [fetchSiteSurveys, options.autoFetch]);
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<SiteSurvey> }) => {
+      const response = await apiClient.patch<SiteSurvey>(`/wireless/site-surveys/${id}`, data);
+      return response.data;
+    },
+    onMutate: async ({ id, data }) => {
+      logger.info("Updating site survey", { id, data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.siteSurveys(filters) });
+
+      const previousData = queryClient.getQueryData<SiteSurvey[]>(
+        wirelessKeys.siteSurveys(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<SiteSurvey[]>(
+          wirelessKeys.siteSurveys(filters),
+          previousData.map((survey) => (survey.id === id ? { ...survey, ...data } : survey)),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.siteSurveys(filters), context.previousData);
+      }
+      logger.error("Failed to update site survey", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update site survey",
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("Site survey updated successfully", { id: data.id });
+      toast({
+        title: "Site Survey Updated",
+        description: "Site survey has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.siteSurveys() });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/wireless/site-surveys/${id}`);
+      return id;
+    },
+    onMutate: async (id) => {
+      logger.info("Deleting site survey", { id });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.siteSurveys(filters) });
+
+      const previousData = queryClient.getQueryData<SiteSurvey[]>(
+        wirelessKeys.siteSurveys(filters),
+      );
+
+      if (previousData) {
+        queryClient.setQueryData<SiteSurvey[]>(
+          wirelessKeys.siteSurveys(filters),
+          previousData.filter((survey) => survey.id !== id),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.siteSurveys(filters), context.previousData);
+      }
+      logger.error("Failed to delete site survey", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete site survey",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("Site survey deleted successfully");
+      toast({
+        title: "Site Survey Deleted",
+        description: "Site survey has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.siteSurveys() });
+    },
+  });
 
   return {
-    siteSurveys,
-    isLoading,
-    error,
-    refetch: fetchSiteSurveys,
-    createSiteSurvey,
-    updateSiteSurvey,
-    deleteSiteSurvey,
+    siteSurveys: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    createSiteSurvey: createMutation.mutateAsync,
+    updateSiteSurvey: (id: string, data: Partial<SiteSurvey>) =>
+      updateMutation.mutateAsync({ id, data }),
+    deleteSiteSurvey: deleteMutation.mutateAsync,
   };
 }
 
@@ -654,126 +773,152 @@ interface UseSSIDsOptions {
 
 export function useSSIDs(options: UseSSIDsOptions = {}) {
   const { toast } = useToast();
-  const [ssids, setSSIDs] = useState<SSID[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const queryClient = useQueryClient();
+  const { autoFetch = true, ...filters } = options;
 
-  const fetchSSIDs = useCallback(async () => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.ssids(filters),
+    queryFn: async () => {
       const params = new URLSearchParams();
-      if (options.access_point_id) params.append("access_point_id", options.access_point_id);
-      if (options.enabled !== undefined) params.append("enabled", options.enabled.toString());
-      if (options.limit) params.append("limit", options.limit.toString());
+      if (filters.access_point_id) params.append("access_point_id", filters.access_point_id);
+      if (filters.enabled !== undefined) params.append("enabled", filters.enabled.toString());
+      if (filters.limit) params.append("limit", filters.limit.toString());
 
+      logger.debug("Fetching SSIDs", { filters });
       const response = await apiClient.get<{ ssids: SSID[]; total: number }>(
         `/wireless/ssids?${params.toString()}`,
       );
-
-      setSSIDs(response.data.ssids);
+      logger.info("SSIDs fetched successfully", { count: response.data.ssids.length });
       return response.data.ssids;
-    } catch (err: any) {
-      const error = new Error(err.response?.data?.detail || "Failed to fetch SSIDs");
-      setError(error);
+    },
+    enabled: autoFetch,
+    staleTime: 30000, // 30 seconds
+    retry: 2,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: CreateSSIDRequest) => {
+      const response = await apiClient.post<SSID>("/wireless/ssids", data);
+      return response.data;
+    },
+    onMutate: async (data) => {
+      logger.info("Creating SSID", { data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.ssids(filters) });
+    },
+    onError: (error: any) => {
+      logger.error("Failed to create SSID", error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.response?.data?.detail || "Failed to create SSID",
         variant: "destructive",
       });
-      return [];
-    } finally {
-      setIsLoading(false);
-    }
-  }, [options.access_point_id, options.enabled, options.limit, toast]);
-
-  const createSSID = useCallback(
-    async (data: CreateSSIDRequest) => {
-      try {
-        const response = await apiClient.post<SSID>("/wireless/ssids", data);
-
-        toast({
-          title: "SSID Created",
-          description: `SSID ${response.data.ssid_name} has been created successfully`,
-        });
-
-        await fetchSSIDs();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to create SSID",
-          variant: "destructive",
-        });
-        return null;
-      }
     },
-    [fetchSSIDs, toast],
-  );
-
-  const updateSSID = useCallback(
-    async (id: string, data: Partial<SSID>) => {
-      try {
-        const response = await apiClient.patch<SSID>(`/wireless/ssids/${id}`, data);
-
-        toast({
-          title: "SSID Updated",
-          description: "SSID has been updated successfully",
-        });
-
-        await fetchSSIDs();
-        return response.data;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to update SSID",
-          variant: "destructive",
-        });
-        return null;
-      }
+    onSuccess: (data) => {
+      logger.info("SSID created successfully", { id: data.id, name: data.ssid_name });
+      toast({
+        title: "SSID Created",
+        description: `SSID ${data.ssid_name} has been created successfully`,
+      });
     },
-    [fetchSSIDs, toast],
-  );
-
-  const deleteSSID = useCallback(
-    async (id: string) => {
-      try {
-        await apiClient.delete(`/wireless/ssids/${id}`);
-
-        toast({
-          title: "SSID Deleted",
-          description: "SSID has been deleted successfully",
-        });
-
-        await fetchSSIDs();
-        return true;
-      } catch (err: any) {
-        toast({
-          title: "Error",
-          description: err.response?.data?.detail || "Failed to delete SSID",
-          variant: "destructive",
-        });
-        return false;
-      }
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.ssids() });
     },
-    [fetchSSIDs, toast],
-  );
+  });
 
-  useEffect(() => {
-    if (options.autoFetch !== false) {
-      fetchSSIDs();
-    }
-  }, [fetchSSIDs, options.autoFetch]);
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<SSID> }) => {
+      const response = await apiClient.patch<SSID>(`/wireless/ssids/${id}`, data);
+      return response.data;
+    },
+    onMutate: async ({ id, data }) => {
+      logger.info("Updating SSID", { id, data });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.ssids(filters) });
+
+      const previousData = queryClient.getQueryData<SSID[]>(wirelessKeys.ssids(filters));
+
+      if (previousData) {
+        queryClient.setQueryData<SSID[]>(
+          wirelessKeys.ssids(filters),
+          previousData.map((ssid) => (ssid.id === id ? { ...ssid, ...data } : ssid)),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.ssids(filters), context.previousData);
+      }
+      logger.error("Failed to update SSID", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to update SSID",
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data) => {
+      logger.info("SSID updated successfully", { id: data.id });
+      toast({
+        title: "SSID Updated",
+        description: "SSID has been updated successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.ssids() });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      await apiClient.delete(`/wireless/ssids/${id}`);
+      return id;
+    },
+    onMutate: async (id) => {
+      logger.info("Deleting SSID", { id });
+      await queryClient.cancelQueries({ queryKey: wirelessKeys.ssids(filters) });
+
+      const previousData = queryClient.getQueryData<SSID[]>(wirelessKeys.ssids(filters));
+
+      if (previousData) {
+        queryClient.setQueryData<SSID[]>(
+          wirelessKeys.ssids(filters),
+          previousData.filter((ssid) => ssid.id !== id),
+        );
+      }
+
+      return { previousData };
+    },
+    onError: (error: any, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(wirelessKeys.ssids(filters), context.previousData);
+      }
+      logger.error("Failed to delete SSID", error);
+      toast({
+        title: "Error",
+        description: error.response?.data?.detail || "Failed to delete SSID",
+        variant: "destructive",
+      });
+    },
+    onSuccess: () => {
+      logger.info("SSID deleted successfully");
+      toast({
+        title: "SSID Deleted",
+        description: "SSID has been deleted successfully",
+      });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: wirelessKeys.ssids() });
+    },
+  });
 
   return {
-    ssids,
-    isLoading,
-    error,
-    refetch: fetchSSIDs,
-    createSSID,
-    updateSSID,
-    deleteSSID,
+    ssids: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
+    refetch: query.refetch,
+    createSSID: createMutation.mutateAsync,
+    updateSSID: (id: string, data: Partial<SSID>) => updateMutation.mutateAsync({ id, data }),
+    deleteSSID: deleteMutation.mutateAsync,
   };
 }
 
@@ -783,37 +928,33 @@ export function useSSIDs(options: UseSSIDsOptions = {}) {
 
 export function useWirelessInfrastructureStats() {
   const { toast } = useToast();
-  const [stats, setStats] = useState<WirelessInfrastructureStats | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchStats = useCallback(async () => {
-    setIsLoading(true);
-
-    try {
+  const query = useQuery({
+    queryKey: wirelessKeys.stats(),
+    queryFn: async () => {
+      logger.debug("Fetching wireless infrastructure statistics");
       const response = await apiClient.get<WirelessInfrastructureStats>("/wireless/statistics");
-
-      setStats(response.data);
+      logger.info("Wireless statistics fetched successfully");
       return response.data;
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.response?.data?.detail || "Failed to fetch wireless statistics",
-        variant: "destructive",
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
+    },
+    staleTime: 30000, // 30 seconds - stats change frequently
+    retry: 2,
+    meta: {
+      onError: (error: any) => {
+        logger.error("Failed to fetch wireless statistics", error);
+        toast({
+          title: "Error",
+          description: error.response?.data?.detail || "Failed to fetch wireless statistics",
+          variant: "destructive",
+        });
+      },
+    },
+  });
 
   return {
-    stats,
-    isLoading,
-    refetch: fetchStats,
+    stats: query.data ?? null,
+    isLoading: query.isLoading,
+    refetch: query.refetch,
   };
 }
 

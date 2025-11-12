@@ -1,36 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import Image from "next/image";
 import { useBranding } from "@/hooks/useBranding";
 import { useAppConfig } from "@/providers/AppConfigContext";
+import { useSession } from "@dotmac/better-auth";
+
+const showTestCredentials =
+  process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
 
 export default function HomePage() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [loading, setLoading] = useState(true);
   const { branding } = useBranding();
   const config = useAppConfig();
   const apiBaseUrl = config.api.baseUrl || "/api/v1";
+  const { data: session, isPending: authLoading } = useSession();
+  const isLoggedIn = Boolean(session?.user);
 
-  // Check if user is authenticated via API call (HttpOnly cookies can't be read by JS)
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const response = await fetch("/api/v1/auth/me", {
-          credentials: "include",
-        });
-        setIsLoggedIn(response.ok);
-      } catch (error) {
-        setIsLoggedIn(false);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, []);
-
-  if (loading) {
+  if (authLoading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[color:var(--brand-primary)]"></div>
@@ -42,9 +28,30 @@ export default function HomePage() {
     <main className="min-h-screen flex flex-col items-center justify-center px-6 py-16 gap-12">
       <div className="text-center space-y-6 max-w-3xl">
         <div className="flex items-center justify-center mb-6">
-          <span className="inline-flex items-center rounded-full badge-brand px-4 py-2 text-sm font-medium">
-            🚀 {branding.productName}
-          </span>
+          {branding.logo?.light || branding.logo?.dark ? (
+            <div className="relative h-12 w-48">
+              <Image
+                src={branding.logo.light || branding.logo.dark || ''}
+                alt={branding.productName}
+                fill
+                className="object-contain dark:hidden"
+                priority
+              />
+              {branding.logo.dark && (
+                <Image
+                  src={branding.logo.dark}
+                  alt={branding.productName}
+                  fill
+                  className="object-contain hidden dark:block"
+                  priority
+                />
+              )}
+            </div>
+          ) : (
+            <span className="inline-flex items-center rounded-full badge-brand px-4 py-2 text-sm font-medium">
+              🚀 {branding.productName}
+            </span>
+          )}
         </div>
 
         <h1 className="text-5xl font-bold tracking-tight text-foreground mb-4">
@@ -65,25 +72,20 @@ export default function HomePage() {
               </button>
             </Link>
           ) : (
-            <>
-              <Link href="/login">
-                <button className="px-8 py-4 rounded-lg transition-colors text-lg font-medium btn-brand">
-                  Sign In
-                </button>
-              </Link>
-              <Link href="/register">
-                <button className="px-8 py-4 border border-border text-muted-foreground rounded-lg hover:bg-accent transition-colors text-lg font-medium">
-                  Create Account
-                </button>
-              </Link>
-            </>
+            <Link href="/login">
+              <button className="px-8 py-4 rounded-lg transition-colors text-lg font-medium btn-brand">
+                Sign In
+              </button>
+            </Link>
           )}
         </div>
 
-        <div className="bg-card/30 backdrop-blur border border-border/50 rounded-lg p-4 mt-8">
-          <p className="text-sm text-muted-foreground mb-2">Quick Start - Test Credentials:</p>
-          <p className="text-brand font-mono text-sm">newuser / Test123!@#</p>
-        </div>
+        {showTestCredentials && (
+          <div className="bg-card/30 backdrop-blur border border-border/50 rounded-lg p-4 mt-8">
+            <p className="text-sm text-muted-foreground mb-2">Quick Start - Test Credentials:</p>
+            <p className="text-brand font-mono text-sm">newuser / Test123!@#</p>
+          </div>
+        )}
       </div>
 
       <section className="grid w-full max-w-6xl gap-6 md:grid-cols-3">
@@ -132,7 +134,7 @@ export default function HomePage() {
         <div className="flex items-center gap-2">
           <div className="w-2 h-2 bg-[var(--brand-primary)] rounded-full animate-pulse"></div>
           <span>
-            Frontend: <span className="text-brand">localhost:3001</span>
+            Frontend: <span className="text-brand">{typeof window !== 'undefined' ? window.location.host : 'localhost:3001'}</span>
           </span>
         </div>
       </div>

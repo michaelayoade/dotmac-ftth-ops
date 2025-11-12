@@ -11,7 +11,9 @@
  */
 
 export const DEFAULT_PORTAL_TOKEN_KEY = "access_token";
+export const DEFAULT_PORTAL_REFRESH_TOKEN_KEY = "refresh_token";
 export const CUSTOMER_PORTAL_TOKEN_KEY = "customer_access_token";
+export const CUSTOMER_PORTAL_REFRESH_TOKEN_KEY = "customer_refresh_token";
 
 export class PortalAuthError extends Error {
   constructor(message: string, public readonly code: string = "PORTAL_AUTH_ERROR") {
@@ -73,6 +75,26 @@ const removeFromStorage = (storage: Storage | null, key: string) => {
   }
 };
 
+const writeToSessionStorage = (key: string, value: string | null) => {
+  const session = safeSessionStorage();
+  const local = safeLocalStorage();
+
+  if (value) {
+    if (session) {
+      try {
+        session.setItem(key, value);
+      } catch {
+        // ignore storage failures
+      }
+    }
+  } else {
+    removeFromStorage(session, key);
+  }
+
+  // Always remove legacy/local copies to avoid long-lived storage.
+  removeFromStorage(local, key);
+};
+
 export const setOperatorAccessToken = (token: string | null) => {
   const session = safeSessionStorage();
   const local = safeLocalStorage();
@@ -125,6 +147,17 @@ export const clearOperatorAuthTokens = () => {
   removeFromStorage(local, REFRESH_TOKEN_KEY);
 
   inMemoryAccessToken = null;
+};
+
+export const setPortalAuthToken = (
+  token: string | null,
+  tokenKey: string = DEFAULT_PORTAL_TOKEN_KEY,
+) => {
+  writeToSessionStorage(tokenKey, token);
+};
+
+export const clearPortalAuthToken = (tokenKey: string = DEFAULT_PORTAL_TOKEN_KEY) => {
+  writeToSessionStorage(tokenKey, null);
 };
 
 // ---------------------------------------------------------------------------
@@ -192,13 +225,25 @@ export const portalAuthFetch = (
   init: RequestInit = {},
   options: PortalAuthFetchOptions = {},
 ): Promise<Response> => {
-  const headers = buildPortalAuthHeaders({
-    headers: init.headers,
-    includeJsonContentType: options.includeJsonContentType,
-    tokenKey: options.tokenKey,
-    required: options.required,
-    missingTokenMessage: options.missingTokenMessage,
-  });
+  const headerOptions: BuildPortalAuthHeadersOptions = {};
+
+  if (typeof options.includeJsonContentType !== "undefined") {
+    headerOptions.includeJsonContentType = options.includeJsonContentType;
+  }
+  if (typeof options.tokenKey !== "undefined") {
+    headerOptions.tokenKey = options.tokenKey;
+  }
+  if (typeof options.required !== "undefined") {
+    headerOptions.required = options.required;
+  }
+  if (typeof options.missingTokenMessage !== "undefined") {
+    headerOptions.missingTokenMessage = options.missingTokenMessage;
+  }
+  if (init.headers) {
+    headerOptions.headers = init.headers;
+  }
+
+  const headers = buildPortalAuthHeaders(headerOptions);
 
   const finalInit: RequestInit = {
     ...init,

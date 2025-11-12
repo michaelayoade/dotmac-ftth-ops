@@ -4,7 +4,8 @@ Job API Router
 REST endpoints for job management and monitoring.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status as fastapi_status
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import status as fastapi_status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo

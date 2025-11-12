@@ -13,11 +13,11 @@ interface AssignAccountModalProps {
 
 interface AssignAccountInput {
   customer_id: string;
-  engagement_type?: "direct" | "referral" | "reseller" | "affiliate";
-  custom_commission_rate?: number;
-  start_date?: string;
-  end_date?: string;
-  notes?: string;
+  engagement_type: "direct" | "referral" | "reseller" | "affiliate" | undefined;
+  custom_commission_rate: number | undefined;
+  start_date: string | undefined;
+  end_date: string | undefined;
+  notes: string | undefined;
 }
 
 async function assignAccount(partnerId: string, data: AssignAccountInput): Promise<void> {

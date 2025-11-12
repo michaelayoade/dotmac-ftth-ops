@@ -4,7 +4,8 @@ NetBox API Router
 FastAPI endpoints for NetBox IPAM and DCIM operations.
 """
 
-from typing import Any, Mapping, Type, TypeVar, cast
+from collections.abc import Mapping
+from typing import Any, TypeVar, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -61,7 +62,7 @@ ResponseT = TypeVar(
 )
 
 
-def _coerce_response(model: Type[ResponseT], value: ResponseT | Mapping[str, Any]) -> ResponseT:
+def _coerce_response(model: type[ResponseT], value: ResponseT | Mapping[str, Any]) -> ResponseT:
     """Convert NetBox service results to typed responses."""
     if isinstance(value, model):
         return value

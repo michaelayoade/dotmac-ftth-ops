@@ -51,7 +51,12 @@ import {
   FileText,
 } from "lucide-react";
 import { format } from "date-fns";
-import { usePayments, usePaymentMetrics, type PaymentStatus } from "@/hooks/usePaymentsGraphQL";
+import {
+  usePayments,
+  usePaymentMetrics,
+  type PaymentStatus,
+  type PaymentFilters,
+} from "@/hooks/usePaymentsGraphQL";
 import { apiClient } from "@/lib/api/client";
 import { handleApiError } from "@/lib/error-handler";
 import { logger } from "@/lib/logger";
@@ -66,15 +71,15 @@ interface Payment {
   payment_method: string;
   payment_method_type: "card" | "bank" | "wallet" | "other";
   description: string;
-  invoice_id?: string;
-  subscription_id?: string;
+  invoice_id?: string | null;
+  subscription_id?: string | null;
   created_at: string;
-  processed_at?: string;
-  failure_reason?: string;
-  refund_amount?: number;
-  fee_amount?: number;
-  net_amount?: number;
-  metadata?: Record<string, any>;
+  processed_at?: string | null;
+  failure_reason?: string | null;
+  refund_amount?: number | null;
+  fee_amount?: number | null;
+  net_amount?: number | null;
+  metadata?: Record<string, any> | null;
 }
 
 export default function PaymentsPage() {
@@ -91,6 +96,10 @@ export default function PaymentsPage() {
   const [isExporting, setIsExporting] = useState(false);
   const [refundAmount, setRefundAmount] = useState("");
   const [refundReason, setRefundReason] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 20;
 
   // Calculate date filters
   const getDateFilters = () => {
@@ -113,23 +122,22 @@ export default function PaymentsPage() {
 
   const dateFilters = getDateFilters();
 
-  // Fetch payments using GraphQL
+  // Fetch payments using GraphQL with pagination
+  const paymentFilters: PaymentFilters = {
+    limit: pageSize,
+    offset: (currentPage - 1) * pageSize,
+    includeCustomer: true,
+    includeInvoice: false,
+    ...dateFilters,
+    ...(statusFilter ? { status: statusFilter } : {}),
+  };
+
   const {
     data: paymentsData,
     isLoading: paymentsLoading,
     error: paymentsError,
     refetch: refetchPayments,
-  } = usePayments(
-    {
-      limit: 100,
-      offset: 0,
-      status: statusFilter,
-      includeCustomer: true,
-      includeInvoice: false,
-      ...dateFilters,
-    },
-    true,
-  );
+  } = usePayments(paymentFilters, true);
 
   // Fetch payment metrics
   const { data: metricsData } = usePaymentMetrics({
@@ -137,48 +145,31 @@ export default function PaymentsPage() {
     enabled: true,
   });
 
-  // Transform payments data with search and payment method filters
-  const payments = (paymentsData?.payments || [])
-    .filter((payment) => {
-      // Search filter
-      if (searchQuery) {
-        const searchLower = searchQuery.toLowerCase();
-        const customerName = payment.customer?.name || "Unknown Customer";
-        const matchesSearch =
-          customerName.toLowerCase().includes(searchLower) ||
-          payment.customer?.email.toLowerCase().includes(searchLower) ||
-          payment.id.toLowerCase().includes(searchLower) ||
-          (payment.description ?? "").toLowerCase().includes(searchLower);
-        if (!matchesSearch) return false;
-      }
+  // Transform payments data (filtering now happens on backend)
+  const payments = (paymentsData?.payments || []).map((p) => ({
+    id: p.id,
+    amount: p.amount,
+    currency: p.currency,
+    status: p.status as Payment["status"],
+    customer_name: p.customer?.name || "Unknown Customer",
+    customer_email: p.customer?.email || "",
+    payment_method: p.provider,
+    payment_method_type: p.paymentMethodType as Payment["payment_method_type"],
+    description: p.description || `Payment via ${p.provider}`,
+    invoice_id: p.invoiceId || null,
+    subscription_id: p.subscriptionId || null,
+    created_at: p.createdAt,
+    processed_at: p.processedAt || null,
+    failure_reason: p.failureReason || null,
+    refund_amount: p.refundAmount || null,
+    fee_amount: p.feeAmount || null,
+    net_amount: p.netAmount || null,
+    metadata: p.metadata || null,
+  }));
 
-      // Payment method filter
-      if (paymentMethodFilter !== "all") {
-        if (payment.paymentMethodType !== paymentMethodFilter) return false;
-      }
-
-      return true;
-    })
-    .map((p) => ({
-      id: p.id,
-      amount: p.amount,
-      currency: p.currency,
-      status: p.status as Payment["status"],
-      customer_name: p.customer?.name || "Unknown Customer",
-      customer_email: p.customer?.email || "",
-      payment_method: p.provider,
-      payment_method_type: p.paymentMethodType as Payment["payment_method_type"],
-      description: p.description || `Payment via ${p.provider}`,
-      invoice_id: p.invoiceId || undefined,
-      subscription_id: p.subscriptionId || undefined,
-      created_at: p.createdAt,
-      processed_at: p.processedAt || undefined,
-      failure_reason: p.failureReason || undefined,
-      refund_amount: p.refundAmount || undefined,
-      fee_amount: p.feeAmount || undefined,
-      net_amount: p.netAmount || undefined,
-      metadata: p.metadata || undefined,
-    }));
+  // Calculate total pages
+  const totalPayments = paymentsData?.totalCount || 0;
+  const totalPages = Math.ceil(totalPayments / pageSize);
 
   // Metrics from GraphQL
   const metrics = {
@@ -569,7 +560,18 @@ export default function PaymentsPage() {
         </CardHeader>
         <CardContent>
           {paymentsLoading ? (
-            <div className="text-center py-8">Loading payments...</div>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 border rounded-lg animate-pulse">
+                  <div className="h-10 w-10 bg-muted rounded-full" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-3 bg-muted rounded w-1/3" />
+                  </div>
+                  <div className="h-6 w-20 bg-muted rounded" />
+                </div>
+              ))}
+            </div>
           ) : paymentsError ? (
             <div className="text-center py-8 text-destructive">
               Failed to load payments. Please try again.
@@ -619,7 +621,7 @@ export default function PaymentsPage() {
                       <div className="font-medium">
                         {formatCurrency(payment.amount, payment.currency)}
                       </div>
-                      {payment.net_amount !== undefined && (
+                      {payment.net_amount != null && (
                         <div className="text-xs text-muted-foreground">
                           Net: {formatCurrency(payment.net_amount, payment.currency)}
                         </div>
@@ -696,6 +698,37 @@ export default function PaymentsPage() {
         </CardContent>
       </Card>
 
+      {/* Pagination Controls */}
+      {!paymentsLoading && payments.length > 0 && (
+        <div className="flex items-center justify-between mt-4">
+          <div className="text-sm text-muted-foreground">
+            Showing {(currentPage - 1) * pageSize + 1} to{" "}
+            {Math.min(currentPage * pageSize, totalPayments)} of {totalPayments} payments
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+            >
+              Previous
+            </Button>
+            <div className="text-sm">
+              Page {currentPage} of {totalPages}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+            >
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Payment Detail Dialog */}
       {selectedPayment && (
         <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
@@ -747,20 +780,24 @@ export default function PaymentsPage() {
                     </div>
                   </div>
                 )}
-                {selectedPayment.fee_amount !== undefined && (
+                {(selectedPayment.fee_amount != null || selectedPayment.net_amount != null) && (
                   <>
-                    <div>
-                      <Label>Processing Fee</Label>
-                      <div className="mt-1">
-                        {formatCurrency(selectedPayment.fee_amount, selectedPayment.currency)}
+                    {selectedPayment.fee_amount != null && (
+                      <div>
+                        <Label>Processing Fee</Label>
+                        <div className="mt-1">
+                          {formatCurrency(selectedPayment.fee_amount, selectedPayment.currency)}
+                        </div>
                       </div>
-                    </div>
-                    <div>
-                      <Label>Net Amount</Label>
-                      <div className="mt-1 font-medium">
-                        {formatCurrency(selectedPayment.net_amount || 0, selectedPayment.currency)}
+                    )}
+                    {selectedPayment.net_amount != null && (
+                      <div>
+                        <Label>Net Amount</Label>
+                        <div className="mt-1 font-medium">
+                          {formatCurrency(selectedPayment.net_amount, selectedPayment.currency)}
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </>
                 )}
               </div>

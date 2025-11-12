@@ -5,7 +5,7 @@ Provides REST endpoints for managing subscription plans and customer subscriptio
 """
 
 from datetime import UTC
-from typing import Any, cast
+from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.responses import JSONResponse

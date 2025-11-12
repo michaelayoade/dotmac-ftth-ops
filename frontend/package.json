@@ -24,6 +24,25 @@
     "e2e:ci": "playwright test --reporter=github",
     "e2e:headed": "playwright test --headed",
     "e2e:debug": "playwright test --debug",
+    "e2e:ui": "playwright test --ui",
+    "e2e:report": "playwright show-report",
+    "e2e:comprehensive": "playwright test e2e/tests/comprehensive-page-tests.spec.ts",
+    "e2e:workflows": "playwright test e2e/tests/workflows/complete-workflows.spec.ts --reporter=list",
+    "e2e:workflows:headed": "playwright test e2e/tests/workflows/complete-workflows.spec.ts --headed",
+    "e2e:authenticated": "playwright test e2e/tests/authenticated-workflows.spec.ts --reporter=list",
+    "test:all": "pnpm type-check && pnpm test && pnpm e2e",
+    "test:quick": "pnpm type-check && pnpm test",
+    "test:smoke": "../scripts/smoke-test-pages.sh",
+    "test:workflows": "../scripts/test-all-workflows.sh",
+    "test:auto": "pnpm e2e",
+    "test:auto:isp": "pnpm e2e -- e2e/tests/workflows/field-service-workflow.spec.ts",
+    "test:auto:admin": "pnpm e2e -- e2e/tests/workflows/complete-workflows.spec.ts",
+    "test:auto:full": "pnpm e2e",
+    "test:auto:headed": "pnpm e2e:headed",
+    "inspect:isp": "node ../scripts/browser-inspector.mjs http://localhost:3001",
+    "inspect:admin": "node ../scripts/browser-inspector.mjs http://localhost:3002",
+    "test:interactive": "../scripts/interactive-test-helper.sh",
+    "test:create-users": "../scripts/create-test-users.sh",
     "graphql:codegen": "graphql-codegen --config codegen.ts",
     "graphql:codegen:watch": "graphql-codegen --config codegen.ts --watch",
     "graphql:export-schema": "echo 'Run from project root: poetry run python -m strawberry export-schema dotmac.platform.graphql.schema:schema --output frontend/graphql-schema.graphql'",
@@ -37,19 +56,27 @@
     "pnpm": ">=9"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.28.5",
+    "@babel/preset-react": "^7.28.5",
+    "@babel/preset-typescript": "^7.28.5",
     "@graphql-codegen/cli": "^6.0.0",
     "@graphql-codegen/client-preset": "^5.1.1",
     "@graphql-codegen/typescript": "^5.0.2",
     "@graphql-codegen/typescript-operations": "^5.0.2",
     "@graphql-codegen/typescript-react-query": "^6.1.1",
     "@playwright/test": "^1.55.1",
+    "@types/leaflet": "^1.9.21",
+    "@types/pg": "^8.15.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^5.1.0",
     "concurrently": "^8.2.0",
     "openapi-typescript": "^7.5.2",
-    "prettier": "^3.6.2",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.5"
+    "prettier": "^3.6.2"
   },
   "dependencies": {
-    "@tanstack/react-query": "^5.90.5"
+    "@tanstack/react-query": "^5.90.5",
+    "better-auth": "^1.3.34",
+    "pg": "^8.16.3"
   }
 }

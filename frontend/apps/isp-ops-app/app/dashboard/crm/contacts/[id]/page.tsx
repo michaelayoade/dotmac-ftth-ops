@@ -77,7 +77,7 @@ export default function ContactDetailPage() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const contactId = params.id as string;
+  const contactId = params['id'] as string;
   const confirmDialog = useConfirmDialog();
 
   const [isEditing, setIsEditing] = useState(false);
@@ -349,7 +349,7 @@ export default function ContactDetailPage() {
                       <div className="space-y-2">
                         <Label htmlFor="status">Status</Label>
                         <Select
-                          value={formData.status}
+                          value={formData['status'] || ""}
                           onValueChange={(value) =>
                             setFormData({ ...formData, status: value })
                           }
@@ -368,7 +368,7 @@ export default function ContactDetailPage() {
                       <div className="space-y-2">
                         <Label htmlFor="stage">Stage</Label>
                         <Select
-                          value={formData.stage}
+                          value={formData.stage || ""}
                           onValueChange={(value) =>
                             setFormData({ ...formData, stage: value })
                           }

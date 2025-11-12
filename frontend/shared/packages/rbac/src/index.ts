@@ -19,7 +19,7 @@ export interface Permission {
 export interface User {
   id: string;
   roles: Role[];
-  permissions?: Permission[];
+  permissions: Permission[] | undefined;
 }
 
 // Export hooks and components (placeholder implementations)

@@ -2,7 +2,6 @@
  * React hooks for managing active jobs with WebSocket controls
  */
 
-import { useCallback, useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
 import { extractDataOrThrow } from "@/lib/api/response-helpers";
@@ -81,62 +80,6 @@ export function useCancelJob() {
 
 /**
  * WebSocket hook for real-time job control
+ * Re-exports the shared implementation from useRealtime which has proper auth
  */
-export function useJobWebSocket(jobId: string | null) {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [isConnected, setIsConnected] = useState(false);
-
-  useEffect(() => {
-    if (!jobId) return;
-
-    // Get auth token from localStorage or cookies
-    const wsUrl = `${process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8000"}/api/v1/realtime/ws/jobs/${jobId}`;
-    const ws = new WebSocket(wsUrl);
-
-    ws.onopen = () => {
-      setIsConnected(true);
-      console.log("WebSocket connected for job:", jobId);
-    };
-
-    ws.onclose = () => {
-      setIsConnected(false);
-      console.log("WebSocket disconnected for job:", jobId);
-    };
-
-    ws.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-
-    setSocket(ws);
-
-    return () => {
-      ws.close();
-    };
-  }, [jobId]);
-
-  const cancelJob = useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "cancel_job" }));
-    }
-  }, [socket, isConnected]);
-
-  const pauseJob = useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "pause_job" }));
-    }
-  }, [socket, isConnected]);
-
-  const resumeJob = useCallback(() => {
-    if (socket && isConnected) {
-      socket.send(JSON.stringify({ type: "resume_job" }));
-    }
-  }, [socket, isConnected]);
-
-  return {
-    socket,
-    isConnected,
-    cancelJob,
-    pauseJob,
-    resumeJob,
-  };
-}
+export { useJobWebSocket } from "./useRealtime";

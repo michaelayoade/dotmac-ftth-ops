@@ -135,7 +135,7 @@ class SecurityLogger {
    */
   private sendToSecurityService(event: SecurityEvent): void {
     // In development, just log to console
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       return;
     }
 

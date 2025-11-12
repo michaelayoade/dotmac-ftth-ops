@@ -74,7 +74,7 @@ interface Subscription {
 
 function PlanDetailsPageContent() {
   const params = useParams();
-  const planId = params.planId as string;
+  const planId = params['planId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

@@ -14,7 +14,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo
 from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.db import get_session_dependency
-from dotmac.platform.partner_management import portal_router, revenue_router
+from dotmac.platform.partner_management import (
+    commission_rules_router,
+    portal_router,
+    revenue_router,
+)
 from dotmac.platform.partner_management.models import PartnerStatus
 from dotmac.platform.partner_management.schemas import (
     PartnerAccountCreate,
@@ -42,6 +46,7 @@ router = APIRouter(prefix="/partners", tags=["Partner Management"])
 # Include partner portal sub-routers
 router.include_router(portal_router.router)
 router.include_router(revenue_router.router)
+router.include_router(commission_rules_router.router)
 
 
 def _convert_partner_to_response(partner: Any) -> PartnerResponse:

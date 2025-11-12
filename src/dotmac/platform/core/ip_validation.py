@@ -556,6 +556,26 @@ def validate_ip_network_field(v: str | None, strict: bool = True) -> str | None:
     return IPNetworkValidator.validate(v, strict=strict)
 
 
+def validate_ip_network(cidr: str, strict: bool = True) -> None:
+    """
+    Validate IP network CIDR notation, raising ValueError if invalid.
+
+    Args:
+        cidr: CIDR string (e.g., "192.168.1.0/24" or "2001:db8::/32")
+        strict: If True, host bits must be zero
+
+    Raises:
+        ValueError: If invalid network CIDR notation
+
+    Examples:
+        >>> validate_ip_network("192.168.1.0/24")  # No error
+        >>> validate_ip_network("2001:db8::/32")  # No error
+        >>> validate_ip_network("invalid")  # Raises ValueError
+    """
+    if not is_valid_ip_network(cidr, strict=strict):
+        raise ValueError(f"Invalid IP network CIDR notation: {cidr}")
+
+
 # ============================================================================
 # Export All
 # ============================================================================
@@ -588,4 +608,5 @@ __all__ = [
     "validate_ipv6_network_field",
     "validate_ip_address_field",
     "validate_ip_network_field",
+    "validate_ip_network",
 ]

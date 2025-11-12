@@ -10,7 +10,7 @@ import zlib
 from dataclasses import asdict, is_dataclass
 from datetime import UTC, date, datetime
 from enum import Enum
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict
 
 import structlog
 

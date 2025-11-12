@@ -23,9 +23,13 @@ else:
         TokenType,
         UserInfo,
         _claims_to_user_info,
-        get_current_user as core_get_current_user,
-        get_current_user_optional as core_get_current_user_optional,
         jwt_service,
+    )
+    from dotmac.platform.auth.core import (
+        get_current_user as core_get_current_user,
+    )
+    from dotmac.platform.auth.core import (
+        get_current_user_optional as core_get_current_user_optional,
     )
     from dotmac.platform.auth.dependencies import (
         get_current_user,
@@ -106,9 +110,9 @@ else:
         app.dependency_overrides[get_current_user] = override_get_current_user
         app.dependency_overrides[get_current_user_optional] = override_get_current_user_optional
         app.dependency_overrides[core_get_current_user] = override_get_current_user
-        app.dependency_overrides[
-            core_get_current_user_optional
-        ] = override_get_current_user_optional
+        app.dependency_overrides[core_get_current_user_optional] = (
+            override_get_current_user_optional
+        )
 
     def _override_tenant_dependency(app: FastAPI) -> None:
         def override_get_current_tenant_id(request: Request) -> str:
@@ -119,9 +123,7 @@ else:
 
         app.dependency_overrides[get_current_tenant_id] = override_get_current_tenant_id
 
-    def _override_db_dependency(
-        app: FastAPI, async_db_engine: AsyncEngine
-    ) -> None:
+    def _override_db_dependency(app: FastAPI, async_db_engine: AsyncEngine) -> None:
         async def override_session_dependency() -> AsyncIterator[AsyncSession]:
             async with _session_scope(async_db_engine) as session:
                 yield session

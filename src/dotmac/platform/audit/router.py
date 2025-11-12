@@ -2,19 +2,20 @@
 FastAPI router for audit and activity endpoints.
 """
 
-from collections.abc import Callable
-from datetime import timezone
+from datetime import UTC
 from typing import Any
 from uuid import UUID
 
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from ..auth.core import UserInfo, get_current_user, get_current_user_optional
 from ..auth.platform_admin import is_platform_admin
 from ..auth.rbac_dependencies import require_security_audit_read
 from ..db import async_session_maker, get_async_session
+from ..rate_limit.decorators import rate_limit_per_ip
+from ..rate_limit.models import RateLimitWindow
 from ..tenant import get_current_tenant_id
 from .models import (
     ActivitySeverity,
@@ -31,7 +32,7 @@ from .service import AuditService, log_api_activity
 logger = structlog.get_logger(__name__)
 
 # Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
+UTC = UTC
 
 # Sentinel tenant ID used when platform administrators submit frontend logs without
 # specifying a target tenant. This keeps the logs queryable via the existing API.
@@ -139,31 +140,13 @@ def has_audit_permission(current_user: UserInfo) -> bool:
 
 router = APIRouter(tags=["Audit"])
 
-
-def _register_dual_route(
-    path: str,
-    *,
-    methods: list[str],
-    **kwargs: Any,
-) -> Callable[[Any], Any]:
-    """
-    Register the same endpoint under both `/audit/...` and `/...`.
-
-    This keeps backwards compatibility for apps that include the router either at
-    `/api/v1` (expecting `/api/v1/audit/...`) or `/api/v1/audit`.
-    """
-
-    def decorator(func: Any) -> Any:
-        router.add_api_route(f"/audit{path}", func, methods=methods, **kwargs)
-        router.add_api_route(path, func, methods=methods, **kwargs)
-        return func
-
-    return decorator
+# Public router for unauthenticated endpoints (e.g., frontend error logging)
+# This router bypasses the global auth requirement to allow anonymous error tracking
+public_router = APIRouter(tags=["Audit - Public"], prefix="/audit")
 
 
-@_register_dual_route(
-    "/activities",
-    methods=["GET"],
+@router.get(
+    "/audit/activities",
     response_model=AuditActivityList,
 )
 async def list_activities(
@@ -230,9 +213,8 @@ async def list_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve audit activities")
 
 
-@_register_dual_route(
-    "/activities/recent",
-    methods=["GET"],
+@router.get(
+    "/audit/activities/recent",
     response_model=list[AuditActivityResponse],
 )
 async def get_recent_activities(
@@ -241,6 +223,7 @@ async def get_recent_activities(
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
     session: AsyncSession = Depends(get_async_session),
     current_user: UserInfo = Depends(ensure_audit_access),
+    tenant_id_from_context: str | None = Depends(get_current_tenant_id),
 ) -> list[AuditActivityResponse]:
     """
     Get recent audit activities for dashboard/frontend views.
@@ -250,20 +233,10 @@ async def get_recent_activities(
     try:
         service = AuditService(session)
 
-        # Get activities for current tenant
-        tenant_id = get_current_tenant_id()
+        # Resolve tenant ID with platform admin support
+        tenant_id = resolve_tenant_for_audit(request, current_user, tenant_id_from_context)
         if tenant_id is None:
-            if is_platform_admin(current_user):
-                tenant_id = request.headers.get("X-Target-Tenant-ID") or request.query_params.get(
-                    "tenant_id"
-                )
-                if not tenant_id:
-                    raise HTTPException(
-                        status_code=400,
-                        detail="Platform administrators must specify tenant_id via header or query parameter.",
-                    )
-            else:
-                raise HTTPException(status_code=400, detail="Tenant context required")
+            raise HTTPException(status_code=400, detail="Tenant context required")
 
         activities = await service.get_recent_activities(
             tenant_id=tenant_id,
@@ -292,9 +265,8 @@ async def get_recent_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve recent activities")
 
 
-@_register_dual_route(
-    "/activities/platform",
-    methods=["GET"],
+@router.get(
+    "/audit/activities/platform",
     response_model=AuditActivityList,
 )
 async def get_platform_activities(
@@ -368,9 +340,8 @@ async def get_platform_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve platform activities")
 
 
-@_register_dual_route(
-    "/activities/user/{user_id}",
-    methods=["GET"],
+@router.get(
+    "/audit/activities/user/{user_id}",
     response_model=list[AuditActivityResponse],
 )
 async def get_user_activities(
@@ -440,7 +411,7 @@ async def get_user_activities(
         raise HTTPException(status_code=500, detail="Failed to retrieve user activities")
 
 
-@_register_dual_route("/activities/summary", methods=["GET"])
+@router.get("/audit/activities/summary")
 async def get_activity_summary(
     request: Request,
     days: int = Query(7, ge=1, le=90, description="Number of days to look back"),
@@ -480,9 +451,8 @@ async def get_activity_summary(
         raise HTTPException(status_code=500, detail="Failed to retrieve activity summary")
 
 
-@_register_dual_route(
-    "/activities/{activity_id}",
-    methods=["GET"],
+@router.get(
+    "/audit/activities/{activity_id}",
     response_model=AuditActivityResponse,
 )
 async def get_activity_details(
@@ -555,11 +525,13 @@ async def get_activity_details(
         raise HTTPException(status_code=500, detail="Failed to retrieve activity details")
 
 
-@_register_dual_route(
+@public_router.post(
     "/frontend-logs",
-    methods=["POST"],
     response_model=FrontendLogsResponse,
 )
+@rate_limit_per_ip(
+    max_requests=100, window=RateLimitWindow.MINUTE
+)  # 100 requests per minute per IP
 async def create_frontend_logs(
     request: Request,
     logs_request: FrontendLogsRequest,
@@ -578,11 +550,175 @@ async def create_frontend_logs(
     - Client metadata capture (userAgent, url, etc.)
     - Log level mapping to activity severity
 
-    **Security:**
-    - Unauthenticated requests are accepted but marked appropriately
-    - Logs are tenant-isolated when user is authenticated
-    - Rate limiting should be applied at the API gateway level
+    **Security (Defense-in-Depth):**
+
+    Current protections (multiple layers):
+    1. Shared secret validation (X-Frontend-Log-Secret header) - Primary defense
+    2. HTTPS origin validation with proper URL parsing - Browser defense
+    3. Optional authentication requirement (JWT) - Strong defense
+    4. Metadata validation (size, depth, length limits) - DoS prevention
+    5. Rate limiting: 100 requests per minute per IP - DoS prevention
+
+    **Important Security Note:**
+    Origin headers can be spoofed by non-browser clients (curl, scripts, etc.).
+    The shared secret is the primary defense; origin validation provides additional
+    protection for browser-based clients. For maximum security in production:
+    - ALWAYS configure AUDIT__FRONTEND_LOG_SECRET
+    - Consider enabling AUDIT__FRONTEND_LOG_REQUIRE_AUTH for authenticated-only ingestion
+
+    **TODO - Future Enhancement:**
+    Upgrade to per-client JWT signing for cryptographically-strong client authentication:
+    - Frontend generates signed JWT with each log batch (using client-specific key)
+    - Backend verifies JWT signature + claims (client_id, timestamp, nonce)
+    - Prevents replay attacks and provides non-repudiation
+    - Eliminates reliance on spoofable headers
+
+    See docs/FRONTEND_LOG_JWT.md for implementation guide (when available).
     """
+    from dotmac.platform.settings import settings
+
+    # SECURITY: Require a shared secret in production deployments
+    secret = settings.audit.frontend_log_secret
+    if not secret:
+        if settings.is_production or settings.DEPLOYMENT_MODE in ("multi_tenant", "hybrid"):
+            logger.error(
+                "frontend_log_ingestion_secret_missing",
+                message="AUDIT__FRONTEND_LOG_SECRET must be configured for production ingestion",
+                deployment_mode=settings.DEPLOYMENT_MODE,
+            )
+            raise HTTPException(
+                status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail=(
+                    "Frontend log ingestion is not configured securely. "
+                    "Set AUDIT__FRONTEND_LOG_SECRET in the environment."
+                ),
+            )
+    else:
+        provided_secret = request.headers.get("X-Frontend-Log-Secret")
+        if not provided_secret or provided_secret != secret:
+            logger.warning(
+                "frontend_log_ingestion_invalid_secret",
+                ip=request.client.host if request.client else None,
+                origin=request.headers.get("Origin"),
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Invalid or missing frontend log secret",
+            )
+
+    # SECURITY: Validate origin header against allowlist with proper URL parsing
+    # NOTE: This is DEFENSE-IN-DEPTH. Origin headers can be spoofed by non-browser
+    # clients (curl, scripts). The shared secret above is the PRIMARY defense.
+    # Origin validation provides additional protection for legitimate browser clients.
+    if settings.audit.frontend_log_allowed_origins != ["*"]:
+        from urllib.parse import urlparse
+
+        origin = request.headers.get("Origin") or request.headers.get("Referer")
+        if not origin:
+            logger.warning(
+                "frontend_log_ingestion_missing_origin",
+                ip=request.client.host if request.client else None,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Origin or Referer header required",
+            )
+
+        # Parse and normalize the origin URL
+        try:
+            parsed_origin = urlparse(origin)
+            origin_scheme = parsed_origin.scheme.lower()
+            origin_host = parsed_origin.hostname.lower() if parsed_origin.hostname else ""
+            origin_port = parsed_origin.port
+
+            # Normalize port (use defaults for http/https if not specified)
+            if origin_port is None:
+                if origin_scheme == "https":
+                    origin_port = 443
+                elif origin_scheme == "http":
+                    origin_port = 80
+
+            origin_tuple = (origin_scheme, origin_host, origin_port)
+
+            # SECURITY: Enforce HTTPS except for localhost/127.0.0.1 in development
+            is_localhost = origin_host in ("localhost", "127.0.0.1", "::1")
+            if origin_scheme != "https" and not (origin_scheme == "http" and is_localhost):
+                logger.warning(
+                    "frontend_log_ingestion_insecure_origin",
+                    origin=origin,
+                    scheme=origin_scheme,
+                    ip=request.client.host if request.client else None,
+                )
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"HTTPS required for origin: {origin} (use https:// scheme)",
+                )
+
+        except Exception as e:
+            logger.warning(
+                "frontend_log_ingestion_invalid_origin",
+                origin=origin,
+                error=str(e),
+                ip=request.client.host if request.client else None,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid origin URL format: {origin}",
+            )
+
+        # Check if origin matches any allowed canonical origin
+        origin_allowed = False
+        for allowed_origin_str in settings.audit.frontend_log_allowed_origins:
+            try:
+                parsed_allowed = urlparse(allowed_origin_str)
+                allowed_scheme = parsed_allowed.scheme.lower()
+                allowed_host = parsed_allowed.hostname.lower() if parsed_allowed.hostname else ""
+                allowed_port = parsed_allowed.port
+
+                # Normalize port
+                if allowed_port is None:
+                    if allowed_scheme == "https":
+                        allowed_port = 443
+                    elif allowed_scheme == "http":
+                        allowed_port = 80
+
+                allowed_tuple = (allowed_scheme, allowed_host, allowed_port)
+
+                # Exact match on (scheme, host, port) tuple
+                if origin_tuple == allowed_tuple:
+                    origin_allowed = True
+                    break
+
+            except Exception:
+                # Invalid allowed origin in config - skip it and log
+                logger.error(
+                    "frontend_log_invalid_allowed_origin",
+                    allowed_origin=allowed_origin_str,
+                )
+                continue
+
+        if not origin_allowed:
+            logger.warning(
+                "frontend_log_ingestion_forbidden_origin",
+                origin=origin,
+                origin_parsed=origin_tuple,
+                ip=request.client.host if request.client else None,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Origin not in allowlist: {origin}",
+            )
+
+    # SECURITY: Require authentication if configured
+    if settings.audit.frontend_log_require_auth and not current_user:
+        logger.warning(
+            "frontend_log_ingestion_unauthenticated",
+            ip=request.client.host if request.client else None,
+        )
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required for frontend log ingestion",
+        )
     try:
         # Map frontend log levels to activity severities
         severity_map = {

@@ -49,7 +49,7 @@ interface DiagnosticRun {
 
 function DiagnosticsPageContent() {
   const params = useParams();
-  const subscriberId = params.subscriberId as string;
+  const subscriberId = params['subscriberId'] as string;
   const [activeTab, setActiveTab] = useState<"checks" | "history">("checks");
   const [runningChecks, setRunningChecks] = useState<Set<string>>(new Set());
 

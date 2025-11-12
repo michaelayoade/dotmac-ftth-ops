@@ -9,8 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from dotmac.platform.auth.core import UserInfo
-
 from dotmac.platform.billing.dunning.models import (
     DunningActionType,
 )
@@ -72,8 +70,8 @@ async def async_client(test_app, async_session, test_tenant_id):
         pass
 
     try:
-        from dotmac.platform.auth.dependencies import get_current_user
         from dotmac.platform.auth.core import UserInfo
+        from dotmac.platform.auth.dependencies import get_current_user
 
         def override_get_current_user() -> UserInfo:
             return UserInfo(

@@ -44,7 +44,7 @@ interface Integration {
 
 function IntegrationDetailsPageContent() {
   const params = useParams();
-  const integrationName = decodeURIComponent(params?.integrationName as string);
+  const integrationName = decodeURIComponent(params?.['integrationName'] as string);
   const { toast } = useToast();
 
   // Fetch integration details

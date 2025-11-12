@@ -16,11 +16,11 @@ Target: Increase subscription service coverage from 11.40% to 70%+
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from unittest.mock import patch
+from uuid import uuid4
 
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-from uuid import uuid4
 
 from dotmac.platform.billing.exceptions import (
     PlanNotFoundError,
@@ -45,7 +45,6 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def tenant_id() -> str:
     """Test tenant ID."""
-    from uuid import uuid4
 
     return str(uuid4())
 
@@ -53,7 +52,6 @@ def tenant_id() -> str:
 @pytest.fixture
 def customer_id() -> str:
     """Test customer ID."""
-    from uuid import uuid4
 
     return str(uuid4())
 

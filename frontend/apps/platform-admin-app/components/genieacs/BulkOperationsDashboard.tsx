@@ -173,7 +173,7 @@ export function BulkOperationsDashboard() {
     };
 
     const normalizedStatus = status as keyof typeof styles;
-    const styleRecord = (styles[normalizedStatus] ?? styles.pending)!;
+    const styleRecord = (styles[normalizedStatus] ?? styles['pending'])!;
     const Icon = styleRecord.icon;
 
     return (

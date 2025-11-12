@@ -46,11 +46,11 @@ export function CrossTenantSearch() {
         limit: 50,
       });
       const mappedResults: CrossTenantSearchResultItem[] = (data.results ?? []).map((item) => ({
-        id: String(item.id ?? crypto.randomUUID()),
-        type: String(item.type ?? item.resource_type ?? "unknown"),
-        tenantId: String(item.tenant_id ?? item.tenantId ?? "n/a"),
-        resourceId: item.resource_id ? String(item.resource_id) : undefined,
-        score: typeof item.score === "number" ? item.score : undefined,
+        id: String(item['id'] ?? crypto.randomUUID()),
+        type: String(item['type'] ?? item['resource_type'] ?? "unknown"),
+        tenantId: String(item.tenant_id ?? item['tenantId'] ?? "n/a"),
+        ...(item.resource_id ? { resourceId: String(item.resource_id) } : {}),
+        ...(typeof item.score === "number" ? { score: item.score } : {}),
         data:
           typeof item.data === "object" && item.data !== null
             ? (item.data as Record<string, unknown>)

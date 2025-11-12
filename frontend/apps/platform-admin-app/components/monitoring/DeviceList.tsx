@@ -180,9 +180,9 @@ export function DeviceList({
                   <DeviceRow
                     key={device.id}
                     device={device}
-                    onEdit={onEditDevice}
-                    onDelete={onDeleteDevice}
-                    onViewMetrics={onViewMetrics}
+                    {...(onEditDevice && { onEdit: onEditDevice })}
+                    {...(onDeleteDevice && { onDelete: onDeleteDevice })}
+                    {...(onViewMetrics && { onViewMetrics })}
                   />
                 ))
               )}
@@ -230,8 +230,8 @@ function DeviceRow({ device, onEdit, onDelete, onViewMetrics }: DeviceRowProps) 
       <TableCell>
         <div className="space-y-1">
           <IPAddressDisplay
-            ipv4={device.ipv4_address}
-            ipv6={device.ipv6_address}
+            ipv4={device.ipv4_address ?? null}
+            ipv6={device.ipv6_address ?? null}
             layout="stacked"
             showBadges={true}
             compress={true}

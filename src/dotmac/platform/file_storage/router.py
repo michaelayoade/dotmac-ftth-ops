@@ -22,15 +22,19 @@ from fastapi import (
     status,
 )
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.platform_admin import is_platform_admin
+from dotmac.platform.database import get_async_session as get_db
 from dotmac.platform.file_storage.service import (
     FileMetadata,
     FileStorageService,
     get_storage_service,
 )
 from dotmac.platform.tenant import get_current_tenant_id
+from dotmac.platform.webhooks.events import get_event_bus
+from dotmac.platform.webhooks.models import WebhookEvent
 
 logger = structlog.get_logger(__name__)
 
@@ -115,6 +119,7 @@ async def upload_file(
     file: UploadFile = File(...),
     path: str | None = Form(None, description="Storage path"),
     description: str | None = Form(None, description="File description"),
+    db: AsyncSession = Depends(get_db),
     current_user: UserInfo = Depends(get_current_user),
 ) -> FileUploadResponse:
     """
@@ -157,6 +162,26 @@ async def upload_file(
             tenant_id=tenant_id,
         )
 
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.FILE_UPLOADED.value,
+                event_data={
+                    "file_id": file_id,
+                    "file_name": file.filename or "unnamed",
+                    "file_size": file_size,
+                    "content_type": file.content_type or "application/octet-stream",
+                    "path": path,
+                    "uploaded_by": current_user.user_id,
+                    "description": description,
+                    "uploaded_at": datetime.now(UTC).isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish file.uploaded event", error=str(e))
+
         return FileUploadResponse(
             file_id=file_id,
             file_name=file.filename or "unnamed",
@@ -184,6 +209,7 @@ async def upload_file(
 async def download_file(
     request: Request,
     file_id: str,
+    db: AsyncSession = Depends(get_db),
     current_user: UserInfo = Depends(get_current_user),
 ) -> Response:
     """
@@ -208,6 +234,24 @@ async def download_file(
             else "application/octet-stream"
         )
         file_name = metadata.get("file_name", "download") if metadata else "download"
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.FILE_DOWNLOADED.value,
+                event_data={
+                    "file_id": file_id,
+                    "file_name": file_name,
+                    "file_size": len(file_data),
+                    "content_type": content_type,
+                    "downloaded_by": current_user.user_id,
+                    "downloaded_at": datetime.now(UTC).isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish file.downloaded event", error=str(e))
 
         return Response(
             content=file_data,
@@ -236,6 +280,7 @@ async def download_file(
 async def delete_file(
     request: Request,
     file_id: str,
+    db: AsyncSession = Depends(get_db),
     current_user: UserInfo = Depends(get_current_user),
 ) -> dict[str, Any]:
     """
@@ -244,6 +289,10 @@ async def delete_file(
     try:
         tenant_id = _resolve_tenant_id(request, current_user)
         service = storage_service
+
+        # Get file metadata before deletion for webhook
+        metadata = await service.get_file_metadata(file_id)
+
         success = await service.delete_file(file_id, tenant_id)
 
         if not success:
@@ -251,6 +300,25 @@ async def delete_file(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"File {file_id} not found",
             )
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.FILE_DELETED.value,
+                event_data={
+                    "file_id": file_id,
+                    "file_name": metadata.get("file_name") if metadata else "unknown",
+                    "file_size": metadata.get("file_size") if metadata else 0,
+                    "content_type": metadata.get("content_type") if metadata else "unknown",
+                    "path": metadata.get("path") if metadata else "unknown",
+                    "deleted_by": current_user.user_id,
+                    "deleted_at": datetime.now(UTC).isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish file.deleted event", error=str(e))
 
         return {
             "message": f"File {file_id} deleted successfully",

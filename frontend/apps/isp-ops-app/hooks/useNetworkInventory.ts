@@ -34,11 +34,14 @@ export function useNetboxHealth({
   return useQuery<NetboxHealth, Error, NetboxHealth, NetboxHealthKey>({
     queryKey: ["netbox", "health"],
     queryFn: async () => {
-      const response = await apiClient.get<NetboxHealth>("/netbox/health");
+      const response = await apiClient.get<NetboxHealth>("/netbox/health", {
+        timeout: 8000, // 8 second timeout
+      });
       return extractDataOrThrow(response);
     },
     enabled,
     staleTime: 60_000,
+    retry: 1, // Only retry once
     ...queryOptions,
   });
 }
@@ -57,11 +60,13 @@ export function useNetboxSites({
     queryFn: async () => {
       const response = await apiClient.get<NetboxSite[]>("/netbox/dcim/sites", {
         params: { limit, offset },
+        timeout: 8000, // 8 second timeout
       });
       return extractDataOrThrow(response);
     },
     enabled,
     staleTime: 60_000,
+    retry: 1, // Only retry once
     ...queryOptions,
   });
 }

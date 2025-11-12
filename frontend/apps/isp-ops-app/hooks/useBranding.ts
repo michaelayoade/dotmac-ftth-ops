@@ -1,11 +1,7 @@
 "use client";
 
-import { useAppConfig } from "@/providers/AppConfigContext";
+import { useBrandingContext } from "@/providers/BrandingProvider";
 
 export function useBranding() {
-  const { branding } = useAppConfig();
-
-  return {
-    branding,
-  };
+  return useBrandingContext();
 }

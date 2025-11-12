@@ -94,12 +94,27 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                         roles = claims.get("roles", [])
                         scopes = claims.get("scopes", []) or claims.get("permissions", [])
 
+                        # Partner multi-tenant context
+                        partner_id = claims.get("partner_id")
+                        managed_tenant_ids = claims.get("managed_tenant_ids", [])
+                        active_managed_tenant_id = request.headers.get("X-Active-Tenant-Id")
+
                         # Set individual fields for backward compatibility
                         request.state.user_id = user_id
                         request.state.username = username
                         request.state.email = email
                         request.state.tenant_id = tenant_id_claim
                         request.state.roles = roles
+
+                        # Set partner context fields for audit logging
+                        request.state.partner_id = partner_id
+                        request.state.managed_tenant_ids = managed_tenant_ids
+                        request.state.active_managed_tenant_id = active_managed_tenant_id
+                        request.state.is_cross_tenant_access = bool(
+                            partner_id
+                            and active_managed_tenant_id
+                            and active_managed_tenant_id != tenant_id_claim
+                        )
 
                         # Create user object for AppBoundaryMiddleware
                         if user_id:
@@ -112,12 +127,27 @@ class AuditContextMiddleware(BaseHTTPMiddleware):
                                 scopes=scopes,
                             )
 
-                        if tenant_id_claim and tenant_id_claim != get_tenant_context():
+                        # Determine effective tenant ID (for partner cross-tenant access)
+                        effective_tenant_id = active_managed_tenant_id or tenant_id_claim
+
+                        if effective_tenant_id and effective_tenant_id != get_tenant_context():
                             from ..tenant import set_current_tenant_id as set_tenant_id
 
-                            set_tenant_id(tenant_id_claim)
-                            tenant_module._tenant_context.set(tenant_id_claim)
+                            set_tenant_id(effective_tenant_id)
+                            tenant_module._tenant_context.set(effective_tenant_id)
                             tenant_overridden = True
+
+                        # Log cross-tenant access for audit trail
+                        if request.state.is_cross_tenant_access:
+                            logger.info(
+                                "Cross-tenant access initiated",
+                                user_id=user_id,
+                                partner_id=partner_id,
+                                home_tenant=tenant_id_claim,
+                                active_managed_tenant=active_managed_tenant_id,
+                                path=str(request.url.path),
+                                method=request.method,
+                            )
                     except Exception as e:
                         logger.debug("Failed to extract user from JWT", error=str(e))
 

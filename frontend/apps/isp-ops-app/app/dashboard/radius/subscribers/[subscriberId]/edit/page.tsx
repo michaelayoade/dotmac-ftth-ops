@@ -43,7 +43,7 @@ export default function EditRADIUSSubscriberPage() {
   const params = useParams();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const subscriberId = decodeURIComponent(params.subscriberId as string);
+  const subscriberId = decodeURIComponent(params['subscriberId'] as string);
 
   const [formData, setFormData] = useState({
     password: "",

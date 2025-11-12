@@ -30,7 +30,7 @@ export interface GraphQLClientConfig {
   /**
    * GraphQL endpoint URL
    * Defaults to /api/v1/graphql (matching backend endpoint)
-   * Supports NEXT_PUBLIC_API_URL env var for absolute URLs (works in SSR/build/browser)
+   * Supports NEXT_PUBLIC_API_BASE_URL env var for absolute URLs (works in SSR/build/browser)
    */
   endpoint?: string;
 
@@ -56,7 +56,7 @@ export class GraphQLClient {
 
   constructor(config: GraphQLClientConfig = {}) {
     // Default to /api/v1/graphql (matching backend route)
-    // Support NEXT_PUBLIC_API_URL for absolute URLs (e.g., cross-domain)
+    // Support NEXT_PUBLIC_API_BASE_URL for absolute URLs (e.g., cross-domain)
     this.endpoint = config.endpoint || this.getDefaultEndpoint();
     this.headers = config.headers || {};
 
@@ -73,10 +73,10 @@ export class GraphQLClient {
    * Works in both browser and server (SSR/build) contexts
    */
   private getDefaultEndpoint(): string {
-    // Check for NEXT_PUBLIC_API_URL in both browser and server contexts
+    // Check for NEXT_PUBLIC_API_BASE_URL in both browser and server contexts
     // Next.js inlines NEXT_PUBLIC_* vars at build time for browser bundles
     // Server-side code has direct access to process.env
-    const apiUrl = typeof process !== 'undefined' ? process.env.NEXT_PUBLIC_API_URL : undefined;
+    const apiUrl = typeof process !== 'undefined' ? process.env["NEXT_PUBLIC_API_BASE_URL"] : undefined;
 
     if (apiUrl) {
       return `${apiUrl}/api/v1/graphql`;

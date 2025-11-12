@@ -257,7 +257,7 @@ export function usePlanSubscriptions(
 ) {
   const fullParams: ListSubscriptionsParams = {
     ...params,
-    plan_id: planId,
+    ...(planId ? { plan_id: planId } : {}),
   };
 
   return useQuery({
@@ -304,7 +304,7 @@ export function useCustomerSubscriptions(
 ) {
   const fullParams: ListSubscriptionsParams = {
     ...params,
-    customer_id: customerId,
+    ...(customerId ? { customer_id: customerId } : {}),
   };
 
   return useQuery({

@@ -14,7 +14,7 @@ from datetime import UTC, datetime
 from uuid import UUID
 
 import structlog
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -31,7 +31,7 @@ from .events import (
     emit_ticket_status_changed,
 )
 from .models import Ticket, TicketActorType, TicketMessage, TicketStatus
-from .schemas import TicketCreate, TicketMessageCreate, TicketUpdate
+from .schemas import AgentPerformanceMetrics, TicketCreate, TicketMessageCreate, TicketUpdate
 
 logger = structlog.get_logger(__name__)
 
@@ -616,6 +616,100 @@ class TicketService:
         )
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
+
+    async def get_agent_performance(
+        self,
+        tenant_id: str | None,
+        start_date: str | None = None,
+        end_date: str | None = None,
+    ) -> list[AgentPerformanceMetrics]:
+        """Get performance metrics for all agents (users with assigned tickets)."""
+        from dotmac.platform.user_management.models import User
+
+        # Base query to get all agents with assigned tickets
+        query = (
+            select(
+                Ticket.assigned_to_user_id,
+                func.count(Ticket.id).label("total_assigned"),
+                func.sum(func.case((Ticket.status == TicketStatus.RESOLVED, 1), else_=0)).label(
+                    "total_resolved"
+                ),
+                func.sum(func.case((Ticket.status == TicketStatus.OPEN, 1), else_=0)).label(
+                    "total_open"
+                ),
+                func.sum(func.case((Ticket.status == TicketStatus.IN_PROGRESS, 1), else_=0)).label(
+                    "total_in_progress"
+                ),
+                func.avg(Ticket.resolution_time_minutes).label("avg_resolution_time"),
+                func.avg(
+                    func.extract(
+                        "epoch",
+                        func.coalesce(Ticket.first_response_at, Ticket.updated_at)
+                        - Ticket.created_at,
+                    )
+                    / 60
+                ).label("avg_first_response_time"),
+                func.sum(
+                    func.case(
+                        (Ticket.sla_breached.is_(False), 1),
+                        else_=0,
+                    )
+                ).label("sla_met_count"),
+                func.sum(func.case((Ticket.escalation_level > 0, 1), else_=0)).label(
+                    "escalated_count"
+                ),
+            )
+            .where(Ticket.assigned_to_user_id.isnot(None))
+            .group_by(Ticket.assigned_to_user_id)
+        )
+
+        # Apply tenant filter if provided
+        if tenant_id:
+            query = query.where(Ticket.tenant_id == tenant_id)
+
+        # Apply date filters if provided
+        if start_date:
+            query = query.where(Ticket.created_at >= datetime.fromisoformat(start_date))
+        if end_date:
+            query = query.where(Ticket.created_at <= datetime.fromisoformat(end_date))
+
+        result = await self.session.execute(query)
+        rows = result.all()
+
+        # Fetch user information for each agent
+        metrics = []
+        for row in rows:
+            agent_id = row.assigned_to_user_id
+            total_assigned = row.total_assigned or 0
+            sla_met_count = row.sla_met_count or 0
+            escalated_count = row.escalated_count or 0
+
+            # Fetch user details
+            user_query = select(User).where(User.id == agent_id)
+            user_result = await self.session.execute(user_query)
+            user = user_result.scalar_one_or_none()
+
+            metrics.append(
+                AgentPerformanceMetrics(
+                    agent_id=agent_id,
+                    agent_name=f"{user.first_name} {user.last_name}" if user else None,
+                    agent_email=user.email if user else None,
+                    total_assigned=total_assigned,
+                    total_resolved=row.total_resolved or 0,
+                    total_open=row.total_open or 0,
+                    total_in_progress=row.total_in_progress or 0,
+                    avg_resolution_time_minutes=row.avg_resolution_time,
+                    avg_first_response_time_minutes=row.avg_first_response_time,
+                    sla_compliance_rate=(
+                        (sla_met_count / total_assigned * 100) if total_assigned > 0 else None
+                    ),
+                    escalation_rate=(
+                        (escalated_count / total_assigned * 100) if total_assigned > 0 else None
+                    ),
+                )
+            )
+
+        return metrics
 
     @staticmethod
     def _generate_ticket_number() -> str:

@@ -5,12 +5,11 @@ Background tasks for RADIUS session synchronization and maintenance.
 """
 
 from datetime import datetime, timedelta
+from typing import Any
 
 import structlog
 from sqlalchemy import and_, select
 from sqlalchemy.exc import IntegrityError
-
-from typing import Any
 
 from dotmac.platform.celery_app import celery_app
 from dotmac.platform.db import AsyncSessionLocal

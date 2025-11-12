@@ -579,21 +579,152 @@ async def get_available_scopes(
     """Get available API key scopes."""
     # Define available scopes based on your application's permissions
     scopes = {
+        # General Access
         "read": {"name": "Read Access", "description": "Read-only access to resources"},
         "write": {"name": "Write Access", "description": "Create and update resources"},
         "delete": {"name": "Delete Access", "description": "Delete resources"},
+        # Customer & CRM
         "customers:read": {"name": "Read Customers", "description": "View customer information"},
         "customers:write": {
             "name": "Manage Customers",
             "description": "Create and update customers",
         },
+        "crm:leads:read": {"name": "Read Leads", "description": "View CRM leads"},
+        "crm:leads:write": {"name": "Manage Leads", "description": "Create and manage leads"},
+        "crm:contacts:read": {"name": "Read Contacts", "description": "View contacts"},
+        "crm:contacts:write": {
+            "name": "Manage Contacts",
+            "description": "Create and manage contacts",
+        },
+        # Subscribers & RADIUS
+        "subscribers:read": {
+            "name": "Read Subscribers",
+            "description": "View subscriber information",
+        },
+        "subscribers:write": {
+            "name": "Manage Subscribers",
+            "description": "Create and manage subscribers",
+        },
+        "radius:sessions:read": {
+            "name": "Read RADIUS Sessions",
+            "description": "View active RADIUS sessions",
+        },
+        "radius:sessions:manage": {
+            "name": "Manage RADIUS Sessions",
+            "description": "Disconnect or modify sessions",
+        },
+        "radius:nas:read": {
+            "name": "Read NAS Devices",
+            "description": "View Network Access Servers",
+        },
+        "radius:nas:write": {"name": "Manage NAS Devices", "description": "Configure NAS devices"},
+        # Network & Infrastructure
+        "network:read": {
+            "name": "Read Network",
+            "description": "View network inventory and topology",
+        },
+        "network:write": {"name": "Manage Network", "description": "Modify network configuration"},
+        "ipam:read": {"name": "Read IPAM", "description": "View IP address management"},
+        "ipam:write": {"name": "Manage IPAM", "description": "Allocate and manage IP addresses"},
+        "fiber:read": {"name": "Read Fiber Network", "description": "View fiber infrastructure"},
+        "fiber:write": {
+            "name": "Manage Fiber",
+            "description": "Manage fiber cables and infrastructure",
+        },
+        "pon:read": {"name": "Read PON", "description": "View PON/OLT/ONU information"},
+        "pon:write": {"name": "Manage PON", "description": "Configure PON devices"},
+        "wireless:read": {"name": "Read Wireless", "description": "View wireless access points"},
+        "wireless:write": {
+            "name": "Manage Wireless",
+            "description": "Configure wireless infrastructure",
+        },
+        # Billing & Revenue
+        "billing:read": {"name": "Read Billing", "description": "View invoices and billing data"},
+        "billing:write": {
+            "name": "Manage Billing",
+            "description": "Create invoices and manage billing",
+        },
+        "billing:payments": {
+            "name": "Process Payments",
+            "description": "Record and process payments",
+        },
+        "subscriptions:read": {
+            "name": "Read Subscriptions",
+            "description": "View subscription plans",
+        },
+        "subscriptions:write": {
+            "name": "Manage Subscriptions",
+            "description": "Create and modify subscriptions",
+        },
+        # Support & Ticketing
+        "tickets:read": {"name": "Read Tickets", "description": "View support tickets"},
+        "tickets:write": {"name": "Manage Tickets", "description": "Create and update tickets"},
+        "tickets:assign": {"name": "Assign Tickets", "description": "Assign tickets to agents"},
+        # Communications
+        "communications:read": {
+            "name": "Read Communications",
+            "description": "View communication history",
+        },
+        "communications:send": {
+            "name": "Send Communications",
+            "description": "Send emails and notifications",
+        },
+        "communications:campaigns": {
+            "name": "Manage Campaigns",
+            "description": "Create and manage campaigns",
+        },
+        "communications:templates": {
+            "name": "Manage Templates",
+            "description": "Manage communication templates",
+        },
+        # Operations & Automation
+        "automation:read": {
+            "name": "Read Automation",
+            "description": "View automation playbooks and jobs",
+        },
+        "automation:execute": {
+            "name": "Execute Automation",
+            "description": "Run automation playbooks",
+        },
+        "workflows:read": {"name": "Read Workflows", "description": "View workflow definitions"},
+        "workflows:execute": {
+            "name": "Execute Workflows",
+            "description": "Trigger workflow execution",
+        },
+        "jobs:read": {"name": "Read Jobs", "description": "View background jobs"},
+        # Integrations
+        "webhooks:read": {"name": "Read Webhooks", "description": "View webhook subscriptions"},
         "webhooks:manage": {
             "name": "Manage Webhooks",
             "description": "Create and manage webhook subscriptions",
         },
+        "integrations:read": {
+            "name": "Read Integrations",
+            "description": "View configured integrations",
+        },
+        "integrations:manage": {
+            "name": "Manage Integrations",
+            "description": "Configure integrations",
+        },
+        # Analytics & Reporting
         "analytics:read": {
             "name": "Read Analytics",
             "description": "Access analytics and reporting data",
+        },
+        "analytics:export": {"name": "Export Analytics", "description": "Export analytics data"},
+        # Partner Management
+        "partner:read": {"name": "Read Partners", "description": "View partner information"},
+        "partner:manage": {
+            "name": "Manage Partners",
+            "description": "Manage partner relationships",
+        },
+        "partner:tenants:list": {
+            "name": "List Managed Tenants",
+            "description": "View managed tenant list",
+        },
+        "partner:tenants:manage": {
+            "name": "Manage Tenants",
+            "description": "Manage partner tenants",
         },
     }
 

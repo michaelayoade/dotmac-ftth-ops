@@ -26,8 +26,13 @@ from dotmac.platform.audit import AuditContextMiddleware
 from dotmac.platform.auth.billing_permissions import ensure_billing_rbac
 from dotmac.platform.auth.bootstrap import ensure_default_admin_user
 from dotmac.platform.auth.exceptions import AuthError, get_http_status
+from dotmac.platform.auth.field_service_permissions import ensure_field_service_rbac
 from dotmac.platform.auth.isp_permissions import ensure_isp_rbac
+from dotmac.platform.auth.partner_permissions import ensure_partner_rbac
+from dotmac.platform.core.exception_handlers import register_exception_handlers
 from dotmac.platform.core.rate_limiting import get_limiter
+from dotmac.platform.core.request_context import RequestContextMiddleware, configure_context_logging
+from dotmac.platform.core.rls_middleware import RLSMiddleware
 from dotmac.platform.db import AsyncSessionLocal, init_db
 from dotmac.platform.infrastructure_health import run_startup_health_checks
 from dotmac.platform.monitoring.error_middleware import (
@@ -36,7 +41,7 @@ from dotmac.platform.monitoring.error_middleware import (
 )
 from dotmac.platform.monitoring.health_checks import HealthChecker, ensure_infrastructure_running
 from dotmac.platform.platform_app import platform_app
-from dotmac.platform.redis_client import init_redis, shutdown_redis, redis_manager
+from dotmac.platform.redis_client import init_redis, redis_manager, shutdown_redis
 from dotmac.platform.routers import get_api_info, register_routers
 from dotmac.platform.secrets import load_secrets_from_vault_sync
 from dotmac.platform.settings import settings
@@ -94,6 +99,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
 
     # Get structured logger (telemetry configured during app creation)
     logger = structlog.get_logger(__name__)
+
+    # Configure request context logging (adds correlation IDs to all logs)
+    configure_context_logging()
+    logger.info("request_context.logging.configured", emoji="✅")
 
     # Ensure telemetry is configured (lifespan may be used outside create_application)
     try:
@@ -235,6 +244,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None]:
             logger.info("rbac.isp_permissions.seeded", emoji="✅")
             await ensure_billing_rbac(session)
             logger.info("rbac.billing_permissions.seeded", emoji="✅")
+            await ensure_partner_rbac(session)
+            logger.info("rbac.partner_permissions.seeded", emoji="✅")
+            await ensure_field_service_rbac(session)
+            logger.info("rbac.field_service_permissions.seeded", emoji="✅")
     except Exception as e:
         logger.error("rbac.permissions.failed", error=str(e), emoji="❌")
         if settings.is_production:
@@ -309,6 +322,10 @@ def create_application() -> FastAPI:
     allowed_hosts = settings.trusted_hosts if settings.trusted_hosts else ["*"]
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
 
+    # Add request context middleware VERY early in the chain
+    # This generates correlation IDs and manages request-scoped context
+    app.add_middleware(RequestContextMiddleware, enable_logging=True)
+
     # Add error tracking middleware (should be early in the chain)
     # Tracks HTTP errors and exceptions in Prometheus
     if settings.observability.enable_metrics:
@@ -318,6 +335,10 @@ def create_application() -> FastAPI:
     # Add tenant middleware BEFORE other middleware
     # This ensures tenant context is set before boundary checks
     app.add_middleware(TenantMiddleware)
+
+    # Add Row-Level Security middleware RIGHT AFTER tenant context is set
+    # This enforces tenant data isolation at the database level
+    app.add_middleware(RLSMiddleware)
 
     # Add single-tenant middleware if in single-tenant mode
     # This automatically sets fixed tenant_id from config
@@ -345,8 +366,10 @@ def create_application() -> FastAPI:
     app.state.limiter = get_limiter()
     app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
 
-    # Add auth error handler for proper status codes (401 for auth, 403 for authz)
-    app.add_exception_handler(AuthError, auth_error_handler)
+    # Register comprehensive exception handlers
+    # This includes generic catch-all handler, DotMacError handler, validation handler, etc.
+    register_exception_handlers(app)
+    logger.info("exception_handlers.registered", emoji="✅")
 
     # Register shared routers (auth, webhooks, etc.) before mounting tenant apps so
     # single-tenant deployments retain access to shared endpoints under /api/v1.

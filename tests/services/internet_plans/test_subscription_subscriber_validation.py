@@ -30,7 +30,7 @@ pytestmark = pytest.mark.unit
 @pytest_asyncio.fixture
 async def setup_test_data(async_db_session):
     """Create test data for subscription validation tests."""
-    from dotmac.platform.tenant.models import Tenant, TenantStatus, TenantPlanType, BillingCycle
+    from dotmac.platform.tenant.models import BillingCycle, Tenant, TenantPlanType, TenantStatus
 
     # Create an actual tenant record in the database
     tenant_id = f"test-tenant-{uuid4().hex[:8]}"
@@ -131,9 +131,7 @@ async def setup_test_data(async_db_session):
 
 
 @pytest.mark.asyncio
-async def test_create_subscription_requires_subscriber_id(
-    async_db_session, setup_test_data
-):
+async def test_create_subscription_requires_subscriber_id(async_db_session, setup_test_data):
     """Test that subscriber_id is required when creating a subscription."""
     data = setup_test_data
     service = InternetPlanService(async_db_session, data["tenant_id"])
@@ -154,9 +152,7 @@ async def test_create_subscription_requires_subscriber_id(
 
 
 @pytest.mark.asyncio
-async def test_create_subscription_validates_subscriber_exists(
-    async_db_session, setup_test_data
-):
+async def test_create_subscription_validates_subscriber_exists(async_db_session, setup_test_data):
     """Test that subscriber_id must reference an existing subscriber."""
     data = setup_test_data
     service = InternetPlanService(async_db_session, data["tenant_id"])
@@ -192,9 +188,7 @@ async def test_create_subscription_validates_subscriber_belongs_to_customer(
 
 
 @pytest.mark.asyncio
-async def test_create_subscription_validates_tenant_isolation(
-    async_db_session, setup_test_data
-):
+async def test_create_subscription_validates_tenant_isolation(async_db_session, setup_test_data):
     """Test that subscriber must belong to the same tenant."""
     data = setup_test_data
 

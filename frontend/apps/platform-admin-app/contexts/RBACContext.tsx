@@ -522,7 +522,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Log permission changes in development
   useEffect(() => {
-    if (permissions && process.env.NODE_ENV === "development") {
+    if (permissions && process.env["NODE_ENV"] === "development") {
       logger.info("User permissions loaded", {
         userId: permissions.user_id,
         roles: permissions.roles.map((r) => r.name),

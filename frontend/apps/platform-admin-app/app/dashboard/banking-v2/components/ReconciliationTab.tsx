@@ -37,10 +37,7 @@ export function ReconciliationTab() {
     end_date: selectedPeriod.end,
   });
 
-  const { data: summary, isLoading: isLoadingSummary } = useReconciliationSummary({
-    bank_account_id: undefined,
-    days: undefined,
-  });
+  const { data: summary, isLoading: isLoadingSummary } = useReconciliationSummary({});
 
   const getStatusBadge = (status: string) => {
     const variants = {

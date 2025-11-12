@@ -26,7 +26,6 @@ from dotmac.platform.customer_management.models import (
     CustomerTier,
     CustomerType,
 )
-from dotmac.platform.tenant.models import Tenant
 
 
 @pytest.mark.integration
@@ -426,8 +425,6 @@ class TestModelRelationships:
         if async_db_session.bind.dialect.name.startswith("sqlite"):
             pytest.skip("Requires PostgreSQL backend with full contact relationships")
 
-        await ensure_tenant(async_db_session)
-
         # Create a customer
         customer = Customer(
             customer_number="CUST001",
@@ -567,7 +564,9 @@ class TestModelRelationships:
             await async_db_session.flush()
 
     @pytest.mark.asyncio
-    async def test_customer_contact_multiple_roles(self, async_db_session: AsyncSession, test_tenant):
+    async def test_customer_contact_multiple_roles(
+        self, async_db_session: AsyncSession, test_tenant
+    ):
         """
         Test that a single contact can have multiple roles with the same customer.
 

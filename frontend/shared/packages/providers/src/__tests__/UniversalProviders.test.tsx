@@ -7,7 +7,8 @@ import userEvent from "@testing-library/user-event";
 import { axe, toHaveNoViolations } from "jest-axe";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { UniversalProviders } from "../UniversalProviders";
-import type { PortalType, FeatureFlags, AuthVariant, TenantVariant } from "../UniversalProviders";
+// Note: AuthVariant removed - Better Auth configured at app level
+import type { PortalType, FeatureFlags, TenantVariant } from "../UniversalProviders";
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations);
@@ -37,13 +38,8 @@ jest.mock("@tanstack/react-query", () => {
   };
 });
 
-jest.mock("@dotmac/auth", () => ({
-  AuthProvider: ({ children, variant, portal }: any) => (
-    <div data-testid="auth-provider" data-variant={variant} data-portal={portal}>
-      {children}
-    </div>
-  ),
-}));
+// Note: @dotmac/auth removed - Better Auth is hook-based, no provider needed
+// Old AuthProvider mock removed
 
 jest.mock("./components/ErrorBoundary", () => ({
   ErrorBoundary: ({ children, portal }: any) => (
@@ -142,7 +138,7 @@ describe("UniversalProviders", () => {
       expect(screen.getByTestId("error-boundary")).toBeInTheDocument();
       expect(screen.getByTestId("query-client-provider")).toBeInTheDocument();
       expect(screen.getByTestId("theme-provider")).toBeInTheDocument();
-      expect(screen.getByTestId("auth-provider")).toBeInTheDocument();
+      // Note: auth-provider removed - Better Auth is hook-based, no provider needed
       expect(screen.getByTestId("tenant-provider")).toBeInTheDocument();
       expect(screen.getByTestId("feature-provider")).toBeInTheDocument();
     });
@@ -161,7 +157,7 @@ describe("UniversalProviders", () => {
 
         expect(screen.getByTestId("error-boundary")).toHaveAttribute("data-portal", portal);
         expect(screen.getByTestId("theme-provider")).toHaveAttribute("data-portal", portal);
-        expect(screen.getByTestId("auth-provider")).toHaveAttribute("data-portal", portal);
+        // Note: auth-provider removed - Better Auth configured at app level
         expect(screen.getByTestId("tenant-provider")).toHaveAttribute("data-portal", portal);
       });
     });
@@ -174,7 +170,7 @@ describe("UniversalProviders", () => {
       );
 
       expect(screen.getByTestId("theme-provider")).toHaveAttribute("data-theme", "professional");
-      expect(screen.getByTestId("auth-provider")).toHaveAttribute("data-variant", "secure");
+      // Note: auth-provider removed - Better Auth configured separately
       expect(screen.getByTestId("tenant-provider")).toHaveAttribute("data-variant", "multi");
     });
 
@@ -269,31 +265,8 @@ describe("UniversalProviders", () => {
     });
   });
 
-  describe("Auth Variants", () => {
-    const authVariants: AuthVariant[] = ["simple", "secure", "enterprise"];
-
-    authVariants.forEach((variant) => {
-      it(`applies ${variant} auth variant correctly`, () => {
-        render(
-          <UniversalProviders portal="admin" authVariant={variant}>
-            <TestConsumer />
-          </UniversalProviders>,
-        );
-
-        expect(screen.getByTestId("auth-provider")).toHaveAttribute("data-variant", variant);
-      });
-    });
-
-    it("defaults to secure auth variant", () => {
-      render(
-        <UniversalProviders portal="admin">
-          <TestConsumer />
-        </UniversalProviders>,
-      );
-
-      expect(screen.getByTestId("auth-provider")).toHaveAttribute("data-variant", "secure");
-    });
-  });
+  // Note: Auth Variants section removed - authVariant prop no longer exists
+  // Better Auth is configured at app level, not through UniversalProviders
 
   describe("Tenant Variants", () => {
     const tenantVariants: TenantVariant[] = ["single", "multi", "isp"];
@@ -458,8 +431,8 @@ describe("UniversalProviders", () => {
 
   describe("Development Tools", () => {
     it("enables devtools in development environment by default", () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "development";
+      const originalEnv = process.env["NODE_ENV"];
+      process.env["NODE_ENV"] = "development";
 
       render(
         <UniversalProviders portal="admin">
@@ -470,12 +443,12 @@ describe("UniversalProviders", () => {
       // Devtools would be rendered (mocked as ReactQueryDevtools)
       expect(screen.getByTestId("test-consumer")).toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      process.env["NODE_ENV"] = originalEnv;
     });
 
     it("disables devtools in production environment", () => {
-      const originalEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = "production";
+      const originalEnv = process.env["NODE_ENV"];
+      process.env["NODE_ENV"] = "production";
 
       render(
         <UniversalProviders portal="admin">
@@ -485,7 +458,7 @@ describe("UniversalProviders", () => {
 
       expect(screen.getByTestId("test-consumer")).toBeInTheDocument();
 
-      process.env.NODE_ENV = originalEnv;
+      process.env["NODE_ENV"] = originalEnv;
     });
 
     it("respects explicit enableDevtools prop", () => {
@@ -500,20 +473,8 @@ describe("UniversalProviders", () => {
   });
 
   describe("Configuration", () => {
-    it("passes auth configuration to AuthProvider", () => {
-      const authConfig = {
-        sessionTimeout: 60 * 60 * 1000,
-        enableMFA: false,
-      };
-
-      render(
-        <UniversalProviders portal="admin" config={{ auth: authConfig }}>
-          <TestConsumer />
-        </UniversalProviders>,
-      );
-
-      expect(screen.getByTestId("auth-provider")).toBeInTheDocument();
-    });
+    // Note: "passes auth configuration to AuthProvider" test removed
+    // UniversalProviders no longer accepts config.auth - Better Auth configured at app level
 
     it("passes API configuration", () => {
       const apiConfig = {
@@ -563,14 +524,13 @@ describe("UniversalProviders", () => {
       const errorBoundary = screen.getByTestId("error-boundary");
       const queryProvider = screen.getByTestId("query-client-provider");
       const themeProvider = screen.getByTestId("theme-provider");
-      const authProvider = screen.getByTestId("auth-provider");
+      // Note: authProvider removed - Better Auth is hook-based
       const tenantProvider = screen.getByTestId("tenant-provider");
       const featureProvider = screen.getByTestId("feature-provider");
 
       expect(errorBoundary).toContainElement(queryProvider);
       expect(queryProvider).toContainElement(themeProvider);
-      expect(themeProvider).toContainElement(authProvider);
-      expect(authProvider).toContainElement(tenantProvider);
+      expect(themeProvider).toContainElement(tenantProvider); // Updated: theme → tenant
       expect(tenantProvider).toContainElement(featureProvider);
     });
 
@@ -655,11 +615,7 @@ describe("UniversalProviders", () => {
       const startTime = performance.now();
 
       const complexConfig = {
-        auth: {
-          sessionTimeout: 30 * 60 * 1000,
-          enableMFA: true,
-          enablePermissions: true,
-        },
+        // Note: auth config removed - Better Auth configured at app level
         apiConfig: {
           baseUrl: "https://api.example.com",
           timeout: 5000,

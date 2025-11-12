@@ -382,7 +382,9 @@ class CustomerMapper:
         status = (
             CustomerStatus(customer.status)
             if isinstance(customer.status, str)
-            else customer.status if customer.status else CustomerStatus.ACTIVE
+            else customer.status
+            if customer.status
+            else CustomerStatus.ACTIVE
         )
 
         # Ensure we have UUID for primary key

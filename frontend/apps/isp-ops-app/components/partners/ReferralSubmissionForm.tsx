@@ -14,10 +14,10 @@ interface ReferralSubmissionFormProps {
 interface ReferralInput {
   lead_name: string;
   lead_email: string;
-  lead_phone?: string;
-  company_name?: string;
-  estimated_value?: number;
-  notes?: string;
+  lead_phone: string | undefined;
+  company_name: string | undefined;
+  estimated_value: number | undefined;
+  notes: string | undefined;
 }
 
 async function submitReferral(partnerId: string, data: ReferralInput): Promise<void> {

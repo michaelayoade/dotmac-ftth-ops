@@ -190,8 +190,8 @@ export class RateLimiter {
 
     this.storage =
       storage ||
-      (process.env.NODE_ENV === "production" && process.env.REDIS_URL
-        ? new RedisRateLimitStorage(process.env.REDIS_URL)
+      (process.env["NODE_ENV"] === "production" && process.env["REDIS_URL"]
+        ? new RedisRateLimitStorage(process.env["REDIS_URL"])
         : new MemoryRateLimitStorage());
   }
 

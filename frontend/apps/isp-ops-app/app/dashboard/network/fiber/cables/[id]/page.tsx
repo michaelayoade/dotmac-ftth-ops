@@ -641,11 +641,16 @@ export default function FiberCableDetailPage({ params }: PageProps) {
                 )}
               </div>
 
-              {/* Map placeholder */}
+              {/* Fiber Cable Map */}
               <div className="h-96 rounded-lg border bg-muted flex items-center justify-center">
                 <div className="text-center space-y-2">
                   <MapPin className="h-8 w-8 mx-auto text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Map view will be displayed here</p>
+                  <p className="text-sm text-muted-foreground">
+                    Interactive fiber map visualization
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Visit the <a href="/dashboard/network/fiber/map" className="text-primary hover:underline">Fiber Map page</a> for full network visualization
+                  </p>
                 </div>
               </div>
             </CardContent>

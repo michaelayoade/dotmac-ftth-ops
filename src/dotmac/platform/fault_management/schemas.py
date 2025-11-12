@@ -10,9 +10,6 @@ from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, ValidationInfo, field_validator
 
-ALIAS_START_DATE = cast(Any, AliasChoices("start_date", "period_start"))
-ALIAS_END_DATE = cast(Any, AliasChoices("end_date", "period_end"))
-
 from dotmac.platform.fault_management.models import (
     AlarmSeverity,
     AlarmSource,
@@ -20,6 +17,9 @@ from dotmac.platform.fault_management.models import (
     CorrelationAction,
     SLAStatus,
 )
+
+ALIAS_START_DATE = cast(Any, AliasChoices("start_date", "period_start"))
+ALIAS_END_DATE = cast(Any, AliasChoices("end_date", "period_end"))
 
 # =============================================================================
 # Alarm Schemas
@@ -503,3 +503,28 @@ class SLAComplianceReport(BaseModel):
     total_credits: float
     compliance_by_service_type: dict[str, float]
     instances: list[SLAInstanceResponse]
+
+
+class SLAComplianceRecord(BaseModel):
+    """Daily SLA compliance record for time-series charts"""
+
+    model_config = ConfigDict()
+
+    date: datetime
+    compliance_percentage: float
+    target_percentage: float
+    uptime_minutes: int
+    downtime_minutes: int
+    sla_breaches: int
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "date": "2025-10-08T00:00:00Z",
+                "compliance_percentage": 99.95,
+                "target_percentage": 99.9,
+                "uptime_minutes": 1438,
+                "downtime_minutes": 2,
+                "sla_breaches": 0,
+            }
+        }

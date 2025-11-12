@@ -39,7 +39,7 @@ import { useConfirmDialog } from "@dotmac/ui";
 export default function PlanDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const planId = params.id as string;
+  const planId = params['id'] as string;
 
   const { data: plan, isLoading } = useInternetPlan(planId);
   const { data: stats } = usePlanStatistics(planId);

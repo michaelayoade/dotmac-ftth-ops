@@ -53,18 +53,18 @@ export default function CreateTemplatePage() {
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.name || formData.name.trim().length === 0) {
-      newErrors.name = "Template name is required";
+    if (!formData['name'] || formData['name'].trim().length === 0) {
+      newErrors['name'] = "Template name is required";
     }
 
     if (formData.channel === CommunicationChannel.EMAIL) {
-      if (!formData.subject || formData.subject.trim().length === 0) {
-        newErrors.subject = "Subject is required for email templates";
+      if (!formData['subject'] || formData['subject'].trim().length === 0) {
+        newErrors['subject'] = "Subject is required for email templates";
       }
     }
 
-    if (!formData.body_text && !formData.body_html) {
-      newErrors.body_text = "Template body is required";
+    if (!formData['body_text'] && !formData.body_html) {
+      newErrors['body_text'] = "Template body is required";
     }
 
     setErrors(newErrors);
@@ -72,9 +72,9 @@ export default function CreateTemplatePage() {
   };
 
   const detectVariables = () => {
-    const textVars = extractTemplateVariables(formData.body_text || "");
+    const textVars = extractTemplateVariables(formData['body_text'] || "");
     const htmlVars = extractTemplateVariables(formData.body_html || "");
-    const subjectVars = extractTemplateVariables(formData.subject || "");
+    const subjectVars = extractTemplateVariables(formData['subject'] || "");
     const allVars = [...new Set([...textVars, ...htmlVars, ...subjectVars])];
     setDetectedVars(allVars);
 
@@ -184,18 +184,18 @@ export default function CreateTemplatePage() {
                   </Label>
                   <Input
                     id="name"
-                    value={formData.name}
+                    value={formData['name']}
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="e.g., Welcome Email"
                   />
-                  {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
+                  {errors['name'] && <p className="text-sm text-red-500">{errors['name']}</p>}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="description">Description</Label>
                   <Textarea
                     id="description"
-                    value={formData.description || ""}
+                    value={formData['description'] || ""}
                     onChange={(e) => handleChange("description", e.target.value)}
                     placeholder="What is this template for?"
                     rows={2}
@@ -254,11 +254,11 @@ export default function CreateTemplatePage() {
                     </Label>
                     <Input
                       id="subject"
-                      value={formData.subject || ""}
+                      value={formData['subject'] || ""}
                       onChange={(e) => handleChange("subject", e.target.value)}
                       placeholder="Email subject with {{ variables }}"
                     />
-                    {errors.subject && <p className="text-sm text-red-500">{errors.subject}</p>}
+                    {errors['subject'] && <p className="text-sm text-red-500">{errors['subject']}</p>}
                   </div>
                 )}
 
@@ -273,12 +273,12 @@ export default function CreateTemplatePage() {
                     </Label>
                     <Textarea
                       id="body_text"
-                      value={formData.body_text || ""}
+                      value={formData['body_text'] || ""}
                       onChange={(e) => handleChange("body_text", e.target.value)}
                       placeholder="Hello {{ name }}, welcome to our service!"
                       rows={12}
                     />
-                    {errors.body_text && <p className="text-sm text-red-500">{errors.body_text}</p>}
+                    {errors['body_text'] && <p className="text-sm text-red-500">{errors['body_text']}</p>}
                   </TabsContent>
                   <TabsContent value="html" className="space-y-2">
                     <Label htmlFor="body_html">HTML Body</Label>

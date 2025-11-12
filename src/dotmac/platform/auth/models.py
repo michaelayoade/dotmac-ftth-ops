@@ -30,6 +30,8 @@ from dotmac.platform.db import Base as BaseRuntime
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase as Base
+
+    from dotmac.platform.user_management.models import User as UserModel  # noqa: F401
 else:
     Base = BaseRuntime
 
@@ -120,6 +122,8 @@ class PermissionCategory(str, Enum):
     IPAM = "ipam"
     AUTOMATION = "automation"
     CPE = "cpe"
+    PARTNER = "partner"
+    FIELD_SERVICE = "field_service"
 
 
 class Permission(Base):
@@ -296,3 +300,20 @@ class PermissionGrant(Base):
         Index("ix_permission_grants_granted_by", "granted_by"),
         Index("ix_permission_grants_created_at", "created_at"),
     )
+
+
+# Backward-compatible User export
+try:  # pragma: no cover - used for legacy imports
+    from dotmac.platform.user_management.models import User as User  # noqa: F401
+except Exception:  # pragma: no cover
+    User = None  # type: ignore
+
+
+__all__ = [
+    "PermissionCategory",
+    "Permission",
+    "Role",
+    "RoleHierarchy",
+    "PermissionGrant",
+    "User",
+]

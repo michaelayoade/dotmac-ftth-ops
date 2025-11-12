@@ -238,13 +238,13 @@ class TestAuditModels:
             level=FrontendLogLevel.ERROR,
             message="Frontend error occurred",
             service="frontend",
-            metadata={"component": "LoginForm", "error_code": "AUTH_001"},
+            metadata={"componentName": "LoginForm", "errorCode": "AUTH_001"},
         )
 
         assert log.level == FrontendLogLevel.ERROR
         assert log.message == "Frontend error occurred"
         assert log.service == "frontend"
-        assert log.metadata["component"] == "LoginForm"
+        assert log.metadata["componentName"] == "LoginForm"
 
         # Test message length validation
         with pytest.raises(ValueError):
@@ -258,6 +258,96 @@ class TestAuditModels:
             FrontendLogEntry(
                 level=FrontendLogLevel.ERROR,
                 message="x" * 1001,  # Over 1000 chars should fail
+            )
+
+    def test_frontend_log_metadata_flexibility(self):
+        """Test that metadata accepts arbitrary keys (real browser events)."""
+        # Simulate various real-world metadata patterns from useAuditLogger and browser events
+
+        # Pattern 1: Error with stack trace
+        log1 = FrontendLogEntry(
+            level=FrontendLogLevel.ERROR,
+            message="Uncaught TypeError",
+            metadata={
+                "filename": "app.tsx",
+                "lineno": 42,
+                "colno": 15,
+                "stackTrace": "Error: Uncaught TypeError\n  at App.tsx:42:15",
+                "errorMessage": "Cannot read property 'foo' of undefined",
+            },
+        )
+        assert log1.metadata["filename"] == "app.tsx"
+        assert log1.metadata["lineno"] == 42
+
+        # Pattern 2: User action with visibility
+        log2 = FrontendLogEntry(
+            level=FrontendLogLevel.INFO,
+            message="Button clicked",
+            metadata={
+                "visible": True,
+                "action": "click",
+                "buttonId": "submit-btn",
+                "timestamp": "2025-11-07T12:00:00Z",
+            },
+        )
+        assert log2.metadata["visible"] is True
+
+        # Pattern 3: Navigation with reason
+        log3 = FrontendLogEntry(
+            level=FrontendLogLevel.INFO,
+            message="Route changed",
+            metadata={
+                "reason": "user_navigation",
+                "from": "/dashboard",
+                "to": "/settings",
+                "pathname": "/settings",
+            },
+        )
+        assert log3.metadata["reason"] == "user_navigation"
+
+        # Pattern 4: Performance metrics
+        log4 = FrontendLogEntry(
+            level=FrontendLogLevel.INFO,
+            message="Page load complete",
+            metadata={
+                "duration": 1234,
+                "performanceMetrics": {
+                    "FCP": 800,
+                    "LCP": 1200,
+                    "TTI": 1234,
+                },
+                "url": "https://app.example.com/dashboard",
+            },
+        )
+        assert log4.metadata["duration"] == 1234
+
+    def test_frontend_log_metadata_size_limits(self):
+        """Test metadata size/depth/length validation."""
+        # Test nesting depth limit (max 5 levels)
+        with pytest.raises(ValueError, match="nesting depth exceeds maximum"):
+            FrontendLogEntry(
+                level=FrontendLogLevel.ERROR,
+                message="Deep nesting",
+                metadata={
+                    "level1": {"level2": {"level3": {"level4": {"level5": {"level6": "too deep"}}}}}
+                },
+            )
+
+        # Test string length limit (max 2000 chars per value)
+        with pytest.raises(ValueError, match="string exceeds maximum length"):
+            FrontendLogEntry(
+                level=FrontendLogLevel.ERROR,
+                message="Long string",
+                metadata={"longString": "x" * 2001},
+            )
+
+        # Test total payload size (max 10KB)
+        with pytest.raises(ValueError, match="payload size.*exceeds maximum"):
+            large_metadata = {f"key{i}": "x" * 100 for i in range(200)}  # ~20KB
+            FrontendLogEntry(
+                level=FrontendLogLevel.ERROR,
+                message="Large payload",
+                metadata=large_metadata,
             )
 
     def test_frontend_logs_request_model(self):

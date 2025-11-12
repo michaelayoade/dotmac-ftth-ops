@@ -73,7 +73,7 @@ interface TicketMessage {
 
 function TicketDetailsPageContent() {
   const params = useParams();
-  const ticketId = params?.ticketId as string;
+  const ticketId = params?.['ticketId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const [newMessage, setNewMessage] = useState("");
@@ -483,7 +483,7 @@ function TicketDetailsPageContent() {
               <CardDescription>Additional ticket information</CardDescription>
             </CardHeader>
             <CardContent>
-              {ticket.metadata ? (
+              {ticket['metadata']? (
                 <pre className="p-4 bg-accent rounded-lg overflow-x-auto text-sm">
                   {JSON.stringify(ticket.metadata, null, 2)}
                 </pre>

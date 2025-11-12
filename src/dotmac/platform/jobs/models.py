@@ -31,6 +31,7 @@ class JobStatus(str, Enum):
     """Job execution status."""
 
     PENDING = "pending"
+    ASSIGNED = "assigned"  # For field service jobs assigned to technician
     RUNNING = "running"
     COMPLETED = "completed"
     FAILED = "failed"
@@ -212,6 +213,65 @@ class Job(Base):  # type: ignore[misc]
         Integer,
         nullable=True,
         comment="Job execution timeout in seconds",
+    )
+
+    # Field Service / Technician Assignment (added by migration 2025_11_08_1700)
+    assigned_technician_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False),
+        nullable=True,
+        comment="Assigned technician for field service jobs",
+    )
+    scheduled_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Scheduled start time for field service",
+    )
+    scheduled_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Scheduled end time for field service",
+    )
+    actual_start: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Actual start time",
+    )
+    actual_end: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+        comment="Actual end time",
+    )
+
+    # Location Information
+    location_lat: Mapped[float | None] = mapped_column(
+        nullable=True,
+        comment="Job site latitude",
+    )
+    location_lng: Mapped[float | None] = mapped_column(
+        nullable=True,
+        comment="Job site longitude",
+    )
+    service_address: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+        comment="Job site service address",
+    )
+
+    # Completion Details
+    customer_signature: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Base64 encoded customer signature",
+    )
+    completion_notes: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
+        comment="Notes added upon job completion",
+    )
+    photos: Mapped[dict[str, Any] | None] = mapped_column(
+        JSON,
+        nullable=True,
+        comment="Array of photo URLs from job site",
     )
 
     # Parent job for job chains

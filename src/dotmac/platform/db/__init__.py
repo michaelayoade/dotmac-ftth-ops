@@ -14,10 +14,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from typing import Any, AsyncIterator, Iterator
+    from collections.abc import AsyncIterator, Iterator
+    from typing import Any
+
+    from sqlalchemy.engine import Engine
     from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
     from sqlalchemy.orm import DeclarativeBase, Session
-    from sqlalchemy.engine import Engine
 
     # Type hints for exported symbols - these are defined in the stub file
     # but we need minimal declarations here for proper resolution

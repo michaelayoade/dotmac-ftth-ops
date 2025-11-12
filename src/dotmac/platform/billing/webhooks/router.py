@@ -8,6 +8,8 @@ from typing import Any
 from fastapi import APIRouter, Depends, Header, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.auth.core import UserInfo
+from dotmac.platform.auth.dependencies import get_current_user
 from dotmac.platform.billing.config import get_billing_config
 from dotmac.platform.billing.webhooks.handlers import (
     PayPalWebhookHandler,
@@ -118,8 +120,21 @@ async def handle_paypal_webhook(
 
 
 @router.get("/config", include_in_schema=False)
-async def get_webhook_config() -> dict[str, Any]:
-    """Get webhook configuration status (for debugging)"""
+async def get_webhook_config(
+    current_user: UserInfo = Depends(get_current_user),
+) -> dict[str, Any]:
+    """
+    Get webhook configuration status (for debugging).
+
+    Requires authentication and platform admin role for security.
+    """
+    # Verify user has platform admin role
+    if not current_user.is_platform_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Platform admin access required to view webhook configuration",
+        )
+
     config = get_billing_config()
 
     return {

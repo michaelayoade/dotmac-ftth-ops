@@ -315,6 +315,99 @@ class CoAClient:
         result = await self.disconnect_session(username, nas_ip=nas_ip, session_id=session_id)
         return bool(result.get("success"))
 
+    async def update_ipv6_prefix(
+        self,
+        username: str,
+        delegated_prefix: str,
+        nas_ip: str | None = None,
+        session_id: str | None = None,
+    ) -> dict[str, Any]:
+        """
+        Send CoA request to update IPv6 delegated prefix (Phase 4).
+
+        Args:
+            username: RADIUS username
+            delegated_prefix: IPv6 prefix in CIDR notation (e.g., "2001:db8::/56")
+            nas_ip: NAS IP address
+            session_id: Acct-Session-Id (optional, for specific session)
+
+        Returns:
+            Dictionary with result status and structured response details.
+        """
+        client = self._create_client()
+
+        try:
+            # Validate IPv6 prefix format
+            if not delegated_prefix or "/" not in delegated_prefix:
+                raise ValueError(f"Invalid IPv6 prefix format: {delegated_prefix}")
+
+            # Create CoA packet with IPv6 prefix delegation attributes
+            packet = client.CreateCoAPacket(code=self._coa_request_code)
+            packet["User-Name"] = username
+
+            # RFC 4818: Delegated-IPv6-Prefix
+            # Format: prefix-length/prefix (e.g., "56 2001:db8::/56")
+            prefix_parts = delegated_prefix.split("/")
+            prefix_length = prefix_parts[1]
+            # Some RADIUS implementations expect: "length prefix"
+            packet["Delegated-IPv6-Prefix"] = f"{prefix_length} {delegated_prefix}"
+
+            if nas_ip:
+                packet["NAS-IP-Address"] = self._validate_nas_ip(nas_ip)
+
+            if session_id:
+                packet["Acct-Session-Id"] = session_id
+
+            response = await self._send_packet(client, packet)
+        except (ValueError, RADIUSCoAError) as exc:
+            logger.error(
+                "radius_coa_ipv6_failed",
+                username=username,
+                delegated_prefix=delegated_prefix,
+                nas_ip=nas_ip,
+                error=str(exc),
+                exc_info=True,
+            )
+            return {
+                "success": False,
+                "message": f"Failed to send IPv6 CoA request: {exc}",
+                "username": username,
+                "delegated_prefix": delegated_prefix,
+                "error": str(exc),
+            }
+
+        success = response.code == self._coa_ack_code
+        message = (
+            "IPv6 prefix update acknowledged by RADIUS server"
+            if success
+            else f"IPv6 prefix update rejected (code={response.code})"
+        )
+
+        if success:
+            logger.info(
+                "radius_coa_ipv6_sent",
+                username=username,
+                delegated_prefix=delegated_prefix,
+                nas_ip=nas_ip,
+                details=response.to_dict(),
+            )
+        else:
+            logger.warning(
+                "radius_coa_ipv6_rejected",
+                username=username,
+                delegated_prefix=delegated_prefix,
+                nas_ip=nas_ip,
+                details=response.to_dict(),
+            )
+
+        return {
+            "success": success,
+            "message": message,
+            "username": username,
+            "delegated_prefix": delegated_prefix,
+            "details": response.to_dict(),
+        }
+
     async def change_bandwidth(
         self,
         username: str,

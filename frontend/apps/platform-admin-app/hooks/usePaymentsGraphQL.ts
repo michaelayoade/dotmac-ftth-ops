@@ -365,7 +365,7 @@ export function useCustomerPayments(
       customerId,
       limit,
       offset,
-      status,
+      ...(status && { status }),
       includeCustomer: false, // Already know the customer
       includeInvoice,
     },

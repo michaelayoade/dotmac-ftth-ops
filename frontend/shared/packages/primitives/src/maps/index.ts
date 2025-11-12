@@ -16,6 +16,10 @@ export type {
   Bounds,
 } from "./UniversalMap";
 
+// Leaflet Map Component (Real Geographic Maps)
+export { LeafletMap } from "./LeafletMap";
+export type { LeafletMapProps } from "./LeafletMap";
+
 // Network Topology Map
 export { NetworkTopologyMap } from "./NetworkTopologyMap";
 export type {

@@ -12,7 +12,7 @@ const serverEnvSchema = z.object({
 
 // Build-time environment variables (client-side)
 const clientEnvSchema = z.object({
-  NEXT_PUBLIC_API_URL: z.string().url().default("http://localhost:8000"),
+  NEXT_PUBLIC_API_BASE_URL: z.string().url().default("http://localhost:8000"),
   NEXT_PUBLIC_WEBSOCKET_URL: z.string().url().default("ws://localhost:3001"),
   NEXT_PUBLIC_APP_NAME: z.string().min(1),
   NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1),
@@ -32,7 +32,7 @@ export function validateEnv(): EnvConfig {
   try {
     const validated = envSchema.parse(process.env);
 
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.log("✅ Environment variables validated successfully");
     }
 
@@ -45,7 +45,7 @@ export function validateEnv(): EnvConfig {
       });
 
       // In production, fail fast
-      if (process.env.NODE_ENV === "production") {
+      if (process.env["NODE_ENV"] === "production") {
         process.exit(1);
       }
     }
@@ -68,7 +68,7 @@ export function checkServiceConfiguration(): {
   valid: boolean;
   missing: string[];
 } {
-  const required = ["NEXT_PUBLIC_API_URL", "NEXT_PUBLIC_WEBSOCKET_URL"];
+  const required = ["NEXT_PUBLIC_API_BASE_URL", "NEXT_PUBLIC_WEBSOCKET_URL"];
 
   const missing = required.filter((key) => !process.env[key]);
 
@@ -82,7 +82,7 @@ export function checkServiceConfiguration(): {
  * Environment-specific configuration
  */
 export function getEnvironmentConfig() {
-  const env = process.env.NODE_ENV || "development";
+  const env = process.env["NODE_ENV"] || "development";
 
   switch (env) {
     case "production":

@@ -1,0 +1,34 @@
+[Unit]
+Description=Redis In-Memory Data Store - Tenant {{ tenant_id }}
+After=network.target
+PartOf=dotmac-tenant-{{ tenant_id }}.service
+
+[Service]
+Type=notify
+User=redis
+Group=redis
+ExecStart=/usr/bin/redis-server /etc/redis/redis-tenant-{{ tenant_id }}.conf
+ExecStop=/bin/kill -s TERM $MAINPID
+Restart=on-failure
+RestartSec=5s
+
+# Resource limits
+{% if resources.redis_cpu_limit is defined %}
+CPUQuota={{ resources.redis_cpu_limit }}%
+{% endif %}
+{% if resources.redis_memory_limit is defined %}
+MemoryLimit={{ resources.redis_memory_limit }}
+{% endif %}
+
+# Security
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths={{ data_dir }}/redis
+
+# File descriptors
+LimitNOFILE=10032
+
+[Install]
+WantedBy=multi-user.target

@@ -24,8 +24,10 @@ from dotmac.platform.graphql.types.user import (
     TeamMembership,
     User,
     UserConnection,
-    UserModel as UserProtocol,
     UserOverviewMetrics,
+)
+from dotmac.platform.graphql.types.user import (
+    UserModel as UserProtocol,
 )
 from dotmac.platform.user_management.models import User as UserTable
 

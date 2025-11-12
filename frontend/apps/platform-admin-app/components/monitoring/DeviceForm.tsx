@@ -173,8 +173,8 @@ export function DeviceForm({
               onIPv6Change={(value) => setValue("ipv6_address", value || undefined)}
               requireAtLeastOne={true}
               useCIDR={false}
-              ipv4Error={errors.ipv4_address?.message}
-              ipv6Error={errors.ipv6_address?.message}
+              {...(errors.ipv4_address?.message && { ipv4Error: errors.ipv4_address.message })}
+              {...(errors.ipv6_address?.message && { ipv6Error: errors.ipv6_address.message })}
             />
 
             <IPAddressInput
@@ -182,7 +182,7 @@ export function DeviceForm({
               value={watch("management_ip") || ""}
               onChange={(value) => setValue("management_ip", value)}
               required={true}
-              error={errors.management_ip?.message}
+              {...(errors.management_ip?.message && { error: errors.management_ip.message })}
               helpText="Primary IP for device management and monitoring"
             />
           </div>

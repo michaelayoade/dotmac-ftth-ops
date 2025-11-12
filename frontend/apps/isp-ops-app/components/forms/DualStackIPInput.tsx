@@ -82,9 +82,9 @@ export function DualStackIPInput({
           label={ipv4Label}
           value={ipv4Value}
           onChange={onIPv4Change}
-          onBlur={onIPv4Blur}
+          {...(onIPv4Blur ? { onBlur: onIPv4Blur } : {})}
           placeholder={ipv4Placeholder || defaultIPv4Placeholder}
-          error={ipv4Error}
+          {...(ipv4Error ? { error: ipv4Error } : {})}
           disabled={disabled}
           allowIPv4={true}
           allowIPv6={false}
@@ -96,9 +96,9 @@ export function DualStackIPInput({
           label={ipv6Label}
           value={ipv6Value}
           onChange={onIPv6Change}
-          onBlur={onIPv6Blur}
+          {...(onIPv6Blur ? { onBlur: onIPv6Blur } : {})}
           placeholder={ipv6Placeholder || defaultIPv6Placeholder}
-          error={ipv6Error}
+          {...(ipv6Error ? { error: ipv6Error } : {})}
           disabled={disabled}
           allowIPv4={false}
           allowIPv6={true}

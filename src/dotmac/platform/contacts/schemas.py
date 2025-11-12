@@ -10,14 +10,14 @@ from uuid import UUID
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
-METADATA_ALIAS = cast(Any, AliasChoices("metadata_", "metadata"))
-
 from dotmac.platform.contacts.models import (
     ContactFieldType,
     ContactMethodType,
     ContactStage,
     ContactStatus,
 )
+
+METADATA_ALIAS = cast(Any, AliasChoices("metadata_", "metadata"))
 
 
 # Contact Method Schemas

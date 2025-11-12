@@ -4,8 +4,8 @@ Sales Order Models
 Data models for order processing and service activation.
 """
 
-from typing import TYPE_CHECKING
 import enum
+from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     JSON,
@@ -24,7 +24,6 @@ from sqlalchemy.orm import relationship
 
 from ..db import Base as BaseRuntime
 from ..db import TimestampMixin
-
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase as Base

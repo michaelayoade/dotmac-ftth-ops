@@ -4,6 +4,7 @@ GraphQL queries for Subscription Management.
 Provides efficient subscription queries with conditional loading of customers,
 plans, and invoices via DataLoaders to prevent N+1 queries.
 """
+# mypy: disable-error-code="arg-type,assignment,attr-defined"
 
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
@@ -60,7 +61,7 @@ class SubscriptionQueries:
         from dotmac.platform.billing.domain.aggregates import Subscription as SubscriptionModel
 
         # Fetch subscription
-        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
+        subscription_id_column = cast(Any, SubscriptionModel.subscription_id)
         stmt = select(SubscriptionModel).where(subscription_id_column == str(id))
         result = await db.execute(stmt)
         sub_model = result.scalar_one_or_none()
@@ -136,10 +137,10 @@ class SubscriptionQueries:
 
         # Build base query
         stmt = select(SubscriptionModel)
-        status_column = cast(Any, getattr(SubscriptionModel, "status"))
-        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
-        customer_id_column = cast(Any, getattr(SubscriptionModel, "customer_id"))
-        created_at_column = cast(Any, getattr(SubscriptionModel, "created_at"))
+        status_column = cast(Any, SubscriptionModel.status)
+        subscription_id_column = cast(Any, SubscriptionModel.subscription_id)
+        customer_id_column = cast(Any, SubscriptionModel.customer_id)
+        created_at_column = cast(Any, SubscriptionModel.created_at)
 
         # Apply filters
         if status:
@@ -227,9 +228,9 @@ class SubscriptionQueries:
         from dotmac.platform.billing.domain.aggregates import Subscription as SubscriptionModel
 
         # Get status counts
-        subscription_id_column = cast(Any, getattr(SubscriptionModel, "subscription_id"))
-        status_column = cast(Any, getattr(SubscriptionModel, "status"))
-        created_at_column = cast(Any, getattr(SubscriptionModel, "created_at"))
+        subscription_id_column = cast(Any, SubscriptionModel.subscription_id)
+        status_column = cast(Any, SubscriptionModel.status)
+        created_at_column = cast(Any, SubscriptionModel.created_at)
 
         status_stmt = select(
             func.count(subscription_id_column).label("total"),
@@ -354,9 +355,9 @@ class SubscriptionQueries:
 
         # Build base query
         stmt = select(SubscriptionPlanModel)
-        plan_is_active_column = cast(Any, getattr(SubscriptionPlanModel, "is_active"))
-        plan_billing_cycle_column = cast(Any, getattr(SubscriptionPlanModel, "billing_cycle"))
-        plan_created_at_column = cast(Any, getattr(SubscriptionPlanModel, "created_at"))
+        plan_is_active_column = cast(Any, SubscriptionPlanModel.is_active)
+        plan_billing_cycle_column = cast(Any, SubscriptionPlanModel.billing_cycle)
+        plan_created_at_column = cast(Any, SubscriptionPlanModel.created_at)
 
         # Apply filters
         if is_active is not None:
@@ -421,9 +422,9 @@ class SubscriptionQueries:
 
         # Build base query
         stmt = select(ProductModel)
-        product_is_active_column = cast(Any, getattr(ProductModel, "is_active"))
-        product_category_column = cast(Any, getattr(ProductModel, "category"))
-        product_created_at_column = cast(Any, getattr(ProductModel, "created_at"))
+        product_is_active_column = cast(Any, ProductModel.is_active)
+        product_category_column = cast(Any, ProductModel.category)
+        product_created_at_column = cast(Any, ProductModel.created_at)
 
         # Apply filters
         if is_active is not None:

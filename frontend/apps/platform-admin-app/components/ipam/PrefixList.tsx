@@ -152,9 +152,9 @@ export function PrefixList({
                   <PrefixRow
                     key={prefix.id}
                     prefix={prefix}
-                    onEdit={onEditPrefix}
-                    onDelete={onDeletePrefix}
-                    onAllocateIP={onAllocateIP}
+                    {...(onEditPrefix && { onEdit: onEditPrefix })}
+                    {...(onDeletePrefix && { onDelete: onDeletePrefix })}
+                    {...(onAllocateIP && { onAllocateIP })}
                   />
                 ))
               )}

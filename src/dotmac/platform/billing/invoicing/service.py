@@ -4,7 +4,6 @@ Invoice service with tenant support and idempotency
 
 import os
 from datetime import UTC, datetime, timedelta
-from decimal import Decimal
 from typing import Any
 
 import structlog
@@ -32,6 +31,12 @@ from dotmac.platform.webhooks.events import get_event_bus
 from dotmac.platform.webhooks.models import WebhookEvent
 
 logger = structlog.get_logger(__name__)
+
+
+def _build_invoice_url(invoice_id: Any) -> str:
+    """Construct invoice portal link using configured base URL."""
+    base_url = settings.urls.billing_portal_base_url.rstrip("/")
+    return f"{base_url}/invoices/{invoice_id}"
 
 
 class InvoiceService:
@@ -349,6 +354,28 @@ class InvoiceService:
 
         await self.db.commit()
         await self.db.refresh(invoice, attribute_names=["line_items"])
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.INVOICE_FINALIZED.value,
+                event_data={
+                    "invoice_id": invoice.invoice_id,
+                    "invoice_number": invoice.invoice_number,
+                    "customer_id": invoice.customer_id,
+                    "amount": float(
+                        money_handler.from_minor_units(invoice.total_amount, invoice.currency)
+                    ),
+                    "currency": invoice.currency,
+                    "status": invoice.status.value,
+                    "due_date": invoice.due_date.isoformat(),
+                    "finalized_at": datetime.now(UTC).isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish invoice.finalized event", error=str(e))
 
         # Send invoice notification
         await self._send_invoice_notification(invoice)
@@ -906,17 +933,17 @@ Best regards,
         new_balance = max(0, old_balance - amount)
 
         # Update invoice
-        setattr(invoice, "remaining_balance", new_balance)
-        setattr(invoice, "updated_at", datetime.now(UTC))
+        invoice.remaining_balance = new_balance
+        invoice.updated_at = datetime.now(UTC)
 
         # Update status based on new balance
         if new_balance == 0:
-            setattr(invoice, "status", InvoiceStatus.PAID)
-            setattr(invoice, "paid_at", datetime.now(UTC))
-            setattr(invoice, "payment_status", PaymentStatus.SUCCEEDED)
+            invoice.status = InvoiceStatus.PAID
+            invoice.paid_at = datetime.now(UTC)
+            invoice.payment_status = PaymentStatus.SUCCEEDED
         elif new_balance < invoice.total_amount:
-            setattr(invoice, "status", InvoiceStatus.PARTIALLY_PAID)
-            setattr(invoice, "payment_status", PaymentStatus.PENDING)
+            invoice.status = InvoiceStatus.PARTIALLY_PAID
+            invoice.payment_status = PaymentStatus.PENDING
 
         # Store payment reference in metadata
         current_metadata = invoice.extra_data or {}
@@ -1133,7 +1160,7 @@ Best regards,
             # Initialize email service with default settings
             email_service = EmailService()
 
-            invoice_url = f"https://platform.dotmac.com/invoices/{invoice.invoice_id}"
+            invoice_url = _build_invoice_url(invoice.invoice_id)
             amount_display = f"{invoice.currency} {invoice.total_amount / 100:.2f}"
 
             company_info = billing_settings.company_info

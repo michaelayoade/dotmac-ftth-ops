@@ -4,6 +4,8 @@ import React, { useState, useCallback } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "@dotmac/better-auth";
+import type { AxiosResponse } from "axios";
 import { apiClient } from "@/lib/api/client";
 import { logger } from "@/lib/logger";
 import { loginSchema, type LoginFormData } from "@/lib/validations/auth";
@@ -13,6 +15,9 @@ import {
   setOperatorAccessToken,
 } from "../../../../shared/utils/operatorAuth";
 
+const showTestCredentials =
+  process.env["NEXT_PUBLIC_SHOW_TEST_CREDENTIALS"] === "true";
+
 export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,11 +26,63 @@ export default function LoginPage() {
   const {
     register,
     handleSubmit,
-    setValue,
     formState: { errors },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
   });
+
+  const establishLegacySession = useCallback(
+    async (
+      credentials: LoginFormData,
+      existingResponse?: AxiosResponse<any>,
+    ): Promise<void> => {
+      const response =
+        existingResponse ??
+        (await apiClient.post("/auth/login", {
+          username: credentials.email,
+          password: credentials.password,
+        }));
+
+      if (response.status !== 200) {
+        throw new Error(`Login failed with status ${response.status}`);
+      }
+
+      const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
+
+      if (response.data?.access_token) {
+        setOperatorAccessToken(response.data.access_token);
+        if (defaultHeaders) {
+          defaultHeaders.Authorization = `Bearer ${response.data.access_token}`;
+        }
+      } else {
+        clearOperatorAuthTokens();
+        if (defaultHeaders?.Authorization) {
+          delete defaultHeaders.Authorization;
+        }
+      }
+
+      if (response.data?.tenant_id) {
+        try {
+          localStorage.setItem("tenant_id", response.data.tenant_id);
+        } catch (storageError) {
+          logger.debug("Unable to persist tenant_id", {
+            error:
+              storageError instanceof Error ? storageError.message : String(storageError),
+          });
+        }
+      } else {
+        try {
+          localStorage.removeItem("tenant_id");
+        } catch {
+          // ignore storage failures
+        }
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      window.location.href = "/dashboard";
+    },
+    [],
+  );
 
   const onSubmit = useCallback(
     async (data: LoginFormData) => {
@@ -33,96 +90,42 @@ export default function LoginPage() {
       setLoading(true);
 
       try {
-        logger.info("Starting login process", { email: data.email });
+        // Use Better Auth for authentication
+        logger.info("Starting Better Auth login process", { email: data.email });
 
-        const response = await apiClient.post("/auth/login", {
-          username: data.email, // Backend expects username field
+        const result = await signIn.email({
+          email: data.email,
           password: data.password,
-        });
-        logger.debug("Login response received", {
-          status: response.status,
+          callbackURL: "/dashboard",
         });
 
-        if (response.status === 200) {
-          logger.info("Login successful, cookies should be set by server");
-          const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
-
-          if (response.data?.access_token) {
-            setOperatorAccessToken(response.data.access_token);
-            if (defaultHeaders) {
-              defaultHeaders.Authorization = `Bearer ${response.data.access_token}`;
-            }
-          } else {
-            clearOperatorAuthTokens();
-            if (defaultHeaders?.Authorization) {
-              delete defaultHeaders.Authorization;
-            }
-          }
-
-          // Store tenant ID if provided
-          if (response.data?.tenant_id) {
-            try {
-              localStorage.setItem("tenant_id", response.data.tenant_id);
-            } catch (error) {
-              logger.debug("Unable to persist tenant_id", { error: error instanceof Error ? error.message : String(error) });
-            }
-          }
-
-          // Small delay to ensure cookies are set
-          await new Promise((resolve) => setTimeout(resolve, 100));
-
-          logger.info("Redirecting to dashboard");
-          // Use window.location for hard redirect to ensure cookies are picked up
-          window.location.href = "/dashboard";
-        } else {
-          logger.warn("Login returned unexpected status", { status: response.status });
-          setError(`Login failed with status ${response.status}`);
+        if (result.error) {
+          logger.error("Better Auth login failed", { error: result.error });
+          setError(result.error.message || "Login failed");
+          return;
         }
+
+        logger.info("Better Auth login successful");
+        await establishLegacySession(data);
       } catch (err: any) {
-        clearOperatorAuthTokens();
-        const defaultHeaders = (apiClient.defaults?.headers as any)?.common;
-        if (defaultHeaders?.Authorization) {
-          delete defaultHeaders.Authorization;
-        }
         logger.error("Login request threw an error", err instanceof Error ? err : new Error(String(err)));
 
         // Extract error message from various possible locations
         let errorMessage = "Login failed";
-        if (err?.response?.data) {
-          errorMessage =
-            err.response.data.detail ||
-            err.response.data.error ||
-            err.response.data.message ||
-            JSON.stringify(err.response.data);
-        } else if (err?.message) {
+        if (err?.message) {
           errorMessage = err.message;
         }
 
         logger.error("Login failed", {
           message: errorMessage,
-          status: err?.response?.status,
         });
         setError(errorMessage);
       } finally {
         setLoading(false);
       }
     },
-    [],
-  ); // No external dependencies
-
-  // Expose login function for E2E tests
-  React.useEffect(() => {
-    if (typeof window !== "undefined" && process.env.NODE_ENV !== "production") {
-      (window as any).__e2e_login = async (username: string, password: string) => {
-        logger.debug("__e2e_login invoked", { username });
-        setValue("email", username, { shouldValidate: true });
-        setValue("password", password, { shouldValidate: true });
-        // Call handleSubmit and pass onSubmit directly each time
-        await handleSubmit(onSubmit)();
-      };
-      logger.debug("__e2e_login function registered on window");
-    }
-  }, [setValue, handleSubmit, onSubmit]); // Added onSubmit to dependencies
+    [establishLegacySession],
+  );
 
   return (
     <main className="min-h-screen flex items-center justify-center px-6 py-12 bg-background">
@@ -144,10 +147,12 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground mt-1">
             Manage subscribers, network, billing, and operations
           </p>
-          {process.env.NODE_ENV === "development" && (
-            <div className="mt-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-              <p className="text-xs text-blue-300 font-medium">Test Credentials:</p>
-              <p className="text-xs text-blue-200 mt-1">admin / admin123</p>
+          {showTestCredentials && (
+            <div className="mt-4 space-y-2">
+              <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                <p className="text-xs text-blue-300 font-medium">Test Credentials:</p>
+                <p className="text-xs text-blue-200 mt-1">admin / admin123</p>
+              </div>
             </div>
           )}
         </div>
@@ -176,7 +181,7 @@ export default function LoginPage() {
               autoComplete="username"
               {...register("email")}
               className={`w-full px-3 py-2 bg-accent border ${
-                errors.email ? "border-red-500" : "border-border"
+                errors['email']? "border-red-500" : "border-border"
               } rounded-lg text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent`}
               placeholder="username or email"
               data-testid="email-input"
@@ -237,7 +242,7 @@ export default function LoginPage() {
           </button>
 
           {/* E2E Test Helper - Hidden button for automated tests */}
-          {process.env.NODE_ENV !== "production" && (
+          {process.env["NODE_ENV"] !== "production" && (
             <button
               type="button"
               data-testid="test-login-admin"

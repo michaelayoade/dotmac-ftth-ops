@@ -40,7 +40,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@dotmac/ui";
-import { formatCurrency } from "@/lib/utils/currency";
+import { formatCurrency } from "@dotmac/features/billing";
 import { useRouter } from "next/navigation";
 import { useToast } from "@dotmac/ui";
 import { useTenant } from "@/lib/contexts/tenant-context";
@@ -123,17 +123,17 @@ export default function CreditNotesPage() {
 
       const lineItems = [
         {
-          description: formData.description,
-          amount: parseFloat(formData.amount),
+          description: formData['description'],
+          amount: parseFloat(formData['amount']),
         },
       ];
 
       const payload = {
-        invoice_id: formData.invoice_id,
+        invoice_id: formData['invoice_id'],
         reason: formData.reason,
         line_items: lineItems,
-        notes: formData.notes || undefined,
-        internal_notes: formData.internal_notes || undefined,
+        notes: formData.notes || null,
+        internal_notes: formData.internal_notes || null,
         auto_apply: formData.auto_apply,
       };
 
@@ -417,7 +417,7 @@ export default function CreditNotesPage() {
               <Label htmlFor="invoice_id">Invoice ID</Label>
               <Input
                 id="invoice_id"
-                value={formData.invoice_id}
+                value={formData['invoice_id']}
                 onChange={(e) => setFormData({ ...formData, invoice_id: e.target.value })}
                 placeholder="Enter invoice ID"
               />
@@ -448,7 +448,7 @@ export default function CreditNotesPage() {
                 id="amount"
                 type="number"
                 step="0.01"
-                value={formData.amount}
+                value={formData['amount']}
                 onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                 placeholder="0.00"
               />
@@ -458,7 +458,7 @@ export default function CreditNotesPage() {
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Description of the credit"
               />

@@ -305,7 +305,7 @@ async def list_all_tenants(
                 tenant_id=tenant.id,
                 name=tenant.name,  # Real tenant name from database
                 created_at=tenant.created_at.isoformat(),
-                is_active=(tenant.status.value in ["active", "trial"]),
+                is_active=(tenant.status.value in ["active", "trial"] if tenant.status else False),
                 user_count=user_count,
                 resource_count=resource_count,
             )

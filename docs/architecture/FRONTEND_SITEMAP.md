@@ -2,7 +2,12 @@
 
 ## 📱 Application Structure
 
-Your Next.js app has **6 portals** serving different user types: Main Dashboard, Platform Admin, Tenant Self-Service, Customer Portal, Partner Referral Portal, and Partner Reseller Portal.
+We deploy **two Next.js applications**:
+
+- `isp-ops-app` – Hosts the ISP operator dashboard and embedded workspaces for partners and end customers.
+- `platform-admin-app` – Hosts the DotMac platform administration console.
+
+Within `isp-ops-app`, different audiences live under distinct route prefixes (dashboard, customer portal, etc.) rather than separate standalone apps. Planned future portals (tenant self-service, external partner) will either extend these workspaces or add thin wrappers around them.
 
 **For detailed portal architecture, see:** [PORTAL_ARCHITECTURE.md](PORTAL_ARCHITECTURE.md)
 
@@ -99,7 +104,7 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 
 ---
 
-## 🏢 TENANT SELF-SERVICE PORTAL (`/tenant`)
+## 🏢 TENANT SELF-SERVICE WORKSPACE (`/tenant`) – *Planned*
 
 ### Tenant Management
 - `/tenant` - Tenant overview
@@ -113,6 +118,7 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 - `/tenant/integrations` - Third-party integrations
 - `/tenant/support` - Tenant support tickets
 
+**Status:** Not yet available. This section documents the intended structure so product and engineering stay aligned once implementation starts.
 **Target Users:** ISP administrators managing their DotMac subscription
 **Permission Required:** `tenants:read`, `platform:tenants:read`
 
@@ -138,37 +144,19 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 
 ---
 
-## 🤝 PARTNER REFERRAL PORTAL (`/portal`)
+## 🤝 PARTNER WORKSPACE (`/dashboard/partners`)
 
-### Authentication
-- `/portal/login` - Partner login
+Partner management is embedded directly inside the ISP dashboard today. The workspace includes:
 
-### Portal Pages
-- `/portal/dashboard` - Partner dashboard
-- `/portal/referrals` - Referral management
-- `/portal/commissions` - Commission tracking & earnings
-- `/portal/customers` - Referred customer list
-- `/portal/performance` - Performance metrics
-- `/portal/settings` - Partner settings
+- `/dashboard/partners` – Partner listing & lifecycle management
+- `/dashboard/partners/[id]` – Individual partner records
+- `/dashboard/partners/onboarding` – Requirements checklist
+- `/dashboard/partners/revenue/*` – Payouts, commissions, referral revenue
+- `/dashboard/partners/managed-tenants` – MSP tenant rollup (read-only, Phase 1)
 
-**Target Users:** Sales partners, affiliates, referral partners
-**Business Model:** Commission-based revenue share on referrals
-**Permission Required:** Partner-specific auth (separate from main system)
-
----
-
-## 🤝 PARTNER RESELLER PORTAL (`/partner`)
-
-### MSP/Reseller Management
-- `/partner` - Partner overview
-- `/partner/tenants` - Managed ISP tenants
-- `/partner/billing` - Partner billing & revenue
-- `/partner/resources` - Partner enablement resources
-- `/partner/support` - Partner support tickets
-
-**Target Users:** MSPs, resellers managing multiple ISP tenants
-**Business Model:** Wholesale/reseller pricing model
-**Permission Required:** `partners.read`, `platform:partners:read`
+**Target Users:** Partner/Channel managers, revenue operations teams inside the ISP organization  
+**Authentication:** Shares the main dashboard session; RBAC gates access via `partners.*` permissions  
+**Roadmap:** Future standalone `/portal` or `/partner` domains will wrap these routes with partner-specific authentication when business needs require external access.
 
 ---
 
@@ -247,7 +235,7 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 │       ├── /plugins
 │       └── /profile
 │
-├── /tenant (Protected - Tenant Self-Service Portal)
+├── /tenant (Planned - Tenant Self-Service Workspace)
 │   ├── / (tenant overview)
 │   ├── /customers
 │   ├── /billing
@@ -275,21 +263,19 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 │       ├── /profile
 │       └── /password
 │
-├── /portal (Protected - Partner Referral Portal)
-│   ├── /login
-│   ├── /dashboard
-│   ├── /referrals
-│   ├── /commissions
-│   ├── /customers
-│   ├── /performance
-│   └── /settings
-│
-└── /partner (Protected - Partner Reseller Portal)
-    ├── / (partner overview)
-    ├── /tenants
+└── /customer-portal (Protected - Customer Portal)
+    ├── / (dashboard)
+    ├── /service
     ├── /billing
-    ├── /resources
-    └── /support
+    ├── /billing/pay
+    ├── /usage
+    ├── /support
+    │   ├── / (ticket list)
+    │   └── /new
+    └── /settings
+        ├── / (settings home)
+        ├── /profile
+        └── /password
 ```
 
 ---
@@ -313,42 +299,39 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 **Features:** Service status, billing & payments, usage tracking, support tickets, account settings
 **Auth:** Separate account number-based authentication
 
-### 🤝 Partner Referral Portal (`/portal/*`)
-**For:** Sales partners and affiliates
-**Features:** Referral tracking, commission management, referred customer list, performance analytics
-**Model:** Commission-based revenue share
+### 🤝 Partner Workspace (`/dashboard/partners/*`)
+**For:** Partner/Channel managers inside the ISP dashboard
+**Features:** Partner roster, onboarding workflows, referral revenue, commissions, managed-tenant summaries
+**Auth:** Same session as main dashboard with `partners.*` permissions
 
-### 🤝 Partner Reseller Portal (`/partner/*`)
-**For:** MSPs and resellers managing multiple ISP tenants
-**Features:** Multi-tenant management, partner billing, enablement resources, partner support
-**Model:** Wholesale/reseller pricing
+### 🕒 Planned Workspaces
+- **Tenant Self-Service (`/tenant/*`)** – ISP subscription & billing management
+- **External Partner Portal (`/portal/*` / `/partner/*`)** – Dedicated partner-authenticated surface that will wrap the existing workspace when needed
 
 ---
 
 ## 📝 Notes
 
 ### Portal Architecture
-- **Single Next.js App**: All 6 portals in one monolith with route-based separation
+- **Two Next.js Apps**: `isp-ops-app` (dashboard + embedded workspaces) and `platform-admin-app`
 - **Main Dashboard**: `/dashboard/*` - Primary ISP operations interface
 - **Platform Admin**: `/dashboard/platform-admin/*` - DotMac platform management (requires `platform:admin`)
-- **Tenant Portal**: `/tenant/*` - ISP self-service for DotMac subscription management
-- **Customer Portal**: `/customer-portal/*` - End-subscriber self-service (separate auth)
-- **Partner Referral**: `/portal/*` - Sales partner commission tracking (separate auth)
-- **Partner Reseller**: `/partner/*` - MSP multi-tenant management
+- **Customer Portal**: `/customer-portal/*` - End-subscriber self-service (separate auth context)
+- **Partner Workspace**: `/dashboard/partners/*` - Partner tooling inside the dashboard
+- **Planned**: `/tenant/*` and standalone `/portal`/`/partner` routes will come online in later phases
 
 ### Authentication Flows
-- **Main Dashboard & Platform Admin**: Standard JWT/session auth with RBAC permissions
-- **Tenant Portal**: Tenant-scoped auth with tenant admin permissions
-- **Customer Portal**: Account number + password (CustomerAuthContext - separate from main auth)
-- **Partner Referral Portal**: Partner-specific authentication (separate login)
-- **Partner Reseller Portal**: Partner permissions (`partners.read`, `platform:partners:read`)
+- **Main Dashboard & Partner Workspace**: Standard tenant-scoped JWT/session auth with RBAC permissions
+- **Platform Admin**: Platform-admin app session with elevated permissions
+- **Customer Portal**: Account number + password (CustomerAuthContext) separate from dashboard auth
+- **Planned Tenant/External Partner Portals**: Will introduce tenant-scoped and partner-scoped auth flows respectively when implemented
 
 ### Technical Notes
 - **Dynamic Routes**: `/dashboard/partners/[id]` uses Next.js dynamic routing
 - **Nested Routes**: Deep nesting in billing-revenue, infrastructure, and settings sections
 - **Settings**: Centralized settings hub with 7 sub-sections
 - **Route Guards**: Permission-based access using RouteGuard components
-- **Deployment Modes**: Portals can be selectively enabled based on deployment mode (single_tenant, multi_tenant, hybrid)
+- **Deployment Modes**: Workspaces can be selectively enabled based on deployment mode (single_tenant, multi_tenant, hybrid)
 
 ---
 
@@ -369,10 +352,9 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 - Platform admin navigation
 - Requires `platform:admin` permission
 
-### Tenant Portal Layout (`/app/tenant/layout.tsx`)
-- Separate layout for tenant self-service
-- Tenant-specific navigation
-- RouteGuard with `tenants:read` or `platform:tenants:read` permissions
+### Tenant Portal Layout (`/app/tenant/layout.tsx`) – *Planned*
+- Will provide a dedicated layout once the workspace is implemented
+- Tenant-specific navigation and guards scoped to tenant admin permissions
 - Subscription management focus
 
 ### Customer Portal Layout (`/app/customer-portal/layout.tsx`)
@@ -382,17 +364,10 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 - CustomerProtectedRoute guards
 - Account number-based authentication
 
-### Partner Referral Layout (`/app/portal/layout.tsx`)
-- Separate layout for referral partners
-- Partner navigation (dashboard, referrals, commissions)
-- Partner-specific authentication flow
-- Commission tracking focus
-
-### Partner Reseller Layout (`/app/partner/layout.tsx`)
-- Separate layout for reseller partners
-- Reseller navigation (tenants, billing, resources)
-- RouteGuard with `partners.read` or `platform:partners:read` permissions
-- Multi-tenant management focus
+### Partner Workspace Layout
+- Reuses the main dashboard layout (`/app/dashboard/layout.tsx`)
+- Access controlled via partner-specific permissions
+- Additional navigation sections surface when `partners.*` scopes are granted
 
 ---
 
@@ -405,5 +380,6 @@ Your Next.js app has **6 portals** serving different user types: Main Dashboard,
 
 ---
 
-**Last Updated:** October 20, 2025
-**Portal Count:** 6 portals (Main Dashboard, Platform Admin, Tenant Self-Service, Customer Portal, Partner Referral, Partner Reseller)
+**Last Updated:** October 20, 2025 (updated to reflect two-app architecture)
+**Workspaces Live:** Main Dashboard, Platform Admin, Customer Portal, Partner Workspace  
+**Workspaces Planned:** Tenant Self-Service, External Partner Portal

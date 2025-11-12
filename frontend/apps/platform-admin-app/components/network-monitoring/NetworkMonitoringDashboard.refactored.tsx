@@ -296,7 +296,7 @@ export function NetworkMonitoringDashboardRefactored() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {data.devices.map((device: NetworkDashboardQuery["networkDevices"]["devices"][number]) => (
+                        {data.devices.map((device) => (
                           <TableRow key={device.deviceId}>
                             <TableCell className="font-medium">{device.deviceName}</TableCell>
                             <TableCell>
@@ -325,7 +325,7 @@ export function NetworkMonitoringDashboardRefactored() {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      {data.alerts.map((alert: NetworkDashboardQuery["networkAlerts"]["alerts"][number]) => (
+                      {data.alerts.map((alert) => (
                         <div
                           key={alert.alertId}
                           className="flex items-start justify-between p-3 border rounded-lg"
@@ -380,7 +380,7 @@ export function NetworkMonitoringDashboardRefactored() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {data.overview.deviceTypeSummary.map((summary: NetworkDashboardQuery["networkOverview"]["deviceTypeSummary"][number]) => (
+                      {data.overview.deviceTypeSummary.map((summary) => (
                         <TableRow key={summary.deviceType}>
                           <TableCell className="font-medium">
                             <Badge variant="outline">{summary.deviceType}</Badge>

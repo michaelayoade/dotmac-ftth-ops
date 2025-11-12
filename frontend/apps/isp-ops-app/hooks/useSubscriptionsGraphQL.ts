@@ -6,7 +6,7 @@
  *
  * Benefits:
  * - Consistent interface with existing REST hooks
- * - Easy migration for components
+ * - Drop-in usage for components
  * - Centralized error handling
  * - Type-safe with auto-generated types
  */

@@ -44,8 +44,8 @@ export default function TenantCustomersView() {
   } = useCustomerListGraphQL({
     limit: 100,
     offset: 0,
-    status: selectedStatus,
-    search: searchQuery || undefined,
+    ...(selectedStatus && { status: selectedStatus }),
+    ...(searchQuery && { search: searchQuery }),
     pollInterval: 30000, // Auto-refresh every 30 seconds
   });
 

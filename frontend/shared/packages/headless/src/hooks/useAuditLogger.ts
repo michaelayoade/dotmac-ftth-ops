@@ -84,7 +84,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
 
   // Initialize audit client
   useEffect(() => {
-    const baseURL = process.env.NEXT_PUBLIC_API_URL || "/api";
+    const baseURL = process.env["NEXT_PUBLIC_API_BASE_URL"] || "/api";
     const headers: Record<string, string> = {};
 
     if (user?.token) {
@@ -137,7 +137,7 @@ export function useAuditLogger(config: AuditLoggerConfig): UseAuditLoggerReturn 
     (additionalContext?: Record<string, any>) => {
       return {
         source: serviceName,
-        environment: process.env.NODE_ENV || "development",
+        environment: process.env["NODE_ENV"] || "development",
         correlation_id: sessionId,
         request_id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         additional: {

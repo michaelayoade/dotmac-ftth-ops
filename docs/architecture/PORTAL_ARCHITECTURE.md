@@ -1,36 +1,52 @@
 # DotMac Platform - Portal Architecture
 
-**Last Updated:** October 20, 2025
+**Last Updated:** November 8, 2025
 **Status:** Production
-**Version:** 1.0
+**Version:** 1.1
 
 ---
 
 ## 📱 Overview
 
-The DotMac ISP Operations Platform consists of **6 distinct portals** serving different user types across the ISP ecosystem. Each portal has its own authentication, authorization, and user interface tailored to specific workflows.
+DotMac currently deploys **two Next.js applications** with **5 live workspaces**:
+
+- `frontend/apps/isp-ops-app` – ISP Operations UI that contains the operator dashboard plus embedded workspaces for partners and end customers.
+- `frontend/apps/platform-admin-app` – DotMac corporate administration UI with tenant self-service portal.
+
+What earlier roadmaps called "portals" now live as discrete **workspaces** inside these apps. They share authentication plumbing and deployment pipelines but keep navigation, RBAC, and context isolated per audience.
+
+**Live Workspaces (5):**
+1. Main Dashboard - ISP operations (`isp-ops-app`)
+2. Partner Workspace - Partner management (`isp-ops-app`)
+3. Customer Portal - End subscriber self-service (`isp-ops-app`)
+4. Platform Admin - DotMac platform oversight (`platform-admin-app`)
+5. **Tenant Portal - ISP admin self-service** (`platform-admin-app`) ✅ **NEW**
+
+**Planned Workspaces (2):**
+6. External Partner Portal - Referral partner portal (future)
+7. MSP Reseller Portal - Multi-tenant partner management (future)
 
 ### Architecture Decision
 
-We use a **single Next.js monolith** with route-based separation rather than separate applications. This provides:
-- ✅ Code reuse across portals
-- ✅ Simplified deployment
+We use shared apps with route-based separation rather than standalone portals. This provides:
+- ✅ Code reuse across workspaces
+- ✅ Simplified deployment (two artifacts)
 - ✅ Shared component library
-- ✅ Single authentication provider
-- ✅ Easier maintenance
+- ✅ Single authentication provider per app
+- ✅ Easier maintenance and onboarding
 
 ---
 
-## 🎯 Portal Matrix
+## 🎯 Workspace Matrix
 
-| # | Portal Name | Route | Target Users | Auth Type | Purpose |
-|---|-------------|-------|--------------|-----------|---------|
-| 1 | **Main Dashboard** | `/dashboard/*` | ISP Staff | JWT/Session | Day-to-day ISP operations |
-| 2 | **Platform Admin** | `/dashboard/platform-admin/*` | DotMac Admins | Platform permissions | Multi-tenant platform administration |
-| 3 | **Tenant Self-Service** | `/tenant/*` | ISP Administrators | Tenant permissions | Manage DotMac subscription & billing |
-| 4 | **Customer Portal** | `/customer-portal/*` | End Subscribers | Customer auth | Internet account self-service |
-| 5 | **Partner Portal (Referral)** | `/portal/*` | Sales Partners | Partner auth | Customer referrals & commissions |
-| 6 | **Partner Portal (Reseller)** | `/partner/*` | MSPs/Resellers | Partner permissions | Multi-tenant reseller management |
+| # | Workspace | Route Prefix | App | Target Users | Auth Context | Status |
+|---|-----------|--------------|-----|--------------|--------------|--------|
+| 1 | **Main Dashboard** | `/dashboard/*` | isp-ops-app | ISP staff | Tenant-scoped JWT/session | ✅ Live |
+| 2 | **Partner Workspace** | `/dashboard/partners/*` | isp-ops-app | Partner managers inside ISP org | Tenant session + partner permissions | ✅ Live |
+| 3 | **Customer Portal** | `/customer-portal/*` | isp-ops-app | End subscribers | Customer auth token (CustomerAuthContext) | ✅ Live |
+| 4 | **Platform Admin** | `/dashboard/platform-admin/*` | platform-admin-app | DotMac admins | Platform permissions | ✅ Live |
+| 5 | **Tenant Self-Service** | `/tenant-portal/*` | platform-admin-app | ISP admins & billing managers | Tenant-scoped session | ✅ Live |
+| 6 | **External Partner Portal** | `/portal/*` / `/partner/*` (planned) | TBA | Referral partners / MSPs | Dedicated partner auth | 🕒 Planned |
 
 ---
 
@@ -122,7 +138,9 @@ Multi-tenant platform administration and oversight:
 
 ---
 
-## 3️⃣ Tenant Self-Service Portal (`/tenant/*`)
+## 3️⃣ Tenant Self-Service Portal (`/tenant-portal/*`)
+
+> **Status:** ✅ **Live in Production** - Available in `platform-admin-app` for ISP admins to manage their DotMac subscription, licenses, and support.
 
 ### **Target Users**
 - ISP Administrators
@@ -131,34 +149,48 @@ Multi-tenant platform administration and oversight:
 
 ### **Purpose**
 ISP tenants manage their own DotMac platform subscription:
+- Manage license seat allocation
 - View/upgrade subscription plans
 - Manage billing & payment methods
 - Track usage & quotas
 - Manage ISP staff users
 - Configure integrations
+- Submit support tickets to DotMac
 
 ### **Key Features**
 ```
-/tenant
-├── /                       # Overview & stats
+/tenant-portal
+├── /                       # Overview dashboard & stats
+├── /licenses               # License seat management by role (Admin/Operator/Read-only)
 ├── /billing
-│   ├── /subscription      # Plan management & upgrades
-│   ├── /addons            # Add-on services
-│   ├── /payment-methods   # Payment cards
-│   ├── /receipts          # Invoice history
-│   ├── /credit-notes      # Credits & refunds
-│   └── /usage             # Usage-based billing
-├── /customers             # Customer accounts (ISP's customers)
-├── /users                 # ISP staff user management
-├── /usage                 # Platform usage & limits
-├── /integrations          # Webhooks & APIs
-└── /support               # Contact DotMac support
+│   ├── /subscription       # Plan management & upgrades
+│   ├── /addons             # Add-on services
+│   ├── /payment-methods    # Payment cards
+│   ├── /receipts           # Invoice history
+│   ├── /credit-notes       # Credits & refunds
+│   └── /usage              # Usage-based billing
+├── /users                  # ISP staff user management
+├── /integrations           # Webhooks & API configuration
+└── /support                # Support tickets to DotMac platform team
 ```
+
+> **Security Note:** The tenant portal does NOT expose ISP customer data. For managing internet subscribers, ISP staff use the Main Dashboard (`/dashboard/operations/customers`).
 
 ### **Authentication**
 - Tenant-scoped authentication
 - Permissions: `tenants:read`, `platform:tenants:read`
 - Uses TenantSelector for MSPs managing multiple ISPs
+
+### **License Management Features**
+```typescript
+// Seat allocation by role
+- Admin seats (10% - Platform configuration access)
+- Operator seats (60% - Day-to-day operations)
+- Read-only seats (30% - View-only access)
+- Visual progress bars showing seat utilization
+- Feature module breakdown by category
+- Subscription plan details (cycle, cost, period)
+```
 
 ### **Billing Features**
 ```typescript
@@ -168,20 +200,30 @@ ISP tenants manage their own DotMac platform subscription:
 - Upgrade/downgrade with immediate effect
 - Manage add-ons (Advanced Analytics, Premium Support)
 - Update payment methods
-- Download invoices
+- Download invoices and receipts
+- View credit notes and refunds
+- Track usage-based billing
 ```
 
 ### **User Journey Example - "Fast Fiber ISP"**
-1. Fast Fiber admin logs in
-2. Views subscription at `/tenant/billing/subscription`
+1. Fast Fiber admin logs in at `/login` (platform-admin-app)
+2. Navigates to `/tenant-portal` dashboard
+   - Views subscription summary
+   - Checks license seat allocation: 45 of 50 seats used
+3. Clicks "Licenses" to review seat distribution
+   - Admin: 5 seats (10%)
+   - Operator: 30 seats (60%)
+   - Read-only: 15 seats (30%)
+4. Navigates to `/tenant-portal/billing/subscription`
    - Current: Professional Plan ($299/month)
-   - Usage: 45,000 API calls of 100,000 limit
-3. Clicks "Upgrade Plan"
-4. Compares Enterprise Plan features
-5. Previews prorated charge: $150 for remaining days
-6. Confirms upgrade
-7. Enables "Advanced Analytics" add-on (+$99/month)
-8. Updates credit card at `/tenant/billing/payment-methods`
+   - Billing cycle: Monthly
+   - Next payment: December 1, 2025
+5. Reviews enabled feature modules
+   - Advanced Analytics ✓
+   - Multi-vendor RADIUS support ✓
+   - IPv6 management ✓
+6. Clicks "Support" to submit ticket to DotMac platform team
+7. Views invoice history at `/tenant-portal/billing/receipts`
 
 ---
 
@@ -237,125 +279,53 @@ Self-service portal for ISP's end customers:
 
 ---
 
-## 5️⃣ Partner Portal - Referral (`/portal/*`)
+## 5️⃣ Partner Workspace (`/dashboard/partners/*`)
 
 ### **Target Users**
-- Sales Affiliates
-- Referral Partners
-- Local Businesses referring customers
-- Marketing Partners
+- Partner managers within the ISP tenant
+- Revenue operations teams
+- MSP coordinators preparing for multi-tenant access
 
 ### **Purpose**
-Partners refer end customers to the ISP and earn commissions:
-- Track customer referrals
-- View commission earnings
-- Monitor referral performance
-- Manage partner profile
+Provide partner management, referral tracking, and revenue insights **inside** the ISP dashboard without requiring a separate app.
 
 ### **Key Features**
 ```
-/portal
-├── /login          # Partner authentication
-├── /dashboard      # Overview & earnings
-├── /referrals      # Referral tracking
-├── /commissions    # Commission details
-├── /customers      # Referred customers
-├── /performance    # Performance metrics
-└── /settings       # Partner profile
+/dashboard/partners
+├── /                    # Partner roster & lifecycle
+├── /onboarding          # Checklists and requirements
+├── /revenue             # Aggregate revenue, payouts, commissions
+├── /revenue/commissions # Detailed ledger
+├── /managed-tenants     # MSP tenant rollups (Phase 1 read-only)
+└── /[id]                # Partner profile & activity
 ```
 
 ### **Authentication**
-- Separate partner authentication
-- Partner-specific login flow
-- API endpoint: `/api/v1/partners/portal/profile`
-
-### **Commission Model**
-```typescript
-// Backend: partner_management/models.py
-enum CommissionModel {
-  REVENUE_SHARE   // Percentage of customer revenue
-  FLAT_FEE        // Fixed amount per referral
-  TIERED          // Volume-based rates
-  HYBRID          // Combination
-}
-```
-
-### **User Journey Example - "Bob's Business Referrals"**
-1. Bob logs in at `/portal/login`
-2. Views dashboard:
-   - Total referrals: 47 customers
-   - This month: 8 new customers
-   - Earnings: $1,240 (pending payout)
-3. Checks `/portal/referrals` for recent conversions
-4. Reviews `/portal/commissions` for payout history
-5. Downloads referral link for social media
-
----
-
-## 6️⃣ Partner Portal - Reseller (`/partner/*`)
-
-### **Target Users**
-- Managed Service Providers (MSPs)
-- White-label Resellers
-- System Integrators
-- Platform Resellers
-
-### **Purpose**
-Partners manage multiple ISP tenants on the DotMac platform:
-- Oversee multiple ISP clients
-- Manage tenant subscriptions
-- White-label platform for clients
-- Access enablement resources
-
-### **Key Features**
-```
-/partner
-├── /                  # Partner overview
-├── /tenants           # Managed ISP tenants
-├── /billing           # Partner billing (reseller fees)
-├── /resources         # Enablement materials
-└── /support           # Partner support channel
-```
-
-### **Authentication**
-- Permission-based access
-- Permissions: `partners:read`, `platform:partners:read`
+- Reuses ISP dashboard authentication (`isp-ops-app`)
+- RBAC controls (e.g., `partners.read`, `partners.manage`, `partners.revenue.read`)
+- No standalone `/portal` login yet; that remains on the roadmap
 
 ### **Use Cases**
-1. **MSP Managing Multiple ISPs:**
-   - "Cloud Solutions Inc" manages 15 ISP clients
-   - Each ISP is a separate tenant
-   - MSP pays wholesale rates, charges clients retail
+1. **Revenue Ops:** Review commission payouts for the month via `/dashboard/partners/revenue`.
+2. **Partner Success:** Track onboarding milestones using `/dashboard/partners/onboarding`.
+3. **MSP Preview:** View managed tenants at `/dashboard/partners/managed-tenants` before releasing full cross-tenant switching.
 
-2. **White-label Reseller:**
-   - "BrandedISP Solutions" resells platform as their own
-   - Custom branding per client
-   - Handles client support
-
-### **User Journey Example - "TechPartners MSP"**
-1. TechPartners admin logs in
-2. Views `/partner/tenants`:
-   - Fast Fiber ISP (Active, 500 subscribers)
-   - City Wireless (Active, 1,200 subscribers)
-   - Rural Connect (Suspended, payment issue)
-3. Clicks tenant to view details
-4. Accesses enablement resources at `/partner/resources`
-5. Downloads API documentation and integration guides
+> **Roadmap:** Dedicated external partner portals (`/portal/*`, `/partner/*`) will eventually wrap these routes with partner-specific auth and branding. Until then, stakeholders should rely on the in-app workspace documented here.
 
 ---
 
 ## 🔐 Authentication & Authorization
 
-### Authentication Methods by Portal
+### Authentication Methods by Workspace
 
-| Portal | Auth Method | Login Route | Session Type |
-|--------|-------------|-------------|--------------|
-| Main Dashboard | JWT/Session | `/login` | Standard user session |
-| Platform Admin | JWT + Platform permissions | `/login` | Admin session |
-| Tenant Portal | JWT + Tenant permissions | `/login` (tenant-scoped) | Tenant session |
-| Customer Portal | Customer auth | `/customer-portal/login` | Customer session |
-| Partner (Referral) | Partner auth | `/portal/login` | Partner session |
-| Partner (Reseller) | JWT + Partner permissions | `/login` (partner-scoped) | Partner session |
+| Workspace | App | Auth Method | Entry Route | Session Context | Status |
+|-----------|-----|-------------|-------------|-----------------|--------|
+| Main Dashboard | isp-ops-app | Tenant-scoped JWT/session | `/login` | ISP operator session | Live |
+| Partner Workspace | isp-ops-app | Same as dashboard + partner RBAC | `/login` then `/dashboard/partners` | ISP operator session | Live |
+| Customer Portal | isp-ops-app | Customer auth token (CustomerAuthContext) | `/customer-portal/login` | Customer session | Live |
+| Platform Admin | platform-admin-app | JWT + platform permissions | `/login` (platform-admin app) | Platform admin session | Live |
+| Tenant Self-Service | platform-admin-app | Tenant-scoped JWT/session | `/login` → `/tenant-portal/*` | ISP tenant session | Live |
+| External Partner Portal | TBA | Dedicated partner auth | `/portal/login` (future) | Partner session | Planned |
 
 ### Permission Hierarchy
 
@@ -389,6 +359,7 @@ customers:*                 # ISP operations
 
 ### Layout Hierarchy
 
+**isp-ops-app:**
 ```
 app/
 ├── layout.tsx                           # Root layout (theme, auth providers)
@@ -397,20 +368,42 @@ app/
 ├── dashboard/
 │   ├── layout.tsx                       # Main dashboard layout (sidebar nav)
 │   ├── page.tsx                         # Dashboard home
-│   ├── platform-admin/
-│   │   ├── layout.tsx                   # Platform admin layout
+│   ├── operations/customers/
+│   │   ├── page.tsx                     # Customer list (ISP subscribers)
+│   │   └── [id]/                        # Customer 360° detail pages
+│   ├── partners/
+│   │   ├── layout.tsx                   # Partner workspace layout
 │   │   └── [pages]
 │   └── [other sections]
 │
-├── tenant/
-│   ├── layout.tsx                       # Tenant portal layout
-│   └── [pages]
+└── customer-portal/
+    ├── layout.tsx                       # Customer portal layout
+    ├── login/page.tsx                   # Customer login
+    └── [pages]
+```
+
+**platform-admin-app:**
+```
+app/
+├── layout.tsx                           # Root layout (theme, auth providers)
+├── login/page.tsx                       # Platform admin login
 │
-├── customer-portal/
-│   ├── layout.tsx                       # Customer portal layout
-│   ├── login/page.tsx                   # Customer login
-│   └── [pages]
+├── dashboard/platform-admin/
+│   ├── layout.tsx                       # Platform admin layout
+│   └── [pages]                          # Tenant management, audit logs, etc.
 │
+└── tenant-portal/                       # ✅ Live
+    ├── layout.tsx                       # Tenant portal layout
+    ├── page.tsx                         # Overview dashboard
+    ├── licenses/page.tsx                # License seat management
+    ├── billing/                         # Subscription & billing
+    ├── users/page.tsx                   # Staff user management
+    ├── integrations/page.tsx            # Webhooks & APIs
+    └── support/page.tsx                 # DotMac support tickets
+```
+
+**Future portals (planned):**
+```
 ├── portal/                              # Partner referral portal
 │   ├── layout.tsx
 │   ├── login/page.tsx
@@ -451,11 +444,12 @@ All portals share:
 - Pays wholesale rates to DotMac
 
 #### 2. **Fast Fiber Admins** (Tenant)
-- Portal: `/tenant/*`
+- Portal: `/tenant-portal/*` (platform-admin-app)
 - Manages Fast Fiber's DotMac subscription
+- Manages license seat allocation (50 seats)
 - Pays $299/month for Professional plan
-- Monitors: 45,000 API calls used (limit: 100,000)
-- Upgrades to Enterprise plan for more capacity
+- Monitors usage quotas and feature modules
+- Upgrades plan or adds feature modules as needed
 
 #### 3. **Fast Fiber Staff** (ISP Operations)
 - Portal: `/dashboard/*`
@@ -523,13 +517,14 @@ ENABLE_PLATFORM_ROUTES=true
 | Feature | Main Dashboard | Platform Admin | Tenant Portal | Customer Portal | Partner (Referral) | Partner (Reseller) |
 |---------|----------------|----------------|---------------|-----------------|-------------------|-------------------|
 | **Manages ISP Operations** | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
-| **Manages Subscribers** | ✅ | ❌ | View only | Own account | View referred | ❌ |
-| **Platform Billing** | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ |
+| **Manages Subscribers** | ✅ | ❌ | ❌ (Security: No ISP customer data) | Own account | View referred | ❌ |
+| **License Seat Management** | ❌ | ❌ | ✅ | ❌ | ❌ | ❌ |
+| **Platform Billing** | ❌ | ❌ | ✅ | ❌ | ❌ | ✅ (Planned) |
 | **Internet Billing** | ✅ | ❌ | ❌ | ✅ | ❌ | ❌ |
-| **Multi-tenant Admin** | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ |
-| **Commission Tracking** | ❌ | ❌ | ❌ | ❌ | ✅ | ❌ |
+| **Multi-tenant Admin** | ❌ | ✅ | ❌ | ❌ | ❌ | ✅ (Planned) |
+| **Commission Tracking** | ❌ | ❌ | ❌ | ❌ | ✅ (Planned) | ❌ |
 | **Usage Quotas** | ❌ | ❌ | ✅ | ✅ | ❌ | ❌ |
-| **Support Tickets** | ✅ Create/Manage | ❌ | Submit to DotMac | Submit to ISP | ❌ | Submit to DotMac |
+| **Support Tickets** | ✅ Create/Manage | ❌ | ✅ Submit to DotMac | ✅ Submit to ISP | ❌ | Submit to DotMac (Planned) |
 
 ---
 
@@ -585,14 +580,20 @@ describe("Portal Access Control", () => {
 
 ## 🎯 Summary
 
-The DotMac platform's 6-portal architecture provides:
+The DotMac platform's multi-workspace architecture (5 live + 2 planned) provides:
 
 ✅ **Clear separation of concerns** - Each user type has dedicated workflows
 ✅ **Scalable architecture** - Easy to add new portals
-✅ **Security by design** - Permission-based access control
+✅ **Security by design** - Permission-based access control with tenant isolation
 ✅ **User experience** - Tailored UIs for each persona
 ✅ **Code reuse** - Single codebase with shared components
 ✅ **Flexibility** - Supports multiple deployment modes
+
+**Recent Updates (v1.1):**
+- ✅ Tenant Self-Service Portal now live in production
+- ✅ License seat management by role (Admin/Operator/Read-only)
+- ✅ Security enhancement: ISP customer data properly isolated from tenant portal
+- ✅ Customer 360° detail page with comprehensive subscriber information
 
 This architecture mirrors successful B2B2C SaaS platforms like Stripe, Shopify, and Twilio, providing a complete ecosystem for ISP operations.
 

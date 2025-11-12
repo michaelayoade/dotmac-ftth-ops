@@ -70,7 +70,7 @@ export const ActiveAddonCard: React.FC<ActiveAddonCardProps> = ({
               Started {format(new Date(addon.started_at), "MMM d, yyyy")}
             </CardDescription>
           </div>
-          <Badge className={statusColors[addon.status] || statusColors.active}>
+          <Badge className={statusColors[addon.status] || statusColors['active']}>
             {addon.status.toUpperCase()}
           </Badge>
         </div>

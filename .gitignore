@@ -349,6 +349,8 @@ test-results/
 test-reports/
 .mutmut-cache/
 mutmut-results/
+frontend/e2e/.auth/
+frontend/e2e/.server-state.json
 
 # Temporary SQL and shell scripts
 *.sql

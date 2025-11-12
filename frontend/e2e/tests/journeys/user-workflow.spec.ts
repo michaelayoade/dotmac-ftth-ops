@@ -3,25 +3,30 @@
  * Tests complete workflows that a regular user would perform
  */
 import { test, expect } from "@playwright/test";
+import path from "path";
 
 test.describe("Regular User Journey", () => {
-  const BASE_APP_URL = "http://localhost:3000";
-  const TEST_USERNAME = "admin";
-  const TEST_EMAIL = "admin@example.com";
-  const TEST_PASSWORD = "admin123";
+  const BASE_APP_URL = process.env.ISP_OPS_URL || "http://localhost:3001";
+  const TEST_USERNAME = process.env.E2E_USER_USERNAME || "admin";
+  const TEST_EMAIL = process.env.E2E_USER_EMAIL || "admin@example.com";
+  const TEST_PASSWORD = process.env.E2E_USER_PASSWORD || "admin123";
+  const BOOT_TIMEOUT = parseInt(process.env.E2E_NAV_TIMEOUT || "120000", 10);
+  const SELECTOR_TIMEOUT = parseInt(process.env.E2E_SELECTOR_TIMEOUT || "15000", 10);
+  const AUTH_STATE = path.resolve(__dirname, "../../.auth/isp-user.json");
+
+  test.use({ storageState: AUTH_STATE });
 
   /**
    * Helper to login
    * Uses exposed E2E login function to bypass react-hook-form issues
    */
   async function login(page: any) {
-    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load" });
-
-    // Wait for page to be fully loaded
-    await page.waitForLoadState("domcontentloaded");
+    await page.goto(`${BASE_APP_URL}/login`, { waitUntil: "load", timeout: BOOT_TIMEOUT });
 
     // Wait for the E2E login function to be available
-    await page.waitForFunction(() => (window as any).__e2e_login !== undefined, { timeout: 5000 });
+    await page.waitForFunction(() => (window as any).__e2e_login !== undefined, {
+      timeout: BOOT_TIMEOUT,
+    });
 
     // Call the login function (don't await the inner promise, just trigger it)
     await page.evaluate(
@@ -34,11 +39,22 @@ test.describe("Regular User Journey", () => {
     );
 
     // Wait for redirect to dashboard (this happens after login completes)
-    await page.waitForURL(/dashboard/, { timeout: 15000 });
+    await page.waitForURL(/dashboard/, { timeout: BOOT_TIMEOUT });
+  }
+
+  async function ensureAuthenticated(page: any) {
+    await page.goto(`${BASE_APP_URL}/dashboard`, {
+      waitUntil: "load",
+      timeout: BOOT_TIMEOUT,
+    });
+
+    if (page.url().includes("/login")) {
+      await login(page);
+    }
   }
 
   test.beforeEach(async ({ page }) => {
-    await login(page);
+    await ensureAuthenticated(page);
   });
 
   test("user can access dashboard", async ({ page }) => {
@@ -58,7 +74,7 @@ test.describe("Regular User Journey", () => {
       .locator('[data-testid="profile-link"], a:has-text("Profile"), a[href*="profile"]')
       .first();
 
-    if (await profileLink.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await profileLink.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       await profileLink.click();
 
       await page.waitForLoadState("networkidle");
@@ -72,13 +88,13 @@ test.describe("Regular User Journey", () => {
         const profileForm = page
           .locator('[data-testid="profile-form"], form, input[name="email"]')
           .first();
-        const hasProfileForm = await profileForm.isVisible({ timeout: 2000 }).catch(() => false);
+        const hasProfileForm = await profileForm.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
         console.log("Profile form displayed:", hasProfileForm);
 
         if (hasProfileForm) {
           // Check if email is pre-filled
           const emailInput = page.locator('input[name="email"], input[type="email"]').first();
-          if (await emailInput.isVisible({ timeout: 1000 }).catch(() => false)) {
+          if (await emailInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
             const emailValue = await emailInput.inputValue();
             console.log("Email pre-filled:", emailValue === TEST_EMAIL);
           }
@@ -98,7 +114,7 @@ test.describe("Regular User Journey", () => {
       .locator('input[name="name"], input[name="full_name"], input[name="fullName"]')
       .first();
 
-    if (await nameInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await nameInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       // Update name
       await nameInput.fill("Updated Test User");
 
@@ -107,7 +123,7 @@ test.describe("Regular User Journey", () => {
         .locator('button[type="submit"], button:has-text("Save"), button:has-text("Update")')
         .first();
 
-      if (await saveButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (await saveButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         await saveButton.click();
 
         // Wait for save to complete
@@ -117,7 +133,7 @@ test.describe("Regular User Journey", () => {
         const successMessage = page
           .locator('[data-testid="success-message"], .success, [role="status"]')
           .first();
-        const hasSuccess = await successMessage.isVisible({ timeout: 2000 }).catch(() => false);
+        const hasSuccess = await successMessage.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false);
 
         console.log("Profile update successful:", hasSuccess);
       }
@@ -135,7 +151,7 @@ test.describe("Regular User Journey", () => {
       .locator('[data-testid="security-tab"], a:has-text("Security"), a:has-text("Password")')
       .first();
 
-    if (await securityTab.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await securityTab.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       await securityTab.click();
 
       await page.waitForLoadState("networkidle");
@@ -149,8 +165,8 @@ test.describe("Regular User Journey", () => {
         .first();
 
       const hasPasswordForm =
-        (await currentPasswordInput.isVisible({ timeout: 2000 }).catch(() => false)) &&
-        (await newPasswordInput.isVisible({ timeout: 2000 }).catch(() => false));
+        (await currentPasswordInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) &&
+        (await newPasswordInput.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false));
 
       console.log("Password change form available:", hasPasswordForm);
     } else {
@@ -183,7 +199,7 @@ test.describe("Regular User Journey", () => {
 
     for (const navItem of navigationTests) {
       const link = page.locator(navItem.selector).first();
-      if (await link.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (await link.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         accessiblePages.push(navItem.name);
       }
     }
@@ -202,14 +218,14 @@ test.describe("Regular User Journey", () => {
       )
       .first();
 
-    if (await logoutButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+    if (await logoutButton.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
       await logoutButton.click();
     } else {
       // Try user menu approach
       const userMenu = page
         .locator('[data-testid="user-menu"], .user-menu, [aria-label="User menu"]')
         .first();
-      if (await userMenu.isVisible({ timeout: 2000 }).catch(() => false)) {
+      if (await userMenu.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         await userMenu.click();
         await page
           .locator('button:has-text("Logout"), button:has-text("Sign out")')
@@ -219,7 +235,7 @@ test.describe("Regular User Journey", () => {
     }
 
     // Should redirect to login
-    await page.waitForURL(/login/, { timeout: 5000 });
+    await page.waitForURL(/login/, { timeout: BOOT_TIMEOUT });
     await expect(page).toHaveURL(/login/);
 
     console.log("User successfully logged out");
@@ -243,7 +259,7 @@ test.describe("Regular User Journey", () => {
 
     for (const item of navigationItems) {
       const element = page.locator(item.selector).first();
-      if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
+      if (await element.isVisible({ timeout: SELECTOR_TIMEOUT }).catch(() => false)) {
         availableFeatures.push(item.name);
       }
     }

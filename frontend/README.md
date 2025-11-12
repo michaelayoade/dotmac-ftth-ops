@@ -1,7 +1,7 @@
 
 # DotMac Frontend Workspace
 
-This directory hosts the three Next.js apps and shared packages that make up the DotMac frontend. Use this guide to get the apps running locally and find deeper documentation.
+This directory hosts the two production Next.js apps and shared packages that make up the DotMac frontend. Use this guide to get the apps running locally and find deeper documentation.
 
 ## Quick Start
 
@@ -21,10 +21,8 @@ pnpm build
 
 ## Key References
 
-- [ARCHITECTURE_OVERVIEW.md](./ARCHITECTURE_OVERVIEW.md) – current architecture and ownership guide
-- [MULTI_APP_ARCHITECTURE.md](./MULTI_APP_ARCHITECTURE.md) – implementation summary & structure
+- [PRODUCTION_GUIDE.md](./PRODUCTION_GUIDE.md) – architecture, deployment, auth, and runtime checklist
 - [QUICK_START.md](./QUICK_START.md) – day-to-day developer workflow
-- [DEPLOYMENT-ARCHITECTURE.md](./DEPLOYMENT-ARCHITECTURE.md) – staging/production hosting patterns
 - [e2e/README.md](./e2e/README.md) – Playwright end-to-end testing guide
 
 ## Workspace Layout
@@ -47,3 +45,10 @@ frontend/
 - Use the per-app `package.json` scripts (e.g. `pnpm --filter @dotmac/isp-ops-app test`) for targeted testing.
 - Shared implementation notes live in `docs/` and `shared/`.
 - Keep `pnpm install` scoped to the workspace root; individual worktrees require their own `node_modules`.
+
+## Testing
+
+- **Unit tests:** `pnpm --filter @dotmac/isp-ops-app test` and `pnpm --filter @dotmac/platform-admin-app test` run the Next/Jest suites with the consolidated `jest.config.ts`.
+- **Shared package tests:** run `pnpm --filter ./shared/packages/* test` to execute Jest suites inside the shared packages (http-client, graphql, providers, etc.).
+- **E2E tests:** `pnpm e2e` executes the Playwright suite defined in `playwright.config.ts`. Use `pnpm e2e -- e2e/tests/workflows/complete-workflows.spec.ts` for a specific spec or `pnpm e2e:headed` to watch the browser.
+- **Smoke/workflow shortcuts:** the `test:auto*` scripts now proxy to Playwright (no more Puppeteer harness); see `package.json` for the available targets.

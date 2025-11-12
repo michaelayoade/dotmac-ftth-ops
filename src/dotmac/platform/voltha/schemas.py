@@ -279,8 +279,12 @@ class ONUProvisionRequest(BaseModel):
     olt_device_id: str = Field(..., description="Parent OLT device ID")
     pon_port: int = Field(..., description="PON port number")
     subscriber_id: str | None = Field(None, description="Subscriber ID to associate")
-    vlan: int | None = Field(None, description="Service VLAN")
+    vlan: int | None = Field(
+        None, description="Service VLAN (C-TAG for single VLAN, S-VLAN for QinQ)"
+    )
     bandwidth_profile: str | None = Field(None, description="Bandwidth profile name")
+    qinq_enabled: bool = Field(False, description="Enable QinQ (802.1ad) double VLAN tagging")
+    inner_vlan: int | None = Field(None, description="Customer VLAN (C-VLAN) for QinQ mode")
 
 
 class ONUProvisionResponse(BaseModel):  # BaseModel resolves to Any in isolation

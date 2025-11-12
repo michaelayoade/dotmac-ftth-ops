@@ -6,12 +6,12 @@ provisioning workflows, scheduled terminations, and automated health checks.
 """
 
 import asyncio
+from contextlib import AbstractAsyncContextManager
 from datetime import UTC, datetime, timedelta
-from typing import Any, AsyncContextManager, cast
+from typing import Any, cast
 from uuid import UUID
 
 from celery import Task
-
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.celery_app import celery_app
@@ -25,9 +25,9 @@ from dotmac.platform.services.lifecycle.models import (
 from dotmac.platform.services.lifecycle.service import LifecycleOrchestrationService
 
 
-def _session_context() -> AsyncContextManager[AsyncSession]:
+def _session_context() -> AbstractAsyncContextManager[AsyncSession]:
     """Typed wrapper for get_async_session_context."""
-    return cast(AsyncContextManager[AsyncSession], get_async_session_context())
+    return cast(AbstractAsyncContextManager[AsyncSession], get_async_session_context())
 
 
 def _run_async(coro: Any) -> Any:

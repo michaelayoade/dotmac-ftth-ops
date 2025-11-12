@@ -71,8 +71,8 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
             <div className="space-y-2">
               <Label>IP Addresses</Label>
               <IPAddressDisplay
-                ipv4={metrics.ipv4_address}
-                ipv6={metrics.ipv6_address}
+                {...(metrics.ipv4_address && { ipv4: metrics.ipv4_address })}
+                {...(metrics.ipv6_address && { ipv6: metrics.ipv6_address })}
                 layout="card"
                 showBadges={true}
               />
@@ -100,14 +100,14 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="ipv4" disabled={!hasIPv4}>
                 IPv4{" "}
-                {hasIPv4 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv4?.reachable} />
+                {hasIPv4 && metrics.connectivity.ipv4?.reachable !== undefined && (
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv4.reachable} />
                 )}
               </TabsTrigger>
               <TabsTrigger value="ipv6" disabled={!hasIPv6}>
                 IPv6{" "}
-                {hasIPv6 && (
-                  <ConnectivityIndicator connected={metrics.connectivity.ipv6?.reachable} />
+                {hasIPv6 && metrics.connectivity.ipv6?.reachable !== undefined && (
+                  <ConnectivityIndicator connected={metrics.connectivity.ipv6.reachable} />
                 )}
               </TabsTrigger>
             </TabsList>
@@ -139,18 +139,18 @@ export function DeviceMetricsPanel({ metrics }: DeviceMetricsProps) {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <MetricCard
           title="CPU Usage"
-          value={metrics.cpu_usage_percent}
+          {...(metrics.cpu_usage_percent !== undefined && { value: metrics.cpu_usage_percent })}
           unit="%"
           threshold={{ warning: 70, critical: 90 }}
         />
         <MetricCard
           title="Memory Usage"
-          value={metrics.memory_usage_percent}
+          {...(metrics.memory_usage_percent !== undefined && { value: metrics.memory_usage_percent })}
           unit="%"
           threshold={{ warning: 80, critical: 95 }}
         />
-        <MetricCard title="Bandwidth In" value={metrics.bandwidth_in_mbps} unit="Mbps" />
-        <MetricCard title="Bandwidth Out" value={metrics.bandwidth_out_mbps} unit="Mbps" />
+        <MetricCard title="Bandwidth In" {...(metrics.bandwidth_in_mbps !== undefined && { value: metrics.bandwidth_in_mbps })} unit="Mbps" />
+        <MetricCard title="Bandwidth Out" {...(metrics.bandwidth_out_mbps !== undefined && { value: metrics.bandwidth_out_mbps })} unit="Mbps" />
       </div>
 
       {/* Interface Status */}

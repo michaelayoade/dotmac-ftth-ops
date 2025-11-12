@@ -84,28 +84,36 @@ class TenantMiddleware(BaseHTTPMiddleware):
         self.resolver = resolver or TenantIdentityResolver(self.config)
         self.header_name = self.config.tenant_header_name  # Set header name for middleware
         self.query_param = self.config.tenant_query_param  # Set query param for middleware
-        self.exempt_paths = exempt_paths or {
-            "/health",
-            "/ready",
-            "/metrics",
-            "/docs",
-            "/redoc",
-            "/openapi.json",
-            "/api/v1/auth/login",  # Auth endpoints don't need tenant
-            "/api/v1/auth/register",
-            "/api/v1/auth/password-reset",
-            "/api/v1/auth/password-reset/confirm",
-            "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
-            "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
-            "/api/v1/secrets/health",  # Vault health check is public
-            "/api/v1/health",  # Health check endpoint (also available at /health)
-            "/api/v1/platform/config",
-            "/api/v1/platform/health",
-            "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
-        }
+        self.exempt_paths = (
+            exempt_paths
+            or {
+                "/health",
+                "/ready",
+                "/metrics",
+                "/docs",
+                "/redoc",
+                "/openapi.json",
+                "/api/v1/auth/login",  # Auth endpoints don't need tenant
+                "/api/v1/auth/register",
+                "/api/v1/auth/password-reset",
+                "/api/v1/auth/password-reset/confirm",
+                "/api/v1/auth/me",  # Allow authenticated users to fetch their profile with tenant_id
+                "/api/v1/auth/rbac/my-permissions",  # Allow authenticated users to fetch their permissions
+                "/api/v1/secrets/health",  # Vault health check is public
+                "/api/v1/health",  # Health check endpoint (also available at /health)
+                "/api/v1/platform/config",
+                "/api/v1/platform/health",
+                "/api/v1/monitoring/alerts/webhook",  # Alertmanager webhook doesn't provide tenant context
+            }
+        )
         # Paths where tenant is optional (middleware runs but doesn't require tenant)
         self.optional_tenant_paths = {
             "/api/v1/audit/frontend-logs",  # Frontend logs can be unauthenticated
+            "/api/v1/realtime/alerts",  # SSE endpoints work with optional auth
+            "/api/v1/realtime/onu-status",
+            "/api/v1/realtime/tickets",
+            "/api/v1/realtime/subscribers",
+            "/api/v1/realtime/radius-sessions",
         }
         # Override config's require_tenant if explicitly provided
         if require_tenant is not None:
@@ -130,23 +138,35 @@ class TenantMiddleware(BaseHTTPMiddleware):
                 skip_tenant_validation = True
 
         if skip_tenant_validation:
-            # Even when validation is skipped, honor explicit tenant headers if provided
-            tenant_override = None
-            try:
-                tenant_header = request.headers.get(self.header_name)
-                if isinstance(tenant_header, str):
-                    tenant_override = tenant_header.strip() or None
-            except Exception:
-                tenant_override = None
-
             from . import set_current_tenant_id
 
-            if tenant_override:
-                request.state.tenant_id = tenant_override
-                set_current_tenant_id(tenant_override)
+            # SECURITY FIX: Force tenant_id = "public" for exempt paths (optional tenant paths)
+            # This prevents rate limit bypass via tenant ID spoofing on public endpoints.
+            # Public/anonymous endpoints should not allow tenant context manipulation as it
+            # can be used to evade rate limiting by rotating X-Tenant-ID headers.
+            is_optional_tenant_path = path in self.optional_tenant_paths
+
+            if is_optional_tenant_path:
+                # Force public tenant for anonymous endpoints (rate limit protection)
+                request.state.tenant_id = "public"
+                set_current_tenant_id("public")
             elif self.config.is_single_tenant:
+                # Single-tenant mode: use configured default
                 request.state.tenant_id = self.config.default_tenant_id
                 set_current_tenant_id(self.config.default_tenant_id)
+            else:
+                # Other exempt paths can honor tenant headers if provided
+                tenant_override = None
+                try:
+                    tenant_header = request.headers.get(self.header_name)
+                    if isinstance(tenant_header, str):
+                        tenant_override = tenant_header.strip() or None
+                except Exception:
+                    tenant_override = None
+
+                if tenant_override:
+                    request.state.tenant_id = tenant_override
+                    set_current_tenant_id(tenant_override)
 
             return await call_next(request)
 
@@ -208,11 +228,23 @@ class TenantMiddleware(BaseHTTPMiddleware):
             import structlog
 
             logger = structlog.get_logger(__name__)
+
+            # Sanitize sensitive headers before logging
+            sensitive_keywords = {"key", "token", "auth", "secret", "password", "credential"}
+            sanitized_headers = {}
+            for k, v in request.headers.items():
+                if k.lower().startswith("x-"):
+                    # Mask header value if key contains sensitive keywords
+                    if any(keyword in k.lower() for keyword in sensitive_keywords):
+                        sanitized_headers[k] = "***REDACTED***"
+                    else:
+                        sanitized_headers[k] = v
+
             logger.warning(
                 "Tenant ID missing for request - proceeding without tenant context",
                 path=request.url.path,
                 method=request.method,
-                headers={k: v for k, v in request.headers.items() if k.lower().startswith("x-")},
+                headers=sanitized_headers,
             )
 
             from . import set_current_tenant_id

@@ -127,7 +127,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     };
 
     return (
-      <Badge variant="outline" className={classes[severity] || classes.INDETERMINATE}>
+      <Badge variant="outline" className={classes[severity] || classes['INDETERMINATE']}>
         {severity}
       </Badge>
     );

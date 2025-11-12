@@ -1,15 +1,16 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import { useToast } from "@dotmac/ui";
-import { platformConfig } from "@/lib/config";
+/**
+ * Observability Hook - TanStack Query Version
+ *
+ * Migrated from axios to TanStack Query for:
+ * - Automatic caching and deduplication
+ * - Background refetching
+ * - Better error handling
+ * - Reduced boilerplate
+ */
 
-// Migrated from sonner to useToast hook
-// Note: toast options have changed:
-// - sonner: toast.success('msg') -> useToast: toast({ title: 'Success', description: 'msg' })
-// - sonner: toast.error('msg') -> useToast: toast({ title: 'Error', description: 'msg', variant: 'destructive' })
-// - For complex options, refer to useToast documentation
-
-const API_BASE_URL = platformConfig.api.baseUrl;
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 
 export interface SpanData {
   span_id: string;
@@ -106,211 +107,199 @@ export interface TracesFilter {
   page_size?: number;
 }
 
+// ============================================================================
+// Query Key Factory
+// ============================================================================
+
+export const observabilityKeys = {
+  all: ["observability"] as const,
+  traces: (filters?: TracesFilter) => [...observabilityKeys.all, "traces", filters] as const,
+  traceDetail: (traceId: string) => [...observabilityKeys.all, "trace", traceId] as const,
+  metrics: (metricNames?: string[], startTime?: string, endTime?: string) =>
+    [...observabilityKeys.all, "metrics", metricNames, startTime, endTime] as const,
+  serviceMap: () => [...observabilityKeys.all, "service-map"] as const,
+  performance: () => [...observabilityKeys.all, "performance"] as const,
+};
+
+// ============================================================================
+// Helper function to build query params
+// ============================================================================
+
+function buildTracesQueryString(filters: TracesFilter): string {
+  const params = new URLSearchParams();
+  if (filters.service) params.append("service", filters.service);
+  if (filters.status) params.append("status", filters.status);
+  if (filters.min_duration) params.append("min_duration", filters.min_duration.toString());
+  if (filters.start_time) params.append("start_time", filters.start_time);
+  if (filters.end_time) params.append("end_time", filters.end_time);
+  if (filters.page) params.append("page", filters.page.toString());
+  if (filters.page_size) params.append("page_size", filters.page_size.toString());
+  return params.toString();
+}
+
+// ============================================================================
+// useTraces Hook
+// ============================================================================
+
 export function useTraces(filters: TracesFilter = {}) {
-  const { toast } = useToast();
-
-  const [traces, setTraces] = useState<TraceData[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    total: 0,
-    page: 1,
-    page_size: 50,
-    has_more: false,
+  const query = useQuery({
+    queryKey: observabilityKeys.traces(filters),
+    queryFn: async () => {
+      try {
+        const queryString = buildTracesQueryString(filters);
+        const response = await apiClient.get<TracesResponse>(
+          `/observability/traces${queryString ? `?${queryString}` : ""}`
+        );
+        logger.info("Fetched traces", {
+          count: response.data.traces.length,
+          filters
+        });
+        return response.data;
+      } catch (err) {
+        logger.error("Failed to fetch traces", err instanceof Error ? err : new Error(String(err)));
+        throw err;
+      }
+    },
+    staleTime: 30000, // 30 seconds - traces data changes frequently
+    refetchOnWindowFocus: true,
   });
-
-  const fetchTraces = async (customFilters?: TracesFilter) => {
-    const activeFilters = { ...filters, ...customFilters };
-
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (activeFilters.service) params.append("service", activeFilters.service);
-      if (activeFilters.status) params.append("status", activeFilters.status);
-      if (activeFilters.min_duration)
-        params.append("min_duration", activeFilters.min_duration.toString());
-      if (activeFilters.start_time) params.append("start_time", activeFilters.start_time);
-      if (activeFilters.end_time) params.append("end_time", activeFilters.end_time);
-      if (activeFilters.page) params.append("page", activeFilters.page.toString());
-      if (activeFilters.page_size) params.append("page_size", activeFilters.page_size.toString());
-
-      const response = await axios.get<TracesResponse>(
-        `${API_BASE_URL}/api/v1/observability/traces?${params.toString()}`,
-        { withCredentials: true },
-      );
-
-      setTraces(response.data.traces);
-      setPagination({
-        total: response.data.total,
-        page: response.data.page,
-        page_size: response.data.page_size,
-        has_more: response.data.has_more,
-      });
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || "Failed to fetch traces"
-        : "An error occurred";
-      setError(message);
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const fetchTraceDetails = async (traceId: string): Promise<TraceData | null> => {
     try {
-      const response = await axios.get<TraceData>(
-        `${API_BASE_URL}/api/v1/observability/traces/${traceId}`,
-        { withCredentials: true },
+      const response = await apiClient.get<TraceData>(
+        `/observability/traces/${traceId}`
       );
+      logger.info("Fetched trace details", { traceId });
       return response.data;
-    } catch (err: unknown) {
-      console.error("Failed to fetch trace details:", err);
+    } catch (err) {
+      logger.error("Failed to fetch trace details", err instanceof Error ? err : new Error(String(err)));
       return null;
     }
   };
 
-  useEffect(() => {
-    fetchTraces();
-  }, []);
-
   return {
-    traces,
-    isLoading,
-    error,
-    pagination,
-    refetch: fetchTraces,
+    traces: query.data?.traces || [],
+    isLoading: query.isLoading,
+    error: query.error ? String(query.error) : null,
+    pagination: {
+      total: query.data?.total || 0,
+      page: query.data?.page || 1,
+      page_size: query.data?.page_size || 50,
+      has_more: query.data?.has_more || false,
+    },
+    refetch: query.refetch,
     fetchTraceDetails,
   };
 }
 
-export function useMetrics(metricNames?: string[]) {
-  const { toast } = useToast();
-  const [metrics, setMetrics] = useState<MetricSeries[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+// ============================================================================
+// useMetrics Hook
+// ============================================================================
 
-  const fetchMetrics = async (customMetrics?: string[], startTime?: string, endTime?: string) => {
-    const metricsToFetch = customMetrics || metricNames;
+export function useMetrics(metricNames?: string[], startTime?: string, endTime?: string) {
+  const query = useQuery({
+    queryKey: observabilityKeys.metrics(metricNames, startTime, endTime),
+    queryFn: async () => {
+      try {
+        const params = new URLSearchParams();
+        if (metricNames && metricNames.length > 0) {
+          params.append("metrics", metricNames.join(","));
+        }
+        if (startTime) params.append("start_time", startTime);
+        if (endTime) params.append("end_time", endTime);
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const params = new URLSearchParams();
-      if (metricsToFetch && metricsToFetch.length > 0) {
-        params.append("metrics", metricsToFetch.join(","));
+        const response = await apiClient.get<MetricsResponse>(
+          `/observability/metrics${params.toString() ? `?${params.toString()}` : ""}`
+        );
+        logger.info("Fetched metrics", {
+          count: response.data.metrics.length,
+          metricNames,
+          startTime,
+          endTime
+        });
+        return response.data;
+      } catch (err) {
+        logger.error("Failed to fetch metrics", err instanceof Error ? err : new Error(String(err)));
+        throw err;
       }
-      if (startTime) params.append("start_time", startTime);
-      if (endTime) params.append("end_time", endTime);
-
-      const response = await axios.get<MetricsResponse>(
-        `${API_BASE_URL}/api/v1/observability/metrics?${params.toString()}`,
-        { withCredentials: true },
-      );
-
-      setMetrics(response.data.metrics);
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || "Failed to fetch metrics"
-        : "An error occurred";
-      setError(message);
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchMetrics();
-  }, []);
+    },
+    staleTime: 30000, // 30 seconds - metrics data changes frequently
+    refetchOnWindowFocus: true,
+  });
 
   return {
-    metrics,
-    isLoading,
-    error,
-    refetch: fetchMetrics,
+    metrics: query.data?.metrics || [],
+    isLoading: query.isLoading,
+    error: query.error ? String(query.error) : null,
+    refetch: query.refetch,
   };
 }
+
+// ============================================================================
+// useServiceMap Hook
+// ============================================================================
 
 export function useServiceMap() {
-  const { toast } = useToast();
-  const [serviceMap, setServiceMap] = useState<ServiceMapResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchServiceMap = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await axios.get<ServiceMapResponse>(
-        `${API_BASE_URL}/api/v1/observability/service-map`,
-        { withCredentials: true },
-      );
-
-      setServiceMap(response.data);
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || "Failed to fetch service map"
-        : "An error occurred";
-      setError(message);
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchServiceMap();
-  }, []);
+  const query = useQuery({
+    queryKey: observabilityKeys.serviceMap(),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<ServiceMapResponse>(
+          "/observability/service-map"
+        );
+        logger.info("Fetched service map", {
+          servicesCount: response.data.services.length,
+          dependenciesCount: response.data.dependencies.length
+        });
+        return response.data;
+      } catch (err) {
+        logger.error("Failed to fetch service map", err instanceof Error ? err : new Error(String(err)));
+        throw err;
+      }
+    },
+    staleTime: 60000, // 1 minute - service map changes less frequently
+    refetchOnWindowFocus: true,
+  });
 
   return {
-    serviceMap,
-    isLoading,
-    error,
-    refetch: fetchServiceMap,
+    serviceMap: query.data || null,
+    isLoading: query.isLoading,
+    error: query.error ? String(query.error) : null,
+    refetch: query.refetch,
   };
 }
 
+// ============================================================================
+// usePerformance Hook
+// ============================================================================
+
 export function usePerformance() {
-  const { toast } = useToast();
-  const [performance, setPerformance] = useState<PerformanceResponse | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPerformance = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      const response = await axios.get<PerformanceResponse>(
-        `${API_BASE_URL}/api/v1/observability/performance`,
-        { withCredentials: true },
-      );
-
-      setPerformance(response.data);
-    } catch (err: unknown) {
-      const message = axios.isAxiosError(err)
-        ? err.response?.data?.detail || "Failed to fetch performance metrics"
-        : "An error occurred";
-      setError(message);
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchPerformance();
-  }, []);
+  const query = useQuery({
+    queryKey: observabilityKeys.performance(),
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get<PerformanceResponse>(
+          "/observability/performance"
+        );
+        logger.info("Fetched performance metrics", {
+          percentilesCount: response.data.percentiles.length,
+          slowestEndpointsCount: response.data.slowest_endpoints.length,
+          errorTypesCount: response.data.most_frequent_errors.length
+        });
+        return response.data;
+      } catch (err) {
+        logger.error("Failed to fetch performance metrics", err instanceof Error ? err : new Error(String(err)));
+        throw err;
+      }
+    },
+    staleTime: 30000, // 30 seconds - performance data changes frequently
+    refetchOnWindowFocus: true,
+  });
 
   return {
-    performance,
-    isLoading,
-    error,
-    refetch: fetchPerformance,
+    performance: query.data || null,
+    isLoading: query.isLoading,
+    error: query.error ? String(query.error) : null,
+    refetch: query.refetch,
   };
 }

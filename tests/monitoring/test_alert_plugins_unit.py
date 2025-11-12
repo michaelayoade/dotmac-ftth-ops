@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from types import SimpleNamespace
 
 import pytest
@@ -26,7 +26,7 @@ def _sample_alert(**overrides):
         "status": "firing",
         "labels": {"alertname": "TestAlert", "severity": "critical"},
         "annotations": {"summary": "Something happened", "description": "Detailed message"},
-        "startsAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "startsAt": datetime.now(UTC).isoformat().replace("+00:00", "Z"),
         "generatorURL": "https://prometheus.example.com/graph",
     }
     base.update(overrides)

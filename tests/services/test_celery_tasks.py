@@ -6,7 +6,7 @@ requiring a running Celery worker.
 """
 
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 from uuid import UUID, uuid4
 
 import pytest
@@ -158,7 +158,6 @@ class TestProvisionSubscriberAsync:
             mock_run.side_effect = run_coro
 
             provision_subscriber_async.run(
-                
                 tenant_id=tenant_id,
                 customer_id=customer_id,
                 username="testuser",
@@ -219,7 +218,6 @@ class TestProvisionSubscriberAsync:
             mock_run.side_effect = run_coro
 
             result = provision_subscriber_async.run(
-                
                 tenant_id="test_tenant",
                 customer_id=str(uuid4()),
                 username="testuser",
@@ -282,7 +280,6 @@ class TestDeprovisionSubscriberAsync:
         mock_asyncio_run.side_effect = run_coro
 
         result = deprovision_subscriber_async.run(
-            
             tenant_id=tenant_id,
             subscriber_id=subscriber_id,
             reason="Customer request",
@@ -341,7 +338,6 @@ class TestConvertLeadToCustomerAsync:
         mock_asyncio_run.side_effect = run_coro
 
         result = convert_lead_to_customer_async.run(
-            
             tenant_id=tenant_id,
             lead_id=str(lead_id),
             accepted_quote_id=str(quote_id),
@@ -397,7 +393,6 @@ class TestConvertLeadToCustomerAsync:
             mock_run.side_effect = run_coro
 
             convert_lead_to_customer_async.run(
-                
                 tenant_id=tenant_id,
                 lead_id=lead_id,
                 accepted_quote_id=quote_id,
@@ -457,7 +452,6 @@ class TestAsyncSessionHandling:
             mock_run.side_effect = run_coro
 
             provision_subscriber_async.run(
-                
                 tenant_id="test_tenant",
                 customer_id=str(uuid4()),
                 username="testuser",

@@ -5,9 +5,10 @@ Periodic Celery tasks to monitor subscriber bandwidth usage against plan data ca
 and generate alerts when thresholds are exceeded.
 """
 
+from contextlib import AbstractAsyncContextManager
 from datetime import datetime, timedelta
 from decimal import Decimal
-from typing import Any, AsyncContextManager, cast
+from typing import Any, cast
 
 import structlog
 from sqlalchemy import and_, select
@@ -36,10 +37,10 @@ except ImportError:
     TIMESCALEDB_AVAILABLE = False
 
 
-def _session_context() -> AsyncContextManager[AsyncSession]:
+def _session_context() -> AbstractAsyncContextManager[AsyncSession]:
     """Typed helper for acquiring an async session."""
     session_factory = async_session_maker
-    return cast(AsyncContextManager[AsyncSession], session_factory())
+    return cast(AbstractAsyncContextManager[AsyncSession], session_factory())
 
 
 logger = structlog.get_logger(__name__)

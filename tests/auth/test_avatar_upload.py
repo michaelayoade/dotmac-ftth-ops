@@ -98,8 +98,11 @@ async def client(app, async_db_session):
     storage_mock.store_file = AsyncMock(return_value="mock-file-id")
     storage_mock.delete_file = AsyncMock(return_value=None)
 
-    with patch("dotmac.platform.file_storage.service.get_storage_service", return_value=storage_mock), patch(
-        "dotmac.platform.audit.log_user_activity", new=AsyncMock()
+    with (
+        patch(
+            "dotmac.platform.file_storage.service.get_storage_service", return_value=storage_mock
+        ),
+        patch("dotmac.platform.audit.log_user_activity", new=AsyncMock()),
     ):
         # Use ASGITransport instead of app parameter (httpx API change)
         transport = ASGITransport(app=app)

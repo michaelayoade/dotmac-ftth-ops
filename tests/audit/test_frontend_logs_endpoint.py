@@ -18,6 +18,15 @@ pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
+def frontend_log_headers() -> dict[str, str]:
+    """Headers required for secure frontend log ingestion."""
+    return {
+        "X-Frontend-Log-Secret": "test-secret",
+        "Origin": "https://test.local",
+    }
+
+
+@pytest.fixture
 def mock_user_info() -> UserInfo:
     """Provide a standard authenticated user for frontend log tests."""
     return UserInfo(
@@ -35,7 +44,7 @@ class TestFrontendLogsEndpoint:
     """Test frontend logs ingestion endpoint."""
 
     async def test_create_frontend_logs_unauthenticated(
-        self, client: AsyncClient, async_db_session
+        self, client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test creating frontend logs without authentication (uses default tenant)."""
         logs_data = {
@@ -64,7 +73,9 @@ class TestFrontendLogsEndpoint:
             ]
         }
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         result = response.json()
@@ -74,7 +85,11 @@ class TestFrontendLogsEndpoint:
         assert result["logs_stored"] == 2
 
     async def test_create_frontend_logs_authenticated(
-        self, authenticated_client: AsyncClient, async_db_session, mock_user_info
+        self,
+        authenticated_client: AsyncClient,
+        async_db_session,
+        mock_user_info,
+        frontend_log_headers,
     ):
         """Test creating frontend logs with authentication."""
         logs_data = {
@@ -97,6 +112,7 @@ class TestFrontendLogsEndpoint:
         response = await authenticated_client.post(
             "/api/v1/audit/frontend-logs",
             json=logs_data,
+            headers=frontend_log_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -106,7 +122,7 @@ class TestFrontendLogsEndpoint:
         assert result["logs_stored"] == 1
 
     async def test_create_frontend_logs_batched(
-        self, authenticated_client: AsyncClient, async_db_session
+        self, authenticated_client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test creating a large batch of frontend logs."""
         logs = []
@@ -118,7 +134,7 @@ class TestFrontendLogsEndpoint:
                     "service": "frontend",
                     "metadata": {
                         "timestamp": datetime.now(UTC).isoformat(),
-                        "index": i,
+                        "requestId": f"req-{i}",
                     },
                 }
             )
@@ -128,6 +144,7 @@ class TestFrontendLogsEndpoint:
         response = await authenticated_client.post(
             "/api/v1/audit/frontend-logs",
             json=logs_data,
+            headers=frontend_log_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -137,7 +154,7 @@ class TestFrontendLogsEndpoint:
         assert result["logs_stored"] == 50
 
     async def test_create_frontend_logs_validation_error(
-        self, client: AsyncClient, async_db_session
+        self, client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test validation errors for malformed log data."""
         # Missing required field 'level'
@@ -151,11 +168,15 @@ class TestFrontendLogsEndpoint:
             ]
         }
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    async def test_create_frontend_logs_invalid_level(self, client: AsyncClient, async_db_session):
+    async def test_create_frontend_logs_invalid_level(
+        self, client: AsyncClient, async_db_session, frontend_log_headers
+    ):
         """Test invalid log level."""
         logs_data = {
             "logs": [
@@ -168,20 +189,28 @@ class TestFrontendLogsEndpoint:
             ]
         }
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    async def test_create_frontend_logs_empty_batch(self, client: AsyncClient, async_db_session):
+    async def test_create_frontend_logs_empty_batch(
+        self, client: AsyncClient, async_db_session, frontend_log_headers
+    ):
         """Test empty logs batch."""
         logs_data = {"logs": []}
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         # Should fail validation (min_length=1)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-    async def test_create_frontend_logs_max_batch_size(self, client: AsyncClient, async_db_session):
+    async def test_create_frontend_logs_max_batch_size(
+        self, client: AsyncClient, async_db_session, frontend_log_headers
+    ):
         """Test maximum batch size (100 logs)."""
         logs = []
         for i in range(100):
@@ -190,20 +219,22 @@ class TestFrontendLogsEndpoint:
                     "level": "INFO",
                     "message": f"Test log {i}",
                     "service": "frontend",
-                    "metadata": {"index": i},
+                    "metadata": {"requestId": f"req-{i}"},
                 }
             )
 
         logs_data = {"logs": logs}
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         assert response.status_code == status.HTTP_200_OK
         result = response.json()
         assert result["logs_received"] == 100
 
     async def test_create_frontend_logs_exceeds_max_batch(
-        self, client: AsyncClient, async_db_session
+        self, client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test batch size exceeding maximum (>100 logs)."""
         logs = []
@@ -219,13 +250,15 @@ class TestFrontendLogsEndpoint:
 
         logs_data = {"logs": logs}
 
-        response = await client.post("/api/v1/audit/frontend-logs", json=logs_data)
+        response = await client.post(
+            "/api/v1/audit/frontend-logs", json=logs_data, headers=frontend_log_headers
+        )
 
         # Should fail validation (max_length=100)
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
     async def test_frontend_logs_stored_correctly(
-        self, authenticated_client: AsyncClient, async_db_session
+        self, authenticated_client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test that frontend logs are stored correctly in audit_activities."""
         from sqlalchemy import select
@@ -251,6 +284,7 @@ class TestFrontendLogsEndpoint:
         response = await authenticated_client.post(
             "/api/v1/audit/frontend-logs",
             json=logs_data,
+            headers=frontend_log_headers,
         )
 
         assert response.status_code == status.HTTP_200_OK
@@ -276,7 +310,7 @@ class TestFrontendLogsEndpoint:
         assert activity.user_agent == "Test Agent"
 
     async def test_frontend_logs_severity_mapping(
-        self, authenticated_client: AsyncClient, async_db_session
+        self, authenticated_client: AsyncClient, async_db_session, frontend_log_headers
     ):
         """Test that frontend log levels are correctly mapped to severities."""
         from sqlalchemy import select
@@ -309,6 +343,7 @@ class TestFrontendLogsEndpoint:
         response = await authenticated_client.post(
             "/api/v1/audit/frontend-logs",
             json=logs_data,
+            headers=frontend_log_headers,
         )
         assert response.status_code == status.HTTP_200_OK
 

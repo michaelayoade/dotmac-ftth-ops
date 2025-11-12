@@ -39,7 +39,10 @@ from dotmac.platform.customer_management.schemas import (
     CustomerSegmentCreate,
     CustomerUpdate,
 )
+from dotmac.platform.geo.auto_geocode import geocode_customer_address
 from dotmac.platform.tenant import get_current_tenant_id
+from dotmac.platform.webhooks.events import get_event_bus
+from dotmac.platform.webhooks.models import WebhookEvent
 
 _T = TypeVar("_T")
 
@@ -226,6 +229,28 @@ class CustomerService:
             )
             self.session.add(tag)
 
+        # Auto-geocode service address if provided
+        try:
+            customer_data = {
+                "service_address_line1": customer.service_address_line1,
+                "service_address_line2": customer.service_address_line2,
+                "service_city": customer.service_city,
+                "service_state_province": customer.service_state_province,
+                "service_postal_code": customer.service_postal_code,
+                "service_country": customer.service_country,
+                "service_coordinates": customer.service_coordinates,
+            }
+            coords = await geocode_customer_address(customer_data, force=False)
+            if coords:
+                customer.service_coordinates = coords
+                logger.info(
+                    "Auto-geocoded customer service address",
+                    customer_id=str(customer.id),
+                    coordinates=coords,
+                )
+        except Exception as e:
+            logger.warning("Failed to auto-geocode customer address", error=str(e))
+
         await self.session.commit()
         await self.session.refresh(customer)
 
@@ -235,6 +260,28 @@ class CustomerService:
             customer_number=customer_number,
             email=customer.email,
         )
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CUSTOMER_CREATED.value,
+                event_data={
+                    "customer_id": str(customer.id),
+                    "customer_number": customer.customer_number,
+                    "email": customer.email,
+                    "first_name": customer.first_name,
+                    "last_name": customer.last_name,
+                    "company_name": customer.company_name,
+                    "status": customer.status.value if customer.status else None,
+                    "customer_type": customer.customer_type,
+                    "phone": customer.phone,
+                    "created_at": customer.created_at.isoformat() if customer.created_at else None,
+                },
+                tenant_id=tenant_id,
+                db=self.session,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish customer.created event", error=str(e))
 
         return customer
 
@@ -354,6 +401,46 @@ class CustomerService:
             customer.custom_fields = data.custom_fields
             changes.append("custom_fields")
 
+        # Auto-geocode service address if it changed
+        try:
+            # Get updated customer to check if geocoding is needed
+            await self.session.refresh(customer)
+
+            # Build customer data dict for geocoding check
+            new_customer_data = {
+                "service_address_line1": customer.service_address_line1,
+                "service_address_line2": customer.service_address_line2,
+                "service_city": customer.service_city,
+                "service_state_province": customer.service_state_province,
+                "service_postal_code": customer.service_postal_code,
+                "service_country": customer.service_country,
+                "service_coordinates": customer.service_coordinates,
+            }
+
+            # Check if any service address field was updated
+            service_address_fields = [
+                "service_address_line1",
+                "service_address_line2",
+                "service_city",
+                "service_state_province",
+                "service_postal_code",
+                "service_country",
+            ]
+            address_changed = any(field in update_data for field in service_address_fields)
+
+            if address_changed or not customer.service_coordinates.get("lat"):
+                coords = await geocode_customer_address(new_customer_data, force=address_changed)
+                if coords:
+                    customer.service_coordinates = coords
+                    changes.append("service_coordinates")
+                    logger.info(
+                        "Auto-geocoded customer service address",
+                        customer_id=str(customer.id),
+                        coordinates=coords,
+                    )
+        except Exception as e:
+            logger.warning("Failed to auto-geocode customer address", error=str(e))
+
         # Create activity log
         if update_data or changes:
             # Try to convert updated_by to UUID, skip if invalid
@@ -379,6 +466,32 @@ class CustomerService:
         await self.session.refresh(customer)
 
         logger.info("Customer updated", customer_id=str(customer.id))
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CUSTOMER_UPDATED.value,
+                event_data={
+                    "customer_id": str(customer.id),
+                    "customer_number": customer.customer_number,
+                    "email": customer.email,
+                    "first_name": customer.first_name,
+                    "last_name": customer.last_name,
+                    "company_name": customer.company_name,
+                    "status": customer.status.value if customer.status else None,
+                    "customer_type": customer.customer_type,
+                    "phone": customer.phone,
+                    "updated_fields": list(update_data.keys()) + changes
+                    if (update_data or changes)
+                    else [],
+                    "updated_at": customer.updated_at.isoformat() if customer.updated_at else None,
+                },
+                tenant_id=tenant_id,
+                db=self.session,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish customer.updated event", error=str(e))
+
         return customer
 
     async def delete_customer(
@@ -418,6 +531,27 @@ class CustomerService:
         await self.session.commit()
 
         logger.info("Customer deleted", customer_id=str(customer.id), hard_delete=hard_delete)
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.CUSTOMER_DELETED.value,
+                event_data={
+                    "customer_id": str(customer.id),
+                    "customer_number": customer.customer_number,
+                    "email": customer.email,
+                    "first_name": customer.first_name,
+                    "last_name": customer.last_name,
+                    "company_name": customer.company_name,
+                    "hard_delete": hard_delete,
+                    "deleted_at": datetime.now(UTC).isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.session,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish customer.deleted event", error=str(e))
+
         return True
 
     # BASIC SEARCH (using standard SQLAlchemy filtering)

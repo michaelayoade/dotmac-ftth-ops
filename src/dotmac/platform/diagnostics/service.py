@@ -94,7 +94,7 @@ class DiagnosticsService:
             radius_service = RADIUSService(self.db, tenant_id=tenant_id)
             self.radius_service = radius_service
         else:
-            setattr(radius_service, "tenant_id", tenant_id)
+            radius_service.tenant_id = tenant_id
         return radius_service
 
     async def _get_subscriber(self, tenant_id: str, subscriber_id: str) -> "Subscriber":
@@ -1058,7 +1058,9 @@ class DiagnosticsService:
                     "peak_day": (
                         peak_day.date().isoformat()
                         if peak_day and hasattr(peak_day, "date")
-                        else str(peak_day) if peak_day else None
+                        else str(peak_day)
+                        if peak_day
+                        else None
                     ),
                     "peak_usage_gb": float(peak_usage_gb),
                     "daily_breakdown": daily_breakdown,

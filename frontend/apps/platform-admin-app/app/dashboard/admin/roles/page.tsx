@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Shield, Users, Search, Filter } from "lucide-react";
-import { useRBAC } from "@/contexts/RBACContext";
+import { useRBAC, PermissionCategory } from "@/contexts/RBACContext";
+import type {
+  Role as BaseRole,
+  Permission as BasePermission,
+} from "@/contexts/RBACContext";
 import { RouteGuard } from "@/components/auth/PermissionGuard";
 import RoleDetailsModal from "@/components/admin/RoleDetailsModal";
 import CreateRoleModal from "@/components/admin/CreateRoleModal";
@@ -11,36 +15,27 @@ import { toast } from "@dotmac/ui";
 import { apiClient } from "@/lib/api/client";
 import { useConfirmDialog } from "@dotmac/ui";
 
-interface Role {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string;
-  priority: number;
-  is_active: boolean;
-  is_system: boolean;
-  is_default: boolean;
-  permissions: Permission[];
+type AdminPermission = BasePermission & {
+  id?: string;
+};
+
+type AdminRole = Omit<BaseRole, "permissions"> & {
+  permissions: AdminPermission[];
+  id?: string;
+  priority?: number;
+  is_default?: boolean;
   user_count?: number;
   parent_id?: string;
-}
-
-interface Permission {
-  id: string;
-  name: string;
-  display_name: string;
-  description: string;
-  category: string;
-}
+};
 
 export default function RolesManagementPage() {
   const { hasPermission } = useRBAC();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [roles, setRoles] = useState<AdminRole[]>([]);
+  const [permissions, setPermissions] = useState<AdminPermission[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [selectedRole, setSelectedRole] = useState<AdminRole | null>(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -54,9 +49,23 @@ export default function RolesManagementPage() {
   const fetchRoles = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get<Role[]>("/auth/rbac/roles");
+      const response = await apiClient.get<AdminRole[]>("/auth/rbac/roles");
       if (response.data) {
-        setRoles(response.data);
+        const normalized: AdminRole[] = response.data.map((role) => {
+          const parentId = role.parent_id ?? role.parent_role;
+          return {
+            ...role,
+            permissions: (role.permissions ?? []) as AdminPermission[],
+            created_at: role.created_at ?? "",
+            updated_at: role.updated_at ?? "",
+            id: role.id ?? role.name,
+            priority: role.priority ?? 0,
+            is_default: role.is_default ?? false,
+            user_count: role.user_count ?? 0,
+            ...(parentId ? { parent_id: parentId } : {}),
+          };
+        });
+        setRoles(normalized);
       }
     } catch (error) {
       console.error("Error fetching roles:", error);
@@ -68,16 +77,23 @@ export default function RolesManagementPage() {
 
   const fetchPermissions = async () => {
     try {
-      const response = await apiClient.get<Permission[]>("/auth/rbac/permissions");
+      const response = await apiClient.get<AdminPermission[]>("/auth/rbac/permissions");
       if (response.data) {
-        setPermissions(response.data);
+        const normalized: AdminPermission[] = response.data.map((permission) => ({
+          ...permission,
+          description: permission.description ?? "",
+          category: permission.category ?? PermissionCategory.SYSTEM,
+          is_system: permission.is_system ?? false,
+          id: permission.id ?? permission.name,
+        }));
+        setPermissions(normalized);
       }
     } catch (error) {
       console.error("Error fetching permissions:", error);
     }
   };
 
-  const handleDeleteRole = async (role: Role) => {
+  const handleDeleteRole = async (role: AdminRole) => {
     if (role.is_system) {
       toast.error("System roles cannot be deleted");
       return;
@@ -103,12 +119,12 @@ export default function RolesManagementPage() {
     }
   };
 
-  const handleEditRole = (role: Role) => {
+  const handleEditRole = (role: AdminRole) => {
     setSelectedRole(role);
     setShowDetailsModal(true);
   };
 
-  const handleAssignRole = (role: Role) => {
+  const handleAssignRole = (role: AdminRole) => {
     setSelectedRole(role);
     setShowAssignModal(true);
   };
@@ -117,25 +133,25 @@ export default function RolesManagementPage() {
     const matchesSearch =
       role.display_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      role['description']?.toLowerCase().includes(searchQuery.toLowerCase());
 
     if (filterCategory === "all") return matchesSearch;
     if (filterCategory === "system") return matchesSearch && role.is_system;
     if (filterCategory === "custom") return matchesSearch && !role.is_system;
-    if (filterCategory === "default") return matchesSearch && role.is_default;
+    if (filterCategory === "default") return matchesSearch && (role.is_default ?? false);
 
     return matchesSearch;
   });
 
-  const getRoleBadgeColor = (role: Role) => {
+  const getRoleBadgeColor = (role: AdminRole) => {
     if (role.is_system) return "bg-red-100 text-red-800";
-    if (role.is_default) return "bg-blue-100 text-blue-800";
+    if (role.is_default ?? false) return "bg-blue-100 text-blue-800";
     return "bg-green-100 text-green-800";
   };
 
-  const getRoleBadgeText = (role: Role) => {
+  const getRoleBadgeText = (role: AdminRole) => {
     if (role.is_system) return "System";
-    if (role.is_default) return "Default";
+    if (role.is_default ?? false) return "Default";
     return "Custom";
   };
 
@@ -199,7 +215,7 @@ export default function RolesManagementPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredRoles.map((role) => (
               <div
-                key={role.id}
+                key={role.id ?? role.name}
                 className="bg-accent border border-border rounded-lg p-4 hover:border-border transition-colors"
               >
                 <div className="flex items-start justify-between mb-3">
@@ -219,9 +235,9 @@ export default function RolesManagementPage() {
                 <div className="flex items-center justify-between text-xs text-foreground0 mb-3">
                   <span className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {role.user_count || 0} users
+                    {role.user_count ?? 0} users
                   </span>
-                  <span>Priority: {role.priority}</span>
+                  <span>Priority: {role.priority ?? 0}</span>
                 </div>
 
                 <div className="mb-3">
@@ -229,7 +245,7 @@ export default function RolesManagementPage() {
                   <div className="flex flex-wrap gap-1">
                     {role.permissions.slice(0, 3).map((perm) => (
                       <span
-                        key={perm.id}
+                        key={perm.id ?? perm.name}
                         className="px-2 py-1 text-xs bg-muted text-muted-foreground rounded"
                       >
                         {perm.name}

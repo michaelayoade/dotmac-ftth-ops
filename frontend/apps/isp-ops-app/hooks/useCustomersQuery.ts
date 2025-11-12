@@ -140,7 +140,7 @@ export function useCreateCustomer() {
       const previousCustomers = queryClient.getQueryData(queryKeys.customers.lists());
 
       // Optimistically update the list
-      const optimisticCustomer: Customer = {
+      const optimisticCustomer = {
         id: `temp-${Date.now()}`,
         ...newCustomer,
         created_at: new Date().toISOString(),
@@ -148,7 +148,7 @@ export function useCreateCustomer() {
         status: "active",
         lifetime_value: 0,
         last_interaction: undefined,
-      } as Customer;
+      } as unknown as Customer;
 
       optimisticHelpers.addToList(queryClient, queryKeys.customers.lists(), optimisticCustomer, {
         position: "start",

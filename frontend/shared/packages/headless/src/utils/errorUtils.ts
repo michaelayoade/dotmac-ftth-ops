@@ -405,7 +405,7 @@ export const configureGlobalErrorHandling = (
 
   if (config.enableConsoleLogging) {
     // Enable console logging for errors in development
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.warn("Global error handling configured for development");
     }
   }

@@ -41,7 +41,7 @@ class EmailChannelProvider(NotificationChannelProvider):
         html_body = self._render_html_email(context)
 
         # Create email message
-        email_message = EmailMessage(
+        EmailMessage(
             to=[context.recipient_email],
             subject=context.title,
             text_body=context.message,

@@ -70,19 +70,19 @@ export function AllocateIPDialog({
     try {
       const data: IPAllocationData = {
         mode: activeTab,
-        description,
-        dnsName: dnsName || undefined,
+        ...(description && { description }),
+        ...(dnsName && { dnsName }),
       };
 
       if (activeTab === "single") {
-        data.prefixId = prefixId;
+        if (prefixId !== undefined) data.prefixId = prefixId;
       } else if (activeTab === "dual-stack") {
-        data.prefixId = prefixId;
-        data.ipv6PrefixId = ipv6PrefixId;
+        if (prefixId !== undefined) data.prefixId = prefixId;
+        if (ipv6PrefixId !== undefined) data.ipv6PrefixId = ipv6PrefixId;
       } else if (activeTab === "bulk") {
-        data.prefixId = prefixId;
+        if (prefixId !== undefined) data.prefixId = prefixId;
         data.count = parseInt(bulkCount, 10);
-        data.descriptionPrefix = descriptionPrefix;
+        if (descriptionPrefix) data.descriptionPrefix = descriptionPrefix;
       }
 
       await onAllocate(data);

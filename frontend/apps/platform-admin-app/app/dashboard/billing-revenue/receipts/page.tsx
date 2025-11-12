@@ -122,7 +122,7 @@ export default function ReceiptsPage() {
     return receiptsData.receipts.filter(
       (receipt) =>
         receipt.receipt_number.toLowerCase().includes(query) ||
-        receipt.customer_name?.toLowerCase().includes(query) ||
+        receipt['customer_name']?.toLowerCase().includes(query) ||
         receipt.customer_email?.toLowerCase().includes(query) ||
         receipt.payment_id?.toLowerCase().includes(query)
     );
@@ -448,7 +448,7 @@ export default function ReceiptsPage() {
                             {receipt.payment_id.slice(0, 8)}...
                           </span>
                         </div>
-                      ) : receipt.invoice_id ? (
+                      ) : receipt['invoice_id']? (
                         <div className="flex items-center gap-1">
                           <FileText className="h-3 w-3 text-muted-foreground" />
                           <span className="text-sm font-mono">

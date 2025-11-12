@@ -4,13 +4,14 @@ SQLAlchemy 2.0 Database Configuration
 Simple, standard SQLAlchemy setup replacing the custom database module.
 """
 
+import importlib
 import inspect
 import os
 from collections.abc import AsyncIterator, Callable, Iterator
 from contextlib import asynccontextmanager, contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING, Any
+from typing import Any
 from unittest.mock import AsyncMock
 from urllib.parse import quote_plus
 from uuid import UUID, uuid4
@@ -354,7 +355,13 @@ def snapshot_database_state() -> DatabaseState:
 def restore_database_state(state: DatabaseState) -> None:
     """Restore database wiring to a previously captured snapshot."""
 
-    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+    global \
+        _sync_engine, \
+        _async_engine, \
+        SyncSessionLocal, \
+        AsyncSessionLocal, \
+        _async_session_maker, \
+        async_session_maker
 
     _sync_engine = state.sync_engine
     _async_engine = state.async_engine
@@ -373,7 +380,13 @@ def configure_database_for_testing(
 ) -> None:
     """Override engines or session factories for test scenarios."""
 
-    global _sync_engine, _async_engine, SyncSessionLocal, AsyncSessionLocal, _async_session_maker, async_session_maker
+    global \
+        _sync_engine, \
+        _async_engine, \
+        SyncSessionLocal, \
+        AsyncSessionLocal, \
+        _async_session_maker, \
+        async_session_maker
 
     if sync_engine is not None:
         _sync_engine = sync_engine
@@ -449,6 +462,57 @@ async def get_async_session() -> AsyncIterator[AsyncSession]:
             await session.close()
 
 
+async def get_rls_session(request: Any = None) -> AsyncIterator[AsyncSession]:
+    """
+    FastAPI dependency for getting an RLS-aware async database session.
+
+    This dependency automatically sets PostgreSQL session variables for
+    Row-Level Security based on the context stored in request.state by
+    the RLS middleware.
+
+    Args:
+        request: FastAPI Request object (injected automatically)
+
+    Yields:
+        AsyncSession with RLS context applied
+    """
+    from sqlalchemy import text
+
+    async with _async_session_maker() as session:
+        try:
+            # Set RLS context from request state if available
+            if request and hasattr(request, "state"):
+                tenant_id = getattr(request.state, "rls_tenant_id", None)
+                is_superuser = getattr(request.state, "rls_is_superuser", False)
+                bypass_rls = getattr(request.state, "rls_bypass", False)
+
+                # Set PostgreSQL session variables
+                if tenant_id:
+                    await session.execute(
+                        text("SET LOCAL app.current_tenant_id = :tenant_id"),
+                        {"tenant_id": tenant_id},
+                    )
+
+                await session.execute(
+                    text("SET LOCAL app.is_superuser = :is_superuser"),
+                    {"is_superuser": str(is_superuser).lower()},
+                )
+
+                await session.execute(
+                    text("SET LOCAL app.bypass_rls = :bypass_rls"),
+                    {"bypass_rls": str(bypass_rls).lower()},
+                )
+
+                await session.commit()
+
+            yield session
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
 async def get_session_dependency() -> AsyncIterator[AsyncSession]:
     """Compatibility wrapper that yields a session and remains easy to patch in tests."""
 
@@ -497,13 +561,53 @@ get_session = get_async_db
 # ==========================================
 
 
+def _safe_import(module_path: str, context: str | None = None) -> None:
+    """Import a module and log (without raising) if it fails."""
+    try:
+        importlib.import_module(module_path)
+    except Exception as exc:  # pragma: no cover - defensive logging
+        logger.warning(
+            "database.model_import_failed",
+            module=module_path,
+            context=context,
+            error=str(exc),
+        )
+
+
+def _ensure_model_registry_loaded() -> None:
+    """Import model modules so Base metadata is complete."""
+    _safe_import("dotmac.platform.models", context="core platform models")
+
+    # Project management tables (independent modules so we can log failures per file)
+    _safe_import(
+        "dotmac.platform.project_management.models",
+        context="project/task models",
+    )
+    _safe_import(
+        "dotmac.platform.project_management.resource_models",
+        context="project resource models",
+    )
+    _safe_import(
+        "dotmac.platform.project_management.time_tracking_models",
+        context="project time tracking models",
+    )
+
+    # Field service tables (technicians, availability, etc.)
+    _safe_import(
+        "dotmac.platform.field_service.models",
+        context="technician models",
+    )
+
+
 def create_all_tables() -> None:
     """Create all tables in the database."""
+    _ensure_model_registry_loaded()
     Base.metadata.create_all(bind=get_sync_engine(), checkfirst=True)
 
 
 async def create_all_tables_async() -> None:
     """Create all tables in the database asynchronously."""
+    _ensure_model_registry_loaded()
     engine = get_async_engine()
     async with engine.begin() as conn:
         await conn.run_sync(

@@ -38,7 +38,7 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, children, ...props }, ref) => {
     // Accessibility: Warn in development if button has no accessible label
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env["NODE_ENV"] !== "production") {
       const hasTextContent =
         typeof children === "string" ||
         (React.Children.count(children) > 0 &&

@@ -1651,8 +1651,7 @@ export default function BillingSettingsPage() {
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 py-3 px-1 border-b-2 transition-colors text-sm font-medium ${
-                  activeTab === tab.id
-                    ? "border-sky-500 text-sky-600 dark:text-sky-400"
+                  activeTab === tab['id']? "border-sky-500 text-sky-600 dark:text-sky-400"
                     : "border-transparent text-muted-foreground hover:text-foreground hover:border-border"
                 }`}
               >

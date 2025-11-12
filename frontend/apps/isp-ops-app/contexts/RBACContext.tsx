@@ -50,18 +50,18 @@ export enum PermissionAction {
 export interface Permission {
   name: string;
   display_name: string;
-  description?: string;
+  description: string | undefined;
   category: PermissionCategory;
-  resource?: string;
-  action?: string;
+  resource: string | undefined;
+  action: string | undefined;
   is_system: boolean;
 }
 
 export interface Role {
   name: string;
   display_name: string;
-  description?: string;
-  parent_role?: string;
+  description: string | undefined;
+  parent_role: string | undefined;
   is_system: boolean;
   is_active: boolean;
   permissions: Permission[];
@@ -80,31 +80,31 @@ export interface UserPermissions {
 export interface RoleCreateRequest {
   name: string;
   display_name: string;
-  description?: string;
-  parent_role?: string;
+  description: string | undefined;
+  parent_role: string | undefined;
   permissions: string[];
 }
 
 export interface RoleUpdateRequest {
-  display_name?: string;
-  description?: string;
-  parent_role?: string;
-  permissions?: string[];
-  is_active?: boolean;
+  display_name: string | undefined;
+  description: string | undefined;
+  parent_role: string | undefined;
+  permissions: string[] | undefined;
+  is_active: boolean | undefined;
 }
 
 export interface UserRoleAssignment {
   user_id: string;
   role_name: string;
-  granted_by?: string;
-  expires_at?: string;
+  granted_by: string | undefined;
+  expires_at: string | undefined;
 }
 
 export interface UserPermissionGrant {
   user_id: string;
   permission_name: string;
-  granted_by?: string;
-  expires_at?: string;
+  granted_by: string | undefined;
+  expires_at: string | undefined;
 }
 
 const EMPTY_USER_PERMISSIONS: UserPermissions = {
@@ -239,7 +239,7 @@ interface RBACContextValue {
   hasAnyPermission: (permissions: string[]) => boolean;
   hasAllPermissions: (permissions: string[]) => boolean;
   hasRole: (role: string) => boolean;
-  canAccess: (category: PermissionCategory, action?: PermissionAction) => boolean;
+  canAccess: (category: string, action?: string) => boolean;
 
   // Role management
   roles: Role[];
@@ -346,7 +346,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
   );
 
   const canAccess = useCallback(
-    (category: PermissionCategory, action?: PermissionAction): boolean => {
+    (category: string, action?: string): boolean => {
       if (!permissions) return false;
       if (isSuperuser) return true;
 
@@ -362,8 +362,8 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
         // System wildcard
         if (p.name === "*") return true;
 
-        // Category and action match
-        if (p.category === category && (!action || p.action === action)) return true;
+        // Category and action match (convert enum to string for comparison)
+        if (String(p.category) === category && (!action || String(p.action) === action)) return true;
 
         return false;
       });
@@ -473,18 +473,24 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
       await assignRoleMutation.mutateAsync({
         user_id: userId,
         role_name: roleName,
+        granted_by: undefined,
+        expires_at: undefined,
       });
     },
     revokeRole: async (userId, roleName) => {
       await revokeRoleMutation.mutateAsync({
         user_id: userId,
         role_name: roleName,
+        granted_by: undefined,
+        expires_at: undefined,
       });
     },
     grantPermission: async (userId, permissionName) => {
       await grantPermissionMutation.mutateAsync({
         user_id: userId,
         permission_name: permissionName,
+        granted_by: undefined,
+        expires_at: undefined,
       });
     },
     refreshPermissions: () => refreshPermissions(),
@@ -493,7 +499,7 @@ export function RBACProvider({ children }: { children: React.ReactNode }) {
 
   // Log permission changes in development
   useEffect(() => {
-    if (permissions && process.env.NODE_ENV === "development") {
+    if (permissions && process.env["NODE_ENV"] === "development") {
       logger.info("User permissions loaded", {
         userId: permissions.user_id,
         roles: permissions.roles.map((r) => r.name),
@@ -542,8 +548,8 @@ export function useRole(role: string): boolean {
  * Hook for category access
  */
 export function useCategoryAccess(
-  category: PermissionCategory,
-  action?: PermissionAction,
+  category: string,
+  action?: string,
 ): boolean {
   const { canAccess } = useRBAC();
   return canAccess(category, action);

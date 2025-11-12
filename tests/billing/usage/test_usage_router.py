@@ -25,7 +25,7 @@ pytestmark = pytest.mark.integration
 async def usage_test_client(async_db_session: AsyncSession):
     """Create a test client with dependency overrides."""
 
-    from httpx import ASGITransport, AsyncClient
+    from httpx import ASGITransport
 
     tenant_id = f"usage-test-tenant-{uuid4().hex[:8]}"
     app = FastAPI()

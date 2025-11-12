@@ -17,6 +17,7 @@ import structlog
 from sqlalchemy import and_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.network.models import SubscriberNetworkProfile
 from dotmac.platform.radius.coa_client import CoAClient, CoAClientHTTP
 from dotmac.platform.radius.repository import RADIUSRepository
 from dotmac.platform.radius.schemas import (
@@ -25,6 +26,8 @@ from dotmac.platform.radius.schemas import (
     NASCreate,
     NASResponse,
     NASUpdate,
+    RADIUSAuthorizationRequest,
+    RADIUSAuthorizationResponse,
     RADIUSSessionResponse,
     RADIUSSubscriberCreate,
     RADIUSSubscriberResponse,
@@ -33,7 +36,7 @@ from dotmac.platform.radius.schemas import (
     RADIUSUsageResponse,
 )
 from dotmac.platform.services.lifecycle.models import ServiceInstance
-from dotmac.platform.subscribers.models import PasswordHashingMethod
+from dotmac.platform.subscribers.models import PasswordHashingMethod, verify_radius_password
 
 logger = structlog.get_logger(__name__)
 
@@ -101,6 +104,19 @@ class RADIUSService:
         if existing:
             raise ValueError(f"Subscriber with username '{data.username}' already exists")
 
+        profile = await self._get_network_profile(data.subscriber_id)
+
+        framed_ipv4_address = data.framed_ipv4_address or (
+            str(profile.static_ipv4) if profile and profile.static_ipv4 else None
+        )
+        framed_ipv6_address = data.framed_ipv6_address or (
+            str(profile.static_ipv6) if profile and profile.static_ipv6 else None
+        )
+        framed_ipv6_prefix = data.framed_ipv6_prefix
+        delegated_ipv6_prefix = data.delegated_ipv6_prefix or (
+            profile.delegated_ipv6_prefix if profile and profile.delegated_ipv6_prefix else None
+        )
+
         # Create authentication entry (radcheck)
         radcheck = await self.repository.create_radcheck(
             tenant_id=self.tenant_id,
@@ -111,43 +127,43 @@ class RADIUSService:
 
         # Create authorization entries (radreply)
         # IPv4 address
-        if data.framed_ipv4_address:
+        if framed_ipv4_address:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=data.subscriber_id,
                 username=data.username,
                 attribute="Framed-IP-Address",
-                value=data.framed_ipv4_address,
+                value=framed_ipv4_address,
             )
 
         # IPv6 address (RFC 6911)
-        if data.framed_ipv6_address:
+        if framed_ipv6_address:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=data.subscriber_id,
                 username=data.username,
                 attribute="Framed-IPv6-Address",
-                value=data.framed_ipv6_address,
+                value=framed_ipv6_address,
             )
 
         # IPv6 prefix for subscriber interface (RFC 3162)
-        if data.framed_ipv6_prefix:
+        if framed_ipv6_prefix:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=data.subscriber_id,
                 username=data.username,
                 attribute="Framed-IPv6-Prefix",
-                value=data.framed_ipv6_prefix,
+                value=framed_ipv6_prefix,
             )
 
         # IPv6 prefix delegation (RFC 4818)
-        if data.delegated_ipv6_prefix:
+        if delegated_ipv6_prefix:
             await self.repository.create_radreply(
                 tenant_id=self.tenant_id,
                 subscriber_id=data.subscriber_id,
                 username=data.username,
                 attribute="Delegated-IPv6-Prefix",
-                value=data.delegated_ipv6_prefix,
+                value=delegated_ipv6_prefix,
             )
 
         if data.session_timeout:
@@ -178,6 +194,15 @@ class RADIUSService:
             if profile_response is None:
                 raise ValueError(f"Bandwidth profile '{data.bandwidth_profile_id}' not found")
 
+        if profile and profile.service_vlan:
+            await self._apply_vlan_attributes(
+                username=data.username,
+                subscriber_id=data.subscriber_id,
+                vlan_id=profile.service_vlan,
+                inner_vlan_id=getattr(profile, "inner_vlan", None),
+                qinq_enabled=getattr(profile, "qinq_enabled", False),
+            )
+
         await self.session.commit()
 
         if data.framed_ipv4_address:
@@ -201,10 +226,10 @@ class RADIUSService:
             subscriber_id=radcheck.subscriber_id,
             username=radcheck.username,
             bandwidth_profile_id=data.bandwidth_profile_id,
-            framed_ipv4_address=data.framed_ipv4_address,
-            framed_ipv6_address=data.framed_ipv6_address,
-            framed_ipv6_prefix=data.framed_ipv6_prefix,
-            delegated_ipv6_prefix=data.delegated_ipv6_prefix,
+            framed_ipv4_address=framed_ipv4_address,
+            framed_ipv6_address=framed_ipv6_address,
+            framed_ipv6_prefix=framed_ipv6_prefix,
+            delegated_ipv6_prefix=delegated_ipv6_prefix,
             session_timeout=data.session_timeout,
             idle_timeout=data.idle_timeout,
             enabled=True,
@@ -685,27 +710,25 @@ class RADIUSService:
             await self.repository.delete_radreply(self.tenant_id, username, "Session-Timeout")
             if data.session_timeout:
                 subscriber_ref = await self._resolve_subscriber_id(username)
-                if subscriber_ref is not None:
-                    await self.repository.create_radreply(
-                        tenant_id=self.tenant_id,
-                        subscriber_id=subscriber_ref,
-                        username=username,
-                        attribute="Session-Timeout",
-                        value=str(data.session_timeout),
-                    )
+                await self.repository.create_radreply(
+                    tenant_id=self.tenant_id,
+                    subscriber_id=subscriber_ref,
+                    username=username,
+                    attribute="Session-Timeout",
+                    value=str(data.session_timeout),
+                )
 
         if data.idle_timeout is not None:
             await self.repository.delete_radreply(self.tenant_id, username, "Idle-Timeout")
             if data.idle_timeout:
                 subscriber_ref = await self._resolve_subscriber_id(username)
-                if subscriber_ref is not None:
-                    await self.repository.create_radreply(
-                        tenant_id=self.tenant_id,
-                        subscriber_id=subscriber_ref,
-                        username=username,
-                        attribute="Idle-Timeout",
-                        value=str(data.idle_timeout),
-                    )
+                await self.repository.create_radreply(
+                    tenant_id=self.tenant_id,
+                    subscriber_id=subscriber_ref,
+                    username=username,
+                    attribute="Idle-Timeout",
+                    value=str(data.idle_timeout),
+                )
 
         # Update bandwidth profile
         if data.bandwidth_profile_id:
@@ -1193,6 +1216,458 @@ class RADIUSService:
                 "username": username or "",
                 "error": str(e),
             }
+
+    async def _get_network_profile(
+        self, subscriber_id: str | None
+    ) -> SubscriberNetworkProfile | None:
+        """Fetch subscriber network profile if one exists."""
+        if not subscriber_id:
+            return None
+        stmt = (
+            select(SubscriberNetworkProfile)
+            .where(
+                SubscriberNetworkProfile.subscriber_id == subscriber_id,
+                SubscriberNetworkProfile.tenant_id == self.tenant_id,
+            )
+            .limit(1)
+        )
+        result = await self.session.execute(stmt)
+        return result.scalar_one_or_none()
+
+    async def _apply_vlan_attributes(
+        self,
+        username: str,
+        subscriber_id: str | None,
+        vlan_id: int,
+        inner_vlan_id: int | None = None,
+        qinq_enabled: bool = False,
+    ) -> None:
+        """
+        Create RADIUS Tunnel attributes for VLAN enforcement.
+
+        Supports both single VLAN tagging and QinQ (IEEE 802.1ad) double tagging.
+
+        **Single VLAN Mode** (qinq_enabled=False):
+        - Tunnel-Type: VLAN
+        - Tunnel-Medium-Type: IEEE-802
+        - Tunnel-Private-Group-ID: <vlan_id>
+
+        **QinQ Mode** (qinq_enabled=True):
+        - Outer VLAN (S-VLAN): Tag 1
+          - Tunnel-Type:1: VLAN
+          - Tunnel-Medium-Type:1: IEEE-802
+          - Tunnel-Private-Group-ID:1: <vlan_id>
+        - Inner VLAN (C-VLAN): Tag 2
+          - Tunnel-Type:2: VLAN
+          - Tunnel-Medium-Type:2: IEEE-802
+          - Tunnel-Private-Group-ID:2: <inner_vlan_id>
+
+        Args:
+            username: RADIUS username
+            subscriber_id: Subscriber UUID
+            vlan_id: Primary VLAN (S-VLAN in QinQ, single VLAN otherwise)
+            inner_vlan_id: Inner VLAN (C-VLAN) when QinQ is enabled
+            qinq_enabled: Enable QinQ double tagging
+        """
+        if qinq_enabled and inner_vlan_id:
+            # QinQ Mode: Double VLAN tagging
+            # Outer VLAN (S-VLAN) with tag 1
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Type:1",
+                value="VLAN",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Medium-Type:1",
+                value="IEEE-802",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Private-Group-ID:1",
+                value=str(vlan_id),
+                op=":=",
+            )
+
+            # Inner VLAN (C-VLAN) with tag 2
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Type:2",
+                value="VLAN",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Medium-Type:2",
+                value="IEEE-802",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Private-Group-ID:2",
+                value=str(inner_vlan_id),
+                op=":=",
+            )
+        else:
+            # Single VLAN Mode (backward compatible)
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Type",
+                value="VLAN",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Medium-Type",
+                value="IEEE-802",
+                op=":=",
+            )
+            await self.repository.create_radreply(
+                tenant_id=self.tenant_id,
+                subscriber_id=subscriber_id,
+                username=username,
+                attribute="Tunnel-Private-Group-ID",
+                value=str(vlan_id),
+                op=":=",
+            )
+
+    # =========================================================================
+    # Phase 3: Option 82 & VLAN Enforcement
+    # =========================================================================
+
+    @staticmethod
+    def parse_option82(access_request: dict[str, Any]) -> dict[str, str | None]:
+        """
+        Parse DHCP Option 82 (Relay Agent Information) from RADIUS Access-Request.
+
+        Option 82 provides:
+        - circuit-id: Physical port identifier (e.g., "OLT1/1/1/1:1", "ge-0/0/1.100")
+        - remote-id: Subscriber CPE identifier (e.g., MAC address, serial number)
+
+        These identifiers enable ISPs to:
+        1. Validate subscriber location (prevent service theft)
+        2. Enforce port-level access control
+        3. Correlate sessions with physical infrastructure
+        4. Troubleshoot connectivity issues
+
+        RADIUS Attributes:
+        - Agent-Circuit-Id (RADIUS attribute 82, sub-attribute 1)
+        - Agent-Remote-Id (RADIUS attribute 82, sub-attribute 2)
+
+        Args:
+            access_request: RADIUS Access-Request packet dictionary
+
+        Returns:
+            dict with 'circuit_id' and 'remote_id' keys (None if not present)
+
+        Example:
+            {
+                "circuit_id": "OLT1/1/1/1:1",  # OLT/rack/shelf/port:ONT
+                "remote_id": "ALCL12345678",   # ONU serial number
+            }
+        """
+        circuit_id = None
+        remote_id = None
+
+        # Check for Agent-Circuit-Id (sub-attribute 1)
+        if "Agent-Circuit-Id" in access_request:
+            circuit_id = access_request["Agent-Circuit-Id"]
+        elif "Alcatel-Lucent-Agent-Circuit-Id" in access_request:
+            # Vendor-specific variant
+            circuit_id = access_request["Alcatel-Lucent-Agent-Circuit-Id"]
+
+        # Check for Agent-Remote-Id (sub-attribute 2)
+        if "Agent-Remote-Id" in access_request:
+            remote_id = access_request["Agent-Remote-Id"]
+        elif "Alcatel-Lucent-Agent-Remote-Id" in access_request:
+            # Vendor-specific variant
+            remote_id = access_request["Alcatel-Lucent-Agent-Remote-Id"]
+
+        return {
+            "circuit_id": circuit_id,
+            "remote_id": remote_id,
+        }
+
+    async def validate_option82(
+        self,
+        subscriber_id: str,
+        access_request: dict[str, Any],
+    ) -> dict[str, Any]:
+        """
+        Validate Option 82 attributes against subscriber's network profile.
+
+        Enforces policies based on network profile configuration:
+        - ENFORCE: Deny access if Option 82 doesn't match
+        - LOG: Log mismatches but allow access
+        - IGNORE: Skip validation
+
+        Args:
+            subscriber_id: Subscriber UUID
+            access_request: RADIUS Access-Request packet
+
+        Returns:
+            dict with validation result:
+            {
+                "valid": bool,
+                "policy": str,  # "reject", "log", "ignore"
+                "mismatches": list[str],  # Mismatch descriptions
+                "circuit_id_received": str | None,
+                "circuit_id_expected": str | None,
+                "remote_id_received": str | None,
+                "remote_id_expected": str | None,
+            }
+        """
+        # Parse Option 82 from RADIUS request
+        option82 = self.parse_option82(access_request)
+
+        # Fetch subscriber's network profile
+        result = await self.session.execute(
+            select(SubscriberNetworkProfile).where(
+                and_(
+                    SubscriberNetworkProfile.subscriber_id == subscriber_id,
+                    SubscriberNetworkProfile.tenant_id == self.tenant_id,
+                    SubscriberNetworkProfile.deleted_at.is_(None),
+                )
+            )
+        )
+        profile = result.scalar_one_or_none()
+
+        # No profile = no validation
+        if not profile:
+            return {
+                "valid": True,
+                "policy": "ignore",
+                "mismatches": [],
+                "circuit_id_received": option82.get("circuit_id"),
+                "circuit_id_expected": None,
+                "remote_id_received": option82.get("remote_id"),
+                "remote_id_expected": None,
+            }
+
+        # Get policy from profile
+        policy = profile.option82_policy.value if profile.option82_policy else "log"
+
+        # If policy is IGNORE, skip validation
+        if policy.lower() == "ignore":
+            return {
+                "valid": True,
+                "policy": "ignore",
+                "mismatches": [],
+                "circuit_id_received": option82.get("circuit_id"),
+                "circuit_id_expected": profile.circuit_id,
+                "remote_id_received": option82.get("remote_id"),
+                "remote_id_expected": profile.remote_id,
+            }
+
+        # Validate circuit-id
+        mismatches = []
+        if profile.circuit_id and profile.circuit_id != option82.get("circuit_id"):
+            mismatches.append(
+                f"circuit_id mismatch: expected='{profile.circuit_id}', "
+                f"received='{option82.get('circuit_id')}'"
+            )
+
+        # Validate remote-id
+        if profile.remote_id and profile.remote_id != option82.get("remote_id"):
+            mismatches.append(
+                f"remote_id mismatch: expected='{profile.remote_id}', "
+                f"received='{option82.get('remote_id')}'"
+            )
+
+        # Determine if validation passed
+        valid = len(mismatches) == 0
+
+        # Phase 3: Audit logging
+        log_data = {
+            "subscriber_id": subscriber_id,
+            "tenant_id": self.tenant_id,
+            "policy": policy,
+            "valid": valid,
+            "circuit_id_expected": profile.circuit_id,
+            "circuit_id_received": option82.get("circuit_id"),
+            "remote_id_expected": profile.remote_id,
+            "remote_id_received": option82.get("remote_id"),
+            "mismatches": mismatches,
+        }
+
+        if not valid:
+            if policy.lower() == "enforce":
+                logger.warning(
+                    "radius.option82.mismatch_rejected",
+                    **log_data,
+                )
+            else:  # log policy
+                logger.info(
+                    "radius.option82.mismatch_logged",
+                    **log_data,
+                )
+        else:
+            logger.debug(
+                "radius.option82.match",
+                **log_data,
+            )
+
+        return {
+            "valid": valid,
+            "policy": policy,
+            "mismatches": mismatches,
+            "circuit_id_received": option82.get("circuit_id"),
+            "circuit_id_expected": profile.circuit_id,
+            "remote_id_received": option82.get("remote_id"),
+            "remote_id_expected": profile.remote_id,
+        }
+
+    async def authorize_subscriber(
+        self,
+        request: "RADIUSAuthorizationRequest",
+    ) -> "RADIUSAuthorizationResponse":
+        """
+        Authorize RADIUS Access-Request with Option 82 validation (Phase 3).
+
+        This method performs complete RADIUS authorization:
+        1. Subscriber authentication (username/password)
+        2. Option 82 validation (circuit-id, remote-id)
+        3. VLAN attribute injection from network profile
+        4. Bandwidth profile application
+        5. IPv4/IPv6 address assignment
+
+        Args:
+            request: RADIUS Access-Request with Option 82 attributes
+
+        Returns:
+            Authorization decision (Accept/Reject) with reply attributes
+        """
+        # Step 1: Check if subscriber exists
+        subscriber = await self.get_subscriber(request.username)
+        if not subscriber:
+            logger.warning(
+                "radius.authorization.user_not_found",
+                username=request.username,
+                tenant_id=self.tenant_id,
+            )
+            return RADIUSAuthorizationResponse(
+                accept=False,
+                reason=f"User '{request.username}' not found",
+                reply_attributes={},
+                option82_validation=None,
+            )
+
+        # Step 2: Validate password (if provided)
+        if request.password:
+            radcheck = await self.repository.get_radcheck_by_username(
+                self.tenant_id, request.username
+            )
+            if not radcheck:
+                logger.warning(
+                    "radius.authorization.no_radcheck",
+                    username=request.username,
+                    tenant_id=self.tenant_id,
+                )
+                return RADIUSAuthorizationResponse(
+                    accept=False,
+                    reason="Invalid password",
+                    reply_attributes={},
+                    option82_validation=None,
+                )
+
+            # Verify password using proper hash verification
+            if not verify_radius_password(request.password, radcheck.value):
+                logger.warning(
+                    "radius.authorization.invalid_password",
+                    username=request.username,
+                    tenant_id=self.tenant_id,
+                )
+                return RADIUSAuthorizationResponse(
+                    accept=False,
+                    reason="Invalid password",
+                    reply_attributes={},
+                    option82_validation=None,
+                )
+
+        # Step 3: Build Access-Request dict for Option 82 parsing
+        access_request = {}
+        if request.agent_circuit_id:
+            access_request["Agent-Circuit-Id"] = request.agent_circuit_id
+        if request.agent_remote_id:
+            access_request["Agent-Remote-Id"] = request.agent_remote_id
+        if request.alcatel_agent_circuit_id:
+            access_request["Alcatel-Lucent-Agent-Circuit-Id"] = request.alcatel_agent_circuit_id
+        if request.alcatel_agent_remote_id:
+            access_request["Alcatel-Lucent-Agent-Remote-Id"] = request.alcatel_agent_remote_id
+
+        # Step 4: Validate Option 82
+        if not subscriber.subscriber_id:
+            # No subscriber_id means no network profile, skip Option 82 validation
+            option82_result = {
+                "valid": True,
+                "policy": "ignore",
+                "mismatches": [],
+                "circuit_id_received": None,
+                "circuit_id_expected": None,
+                "remote_id_received": None,
+                "remote_id_expected": None,
+            }
+        else:
+            option82_result = await self.validate_option82(
+                subscriber_id=subscriber.subscriber_id,
+                access_request=access_request,
+            )
+
+        # Step 5: Enforce Option 82 policy
+        if not option82_result["valid"] and option82_result["policy"].lower() == "enforce":
+            logger.warning(
+                "radius.authorization.option82_rejected",
+                username=request.username,
+                tenant_id=self.tenant_id,
+                option82_validation=option82_result,
+            )
+            return RADIUSAuthorizationResponse(
+                accept=False,
+                reason=f"Option 82 validation failed: {', '.join(option82_result['mismatches'])}",
+                reply_attributes={},
+                option82_validation=option82_result,
+            )
+
+        # Step 6: Get reply attributes from database
+        radreplies = await self.repository.get_radreplies_by_username(
+            self.tenant_id, request.username
+        )
+        reply_attributes = {reply.attribute: reply.value for reply in radreplies}
+
+        # Step 7: Authorization successful
+        logger.info(
+            "radius.authorization.success",
+            username=request.username,
+            tenant_id=self.tenant_id,
+            option82_valid=option82_result["valid"],
+            option82_policy=option82_result["policy"],
+            reply_attributes_count=len(reply_attributes),
+        )
+
+        return RADIUSAuthorizationResponse(
+            accept=True,
+            reason="Access granted",
+            reply_attributes=reply_attributes,
+            option82_validation=option82_result,
+        )
 
     # =========================================================================
     # Usage Tracking

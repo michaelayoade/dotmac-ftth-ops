@@ -727,7 +727,7 @@ export function useServiceAreasByPostalCodeGraphQL(postalCode: string | undefine
  */
 export function useFiberCableDetailsAggregated(cableId: string | undefined) {
   const cableQuery = useFiberCableDetailGraphQL(cableId);
-  const healthQuery = useFiberHealthMetricsGraphQL({ cableId });
+  const healthQuery = useFiberHealthMetricsGraphQL(cableId ? { cableId } : undefined);
   const spliceQuery = useSplicePointsByCableGraphQL(cableId);
 
   return {

@@ -1,5 +1,7 @@
 # Stub file for dotmac.platform.db module
-from typing import Any, AsyncIterator, Callable, ContextManager, Iterator, TypeVar
+from collections.abc import AsyncIterator, Iterator
+from contextlib import AbstractContextManager
+from typing import Any
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession
@@ -43,10 +45,10 @@ def get_async_engine() -> AsyncEngine: ...
 
 # Session factories
 class SyncSessionLocal:
-    def __call__(self) -> ContextManager[Session]: ...
+    def __call__(self) -> AbstractContextManager[Session]: ...
 
 class AsyncSessionLocal:
-    def __call__(self) -> ContextManager[AsyncSession]: ...
+    def __call__(self) -> AbstractContextManager[AsyncSession]: ...
 
 async_session_maker: Any
 

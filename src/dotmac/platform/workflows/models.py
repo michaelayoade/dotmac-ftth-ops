@@ -59,7 +59,7 @@ class Workflow(Base, TimestampMixin):
     tags: Mapped[dict[str, Any] | list[Any] | None] = mapped_column(JSON, nullable=True)
 
     # Relationships
-    executions: Mapped[list["WorkflowExecution"]] = relationship(
+    executions: Mapped[list[WorkflowExecution]] = relationship(
         "WorkflowExecution", back_populates="workflow", cascade="all, delete-orphan"
     )
 
@@ -99,8 +99,8 @@ class WorkflowExecution(Base, TimestampMixin):
     tenant_id: Mapped[str | None] = mapped_column(String(255), ForeignKey("tenants.id"), index=True)
 
     # Relationships
-    workflow: Mapped["Workflow"] = relationship("Workflow", back_populates="executions")
-    steps: Mapped[list["WorkflowStep"]] = relationship(
+    workflow: Mapped[Workflow] = relationship("Workflow", back_populates="executions")
+    steps: Mapped[list[WorkflowStep]] = relationship(
         "WorkflowStep", back_populates="execution", cascade="all, delete-orphan"
     )
 
@@ -140,9 +140,7 @@ class WorkflowStep(Base, TimestampMixin):
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     # Relationships
-    execution: Mapped["WorkflowExecution"] = relationship(
-        "WorkflowExecution", back_populates="steps"
-    )
+    execution: Mapped[WorkflowExecution] = relationship("WorkflowExecution", back_populates="steps")
 
     def __repr__(self) -> str:
         return f"<WorkflowStep {self.step_name} status={self.status.value}>"

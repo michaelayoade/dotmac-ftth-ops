@@ -53,7 +53,7 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
         'Content-Type': 'application/json',
       };
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
       }
 
       const response = await fetch(
@@ -64,17 +64,17 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
         },
       );
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch RADIUS subscribers: ${response.statusText}`);
+      if (!response['ok']) {
+        throw new Error(`Failed to fetch RADIUS subscribers: ${response['statusText']}`);
       }
 
       const data = await response.json();
       return {
         data: data as RADIUSSubscriber[],
-        total: data.length,
+        total: data['length'],
       };
     },
-    enabled: options?.enabled ?? true,
+    enabled: options?.['enabled'] ?? true,
     staleTime: 30000, // 30 seconds
   });
 }
@@ -88,24 +88,24 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
         'Content-Type': 'application/json',
       };
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
       }
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/radius/sessions`, {
         credentials: 'include',
         headers,
       });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch RADIUS sessions: ${response.statusText}`);
+      if (!response['ok']) {
+        throw new Error(`Failed to fetch RADIUS sessions: ${response['statusText']}`);
       }
 
       const data = await response.json();
       return {
         data: data as RADIUSSession[],
-        total: data.length,
+        total: data['length'],
       };
     },
-    enabled: options?.enabled ?? true,
+    enabled: options?.['enabled'] ?? true,
     staleTime: 10000, // 10 seconds (sessions change frequently)
   });
 }

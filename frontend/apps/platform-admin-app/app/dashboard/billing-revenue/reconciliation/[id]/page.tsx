@@ -186,7 +186,7 @@ const getDiscrepancyIcon = (amount: number) => {
 export default function ReconciliationDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const id = params.id as string;
+  const id = params['id'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();

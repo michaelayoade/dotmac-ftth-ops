@@ -39,28 +39,6 @@ export function LiveBandwidthChart() {
     }
   }, [bandwidthData]);
 
-  // Simulate data if WebSocket not connected (for demo purposes)
-  useEffect(() => {
-    if (!isConnected) {
-      const interval = setInterval(() => {
-        const mockData: BandwidthData = {
-          timestamp: new Date().toISOString(),
-          upload_mbps: 50 + Math.random() * 50,
-          download_mbps: 100 + Math.random() * 100,
-          latency_ms: 10 + Math.random() * 20,
-        };
-
-        setHistory((prev) => {
-          const newHistory = [...prev, mockData];
-          return newHistory.slice(-50);
-        });
-      }, 2000);
-
-      return () => clearInterval(interval);
-    }
-    return undefined;
-  }, [isConnected]);
-
   const chartData = history.map((point) => ({
     time: format(new Date(point.timestamp), "HH:mm:ss"),
     upload: Math.round(point.upload_mbps),
@@ -124,44 +102,46 @@ export function LiveBandwidthChart() {
 
         {/* Chart */}
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
-              <YAxis className="text-xs" tick={{ fontSize: 10 }} />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--background))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: "6px",
-                }}
-              />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="upload"
-                stroke="hsl(142, 76%, 36%)"
-                strokeWidth={2}
-                dot={false}
-                name="Upload (Mbps)"
-              />
-              <Line
-                type="monotone"
-                dataKey="download"
-                stroke="hsl(217, 91%, 60%)"
-                strokeWidth={2}
-                dot={false}
-                name="Download (Mbps)"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {chartData.length === 0 ? (
+            <div className="h-full flex items-center justify-center text-sm text-muted-foreground">
+              {isConnected
+                ? "Awaiting telemetry…"
+                : "WebSocket connection offline. Bandwidth metrics will appear once the stream resumes."}
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                <XAxis dataKey="time" className="text-xs" tick={{ fontSize: 10 }} />
+                <YAxis className="text-xs" tick={{ fontSize: 10 }} />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--background))",
+                    border: "1px solid hsl(var(--border))",
+                    borderRadius: "6px",
+                  }}
+                />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="upload"
+                  stroke="hsl(142, 76%, 36%)"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Upload (Mbps)"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="download"
+                  stroke="hsl(217, 91%, 60%)"
+                  strokeWidth={2}
+                  dot={false}
+                  name="Download (Mbps)"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
-
-        {!isConnected && (
-          <p className="text-xs text-muted-foreground text-center mt-4">
-            Showing simulated data. WebSocket connection not available.
-          </p>
-        )}
       </CardContent>
     </Card>
   );

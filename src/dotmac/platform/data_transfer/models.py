@@ -288,7 +288,9 @@ class TransferJobResponse(BaseModel):  # BaseModel resolves to Any in isolation
     records_failed: int = Field(0, ge=0, description="Records failed")
     records_total: int | None = Field(None, description="Total records to process")
     error_message: str | None = Field(None, description="Error message if failed")
-    metadata: dict[str, Any] | None = Field(None, description="Additional metadata")
+    metadata: dict[str, Any] | None = Field(
+        None, description="Additional metadata", validation_alias="metadata_"
+    )
 
     @property
     def duration(self) -> float | None:

@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SkipLink } from "@dotmac/ui";
 import {
   Home,
@@ -54,10 +54,9 @@ import {
   Plug,
   GitBranch,
   Puzzle,
+  TrendingUp,
 } from "lucide-react";
 import { ThemeToggle } from "@dotmac/ui";
-import { apiClient } from "@/lib/api/client";
-import { logger } from "@/lib/logger";
 import { Can } from "@/components/auth/PermissionGuard";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useBranding } from "@/hooks/useBranding";
@@ -66,6 +65,10 @@ import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatu
 import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
+import { useSession } from "@dotmac/better-auth";
+import type { ExtendedUser } from "@dotmac/better-auth";
+import { signOut } from "@dotmac/better-auth";
+import { RealtimeProvider } from "@/contexts/RealtimeProvider";
 
 interface NavItem {
   name: string;
@@ -158,7 +161,9 @@ const allSections: NavSection[] = [
     href: "/dashboard/jobs",
     items: [
       { name: "Automation Jobs", href: "/dashboard/jobs", icon: Activity },
+      { name: "Orchestration", href: "/dashboard/orchestration", icon: GitBranch },
       { name: "Workflows", href: "/dashboard/workflows", icon: Repeat },
+      { name: "Data Import", href: "/dashboard/data-import", icon: Database },
       { name: "Data Pipelines", href: "/dashboard/data-transfer", icon: ArrowLeftRight },
     ],
   },
@@ -181,6 +186,7 @@ const allSections: NavSection[] = [
     items: [
       { name: "Plugin Catalog", href: "/dashboard/plugins", icon: Package },
       { name: "Partner Integrations", href: "/dashboard/partners", icon: Handshake },
+      { name: "Partner Revenue", href: "/dashboard/partners/revenue", icon: TrendingUp },
     ],
   },
 ];
@@ -234,21 +240,20 @@ function checkSectionVisibility(
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const router = useRouter();
   const { hasPermission, hasAnyPermission } = useRBAC();
   const { branding } = useBranding();
   const portalType = getPortalType();
+  const { data: session, isPending: authLoading } = useSession();
+  const userData = session?.user as ExtendedUser | undefined;
 
-  // Type helper for user data
-  const userData = user as {
-    id?: string;
-    username?: string;
-    email?: string;
-    full_name?: string;
-    roles?: string[];
-  } | null;
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.replace("/login");
+    }
+  }, [authLoading, session, router]);
 
   const portalScopedSections = useMemo(
     () =>
@@ -256,7 +261,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         .filter((section) => portalAllows(section.portals, portalType))
         .map((section) => ({
           ...section,
-          items: section.items?.filter((item) => portalAllows(item.portals, portalType)),
+          ...(section.items && {
+            items: section.items.filter((item) => portalAllows(item.portals, portalType)),
+          }),
         })),
     [portalType],
   );
@@ -317,70 +324,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   }, [pathname, visibleSections]);
 
-  // Fetch current user
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  const fetchCurrentUser = async () => {
-    // Skip auth check in E2E test mode
-    if (typeof window !== "undefined" && (window as any).__e2e_test__) {
-      logger.info("Dashboard: E2E test mode detected, skipping auth check");
-      setUser({
-        id: "e2e-test-user",
-        username: "admin",
-        email: "admin@example.com",
-        full_name: "Test Admin",
-        roles: ["platform_admin"],
-      });
-      return;
-    }
-
-    try {
-      logger.debug("Dashboard: Fetching current user");
-      const response = await apiClient.get("/auth/me");
-
-      if (response.data) {
-        const userData = response.data as Record<string, unknown> & {
-          id?: string;
-        };
-        logger.info("Dashboard: User fetched successfully", {
-          userId: userData.id,
-        });
-        setUser(userData);
-      } else {
-        logger.warn("Dashboard: Failed to fetch user, redirecting to login", {
-          response: response,
-        });
-        // Token expired or invalid - redirect to login
-        window.location.href = "/login";
-      }
-    } catch (error) {
-      logger.error(
-        "Dashboard: Error fetching user",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-      // On error, redirect to login
-      window.location.href = "/login";
-    }
-  };
-
   const handleLogout = async () => {
-    try {
-      await apiClient.post("/auth/logout");
-      window.location.href = "/login";
-    } catch (error) {
-      logger.error("Logout error", error instanceof Error ? error : new Error(String(error)));
-      // Still redirect even if logout fails
-      window.location.href = "/login";
-    }
+    await signOut();
+    router.push("/login");
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SkipLink />
-      {/* Top Navigation Bar */}
-      <nav
+    <RealtimeProvider>
+      <div className="min-h-screen bg-background">
+        <SkipLink />
+        {/* Top Navigation Bar */}
+        <nav
         className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
         aria-label="Main navigation"
       >
@@ -651,6 +605,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onClick={() => setSidebarOpen(false)}
         />
       )}
-    </div>
+      </div>
+    </RealtimeProvider>
   );
 }

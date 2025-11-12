@@ -136,10 +136,12 @@ async def api_health_check() -> dict[str, Any]:
     health_summary = checker.get_summary()
 
     response = _PLATFORM_HEALTH_SUMMARY.copy()
-    response.update({
-        "services": health_summary["services"],
-        "healthy": health_summary["healthy"],
-    })
+    response.update(
+        {
+            "services": health_summary["services"],
+            "healthy": health_summary["healthy"],
+        }
+    )
 
     return response
 
@@ -159,6 +161,7 @@ async def redis_health_check() -> dict[str, Any]:
     Returns 503 if Redis is unavailable.
     """
     from fastapi import HTTPException
+
     from ..redis_client import redis_manager
 
     try:
@@ -170,7 +173,7 @@ async def redis_health_check() -> dict[str, Any]:
                 detail={
                     "error": "Redis unavailable",
                     "info": health_info,
-                }
+                },
             )
 
         return health_info
@@ -181,5 +184,5 @@ async def redis_health_check() -> dict[str, Any]:
             detail={
                 "error": "Redis health check failed",
                 "message": str(e),
-            }
+            },
         )

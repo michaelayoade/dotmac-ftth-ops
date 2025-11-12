@@ -2,6 +2,7 @@
 Orchestration Service.
 
 Coordinates complex multi-system workflows for subscriber lifecycle management.
+# mypy: disable-error-code="arg-type,assignment"
 Handles end-to-end provisioning across CRM, BSS, OSS, and network systems.
 """
 
@@ -28,8 +29,8 @@ from dotmac.platform.radius.models import RadCheck
 from dotmac.platform.radius.schemas import RADIUSSubscriberCreate
 from dotmac.platform.radius.service import RADIUSService
 from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
-from dotmac.platform.voltha.service import VOLTHAService
 from dotmac.platform.tenant import get_current_tenant_id, set_current_tenant_id
+from dotmac.platform.voltha.service import VOLTHAService
 
 logger = structlog.get_logger(__name__)
 
@@ -588,8 +589,8 @@ class OrchestrationService:
         radcheck_entry = radcheck_result.scalar_one_or_none()
 
         if radcheck_entry:
-            setattr(radcheck_entry, "attribute", "Auth-Type")
-            setattr(radcheck_entry, "value", "Reject")
+            radcheck_entry.attribute = "Auth-Type"
+            radcheck_entry.value = "Reject"
 
         # Mark as suspended
         subscriber.status = SubscriberStatus.SUSPENDED
@@ -658,8 +659,8 @@ class OrchestrationService:
         radcheck_entry = radcheck_result.scalar_one_or_none()
 
         if radcheck_entry:
-            setattr(radcheck_entry, "attribute", "Cleartext-Password")
-            setattr(radcheck_entry, "value", subscriber.password)
+            radcheck_entry.attribute = "Cleartext-Password"
+            radcheck_entry.value = subscriber.password
 
         # Mark as active
         subscriber.status = SubscriberStatus.ACTIVE

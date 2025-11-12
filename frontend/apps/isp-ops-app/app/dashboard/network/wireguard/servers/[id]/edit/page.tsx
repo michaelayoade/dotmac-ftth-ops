@@ -40,35 +40,35 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
   useEffect(() => {
     if (server) {
       setFormData({
-        name: server.name,
-        description: server.description,
-        public_endpoint: server.public_endpoint,
-        status: server.status,
-        max_peers: server.max_peers,
-        dns_servers: server.dns_servers,
-        allowed_ips: server.allowed_ips,
-        persistent_keepalive: server.persistent_keepalive,
-        location: server.location,
-        metadata: server.metadata_,
+        name: server['name'],
+        description: server['description'],
+        public_endpoint: server['public_endpoint'],
+        status: server['status'],
+        max_peers: server['max_peers'],
+        dns_servers: server['dns_servers'],
+        allowed_ips: server['allowed_ips'],
+        persistent_keepalive: server['persistent_keepalive'],
+        location: server['location'],
+        metadata: server['metadata_'],
       });
-      setDnsInput(server.dns_servers.join(", "));
-      setAllowedIpsInput(server.allowed_ips.join(", "));
+      setDnsInput(server['dns_servers'].join(", "));
+      setAllowedIpsInput(server['allowed_ips'].join(", "));
     }
   }, [server]);
 
   const validateForm = (): boolean => {
     const errors: Record<string, string> = {};
 
-    if (formData.name && !formData.name.trim()) {
-      errors.name = "Server name cannot be empty";
+    if (formData['name'] && !formData['name'].trim()) {
+      errors['name'] = "Server name cannot be empty";
     }
 
-    if (formData.public_endpoint && !formData.public_endpoint.trim()) {
-      errors.public_endpoint = "Public endpoint cannot be empty";
+    if (formData['public_endpoint'] && !formData['public_endpoint'].trim()) {
+      errors['public_endpoint'] = "Public endpoint cannot be empty";
     }
 
-    if (formData.max_peers && (formData.max_peers < 1 || formData.max_peers > 65535)) {
-      errors.max_peers = "Max peers must be between 1 and 65535";
+    if (formData['max_peers'] && (formData['max_peers'] < 1 || formData['max_peers'] > 65535)) {
+      errors['max_peers'] = "Max peers must be between 1 and 65535";
     }
 
     const dns_servers = dnsInput
@@ -76,7 +76,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
       .map((s) => s.trim())
       .filter((s) => s);
     if (dns_servers.length === 0) {
-      errors.dns_servers = "At least one DNS server is required";
+      errors['dns_servers'] = "At least one DNS server is required";
     }
 
     const allowed_ips = allowedIpsInput
@@ -84,7 +84,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
       .map((s) => s.trim())
       .filter((s) => s);
     if (allowed_ips.length === 0) {
-      errors.allowed_ips = "At least one allowed IP range is required";
+      errors['allowed_ips'] = "At least one allowed IP range is required";
     }
 
     setValidationErrors(errors);
@@ -112,8 +112,8 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
       ...formData,
       dns_servers,
       allowed_ips,
-      description: formData.description || null,
-      location: formData.location || null,
+      description: formData['description'] || null,
+      location: formData['location'] || null,
     };
 
     updateServer(
@@ -175,7 +175,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Server className="h-8 w-8" />
-            Edit Server: {server.name}
+            Edit Server: {server['name']}
           </h1>
           <p className="text-muted-foreground mt-1">Update server configuration and settings</p>
         </div>
@@ -218,22 +218,22 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               </label>
               <input
                 type="text"
-                value={formData.name || ""}
+                value={formData['name'] || ""}
                 onChange={(e) => handleFieldChange("name", e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.name ? "border-red-500" : ""
+                  validationErrors['name']? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.name && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors.name}</p>
+              {validationErrors['name'] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors['name']}</p>
               )}
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-1">Description</label>
               <textarea
-                value={formData.description || ""}
+                value={formData['description'] || ""}
                 onChange={(e) => handleFieldChange("description", e.target.value)}
                 rows={3}
                 className="w-full px-4 py-2 border rounded-md"
@@ -244,7 +244,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               <label className="block text-sm font-medium mb-1">Location</label>
               <input
                 type="text"
-                value={formData.location || ""}
+                value={formData['location'] || ""}
                 onChange={(e) => handleFieldChange("location", e.target.value)}
                 placeholder="e.g., New York, US"
                 className="w-full px-4 py-2 border rounded-md"
@@ -256,7 +256,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 Status <span className="text-red-500">*</span>
               </label>
               <select
-                value={formData.status || server.status}
+                value={formData['status'] || server['status']}
                 onChange={(e) =>
                   handleFieldChange("status", e.target.value as WireGuardServerStatus)
                 }
@@ -289,7 +289,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 </label>
                 <input
                   type="text"
-                  value={server.public_endpoint}
+                  value={server['public_endpoint']}
                   disabled
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
@@ -299,7 +299,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 <label className="block text-sm font-medium mb-1 text-gray-600">Listen Port</label>
                 <input
                   type="text"
-                  value={server.listen_port}
+                  value={server['listen_port']}
                   disabled
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
@@ -309,20 +309,20 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 <label className="block text-sm font-medium mb-1 text-gray-600">Server IPv4</label>
                 <input
                   type="text"
-                  value={server.server_ipv4}
+                  value={server['server_ipv4']}
                   disabled
                   className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                 />
               </div>
 
-              {server.server_ipv6 && (
+              {server['server_ipv6'] && (
                 <div>
                   <label className="block text-sm font-medium mb-1 text-gray-600">
                     Server IPv6
                   </label>
                   <input
                     type="text"
-                    value={server.server_ipv6}
+                    value={server['server_ipv6']}
                     disabled
                     className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-600 cursor-not-allowed"
                   />
@@ -334,7 +334,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               <label className="block text-sm font-medium mb-1 text-gray-600">Public Key</label>
               <input
                 type="text"
-                value={server.public_key}
+                value={server['public_key']}
                 disabled
                 className="w-full px-4 py-2 border rounded-md bg-gray-100 text-gray-600 cursor-not-allowed font-mono text-xs"
               />
@@ -352,15 +352,15 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               </label>
               <input
                 type="text"
-                value={formData.public_endpoint || ""}
+                value={formData['public_endpoint'] || ""}
                 onChange={(e) => handleFieldChange("public_endpoint", e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.public_endpoint ? "border-red-500" : ""
+                  validationErrors['public_endpoint'] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.public_endpoint && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors.public_endpoint}</p>
+              {validationErrors['public_endpoint'] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors['public_endpoint']}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Update if the public DNS or IP changes
@@ -373,20 +373,20 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               </label>
               <input
                 type="number"
-                value={formData.max_peers || 0}
+                value={formData['max_peers'] || 0}
                 onChange={(e) => handleFieldChange("max_peers", parseInt(e.target.value))}
-                min={server.current_peers}
+                min={server['current_peers']}
                 max={65535}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.max_peers ? "border-red-500" : ""
+                  validationErrors['max_peers'] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.max_peers && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors.max_peers}</p>
+              {validationErrors['max_peers'] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors['max_peers']}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Current peers: {server.current_peers}. Cannot set below this value.
+                Current peers: {server['current_peers']}. Cannot set below this value.
               </p>
             </div>
 
@@ -399,12 +399,12 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 value={dnsInput}
                 onChange={(e) => setDnsInput(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.dns_servers ? "border-red-500" : ""
+                  validationErrors['dns_servers'] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.dns_servers && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors.dns_servers}</p>
+              {validationErrors['dns_servers'] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors['dns_servers']}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated DNS servers (affects new peer configs)
@@ -420,12 +420,12 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
                 value={allowedIpsInput}
                 onChange={(e) => setAllowedIpsInput(e.target.value)}
                 className={`w-full px-4 py-2 border rounded-md ${
-                  validationErrors.allowed_ips ? "border-red-500" : ""
+                  validationErrors['allowed_ips'] ? "border-red-500" : ""
                 }`}
                 required
               />
-              {validationErrors.allowed_ips && (
-                <p className="text-sm text-red-500 mt-1">{validationErrors.allowed_ips}</p>
+              {validationErrors['allowed_ips'] && (
+                <p className="text-sm text-red-500 mt-1">{validationErrors['allowed_ips']}</p>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Comma-separated CIDR ranges (affects new peer configs)
@@ -438,7 +438,7 @@ export default function EditServerPage({ params }: EditServerPageProps): JSX.Ele
               </label>
               <input
                 type="number"
-                value={formData.persistent_keepalive || 0}
+                value={formData['persistent_keepalive'] || 0}
                 onChange={(e) =>
                   handleFieldChange("persistent_keepalive", parseInt(e.target.value))
                 }

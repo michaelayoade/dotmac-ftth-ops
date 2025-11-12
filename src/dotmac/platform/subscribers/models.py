@@ -38,7 +38,7 @@ from dotmac.platform.radius.models import INET  # Cross-database INET type
 from dotmac.platform.services.lifecycle.models import ServiceType
 
 if TYPE_CHECKING:
-    pass
+    from dotmac.platform.ip_management.models import IPReservation
 
 
 class PasswordHashingMethod(str, Enum):
@@ -415,6 +415,17 @@ class Subscriber(Base, TimestampMixin, TenantMixin, SoftDeleteMixin, AuditMixin)
     radius_checks = relationship("RadCheck", back_populates="subscriber", lazy="dynamic")
     radius_replies = relationship("RadReply", back_populates="subscriber", lazy="dynamic")
     radius_sessions = relationship("RadAcct", back_populates="subscriber", lazy="dynamic")
+    network_profile = relationship(
+        "SubscriberNetworkProfile",
+        back_populates="subscriber",
+        uselist=False,
+        lazy="joined",
+    )
+    ip_reservations: Mapped[list["IPReservation"]] = relationship(
+        "IPReservation",
+        back_populates="subscriber",
+        cascade="all, delete-orphan",
+    )
 
     # Indexes and constraints
     # Note: Partial unique indexes exclude soft-deleted rows to allow re-use

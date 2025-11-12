@@ -20,25 +20,24 @@ export * from "./config/framework.config";
 export * from "./config/ThemeProvider";
 export * from "./config/theme.config";
 // Hooks (excluding conflict-prone exports)
+// Note: Auth hooks removed - use Better Auth's useSession() from @dotmac/better-auth
 export {
   useApiData,
   useCachedData,
-  useAuth,
   useBilling,
   useCommunication,
   useFormatting,
-  useMFA,
-  useOfflineSync,
+  // Note: useMFA removed - deprecated hook that depended on authStore
+  // Note: useOfflineSync removed - deprecated hook that depended on authStore
   usePerformanceMonitoring,
-  usePermissions,
-  usePortalAuth,
+  // Note: usePermissions removed - deprecated hook that depended on authStore
   usePortalIdAuth,
   useProvisioning,
   useISPModules,
   useISPTenant,
   useISPTenantProvider,
   useWebSocket,
-  useRealTimeSync,
+  // Note: useRealTimeSync removed - deprecated hook that depended on authStore
   useRouteProtection,
   useCustomRouteProtection,
   useAppState,
@@ -69,7 +68,7 @@ export {
 
 // Security hooks
 export { useSecureForm } from "./hooks/useSecureForm";
-export { useMFAGuard } from "./hooks/useMFA";
+// Note: useMFAGuard removed - useMFA.ts file deleted (depended on authStore)
 
 // Additional WebSocket hooks
 export {
@@ -79,7 +78,7 @@ export {
 } from "./hooks/useWebSocket";
 
 // Real-time event hooks
-export { useRealTimeEvent, useRealTimeData } from "./hooks/useRealTimeSync";
+// Note: useRealTimeEvent, useRealTimeData removed - useRealTimeSync.ts file deleted (depended on authStore)
 
 // Business validation hooks
 export { useBusinessValidation } from "./hooks/useBusinessValidation";
@@ -161,7 +160,7 @@ export {
 export * from "./stores";
 
 // Explicitly export store hooks for clarity
-export { useAuthStore } from "@dotmac/headless/auth";
+// Note: useAuthStore removed - use Better Auth's useSession() from @dotmac/better-auth
 export { useTenantStore } from "@dotmac/headless/stores";
 export { useAppStore } from "@dotmac/headless/stores";
 // Types (exclude conflicting types that are exported from hooks)

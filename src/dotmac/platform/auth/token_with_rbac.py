@@ -8,14 +8,16 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from fastapi import HTTPException
+from fastapi import Depends, HTTPException
 from jwt.exceptions import InvalidTokenError as JWTError
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
-from dotmac.platform.auth.core import JWTService
+from dotmac.platform.auth.core import JWTService, UserInfo, get_current_user
 from dotmac.platform.auth.exceptions import InvalidToken
 from dotmac.platform.auth.rbac_service import RBACService
 from dotmac.platform.core.caching import cache_get, cache_set
+from dotmac.platform.database import get_async_session
 from dotmac.platform.settings import settings
 from dotmac.platform.user_management.models import User
 
@@ -51,12 +53,17 @@ class RBACTokenService:
             "sub": str(user.id),
             "email": user.email,
             "username": user.username,
-            "permissions": list(permissions),  # Convert set to list
+            "permissions": list(permissions),  # Convert snapshot to list
             "roles": role_names,
             "tenant_id": (
                 str(user.tenant_id) if hasattr(user, "tenant_id") and user.tenant_id else None
             ),
         }
+
+        # Enrich token with partner metadata if user belongs to a partner
+        partner_metadata = await self._get_partner_metadata(user, db_session)
+        if partner_metadata:
+            claims.update(partner_metadata)
 
         # Add any additional claims
         if additional_claims:
@@ -91,6 +98,61 @@ class RBACTokenService:
             f"Created access token for user {user.id} with {len(permissions)} permissions and {len(role_names)} roles"
         )
         return token
+
+    async def _get_partner_metadata(self, user: User, db_session: Session) -> dict[str, Any] | None:
+        """
+        Get partner metadata for token enrichment.
+
+        Returns partner_id and managed_tenant_ids if user belongs to a partner with active tenant links.
+        """
+        try:
+            from sqlalchemy import select
+            from sqlalchemy.ext.asyncio import AsyncSession
+
+            from dotmac.platform.partner_management.models import (
+                Partner,
+                PartnerTenantLink,
+                PartnerUser,
+            )
+
+            # Convert sync session to async if needed
+            if not isinstance(db_session, AsyncSession):
+                return None
+
+            # Check if user is a partner user
+            result = await db_session.execute(
+                select(PartnerUser).where(PartnerUser.user_id == user.id)
+            )
+            partner_user = result.scalars().first()
+
+            if not partner_user:
+                return None
+
+            # Get partner
+            partner_result = await db_session.execute(
+                select(Partner).where(Partner.id == partner_user.partner_id)
+            )
+            partner = partner_result.scalars().first()
+
+            if not partner:
+                return None
+
+            # Get active managed tenant links
+            links_result = await db_session.execute(
+                select(PartnerTenantLink.managed_tenant_id).where(
+                    PartnerTenantLink.partner_id == partner.id,
+                    PartnerTenantLink.is_active == True,  # noqa: E712
+                )
+            )
+            managed_tenant_ids = list(links_result.scalars().all())
+
+            return {
+                "partner_id": str(partner.id),
+                "managed_tenant_ids": managed_tenant_ids,
+            }
+        except Exception as e:
+            logger.warning(f"Failed to get partner metadata for user {user.id}: {e}")
+            return None
 
     async def create_refresh_token(self, user: User, expires_delta: timedelta | None = None) -> str:
         """
@@ -250,3 +312,51 @@ class RBACTokenService:
 def get_rbac_token_service(jwt_service: JWTService, rbac_service: RBACService) -> RBACTokenService:
     """Factory function to create RBAC token service"""
     return RBACTokenService(jwt_service, rbac_service)
+
+
+async def get_current_user_with_rbac(
+    current_user_info: UserInfo = Depends(get_current_user),
+    db: AsyncSession = Depends(get_async_session),
+) -> User:
+    """
+    FastAPI dependency to get current authenticated user as full User model.
+
+    This is a compatibility function for routers that need the full User object
+    instead of just UserInfo. Most new code should use get_current_user from
+    auth.core which returns UserInfo.
+
+    Usage:
+        @router.get("/endpoint")
+        async def my_endpoint(
+            current_user: User = Depends(get_current_user_with_rbac)
+        ):
+            ...
+
+    Returns:
+        User: Full User model with all database fields
+
+    Raises:
+        HTTPException: If user is not authenticated or not found
+    """
+    from sqlalchemy import select
+
+    # Fetch full User object from database
+    stmt = select(User).where(User.id == UUID(current_user_info.user_id))
+    result = await db.execute(stmt)
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="User not found in database",
+        )
+
+    return user
+
+
+# Export for use in routers
+__all__ = [
+    "RBACTokenService",
+    "get_rbac_token_service",
+    "get_current_user_with_rbac",
+]

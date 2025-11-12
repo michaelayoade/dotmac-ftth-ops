@@ -80,16 +80,16 @@ export function TenantManagement() {
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   const { toast } = useToast();
-  const queryParams = useMemo<PlatformTenantListParams>(
-    () => ({
+  const queryParams = useMemo<PlatformTenantListParams>(() => {
+    const trimmedSearch = filters.search.trim();
+    return {
       page: pagination.page,
       limit: pagination.pageSize,
-      search: filters.search.trim() || undefined,
-      status: filters.status || undefined,
-      plan: filters.plan || undefined,
-    }),
-    [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan],
-  );
+      ...(trimmedSearch ? { search: trimmedSearch } : {}),
+      ...(filters.status ? { status: filters.status } : {}),
+      ...(filters.plan ? { plan: filters.plan } : {}),
+    };
+  }, [pagination.page, pagination.pageSize, filters.search, filters.status, filters.plan]);
 
   const { data, isLoading, isFetching } = usePlatformTenants(queryParams);
 
@@ -276,7 +276,7 @@ export function TenantManagement() {
                       </TableCell>
                       <TableCell>
                         <Badge variant={tenant.status === "active" ? "default" : "outline"}>
-                          {tenant.status ?? "unknown"}
+                          {tenant['status']?? "unknown"}
                         </Badge>
                       </TableCell>
                       <TableCell className="hidden capitalize lg:table-cell">
@@ -289,7 +289,7 @@ export function TenantManagement() {
                         <Badge variant="secondary">{tenant.usage?.storage_gb ?? 0}</Badge>
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {tenant.created_at ? new Date(tenant.created_at).toLocaleDateString() : "—"}
+                        {tenant['created_at']? new Date(tenant.created_at).toLocaleDateString() : "—"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex items-center justify-end gap-1">
@@ -473,8 +473,7 @@ export function TenantManagement() {
                 <div>
                   <p className="text-sm text-muted-foreground">Created</p>
                   <p className="mt-1">
-                    {detailTenant.created_at
-                      ? new Date(detailTenant.created_at).toLocaleString()
+                    {detailTenant['created_at']? new Date(detailTenant.created_at).toLocaleString()
                       : "—"}
                   </p>
                 </div>

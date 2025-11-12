@@ -4,14 +4,13 @@ Comprehensive end-to-end tests for the DotMac Platform using Playwright.
 
 ## Overview
 
-This test suite provides comprehensive coverage of:
+This test suite provides coverage across:
 
 - **Authentication flows** (login, MFA, logout)
-- **API integrations** (REST and GraphQL)
-- **User journeys** (admin and regular user workflows)
-- **Real-time features** (WebSocket, notifications)
-- **Performance testing**
-- **Visual regression testing**
+- **API & GraphQL integrations**
+- **Admin + ISP user journeys and workflows**
+- **Accessibility and visual regression smoke tests**
+- **Contract validation and MSW-backed scenarios**
 
 ## Setup
 
@@ -42,7 +41,7 @@ Create `.env` file in the e2e directory:
 
 ```env
 # Application URLs
-E2E_BASE_URL=http://localhost:3000
+E2E_BASE_URL=http://localhost:3001
 API_BASE_URL=http://localhost:8000
 
 # Test credentials (DO NOT use production credentials!)
@@ -94,44 +93,45 @@ pnpm test --project="Mobile Safari"
 ### Test Categories
 
 ```bash
-# Authentication tests
-pnpm test tests/auth/
+# Authentication suites
+pnpm test tests/auth
 
-# API integration tests
-pnpm test tests/api/
+# REST API suites
+pnpm test tests/api
 
-# User journey tests
-pnpm test tests/journeys/
+# GraphQL suites
+pnpm test tests/graphql
 
-# Performance tests
-pnpm test tests/performance/
+# User journeys (admin + ISP)
+pnpm test tests/journeys
 
-# Visual regression tests
-pnpm test tests/visual/
+# Workflow automation scenarios
+pnpm test tests/workflows
+
+# Individual spec (e.g., visual regression)
+pnpm test tests/visual-regression.spec.ts
 ```
 
 ## Test Structure
 
 ```
 tests/
-├── auth/                     # Authentication flows
-│   ├── login.spec.ts        # Login/logout functionality
-│   ├── mfa.spec.ts          # Multi-factor authentication
-│   └── oauth.spec.ts        # OAuth provider testing
-├── api/                     # API integration tests
-│   ├── rest-integration.spec.ts     # REST API tests
-│   ├── graphql-integration.spec.ts  # GraphQL API tests
-│   └── websocket.spec.ts    # WebSocket tests
-├── journeys/                # End-to-end user workflows
-│   ├── admin-workflow.spec.ts       # Admin user journey
-│   ├── user-workflow.spec.ts        # Regular user journey
-│   └── guest-workflow.spec.ts       # Anonymous user journey
-├── performance/             # Performance and load tests
-│   ├── page-load.spec.ts    # Page load performance
-│   └── api-performance.spec.ts      # API response times
-└── visual/                  # Visual regression tests
-    ├── login-page.spec.ts   # Login page screenshots
-    └── dashboard.spec.ts    # Dashboard visual tests
+├── auth/                        # Login, MFA, session flows
+├── api/                         # REST integration specs
+├── graphql/                     # GraphQL and contract specs
+├── journeys/                    # Cross-app user journeys
+├── workflows/                   # Automation & provisioning flows
+├── accessibility.spec.ts        # Axe-powered accessibility smoke test
+├── admin-data-transfer.spec.ts  # Admin portal workflows
+├── admin-integrations.spec.ts
+├── admin-operations.spec.ts
+├── api-contract-validation.spec.ts
+├── authenticated-workflows.spec.ts
+├── branding-settings.spec.ts
+├── comprehensive-page-tests.spec.ts
+├── dual-stack-provisioning.spec.ts
+├── msw-contract-validation.spec.ts
+└── visual-regression.spec.ts    # Screenshot diff test
 ```
 
 ## Page Objects
@@ -279,7 +279,7 @@ Tests are sharded across multiple runners for faster execution:
    curl http://localhost:8000/health
 
    # Check frontend is running
-   curl http://localhost:3000
+   curl http://localhost:3001
    ```
 
 2. **Authentication Failures**

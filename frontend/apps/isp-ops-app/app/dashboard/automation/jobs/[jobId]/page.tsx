@@ -43,7 +43,7 @@ interface Job {
 function JobDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const jobId = params?.jobId as string;
+  const jobId = params?.['jobId'] as string;
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const confirmDialog = useConfirmDialog();

@@ -42,7 +42,7 @@ interface FeatureFlag {
 function FeatureFlagDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const flagName = decodeURIComponent(params?.flagName as string);
+  const flagName = decodeURIComponent(params?.['flagName'] as string);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isEditing, setIsEditing] = useState(false);

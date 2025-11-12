@@ -9,7 +9,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, cast
 
-from sqlalchemy import and_, case, func, select
+from sqlalchemy import and_, case, func, literal, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from dotmac.platform.billing.core.entities import (
@@ -22,6 +22,7 @@ from dotmac.platform.billing.core.enums import (
     InvoiceStatus,
     PaymentStatus,
 )
+from dotmac.platform.customer_management.models import Customer
 
 logger = logging.getLogger(__name__)
 
@@ -639,3 +640,389 @@ class AgingReportGenerator:
             },
             "generated_at": datetime.now(UTC).isoformat(),
         }
+
+    async def get_aging_by_partner(
+        self,
+        tenant_id: str,
+    ) -> list[dict[str, Any]]:
+        """
+        Get AR aging breakdown by partner.
+
+        Returns aging buckets grouped by partner_id with full bucket analysis.
+        """
+        current_date = datetime.now(UTC).date()
+
+        stmt = (
+            select(
+                Customer.partner_id,
+                func.count(InvoiceEntity.invoice_id).label("invoice_count"),
+                func.sum(InvoiceEntity.remaining_balance).label("total_outstanding"),
+                func.sum(
+                    case(
+                        (
+                            InvoiceEntity.due_date > current_date,
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("current"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date,
+                                InvoiceEntity.due_date > current_date - timedelta(days=30),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_1_30"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date - timedelta(days=30),
+                                InvoiceEntity.due_date > current_date - timedelta(days=60),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_31_60"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date - timedelta(days=60),
+                                InvoiceEntity.due_date > current_date - timedelta(days=90),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_61_90"),
+                func.sum(
+                    case(
+                        (
+                            InvoiceEntity.due_date <= current_date - timedelta(days=90),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("over_90_days"),
+            )
+            .join(Customer, InvoiceEntity.customer_id == Customer.id)
+            .where(
+                and_(
+                    InvoiceEntity.tenant_id == tenant_id,
+                    InvoiceEntity.payment_status != PaymentStatus.SUCCEEDED,
+                    InvoiceEntity.status.in_([InvoiceStatus.OPEN, InvoiceStatus.OVERDUE]),
+                    InvoiceEntity.remaining_balance > 0,
+                )
+            )
+            .group_by(Customer.partner_id)
+        )
+
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        return [
+            {
+                "partner_id": row.partner_id,
+                "invoice_count": row.invoice_count or 0,
+                "total_outstanding": row.total_outstanding or 0,
+                "buckets": {
+                    "current": row.current or 0,
+                    "1_30_days": row.days_1_30 or 0,
+                    "31_60_days": row.days_31_60 or 0,
+                    "61_90_days": row.days_61_90 or 0,
+                    "over_90_days": row.over_90_days or 0,
+                },
+            }
+            for row in rows
+        ]
+
+    async def get_aging_by_region(
+        self,
+        tenant_id: str,
+    ) -> list[dict[str, Any]]:
+        """
+        Get AR aging breakdown by billing region/country.
+
+        Returns aging buckets grouped by billing_country with full bucket analysis.
+        """
+        current_date = datetime.now(UTC).date()
+
+        stmt = (
+            select(
+                Customer.billing_country,
+                func.count(InvoiceEntity.invoice_id).label("invoice_count"),
+                func.sum(InvoiceEntity.remaining_balance).label("total_outstanding"),
+                func.sum(
+                    case(
+                        (
+                            InvoiceEntity.due_date > current_date,
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("current"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date,
+                                InvoiceEntity.due_date > current_date - timedelta(days=30),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_1_30"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date - timedelta(days=30),
+                                InvoiceEntity.due_date > current_date - timedelta(days=60),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_31_60"),
+                func.sum(
+                    case(
+                        (
+                            and_(
+                                InvoiceEntity.due_date <= current_date - timedelta(days=60),
+                                InvoiceEntity.due_date > current_date - timedelta(days=90),
+                            ),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("days_61_90"),
+                func.sum(
+                    case(
+                        (
+                            InvoiceEntity.due_date <= current_date - timedelta(days=90),
+                            InvoiceEntity.remaining_balance,
+                        ),
+                        else_=0,
+                    )
+                ).label("over_90_days"),
+            )
+            .join(Customer, InvoiceEntity.customer_id == Customer.id)
+            .where(
+                and_(
+                    InvoiceEntity.tenant_id == tenant_id,
+                    InvoiceEntity.payment_status != PaymentStatus.SUCCEEDED,
+                    InvoiceEntity.status.in_([InvoiceStatus.OPEN, InvoiceStatus.OVERDUE]),
+                    InvoiceEntity.remaining_balance > 0,
+                )
+            )
+            .group_by(Customer.billing_country)
+        )
+
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        return [
+            {
+                "region": row.billing_country or "Unknown",
+                "invoice_count": row.invoice_count or 0,
+                "total_outstanding": row.total_outstanding or 0,
+                "buckets": {
+                    "current": row.current or 0,
+                    "1_30_days": row.days_1_30 or 0,
+                    "31_60_days": row.days_31_60 or 0,
+                    "61_90_days": row.days_61_90 or 0,
+                    "over_90_days": row.over_90_days or 0,
+                },
+            }
+            for row in rows
+        ]
+
+
+class BlockedCustomersReportGenerator:
+    """
+    Generator for blocked/suspended customers dashboard.
+
+    Provides visibility into suspended subscribers with outstanding balances,
+    suspension duration, and recommended next actions for collections.
+    """
+
+    def __init__(self, db: AsyncSession):
+        self.db = db
+
+    async def get_blocked_customers_summary(
+        self,
+        tenant_id: str,
+        min_days_blocked: int = 0,
+        max_days_blocked: int | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Get summary of blocked/suspended customers.
+
+        Args:
+            tenant_id: Tenant ID
+            min_days_blocked: Minimum days in suspended state
+            max_days_blocked: Maximum days in suspended state (optional)
+
+        Returns:
+            List of blocked customer records with:
+            - subscriber_id, username
+            - customer name and contact
+            - suspended_at, days_blocked
+            - outstanding_balance, overdue_invoices
+            - next_action, priority
+        """
+        from dotmac.platform.subscribers.models import Subscriber, SubscriberStatus
+
+        current_date = datetime.now(UTC)
+
+        # Build query to get suspended subscribers with their outstanding balances
+        customer_name_expr = func.coalesce(
+            Customer.display_name,
+            Customer.company_name,
+            func.trim(
+                func.concat(
+                    func.coalesce(Customer.first_name, ""),
+                    literal(" "),
+                    func.coalesce(Customer.last_name, ""),
+                )
+            ),
+        )
+
+        stmt = (
+            select(
+                Subscriber.id.label("subscriber_id"),
+                Subscriber.username,
+                Subscriber.suspended_at,
+                Customer.id.label("customer_id"),
+                customer_name_expr.label("customer_name"),
+                Customer.email,
+                Customer.phone,
+                func.count(InvoiceEntity.invoice_id).label("overdue_invoices"),
+                func.sum(InvoiceEntity.remaining_balance).label("outstanding_balance"),
+            )
+            .join(Customer, Subscriber.customer_id == Customer.id)
+            .outerjoin(
+                InvoiceEntity,
+                and_(
+                    InvoiceEntity.customer_id == Customer.id,
+                    InvoiceEntity.status.in_([InvoiceStatus.OPEN, InvoiceStatus.OVERDUE]),
+                    InvoiceEntity.remaining_balance > 0,
+                ),
+            )
+            .where(
+                and_(
+                    Subscriber.tenant_id == tenant_id,
+                    Subscriber.status == SubscriberStatus.SUSPENDED,
+                    Subscriber.suspended_at.is_not(None),
+                )
+            )
+            .group_by(
+                Subscriber.id,
+                Subscriber.username,
+                Subscriber.suspended_at,
+                Customer.id,
+                customer_name_expr,
+                Customer.email,
+                Customer.phone,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        rows = result.all()
+
+        # Process results
+        blocked_customers = []
+        for row in rows:
+            days_blocked = (current_date - row.suspended_at).days if row.suspended_at else 0
+
+            # Apply filters
+            if days_blocked < min_days_blocked:
+                continue
+            if max_days_blocked is not None and days_blocked > max_days_blocked:
+                continue
+
+            outstanding_balance = float(row.outstanding_balance or 0)
+            next_action = self._determine_next_action(days_blocked, outstanding_balance)
+            priority = self._calculate_priority(days_blocked, outstanding_balance)
+
+            blocked_customers.append(
+                {
+                    "subscriber_id": row.subscriber_id,
+                    "username": row.username,
+                    "customer_name": row.full_name,
+                    "email": row.email,
+                    "phone": row.phone,
+                    "suspended_at": row.suspended_at.isoformat() if row.suspended_at else None,
+                    "days_blocked": days_blocked,
+                    "overdue_invoices": row.overdue_invoices or 0,
+                    "outstanding_balance": outstanding_balance,
+                    "next_action": next_action,
+                    "priority": priority,
+                }
+            )
+
+        # Sort by priority (critical first) then by days_blocked
+        priority_order = {"critical": 0, "high": 1, "medium": 2, "low": 3}
+        blocked_customers.sort(
+            key=lambda x: (priority_order.get(x["priority"], 4), -x["days_blocked"])
+        )
+
+        return blocked_customers
+
+    def _determine_next_action(self, days_blocked: int, outstanding_balance: float) -> str:
+        """
+        Determine recommended next action based on suspension duration and balance.
+
+        Args:
+            days_blocked: Number of days in suspended state
+            outstanding_balance: Total outstanding balance
+
+        Returns:
+            Next action recommendation
+        """
+        if days_blocked >= 90:
+            return "escalate_to_collections"
+        elif days_blocked >= 60:
+            return "final_notice"
+        elif days_blocked >= 30:
+            if outstanding_balance > 10000:
+                return "collections_call"
+            else:
+                return "payment_reminder"
+        elif days_blocked >= 14:
+            return "payment_reminder"
+        else:
+            return "monitor"
+
+    def _calculate_priority(self, days_blocked: int, outstanding_balance: float) -> str:
+        """
+        Calculate priority level for collections.
+
+        Args:
+            days_blocked: Number of days in suspended state
+            outstanding_balance: Total outstanding balance
+
+        Returns:
+            Priority level: critical, high, medium, low
+        """
+        # Critical: Long suspension + high balance
+        if days_blocked >= 90 or outstanding_balance > 50000:
+            return "critical"
+
+        # High: Medium suspension + significant balance
+        if days_blocked >= 60 or outstanding_balance > 20000:
+            return "high"
+
+        # Medium: Recent suspension or moderate balance
+        if days_blocked >= 30 or outstanding_balance > 5000:
+            return "medium"
+
+        return "low"

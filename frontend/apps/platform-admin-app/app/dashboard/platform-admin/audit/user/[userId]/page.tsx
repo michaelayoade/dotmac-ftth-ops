@@ -55,7 +55,7 @@ const ITEMS_PER_PAGE = 15;
 export default function UserActivityLogPage() {
   const params = useParams();
   const router = useRouter();
-  const userId = params.userId as string;
+  const userId = params['userId'] as string;
   const { toast } = useToast();
 
   const [allActions, setAllActions] = useState<AuditAction[]>([]);
@@ -80,9 +80,9 @@ export default function UserActivityLogPage() {
           resourceType: entry.resource_type,
           timestamp: entry.timestamp,
           userId: entry.user_id,
-          tenantId: entry.tenant_id,
+          tenantId: entry.tenant_id ?? "",
           status: entry.status,
-          details: entry.changes ?? undefined,
+          ...(entry.changes ? { details: entry.changes } : {}),
         }));
       setAllActions(mappedActions);
     } catch (error) {

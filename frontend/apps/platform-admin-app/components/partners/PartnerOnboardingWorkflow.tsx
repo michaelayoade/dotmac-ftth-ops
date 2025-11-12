@@ -49,6 +49,20 @@ export default function PartnerOnboardingWorkflow() {
 
   const completeOnboarding = useCompletePartnerOnboarding();
 
+  const updatePartnerData = (update: Partial<CreatePartnerInput>) => {
+    setPartnerData((prev) => {
+      const next = { ...prev };
+      Object.entries(update).forEach(([key, value]) => {
+        if (value === undefined) {
+          delete (next as any)[key];
+        } else {
+          (next as any)[key] = value;
+        }
+      });
+      return next;
+    });
+  };
+
   const steps: { id: OnboardingStep; label: string; description: string }[] = [
     {
       id: "partner",
@@ -174,12 +188,7 @@ export default function PartnerOnboardingWorkflow() {
                 <input
                   type="text"
                   value={partnerData.company_name}
-                  onChange={(e) =>
-                    setPartnerData({
-                      ...partnerData,
-                      company_name: e.target.value,
-                    })
-                  }
+                  onChange={(e) => updatePartnerData({ company_name: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
@@ -190,12 +199,7 @@ export default function PartnerOnboardingWorkflow() {
                 <input
                   type="text"
                   value={partnerData.legal_name}
-                  onChange={(e) =>
-                    setPartnerData({
-                      ...partnerData,
-                      legal_name: e.target.value,
-                    })
-                  }
+                  onChange={(e) => updatePartnerData({ legal_name: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -209,12 +213,7 @@ export default function PartnerOnboardingWorkflow() {
                 <input
                   type="email"
                   value={partnerData.primary_email}
-                  onChange={(e) =>
-                    setPartnerData({
-                      ...partnerData,
-                      primary_email: e.target.value,
-                    })
-                  }
+                  onChange={(e) => updatePartnerData({ primary_email: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   required
                 />
@@ -225,7 +224,7 @@ export default function PartnerOnboardingWorkflow() {
                 <input
                   type="tel"
                   value={partnerData.phone}
-                  onChange={(e) => setPartnerData({ ...partnerData, phone: e.target.value })}
+                  onChange={(e) => updatePartnerData({ phone: e.target.value })}
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
               </div>
@@ -239,9 +238,8 @@ export default function PartnerOnboardingWorkflow() {
                 <select
                   value={partnerData.tier}
                   onChange={(e) =>
-                    setPartnerData({
-                      ...partnerData,
-                      tier: e.target.value as CreatePartnerInput["tier"],
+                    updatePartnerData({
+                      tier: e.target.value as NonNullable<CreatePartnerInput["tier"]>,
                     })
                   }
                   className="w-full px-3 py-2 bg-accent border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
@@ -265,8 +263,7 @@ export default function PartnerOnboardingWorkflow() {
                   step="0.1"
                   value={(partnerData.default_commission_rate || 0) * 100}
                   onChange={(e) =>
-                    setPartnerData({
-                      ...partnerData,
+                    updatePartnerData({
                       default_commission_rate: parseFloat(e.target.value) / 100,
                     })
                   }

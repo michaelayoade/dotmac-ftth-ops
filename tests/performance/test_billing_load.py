@@ -15,8 +15,8 @@ from __future__ import annotations
 
 import json
 import random
+from collections.abc import Callable, Iterable
 from datetime import datetime, timedelta
-from typing import Callable, Iterable
 
 import pytest
 
@@ -190,7 +190,9 @@ def add_payment_method(client, headers, *, rng=random, now=None):
     )
 
 
-def generate_revenue_report(client, headers, *, rng=None, now: Callable[[], datetime] | None = None):
+def generate_revenue_report(
+    client, headers, *, rng=None, now: Callable[[], datetime] | None = None
+):
     now_fn = now or datetime.now
     end_date = now_fn()
     start_date = end_date - timedelta(days=30)
@@ -359,9 +361,7 @@ class DeterministicRandom:
 
 
 def test_login_and_get_headers_success():
-    client = DummyClient(
-        responses=[DummyResponse(200, {"access_token": "token-abc"})]
-    )
+    client = DummyClient(responses=[DummyResponse(200, {"access_token": "token-abc"})])
 
     headers = login_and_get_headers(client, rng=DeterministicRandom())
 

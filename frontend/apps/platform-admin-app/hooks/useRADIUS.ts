@@ -53,7 +53,7 @@ export function useRADIUSSubscribers(offset: number, limit: number, options?: Us
         'Content-Type': 'application/json',
       };
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
       }
       const response = await fetch(
         `${platformConfig.api.baseUrl}/api/v1/radius/subscribers?offset=${offset}&limit=${limit}`,
@@ -87,7 +87,7 @@ export function useRADIUSSessions(options?: UseRADIUSOptions) {
         'Content-Type': 'application/json',
       };
       if (token) {
-        headers.Authorization = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;
       }
       const response = await fetch(`${platformConfig.api.baseUrl}/api/v1/radius/sessions`, {
         credentials: 'include',

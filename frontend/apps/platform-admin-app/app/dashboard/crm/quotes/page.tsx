@@ -38,7 +38,7 @@ import {
 } from "@dotmac/ui";
 import { MetricCardEnhanced } from "@dotmac/ui";
 import { useToast } from "@dotmac/ui";
-import { useQuotes, type Quote, type QuoteStatus } from "@/hooks/useCRM";
+import { useQuotes, useSendQuote, type Quote, type QuoteStatus } from "@/hooks/useCRM";
 import { QuoteStatusBadge } from "@/components/crm/Badges";
 import { CreateQuoteModal } from "@/components/crm/CreateQuoteModal";
 import { QuoteDetailModal } from "@/components/crm/QuoteDetailModal";
@@ -68,9 +68,13 @@ export default function QuotesPage() {
   const [selectedQuote, setSelectedQuote] = useState<Quote | null>(null);
 
   // Fetch quotes
-  const { quotes, isLoading, error, refetch, sendQuote, createQuote } = useQuotes({
-    status: statusFilter !== "all" ? statusFilter : undefined,
-  });
+  const {
+    data: quotes = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuotes(statusFilter !== "all" ? { status: statusFilter } : {});
+  const sendQuoteMutation = useSendQuote();
 
   // Delete quote function
   const deleteQuote = useCallback(async (quoteId: string) => {
@@ -186,7 +190,7 @@ export default function QuotesPage() {
   const handleSendQuote = useCallback(
     async (quote: Quote) => {
       try {
-        await sendQuote(quote.id);
+        await sendQuoteMutation.mutateAsync(quote.id);
         toast({
           title: "Quote Sent",
           description: `Quote ${quote.quote_number} has been sent to the lead.`,
@@ -201,7 +205,7 @@ export default function QuotesPage() {
         });
       }
     },
-    [refetch, sendQuote, toast],
+    [refetch, sendQuoteMutation, toast],
   );
 
   const handleDeleteQuote = useCallback(
@@ -370,67 +374,71 @@ export default function QuotesPage() {
   );
 
   // Bulk actions
-  const bulkActions: BulkAction<Quote>[] = [
-    {
-      label: "Send Quotes",
-      icon: Send,
-      action: async (selectedQuotes) => {
-        const draftQuotes = selectedQuotes.filter((q) => q.status === "draft");
-        if (draftQuotes.length === 0) {
+  const bulkActions: BulkAction<Quote>[] = useMemo(
+    () => [
+      {
+        label: "Send Quotes",
+        icon: Send as any,
+        variant: "default" as const,
+        action: async (selectedQuotes) => {
+          const draftQuotes = selectedQuotes.filter((q) => q.status === "draft");
+          if (draftQuotes.length === 0) {
+            toast({
+              title: "No Draft Quotes",
+              description: "Only draft quotes can be sent.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          for (const quote of draftQuotes) {
+            try {
+              await sendQuoteMutation.mutateAsync(quote.id);
+            } catch (error) {
+              console.error(`Failed to send quote ${quote.quote_number}:`, error);
+            }
+          }
+
           toast({
-            title: "No Draft Quotes",
-            description: "Only draft quotes can be sent.",
+            title: "Quotes Sent",
+            description: `${draftQuotes.length} quote(s) have been sent.`,
+          });
+          refetch();
+        },
+      },
+      {
+        label: "Delete Quotes",
+        icon: Trash2 as any,
+        variant: "destructive" as const,
+        action: async (selectedQuotes) => {
+          const confirmed = await confirmDialog({
+            title: "Delete quotes",
+            description: `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
+            confirmText: "Delete quotes",
             variant: "destructive",
           });
-          return;
-        }
-
-        for (const quote of draftQuotes) {
-          try {
-            await sendQuote(quote.id);
-          } catch (error) {
-            console.error(`Failed to send quote ${quote.quote_number}:`, error);
+          if (!confirmed) {
+            return;
           }
-        }
 
-        toast({
-          title: "Quotes Sent",
-          description: `${draftQuotes.length} quote(s) have been sent.`,
-        });
-        refetch();
-      },
-    },
-    {
-      label: "Delete Quotes",
-      icon: Trash2,
-      variant: "destructive",
-      action: async (selectedQuotes) => {
-        const confirmed = await confirmDialog({
-          title: "Delete quotes",
-          description: `Are you sure you want to delete ${selectedQuotes.length} quote(s)? This action cannot be undone.`,
-          confirmText: "Delete quotes",
-          variant: "destructive",
-        });
-        if (!confirmed) {
-          return;
-        }
-
-        for (const quote of selectedQuotes) {
-          try {
-            await deleteQuote(quote.id);
-          } catch (error) {
-            console.error(`Failed to delete quote ${quote.quote_number}:`, error);
+          for (const quote of selectedQuotes) {
+            try {
+              await deleteQuote(quote.id);
+            } catch (error) {
+              console.error(`Failed to delete quote ${quote.quote_number}:`, error);
+            }
           }
-        }
 
-        toast({
-          title: "Quotes Deleted",
-          description: `${selectedQuotes.length} quote(s) have been deleted.`,
-        });
-        refetch();
+          toast({
+            title: "Quotes Deleted",
+            description: `${selectedQuotes.length} quote(s) have been deleted.`,
+          });
+          refetch();
+        },
       },
-    },
-  ];
+    ],
+    [confirmDialog, deleteQuote, refetch, sendQuoteMutation, toast],
+  );
 
   const handleExport = () => {
     if (!filteredQuotes.length) {
@@ -619,7 +627,6 @@ export default function QuotesPage() {
           setIsCreateModalOpen(false);
           setSelectedQuote(null);
         }}
-        onCreate={createQuote}
         onSuccess={() => refetch()}
         quote={selectedQuote}
       />

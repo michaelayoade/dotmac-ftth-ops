@@ -3,8 +3,8 @@
 // ========================================
 
 // Core unified systems (NEW - consolidated)
-export * from "../auth/useAuth"; // Unified auth system
-export * from "./usePermissions"; // Consolidated permissions
+// Note: Auth is now handled by Better Auth (@dotmac/better-auth)
+// Note: usePermissions removed - deprecated hook that depended on authStore
 export * from "./useDataManagement"; // Unified data management
 export * from "./useNotifications"; // Consolidated notifications
 
@@ -18,14 +18,6 @@ export * from "./useCommunication";
 
 // ISP Business Operations (DRY-compliant centralized business logic)
 export * from "./useISPBusiness"; // Portal-optimized business operations
-
-// ========================================
-// LEGACY COMPATIBILITY EXPORTS
-// ========================================
-
-// Authentication compatibility (redirects to unified system)
-export { useAuth as useUniversalAuth } from "../auth/useAuth";
-export { useAuth as usePortalAuth } from "../auth/useAuth";
 
 // Data fetching compatibility
 export * from "./useApiData";
@@ -44,13 +36,13 @@ export * from "./useEnhancedErrorHandler";
 export * from "./useStandardErrorHandler";
 
 // Security and authentication
-export * from "./useMFA";
+// Note: useMFA removed - deprecated hook that depended on authStore
 export * from "./usePortalIdAuth";
 export * from "./useSecureForm";
 
 // Performance and monitoring
 export * from "./usePerformanceMonitoring";
-export * from "./useOfflineSync";
+// Note: useOfflineSync removed - deprecated hook that depended on authStore
 
 // Multi-tenant functionality
 export * from "./useProvisioning";
@@ -59,7 +51,7 @@ export * from "./useISPTenant";
 
 // Real-time and connectivity
 export * from "./useWebSocket";
-export * from "./useRealTimeSync";
+// Note: useRealTimeSync removed - deprecated hook that depended on authStore
 
 // API Client
 export * from "./useApiClient";

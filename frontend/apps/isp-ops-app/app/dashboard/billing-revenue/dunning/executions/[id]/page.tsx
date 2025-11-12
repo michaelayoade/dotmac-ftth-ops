@@ -190,7 +190,7 @@ function ExecutionDetailsContent() {
   const router = useRouter();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const executionId = params.id as string;
+  const executionId = params['id'] as string;
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
 

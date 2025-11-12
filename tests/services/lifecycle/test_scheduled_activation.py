@@ -51,6 +51,8 @@ async def _create_customer(
     async_session.add(customer)
     await async_session.flush()
     return customer
+
+
 @pytest.fixture
 def scheduled_tenant_id() -> str:
     """Provide a unique tenant identifier for scheduled activation tests."""

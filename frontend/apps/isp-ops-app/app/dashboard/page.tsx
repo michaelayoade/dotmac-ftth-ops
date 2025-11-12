@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@dotmac/ui";
@@ -18,18 +18,10 @@ import { useSystemHealth } from "@/hooks/useOperations";
 import { useServiceInstances, useServiceStatistics } from "@/hooks/useServiceLifecycle";
 import { useRADIUSSessions, useRADIUSSubscribers } from '@/hooks/useRADIUS';
 import { useNetboxHealth, useNetboxSites } from "@/hooks/useNetworkInventory";
-import { getCurrentUser } from "@/lib/auth";
 import { platformConfig } from "@/lib/config";
-import { logger } from "@/lib/logger";
 import { useFeatureFlag } from "@/lib/feature-flags";
 import { ROUTES } from "@/lib/routes";
-
-interface User {
-  id: string;
-  email: string;
-  name?: string;
-  roles?: string[];
-}
+import { useSession } from "@dotmac/better-auth";
 
 function formatDate(value?: string | null): string {
   if (!value) {
@@ -45,8 +37,8 @@ function formatDate(value?: string | null): string {
 export default function DashboardPage() {
   const router = useRouter();
   const { hasPermission } = useRBAC();
-  const [user, setUser] = useState<User | null>(null);
-  const [initializing, setInitializing] = useState(true);
+  const { data: session, isPending: authLoading } = useSession();
+  const user = session?.user;
 
   // Feature flags
   const { enabled: radiusSessionsEnabled } = useFeatureFlag('radius-sessions');
@@ -85,34 +77,10 @@ export default function DashboardPage() {
   const { data: systemHealth } = useSystemHealth();
 
   useEffect(() => {
-    let isMounted = true;
-
-    const loadUser = async () => {
-      try {
-        const currentUser = await getCurrentUser();
-        if (!isMounted) {
-          return;
-        }
-        setUser(currentUser);
-      } catch (err) {
-        logger.error("Failed to fetch user", err instanceof Error ? err : new Error(String(err)));
-        if (!isMounted) {
-          return;
-        }
-        router.replace(ROUTES.LOGIN);
-      } finally {
-        if (isMounted) {
-          setInitializing(false);
-        }
-      }
-    };
-
-    loadUser();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [router]);
+    if (!authLoading && !session) {
+      router.replace(ROUTES.LOGIN);
+    }
+  }, [authLoading, session, router]);
 
   const numberFormatter = useMemo(() => new Intl.NumberFormat("en-US"), []);
 
@@ -148,7 +116,7 @@ export default function DashboardPage() {
     },
   ];
 
-  if (initializing) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-muted-foreground">Loading network operations center…</div>

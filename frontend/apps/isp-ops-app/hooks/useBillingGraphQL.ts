@@ -700,12 +700,11 @@ export function useActiveBillingPlans(
   billingCycle?: BillingCycle,
   enabled = true,
 ): UseQueryResult<PlanConnection, Error> {
-  return useBillingPlans(
-    {
-      isActive: true,
-      billingCycle,
-      pageSize: 100, // Get all active plans
-    },
-    enabled,
-  );
+  const planFilters = {
+    isActive: true,
+    pageSize: 100, // Get all active plans
+    ...(billingCycle !== undefined && { billingCycle }),
+  };
+
+  return useBillingPlans(planFilters, enabled);
 }

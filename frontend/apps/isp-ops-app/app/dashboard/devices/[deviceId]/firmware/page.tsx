@@ -40,7 +40,7 @@ interface UpgradeJob {
 
 function FirmwarePageContent() {
   const params = useParams();
-  const deviceId = params.deviceId as string;
+  const deviceId = params['deviceId'] as string;
   const [selectedVersion, setSelectedVersion] = useState<string | null>(null);
 
   const queryClient = useQueryClient();

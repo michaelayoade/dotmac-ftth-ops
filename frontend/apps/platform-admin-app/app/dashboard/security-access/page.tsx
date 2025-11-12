@@ -250,7 +250,7 @@ export default function SecurityAccessPage() {
         );
         if (eventsResponse.data) {
           const events: SecurityEvent[] = eventsResponse.data.map((e, index: number) => {
-            const eventType = e.type as string;
+            const eventType = e['type'] as string;
             const validTypes: SecurityEvent["type"][] = [
               "auth_success",
               "auth_failure",
@@ -264,7 +264,7 @@ export default function SecurityAccessPage() {
               ? (eventType as SecurityEvent["type"])
               : "auth_success";
 
-            const eventSeverity = e.severity as string;
+            const eventSeverity = e['severity'] as string;
             const validSeverities: SecurityEvent["severity"][] = ["info", "warning", "critical"];
             const severity: SecurityEvent["severity"] = validSeverities.includes(
               eventSeverity as SecurityEvent["severity"],
@@ -273,12 +273,11 @@ export default function SecurityAccessPage() {
               : "info";
 
             return {
-              id: (e.id as string) || `event-${index}`,
+              id: (e['id'] as string) || `event-${index}`,
               type,
-              description: (e.description as string) || (e.message as string) || "Security event",
-              user: (e.user_email as string) || (e.user_id as string),
-              timestamp: e.created_at
-                ? new Date(e.created_at as string).toLocaleString()
+              description: (e['description'] as string) || (e['message'] as string) || "Security event",
+              user: (e['user_email'] as string) || (e['user_id'] as string),
+              timestamp: e['created_at']? new Date(e['created_at'] as string).toLocaleString()
                 : "Recently",
               severity,
             };

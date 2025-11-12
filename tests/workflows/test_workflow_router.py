@@ -120,9 +120,7 @@ class TestWorkflowCRUD:
         assert data["workflows"][0]["id"] == 1
         assert data["workflows"][1]["id"] == 2
 
-    def test_delete_workflow_not_found(
-        self, workflow_client: TestClient, mock_workflow_service
-    ):
+    def test_delete_workflow_not_found(self, workflow_client: TestClient, mock_workflow_service):
         """Test workflow deletion when service reports missing workflow."""
         # Arrange
         mock_workflow_service.delete_workflow.side_effect = ValueError("Workflow 1 not found")
@@ -282,9 +280,7 @@ class TestWorkflowCRUDExtended:
 class TestWorkflowStatistics:
     """Test workflow statistics endpoints."""
 
-    def test_get_workflow_stats_success(
-        self, workflow_client: TestClient, mock_workflow_service
-    ):
+    def test_get_workflow_stats_success(self, workflow_client: TestClient, mock_workflow_service):
         """Test get workflow execution statistics."""
         # Arrange
         mock_workflow_service.get_execution_stats.return_value = {

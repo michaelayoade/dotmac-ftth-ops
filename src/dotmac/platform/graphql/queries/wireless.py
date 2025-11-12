@@ -14,9 +14,10 @@ Created: 2025-10-16
 import json
 import uuid
 from collections import defaultdict
+from collections.abc import Sequence
 from datetime import datetime
 from statistics import mean
-from typing import Any, DefaultDict, Sequence
+from typing import Any
 
 import strawberry
 from sqlalchemy import and_, desc, func, or_, select
@@ -686,8 +687,8 @@ class WirelessQueries:
             Frequency.FREQ_6_GHZ: FrequencyBand.BAND_6_GHZ,
         }
 
-        band_to_channels: DefaultDict[Frequency, list[ChannelUtilization]] = defaultdict(list)
-        clients_per_band: DefaultDict[Frequency, int] = defaultdict(int)
+        band_to_channels: defaultdict[Frequency, list[ChannelUtilization]] = defaultdict(list)
+        clients_per_band: defaultdict[Frequency, int] = defaultdict(int)
         interference_values: list[float] = []
         signal_values: list[float] = []
         snr_values: list[float] = []

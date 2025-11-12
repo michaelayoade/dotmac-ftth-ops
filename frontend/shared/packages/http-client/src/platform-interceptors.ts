@@ -56,7 +56,7 @@ export class PlatformInterceptors {
     if (this.config.enableServiceRegistry && this.isPlatformServiceRequest(config.url)) {
       config.headers["X-Service-Discovery"] = "enabled";
       config.headers["X-Client-Type"] = "web-frontend";
-      config.headers["X-Client-Version"] = process.env.VITE_APP_VERSION || "1.0.0";
+      config.headers["X-Client-Version"] = process.env["VITE_APP_VERSION"] || "1.0.0";
     }
 
     // Add request timing for performance monitoring

@@ -3,6 +3,7 @@ Subscription management service.
 
 Handles complete subscription lifecycle with simple, clear operations.
 """
+# mypy: disable-error-code="assignment"
 
 from calendar import monthrange
 from datetime import UTC, datetime, timedelta
@@ -41,6 +42,8 @@ from dotmac.platform.billing.subscriptions.models import (
     SubscriptionUpdateRequest,
     UsageRecordRequest,
 )
+from dotmac.platform.webhooks.events import get_event_bus
+from dotmac.platform.webhooks.models import WebhookEvent
 
 logger = structlog.get_logger(__name__)
 
@@ -230,6 +233,30 @@ class SubscriptionService:
             tenant_id,
         )
 
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.SUBSCRIPTION_CREATED.value,
+                event_data={
+                    "subscription_id": subscription.subscription_id,
+                    "customer_id": subscription.customer_id,
+                    "plan_id": subscription.plan_id,
+                    "status": subscription.status.value,
+                    "trial_end": subscription.trial_end.isoformat()
+                    if subscription.trial_end
+                    else None,
+                    "current_period_start": subscription.current_period_start.isoformat(),
+                    "current_period_end": subscription.current_period_end.isoformat(),
+                    "custom_price": str(subscription.custom_price)
+                    if subscription.custom_price
+                    else None,
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish subscription.created event", error=str(e))
+
         logger.info(
             "Subscription created",
             subscription_id=subscription.subscription_id,
@@ -318,11 +345,11 @@ class SubscriptionService:
 
         for field, value in update_data.items():
             if field == "metadata":
-                setattr(db_subscription, "metadata_json", value)
+                db_subscription.metadata_json = value
             elif field == "status":
                 # Convert SubscriptionStatus enum to string value for database
                 status_value = value.value if isinstance(value, SubscriptionStatus) else value
-                setattr(db_subscription, "status", status_value)
+                db_subscription.status = status_value  # type: ignore[assignment]
             else:
                 setattr(db_subscription, field, value)
 
@@ -388,8 +415,8 @@ class SubscriptionService:
         if effective_date > now:
             # Schedule the plan change for future processing
             # The renewal/scheduled job will check scheduled_plan_id and apply it at effective_date
-            setattr(db_subscription, "scheduled_plan_id", change_request.new_plan_id)
-            setattr(db_subscription, "scheduled_plan_change_date", effective_date)
+            db_subscription.scheduled_plan_id = change_request.new_plan_id
+            db_subscription.scheduled_plan_change_date = effective_date
 
             logger.info(
                 "Scheduled plan change",
@@ -401,7 +428,7 @@ class SubscriptionService:
             )
         else:
             # Apply plan change immediately
-            setattr(db_subscription, "plan_id", change_request.new_plan_id)
+            db_subscription.plan_id = change_request.new_plan_id
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -424,6 +451,32 @@ class SubscriptionService:
             tenant_id,
             user_id,
         )
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.SUBSCRIPTION_UPDATED.value,
+                event_data={
+                    "subscription_id": subscription_id,
+                    "customer_id": updated_subscription.customer_id,
+                    "old_plan_id": old_plan.plan_id,
+                    "new_plan_id": new_plan.plan_id,
+                    "effective_date": effective_date.isoformat(),
+                    "proration_behavior": (
+                        change_request.proration_behavior.value
+                        if hasattr(change_request.proration_behavior, "value")
+                        else str(change_request.proration_behavior)
+                    ),
+                    "proration_amount": str(proration_result.proration_amount)
+                    if proration_result
+                    else "0",
+                    "is_scheduled": effective_date > datetime.now(UTC),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish subscription.updated event", error=str(e))
 
         logger.info(
             "Subscription plan changed",
@@ -476,15 +529,15 @@ class SubscriptionService:
 
         if immediate:
             # End subscription immediately
-            setattr(db_subscription, "status", SubscriptionStatus.ENDED.value)
-            setattr(db_subscription, "ended_at", now)
-            setattr(db_subscription, "canceled_at", now)
+            db_subscription.status = SubscriptionStatus.ENDED.value
+            db_subscription.ended_at = now
+            db_subscription.canceled_at = now
         else:
             # Cancel at period end (default behavior) - use setattr to avoid mypy Column assignment errors
             # IMPORTANT: Keep status as ACTIVE so subscription remains usable until period ends
             # The renewal job will check cancel_at_period_end and transition to ENDED at current_period_end
-            setattr(db_subscription, "cancel_at_period_end", True)
-            setattr(db_subscription, "canceled_at", now)
+            db_subscription.cancel_at_period_end = True
+            db_subscription.canceled_at = now
             # Do NOT change status to CANCELED - keep it ACTIVE until period actually ends
 
         await self.db.commit()
@@ -504,6 +557,26 @@ class SubscriptionService:
             tenant_id,
             user_id,
         )
+
+        # Publish webhook event
+        try:
+            await get_event_bus().publish(
+                event_type=WebhookEvent.SUBSCRIPTION_CANCELLED.value,
+                event_data={
+                    "subscription_id": subscription_id,
+                    "customer_id": updated_subscription.customer_id,
+                    "plan_id": updated_subscription.plan_id,
+                    "status": updated_subscription.status.value,
+                    "immediate": immediate,
+                    "cancelled_at": now.isoformat(),
+                    "cancel_at_period_end": updated_subscription.cancel_at_period_end,
+                    "current_period_end": updated_subscription.current_period_end.isoformat(),
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish subscription.cancelled event", error=str(e))
 
         logger.info(
             "Subscription canceled",
@@ -549,9 +622,9 @@ class SubscriptionService:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
         # Use setattr to avoid mypy Column assignment errors
-        setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
-        setattr(db_subscription, "cancel_at_period_end", False)
-        setattr(db_subscription, "canceled_at", None)
+        db_subscription.status = SubscriptionStatus.ACTIVE.value
+        db_subscription.cancel_at_period_end = False
+        db_subscription.canceled_at = None
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -619,7 +692,7 @@ class SubscriptionService:
         )
 
         # Use setattr to avoid mypy Column assignment errors
-        setattr(db_subscription, "usage_records", current_usage)
+        db_subscription.usage_records = current_usage
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -796,16 +869,16 @@ class SubscriptionService:
             raise SubscriptionNotFoundError(f"Subscription {subscription_id} not found")
 
             # Update period dates
-            setattr(db_subscription, "current_period_start", new_period_start)
-            setattr(db_subscription, "current_period_end", new_period_end)
+            db_subscription.current_period_start = new_period_start
+            db_subscription.current_period_end = new_period_end
 
             # Reset usage counters for new period
-            setattr(db_subscription, "usage_records", {})
+            db_subscription.usage_records = {}
 
         # If subscription was trialing and trial has ended, activate it
         if subscription.status == SubscriptionStatus.TRIALING:
             if subscription.trial_end and datetime.now(UTC) >= subscription.trial_end:
-                setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
+                db_subscription.status = SubscriptionStatus.ACTIVE.value
 
         await self.db.commit()
         await self.db.refresh(db_subscription)
@@ -827,6 +900,34 @@ class SubscriptionService:
             tenant_id,
             user_id,
         )
+
+        # Publish webhook event
+        try:
+            renewal_amount = (
+                renewed_subscription.custom_price
+                if renewed_subscription.custom_price
+                else plan.price
+            )
+            await get_event_bus().publish(
+                event_type=WebhookEvent.SUBSCRIPTION_RENEWED.value,
+                event_data={
+                    "subscription_id": subscription_id,
+                    "customer_id": renewed_subscription.customer_id,
+                    "plan_id": plan.plan_id,
+                    "amount": float(renewal_amount),
+                    "currency": plan.currency,
+                    "billing_cycle": plan.billing_cycle.value,
+                    "previous_period_end": subscription.current_period_end.isoformat(),
+                    "current_period_start": new_period_start.isoformat(),
+                    "current_period_end": new_period_end.isoformat(),
+                    "next_billing_date": new_period_end.isoformat(),
+                    "payment_id": payment_id,
+                },
+                tenant_id=tenant_id,
+                db=self.db,
+            )
+        except Exception as e:
+            logger.warning("Failed to publish subscription.renewed event", error=str(e))
 
         logger.info(
             "Subscription extended",
@@ -1012,6 +1113,71 @@ class SubscriptionService:
         )
 
         return stats
+
+    async def check_trials_ending_soon(
+        self, tenant_id: str, days_ahead: int = 3
+    ) -> list[Subscription]:
+        """
+        Check for subscriptions with trials ending soon and publish webhook events.
+
+        Args:
+            tenant_id: The tenant ID
+            days_ahead: Number of days ahead to check (default: 3 days)
+
+        Returns:
+            List of subscriptions with trials ending soon
+        """
+        from sqlalchemy import and_, select
+
+        from dotmac.platform.billing.db.tables import BillingSubscriptionTable
+
+        now = datetime.now(UTC)
+        check_until = now + timedelta(days=days_ahead)
+
+        # Find subscriptions with trials ending in the next X days
+        stmt = select(BillingSubscriptionTable).where(
+            and_(
+                BillingSubscriptionTable.tenant_id == tenant_id,
+                BillingSubscriptionTable.status == SubscriptionStatus.TRIALING.value,
+                BillingSubscriptionTable.trial_end.isnot(None),
+                BillingSubscriptionTable.trial_end > now,
+                BillingSubscriptionTable.trial_end <= check_until,
+            )
+        )
+
+        result = await self.db.execute(stmt)
+        db_subscriptions = result.scalars().all()
+
+        subscriptions = [self._to_subscription_model(sub) for sub in db_subscriptions]
+
+        # Publish webhook events for each trial ending soon
+        for subscription in subscriptions:
+            if subscription.trial_end:
+                days_remaining = (subscription.trial_end - now).days
+
+                try:
+                    await get_event_bus().publish(
+                        event_type=WebhookEvent.SUBSCRIPTION_TRIAL_ENDING.value,
+                        event_data={
+                            "subscription_id": subscription.subscription_id,
+                            "customer_id": subscription.customer_id,
+                            "plan_id": subscription.plan_id,
+                            "status": subscription.status.value,
+                            "trial_end": subscription.trial_end.isoformat(),
+                            "days_remaining": days_remaining,
+                            "current_period_end": subscription.current_period_end.isoformat(),
+                            "will_convert_to_paid": True,  # Assuming auto-conversion
+                        },
+                        tenant_id=tenant_id,
+                        db=self.db,
+                    )
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to publish subscription.trial_ending event for {subscription.subscription_id}",
+                        error=str(e),
+                    )
+
+        return subscriptions
 
     # ========================================
     # Private Helper Methods
@@ -1308,7 +1474,7 @@ class SubscriptionService:
 
         # Use setattr to avoid mypy Column assignment errors
         empty_usage: dict[str, Any] = {}
-        setattr(db_subscription, "usage_records", empty_usage)
+        db_subscription.usage_records = empty_usage
         await self.db.commit()
         return True
 
@@ -1591,9 +1757,9 @@ class SubscriptionService:
             raise SubscriptionNotFoundError("Subscription not found")
 
         # Update status and remove cancellation
-        setattr(db_subscription, "status", SubscriptionStatus.ACTIVE.value)
-        setattr(db_subscription, "cancel_at_period_end", False)
-        setattr(db_subscription, "canceled_at", None)
+        db_subscription.status = SubscriptionStatus.ACTIVE.value
+        db_subscription.cancel_at_period_end = False
+        db_subscription.canceled_at = None
 
         await self.db.commit()
         await self.db.refresh(db_subscription)

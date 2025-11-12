@@ -76,7 +76,7 @@ interface InstanceStatus {
 function InstanceDetailsPageContent() {
   const params = useParams();
   const router = useRouter();
-  const instanceId = params.instanceId as string;
+  const instanceId = params['instanceId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const confirmDialog = useConfirmDialog();

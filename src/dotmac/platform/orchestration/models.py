@@ -120,7 +120,7 @@ class OrchestrationWorkflow(Base, TimestampMixin, TenantMixin):
     )  # Stores intermediate data between steps
 
     # Relationships
-    steps: Mapped[list["OrchestrationWorkflowStep"]] = relationship(
+    steps: Mapped[list[OrchestrationWorkflowStep]] = relationship(
         "OrchestrationWorkflowStep",
         back_populates="workflow",
         cascade="all, delete-orphan",
@@ -200,7 +200,7 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
     idempotency_key: Mapped[str | None] = mapped_column(String(128), nullable=True, unique=True)
 
     # Relationships
-    workflow: Mapped["OrchestrationWorkflow"] = relationship(
+    workflow: Mapped[OrchestrationWorkflow] = relationship(
         "OrchestrationWorkflow", back_populates="steps"
     )
 
@@ -211,7 +211,7 @@ class OrchestrationWorkflowStep(Base, TimestampMixin, TenantMixin):
 
     @step_order.setter
     def step_order(self, value: int) -> None:
-        setattr(self, "sequence_number", value)
+        self.sequence_number = value
 
     def __repr__(self) -> str:
         return (

@@ -7,7 +7,7 @@ provisioning, activation, suspension, and termination workflows.
 
 from datetime import UTC, datetime
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Type, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 from uuid import UUID, uuid4
 
 from sqlalchemy import (
@@ -157,7 +157,7 @@ class LifecycleEventType(str, Enum):
 EnumT = TypeVar("EnumT", bound=Enum)
 
 
-def _enum(enum_cls: Type[EnumT], *, name: str) -> SQLEnum:
+def _enum[EnumT: Enum](enum_cls: type[EnumT], *, name: str) -> SQLEnum:
     """Create SQLAlchemy Enum that persists Enum values instead of names."""
     return SQLEnum(
         enum_cls,

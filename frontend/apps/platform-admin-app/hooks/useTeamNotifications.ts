@@ -1,11 +1,15 @@
 /**
- * Team Notifications Hook
+ * Team Notifications Hook - TanStack Query Version
  *
- * Custom hook for sending notifications to teams via role or explicit user lists
+ * Migrated from direct API calls to TanStack Query for:
+ * - Better error handling
+ * - Loading states management
+ * - Mutation tracking
  */
 
-import { useState, useCallback } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api/client";
+import { logger } from "@/lib/logger";
 import type { NotificationPriority, NotificationType } from "./useNotifications";
 
 // ============================================================================
@@ -41,20 +45,14 @@ export interface TeamNotificationResponse {
 // ============================================================================
 
 export function useTeamNotifications() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const mutation = useMutation({
+    mutationFn: async (request: TeamNotificationRequest): Promise<TeamNotificationResponse> => {
+      // Validate that either team_members or role_filter is provided
+      if (!request.team_members && !request.role_filter) {
+        throw new Error("Either team_members or role_filter must be provided");
+      }
 
-  const sendTeamNotification = useCallback(
-    async (request: TeamNotificationRequest): Promise<TeamNotificationResponse> => {
       try {
-        setIsLoading(true);
-        setError(null);
-
-        // Validate that either team_members or role_filter is provided
-        if (!request.team_members && !request.role_filter) {
-          throw new Error("Either team_members or role_filter must be provided");
-        }
-
         const response = await apiClient.post<TeamNotificationResponse>("/notifications/team", {
           team_members: request.team_members,
           role_filter: request.role_filter,
@@ -70,22 +68,29 @@ export function useTeamNotifications() {
           auto_send: request.auto_send !== undefined ? request.auto_send : true,
         });
 
+        logger.info("Team notification sent", {
+          target_count: response.data.target_count,
+          notifications_created: response.data.notifications_created,
+        });
+
         return response.data;
       } catch (err) {
-        const error = err instanceof Error ? err : new Error("Failed to send team notification");
-        setError(error);
-        throw error;
-      } finally {
-        setIsLoading(false);
+        logger.error(
+          "Failed to send team notification",
+          err instanceof Error ? err : new Error(String(err))
+        );
+        throw err;
       }
     },
-    [],
-  );
+    onError: (error) => {
+      logger.error("Team notification mutation failed", error instanceof Error ? error : new Error(String(error)));
+    },
+  });
 
   return {
-    sendTeamNotification,
-    isLoading,
-    error,
+    sendTeamNotification: mutation.mutateAsync,
+    isLoading: mutation.isPending,
+    error: mutation.error,
   };
 }
 

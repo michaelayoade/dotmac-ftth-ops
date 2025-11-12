@@ -35,9 +35,9 @@ export interface MockDataGuard {
  * Create a mock data guard with environment detection
  */
 export function createMockDataGuard(config?: MockDataConfig): MockDataGuard {
-  const isDevelopment = process.env.NODE_ENV === "development";
-  const isTest = process.env.NODE_ENV === "test";
-  const isProduction = process.env.NODE_ENV === "production";
+  const isDevelopment = process.env["NODE_ENV"] === "development";
+  const isTest = process.env["NODE_ENV"] === "test";
+  const isProduction = process.env["NODE_ENV"] === "production";
 
   const shouldUseMockData =
     (isDevelopment && (config?.enableInDevelopment ?? true)) ||
@@ -91,7 +91,7 @@ export function mockData<T>(
  * Development-only function that gets completely removed in production
  */
 export function devOnly<T>(fn: () => T): T | undefined {
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     return fn();
   }
   return undefined;
@@ -101,7 +101,7 @@ export function devOnly<T>(fn: () => T): T | undefined {
  * Test-only function that gets removed in production
  */
 export function testOnly<T>(fn: () => T): T | undefined {
-  if (process.env.NODE_ENV === "test") {
+  if (process.env["NODE_ENV"] === "test") {
     return fn();
   }
   return undefined;
@@ -116,7 +116,7 @@ export function useMockData<T>(
   config?: MockDataConfig,
 ): T | undefined {
   // This will be tree-shaken in production builds
-  if (process.env.NODE_ENV === "production") {
+  if (process.env["NODE_ENV"] === "production") {
     return productionFallback;
   }
 
@@ -165,7 +165,7 @@ export function MockDataIndicator({
   children?: any;
   message?: string;
 }): any | null {
-  if (process.env.NODE_ENV !== 'development') {
+  if (process.env["NODE_ENV"] !== 'development') {
     return null;
   }
 
@@ -216,19 +216,19 @@ export function createMockGenerator<T>(
  */
 export const safeConsole = {
   dev: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV === "development") {
+    if (process.env["NODE_ENV"] === "development") {
       console.log(`🔧 [DEV] ${message}`, ...args);
     }
   },
 
   test: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV === "test") {
+    if (process.env["NODE_ENV"] === "test") {
       console.log(`🧪 [TEST] ${message}`, ...args);
     }
   },
 
   warn: (message: string, ...args: any[]): void => {
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env["NODE_ENV"] !== "production") {
       console.warn(`⚠️ ${message}`, ...args);
     }
   },

@@ -12,7 +12,8 @@ from typing import Any
 import structlog
 from fastapi import HTTPException
 from redis.asyncio.client import PubSub
-from redis.exceptions import RedisError, TimeoutError as RedisTimeoutError
+from redis.exceptions import RedisError
+from redis.exceptions import TimeoutError as RedisTimeoutError
 from sse_starlette.sse import EventSourceResponse
 
 from dotmac.platform.redis_client import RedisClientType
@@ -65,7 +66,7 @@ class SSEStream:
                     "error": "Redis pub/sub temporarily unavailable",
                     "message": "Service is experiencing connection issues. Please try again later.",
                     "circuit_breaker_state": circuit_breaker.get_state(),
-                }
+                },
             )
 
         async def _subscribe_with_breaker() -> PubSub:
@@ -90,7 +91,7 @@ class SSEStream:
                 detail={
                     "error": "Redis pub/sub temporarily unavailable",
                     "message": str(exc),
-                }
+                },
             )
         except RedisError as exc:
             logger.error(
@@ -105,7 +106,7 @@ class SSEStream:
                     "error": "Redis connection failed",
                     "message": "Unable to establish connection to Redis pub/sub. Please check Redis status.",
                     "detail": str(exc),
-                }
+                },
             )
         except Exception as exc:  # pragma: no cover - defensive
             logger.error(
@@ -120,7 +121,7 @@ class SSEStream:
                     "error": "Stream initialization failed",
                     "message": "Unable to initialize event stream.",
                     "detail": str(exc),
-                }
+                },
             )
 
         try:
@@ -129,7 +130,9 @@ class SSEStream:
 
             while True:
                 try:
-                    message = await self.pubsub.get_message(ignore_subscribe_messages=False, timeout=1.0)
+                    message = await self.pubsub.get_message(
+                        ignore_subscribe_messages=False, timeout=1.0
+                    )
                 except RedisTimeoutError:
                     # Idle timeout - keep connection alive
                     continue

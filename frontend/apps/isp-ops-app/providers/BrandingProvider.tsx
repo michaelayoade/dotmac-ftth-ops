@@ -1,34 +1,124 @@
 "use client";
 
-import { ReactNode, useEffect } from "react";
+import { createContext, ReactNode, useContext, useEffect, useMemo } from "react";
 import { useAppConfig } from "./AppConfigContext";
 import { applyBrandingConfig, applyThemeTokens } from "@/lib/theme";
+import { useTenantBrandingQuery, type TenantBrandingConfigDto } from "@/hooks/useTenantBranding";
+import { useSession } from "@dotmac/better-auth";
 
 interface BrandingProviderProps {
   children: ReactNode;
 }
 
+export interface BrandingContextValue {
+  branding: ReturnType<typeof useAppConfig>["branding"];
+  isLoading: boolean;
+}
+
+const BrandingContext = createContext<BrandingContextValue | null>(null);
+
+function mergeBranding(
+  defaultBranding: BrandingContextValue["branding"],
+  overrides?: TenantBrandingConfigDto,
+) {
+  if (!overrides) {
+    return defaultBranding;
+  }
+
+  const mergedColors = {
+    ...defaultBranding.colors,
+    primary: overrides.primary_color ?? defaultBranding.colors?.primary,
+    primaryHover: overrides.primary_color ?? defaultBranding.colors?.primaryHover,
+    primaryForeground: defaultBranding.colors?.primaryForeground,
+    secondary: overrides.secondary_color ?? defaultBranding.colors?.secondary,
+    secondaryHover: overrides.secondary_color ?? defaultBranding.colors?.secondaryHover,
+    secondaryForeground: defaultBranding.colors?.secondaryForeground,
+    accent: overrides.accent_color ?? defaultBranding.colors?.accent,
+    background: defaultBranding.colors?.background,
+    foreground: defaultBranding.colors?.foreground,
+  };
+
+  const mergedLogos = {
+    ...defaultBranding.logo,
+    light: overrides.logo_light_url ?? defaultBranding.logo?.light,
+    dark: overrides.logo_dark_url ?? defaultBranding.logo?.dark,
+  };
+
+  return {
+    ...defaultBranding,
+    productName: overrides.product_name ?? defaultBranding.productName,
+    productTagline: overrides.product_tagline ?? defaultBranding.productTagline,
+    companyName: overrides.company_name ?? defaultBranding.companyName,
+    supportEmail: overrides.support_email ?? defaultBranding.supportEmail,
+    successEmail: overrides.success_email ?? defaultBranding.successEmail,
+    partnerSupportEmail:
+      overrides.partner_support_email ?? defaultBranding.partnerSupportEmail,
+    colors: mergedColors,
+    logo: mergedLogos,
+    faviconUrl: overrides.favicon_url ?? defaultBranding.faviconUrl ?? "/favicon.ico",
+    docsUrl: overrides.docs_url ?? defaultBranding.docsUrl,
+    supportPortalUrl: overrides.support_portal_url ?? defaultBranding.supportPortalUrl,
+    statusPageUrl: overrides.status_page_url ?? defaultBranding.statusPageUrl,
+    termsUrl: overrides.terms_url ?? defaultBranding.termsUrl,
+    privacyUrl: overrides.privacy_url ?? defaultBranding.privacyUrl,
+  };
+}
+
+function updateFavicon(faviconUrl?: string) {
+  if (typeof document === "undefined") return;
+  const href = faviconUrl || "/favicon.ico";
+
+  let link = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+  if (!link) {
+    link = document.createElement("link");
+    link.rel = "icon";
+    document.head.appendChild(link);
+  }
+  if (link.href !== href) {
+    link.href = href;
+  }
+}
+
 export function BrandingProvider({ children }: BrandingProviderProps) {
-  const { branding } = useAppConfig();
+  const { branding: defaultBranding } = useAppConfig();
+  const { data: session } = useSession();
+  const user = session?.user;
+  const brandingQuery = useTenantBrandingQuery({ enabled: Boolean(user?.tenant_id) });
+
+  const mergedBranding = useMemo(
+    () => mergeBranding(defaultBranding, brandingQuery.data?.branding),
+    [defaultBranding, brandingQuery.data?.branding],
+  );
 
   useEffect(() => {
-    // Apply primary/secondary theme tokens derived from branding colors
     applyThemeTokens({
-      "brand-primary": branding.colors?.primary,
-      "brand-primary-hover": branding.colors?.primaryHover,
-      "brand-primary-foreground": branding.colors?.primaryForeground,
-      "brand-secondary": branding.colors?.secondary,
-      "brand-secondary-hover": branding.colors?.secondaryHover,
-      "brand-secondary-foreground": branding.colors?.secondaryForeground,
-      "brand-accent": branding.colors?.accent,
-      "brand-background": branding.colors?.background,
-      "brand-foreground": branding.colors?.foreground,
+      "brand-primary": mergedBranding.colors?.primary,
+      "brand-primary-hover": mergedBranding.colors?.primaryHover,
+      "brand-primary-foreground": mergedBranding.colors?.primaryForeground,
+      "brand-secondary": mergedBranding.colors?.secondary,
+      "brand-secondary-hover": mergedBranding.colors?.secondaryHover,
+      "brand-secondary-foreground": mergedBranding.colors?.secondaryForeground,
+      "brand-accent": mergedBranding.colors?.accent,
+      "brand-background": mergedBranding.colors?.background,
+      "brand-foreground": mergedBranding.colors?.foreground,
     });
-  }, [branding]);
+    applyBrandingConfig(mergedBranding);
+    updateFavicon(mergedBranding.faviconUrl);
+  }, [mergedBranding]);
 
-  useEffect(() => {
-    applyBrandingConfig(branding);
-  }, [branding]);
+  return (
+    <BrandingContext.Provider
+      value={{ branding: mergedBranding, isLoading: brandingQuery.isLoading }}
+    >
+      {children}
+    </BrandingContext.Provider>
+  );
+}
 
-  return <>{children}</>;
+export function useBrandingContext(): BrandingContextValue {
+  const ctx = useContext(BrandingContext);
+  if (!ctx) {
+    throw new Error("useBrandingContext must be used within BrandingProvider");
+  }
+  return ctx;
 }

@@ -89,7 +89,7 @@ export const AddonCard: React.FC<AddonCardProps> = ({
           </div>
 
           {/* Type Badge */}
-          <Badge className={addonTypeColors[addon.addon_type] || addonTypeColors.feature}>
+          <Badge className={addonTypeColors[addon.addon_type] || addonTypeColors['feature']}>
             {addon.addon_type.replace("_", " ")}
           </Badge>
         </div>

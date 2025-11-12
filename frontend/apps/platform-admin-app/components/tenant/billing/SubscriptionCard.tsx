@@ -13,7 +13,7 @@ import { Button } from "@dotmac/ui";
 import { Badge } from "@dotmac/ui";
 import { Progress } from "@dotmac/ui";
 import { TenantSubscription } from "@/hooks/useTenantSubscription";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@dotmac/features/billing";
 import { format } from "date-fns";
 
 interface SubscriptionCardProps {

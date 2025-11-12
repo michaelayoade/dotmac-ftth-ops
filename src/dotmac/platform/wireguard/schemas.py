@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from dotmac.platform.wireguard.models import WireGuardPeerStatus, WireGuardServerStatus
 

@@ -2,8 +2,7 @@ import * as React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // Devtools are optional; avoid hard dependency in library code
 const ReactQueryDevtools: React.FC<{ initialIsOpen?: boolean }> = () => null;
-import { AuthProvider, type PartialAuthConfig } from "@dotmac/auth";
-import type { PortalType } from "@dotmac/auth";
+// Note: Auth is now handled by Better Auth (@dotmac/better-auth) - no provider needed
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { NotificationProvider } from "./components/NotificationProvider";
@@ -11,16 +10,19 @@ import { FeatureProvider } from "./components/FeatureProvider";
 import { TenantProvider } from "./components/TenantProvider";
 import { createPortalQueryClient } from "./utils/queryClients";
 
+// Portal types formerly defined in @dotmac/auth
+export type PortalType = "admin" | "customer" | "reseller" | "technician" | "management";
+
 export interface UniversalProviderProps {
   children: React.ReactNode;
   portal: PortalType;
   features?: FeatureFlags;
-  authVariant?: AuthVariant;
+  // Note: authVariant removed - Better Auth configuration handled at app level
   tenantVariant?: TenantVariant;
   queryClient?: QueryClient;
   enableDevtools?: boolean;
   config?: {
-    auth?: PartialAuthConfig;
+    // Note: auth config removed - Better Auth configured separately
     apiConfig?: {
       baseUrl?: string;
       timeout?: number;
@@ -51,7 +53,7 @@ export interface FeatureFlags {
   devtools?: boolean;
 }
 
-export type AuthVariant = "simple" | "secure" | "enterprise";
+// Note: AuthVariant removed - Better Auth configured at app level
 export type TenantVariant = "single" | "multi" | "isp";
 
 const defaultFeatures: FeatureFlags = {
@@ -78,10 +80,9 @@ export function UniversalProviders({
   children,
   portal,
   features = {},
-  authVariant = "secure",
   tenantVariant = "multi",
   queryClient,
-  enableDevtools = process.env.NODE_ENV === "development",
+  enableDevtools = process.env["NODE_ENV"] === "development",
   config = {},
 }: UniversalProviderProps) {
   // Memoize the query client to prevent recreation on re-renders
@@ -106,20 +107,19 @@ export function UniversalProviders({
     <ErrorBoundary portal={portal} fallback={portalConfig.errorFallback}>
       <QueryClientProvider client={client}>
         <ThemeProvider portal={portal} theme={portalConfig.theme}>
-          <AuthProvider variant={authVariant} portal={portal} config={portalConfig.auth}>
-            <TenantProvider variant={tenantVariant} portal={portal}>
-              <FeatureProvider features={mergedFeatures}>
-                {mergedFeatures.notifications && (
-                  <NotificationProvider
-                    maxNotifications={portalConfig.notifications.max}
-                    defaultDuration={portalConfig.notifications.duration}
-                    position={portalConfig.notifications.position}
-                  />
-                )}
-                {children}
-              </FeatureProvider>
-            </TenantProvider>
-          </AuthProvider>
+          {/* Note: AuthProvider removed - Better Auth is hook-based, no provider needed */}
+          <TenantProvider variant={tenantVariant} portal={portal}>
+            <FeatureProvider features={mergedFeatures}>
+              {mergedFeatures.notifications && (
+                <NotificationProvider
+                  maxNotifications={portalConfig.notifications.max}
+                  defaultDuration={portalConfig.notifications.duration}
+                  position={portalConfig.notifications.position}
+                />
+              )}
+              {children}
+            </FeatureProvider>
+          </TenantProvider>
         </ThemeProvider>
 
         {enableDevtools && <ReactQueryDevtools initialIsOpen={false} />}
@@ -130,9 +130,11 @@ export function UniversalProviders({
 
 /**
  * Portal-specific configuration
+ * Note: Auth configuration removed - Better Auth is configured at app level
  */
 function getPortalConfig(portal: PortalType, config: any = {}) {
-  // Base auth configurations matching our auth package
+  // Note: baseAuthConfigs removed - Better Auth configured separately
+  // Keeping this structure for reference if needed in the future
   const baseAuthConfigs = {
     admin: {
       sessionTimeout: 60 * 60 * 1000, // 1 hour
@@ -273,4 +275,4 @@ function getPortalConfig(portal: PortalType, config: any = {}) {
 }
 
 // Re-export for convenience
-export { FeatureFlags, AuthVariant, TenantVariant };
+export type { FeatureFlags, TenantVariant };

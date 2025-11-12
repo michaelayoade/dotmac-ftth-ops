@@ -279,7 +279,7 @@ export function SubscriberList({
       searchPlaceholder="Search subscribers..."
       searchColumn="name"
       paginated={true}
-      onRowClick={onRowClick}
+      {...(onRowClick && { onRowClick })}
       emptyMessage="No subscribers found"
       className="w-full"
     />

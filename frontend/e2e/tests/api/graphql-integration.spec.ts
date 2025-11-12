@@ -5,11 +5,10 @@
 import { test, expect, type APIRequestContext } from "@playwright/test";
 
 test.describe("GraphQL API Integration", () => {
-  const BASE_URL = "http://localhost:8000";
-  const APP_URL = "http://localhost:3000";
+  const BASE_URL = process.env.API_BASE_URL || "http://localhost:8000";
   const GRAPHQL_ENDPOINT = `${BASE_URL}/graphql`;
-  const TEST_EMAIL = "admin@test.com";
-  const TEST_PASSWORD = "Test123!@#";
+  const TEST_EMAIL = process.env.E2E_ADMIN_EMAIL || "admin@test.com";
+  const TEST_PASSWORD = process.env.E2E_ADMIN_PASSWORD || "Test123!@#";
 
   let authToken: string;
 
@@ -119,19 +118,17 @@ test.describe("GraphQL API Integration", () => {
 
       if (response.status() === 404) {
         console.log("GraphQL endpoint not found");
+        test.skip();
         return;
       }
 
-      if (response.ok()) {
-        const data = await response.json();
+      expect(response.ok()).toBe(true);
+      const data = await response.json();
 
-        if (data.errors) {
-          console.log("GraphQL errors:", data.errors);
-        } else {
-          expect(data.data).toHaveProperty("dashboardOverview");
-          console.log("Dashboard analytics retrieved successfully");
-        }
-      }
+      // Assert that query succeeded without errors
+      expect(data.errors).toBeUndefined();
+      expect(data.data).toHaveProperty("dashboardOverview");
+      console.log("Dashboard analytics retrieved successfully");
     });
   });
 
@@ -148,20 +145,18 @@ test.describe("GraphQL API Integration", () => {
 
       if (response.status() === 404) {
         console.log("GraphQL endpoint not found");
+        test.skip();
         return;
       }
 
-      if (response.ok()) {
-        const data = await response.json();
+      expect(response.ok()).toBe(true);
+      const data = await response.json();
 
-        if (data.errors) {
-          console.log("GraphQL mutation errors:", data.errors);
-        } else if (data.data) {
-          expect(data.data).toHaveProperty("ping");
-          expect(data.data.ping).toBe("pong");
-          console.log("Ping mutation executed successfully");
-        }
-      }
+      // Assert that mutation succeeded without errors
+      expect(data.errors).toBeUndefined();
+      expect(data.data).toHaveProperty("ping");
+      expect(data.data.ping).toBe("pong");
+      console.log("Ping mutation executed successfully");
     });
   });
 
@@ -298,7 +293,17 @@ test.describe("GraphQL API Integration", () => {
 
     console.log("GraphQL Implementation Status:", results);
 
-    // This test always passes - it's just for documentation
-    expect(true).toBe(true);
+    // Check if endpoint is available
+    const endpointNotAvailable = results.some(r => r.status === "endpoint_not_found");
+    if (endpointNotAvailable) {
+      test.skip(true, "GraphQL endpoint not deployed");
+      return;
+    }
+
+    // Assert that all queries succeeded when endpoint is available
+    const failedQueries = results.filter(
+      r => !r.status.includes("success") && r.status !== "endpoint_not_found"
+    );
+    expect(failedQueries).toEqual([]);
   });
 });

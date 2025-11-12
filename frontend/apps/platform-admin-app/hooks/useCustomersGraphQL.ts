@@ -531,11 +531,11 @@ export function useCustomerDevicesGraphQL(options: UseCustomerDevicesOptions) {
   const deviceData = data?.customerDevices ?? null;
 
   return {
-    devices: deviceData?.devices ?? [],
-    totalDevices: deviceData?.totalDevices ?? 0,
-    onlineDevices: deviceData?.onlineDevices ?? 0,
-    offlineDevices: deviceData?.offlineDevices ?? 0,
-    needingUpdates: deviceData?.needingUpdates ?? 0,
+    devices: deviceData?.['devices'] ?? [],
+    totalDevices: deviceData?.['totalDevices'] ?? 0,
+    onlineDevices: deviceData?.['onlineDevices'] ?? 0,
+    offlineDevices: deviceData?.['offlineDevices'] ?? 0,
+    needingUpdates: deviceData?.['needingUpdates'] ?? 0,
     isLoading,
     error: error instanceof Error ? error.message : error ? String(error) : undefined,
     refetch,

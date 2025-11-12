@@ -7,7 +7,8 @@ This module provides utilities to configure and connect to Vault/OpenBao backend
 import asyncio
 import inspect
 import os
-from typing import Any, Coroutine, cast
+from collections.abc import Coroutine
+from typing import Any, cast
 
 import httpx
 import structlog

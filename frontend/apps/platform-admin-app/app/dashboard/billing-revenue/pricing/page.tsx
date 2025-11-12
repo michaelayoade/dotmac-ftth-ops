@@ -166,7 +166,7 @@ export default function PricingPage() {
       const searchLower = searchQuery.toLowerCase();
       if (
         !rule.name.toLowerCase().includes(searchLower) &&
-        !rule.description?.toLowerCase().includes(searchLower)
+        !rule['description']?.toLowerCase().includes(searchLower)
       ) {
         return false;
       }
@@ -322,8 +322,8 @@ export default function PricingPage() {
 
   const handleCreateRule = () => {
     const ruleData: Partial<PricingRule> = {
-      name: formData.name,
-      description: formData.description || undefined,
+      name: formData['name'],
+      ...(formData['description'] && { description: formData['description'] }),
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -331,15 +331,15 @@ export default function PricingPage() {
         ? formData.applies_to_categories.split(",").map((s) => s.trim())
         : [],
       applies_to_all: formData.applies_to_all,
-      min_quantity: formData.min_quantity ? parseInt(formData.min_quantity) : undefined,
+      ...(formData.min_quantity && { min_quantity: parseInt(formData.min_quantity) }),
       customer_segments: formData.customer_segments
         ? formData.customer_segments.split(",").map((s) => s.trim())
         : [],
       discount_type: formData.discount_type,
       discount_value: parseFloat(formData.discount_value),
-      starts_at: formData.starts_at || undefined,
-      ends_at: formData.ends_at || undefined,
-      max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
+      ...(formData.starts_at && { starts_at: formData.starts_at }),
+      ...(formData.ends_at && { ends_at: formData.ends_at }),
+      ...(formData.max_uses && { max_uses: parseInt(formData.max_uses) }),
       priority: parseInt(formData.priority),
     };
 
@@ -350,8 +350,8 @@ export default function PricingPage() {
     if (!selectedRule) return;
 
     const ruleData: Partial<PricingRule> = {
-      name: formData.name,
-      description: formData.description || undefined,
+      name: formData['name'],
+      ...(formData['description'] && { description: formData['description'] }),
       applies_to_product_ids: formData.applies_to_product_ids
         ? formData.applies_to_product_ids.split(",").map((s) => s.trim())
         : [],
@@ -359,15 +359,15 @@ export default function PricingPage() {
         ? formData.applies_to_categories.split(",").map((s) => s.trim())
         : [],
       applies_to_all: formData.applies_to_all,
-      min_quantity: formData.min_quantity ? parseInt(formData.min_quantity) : undefined,
+      ...(formData.min_quantity && { min_quantity: parseInt(formData.min_quantity) }),
       customer_segments: formData.customer_segments
         ? formData.customer_segments.split(",").map((s) => s.trim())
         : [],
       discount_type: formData.discount_type,
       discount_value: parseFloat(formData.discount_value),
-      starts_at: formData.starts_at || undefined,
-      ends_at: formData.ends_at || undefined,
-      max_uses: formData.max_uses ? parseInt(formData.max_uses) : undefined,
+      ...(formData.starts_at && { starts_at: formData.starts_at }),
+      ...(formData.ends_at && { ends_at: formData.ends_at }),
+      ...(formData.max_uses && { max_uses: parseInt(formData.max_uses) }),
       priority: parseInt(formData.priority),
     };
 
@@ -856,7 +856,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -864,7 +864,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}
@@ -1020,7 +1020,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Rule Name*</Label>
               <Input
-                value={formData.name}
+                value={formData['name']}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Summer Sale 2024"
               />
@@ -1028,7 +1028,7 @@ export default function PricingPage() {
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
-                value={formData.description}
+                value={formData['description']}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 placeholder="Optional description of the rule"
                 rows={2}

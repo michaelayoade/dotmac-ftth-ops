@@ -102,72 +102,79 @@ export function GlobalCommandPalette() {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Quick actions
+  // Quick actions - Platform Admin workspace
   const quickActions: QuickAction[] = [
     {
       id: "home",
-      label: "Go to Dashboard",
+      label: "Platform Overview",
       icon: Home,
       shortcut: "⌘H",
       action: () => router.push("/dashboard"),
-      keywords: ["home", "dashboard", "overview"],
+      keywords: ["home", "dashboard", "overview", "platform"],
+    },
+    {
+      id: "tenants",
+      label: "Tenant Directory",
+      icon: Users,
+      action: () => router.push("/dashboard/platform-admin/tenants"),
+      keywords: ["tenants", "organizations", "customers", "clients"],
     },
     {
       id: "search",
-      label: "Open Search Page",
+      label: "Cross-Tenant Search",
       icon: Search,
       shortcut: "⌘S",
-      action: () => router.push("/dashboard/search"),
-      keywords: ["search", "find", "query"],
+      action: () => router.push("/dashboard/platform-admin/search"),
+      keywords: ["search", "find", "query", "cross-tenant"],
     },
     {
-      id: "subscribers",
-      label: "View Subscribers",
-      icon: Users,
-      action: () => router.push("/dashboard/subscribers"),
-      keywords: ["subscribers", "users", "accounts"],
+      id: "licensing",
+      label: "Licensing & Plans",
+      icon: Activity,
+      action: () => router.push("/dashboard/platform-admin/licensing"),
+      keywords: ["licensing", "plans", "subscriptions", "limits"],
     },
     {
-      id: "billing",
-      label: "Billing & Revenue",
-      icon: Receipt,
-      action: () => router.push("/dashboard/billing-revenue"),
-      keywords: ["billing", "invoices", "revenue", "payments"],
+      id: "feature-flags",
+      label: "Feature Flags",
+      icon: FileText,
+      action: () => router.push("/dashboard/feature-flags"),
+      keywords: ["features", "flags", "toggles", "rollout"],
     },
     {
-      id: "support",
-      label: "Support Tickets",
-      icon: Ticket,
-      action: () => router.push("/dashboard/support"),
-      keywords: ["support", "tickets", "help"],
-    },
-    {
-      id: "network",
-      label: "Network Inventory",
-      icon: Server,
-      action: () => router.push("/dashboard/network"),
-      keywords: ["network", "devices", "infrastructure"],
-    },
-    {
-      id: "communications",
-      label: "Communications",
-      icon: Mail,
-      action: () => router.push("/dashboard/communications"),
-      keywords: ["email", "sms", "communications", "messages"],
+      id: "security",
+      label: "Security & Access",
+      icon: Shield,
+      action: () => router.push("/dashboard/security-access"),
+      keywords: ["security", "access", "roles", "permissions", "api keys"],
     },
     {
       id: "audit",
-      label: "Audit & Compliance",
-      icon: Shield,
+      label: "Audit Trail",
+      icon: FileText,
       action: () => router.push("/dashboard/platform-admin/audit"),
-      keywords: ["audit", "security", "compliance", "logs"],
+      keywords: ["audit", "logs", "compliance", "activity"],
     },
     {
-      id: "settings",
-      label: "Settings",
-      icon: Settings,
-      action: () => router.push("/dashboard/settings"),
-      keywords: ["settings", "preferences", "configuration"],
+      id: "jobs",
+      label: "Automation Jobs",
+      icon: Activity,
+      action: () => router.push("/dashboard/jobs"),
+      keywords: ["jobs", "automation", "tasks", "workflows"],
+    },
+    {
+      id: "plugins",
+      label: "Plugin Catalog",
+      icon: Package,
+      action: () => router.push("/dashboard/plugins"),
+      keywords: ["plugins", "marketplace", "integrations", "extensions"],
+    },
+    {
+      id: "tenant-portal",
+      label: "Tenant Portal",
+      icon: Users,
+      action: () => router.push("/tenant-portal"),
+      keywords: ["tenant", "portal", "self-service"],
     },
   ];
 
@@ -251,7 +258,7 @@ export function GlobalCommandPalette() {
                 <CommandItem
                   key={action.id}
                   onSelect={() => handleSelect(action.action)}
-                  keywords={action.keywords}
+                  keywords={action.keywords ?? []}
                 >
                   <Icon className="mr-2 h-4 w-4" />
                   <span>{action.label}</span>

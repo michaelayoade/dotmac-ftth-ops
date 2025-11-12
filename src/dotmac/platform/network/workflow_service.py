@@ -9,6 +9,8 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.network.profile_service import SubscriberNetworkProfileService
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,6 +35,7 @@ class NetworkService:
         vlan_id: int | None = None,
         static_ip: str | None = None,
         description: str | None = None,
+        subscriber_id: str | None = None,
     ) -> dict[str, Any]:
         """
         Allocate network resources for an ISP customer.
@@ -105,6 +108,13 @@ class NetworkService:
                 raise ValueError(f"Customer {customer_id_str} not found")
             tenant_id = customer.tenant_id
 
+        profile = None
+        ip_from_profile = False
+
+        if tenant_id and subscriber_id:
+            profile_service = SubscriberNetworkProfileService(self.db, tenant_id)
+            profile = await profile_service.get_profile(subscriber_id)
+
         # Generate username for RADIUS (unique identifier)
         # Use format: customer email prefix or customer_<id>
         username = None
@@ -116,6 +126,28 @@ class NetworkService:
         # Generate service ID
         service_id = f"svc-{secrets.token_hex(8)}"
 
+        # Ensure tenant_id determined before referencing profile
+        if not tenant_id:
+            tenant_id = customer.tenant_id
+
+        if not profile and subscriber_id:
+            profile_service = SubscriberNetworkProfileService(self.db, tenant_id)
+            profile = await profile_service.get_profile(subscriber_id)
+
+        profile_static_ipv4 = str(profile.static_ipv4) if profile and profile.static_ipv4 else None
+        profile_static_ipv6 = str(profile.static_ipv6) if profile and profile.static_ipv6 else None
+        profile_ipv6_prefix = profile.delegated_ipv6_prefix if profile else None
+        profile_vlan = profile.service_vlan if profile else None
+        profile_inner_vlan = profile.inner_vlan if profile else None
+        profile_qinq = profile.qinq_enabled if profile else False
+
+        if not static_ip and profile_static_ipv4:
+            static_ip = profile_static_ipv4
+            ip_from_profile = True
+
+        if not vlan_id and profile_vlan:
+            vlan_id = profile_vlan
+
         # Try to allocate IP from NetBox if configured
         netbox_ip_id = None
         ip_address = None
@@ -124,76 +156,41 @@ class NetworkService:
         dns_name = None
         allocation_method = "fallback"
 
-        try:
-            from ..netbox.client import NetBoxClient
+        if not static_ip:
+            try:
+                from ..netbox.client import NetBoxClient
 
-            netbox_client = NetBoxClient(tenant_id=tenant_id)
+                netbox_client = NetBoxClient(tenant_id=tenant_id)
 
-            # Check if NetBox is available
-            is_healthy = await netbox_client.health_check()
-            if is_healthy:
-                allocation_method = "netbox"
+                # Check if NetBox is available
+                is_healthy = await netbox_client.health_check()
+                if is_healthy:
+                    allocation_method = "netbox"
 
-                # Use static IP if provided
-                if static_ip:
-                    # Create IP address in NetBox
-                    ip_data = {
-                        "address": static_ip,
-                        "status": "active",
-                        "description": description
-                        or f"Customer {customer_id_str} - {service_location}",
-                        "tenant": tenant_id if tenant_id else None,
-                        "tags": [
-                            {"name": f"customer-{customer_id_str}"},
-                            {"name": bandwidth_plan},
-                        ],
-                    }
+                    # Use static IP if provided
+                    if static_ip:
+                        # Create IP address in NetBox
+                        ip_data = {
+                            "address": static_ip,
+                            "status": "active",
+                            "description": description
+                            or f"Customer {customer_id_str} - {service_location}",
+                            "tenant": tenant_id if tenant_id else None,
+                            "tags": [
+                                {"name": f"customer-{customer_id_str}"},
+                                {"name": bandwidth_plan},
+                            ],
+                        }
 
-                    netbox_ip = await netbox_client.create_ip_address(ip_data)
-                    ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
-                    subnet = netbox_ip["address"]
-                    netbox_ip_id = netbox_ip["id"]
-                    dns_name = netbox_ip.get("dns_name")
+                        netbox_ip = await netbox_client.create_ip_address(ip_data)
+                        ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
+                        subnet = netbox_ip["address"]
+                        netbox_ip_id = netbox_ip["id"]
+                        dns_name = netbox_ip.get("dns_name")
 
-                # Auto-allocate from prefix
-                elif prefix_id:
-                    # Allocate next available IP from specified prefix
-                    ip_data = {
-                        "status": "active",
-                        "description": description
-                        or f"Customer {customer_id_str} - {service_location}",
-                        "tenant": tenant_id if tenant_id else None,
-                        "tags": [
-                            {"name": f"customer-{customer_id_str}"},
-                            {"name": bandwidth_plan},
-                        ],
-                    }
-
-                    netbox_ip = await netbox_client.allocate_ip(prefix_id, ip_data)
-                    ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
-                    subnet = netbox_ip["address"]
-                    netbox_ip_id = netbox_ip["id"]
-                    dns_name = netbox_ip.get("dns_name")
-
-                    # Try to get gateway from prefix
-                    try:
-                        prefix = await netbox_client.get_prefix(prefix_id)
-                        # First usable IP in subnet is typically the gateway
-                        network = ipaddress.ip_network(prefix["prefix"])
-                        gateway = str(network.network_address + 1)
-                    except Exception:
-                        pass
-
-                else:
-                    # Find available prefixes for this tenant
-                    prefixes_response = await netbox_client.get_prefixes(tenant=tenant_id, limit=10)
-                    prefixes = prefixes_response.get("results", [])
-
-                    if prefixes:
-                        # Use first available prefix
-                        first_prefix = prefixes[0]
-                        prefix_id = first_prefix["id"]
-
+                    # Auto-allocate from prefix
+                    elif prefix_id:
+                        # Allocate next available IP from specified prefix
                         ip_data = {
                             "status": "active",
                             "description": description
@@ -206,21 +203,69 @@ class NetworkService:
                         }
 
                         netbox_ip = await netbox_client.allocate_ip(prefix_id, ip_data)
-                        ip_address = netbox_ip["address"].split("/")[0]
+                        ip_address = netbox_ip["address"].split("/")[0]  # Remove CIDR
                         subnet = netbox_ip["address"]
                         netbox_ip_id = netbox_ip["id"]
                         dns_name = netbox_ip.get("dns_name")
 
-                        # Get gateway
-                        network = ipaddress.ip_network(first_prefix["prefix"])
-                        gateway = str(network.network_address + 1)
+                        # Try to get gateway from prefix
+                        try:
+                            prefix = await netbox_client.get_prefix(prefix_id)
+                            # First usable IP in subnet is typically the gateway
+                            network = ipaddress.ip_network(prefix["prefix"])
+                            gateway = str(network.network_address + 1)
+                        except Exception:
+                            pass
 
-                logger.info(f"Allocated IP from NetBox: {ip_address}, netbox_id={netbox_ip_id}")
+                    else:
+                        # Find available prefixes for this tenant
+                        prefixes_response = await netbox_client.get_prefixes(
+                            tenant=tenant_id, limit=10
+                        )
+                        prefixes = prefixes_response.get("results", [])
 
-        except ImportError:
-            logger.info("NetBox client not available, using fallback IP allocation")
-        except Exception as e:
-            logger.warning(f"NetBox allocation failed: {e}, using fallback IP allocation")
+                        if prefixes:
+                            # Use first available prefix
+                            first_prefix = prefixes[0]
+                            prefix_id = first_prefix["id"]
+
+                            ip_data = {
+                                "status": "active",
+                                "description": description
+                                or f"Customer {customer_id_str} - {service_location}",
+                                "tenant": tenant_id if tenant_id else None,
+                                "tags": [
+                                    {"name": f"customer-{customer_id_str}"},
+                                    {"name": bandwidth_plan},
+                                ],
+                            }
+
+                            netbox_ip = await netbox_client.allocate_ip(prefix_id, ip_data)
+                            ip_address = netbox_ip["address"].split("/")[0]
+                            subnet = netbox_ip["address"]
+                            netbox_ip_id = netbox_ip["id"]
+                            dns_name = netbox_ip.get("dns_name")
+
+                            # Get gateway
+                            network = ipaddress.ip_network(first_prefix["prefix"])
+                            gateway = str(network.network_address + 1)
+
+                    logger.info(f"Allocated IP from NetBox: {ip_address}, netbox_id={netbox_ip_id}")
+
+            except ImportError:
+                logger.info("NetBox client not available, using fallback IP allocation")
+            except Exception as e:
+                logger.warning(f"NetBox allocation failed: {e}, using fallback IP allocation")
+
+        if static_ip and not ip_address:
+            allocation_method = "profile" if ip_from_profile else "static"
+            if "/" in static_ip:
+                ip_part, _, cidr = static_ip.partition("/")
+                ip_address = ip_part
+                subnet = static_ip
+            else:
+                ip_address = static_ip
+                subnet = f"{static_ip}/32"
 
         # Fallback: Generate IP from private range if NetBox unavailable
         if not ip_address:
@@ -261,6 +306,10 @@ class NetworkService:
             "subnet": subnet,
             "gateway": gateway,
             "vlan_id": vlan_id,
+            "inner_vlan": profile_inner_vlan,
+            "qinq_enabled": profile_qinq,
+            "ipv6_address": profile_static_ipv6,
+            "delegated_ipv6_prefix": profile_ipv6_prefix,
             "username": username,
             "bandwidth_plan": bandwidth_plan,
             "service_location": service_location,

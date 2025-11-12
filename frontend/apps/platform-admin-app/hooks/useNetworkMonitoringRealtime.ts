@@ -149,8 +149,8 @@ export function useNetworkDevicesRealtime(params: UseDevicesRealtimeParams = {})
   const { devices, total, isLoading, error, refetch } = useNetworkDeviceListGraphQL({
     page: 1,
     pageSize: 100,
-    deviceType: params.deviceType,
-    status: params.status,
+    ...(params.deviceType && { deviceType: params.deviceType }),
+    ...(params.status && { status: params.status }),
     pollInterval: 30000, // Fallback polling
   });
 
@@ -323,7 +323,7 @@ export function useNetworkAlertsRealtime(params: UseAlertsRealtimeParams = {}) {
   const { alerts, total, isLoading, error, refetch } = useNetworkAlertListGraphQL({
     page: 1,
     pageSize: 100,
-    severity: params.severity,
+    ...(params.severity && { severity: params.severity }),
     activeOnly: params.activeOnly ?? true,
     pollInterval: 15000, // Fallback polling every 15s
   });

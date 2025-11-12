@@ -112,8 +112,8 @@ export function BankAccountDialog({
         data: {
           account_nickname: formData.account_nickname || null,
           bank_address: formData.bank_address || null,
-          is_primary: formData.is_primary,
-          accepts_deposits: formData.accepts_deposits,
+          is_primary: formData.is_primary !== undefined ? formData.is_primary : false,
+          accepts_deposits: formData.accepts_deposits !== undefined ? formData.accepts_deposits : true,
           notes: formData.notes || null,
         },
       });
@@ -324,7 +324,7 @@ export function BankAccountDialog({
               </div>
               <Switch
                 id="is_primary"
-                checked={formData.is_primary}
+                checked={formData.is_primary !== undefined ? formData.is_primary : false}
                 onCheckedChange={(checked) => setFormData({ ...formData, is_primary: checked })}
               />
             </div>
@@ -338,7 +338,7 @@ export function BankAccountDialog({
               </div>
               <Switch
                 id="accepts_deposits"
-                checked={formData.accepts_deposits}
+                checked={formData.accepts_deposits !== undefined ? formData.accepts_deposits : true}
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, accepts_deposits: checked })
                 }

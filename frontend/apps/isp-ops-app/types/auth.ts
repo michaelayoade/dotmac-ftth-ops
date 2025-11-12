@@ -5,26 +5,26 @@ import { BaseEntity, DateString, UserID, TenantID } from "./common";
 export interface User extends BaseEntity {
   id: UserID;
   email: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  avatar?: string;
+  username: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  displayName: string | undefined;
+  avatar: string | undefined;
   status: UserStatus;
   emailVerified: boolean;
-  phoneNumber?: string;
-  phoneVerified?: boolean;
+  phoneNumber: string | undefined;
+  phoneVerified: boolean | undefined;
 
   // Auth details
   roles: Role[];
-  permissions?: Permission[];
-  tenantId?: TenantID;
-  lastLogin?: DateString;
-  passwordChangedAt?: DateString;
+  permissions: Permission[] | undefined;
+  tenantId: TenantID | undefined;
+  lastLogin: DateString | undefined;
+  passwordChangedAt: DateString | undefined;
 
   // Settings
-  preferences?: UserPreferences;
-  twoFactorEnabled?: boolean;
+  preferences: UserPreferences | undefined;
+  twoFactorEnabled: boolean | undefined;
 }
 
 export const UserStatuses = {
@@ -41,17 +41,17 @@ export interface Role {
   id: string;
   name: string;
   displayName: string;
-  description?: string;
+  description: string | undefined;
   permissions: Permission[];
-  isSystem?: boolean;
+  isSystem: boolean | undefined;
 }
 
 export interface Permission {
   id: string;
   resource: string;
   action: PermissionAction;
-  scope?: PermissionScope;
-  conditions?: Record<string, unknown>;
+  scope: PermissionScope | undefined;
+  conditions: Record<string, unknown> | undefined;
 }
 
 export const PermissionActions = {
@@ -70,8 +70,8 @@ export type PermissionScope = "own" | "team" | "tenant" | "global";
 export interface AuthCredentials {
   email: string;
   password: string;
-  rememberMe?: boolean;
-  mfaCode?: string;
+  rememberMe: boolean | undefined;
+  mfaCode: string | undefined;
 }
 
 export interface AuthTokens {
@@ -84,8 +84,8 @@ export interface AuthTokens {
 export interface AuthResponse {
   user: User;
   tokens: AuthTokens;
-  requiresMfa?: boolean;
-  mfaChallenge?: MfaChallenge;
+  requiresMfa: boolean | undefined;
+  mfaChallenge: MfaChallenge | undefined;
 }
 
 // Multi-factor authentication
@@ -99,9 +99,9 @@ export type MfaType = "totp" | "sms" | "email" | "backup_code";
 
 export interface MfaSetup {
   type: MfaType;
-  secret?: string;
-  qrCode?: string;
-  backupCodes?: string[];
+  secret: string | undefined;
+  qrCode: string | undefined;
+  backupCodes: string[] | undefined;
   verified: boolean;
 }
 
@@ -109,9 +109,9 @@ export interface MfaSetup {
 export interface Session {
   id: string;
   userId: UserID;
-  deviceId?: string;
-  ipAddress?: string;
-  userAgent?: string;
+  deviceId: string | undefined;
+  ipAddress: string | undefined;
+  userAgent: string | undefined;
   createdAt: DateString;
   expiresAt: DateString;
   lastActivity: DateString;
@@ -120,33 +120,33 @@ export interface Session {
 
 // User preferences
 export interface UserPreferences {
-  theme?: "light" | "dark" | "system";
-  language?: string;
-  timezone?: string;
-  notifications?: NotificationPreferences;
-  privacy?: PrivacySettings;
+  theme: "light" | "dark" | "system" | undefined;
+  language: string | undefined;
+  timezone: string | undefined;
+  notifications: NotificationPreferences | undefined;
+  privacy: PrivacySettings | undefined;
 }
 
 export interface NotificationPreferences {
   email: {
     enabled: boolean;
-    frequency?: "immediate" | "daily" | "weekly";
-    categories?: string[];
+    frequency: "immediate" | "daily" | "weekly" | undefined;
+    categories: string[] | undefined;
   };
   push: {
     enabled: boolean;
-    categories?: string[];
+    categories: string[] | undefined;
   };
   sms: {
     enabled: boolean;
-    categories?: string[];
+    categories: string[] | undefined;
   };
 }
 
 export interface PrivacySettings {
-  profileVisibility?: "public" | "private" | "team";
-  activityTracking?: boolean;
-  dataSharing?: boolean;
+  profileVisibility: "public" | "private" | "team" | undefined;
+  activityTracking: boolean | undefined;
+  dataSharing: boolean | undefined;
 }
 
 // Registration and profile updates
@@ -154,20 +154,20 @@ export interface UserRegistration {
   email: string;
   password: string;
   confirmPassword: string;
-  username?: string;
-  firstName?: string;
-  lastName?: string;
+  username: string | undefined;
+  firstName: string | undefined;
+  lastName: string | undefined;
   acceptTerms: boolean;
-  marketingOptIn?: boolean;
+  marketingOptIn: boolean | undefined;
 }
 
 export interface UserProfileUpdate {
-  firstName?: string;
-  lastName?: string;
-  displayName?: string;
-  phoneNumber?: string;
-  avatar?: string;
-  preferences?: UserPreferences;
+  firstName: string | undefined;
+  lastName: string | undefined;
+  displayName: string | undefined;
+  phoneNumber: string | undefined;
+  avatar: string | undefined;
+  preferences: UserPreferences | undefined;
 }
 
 // Password management
@@ -195,15 +195,15 @@ export interface ApiKey extends BaseEntity {
   keyHint: string; // Last 4 characters
   userId: UserID;
   scopes: string[];
-  expiresAt?: DateString;
-  lastUsedAt?: DateString;
+  expiresAt: DateString | undefined;
+  lastUsedAt: DateString | undefined;
   isActive: boolean;
 }
 
 export interface ApiKeyCreateInput {
   name: string;
   scopes: string[];
-  expiresIn?: number; // Days
+  expiresIn: number | undefined; // Days
 }
 
 // OAuth providers
@@ -211,7 +211,7 @@ export interface OAuthProvider {
   provider: OAuthProviderType;
   clientId: string;
   enabled: boolean;
-  scopes?: string[];
+  scopes: string[] | undefined;
 }
 
 export type OAuthProviderType = "google" | "github" | "microsoft" | "apple" | "facebook";
@@ -222,9 +222,9 @@ export interface SecurityEvent {
   type: SecurityEventType;
   userId: UserID;
   timestamp: DateString;
-  ipAddress?: string;
-  userAgent?: string;
-  details?: Record<string, unknown>;
+  ipAddress: string | undefined;
+  userAgent: string | undefined;
+  details: Record<string, unknown> | undefined;
   severity: "low" | "medium" | "high" | "critical";
 }
 

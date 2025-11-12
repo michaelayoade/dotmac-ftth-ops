@@ -122,9 +122,9 @@ export default function OrganizationSettingsPage() {
       setIsSaving(true);
 
       await tenantService.updateTenant(currentTenant.id, {
-        name: formData.name,
+        name: formData['name'],
         slug: formData.slug,
-        description: formData.description,
+        description: formData['description'],
         website: formData.website,
         contact_email: formData.contact_email,
         contact_phone: formData.contact_phone,
@@ -406,7 +406,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-name">Organization Name</Label>
                   <Input
                     id="org-name"
-                    value={formData.name || ""}
+                    value={formData['name'] || ""}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     disabled={!isEditing}
                   />
@@ -425,7 +425,7 @@ export default function OrganizationSettingsPage() {
                   <Label htmlFor="org-description">Description</Label>
                   <Textarea
                     id="org-description"
-                    value={formData.description || ""}
+                    value={formData['description'] || ""}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     disabled={!isEditing}
                     rows={3}

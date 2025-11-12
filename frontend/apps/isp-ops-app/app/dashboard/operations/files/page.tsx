@@ -24,6 +24,7 @@ import { StatusBadge } from "@dotmac/ui";
 import { Button } from "@dotmac/ui";
 import { useConfirmDialog } from "@dotmac/ui";
 import { logger } from "@/lib/logger";
+import { platformConfig } from "@/lib/config";
 
 interface FileMetadata {
   file_id: string;
@@ -43,8 +44,6 @@ interface FilesResponse {
   per_page: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8001";
-
 export default function FilesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<string[]>([]);
@@ -56,7 +55,8 @@ export default function FilesPage() {
   const { data, isLoading, error } = useQuery<FilesResponse>({
     queryKey: ["files"],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/api/v1/files/storage`, {
+      const url = platformConfig.api.buildUrl("/files/storage");
+      const response = await fetch(url, {
         credentials: "include",
       });
       if (!response.ok) {
@@ -72,7 +72,8 @@ export default function FilesPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(`${API_BASE_URL}/api/v1/files/storage/upload`, {
+      const url = platformConfig.api.buildUrl("/files/storage/upload");
+      const response = await fetch(url, {
         method: "POST",
         credentials: "include",
         body: formData,
@@ -96,7 +97,8 @@ export default function FilesPage() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (fileId: string) => {
-      const response = await fetch(`${API_BASE_URL}/api/v1/files/storage/${fileId}`, {
+      const url = platformConfig.api.buildUrl(`/files/storage/${fileId}`);
+      const response = await fetch(url, {
         method: "DELETE",
         credentials: "include",
       });
@@ -146,7 +148,8 @@ export default function FilesPage() {
   };
 
   const handleDownload = (fileId: string, fileName: string) => {
-    window.open(`${API_BASE_URL}/api/v1/files/storage/${fileId}/download`, "_blank");
+    const url = platformConfig.api.buildUrl(`/files/storage/${fileId}/download`);
+    window.open(url, "_blank");
     logger.info("File downloaded", { fileId, fileName });
   };
 

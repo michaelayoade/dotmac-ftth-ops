@@ -21,7 +21,7 @@ from sqlalchemy import (
 from sqlalchemy import Enum as SQLEnum
 from sqlalchemy.orm import Mapped, mapped_column
 
-from dotmac.platform.db import AuditMixin, Base, GUID, TenantMixin, TimestampMixin
+from dotmac.platform.db import GUID, AuditMixin, Base, TenantMixin, TimestampMixin
 
 
 class UsageType(str, Enum):

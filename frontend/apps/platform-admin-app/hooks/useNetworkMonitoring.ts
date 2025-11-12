@@ -253,7 +253,10 @@ export function useDeviceDetails(deviceId: string | undefined) {
   const health = useDeviceHealth(deviceId);
   const metrics = useDeviceMetrics(deviceId);
   const traffic = useDeviceTraffic(deviceId);
-  const alerts = useNetworkAlerts({ device_id: deviceId, active_only: true });
+  const alerts = useNetworkAlerts({
+    ...(deviceId && { device_id: deviceId }),
+    active_only: true,
+  });
 
   return {
     health: health.data,

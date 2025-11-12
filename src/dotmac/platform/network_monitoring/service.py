@@ -945,7 +945,7 @@ class NetworkMonitoringService:
         try:
             voltha_client = self.voltha
             if voltha_client and hasattr(voltha_client, "get_devices"):
-                get_devices = getattr(voltha_client, "get_devices")
+                get_devices = voltha_client.get_devices
                 voltha_devices = await get_devices()
                 for onu in self._normalize_collection(voltha_devices):
                     if not isinstance(onu, dict):

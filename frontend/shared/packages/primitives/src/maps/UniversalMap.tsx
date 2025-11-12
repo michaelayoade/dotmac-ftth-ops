@@ -183,7 +183,7 @@ const variantStyles = {
 };
 
 // Status colors
-const statusColors: Record<string, string> = {
+const statusColors = {
   active: "#10B981",
   online: "#10B981",
   inactive: "#6B7280",
@@ -193,6 +193,15 @@ const statusColors: Record<string, string> = {
   planned: "#8B5CF6",
   in_progress: "#3B82F6",
   completed: "#10B981",
+} as const;
+
+type StatusColorKey = keyof typeof statusColors;
+
+const getStatusColor = (status?: string): string => {
+  if (!status) {
+    return statusColors.active;
+  }
+  return statusColors[status as StatusColorKey] ?? statusColors.active;
 };
 
 // Marker icons based on type
@@ -264,7 +273,7 @@ const MockMapCanvas = ({
           >
             <div
               className="p-2 rounded-full shadow-lg"
-              style={{ backgroundColor: statusColors[node.status] }}
+              style={{ backgroundColor: getStatusColor(node.status) }}
             >
               <Icon className="w-4 h-4 text-white" />
             </div>
@@ -289,7 +298,7 @@ const MockMapCanvas = ({
             <div
               className="p-1 rounded-full shadow-md border-2 border-white"
               style={{
-                backgroundColor: statusColors[marker.status ?? "active"],
+                backgroundColor: getStatusColor(marker.status ?? "active"),
               }}
             >
               <Icon className="w-3 h-3 text-white" />
@@ -307,7 +316,7 @@ const MockMapCanvas = ({
         >
           <path
             d={`M ${20 + index * 30} ${50} L ${80 - index * 20} ${70 + index * 10}`}
-            stroke={statusColors[route.status] ?? statusColors.active}
+            stroke={getStatusColor(route.status)}
             strokeWidth="3"
             strokeDasharray={route.status === "planned" ? "5,5" : undefined}
             fill="none"

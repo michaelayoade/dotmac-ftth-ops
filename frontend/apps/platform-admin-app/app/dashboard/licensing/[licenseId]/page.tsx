@@ -66,7 +66,7 @@ interface Activation {
 
 function LicenseDetailsPageContent() {
   const params = useParams();
-  const licenseId = params?.licenseId as string;
+  const licenseId = params?.['licenseId'] as string;
   const queryClient = useQueryClient();
   const { toast } = useToast();
 

@@ -17,9 +17,9 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from dotmac.platform.auth import rbac_service as rbac_module
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.models import Permission, PermissionCategory
-from dotmac.platform.auth import rbac_service as rbac_module
 from dotmac.platform.auth.rbac_service import RBACService
 from dotmac.platform.user_management.models import User
 
@@ -118,7 +118,9 @@ class TestPermissionWildcards:
         assert not await rbac_service.user_has_permission(user_id, "admin.read")
 
     @pytest.mark.asyncio
-    async def test_superadmin_permission(self, rbac_service, sample_permissions, async_db_session, test_user):
+    async def test_superadmin_permission(
+        self, rbac_service, sample_permissions, async_db_session, test_user
+    ):
         """Test superadmin (*) permission."""
         user_id = test_user.id
 
@@ -405,7 +407,9 @@ class TestRoleCRUDErrors:
         assert child_perm.parent_id is not None
 
     @pytest.mark.asyncio
-    async def test_create_permission_with_invalid_parent(self, rbac_service, async_db_session, test_user):
+    async def test_create_permission_with_invalid_parent(
+        self, rbac_service, async_db_session, test_user
+    ):
         """Test creating permission with non-existent parent."""
         with pytest.raises(AuthorizationError, match="Parent permission"):
             await rbac_service.create_permission(
@@ -556,7 +560,9 @@ class TestCachingBehavior:
     """Test permission caching behavior."""
 
     @pytest.mark.asyncio
-    async def test_permission_cache_hit(self, rbac_service, sample_permissions, async_db_session, test_user):
+    async def test_permission_cache_hit(
+        self, rbac_service, sample_permissions, async_db_session, test_user
+    ):
         """Test that permission lookups use cache."""
         user_id = test_user.id
 
@@ -662,7 +668,9 @@ class TestServiceEdgeCases:
         assert len(roles) == 0
 
     @pytest.mark.asyncio
-    async def test_get_permission_by_name_nonexistent(self, rbac_service, async_db_session, test_user):
+    async def test_get_permission_by_name_nonexistent(
+        self, rbac_service, async_db_session, test_user
+    ):
         """Test getting a permission that doesn't exist."""
         # This tests the _get_permission_by_name method
         result = await rbac_service._get_permission_by_name("nonexistent.permission")

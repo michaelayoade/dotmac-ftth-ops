@@ -13,11 +13,11 @@ interface AssignAccountModalProps {
 
 interface AssignAccountInput {
   customer_id: string;
-  engagement_type?: "direct" | "referral" | "reseller" | "affiliate";
-  custom_commission_rate?: number;
-  start_date?: string;
-  end_date?: string;
-  notes?: string;
+  engagement_type: "direct" | "referral" | "reseller" | "affiliate" | undefined;
+  custom_commission_rate: number | undefined;
+  start_date: string | undefined;
+  end_date: string | undefined;
+  notes: string | undefined;
 }
 
 async function assignAccount(partnerId: string, data: AssignAccountInput): Promise<void> {
@@ -46,6 +46,10 @@ export default function AssignAccountModal({ partnerId, onClose }: AssignAccount
   const [formData, setFormData] = useState<AssignAccountInput>({
     customer_id: "",
     engagement_type: "direct",
+    custom_commission_rate: undefined,
+    start_date: undefined,
+    end_date: undefined,
+    notes: undefined,
   });
 
   const assignMutation = useMutation({

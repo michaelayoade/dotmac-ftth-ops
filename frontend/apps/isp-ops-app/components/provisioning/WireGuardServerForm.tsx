@@ -166,8 +166,12 @@ export function WireGuardServerForm({
               onIPv6Change={(value) => setValue("server_ipv6", value || null)}
               requireAtLeastOne={true}
               useCIDR={true}
-              ipv4Error={errors.server_ipv4?.message}
-              ipv6Error={errors.server_ipv6?.message}
+              {...(errors.server_ipv4?.message
+                ? { ipv4Error: errors.server_ipv4.message }
+                : {})}
+              {...(errors.server_ipv6?.message
+                ? { ipv6Error: errors.server_ipv6.message }
+                : {})}
               ipv4Placeholder="10.8.0.1/24"
               ipv6Placeholder="fd00:8::1/64"
             />

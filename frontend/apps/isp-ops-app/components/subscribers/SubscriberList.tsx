@@ -22,6 +22,7 @@ import {
 import { MoreHorizontal, Wifi, WifiOff, Eye, Edit, Trash2, Ban, Play } from "lucide-react";
 import type { Subscriber, SubscriberStatus, ConnectionType } from "@/hooks/useSubscribers";
 import { formatDistanceToNow } from "date-fns";
+import { FadeInWhenVisible } from "@dotmac/primitives";
 
 // ============================================================================
 // Types
@@ -269,19 +270,21 @@ export function SubscriberList({
   );
 
   return (
-    <EnhancedDataTable
-      columns={columns}
-      data={subscribers}
-      isLoading={isLoading}
-      selectable={enableBulkActions}
-      bulkActions={bulkActions}
-      searchable={true}
-      searchPlaceholder="Search subscribers..."
-      searchColumn="name"
-      paginated={true}
-      onRowClick={onRowClick}
-      emptyMessage="No subscribers found"
-      className="w-full"
-    />
+    <FadeInWhenVisible>
+      <EnhancedDataTable
+        columns={columns}
+        data={subscribers}
+        isLoading={isLoading}
+        selectable={enableBulkActions}
+        bulkActions={bulkActions}
+        searchable={true}
+        searchPlaceholder="Search subscribers..."
+        searchColumn="name"
+        paginated={true}
+        onRowClick={onRowClick}
+        emptyMessage="No subscribers found"
+        className="w-full"
+      />
+    </FadeInWhenVisible>
   );
 }

@@ -16,7 +16,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from dotmac.platform.auth.core import UserInfo, get_current_user
 from dotmac.platform.auth.exceptions import AuthorizationError
 from dotmac.platform.auth.rbac_service import RBACService
+from dotmac.platform.auth.token_with_rbac import get_current_user_with_rbac
 from dotmac.platform.db import get_async_session
+from dotmac.platform.user_management.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -130,6 +132,112 @@ class RoleChecker:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=self.error_message)
 
         return current_user
+
+
+class PartnerPermissionChecker(PermissionChecker):
+    """
+    Extended PermissionChecker for partner multi-tenant access.
+
+    Validates:
+    1. Partner permissions (from partner.* namespace)
+    2. Active partner-tenant link if in cross-tenant context
+    3. Link expiry and validity
+    4. Custom permission overrides from PartnerTenantLink
+    """
+
+    def __init__(
+        self,
+        permissions: list[str],
+        mode: PermissionMode = PermissionMode.ALL,
+        error_message: str | None = None,
+        require_active_link: bool = True,
+    ):
+        super().__init__(permissions, mode, error_message)
+        self.require_active_link = require_active_link
+
+    async def __call__(
+        self,
+        current_user: UserInfo = Depends(get_current_user),
+        db: AsyncSession = Depends(get_async_session),
+    ) -> UserInfo:
+        """Check partner permissions and validate tenant link if applicable"""
+        if not current_user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated"
+            )
+
+        # Check if this is a cross-tenant access
+        if current_user.is_cross_tenant_access and self.require_active_link:
+            await self._validate_partner_link(current_user, db)
+
+        # Check standard permissions
+        return await super().__call__(current_user, db)
+
+    async def _validate_partner_link(self, current_user: UserInfo, db: AsyncSession) -> None:
+        """Validate active partner-tenant link with custom permissions."""
+        from sqlalchemy import select
+
+        from dotmac.platform.partner_management.models import PartnerTenantLink
+
+        # Query for active link
+        result = await db.execute(
+            select(PartnerTenantLink).where(
+                PartnerTenantLink.partner_id == current_user.partner_id,
+                PartnerTenantLink.managed_tenant_id == current_user.active_managed_tenant_id,
+                PartnerTenantLink.is_active == True,  # noqa: E712
+            )
+        )
+        link = result.scalars().first()
+
+        if not link:
+            logger.warning(
+                "No active partner-tenant link found",
+                user_id=current_user.user_id,
+                partner_id=current_user.partner_id,
+                managed_tenant_id=current_user.active_managed_tenant_id,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No active partner-tenant link found",
+            )
+
+        # Check if link is expired
+        if link.is_expired:
+            logger.warning(
+                "Partner-tenant link is expired",
+                user_id=current_user.user_id,
+                partner_id=current_user.partner_id,
+                managed_tenant_id=current_user.active_managed_tenant_id,
+                end_date=link.end_date,
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Partner-tenant link has expired",
+            )
+
+        # Check custom permission overrides (denials take precedence)
+        if link.custom_permissions:
+            for perm in self.permissions:
+                override = link.custom_permissions.get(perm)
+                if override is False:  # Explicit denial
+                    logger.warning(
+                        "Permission denied by custom override",
+                        user_id=current_user.user_id,
+                        partner_id=current_user.partner_id,
+                        permission=perm,
+                        managed_tenant_id=current_user.active_managed_tenant_id,
+                    )
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Permission {perm} denied by partner link configuration",
+                    )
+
+
+async def get_current_active_user(
+    current_user: User = Depends(get_current_user_with_rbac),
+) -> User:
+    """Backward-compatible dependency returning the full User model."""
+    return current_user
 
 
 # ==================== Convenience Functions ====================
@@ -301,6 +409,24 @@ require_team_create = require_permission("team.create")
 require_team_update = require_permission("team.update")
 require_team_delete = require_permission("team.delete")
 require_team_manage_members = require_permission("team.manage_members")
+
+# Field Service & Project Management
+require_field_service_project_read = require_permission("field_service.project.read")
+require_field_service_project_manage = require_permission("field_service.project.manage")
+require_field_service_task_read = require_permission("field_service.task.read")
+require_field_service_task_manage = require_permission("field_service.task.manage")
+require_field_service_team_read = require_permission("field_service.team.read")
+require_field_service_team_manage = require_permission("field_service.team.manage")
+require_field_service_technician_read = require_permission("field_service.technician.read")
+require_field_service_technician_manage = require_permission("field_service.technician.manage")
+require_field_service_technician_location = require_permission(
+    "field_service.technician.location.update"
+)
+require_field_service_geofence_read = require_permission("field_service.geofence.read")
+require_field_service_time_read = require_permission("field_service.time_entry.read")
+require_field_service_time_manage = require_permission("field_service.time_entry.manage")
+require_field_service_resource_read = require_permission("field_service.resource.read")
+require_field_service_resource_manage = require_permission("field_service.resource.manage")
 
 # Security Management
 require_security_secret_read = require_permission("security.secret.read")

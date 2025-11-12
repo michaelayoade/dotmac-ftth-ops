@@ -93,7 +93,7 @@ export function ReconciliationWizard({
         period_end: setupData.period_end,
         opening_balance: statementBalance,
         statement_balance: statementBalance,
-        notes: setupData.notes || undefined,
+        notes: setupData.notes || null,
       };
 
       const result = await startReconciliation.mutateAsync(data);
@@ -131,7 +131,7 @@ export function ReconciliationWizard({
       await completeReconciliation.mutateAsync({
         reconciliationId,
         data: {
-          notes: setupData.notes || undefined,
+          notes: setupData.notes || null,
         },
       });
 

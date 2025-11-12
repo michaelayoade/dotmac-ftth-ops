@@ -84,7 +84,7 @@ export default function NetworkMonitoringPage() {
     pageSize: 100,
     status: statusFilter,
     deviceType: typeFilter,
-    search: searchTerm || undefined,
+    search: searchTerm || null,
     pollInterval: 30000,
   });
 
@@ -398,7 +398,7 @@ export default function NetworkMonitoringPage() {
                   </div>
                 </div>
                 <Select
-                  value={statusFilter}
+                  value={statusFilter || "all"}
                   onValueChange={(value) => setStatusFilter(value as DeviceStatusEnum)}
                 >
                   <SelectTrigger className="w-[180px]">
@@ -412,7 +412,7 @@ export default function NetworkMonitoringPage() {
                   </SelectContent>
                 </Select>
                 <Select
-                  value={typeFilter}
+                  value={typeFilter || "all"}
                   onValueChange={(value) => setTypeFilter(value as DeviceTypeEnum)}
                 >
                   <SelectTrigger className="w-[180px]">

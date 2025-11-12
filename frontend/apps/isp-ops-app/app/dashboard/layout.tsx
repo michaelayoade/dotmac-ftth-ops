@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { SkipLink } from "@dotmac/ui";
 import {
   Home,
@@ -54,10 +54,9 @@ import {
   Plug,
   GitBranch,
   Puzzle,
+  TrendingUp,
 } from "lucide-react";
 import { ThemeToggle } from "@dotmac/ui";
-import { apiClient } from "@/lib/api/client";
-import { logger } from "@/lib/logger";
 import { Can } from "@/components/auth/PermissionGuard";
 import { useRBAC } from "@/contexts/RBACContext";
 import { useBranding } from "@/hooks/useBranding";
@@ -66,6 +65,10 @@ import { ConnectionStatusIndicator } from "@/components/realtime/ConnectionStatu
 import { RealtimeAlerts } from "@/components/realtime/RealtimeAlerts";
 import { GlobalCommandPalette } from "@/components/global-command-palette";
 import { getPortalType, portalAllows, type PortalType } from "@/lib/portal";
+import { useSession } from "@dotmac/better-auth";
+import { signOut } from "@dotmac/better-auth";
+import { TenantSelector } from "@/components/partner/TenantSelector";
+import { RealtimeProvider } from "@/contexts/RealtimeProvider";
 
 interface NavItem {
   name: string;
@@ -86,40 +89,14 @@ interface NavSection {
   portals?: PortalType[];
 }
 
-const ispSectionIds = new Set<string>([
-  "noc",
-  "subscribers",
-  "radius",
-  "devices",
-  "diagnostics",
-  "pon",
-  "network",
-  "wireless",
-  "workflows",
-  "services",
-  "sales",
-  "ticketing",
-  "crm",
-  "business-support",
-  "support",
-  "orchestration",
-  "observability",
-  "integrations",
-  "plugins",
-  "feature-flags",
-  "audit",
-  "security-access",
-  "settings",
-]);
-
-const allSections: NavSection[] = [
+const sections: NavSection[] = [
   {
-    id: "operations",
-    label: "Operations Center",
+    id: "overview",
+    label: "Overview",
     icon: LayoutDashboard,
     href: "/dashboard",
     items: [
-      { name: "NOC Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { name: "Overview Dashboard", href: "/dashboard", icon: LayoutDashboard },
       {
         name: "Observability & Health",
         href: "/dashboard/infrastructure",
@@ -129,67 +106,54 @@ const allSections: NavSection[] = [
     ],
   },
   {
-    id: "subscribers",
-    label: "Subscribers",
+    id: "customer-lifecycle",
+    label: "Customer Lifecycle",
     icon: Users,
-    href: "/dashboard/subscribers",
-    permission: "isp.radius.read",
+    href: "/dashboard/crm",
     items: [
+      { name: "CRM Workspace", href: "/dashboard/crm", icon: Handshake },
+      { name: "Sales Orders", href: "/dashboard/sales", icon: ShoppingCart },
       {
-        name: "Subscriber Overview",
+        name: "Subscribers",
         href: "/dashboard/subscribers",
-        icon: LayoutDashboard,
+        icon: Users,
         permission: "isp.radius.read",
       },
+      { name: "Service Catalog", href: "/dashboard/services/internet-plans", icon: Package },
     ],
   },
   {
-    id: "network",
-    label: "Network Operations",
+    id: "network-infra",
+    label: "Network & Infrastructure",
     icon: Server,
     href: "/dashboard/network",
-    permission: "isp.ipam.read",
     items: [
-      { name: "Inventory", href: "/dashboard/network", icon: Database, permission: "isp.ipam.read" },
-      { name: "Fiber", href: "/dashboard/network/fiber", icon: Cable, permission: "isp.ipam.read" },
-      { name: "Monitoring", href: "/dashboard/network-monitoring", icon: Activity },
-      { name: "Faults", href: "/dashboard/network/faults", icon: AlertTriangle, permission: "faults.alarms.read" },
+      { name: "Network Inventory", href: "/dashboard/network", icon: Database, permission: "isp.ipam.read" },
+      { name: "Fiber Management", href: "/dashboard/network/fiber", icon: Cable, permission: "isp.ipam.read" },
+      { name: "Network Monitoring", href: "/dashboard/network-monitoring", icon: Activity },
+      { name: "Faults & Incidents", href: "/dashboard/network/faults", icon: AlertTriangle, permission: "faults.alarms.read" },
       { name: "IPAM", href: "/dashboard/ipam", icon: NetworkIcon, permission: "isp.ipam.read" },
       { name: "DCIM", href: "/dashboard/dcim", icon: MapPin, permission: "isp.ipam.read" },
-      { name: "PON", href: "/dashboard/pon/olts", icon: Zap, permission: "isp.network.pon.read" },
+      { name: "PON Operations", href: "/dashboard/pon/olts", icon: Zap, permission: "isp.network.pon.read" },
       { name: "Wireless", href: "/dashboard/wireless", icon: Wifi },
+      { name: "Device Management", href: "/dashboard/devices", icon: RouterIcon, permission: "devices.read" },
+      { name: "Diagnostics Hub", href: "/dashboard/diagnostics", icon: Activity, permission: "diagnostics.read" },
     ],
   },
   {
-    id: "devices",
-    label: "Devices",
-    icon: RouterIcon,
-    href: "/dashboard/devices",
-    permission: "devices.read",
-    items: [
-      { name: "All Devices", href: "/dashboard/devices", icon: RouterIcon },
-      { name: "Provision", href: "/dashboard/devices/provision", icon: Plus },
-      { name: "Presets", href: "/dashboard/devices/presets", icon: Settings },
-    ],
-  },
-  {
-    id: "diagnostics",
-    label: "Diagnostics",
-    icon: Activity,
-    href: "/dashboard/diagnostics",
-    permission: "diagnostics.read",
-    items: [
-      { name: "Diagnostics Hub", href: "/dashboard/diagnostics", icon: Activity },
-      { name: "History", href: "/dashboard/diagnostics/history", icon: FileText },
-    ],
-  },
-  {
-    id: "automation",
-    label: "Automation & Workflows",
+    id: "operations-automation",
+    label: "Operations & Automation",
     icon: Repeat,
-    href: "/dashboard/automation",
+    href: "/dashboard/operations",
+    permission: "operations.read",
     items: [
-      { name: "Automation", href: "/dashboard/automation", icon: Repeat },
+      {
+        name: "Operations Center",
+        href: "/dashboard/operations",
+        icon: LayoutDashboard,
+        permission: "operations.read",
+      },
+      { name: "Automation Studio", href: "/dashboard/automation", icon: Repeat },
       { name: "Templates", href: "/dashboard/automation/templates", icon: FileCode },
       { name: "Instances", href: "/dashboard/automation/instances", icon: Server },
       { name: "Jobs", href: "/dashboard/jobs", icon: Briefcase },
@@ -199,49 +163,80 @@ const allSections: NavSection[] = [
     ],
   },
   {
-    id: "services",
-    label: "Service Catalog",
-    icon: Package,
-    href: "/dashboard/services/internet-plans",
-    items: [
-      { name: "Internet Plans", href: "/dashboard/services/internet-plans", icon: Package },
-    ],
-  },
-  {
-    id: "business",
-    label: "Business Operations",
+    id: "business-finance",
+    label: "Business & Finance",
     icon: DollarSign,
     href: "/dashboard/billing-revenue",
     items: [
-      { name: "Revenue", href: "/dashboard/billing-revenue", icon: BarChart3 },
+      { name: "Revenue Overview", href: "/dashboard/billing-revenue", icon: BarChart3 },
       { name: "Invoices", href: "/dashboard/billing-revenue/invoices", icon: FileText },
       { name: "Subscriptions", href: "/dashboard/billing-revenue/subscriptions", icon: Repeat },
       { name: "Payments", href: "/dashboard/billing-revenue/payments", icon: CreditCard },
       { name: "Plans", href: "/dashboard/billing-revenue/plans", icon: Package },
-      { name: "Sales Orders", href: "/dashboard/sales", icon: ShoppingCart },
-      { name: "CRM", href: "/dashboard/crm", icon: Handshake },
+      {
+        name: "Banking Overview",
+        href: "/dashboard/banking",
+        icon: CreditCard,
+        permission: "billing.read",
+      },
+      {
+        name: "Payments & Reconciliation",
+        href: "/dashboard/banking-v2",
+        icon: Repeat,
+        permission: "billing.payments",
+      },
       { name: "Licensing", href: "/dashboard/licensing", icon: Key },
+      {
+        name: "Partner Directory",
+        href: "/dashboard/partners",
+        icon: Handshake,
+        permission: "partner.manage",
+      },
+      {
+        name: "Partner Revenue",
+        href: "/dashboard/partners/revenue",
+        icon: TrendingUp,
+        permission: "partner.manage",
+      },
+      {
+        name: "Managed Tenants",
+        href: "/dashboard/partners/managed-tenants",
+        icon: Building2,
+        permission: "partner.tenants.list",
+      },
     ],
   },
   {
-    id: "communications",
-    label: "Communications",
-    icon: Mail,
-    href: "/dashboard/communications",
-    items: [
-      { name: "Campaigns", href: "/dashboard/communications", icon: Mail },
-      { name: "Notification Templates", href: "/dashboard/notifications/templates", icon: FileText },
-      { name: "Notification History", href: "/dashboard/notifications/history", icon: Bell },
-    ],
-  },
-  {
-    id: "support",
-    label: "Support",
+    id: "support-comms",
+    label: "Support & Communications",
     icon: LifeBuoy,
     href: "/dashboard/ticketing",
     items: [
       { name: "Tickets", href: "/dashboard/ticketing", icon: Ticket },
       { name: "Support Center", href: "/dashboard/support", icon: LifeBuoy },
+      {
+        name: "Communications Inbox",
+        href: "/dashboard/communications",
+        icon: Mail,
+        permission: "communications.read",
+      },
+      {
+        name: "Campaigns",
+        href: "/dashboard/communications/campaigns",
+        icon: Calendar,
+        permission: "communications.campaigns",
+      },
+      {
+        name: "Templates",
+        href: "/dashboard/communications/templates",
+        icon: FileText,
+        permission: "communications.templates",
+      },
+      {
+        name: "Notification History",
+        href: "/dashboard/notifications/history",
+        icon: Bell,
+      },
     ],
   },
   {
@@ -253,11 +248,17 @@ const allSections: NavSection[] = [
       { name: "Integrations", href: "/dashboard/integrations", icon: Plug },
       { name: "Plugins", href: "/dashboard/plugins", icon: Puzzle },
       { name: "Feature Flags", href: "/dashboard/feature-flags", icon: ToggleLeft },
+      {
+        name: "Webhooks",
+        href: "/dashboard/webhooks",
+        icon: Webhook,
+        permission: "webhooks.read",
+      },
     ],
   },
   {
     id: "security",
-    label: "Security & Audit",
+    label: "Security & Admin",
     icon: Shield,
     href: "/dashboard/security-access",
     items: [
@@ -267,79 +268,10 @@ const allSections: NavSection[] = [
       { name: "Roles", href: "/dashboard/security-access/roles", icon: Shield },
       { name: "Users", href: "/dashboard/security-access/users", icon: Users },
       { name: "Audit Logs", href: "/dashboard/audit", icon: FileText },
-    ],
-  },
-  {
-    id: "settings",
-    label: "Account & Settings",
-    icon: Settings,
-    href: "/dashboard/settings",
-  },
-];
-
-
-
-const filteredSections = allSections.filter((section) => ispSectionIds.has(section.id));
-
-const ispCustomSections: NavSection[] = [
-  {
-    id: "communications",
-    label: "Communications",
-    icon: Mail,
-    href: "/dashboard/communications",
-    items: [
-      { name: "Inbox", href: "/dashboard/communications", icon: Mail },
-      { name: "Campaigns", href: "/dashboard/communications/campaigns", icon: Calendar },
-      { name: "Templates", href: "/dashboard/communications/templates", icon: FileText },
-    ],
-  },
-  {
-    id: "banking",
-    label: "Banking & Finance",
-    icon: DollarSign,
-    href: "/dashboard/banking",
-    items: [
-      { name: "Banking Overview", href: "/dashboard/banking", icon: CreditCard },
-      { name: "Payments & Reconciliation", href: "/dashboard/banking-v2", icon: Repeat },
-    ],
-  },
-  {
-    id: "partners",
-    label: "Partners",
-    icon: Handshake,
-    href: "/dashboard/partners",
-    items: [{ name: "Partner Directory", href: "/dashboard/partners", icon: Handshake }],
-  },
-  {
-    id: "webhooks",
-    label: "Webhooks",
-    icon: Webhook,
-    href: "/dashboard/webhooks",
-    items: [{ name: "Subscriptions", href: "/dashboard/webhooks", icon: Webhook }],
-  },
-  {
-    id: "operations-center",
-    label: "Operations",
-    icon: Briefcase,
-    href: "/dashboard/operations",
-    items: [
-      { name: "Operations Center", href: "/dashboard/operations", icon: LayoutDashboard },
-      { name: "Automation Pipelines", href: "/dashboard/automation", icon: Repeat },
-    ],
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    icon: BarChart3,
-    href: "/dashboard/analytics",
-    items: [
-      { name: "Operational Insights", href: "/dashboard/analytics", icon: BarChart3 },
-      { name: "Diagnostics", href: "/dashboard/diagnostics", icon: Activity },
+      { name: "Account & Settings", href: "/dashboard/settings", icon: Settings },
     ],
   },
 ];
-
-const sections = [...filteredSections, ...ispCustomSections];
 
 // Helper function to check if section should be visible
 function checkSectionVisibility(
@@ -370,21 +302,20 @@ function checkSectionVisibility(
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [user, setUser] = useState<Record<string, unknown> | null>(null);
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const pathname = usePathname();
+  const router = useRouter();
   const { hasPermission, hasAnyPermission } = useRBAC();
   const { branding } = useBranding();
   const portalType = getPortalType();
+  const { data: session, isPending: authLoading } = useSession();
+  const userData = session?.user;
 
-  // Type helper for user data
-  const userData = user as {
-    id?: string;
-    username?: string;
-    email?: string;
-    full_name?: string;
-    roles?: string[];
-  } | null;
+  useEffect(() => {
+    if (!authLoading && !session) {
+      router.replace("/login");
+    }
+  }, [authLoading, session, router]);
 
   const portalScopedSections = useMemo(
     () =>
@@ -453,68 +384,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     });
   }, [pathname, visibleSections]);
 
-  // Fetch current user
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
-
-  const fetchCurrentUser = async () => {
-    // Skip auth check in E2E test mode
-    if (typeof window !== "undefined" && (window as any).__e2e_test__) {
-      logger.info("Dashboard: E2E test mode detected, skipping auth check");
-      setUser({
-        id: "e2e-test-user",
-        username: "admin",
-        email: "admin@example.com",
-        full_name: "Test Admin",
-        roles: ["platform_admin"],
-      });
-      return;
-    }
-
-    try {
-      logger.debug("Dashboard: Fetching current user");
-      const response = await apiClient.get("/auth/me");
-
-      if (response.data) {
-        const userData = response.data as Record<string, unknown> & {
-          id?: string;
-        };
-        logger.info("Dashboard: User fetched successfully", {
-          userId: userData.id,
-        });
-        setUser(userData);
-      } else {
-        logger.warn("Dashboard: Failed to fetch user, redirecting to login", {
-          response: response,
-        });
-        // Token expired or invalid - redirect to login
-        window.location.href = "/login";
-      }
-    } catch (error) {
-      logger.error(
-        "Dashboard: Error fetching user",
-        error instanceof Error ? error : new Error(String(error)),
-      );
-      // On error, redirect to login
-      window.location.href = "/login";
-    }
-  };
-
   const handleLogout = async () => {
-    try {
-      await apiClient.post("/auth/logout");
-      window.location.href = "/login";
-    } catch (error) {
-      logger.error("Logout error", error instanceof Error ? error : new Error(String(error)));
-      // Still redirect even if logout fails
-      window.location.href = "/login";
-    }
+    await signOut();
+    router.push("/login");
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <SkipLink />
+    <RealtimeProvider>
+      <div className="min-h-screen bg-background">
+        <SkipLink />
       {/* Top Navigation Bar */}
       <nav
         className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border"
@@ -563,8 +441,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          {/* Right side - Notifications, Theme toggle and User menu */}
+          {/* Right side - Tenant selector, Notifications, Theme toggle and User menu */}
           <div className="flex items-center gap-4">
+            <TenantSelector />
             <NotificationCenter
               maxNotifications={5}
               refreshInterval={30000}
@@ -787,6 +666,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           onClick={() => setSidebarOpen(false)}
         />
       )}
-    </div>
+      </div>
+    </RealtimeProvider>
   );
 }

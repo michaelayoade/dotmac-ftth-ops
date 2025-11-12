@@ -353,7 +353,7 @@ export function useBulkOperationStatus(id: string | null, options?: { refetchInt
     queryKey: communicationsKeys.bulk.detail(id || ""),
     queryFn: () => communicationsService.getBulkEmailStatus(id!),
     enabled: !!id,
-    refetchInterval: options?.refetchInterval, // For live updates
+    refetchInterval: options?.refetchInterval ?? false, // For live updates
     staleTime: 5000, // 5 seconds
     gcTime: 2 * 60 * 1000, // 2 minutes
   });
@@ -397,7 +397,7 @@ export function useTaskStatus(taskId: string | null, options?: { refetchInterval
     queryKey: communicationsKeys.tasks.detail(taskId || ""),
     queryFn: () => communicationsService.getTaskStatus(taskId!),
     enabled: !!taskId,
-    refetchInterval: options?.refetchInterval, // For live updates
+    refetchInterval: options?.refetchInterval ?? false, // For live updates
     staleTime: 2000, // 2 seconds
     gcTime: 1 * 60 * 1000, // 1 minute
   });

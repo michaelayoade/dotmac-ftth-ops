@@ -133,7 +133,7 @@ Generated files are output to `frontend/shared/packages/graphql/generated/`.
 4. **Phase 4**: Spike `graphql-ws` client that feeds React Query cache
 5. **Phase 5**: Remove Apollo entirely
 
-See `frontend/docs/GRAPHQL_MIGRATION_PLAN.md` for full migration strategy.
+See `frontend/PRODUCTION_GUIDE.md` for the latest schema/codegen workflow.
 
 ## Architecture
 
@@ -160,7 +160,7 @@ pnpm lint
 
 ## Dependencies
 
-- `@dotmac/auth`: Authentication state and token management
+- `@dotmac/better-auth`: Authentication hooks and session management
 - `@dotmac/http-client`: HTTP client with auth, tenant resolution, retries
 - `@tanstack/react-query`: React Query integration
 - `graphql`: GraphQL core library

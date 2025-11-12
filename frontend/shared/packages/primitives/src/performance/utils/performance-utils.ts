@@ -32,7 +32,7 @@ export function measurePerformance<T>(
   };
 
   // Log to console in development
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     console.log(`[Performance] ${name}: ${measurement.duration.toFixed(2)}ms`, measurement);
   }
 
@@ -59,7 +59,7 @@ export async function measureAsyncPerformance<T>(
     ...(metadata !== undefined ? { metadata } : {}),
   };
 
-  if (process.env.NODE_ENV === "development") {
+  if (process.env["NODE_ENV"] === "development") {
     console.log(`[Performance] ${name}: ${measurement.duration.toFixed(2)}ms`, measurement);
   }
 
@@ -97,7 +97,7 @@ export function withPerformanceTracking<P extends Record<string, any>>(
 
         setMeasurements((prev) => [...prev.slice(-9), measurement]); // Keep last 10 measurements
 
-        if (process.env.NODE_ENV === "development" && measurement.duration > 16) {
+        if (process.env["NODE_ENV"] === "development" && measurement.duration > 16) {
           console.warn(
             `[Performance] Slow render detected for ${displayName}: ${measurement.duration.toFixed(2)}ms`,
           );
@@ -156,7 +156,7 @@ export function usePerformanceMetrics(componentName: string) {
         lastRenderTime: renderTime,
       });
 
-      if (process.env.NODE_ENV === "development") {
+      if (process.env["NODE_ENV"] === "development") {
         if (renderTime > 16) {
           console.warn(`[Performance] Slow render in ${componentName}: ${renderTime.toFixed(2)}ms`);
         }
@@ -265,7 +265,7 @@ export const memoryUtils = {
    * Monitor memory leaks by tracking object references
    */
   trackMemoryLeaks: (objectName: string, obj: any) => {
-    if (process.env.NODE_ENV !== "development") return;
+    if (process.env["NODE_ENV"] !== "development") return;
 
     const refs = new Set();
     const trackRef = (ref: any) => refs.add(ref);

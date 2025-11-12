@@ -6,11 +6,8 @@ Business logic for PON network management via VOLTHA.
 
 import base64
 from collections.abc import Mapping
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-
-# Python 3.9/3.10 compatibility: UTC was added in 3.11
-UTC = timezone.utc
 
 import structlog
 from fastapi import HTTPException
@@ -41,6 +38,9 @@ from dotmac.platform.voltha.schemas import (
     VOLTHAEventStreamResponse,
     VOLTHAHealthResponse,
 )
+
+# Python 3.9/3.10 compatibility: UTC was added in 3.11
+UTC = UTC
 
 logger = structlog.get_logger(__name__)
 
@@ -514,12 +514,16 @@ class VOLTHAService:
                         parent_id=provision_request.olt_device_id,
                         vlan=provision_request.vlan,
                         bandwidth_profile=provision_request.bandwidth_profile,
+                        qinq_enabled=provision_request.qinq_enabled,
+                        inner_vlan=provision_request.inner_vlan,
                     )
                     logger.info(
                         "voltha.provision_onu.service_configured",
                         device_id=device_id,
                         vlan=provision_request.vlan,
                         bandwidth_profile=provision_request.bandwidth_profile,
+                        qinq_enabled=provision_request.qinq_enabled,
+                        inner_vlan=provision_request.inner_vlan,
                     )
                 except Exception as e:
                     error_msg = f"Service configuration failed: {str(e)}"
@@ -573,6 +577,8 @@ class VOLTHAService:
         vlan: int | None = None,
         bandwidth_profile: str | None = None,
         technology_profile_id: int = 64,
+        qinq_enabled: bool = False,
+        inner_vlan: int | None = None,
     ) -> None:
         """
         Configure ONU service parameters (VLAN, bandwidth profile, tech profile).
@@ -580,14 +586,18 @@ class VOLTHAService:
         This is an internal method called during ONU provisioning to set up:
         1. Technology Profile - Defines GEM ports, schedulers, QoS
         2. VLAN Configuration - Sets up C-TAG/S-TAG for traffic segregation
+           - Single VLAN (802.1q): Uses vlan parameter
+           - QinQ (802.1ad): Uses vlan (S-VLAN) + inner_vlan (C-VLAN)
         3. Bandwidth Profile - Configures CIR/PIR for traffic shaping
 
         Args:
             device_id: ONU device ID
             parent_id: Parent OLT device ID
-            vlan: Service VLAN (C-TAG)
+            vlan: Service VLAN (C-TAG for single VLAN, S-VLAN for QinQ)
             bandwidth_profile: Bandwidth profile name
             technology_profile_id: Technology profile ID (default 64)
+            qinq_enabled: Enable QinQ (802.1ad) double VLAN tagging
+            inner_vlan: Customer VLAN (C-VLAN) for QinQ mode
 
         Raises:
             Exception: If configuration fails
@@ -619,21 +629,41 @@ class VOLTHAService:
         # VLAN tagging enables service segregation and subscriber identification
         if vlan is not None:
             try:
-                await self._configure_vlan_flow(
-                    device_id=device_id,
-                    parent_id=parent_id,
-                    vlan=vlan,
-                )
-                logger.info(
-                    "voltha.configure_service.vlan_configured",
-                    device_id=device_id,
-                    vlan=vlan,
-                )
+                # Phase 2: QinQ (802.1ad) double VLAN tagging
+                if qinq_enabled and inner_vlan is not None:
+                    await self._configure_qinq_flows(
+                        device_id=device_id,
+                        parent_id=parent_id,
+                        service_vlan=vlan,  # S-VLAN (outer)
+                        inner_vlan=inner_vlan,  # C-VLAN (inner)
+                    )
+                    logger.info(
+                        "voltha.configure_service.qinq_configured",
+                        device_id=device_id,
+                        service_vlan=vlan,
+                        inner_vlan=inner_vlan,
+                        vlan_type="802.1ad_qinq",
+                    )
+                else:
+                    # Standard single VLAN (802.1q)
+                    await self._configure_vlan_flow(
+                        device_id=device_id,
+                        parent_id=parent_id,
+                        vlan=vlan,
+                    )
+                    logger.info(
+                        "voltha.configure_service.vlan_configured",
+                        device_id=device_id,
+                        vlan=vlan,
+                        vlan_type="802.1q_single",
+                    )
             except Exception as e:
                 logger.error(
                     "voltha.configure_service.vlan_failed",
                     device_id=device_id,
                     vlan=vlan,
+                    inner_vlan=inner_vlan,
+                    qinq_enabled=qinq_enabled,
                     error=str(e),
                 )
                 raise
@@ -765,6 +795,151 @@ class VOLTHAService:
             logical_device_id=logical_device_id,
             vlan=vlan,
             uni_port=uni_port,
+        )
+
+    async def _configure_qinq_flows(
+        self,
+        device_id: str,
+        parent_id: str,
+        service_vlan: int,
+        inner_vlan: int,
+    ) -> None:
+        """
+        Configure QinQ (802.1ad) double VLAN tagging flows for ONU.
+
+        QinQ provides two levels of VLAN encapsulation:
+        - S-VLAN (Service/Outer): Provider's VLAN, uses 802.1ad (ethertype 0x88a8)
+        - C-VLAN (Customer/Inner): Customer's VLAN, uses 802.1q (ethertype 0x8100)
+
+        This is used for:
+        - Multi-tenant service isolation
+        - Hierarchical service provider networks
+        - Preserving customer VLAN transparency
+
+        Args:
+            device_id: ONU device ID
+            parent_id: Parent OLT device ID
+            service_vlan: S-VLAN (outer tag, provider VLAN)
+            inner_vlan: C-VLAN (inner tag, customer VLAN)
+
+        Flow Configuration:
+            Upstream (ONU -> OLT):
+                1. Match: Untagged or C-VLAN tagged traffic from UNI port
+                2. Action: Push C-VLAN (0x8100), Push S-VLAN (0x88a8)
+                3. Forward: To controller/OLT
+
+            Downstream (OLT -> ONU):
+                1. Match: Traffic with S-VLAN + C-VLAN
+                2. Action: Pop S-VLAN, Pop C-VLAN (deliver untagged to subscriber)
+                3. Forward: To UNI port
+        """
+        # Get logical device for the OLT
+        logical_devices = await self.client.get_logical_devices()
+        logical_device_id = None
+
+        for ld in logical_devices:
+            if ld.get("root_device_id") == parent_id:
+                logical_device_id = ld.get("id")
+                break
+
+        if not logical_device_id:
+            raise ValueError(f"Logical device not found for OLT {parent_id}")
+
+        # Get device ports to find the UNI port
+        ports = await self.client.get_device_ports(device_id)
+        uni_port = None
+        for port in ports:
+            if port.get("type") == "ETHERNET_UNI":
+                uni_port = port.get("port_no")
+                break
+
+        if uni_port is None:
+            raise ValueError(f"UNI port not found for device {device_id}")
+
+        # Create upstream QinQ flow (ONU -> OLT): Push C-VLAN then S-VLAN
+        upstream_flow = {
+            "table_id": 0,
+            "priority": 1000,
+            "match": {
+                "in_port": uni_port,
+                "vlan_vid": 0,  # Untagged traffic from subscriber
+            },
+            "instructions": [
+                {
+                    "type": "APPLY_ACTIONS",
+                    "actions": [
+                        # Step 1: Push C-VLAN (customer/inner VLAN) using 802.1q
+                        {
+                            "type": "PUSH_VLAN",
+                            "ethertype": 0x8100,  # 802.1q
+                        },
+                        {
+                            "type": "SET_FIELD",
+                            "field": "vlan_vid",
+                            "value": inner_vlan | 0x1000,  # Set C-VLAN with present bit
+                        },
+                        # Step 2: Push S-VLAN (service/outer VLAN) using 802.1ad
+                        {
+                            "type": "PUSH_VLAN",
+                            "ethertype": 0x88A8,  # 802.1ad (QinQ)
+                        },
+                        {
+                            "type": "SET_FIELD",
+                            "field": "vlan_vid",
+                            "value": service_vlan | 0x1000,  # Set S-VLAN with present bit
+                        },
+                        {
+                            "type": "OUTPUT",
+                            "port": "CONTROLLER",
+                        },
+                    ],
+                }
+            ],
+        }
+
+        # Create downstream QinQ flow (OLT -> ONU): Strip both VLANs
+        downstream_flow = {
+            "table_id": 0,
+            "priority": 1000,
+            "match": {
+                # Match on outer S-VLAN
+                "vlan_vid": service_vlan | 0x1000,  # S-VLAN with present bit
+                # Note: Some implementations may need to also match C-VLAN
+                # This depends on the VOLTHA/OLT implementation
+            },
+            "instructions": [
+                {
+                    "type": "APPLY_ACTIONS",
+                    "actions": [
+                        # Step 1: Pop S-VLAN (outer tag)
+                        {
+                            "type": "POP_VLAN",
+                        },
+                        # Step 2: Pop C-VLAN (inner tag) - deliver untagged to subscriber
+                        {
+                            "type": "POP_VLAN",
+                        },
+                        {
+                            "type": "OUTPUT",
+                            "port": uni_port,
+                        },
+                    ],
+                }
+            ],
+        }
+
+        # Add flows to logical device
+        await self.client.add_flow(logical_device_id, upstream_flow)
+        await self.client.add_flow(logical_device_id, downstream_flow)
+
+        logger.info(
+            "voltha.qinq_flows_created",
+            device_id=device_id,
+            logical_device_id=logical_device_id,
+            service_vlan=service_vlan,
+            inner_vlan=inner_vlan,
+            uni_port=uni_port,
+            flow_type="802.1ad_qinq",
         )
 
     async def _configure_bandwidth_profile(

@@ -50,11 +50,11 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
       const endpoint = deviceId ? `/access/devices/${deviceId}/alarms` : "/access/alarms";
 
       const response = await apiClient.get<VOLTHAAlarmListResponse>(endpoint);
-      setAlarms(response.data.alarms);
+      setAlarms(response['data'].alarms);
     } catch (err: any) {
       toast({
         title: "Failed to load alarms",
-        description: err?.response?.data?.detail || "Could not fetch VOLTHA alarms",
+        description: err?.response?.['data']?.detail || "Could not fetch VOLTHA alarms",
         variant: "destructive",
       });
     } finally {
@@ -77,7 +77,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     } catch (err: any) {
       toast({
         title: "Failed to acknowledge alarm",
-        description: err?.response?.data?.detail || "Could not acknowledge alarm",
+        description: err?.response?.['data']?.detail || "Could not acknowledge alarm",
         variant: "destructive",
       });
     }
@@ -94,7 +94,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     } catch (err: any) {
       toast({
         title: "Failed to clear alarm",
-        description: err?.response?.data?.detail || "Could not clear alarm",
+        description: err?.response?.['data']?.detail || "Could not clear alarm",
         variant: "destructive",
       });
     }
@@ -125,15 +125,15 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
     };
 
     return (
-      <Badge variant="outline" className={classes[severity] || classes.INDETERMINATE}>
+      <Badge variant="outline" className={classes[severity] || classes['INDETERMINATE']}>
         {severity}
       </Badge>
     );
   };
 
   const filteredAlarms = alarms.filter((alarm) => {
-    if (severityFilter !== "all" && alarm.severity !== severityFilter) return false;
-    if (stateFilter !== "all" && alarm.state !== stateFilter) return false;
+    if (severityFilter !== "all" && alarm['severity'] !== severityFilter) return false;
+    if (stateFilter !== "all" && alarm['state'] !== stateFilter) return false;
     return true;
   });
 
@@ -247,56 +247,56 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
             <div className="space-y-2">
               {filteredAlarms.map((alarm) => (
                 <div
-                  key={alarm.id}
+                  key={alarm['id']}
                   className={`p-4 rounded-lg border ${
                     alarm.state === "RAISED"
                       ? "border-red-200 bg-red-50"
                       : "border-gray-200 bg-gray-50"
-                  } ${acknowledgedAlarms.has(alarm.id) ? "opacity-60" : ""}`}
+                  } ${acknowledgedAlarms.has(alarm['id']) ? "opacity-60" : ""}`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-start gap-3 flex-1">
-                      {getSeverityIcon(alarm.severity)}
+                      {getSeverityIcon(alarm['severity'])}
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="font-medium">{alarm.type}</div>
-                          {getSeverityBadge(alarm.severity)}
+                          <div className="font-medium">{alarm['type']}</div>
+                          {getSeverityBadge(alarm['severity'])}
                           {alarm.state === "CLEARED" && (
                             <Badge variant="outline" className="bg-green-100 text-green-700">
                               Cleared
                             </Badge>
                           )}
-                          {acknowledgedAlarms.has(alarm.id) && (
+                          {acknowledgedAlarms.has(alarm['id']) && (
                             <Badge variant="outline" className="bg-blue-100 text-blue-700">
                               Acknowledged
                             </Badge>
                           )}
                         </div>
                         <div className="text-sm text-muted-foreground mb-2">
-                          {alarm.description || alarm.category}
+                          {alarm['description'] || alarm['category']}
                         </div>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Device:</span>{" "}
-                            <span className="font-medium">{alarm.device_id}</span>
+                            <span className="font-medium">{alarm['device_id']}</span>
                           </div>
-                          {alarm.resource_id && (
+                          {alarm['resource_id'] && (
                             <div>
                               <span className="text-muted-foreground">Resource:</span>{" "}
-                              <span className="font-medium">{alarm.resource_id}</span>
+                              <span className="font-medium">{alarm['resource_id']}</span>
                             </div>
                           )}
                           <div>
                             <span className="text-muted-foreground">Raised:</span>{" "}
                             <span className="font-medium">
-                              {new Date(alarm.raised_ts).toLocaleString()}
+                              {new Date(alarm['raised_ts']).toLocaleString()}
                             </span>
                           </div>
-                          {alarm.cleared_ts && (
+                          {alarm['cleared_ts'] && (
                             <div>
                               <span className="text-muted-foreground">Cleared:</span>{" "}
                               <span className="font-medium">
-                                {new Date(alarm.cleared_ts).toLocaleString()}
+                                {new Date(alarm['cleared_ts']).toLocaleString()}
                               </span>
                             </div>
                           )}
@@ -304,11 +304,11 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {alarm.state === "RAISED" && !acknowledgedAlarms.has(alarm.id) && (
+                      {alarm.state === "RAISED" && !acknowledgedAlarms.has(alarm['id']) && (
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleAcknowledgeAlarm(alarm.id)}
+                          onClick={() => handleAcknowledgeAlarm(alarm['id'])}
                         >
                           <Bell className="w-4 h-4 mr-1" />
                           Acknowledge
@@ -318,7 +318,7 @@ export function AlarmPerformanceMonitoring({ deviceId }: AlarmPerformanceMonitor
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleClearAlarm(alarm.id)}
+                          onClick={() => handleClearAlarm(alarm['id'])}
                         >
                           <BellOff className="w-4 h-4 mr-1" />
                           Clear
