@@ -204,10 +204,20 @@ export function useWorkflow(workflowId: string | null, autoRefresh = false) {
     },
     enabled: !!workflowId,
     staleTime: 2000,
-    refetchInterval: (data) => {
-      // Only auto-refresh if enabled and workflow is still running
-      if (!autoRefresh || !data) return false;
-      if (data.status === "completed" || data.status === "failed") return false;
+    refetchInterval: (query) => {
+      if (!autoRefresh) {
+        return false;
+      }
+
+      const workflow = query.state.data;
+      if (!workflow) {
+        return false;
+      }
+
+      if (workflow.status === "completed" || workflow.status === "failed") {
+        return false;
+      }
+
       return 2000; // Poll every 2 seconds for running workflows
     },
     refetchOnWindowFocus: true,
