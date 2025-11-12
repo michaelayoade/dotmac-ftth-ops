@@ -43,6 +43,7 @@ htmlcov/
 .cache
 nosetests.xml
 coverage.xml
+coverage.json
 *.cover
 *.py,cover
 .hypothesis/
@@ -87,9 +88,8 @@ ipython_config.py
 Pipfile.lock
 
 # poetry
+# Exclude poetry.lock; remove this rule if the lockfile should be versioned.
 poetry.lock
-# Uncomment if you want to commit poetry.lock
-# poetry.lock
 
 # pdm
 .pdm.toml
@@ -235,6 +235,10 @@ secrets.json
 # Test artifacts
 test-results/
 test-reports/
+.mutmut-cache/
+mutmut-results/
+frontend/e2e/.auth/
+frontend/e2e/.server-state.json
 
 # Database files
 *.db
@@ -246,93 +250,13 @@ config.local.yaml
 config.local.json
 .env.local
 .env.*.local
-htmlcov/
-coverage.xml
-coverage.json
-.coverage
 
 # Claude-specific files
 CLAUDE.md
 .claude/
 
-# Session summaries and development documentation (keep these in /docs/sessions/)
-*_SUMMARY*.md
-*_COMPLETE*.md
-*_ANALYSIS*.md
-*_FAILURE*.md
-*_PROGRESS*.md
-*_REPORT*.md
-*_PLAN*.md
-*_ROADMAP*.md
-*_STRATEGY*.md
-*_STATUS*.md
-*_ASSESSMENT*.md
-*_AUDIT*.md
-*_GUIDE*.md
-*_NOTES*.md
-DEV[0-9]_*.md
-PHASE*.md
-WEEK*.md
-DAY*.md
-SESSION_*.md
-BILLING_*.md
-AUTH_*.md
-CUSTOMER_*.md
-COMMUNICATIONS_*.md
-ANALYTICS_*.md
-COVERAGE_*.md
-TEST_*.md
-E2E_*.md
-DDD_*.md
-CQRS_*.md
-DOMAIN_*.md
-FAKE_*.md
-DEPLOYMENT*.md
-CACHE_*.md
-BACKEND_*.md
-API_*.md
-CONTACT_*.md
-DATA_*.md
-EMAIL_*.md
-EVENT_*.md
-FILE_*.md
-PARTNER_*.md
-PAYMENT_*.md
-PLUGIN_*.md
-RBAC_*.md
-RESILIENCE_*.md
-ROUTER_*.md
-SECRETS_*.md
-SECURITY_*.md
-SERVICE_*.md
-SUBSCRIPTION_*.md
-TAX_*.md
-TENANT_*.md
-UI_*.md
-USER_*.md
-WEBHOOK_*.md
-COMPREHENSIVE_*.md
-FINAL_*.md
-LAYERED_*.md
-SYNTAX_*.md
-CURL_*.md
-BUG_*.md
-CORRECTED_*.md
-CRITICAL_*.md
-CURRENT_*.md
-COMPLETE_*.md
-DARK_*.md
-IMPLEMENTATION_*.md
-IMPROVEMENT_*.md
-INTEGRATION_*.md
-MIGRATION_*.md
-MODULE_*.md
-OBSERVABILITY_*.md
-PERFORMANCE_*.md
-PLATFORM_*.md
-REFACTORING_*.md
-TYPE_*.md
-VISUAL_*.md
+# Session summaries and development documentation (kept in /docs/sessions/)
+docs/sessions/
 
 # Analysis and temporary scripts
 analyze_*.py
@@ -343,25 +267,6 @@ revert_*.py
 test_layer*.py
 *_temp.py
 *_tmp.py
-
-# Test artifacts and reports
-test-results/
-test-reports/
-.mutmut-cache/
-mutmut-results/
-frontend/e2e/.auth/
-frontend/e2e/.server-state.json
-
-# Temporary SQL and shell scripts
-*.sql
-*.sh
-!scripts/*.sh
-!docker/*.sh
-
-# IDE settings (already have .vscode above, but being explicit)
-.idea/
-.vscode/
-*.code-workspace
 
 # Local shell scripts for testing
 run_example_api.sh
