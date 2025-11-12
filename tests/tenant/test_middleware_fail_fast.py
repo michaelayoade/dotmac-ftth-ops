@@ -268,6 +268,101 @@ class TestTenantMiddlewareOptionalMode:
         # ASSERTION: Provided tenant is used, not default
         assert mock_request.state.tenant_id == "tenant-999"
 
+    @pytest.mark.asyncio
+    async def test_multi_tenant_uses_jwt_claim_when_header_missing(self, multi_tenant_config):
+        """Tenant middleware should extract tenant_id from JWT when header/query are absent."""
+        middleware = TenantMiddleware(
+            app=MagicMock(),
+            config=multi_tenant_config,
+            require_tenant=True,
+        )
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url.path = "/api/v1/graphql"
+        mock_request.method = "POST"
+        mock_request.headers = {"Authorization": "Bearer jwt-token"}
+        mock_request.query_params = {}
+        mock_request.state = SimpleNamespace()
+        mock_request.cookies = {}
+
+        mock_call_next = AsyncMock(return_value={"status": "ok"})
+
+        with patch("dotmac.platform.auth.core.jwt_service.verify_token") as verify_token:
+            verify_token.return_value = {
+                "sub": "user-1",
+                "tenant_id": "tenant-from-jwt",
+            }
+
+            await middleware.dispatch(mock_request, mock_call_next)
+
+        mock_call_next.assert_called_once()
+        assert mock_request.state.tenant_id == "tenant-from-jwt"
+
+    @pytest.mark.asyncio
+    async def test_multi_tenant_respects_active_managed_tenant_header(self, multi_tenant_config):
+        """Tenant middleware should honor X-Active-Tenant-Id when user manages that tenant."""
+        middleware = TenantMiddleware(
+            app=MagicMock(),
+            config=multi_tenant_config,
+            require_tenant=True,
+        )
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url.path = "/api/v1/graphql"
+        mock_request.method = "POST"
+        mock_request.headers = {
+            "Authorization": "Bearer jwt-token",
+            "X-Active-Tenant-Id": "managed-tenant-1",
+        }
+        mock_request.query_params = {}
+        mock_request.state = SimpleNamespace()
+        mock_request.cookies = {}
+
+        mock_call_next = AsyncMock(return_value={"status": "ok"})
+
+        with patch("dotmac.platform.auth.core.jwt_service.verify_token") as verify_token:
+            verify_token.return_value = {
+                "sub": "partner-user",
+                "tenant_id": "home-tenant",
+                "managed_tenant_ids": ["managed-tenant-1", "managed-tenant-2"],
+            }
+
+            await middleware.dispatch(mock_request, mock_call_next)
+
+        mock_call_next.assert_called_once()
+        assert mock_request.state.tenant_id == "managed-tenant-1"
+
+    @pytest.mark.asyncio
+    async def test_multi_tenant_falls_back_to_api_key_tenant(self, multi_tenant_config):
+        """Tenant middleware should derive tenant_id from API key metadata."""
+        middleware = TenantMiddleware(
+            app=MagicMock(),
+            config=multi_tenant_config,
+            require_tenant=True,
+        )
+
+        mock_request = MagicMock(spec=Request)
+        mock_request.url.path = "/api/v1/jobs"
+        mock_request.method = "GET"
+        mock_request.headers = {"X-API-Key": "sk_test"}
+        mock_request.query_params = {}
+        mock_request.state = SimpleNamespace()
+        mock_request.cookies = {}
+
+        mock_call_next = AsyncMock(return_value={"status": "ok"})
+
+        with patch(
+            "dotmac.platform.auth.core.api_key_service.verify_api_key",
+            new_callable=AsyncMock,
+        ) as verify_api_key:
+            verify_api_key.return_value = {"tenant_id": "tenant-from-api-key"}
+
+            await middleware.dispatch(mock_request, mock_call_next)
+
+        verify_api_key.assert_awaited_once()
+        mock_call_next.assert_called_once()
+        assert mock_request.state.tenant_id == "tenant-from-api-key"
+
 
 @pytest.mark.integration
 class TestTenantMiddlewarePlatformAdmin:
